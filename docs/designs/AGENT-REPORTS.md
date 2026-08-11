@@ -4,6 +4,63 @@
 
 ---
 
+## AR-979 · 2026-08-11 · 📍 **`RATIFY-1` SEAM REPORT (`R-821 §7[2]`) — `[A]`/`[B]` PROVEN AND THE `[F]`/`[J]` DISCRIMINATION CONTROLS BOTH BITE, AT `3677b8ac`.** ✅ **`[J]` HAS ITS RED: THE OWNERSHIP-BLIND BOUNDARY DESTROYS SESSION-SCOPED FIXTURE STATE AND THE WITNESS NAMES IT BY NODE ID.** ⚖️ **CONTEXT REASSESSED AS ORDERED: I CONTINUE — AND I NAME THE NEXT HARD BOUNDARY RATHER THAN LEAVE IT TO FEEL.** 🛑 **NO CHILD HAS EXECUTED YET; `[C][D][E][G][H][I]` ARE UNSTARTED.**
+
+**SEAT `claude.exe 27448`. `HEAD 3677b8ac`. RULING `R-820 §5` / `R-821 §5`. TREE `wt-h1-wave4-20260712`. 🛑 THE COMMITTED `acceptance_runner.py` IS UNCHANGED — this is a PROTOTYPE and is NOT promoted to authority** (`R-821 §5`: prototype → prove `[A]`–`[J]` → only then promote).
+
+### §1 — 🛑 `[J]`: WHY THE PRESCRIBED LAYER `2` IS WRONG, IMPLEMENTED AND WITNESSED
+🛑 **The prescribed boundary — *"restore pre-existing entries; REMOVE entries created during the test"* — is PRESENCE-aware, and `R-820 §3` is right that presence is not ownership.** **A session/module/package-scoped fixture's setup executes inside the FIRST REQUESTING TEST's setup phase, so to a snapshot taken before that test its keys look "created during the test" — and the boundary deletes them. The fixture then reports SUCCESS while every later test in that child runs without the state it exists to provide.**
+✅ **THE DISCRIMINATOR I IMPLEMENTED IS THE CALL PHASE, AND IT IS A LIFETIME STATEMENT RATHER THAN A PRESENCE ONE:**
+```
+setup     fixtures of EVERY scope run here -> their writes are IN the baseline -> never evicted   [J]
+call      the test BODY -> its additions are evicted; replaced keys restored to SAME OBJECT       [F]
+teardown  untouched -- fixture finalizers own their own cleanup
+```
+✅ **Identity restored with `is`, never `==` — a `MagicMock` compares equal to a great many things.**
+✅ **`--accept5-ownership-blind` REINSTATES THE BROKEN SHAPE ON PURPOSE, so `[J]` has a NEGATIVE control.** ★★★ **A boundary that has never been SHOWN to destroy something is not a boundary anyone has measured.**
+
+### §2 — ✅ THE THREE ARMS, FAILING NODE CONFIRMED BY EXACT NODE ID
+```
+no Layer 2        exit=1  FAILED ...::test_a2_reports_whether_it_observed_a1s_leak
+                          -> [F] test-time pollution DOES cross tests without the boundary
+ownership-aware   exit=0  5 passed   [ACCEPT5-LAYER2] tests_bounded=5 keys_evicted=1
+ownership-blind   exit=1  FAILED ...::test_j3_later_test_READS_the_session_owned_state
+                          [ACCEPT5-LAYER2] tests_bounded=5 keys_evicted=21
+```
+⇒ **`[F]` CONTAINED · `[J]` SURVIVES · AND THE BLIND BOUNDARY IS MEASURED DESTROYING IT (`21` keys evicted vs `1`).**
+✅ **THE `[J]` WITNESS *READS* THE STATE at test `N`, it does not assert the fixture "ran"** — `R-820 §5[J]` verbatim: *"a green run is not evidence here — a disabled fixture and a working one both look green until something READS the state."*
+✅ **AND THE BOUNDARY PRINTS A POSITIVE WITNESS THAT IT EXECUTED** (`tests_bounded`/`keys_evicted`/`identities_restored`), because *"nothing leaked"* and *"the boundary never ran"* are otherwise indistinguishable.
+⚠️ **A SUMMARY LINE THAT CANNOT ISOLATE MY OWN ASSERTION IS NOT A RESULT** (`AR-970 §1`) — hence the node IDs above, not the `1 failed` counts.
+
+### §3 — ✅ `[A]`/`[B]` POPULATION CONSTRUCTION, MEASURED
+✅ **`[A]` — targets built by IMPORTING `acceptance_runner` and `population_successor`. NO second population registry.** ★★★ **`[test-replica]`: a module that RE-IMPLEMENTS what it names can mock the real one out entirely — six greens once survived DELETING production. `THE REPAIR IS AN IMPORT, NOT A COPY.`**
+```
+manifest members (comments stripped) 107  ->  resolved under <repo>/src 107
+chain-required node IDs             2419
+supplemental (outside manifest)        1
+CHILDREN (one pytest each)           108      targets across all children 108
+[B]  input files 108 == re-aggregated 108 | duplicates 0 | lost 0 | invented 0
+     required-files-missing 0                                    VERDICT: HOLDS
+```
+🛑 **AND I CAUGHT MYSELF ON `[B]` BEFORE IT BECAME EVIDENCE: my first version PRINTED `0` for each identity because the guard would have RAISED otherwise.** ⇒ **`A PRINTED 0 THAT CONTROL FLOW MERELY IMPLIES IS INDISTINGUISHABLE FROM A CHECK THAT NEVER RAN.`** **Now every `[B]` number is recomputed and reported as a MEASURED VALUE.**
+✅ **GUARD SET RED-PROOFED `4 / 4`, POSITIVE CONTROL INCLUDED:** unplanted ⇒ no raise · unresolvable manifest member ⇒ BITES · underivable successor chain ⇒ BITES · deleted chain-required file ⇒ BITES.
+✅ **THE CONTROLS CANNOT CONTAMINATE THE GOVERNED POPULATION, VERIFIED NOT ASSUMED:** `[MEASURED]` `testpaths = ["src/engine/tests", "tests/python"]` — `scripts/` is neither — and the derived `108`-child list references none of the new files.
+
+### §4 — ⚖️ CONTEXT REASSESSMENT AT THE NAMED SEAM (`R-821 §6`/`§7[2]`, my call)
+⚖️ **I CONTINUE. NO HANDOFF.** **`R-821 §6` says not to rotate merely because the packet is large, and I am not exhausted — I hold `R-818`→`R-821`, both cluster repairs, the census structure and this prototype's design rationale. A fresh seat pays a full cold start to re-derive all of it.**
+🛑 **BUT I NAME THE NEXT HARD BOUNDARY RATHER THAN LEAVE IT VAGUE, WHICH IS THE POINT OF `§6`: the context-expensive step is `[G]` — comparing EXACT NODE OUTCOME MAPS across `2419` nodes in forward vs reverse file order, twice more for `[I]`. That is result-analysis volume, not build effort.** ⇒ **I will build and prove `[C]`/`[D]`/`[E]`/`[F]` on the real population first, and re-assess IMMEDIATELY BEFORE `[G]`'s first full ordered pair.** ★★★ **`NO HERO RUN` cuts both ways: leaving at a seam I can still work through is also a cost.**
+
+### §5 — 🛑 WHAT IS NOT DONE, STATED SO NOTHING READS AS COMPLETE
+🛑 **NO CHILD HAS EXECUTED. `[C]` per-child receipts · `[D]` invalid-child refusal · `[E]` cross-file control · `[G]` order invariance · `[H]` `≤10` min serial · `[I]` repeatability are ALL UNSTARTED.**
+🛑 **`[F]` IS PROVEN ONLY ON A THROWAWAY**, not yet on a governed file. **`[J]` likewise** — the `9` real non-function-scoped fixtures across `5` files (`R-820 §3`) have NOT yet been exercised under the boundary.
+🛑 **`acceptance_runner.py` UNCHANGED — nothing is promoted, no verdict shape has moved, no disposition seal minted.**
+⚠️ **CARRIED: `STOP [37]` the oracle is order-independent exact node outcomes, NEVER the old `31` · `STOP [40]` counts of code are anchored · `[H]` `>10` min ⇒ STOP AND REPORT, no concurrency · any failed load-bearing obligation ⇒ STOP, never fix-until-green.**
+⚠️ **`E` STAYS HELD. `ACCEPT5-WAIT-SESSION-CORPUS-SCOPE-1` stays banked for `E` (`R-821 §4`).**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **`[C]`/`[D]` next — the child runner and its refusal path. No round-trip.**
+
+---
+
 ## AR-978 · 2026-08-11 · ✅✅ **CLUSTER `F` LANDED AND RED-PROOFED AT `4b7590a5` — ROWS `22`/`23` CONVERTED TO `R-799 §5` FORM `[3]`, PINNED **AND IDENTITY-VERIFIED BEFORE EXECUTION**. `R3-4` = `6 / 7`.** 🛑🛑 **AND THE VERIFIER FOUND A LATENT DEFECT BIGGER THAN THE SKIPS: THE HELPER WAS `exec`-ING A **MIS-DECODED** HISTORICAL MODULE — `text=True` WITH NO `encoding=` ON A `cp1252` BOX.** ⚖️ **AND I OWE THE DESK A COUNT CORRECTION WHOSE PHANTOM I CREATED MYSELF.**
 
 **SEAT `claude.exe 27448`. `HEAD 4b7590a5`, PUSHED (`ls-remote` MATCH). RULING `R-818 §7[3]` → `R-820 §9[1]`. TREE `wt-h1-wave4-20260712` (`STOP [36]`).** ⭐ **FILED IN THE SAME MOTION AS THE WORK — `R-820 §0`'s conviction against me is not repeated here.**
