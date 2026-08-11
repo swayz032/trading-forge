@@ -4,6 +4,118 @@
 
 ---
 
+## AR-972 · 2026-08-11 · ✅ **CLUSTER `A` MICROREPAIR DONE AT `e0d55514`: RENAMED TRUTHFULLY, ADMITTED VIA `record_successor()`, CANONICAL `2418 → 2419` — THE PRE-REGISTERED NUMBER, DERIVED NOT ASSERTED.** 🛑🛑🛑 **BUT `ACCEPTANCE: REFUSED` FOR A REASON THE DESK DID NOT PREDICT, AND IT IS **NOT** `F-ACCEPT5-8`: `SEALED DISPOSITION CHANGED`, CAUSED BY CLUSTER `A` ITSELF. THE SEAL IS OUTSIDE MY AUTHORIZED FILES — DECLARED, NOT ABSORBED, NOT RE-SEALED.** 🛑🛑 **AND `R-816 §5`'s FLIP SET IS `5` NODES IN **TWO** DIRECTIONS, NOT `3` IN ONE.**
+
+**SEAT `claude.exe 6536`. `HEAD e0d55514`, PUSHED (`ls-remote` MATCH, `STOP [31]`).**
+
+### §1 — ✅ THE RENAME (`R-817 §3(1)(a)`) — IDENTITY CORRECTED, BODY UNTOUCHED
+```
+test_signal_vector_path_never_reaches_the_remote_loader      (asserted the OPPOSITE
+                                                              of AR-968 §4)
+  ->  test_signal_vector_contracts_survive_remote_loader_failure
+```
+✅ **`[MEASURED HERE]` THE NAME WAS STILL FREE TO CORRECT, AND I PROVED IT BEFORE TOUCHING IT:** the ONLY code occurrence was the definition itself; **no seal, no chain entry, no test referenced it** — every other hit was append-only narrative. ⇒ **no join key had formed** (`[accept5-join-keys]`, which is why two `6B` tests are frozen today). ★★★★★ **`R-816 §1`'s *"THE CHEAPEST MOMENT TO FIX AN IDENTITY IS THE LAST MOMENT BEFORE SOMETHING ELSE JOINS ON IT"* WAS LITERALLY TRUE — ONE ADMISSION LATER AND THIS WOULD HAVE BEEN PERMANENT.**
+✅ **BODY UNCHANGED** (`R-817`: *"Do not weaken the body"*). Pinned to the single node ID: **`1 passed`** — not a file summary that cannot isolate my own assertion (`AR-970 §1`'s lesson).
+✅ **NEGATIVE CONTROL IN THE CANONICAL RUN: the old name appears in `0` of `collected/executed/passed/failures/skipped/xfailed/xpassed`.**
+
+### §2 — ✅ THE ADMISSION (`R-817 §3(1)(b)`) — DERIVED, AND IT HITS THE PRE-REGISTERED NUMBER
+```
+hermeticity precondition                    : ADMISSION: PERMITTED
+observed collect-only (runner's OWN helpers): 2419 node IDs, 2419 unique
+  NOT in required population (ADDED)   : 1  <- the renamed node, and ONLY it
+  in required but NOT collected (GONE) : 0  <- fail-closed guard never armed
+
+RECORDED successor  kind=admission  graded_sha=12083997
+  parent_population_sha256    : 1c118f39...
+  added_node_ids              : 1
+  authorized removals         : []
+  resulting_population_sha256 : bfe66ce9...
+  --- STOP [22] RECOMPUTE, re-derived from the file just written ---
+  resulting_population_sha256_recomputed_from_disk : bfe66ce9...   (MATCH)
+  population_size_recomputed_from_disk             : 2419
+  reconciles                                       : True
+
+INDEPENDENT RE-DERIVATION, separate process:
+  population_successor.py verify -> required population : 2419 node IDs
+                                    population sha256   : bfe66ce9...
+```
+⇒ ✅ **`2419` — `R-816 §1`'s PRE-REGISTERED number, met EXACTLY. Anything else was a STOP.**
+✅ **`STOP [22]` HONOURED BY CONSTRUCTION: I never hand-edited `added_node_ids` and never hand-copied a total** — the `+1` was DIFFED from an observed collection against the chain tip.
+⭐ **AND THE `0` REMOVALS ARE THEMSELVES A MEASUREMENT, NOT A NON-EVENT: they independently CONFIRM `R-816 §1`'s finding that the old name was never in the governed population.** ★★★ **`A FAIL-CLOSED GUARD THAT DID NOT FIRE IS EVIDENCE ONLY IF YOU CAN SAY WHAT WOULD HAVE MADE IT FIRE — HERE, ANY DISAPPEARING NODE ID.`**
+✅ **I DID NOT HAND-ROLL A CENSUS.** The collector IMPORTS `acceptance_runner.read_manifest` and `population_successor.required_population` and mirrors the runner's own target construction (`:658`, `:694-697`). `[ARTIFACT-SOURCED, AR-927 §3]` every hand-authored runner here has differed from the last and one fabricated a `49`-member regression.
+
+### §3 — ✅ THE CANONICAL RUN IS VALID, AND BOTH POST-SEAL OBLIGATIONS ARE PRESENT
+```
+PINNED HEAD BEFORE RUN : e0d55514      fresh run HEAD : e0d55514   (HELD)
+collected/executed/failed/skip/xfail   : 2419 / 2419 / 31 / 0 / 2
+[SELF-CHECK] independent junitxml feeder: cases=2419 failures=31, feeders AGREE
+             on failure membership, collection membership AND size
+[5] baseline-named tests missing from COLLECTION : 0
+[6] collected-but-unexecuted                     : 0
+[7/8] NEW failures (by node ID)                  : 0     <- my change regressed NOTHING
+[7/8] UNAUTHORIZED GONE                          : 0
+[CHAIN] required population (seal+chain)         : 2419   chain problems: 0
+[SEAL] required members no longer collected      : 0
+
+BOTH R-817 POST-SEAL OBLIGATIONS, BY EXACT NODE ID:
+  1  ...test_accept5_stale_run_consumption.py::test_acceptance_runner_refuses_
+     when_pytest_could_not_run                     COLLECTED · EXECUTED · PASSED
+  2  ...test_signal_vector.py::TestBacktesterSignalVectorIntegration::
+     test_signal_vector_contracts_survive_remote_loader_failure
+                                                   COLLECTED · EXECUTED · PASSED
+POSITIVE CONTROL: test_no_trades_returns_zero_metrics collected=True failing=True
+```
+
+### §4 — 🛑🛑🛑 THE REFUSAL IS REAL, IT IS **NOT** `F-ACCEPT5-8`, AND IT IS CAUSED BY CLUSTER `A`
+🛑 **`R-816 §7` and `R-817 §3(1)` both told me *"`ACCEPTANCE: REFUSED` from `F-ACCEPT5-8` is EXPECTED and unrelated."* `[MEASURED HERE]` THAT IS NOT THE REFUSAL I GOT:**
+```
+ACCEPTANCE: REFUSED
+  - SEALED DISPOSITION CHANGED: 3 sealed test(s) are no longer SKIP though they
+    were at the seal. Re-enabling is likely good news, but it is a POPULATION
+    CHANGE and must be declared, not absorbed.
+[DISP] sealed SKIP membership drift : +0 / -3
+      SEALED TEST NO LONGER SKIP: ...test_signal_vector_is_json_serializable
+      SEALED TEST NO LONGER SKIP: ...test_signal_vector_present_in_result
+      SEALED TEST NO LONGER SKIP: ...test_signal_vector_values_valid
+```
+⇒ **THOSE ARE EXACTLY CLUSTER `A`'s THREE `signal_vector` NODES — the `3 → 0` real-skip conversion `AR-968` landed and `R-816 §1` APPROVED.** The instrument is not complaining about a defect; it is refusing to let a **good** change pass **undeclared**.
+🛑 **I DID NOT RE-SEAL, AND I WILL NOT.** `scripts/population_successor.py`'s own contract: the seal *"is never amended, never regenerated, and never re-sealed to make today's state fit."* ⚠️ **AND IT IS OUTSIDE MY AUTHORIZED FILES: `R-816`'s `FILES / SCOPE` grants `src/engine/tests/**`, the census artifact, and the successor chain VIA `record_successor()` ONLY. A disposition seal is none of those.**
+⇒ ★★★★★ **`AN "EXPECTED REFUSAL" IS A PREDICTION, AND A PREDICTION THAT MATCHES THE VERDICT WORD BUT NOT ITS REASON IS THE MOST DANGEROUS KIND — I WAS TOLD TO EXPECT "REFUSED" AND COULD HAVE FILED THIS RUN AS NOMINAL WITHOUT EVER READING WHY.`** **`A VERDICT IS NOT A REASON. JOIN ON THE REASON.`**
+⚖️ **DESK DECISION OWED (not mine): how the three re-enabled dispositions are DECLARED.** `scripts/generate_disposition_seal.py` exists `[MEASURED, file present]`; whether it is the right instrument, and who runs it, is a governance call. **I am NOT blocked on it and am proceeding to the trace.**
+
+### §5 — 🛑🛑 `R-816 §5`'s FLIP SET IS `5`, BIDIRECTIONAL — STEP `[0]` COMPLETE AND IT CORRECTS THE RECORD
+✅ **BOTH ARMS REPRODUCED FROM THE PIN EXACTLY AS `R-816 §5 [0]` REQUIRED** (ARM `A` = `4` failures, ARM `B` = `1`), so the STOP did not fire.
+```
+JOINED BY EXACT NODE ID (ARM B from the committed instrument's plugin feeder):
+DIRECTION 1  alone FAIL -> company PASS   (MANUFACTURES GREENS)   4 nodes
+   TestCommissionImpact::test_commission_per_trade_matches_formula
+   TestWave1CommissionGoldenFixture::test_topstep_mes_commission_per_trade_contract
+   TestWave1CommissionGoldenFixture::test_mffu_mes_commission_per_trade_contract
+   TestWave1CommissionGoldenFixture::test_prop_sim_trusts_net_pnl_no_double_deduction
+DIRECTION 2  alone PASS -> company FAIL   (MANUFACTURES REDS)     1 node
+   TestEdgeCases::test_no_trades_returns_zero_metrics
+POSITIVE CONTROL: all 4 ARM-A nodes present in ARM B's collection (0 missing)
+INSTRUMENT: feeder_corrupted False; independent junitxml feeder AGREES
+```
+🛑 **THIS REFUTES A NAMED CLAIM IN THE RECORD:** `AR-969 §3` said the in-company failure was *"a KNOWN baseline red, **failing in BOTH**"*, and `R-816 §5` adopted it as *"THREE governed tests"*. **`[MEASURED HERE, twice]` it does NOT fail alone.** ⇒ **`5` nodes, `2` directions.**
+⇒ ★★★★★ **`A BIDIRECTIONAL FLIP SET IS STRICTLY WORSE THAN A ONE-WAY ONE: ONE DIRECTION MANUFACTURES GREENS AND THE OTHER MANUFACTURES REDS, SO A SEARCH ALIGNED TO ONE DIRECTION FINDS HALF THE DEFECT AND REPORTS IT AS ALL OF IT.`**
+⚠️ **SCOPE HELD: same file, same defect, correctly measured membership — NOT a widening.** `R-816 §5`'s bound (no `107`-file sweep, no fixture tuning, no skip restoration) is intact and I am inside it.
+⚠️ **`[UNPROVEN]` the contaminating predecessor `[UNIDENTIFIED]` — the binary search has NOT begun.**
+
+### §6 — 🛑 TWO INSTRUMENT SELF-CONVICTIONS, BOTH MINE
+🛑 **`[1]` I INVALIDATED MY OWN FIRST ARM `B` BY COMMITTING `AR-971` WHILE IT RAN.** The runner refused: *"HEAD moved during execution (`723c773d` → `604d4e6e`); the run does not describe a single tree state."* **The refusal was CORRECT and it was my error.** Re-run on a frozen tree.
+🛑 **`[2]` A STRUCTURAL HAZARD THIS EXPOSED, AND IT IS NOT MINE ALONE:** `[MEASURED HERE]` the desk's own ruling commits (`R-816` = `723c773d`, `R-817` = `12083997`) move `HEAD` on the SAME branch I measure on — **twice in ~25 minutes tonight.** A canonical run takes `~2.5` min. ⇒ **any ACCEPT-5 receipt taken on the shared branch during an active ruling cycle can be voided by a docs-only commit that changes no code.** ✅ **REMEDY AVAILABLE AND NOT YET NEEDED: pin the run in a disposable worktree at an explicit commit.** ★★★ **`THE INSTRUMENT IS RIGHT TO REFUSE, SO THE FIX IS NOT TO LOOSEN IT — IT IS TO STOP MEASURING ON A MOVING TREE.`**
+⚠️ **`[3]` AND I WALKED INTO A MEMORISED TRAP TWICE:** I piped two results I relied on through `| tail`, losing the pytest membership I needed (`[ps-counting-encoding]`: *"NEVER `| head`/`| tail` A RESULT YOU RELY ON"*). **Recovered by reading the runner's durable JSON artifact instead of its stdout — which is the better source anyway.**
+✅ **`[4]` NEAR-MISS DECLARED: `git add -u` staged `docs/wave25-exit-engine-ab-report.md`, a modification that was ALREADY uncommitted at my seating and is NOT mine. I unstaged it before committing.** ★★★ **`ON A SHARED TREE, "ALL MODIFIED FILES" IS NEVER THE SAME SET AS "MY WORK".`**
+
+### §7 — 🛑 NOT DONE / NOT CLAIMED
+🛑 **`C`, `D`, `E`, `F` UNSTARTED** · **`H` FORBIDDEN, untouched (`STOP [11]`)** · the contaminating predecessor `[UNIDENTIFIED]` · the `31` baseline reds `[NOT ANALYSED]` · `test_black_swan_evaluator.py:682` `[CANDIDATE, unadjudicated]` · portability `[NO CLAIM]` · the disposition declaration `[OWED, DESK'S]`.
+⚠️ **I do NOT claim Cluster `A` CLOSED.** `R-817 §1` defines closure as the renamed node admitted at canonical `2419` — **that is done and measured** — but the run it must appear in still returns `REFUSED`, and the reason is Cluster `A`'s own. **The desk owns that verdict, not me.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Proceeding to `R-817 §3 [2]`, the ordered delta-debug of the `5`-node flip set, in the same turn. No round-trip.**
+
+---
+
 ## AR-971 · 2026-08-11 · 📌 **START-RECEIPT — SUCCESSOR SEAT `claude.exe 6536` CLAIMS `R-816 §7` BY `R-784 §3` TRANSFER. EAR ARMED AND RED-PROOFED.** ✅ **`§5` ARM `A` REPRODUCED EXACTLY: `4 failed / 47 passed`, INSTRUMENT AUDITED.** 🛑 **AND ARM `A` CONTRADICTS ONE NAMED CLAIM IN `AR-969 §3` / `R-816 §5`: `test_no_trades_returns_zero_metrics` **PASSES** ALONE — SO IT IS NOT "FAILING IN BOTH", AND THE FLIP SET MAY BE `5`, NOT `3`.**
 
 **SEAT `claude.exe 6536`, born `08-11 01:15:52` `[MEASURED HERE, Win32_Process + parent walk from this shell `28216`]`. PREDECESSOR `23692` GONE — `[seat-rolls-are-swaps]`, a planned swap, NOT investigated.**
