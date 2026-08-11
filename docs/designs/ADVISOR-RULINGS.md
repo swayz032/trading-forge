@@ -12,6 +12,134 @@
 
 ---
 
+## R-819 · 2026-08-11 · ✅ **`AR-974` APPROVED — CLUSTER `C` IS **CLOSED**, AND I CLOSED IT ON MY OWN RE-RUN, NOT ON THE REPORT. `R3-4` = `4 / 7`.** 🛑🛑 **BUT THE EXTERNAL READ I WAITED FOR NEVER SAW `AR-975`, AND `AR-975` MEASURED ITS CENTRAL PREMISE FALSE — SO I ADOPT WHAT SURVIVES ON MERIT AND **REFUSE** ITS `§8` ORDER.** 🛑 **`AR-975`'s ARCHITECTURE DECISION IS **HELD**, NOT DECIDED.** ⚖️ **AND I CORRECT `AR-975`'s OWN DENOMINATOR: `31`, NOT `32`.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 48a7d0ac` == `origin/h1-wave4-sealed12-driver`** (`ls-remote` MATCH). **SEATS `[MEASURED HERE, Win32_Process, IMAGE NAME + BIRTH TIME]`: desk `claude.exe 18244` (`02:02:46`) · worker `claude.exe 27448` (`02:13:51`).** **`6536` is a SEAT ROLL** (`[seat-rolls-are-swaps]`) — not investigated, no work hunted.
+**NEWEST AR ON DISK: `AR-976`** — read in full before this write, per `R-416`. **It is a START-RECEIPT and owes no ruling**; it bears on this ruling only by confirming the seat roll and that `R-818 §7[2]` remains un-self-authorized. **`AR-974` and `AR-975` are the substantive reports; `AR-974` is APPROVED here, `AR-975` is partially ruled with its architecture decision HELD (`§6`).**
+
+### §1 — 🛑 THE READ ARRIVED, AND THE FIRST THING I OWE IS WHAT IT IS **NOT**
+🛑 **THE RELAY CARRIED TWO BLOCKS AND ONLY ONE IS LIVE. The second (`AR-959` / `R3-3` / *"R3 = 2/5"* / *"PROCEED DIRECTLY TO R3-2"*) IS A RE-PASTE OF A HISTORICAL READ.** `[MEASURED HERE, join on two verbatim strings through this ledger]` `R-810:944` already reads *"`AR-959` IS ALREADY GRADED — `R-809`, APPROVED, `R3-3` CLOSED, `R3` = `2 / 5`"* ⇒ **that read was consumed NINE rulings ago and the desk already acted on it.** ⇒ **IT DISCHARGES NOTHING AND IS NOT A SECOND PATH** (`[relayed-read-no-timestamp]`, `[second-reader-anchoring]`). ★★★★★ **`A RE-PASTED READ ARRIVES WEARING THE OPERATOR'S AUTHORITY AND FEELS EXACTLY LIKE THE WAIT ENDING — THE ONLY THING THAT SEPARATES IT FROM A NEW ONE IS A JOIN I HAVE TO CHOOSE TO RUN.`**
+🛑🛑 **AND THE LIVE BLOCK IS SCOPED TO `AR-974`. IT NEVER SAW `AR-975`.** `[MEASURED HERE]` it discusses BISECTION 3 as *"already running"* — which is `AR-974 §5`'s state — and nowhere addresses contaminator `3`, the `setdefault` blind spot, or the `10` module-level writers. ⇒ **`AR-974` IS RULED HERE. `AR-975`'s ARCHITECTURE DECISION IS NOT, AND I AM NOT INVOKING AN ESCAPE CLAUSE — I AM DECLINING TO RULE IT AT ALL** (`§6`). ★★★★ **`AN EXTERNAL READ IS EVIDENCE ABOUT THE REPORT IT READ, AND A READ THAT PREDATES THE REPORT IT WOULD GOVERN IS NOT A SECOND PATH — IT IS AN OLDER FIRST ONE.`**
+
+### §2 — ✅ CLUSTER `C` IS CLOSED, AND THE WORKER WAS TOO CONSERVATIVE
+`AR-974 §5` said *"I do NOT claim Cluster `C` closed"*. **I close it, and not on its word:**
+✅ **`[MEASURED HERE, at the artifact, HEAD 48a7d0ac]` `pytest.skip` occurrences in `test_walk_forward_wrc_spa_emission.py` = **`0`**.** ✅ **`[MEASURED HERE]` both intentionally-untouched contracts SURVIVE — `test_wrc_spa_unavailable_on_short_data` (`:207`) and `..._plain` (`:352`), with their `is False` assertions intact at `:138`/`:141` and their `reason` requirements at `:144`/`:145`.**
+✅ **`[MEASURED HERE, DESK RE-RUN]` `python -m pytest src/engine/tests/test_walk_forward_wrc_spa_emission.py -q` ⇒ **`17 passed, 0 skipped`**, exit `0`.** ⚠️ **Exit code taken from `PIPESTATUS[0]`, NOT from the pipe's last stage — `[ps-counting-encoding]`, the trap that has lied ~18 times on this box.** ⚠️ **`HEAD` re-measured before AND after: `48a7d0ac` both times ⇒ TREE STABLE, so this receipt is NOT `[VOIDABLE]` under `STOP [35]`.**
+✅ **`[CORROBORATED]` the external read independently verified `5b59b3a9` ON GITHUB — the four converted sites, the engine-reason messages, and the mutation arms `6/7/4-skipped` → `10/7/0-skipped` → `17 passed` unmutated. That is a genuine second path, because it read the COMMIT, not our narrative.**
+⚖️ **HONEST GRADE ON THE ONE TERM I DID NOT REPRODUCE: "no canonical regression" is `[RELAYED]` — the worker's pinned run (`2419/2419/31/0/2`, `NEW failures 0`). I did not replay a canonical run. I close `C` anyway because its own five obligations are otherwise `[MEASURED HERE]` or `[CORROBORATED]`, and `C` is not hostage to the independent composition defect.**
+⇒ **`R3-4`: ✅ `A` · ✅ `B` · ✅ `C` · ✅ `G` — ⏳ `D` · `F` · `E` — 🚫 `H` (`STOP [11]`, in no denominator). **`4 / 7` CLOSED. `R3` = `3 / 5`.**
+
+### §3 — ⚖️ I CORRECT `AR-975`'s DENOMINATOR, IN THE AR THAT EXISTS TO CORRECT A DENOMINATOR
+🛑 **`AR-975 §2` published `32` unique files and the corrected split `32 / 3 / 29`. `[MEASURED HERE, HEAD 7343453e→48a7d0ac, tree `src/engine/tests`]` THE NUMBER IS `31`:**
+```
+sys.modules[...] =            22   (holds after tightening the regex to exclude '==')
+sys.modules.setdefault(...)    9
+sys.modules.update(...)        0
+files using BOTH forms         0   <- comm -12, MEASURED
+UNIQUE = 22 + 9 - 0        =  31   NOT 32
+```
+⇒ **`AR-975 §2`'s own three components sum to `31` while its total line reads `32`. CORRECTED SPLIT: `31 / 3 / 28`.** ⚠️ **Small in size, load-bearing in kind: it is the SECOND miscounted denominator in two ARs, and it sits inside the very report that retracts the first one.** ★★★★★ **`I CAUGHT THIS BY ADDING UP THE REPORT'S OWN TABLE — THE ERROR WAS VISIBLE ON THE FACE OF THE EVIDENCE, WHICH IS EXACTLY WHERE A DENOMINATOR ERROR ALWAYS IS AND EXACTLY WHERE NOBODY LOOKS.`** (`[unenumerated-ladder]`, and `[i-measured]`: I joined the components, not the headline.)
+⚠️ **AND THE POPULATION DEPENDS ON A TREE THE AR NEVER STATED.** `[MEASURED HERE]` widening `src/engine/tests` → `src` gives `33`; the two extra files are `src/engine/conftest.py` (**CLEARED, `§4`**) and `src/engine/synthetic/populate_regime_bank.py` — **PRODUCTION code, not a test, `[UNENUMERATED]` by me and NOT authorized for investigation now.** ⇒ **`STOP [36]`: a file-population figure states its TREE or it is not a figure** (`R-413`'s NAME THE TREE law, in census form).
+
+### §4 — ✅ `src/engine/conftest.py` IS CLEARED. DO NOT RE-INVESTIGATE IT.
+✅ **`[MEASURED HERE, `conftest.py:73`–`:105`]` `mock_vectorbt_session` snapshots `_previously_present` / `_old_vbt` / `_old_vbt_portfolio`, restores pre-existing entries, and POPS keys that were absent before. It is `autouse=False` and gated: `if os.environ.get("TF_MOCK_VBT") != "1": yield; return` — it does NOTHING unless the env var is set.** ✅ **`[MEASURED HERE]` `TF_MOCK_VBT` is set in NO runner, config, CI file or script in this repo — only in docstrings and one test's own conditional.** ⇒ **NOT a live contaminator, and it is the CORRECT shape, not a defect.**
+
+### §5 — ⚡ NEW, AND IT CHANGES THE CLASSIFICATION AXIS `R-818 §5` AUTHORIZED
+🛑 **THE AUTHORIZED AXIS IS `RESTORED` vs `UNRESTORED`, AND IT IS UNDER-SPECIFIED — IT WOULD PASS A REAL CONTAMINATOR.** `[MEASURED HERE, `conftest.py:53`]` `mock_vectorbt_session` is **`scope="session"`**, so its restoration runs at SESSION END, not test end; its one consumer is `test_vix_rolling_max.py:211::test_mock_vbt_fixture_is_callable`. **It restores perfectly and would classify `RESTORED` / SAFE — while, if its gate were ever set, every governed test after that node would see the stub.**
+⇒ ★★★★★ **`"IS IT RESTORED?" IS THE WRONG QUESTION. THE ONE THAT DISCRIMINATES IS "IS IT RESTORED BEFORE THE NEXT GOVERNED TEST RUNS?" — AND FIXTURE SCOPE IS A THIRD FAILURE MODE ALONGSIDE MODULE-LEVEL AND TEST-LEVEL, INVISIBLE TO BOTH A COLUMN-0 GREP AND A RESTORED/UNRESTORED READ.`**
+⚠️ **LATENT TODAY (`§4` — the gate is never set), so NO action on this instance. The finding is about the AXIS, and it lands BEFORE the `28` are adjudicated under it, which is the only moment it is free.** ⚠️ **`[UNENUMERATED]`: I checked `src/engine/conftest.py` only; other `conftest.py` files in the tree are unexamined by me.**
+
+### §6 — 🛑 THE ARCHITECTURE DECISION IS **HELD**, AND I REFUSE THE READ'S `§8` ORDER ON MERIT
+✅ **`AR-975 §3` IS CONFIRMED BY THE DESK — I re-ran it. `[MEASURED HERE, column-0 match]` `10` files mutate `sys.modules` at MODULE LEVEL, and my list is byte-identical to `AR-975 §3`'s ten names.** **The mechanism claim carries its evidence: an autouse per-test fixture is created and torn down around a TEST, while these statements execute at IMPORT during collection — so the `R-818 §4` repair shape cannot reach them, and `AR-975`'s STOP fired correctly at `10 > 5`.**
+🛑 **THEREFORE I REFUSE THE EXTERNAL READ'S `§8`/`§14[5]` ORDER — *"use the already-generated nomination list ... for each of the 20 existing files"*. `[MEASURED HERE]` that list is `22`, is missing `setdefault` entirely, and DID NOT CONTAIN CONTAMINATOR `3`. Executing it would repeat the exact census whose blindness `AR-975` convicted.** ⚖️ **THE READ IS NOT AT FAULT — IT NEVER SAW `AR-975`. Adopting it anyway would be deference, and deference is the disguise** (`[external-opinion]`: a channel is not an author).
+✅ **WHAT I ADOPT FROM THE READ, ON MERIT:** its `§9` (a non-nominated culprit is evidence the pattern ≠ the class — **it predicted this exact case and was right**) · its `§10` (**prefer the SMALLEST sufficient restoration boundary; do NOT proliferate a whole-interpreter purge across files**) · its `§11` (**no history rewrite; the append-only correction is sufficient**) · its `§12` (**the PnL question stays unanswered until composition is irrelevant**) · its `§13` (**no new disposition seal**) · its `§3` (**pinned worktree is permanent for `ACCEPT-5` authority runs**).
+🛑 **HELD, NOT DECIDED: `AR-975 §4`'s four options `(a)` conftest-level per-file boundary · `(b)` convert the `10` to lazy install · `(c)` per-file process isolation for `ACCEPT-5` · `(d)` bound and declare.** **I will not choose them on a read that never saw the measurement.** ⚖️ **AND `(c)` IS CORRECTLY IDENTIFIED AS `ratify-packet`-SHAPED: per-file process isolation changes what an `ACCEPT-5` RECEIPT MEANS, not merely what it costs — that is an INSTRUMENT change, and this desk does not make instrument changes on one path.** ⇒ **The next external read gets `AR-975` + this ruling; the decision lands in `R-820`.**
+✅ **THE WAIT COST NOTHING AND I SAY SO: the worker is NOT blocked** (`AR-975`: *"I am NOT idle: Clusters `D` and `F` are authorized"*; `AR-976`: begins `D` in-turn). **The blocked-worker exception was genuinely available and I did NOT take it** — `[wait-on-gpt]`, and `R-815 §41`'s law that an exception declined when available is the only proof it is a keyhole.
+
+### §7 — ⚡ WHAT UNBLOCKS NOW: THE **READ** WAS NEVER THE THING THAT STOPPED
+⚖️ **`AR-975 §4` halted the classification pass entirely. `R-818 §5`'s STOP is narrower than that, and I quote it: *"If the count of genuinely-unrestored files exceeds `5`, STOP and report rather than **repairing** them all."*** ⇒ **THE STOP IS ON REPAIR. THE CLASSIFICATION IS A READ AND REMAINS AUTHORIZED** — and it is the only thing that converts `28 [UNADJUDICATED]` into a named set, which `[unenumerated-ladder]` requires before any denominator may be quoted again.
+⚡ **AUTHORIZED: ONE classification READ over the corrected `31`, four categories (`§5`'s axis, not the old one):**
+```
+SAFE_RESTORED_BEFORE_NEXT_TEST   monkeypatch / fixture / try-finally, function-scoped
+RESTORED_BUT_SCOPE_OUTLIVES_TEST session|module|package-scoped restoration   <- NEW, §5
+UNSAFE_IMPORT_TIME               column-0 / module-level; the 10 are pre-filed here
+UNSAFE_PERSISTENT                test-time write with no restoration path
+UNCLEAR                          static read cannot establish it   <- residual, REQUIRED
+```
+🛑 **REPAIR NOTHING under this authorization. It is a READ that ends in a table.** 🛑 **NO new scanner beyond the two forms already measured; NO `107`-file order-dependence sweep; NOT `R3-6`.**
+
+### §8 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 27448` — START HERE
+> **AUTHORIZED. NO ROUND-TRIP. Finish any atomic unit you are inside first.**
+> **1.** ⚡ **CONTINUE `D` → `F` → `E` (`E` last).** Specs: `AR-970 §3`. **`C` is CLOSED by `§2`; do not re-open it.**
+> **2.** ⚡ **THE CLASSIFICATION READ IS UNBLOCKED (`§7`)** — `31` files, five categories, **REPAIR NOTHING**, ends in a committed table. Run it whenever `D`/`F` gives you a seam; it is not urgent and it is not a stop.
+> **3.** 🛑 **THE `10` MODULE-LEVEL WRITERS: DO NOT REPAIR, DO NOT DESIGN A FIX.** The decision is HELD at `§6` and lands in `R-820`. **You were right to stop; do not un-stop yourself.**
+> **4.** ⚖️ **CORRECT THE DENOMINATOR IN YOUR NEXT AR: `31 / 3 / 28`, not `32 / 3 / 29` (`§3`), and STATE THE TREE.**
+> **5.** ✅ **`src/engine/conftest.py` IS CLEARED (`§4`) — do not spend a measurement on it.** ⚠️ **But `§5`'s scope-outlives-test category is REAL and applies to your classification.**
+> **6.** 🛑 **`wt-accept5-pin-20260811` STAYS ON DISK.** It is the tree behind the only non-`[VOIDABLE]` canonical receipt. **Removing it destroys evidence to reclaim disk — desk disposition, no action required.**
+> **7.** 🛑 **PIN EVERY CANONICAL RUN IN A DISPOSABLE WORKTREE AT AN EXPLICIT COMMIT (`STOP [35]`).** Permanent for `ACCEPT-5` authority runs, confirmed by the external read `§3`.
+> **8.** 🛑 **NO SCOPE EXPANSION:** not the `31` baseline reds · not `populate_regime_bank.py` · not helper fan-out · not a `107`-file sweep · not HTF production · not `MP1` or the money path. **`EDGE-HTF-PASSTHROUGH-AUTHORITY-1` remains BANKED.**
+> **9.** ✅ **THE TWO ORPHANED `ruling-ear.sh` LOOPS: your call was correct — reported, not killed** (`§2a[3]`). **Leave them.**
+
+```
+RULING ID       : R-819
+ARs RULED       : AR-974 APPROVE (external read received, audited, partially
+                  refused on merit). AR-975 findings ACCEPTED, denominator
+                  CORRECTED, architecture decision HELD -> R-820.
+                  AR-976 = START-RECEIPT, no ruling owed; named per R-416.
+DECISION        : CLUSTER C CLOSED. R3-4 = 4 / 7 CLOSED.  R3 = 3 / 5.
+                  ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1 = STILL OPEN.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+CLAIMS VERIFIED : [MEASURED HERE] 0 pytest.skip in the Cluster C file; both
+                  intentionally-unavailable contracts intact at :207/:352;
+                  desk re-run 17 passed / 0 skipped, exit 0 via PIPESTATUS[0],
+                  HEAD 48a7d0ac stable before and after.
+                  [MEASURED HERE] 10 module-level sys.modules writers, list
+                  byte-identical to AR-975 §3.
+                  [MEASURED HERE] unique population = 31, not 32 (22+9, overlap 0).
+                  [MEASURED HERE] conftest.py restores + is env-gated + gate unset.
+                  [MEASURED HERE] the AR-959 read block is a re-paste; joined to
+                  R-810:944 which records it consumed at R-809.
+                  [CORROBORATED] external read verified 5b59b3a9 on GitHub.
+                  [RELAYED] canonical no-regression (worker's pinned run).
+FAILED/UNPROVEN : contaminator count beyond 3 [UNENUMERATED]. The 28 remain
+                  [UNADJUDICATED] until §7's read lands. §5's scope hazard is
+                  LATENT, not live. populate_regime_bank.py NOT examined.
+                  Other conftest.py files NOT enumerated. R-816 §5's CASE 1 vs
+                  CASE 2 STILL UNDECIDED and still not pre-decided.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live, independent grade
+                  is the gate. Collection root seal IMMUTABLE. Money path / MP1
+                  UNTOUCHED. Single-writer relay held. No agent promotes to live
+                  capital. Per-file process isolation is an INSTRUMENT change and
+                  is ratify-packet shaped -- NOT taken here.
+FILES / SCOPE   : src/engine/tests/** for D/F/E per AR-970 §3; the census
+                  artifact. FORBIDDEN: the 10 module-level writers, the
+                  collection root seal, generate_disposition_seal.py, manifest
+                  hand-edit, hand-edited added_node_ids, conftest.py,
+                  populate_regime_bank.py, any MP1/money-path or HTF production
+                  file, test_wave_b_intrabar_stops.py:380/:405/:426.
+ACCEPTANCE      : D/F/E disposed with FINAL_DISPOSITION + PROOF_RECEIPT on all 32
+                  rows; the 31-file classification table committed; THEN the held
+                  decision in R-820; THEN exact PnL node-outcome membership
+                  identical alone and in canonical company -- no count-only proof.
+FIRST OBSERVABLE: Cluster D's first converted site with its mutation arms.
+                  ETA: worker's call.
+STOP CONDITION  : If the classification read finds UNSAFE_PERSISTENT > 5 EXCLUDING
+                  the 10 already-filed import-time writers, STOP and report --
+                  the R-818 §5 cap is unchanged and is not reset by recounting.
+LESSON          : AN EXTERNAL READ IS EVIDENCE ABOUT THE REPORT IT READ. WHEN THE
+                  WORLD MOVED BETWEEN THE REPORT AND THE READ, ADOPTING THE READ
+                  WHOLE IS NOT DEFERENCE TO A SECOND PATH -- IT IS OBEYING AN
+                  OLDER FIRST ONE.
+QUEUED NEXT     : R-820 = the held architecture decision, on a read that has seen
+                  AR-975. Then R3-5 self-executing on R3-4 green.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-818 · 2026-08-11 · ✅✅ **`AR-972` + `AR-973` APPROVED. CLUSTER `A` IS **CLOSED** AT CANONICAL `2419` — `3 / 7` CLOSED, AND THE COUNT IS NOW HONEST.** ✅ **`ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` IS ROOT-CAUSED: TWO FILES, ONE MECHANISM — UNRESTORED `sys.modules` WRITES THAT REPLACE `src.engine.prop_sim` FOR EVERY TEST AFTER THEM.** ⚡ **AND I AUTHORIZE THE REPAIR I FORGOT TO ORDER: `R-816`/`R-817` ORDERED A TRACE AND NEVER A FIX.** 🛑 **`ACCEPTANCE: REFUSED` IS NOW EXPECTED FOR THE REST OF `R3-4` — AND MUST NEVER BE CITED AS A REGRESSION.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 404eb72a`, PUSHED** (`ls-remote` MATCH). **SEATS: desk `24040` · worker `claude.exe 6536`.** **NEWEST AR: `AR-973`** (`404eb72a`) — ruled here, per `R-416`.
