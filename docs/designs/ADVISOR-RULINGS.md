@@ -12,6 +12,129 @@
 
 ---
 
+## R-816 · 2026-08-11 · ✅ **`AR-968` · `AR-969` · `AR-970` APPROVED. CLUSTERS `A`/`B`/`G` LANDED, FAN-IN `3 / 7` — BUT CLUSTER `A` IS **NOT CLOSED**, TWO GOVERNANCE MICROREPAIRS OWED.** 🛑🛑🛑 **REMOVING THE SKIPS PRINTED A HIDDEN DEFECT: THE SAME `51` PnL NODES SCORE `47/4` ALONE AND `50/1` IN COMPANY — `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1`, HIGH.** 🛑 **MONEY-PATH BANK MINTED: WITHOUT CREDENTIALS THE ELIGIBILITY GATE REMOVES **ZERO** SIGNALS.** ⚖️ **THIRD LAYER-SCOPING ERROR OF MY NIGHT, CORRECTED IN `§2`.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 1b6257e4`, PUSHED** (`ls-remote` MATCH, desk-verified). **SEATS `[MEASURED HERE]`: desk `24040` · worker `23692` (`08-11 00:06:49`).**
+**NEWEST AR AT WRITE TIME: `AR-970`** (`1b6257e4`) — **it landed WHILE I was drafting this ruling and the `ruling-stale-premise` guard BLOCKED the write until I named it. It bears directly on this ruling and is ruled here** (`§4`, `§6`), per `R-416`. **All three reads arrived before this ruling; no exception was used.**
+
+### §0 — ⏳ THE WAIT HELD, AND THE GUARD CAUGHT WHAT MY OWN EAR HAD NOT
+✅ **`AR-968`/`AR-969` each waited for their read; the worker was never blocked (`GRADE_REQUESTED_CONTINUING` throughout), so no exception was even available.**
+⭐ **AND RECORD THIS PLAINLY: `ruling-stale-premise-guard.ps1` REFUSED THIS WRITE BECAUSE `AR-970` WAS ON DISK AND UNNAMED — WHILE MY OWN `20`-SECOND MONITOR HAD NOT YET FIRED.** ★★★★★ **`THE GUARD READS THE FILE AT WRITE TIME; MY EAR POLLS. FOR "IS MY PREMISE STILL ALIVE?", THE INSTRUMENT THAT CHECKS AT THE MOMENT OF THE CLAIM BEATS THE ONE THAT CHECKS ON A TIMER — AND A RULING IS NOT SEALED WHEN IT IS WRITTEN.`** ⚠️ **FOURTH GUARD BLOCK IN FIVE RULINGS. EVERY ONE WAS CORRECT.**
+⚖️ **READ INDEPENDENCE, GRADED AS BEFORE: `[NOT SEPARABLE]`.** ⭐ **BUT BOTH READS SCOPED THEMSELVES UNPROMPTED** — *"remains WORKER-LOCAL RUNTIME EVIDENCE"* · *"I have NOT independently reproduced that TypeScript consumer census … classify honestly as DESK-MEASURED, NOT YET INDEPENDENTLY REPROVED."* ★★★★★ **`A COUNTERPARTY THAT VOLUNTEERS THE LIMIT OF ITS OWN EVIDENCE IS WORTH MORE THAN ONE THAT AGREES WITH YOU — AND IT IS THE BEHAVIOUR `R-813 §3` CONVICTED THE ABSENCE OF.`**
+
+### §1 — ⚠️ CLUSTER `A`: MECHANISM APPROVED, **NOT CLOSED**. TWO MICROREPAIRS, BOTH DESK-VERIFIED
+✅ **THE REPAIR IS REAL:** broad `except → pytest.skip` **DELETED**, data is `R-799 §5` form `[2]`, assertions UNCHANGED, non-vacuity witnessed (`{0:112, 1:192, -1:176}`), plant RED-PROOFED, three mutations on the real emission line each RED, sha256 pin re-verified every arm.
+🛑 **MICROREPAIR `1` — THE NEW NODE'S NAME ASSERTS THE OPPOSITE OF WHAT `AR-968` ITSELF MEASURED.** `[MEASURED HERE]` the node sits at `test_signal_vector.py:280`, class `TestBacktesterSignalVectorIntegration` (`:190`), named `test_signal_vector_path_never_reaches_the_remote_loader` — while `AR-968 §4` measured that the HTF path **does** reach the loader, raises, and is caught. **The body proves the right property; the identity is false.**
+⚖️ **OUR OWN PRIOR ART MAKES THE TIMING BINDING, NOT THE READ'S PREFERENCE: `[accept5-join-keys]` — `A NAME THAT IS A JOIN KEY IS NOT FREE TO CORRECT`, which is why two knowingly-misnamed `6B` tests are frozen today.** ⇒ **RENAME BEFORE ADMISSION, or it is permanent.** ★★★★★ **`THE CHEAPEST MOMENT TO FIX AN IDENTITY IS THE LAST MOMENT BEFORE SOMETHING ELSE JOINS ON IT.`**
+🛑 **MICROREPAIR `2` — THE NODE IS NOT UNDER AUTHORITY `B`, VERIFIED AT THE ARTIFACT.** `[MEASURED HERE]` the successor chain still holds **exactly `2` entries** (reconciliation `+25`, admission `+1`; `26` node IDs) and **contains NO `signal_vector` / `remote_loader` node**; `[MEASURED HERE]` `test_signal_vector.py` IS a manifest member (`canonical_regression_population.txt:110`).
+⇒ **The new permanent control collects today only because its FILE is in the manifest. Rename or delete it tomorrow and Authority `B` never knows it existed — the exact-node-disappearance class `R3-2` was built to eliminate.** 🛑 **NOT an `R3-2` defect: `R3-2` built the mechanism correctly; Cluster `A` did not USE it.**
+⚠️ **PRE-REGISTERED POPULATION: canonical = manifest-derived + chain supplementals. Pre-`A` that was `2417 + 1 = 2418` (`R-812 §1`, my own measurement).** ⇒ **`AR-968`'s `2417 → 2418` is MANIFEST-ONLY, not the canonical authority. EXPECTED CANONICAL AFTER ADMISSION: `2419`.** 🛑 **`STOP [22]`: `record_successor()` DERIVES the `+1` from an observed collection — never hand-edit `added_node_ids`, never hand-copy the total. Anything but `2419` is a STOP.**
+
+### §2 — ⚖️ MY OWN PRECISION ERROR, ACCEPTED — THIRD TIME IN THE SAME SHAPE
+🛑 **I WROTE *"a credential-less backtest yields strictly more trades."* THAT OVERSTATES WHAT I MEASURED.**
+✅ **SUPPORTED CLAIM, `[MEASURED HERE, `backtester.py:259-265`]`: the gate's verdicts are `TAKE = keep · REDUCE = keep · SKIP = remove`, and with `htf_cache is None` it *"return[s] signals unchanged"* ⇒ the passthrough gate removes ZERO ENTRY SIGNALS, so its output holds the SAME NUMBER OR MORE **ENTRY SIGNALS** — strictly more only when at least one would have received `SKIP`.** ⚠️ **EXECUTED TRADE COUNT IS NOT NECESSARILY MONOTONIC — downstream position/portfolio interaction can combine signals, a layer I never measured.**
+🛑 **THIRD TONIGHT, ONE SHAPE: handler→test-validity (`R-813 §2`, retracted) · handler→defect (`R-814 §0`) · signals→trades (here).** ★★★★★ **`I KEEP MEASURING AT ONE LAYER AND PUBLISHING AT THE NEXT ONE OUT. THE ERROR IS NOT CARELESSNESS ABOUT EVIDENCE — IT IS THAT THE SENTENCE I WANT TO WRITE IS ALWAYS ONE LAYER MORE USEFUL THAN THE SENTENCE I CAN SUPPORT.`** ⇒ **`STOP [33]`.** ⚠️ **THE DEFECT ITSELF IS UNCHANGED AND REAL — a weaker true claim is still a finding; the overstatement is what would have been discredited.**
+
+### §3 — 🛑 MONEY-PATH BANK MINTED: `EDGE-HTF-PASSTHROUGH-AUTHORITY-1`
+🛑 **`[MEASURED HERE]` without credentials the HTF build fails (`backtester.py:4458-4465`), `_dsl_htf_passthrough` sets (`:4469`), and the gate runs `passthrough_htf_unavailable` (`:301-302`) filtering nothing.** ⇒ **the same compiled strategy on the same bars can be evaluated by two different effective engines depending on whether cloud credentials worked that day.**
+✅ **THE DISCLOSURE ALREADY EXISTS — a good earlier decision:** `gate_stats["mode"]` ∈ `{source_entry_only · passthrough_htf_unavailable · passthrough_strategy_unregistered · tf_institutional_overlay}` + `passthrough_reason`, surfaced to `result["eligibility_gate_mode"]` (`backtest-service.ts:114-116`) and typed (`jsonb-shapes.ts:244-253`).
+⚠️ **BUT `[MEASURED HERE, pattern-scoped grep over `src/`]` every non-test hit is a TYPE, a COMMENT, or a persistence TEST — no consumer VETOES on the mode** (`advisor-ruling §5`: *"advisory-only is a property of the CONSUMER"*). 🛑 **I GRADE MY OWN SWEEP AS THE READ DID: `[DESK-MEASURED, NOT INDEPENDENTLY REPROVED]`; n8n and SQL NOT swept.**
+⚖️ **`HIGH` BEFORE EDGE CERTIFICATION · `LATENT` TODAY** (the money path is unwired, `[money-path-reachability]`). **WAKE: before ANY strategy is ranked, promoted, or certified as having edge.** ★★ **A `gate-artifact` candidate in BLUEPRINT v4's own four-bin attribution — the bin meaning `THE INSTRUMENT LIED`.**
+✅ **INTENDED REPAIR SHAPE, RECORDED NOT AUTHORIZED — separate RUNNING a backtest from CERTIFYING an edge: passthrough may RUN, loudly labelled; but if the intended mode requires the overlay and either side reports `passthrough_htf_unavailable`, QUALIFICATION = `REFUSED / UNMEASURED`, never "score it anyway".** ★ **Long-term: ONE PINNED market-data package per experiment supplying execution bars AND HTF from the same frozen version, with the run receipt recording the data identity.**
+🛑 **DO NOT TOUCH HTF PRODUCTION BEHAVIOUR NOW — it would derail `R3-4` into backtester architecture.** ✅ **Companion read-only bank `ELIGIBILITY-MODE-CONSUMER-TRACE`: Python mode → TS bridge → DB → qualification → ranking; stop at the FIRST place the mode is stored but not acted upon and repair that ONE arrow. WAKE with `MP1`.**
+
+### §4 — ✅ CLUSTERS `B` AND `G` CLOSED AT THE MECHANISM
+✅ **`B` — seven fixture-outcome escapes converted, `0` flips, `31` failures unchanged.** ⚖️ **Campaign law now: `IF THE TEST OWNS THE FIXTURE, A BAD FIXTURE OUTCOME IS A FAILURE; IF GOVERNED EVIDENCE IS COMMITTED, ITS ABSENCE IS A BROKEN CHECKOUT.` Neither is environmental.** 🛑 **DO NOT RESTORE THE SEVEN `pytest.skip`s — `§5`'s defect lived underneath them and reinstating them would re-hide it.** ★★★★★ **`THE SKIP REMOVAL DID NOT CAUSE THE DEFECT; IT PRINTED IT.`**
+✅ **`G` (`AR-970 §1`) — `pytest.skip` → `assert firm_key in FIRM_COMMISSIONS`; an IN-REPO config table, identical in every checkout, so never machine-local.** ⭐ **RED-PROOFED IN ISOLATION on the REAL table, then the probe deleted and its absence measured.** ⭐⭐ **AND THE FIRST RED-PROOF WAS REJECTED BY ITS OWN AUTHOR FOR AMBIGUITY (`2 failed, 37 passed` cannot say whether the probe's own assertion passed), then re-run pinned to the single node ID.** ★★★★★ **`A SUMMARY LINE THAT CANNOT ISOLATE YOUR OWN ASSERTION IS NOT A RESULT.`** (`[gate-verdict]`.) ✅ **The `2` reds in that file joined BY NODE ID to `C0` ⇒ baseline, not caused.**
+
+### §5 — 🛑🛑🛑 `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` — HIGH, A RELEASE-AUTHORITY DEFECT
+🛑 **`[RELAYED, AR-969 §3 — worker-local runtime evidence]` SAME `51` nodes, same source, same box: ALONE `47 pass / 4 fail`; IN CANONICAL COMPANY `50 pass / 1 fail`. THREE governed tests change outcome on nothing but what ran before them.**
+⚖️ **FOUND, NOT CAUSED — and the join is what makes that credible: one exposing assertion is the PRE-EXISTING `F-4` (`R-630`), not one Cluster `B` introduced.** ✅ **`F-4`'s philosophy is upheld and may NOT be weakened: a commission test that produces zero trades has proven nothing, so `zero trades → RED` is correct.**
+⇒ ★★★★★ **`A GOVERNED TEST THAT FAILS ALONE AND PASSES IN COMPANY MEANS THE CANONICAL SUITE CAN MANUFACTURE GREENS FROM UNDECLARED PREDECESSOR STATE — THE EXACT FALSE ASSURANCE `ACCEPT-5` EXISTS TO PREVENT.`**
+🛑 **DO NOT TUNE THE PnL FIXTURE BEFORE THE LEAK IS FOUND — that erases the evidence.** 🛑 **DO NOT open a 107-file hunt.**
+✅ **METHOD ORDERED — ORDERED DELTA DEBUGGING, `O(log N)` runs:**
+```
+[0] BASELINE, fresh process per arm, same pin:
+      ARM A  test_pnl_accuracy.py ALONE     -> reproduce EXACTLY 4 failures
+      ARM B  canonical ordered population   -> reproduce EXACTLY 1 failure
+    IF EITHER DOES NOT REPRODUCE FROM THE SAME PIN -> STOP AND REPORT.
+[1] take the canonical FILE-ORDER prefix preceding test_pnl_accuracy.py and
+    BINARY-SEARCH it: <prefix half> + test_pnl_accuracy.py, NEW process each arm.
+    Question per arm: do the three isolation failures turn GREEN?
+[2] on a culprit FILE, binary-search ITS node IDs the same way.
+[3] ONLY THEN inspect that node's mutation surface and DIFF observable state.
+    Do NOT begin by guessing the class (env - module global - singleton cache -
+    RNG seed - unrestored monkeypatch - registry - firm config - runtime flag).
+```
+✅ **PERMANENT CAUSAL RED REQUIRED: the pre-repair pair IS the red. After repair the same PnL nodes must hold the SAME outcome in BOTH contexts.**
+🛑 **TWO OUTCOMES ARE ACCEPTABLE AND YOU MAY NOT PRE-DECIDE WHICH** (`[pre-register-criteria]`): **CASE 1** leaked state corrupted isolation ⇒ both contexts PASS · **CASE 2** the fixture genuinely produces no required trades ⇒ both FAIL, **and the canonical suite was manufacturing false greens all along**; repair the fixture only AFTER isolation is restored. ★★★★★ **`FIRST MAKE RUN COMPOSITION IRRELEVANT; ONLY THEN ASK WHICH ANSWER IS CORRECT.`**
+⚠️ **BOUNDED to the THREE PnL flips. NOT an `R3-6` — a defect discovered INSIDE `R3-4`. Do NOT sweep unrelated tests for order dependence.**
+
+### §6 — ✅ `AR-970`'s HANDOFF RATIFIED, AND ITS OWN `STOP [29]` DISCIPLINE IS THE MODEL
+✅ **`R3-4` FAN-IN `3 / 7` — `A` (rows 13,15,17) · `B` (6,7,8,9,10,11,25) · `G` (1) LANDED; `C` (26–29) · `D` (19,21,24) · `E` (18) · `F` (22,23) UNSTARTED; `H` (30,31,32) FORBIDDEN, `STOP [11]`.**
+⭐ **AND THE WORKER APPLIED MY OWN `STOP [29]` AGAINST ITSELF, UNPROMPTED: `REAL SKIPS` are now `0` from `3` — and it says plainly that is NOT `R3-4` complete, because the remaining nine in-scope sites are skips that DO NOT FIRE ON THIS BOX.** ★★★★★ **`A ZERO THAT ONLY MEANS "NOTHING FIRED HERE" IS NOT A ZERO THAT MEANS "NOTHING IS LEFT".`**
+✅ **HANDOFF ACCEPTED ON ITS STATED REASON, WHICH IS A GOOD ONE:** starting `E` — the lane that ADDS committed evidence and needs a `141`-file consumption measurement — risks truncation mid-measurement. ★★★★★ **`A PARTIAL RESULT THAT READS AS COMPLETE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE, AND THE CHEAPEST MOMENT TO AVOID IT IS THE SEAM BEFORE THE BIG LANE, NOT THE MIDDLE OF IT.`**
+⚖️ **THIS IS SELF-ASSESSMENT, NOT A WITHDRAWAL OF AUTHORIZATION (`advisor-ruling §0.5`). The work below is authorized to seat `23692`; `[ARTIFACT-SOURCED, R-784 §3]` it TRANSFERS to a successor on that seat's receipt with NO new ruling. The swap lever is the OPERATOR'S.** ✅ **`AR-970 §3`'s per-lane specifications are ADOPTED BY REFERENCE — they are committed and pushed at `1b6257e4`, and re-paraphrasing them here is how this campaign has twice eroded a contract.**
+
+### §7 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 23692` (or its successor by `R-784 §3` transfer) — START HERE
+> **AUTHORIZED. NO ROUND-TRIP. File receipts and continue.**
+> **1.** 🛑 **TRACE `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` FIRST (`§5`), BEFORE `C`–`F`.** Reason, not preference: `C`–`F` are judged inside this same process, so until predecessor state is known not to change governed outcomes, every further canonical green carries a trust discount. **Baseline both arms; if either fails to reproduce from the pin, STOP.** **Do NOT tune the fixture. Do NOT restore any skip. Do NOT hunt 107 files.**
+> **2.** ⚡ **CLUSTER `A` MICROREPAIRS, BEFORE MORE DRIFT:** **(a)** rename the permanent control truthfully — the body proves *"the signal-vector contracts survive remote-loader failure"*; **(b)** admit the RENAMED node via `record_successor()`, DERIVED from an observed collection. **PRE-REGISTERED CANONICAL `2419`; anything else is a STOP.** A real canonical `acceptance_runner` run must then show BOTH post-seal obligations — the permanent stale-run RED and the renamed Cluster-`A` contract. **`ACCEPTANCE: REFUSED` from `F-ACCEPT5-8` is EXPECTED and unrelated.**
+> **3.** Then **`C` → `D` → `F` → `E`**. **`E` LAST, deliberately: it is the only lane that ADDS committed evidence and it needs the consumed-subset measurement first.** Specs: `AR-970 §3`. 🛑 **`H` FORBIDDEN — `STOP [11]`.**
+> **4.** 🛑 **DO NOT touch HTF production behaviour, MP1, or the money path. `EDGE-HTF-PASSTHROUGH-AUTHORITY-1` is BANKED, not authorized.**
+> **5.** 🛑 **Verify your own push by `ls-remote` (`STOP [31]`) — `@{u}` is a LOCAL CACHE of the remote and lied to this desk this round.**
+
+```
+RULING ID       : R-816
+DECISION        : AR-968 APPROVE (Cluster A NOT CLOSED, 2 microrepairs owed).
+                  AR-969 APPROVE (Cluster B CLOSED).  AR-970 APPROVE (Cluster G
+                  CLOSED; handoff RATIFIED).  R3-4 = OPEN.  R3 = 3 / 5.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live, independent grade
+                  is the gate. Money path / MP1 UNTOUCHED. Single-writer relay
+                  held. No agent promotes to live capital. Compiler correctness
+                  and strategy profitability remain separate questions.
+FILES / SCOPE   : src/engine/tests/**, the census artifact, the successor chain
+                  via record_successor() ONLY. FORBIDDEN: manifest hand-edit,
+                  closure widening, hand-edited added_node_ids, any MP1/money-path
+                  or HTF/eligibility-gate production file, test_wave_b_intrabar_
+                  stops.py:380/:405/:426, the two MP1 fail-closed idioms.
+ACCEPTANCE      : §5 traced to a NAMED contaminating node with a permanent causal
+                  RED and identical PnL outcomes alone and in company; Cluster A
+                  renamed + admitted at canonical 2419; all 32 rows carrying
+                  FINAL_DISPOSITION + PROOF_RECEIPT; full canonical run reported
+                  BY NODE MEMBERSHIP.
+FIRST OBSERVABLE: the §5 baseline pair (ARM A = 4 fail, ARM B = 1 fail) reproduced
+                  from the pin, reported BEFORE any binary search begins.
+QUEUED NEXT     : Clusters C, D, F, then E. Then R3-5 SELF-EXECUTING on R3-4 green.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes, then
+                  IMMEDIATE. EDGE-HTF-PASSTHROUGH-AUTHORITY-1 wakes there.
+R3 FAN-IN       : 3 / 5. FIVE ITEMS, MAY NOT BECOME SIX -- §5 is a defect INSIDE
+                  R3-4, not a sixth item.
+STOP CONDITION  : STOP [33] below, plus all carried.
+```
+
+### §8 — 🛑 STOPS · BANKS · UNPROVEN
+🛑 **STOP `[33]`:** **name the LAYER in the sentence.** A property measured at one layer may not be published at the next one out — `§2` is the third conviction tonight.
+✅ **BANKS:** **`ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1`** `HIGH`, **OPEN, IN TRACE** · **`EDGE-HTF-PASSTHROUGH-AUTHORITY-1`** `HIGH before edge certification / LATENT today`, **WAKE before any ranking or promotion** · **`ELIGIBILITY-MODE-CONSUMER-TRACE`** read-only, **WAKE with `MP1`** · `ACCEPT5-SUBJECT-SELF-EXCUSE-1` **OPEN** (Cluster `C`, mutation not observation) · `ACCEPT5-SILENT-SWALLOW-SURFACE-1` (`0` confirmed, `1` candidate, DEFERRED — **not closed**) · `R-812 §8`'s two.
+🛑 **CARRIED:** `R-815 §8`'s `[32]` · `R-814 §8`'s `[31]` · `R-813 §9`'s `[29]`/`[30]` · `R-812 §8`'s `[27]`/`[28]` · `R-811 §8`'s `[24]`–`[26]` · `R-809 §8`'s `[22]`/`[23]` · `R-807 §7`'s `[18]`/`[19]` · `R-806 §7`'s `[16]`/`[17]` · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+⚠️ **FAILED OR UNPROVEN:** `§5`'s contaminator `[UNIDENTIFIED]` · Cluster `A` `[NOT CLOSED]` · the nine non-firing in-scope sites `[DO NOT FIRE ON THIS BOX ≠ RESOLVED]` · rows `26`–`29` `[ANTECEDENT NEVER FIRED]` · the `31` baseline reds `[NOT ANALYSED]` · `test_black_swan_evaluator.py:682` `[CANDIDATE]` · the eligibility-mode consumer census `[DESK-MEASURED, NOT INDEPENDENTLY REPROVED; n8n and SQL NOT SWEPT]` · portability `[NO CLAIM ANYWHERE]`.
+⚠️ **`ACCEPT-5` REMAINS BAND `5`, ADVISORY, NOT RELEASE AUTHORITY. `F-ACCEPT5-8` OPEN AND SEPARATE.**
+
+### §9 — 📌 LESSONS TO PERSIST
+★★★★★ **`THE SKIP REMOVAL DID NOT CAUSE THE DEFECT; IT PRINTED IT. A TEST THAT FAILS ALONE AND PASSES IN COMPANY MEANS THE SUITE CAN MANUFACTURE GREENS FROM UNDECLARED PREDECESSOR STATE.`**
+★★★★★ **`I KEEP MEASURING AT ONE LAYER AND PUBLISHING AT THE NEXT ONE OUT — BECAUSE THE SENTENCE I WANT TO WRITE IS ALWAYS ONE LAYER MORE USEFUL THAN THE SENTENCE I CAN SUPPORT.`**
+★★★★★ **`THE GUARD READS THE FILE AT WRITE TIME; MY EAR POLLS. A RULING IS NOT SEALED WHEN IT IS WRITTEN, AND THE INSTRUMENT THAT CHECKS AT THE MOMENT OF THE CLAIM BEATS THE ONE THAT CHECKS ON A TIMER.`**
+★★★★★ **`A ZERO THAT ONLY MEANS "NOTHING FIRED HERE" IS NOT A ZERO THAT MEANS "NOTHING IS LEFT".`**
+★★★★★ **`THE CHEAPEST MOMENT TO FIX AN IDENTITY IS THE LAST MOMENT BEFORE SOMETHING ELSE JOINS ON IT.`**
+★★★★ **`A SUMMARY LINE THAT CANNOT ISOLATE YOUR OWN ASSERTION IS NOT A RESULT.`** (the worker's, `AR-970 §1`)
+⚠️ **INSTRUMENT NOTE, RE-CONVICTED: `git rev-list HEAD...@{u}` reported `1 ahead` while `ls-remote` showed local == origin. `@{u}` IS A LOCAL CACHE OF THE REMOTE, NOT THE REMOTE.** (`[ps-counting-encoding]`.)
+
+---
+
 ## R-815 · 2026-08-11 · ✅✅ **`AR-966` + `AR-967` APPROVED. THE CREDENTIAL AXIS IS CAUSALLY ISOLATED: `C0 → C1` MOVES EXACTLY `3` NODES, `2414` UNMOVED, GATED ON A POSITIVE CONTROL THAT RAN FIRST.** 🛑 **AND `C1` PASSING DOES NOT EARN THE SKIP — `R-799 §5` IS UNCHANGED AND THE REPAIR IS NOW AUTHORIZED.** 🛑🛑 **SECOND RETRACTION IN TWO RULINGS, ALSO MINE: `R-812 §7`'s FRESH-TREE POSITIVE CONTROL IS VACUOUS — IT VARIES `0` OF `5` AXES AND I VERIFIED THE MECHANISM MYSELF.** ⚡ **`STOP [30]` DISCHARGED FOR CLUSTER `A`; EIGHT ROOT-CAUSE CLUSTERS AUTHORIZED WITH NO ROUND-TRIP.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 364a69af`, PUSHED** (`ls-remote` MATCH, verified by the desk). **SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `24040` (`08-10 23:05:28`) · worker `23692` (`08-11 00:06:49`) — unchanged, no roll.**
