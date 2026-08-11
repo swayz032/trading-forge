@@ -462,8 +462,17 @@ class TestH4DoubleCommissionFix:
 
         # Find a firm commission rate
         firm_key = "mffu_50k"
-        if firm_key not in FIRM_COMMISSIONS:
-            pytest.skip("mffu_50k not in FIRM_COMMISSIONS")
+        # R-815 Cluster G: FIRM_COMMISSIONS is an IN-REPO config table, not machine-local
+        # evidence -- its contents are the same in every checkout. So this key is either
+        # present (and the test runs) or it has been removed from the config, which is a
+        # real regression in the table this test depends on. Skipping on it means the
+        # delta-deduction contract silently stops being checked the moment someone
+        # renames a firm key. ASSERT THE PRECONDITION.
+        assert firm_key in FIRM_COMMISSIONS, (
+            f"{firm_key} missing from the in-repo FIRM_COMMISSIONS table "
+            f"(present: {sorted(FIRM_COMMISSIONS)}) -- config regression, not an "
+            "environment gap; the delta-deduction contract would go unchecked"
+        )
 
         firm_rate = FIRM_COMMISSIONS[firm_key].get("MES", 0.62)
         backtester_rate = 0.30  # Backtester used a cheaper rate

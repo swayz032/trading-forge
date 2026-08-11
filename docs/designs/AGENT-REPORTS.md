@@ -4,6 +4,54 @@
 
 ---
 
+## AR-970 · 2026-08-11 · ✅ **CLUSTER `G` LANDED AND RED-PROOFED. FAN-IN `3 / 7` (`A`,`B`,`G`).** 🛑 **AND THIS IS A HANDOFF — DECLARED ON CONTEXT, AT A CLEAN SEAM, WITH NOTHING HALF-BUILT AND EVERY REMAINING LANE SPECIFIED SO THE NEXT SEAT RE-DERIVES NOTHING.** ⚠️ **I AM NOT CLAIMING `R3-4` COMPLETE — `C`, `D`, `E`, `F` ARE UNSTARTED AND I SAY SO IN THE HEADLINE.**
+
+**SEAT `claude.exe 23692`. TREE `HEAD` at commit below. `R3` = `3 / 5`, `R3-4` OPEN. CLUSTER FAN-IN `3 / 7`.**
+
+### §1 — ✅ CLUSTER `G` (row `1`, `test_accuracy_fixes.py:466`)
+🛑 **`if firm_key not in FIRM_COMMISSIONS: pytest.skip(...)` → `assert firm_key in FIRM_COMMISSIONS`** with the present-keys list in the message. **`FIRM_COMMISSIONS` is an IN-REPO config table — identical in every checkout — so this was never machine-local** (`R-815 §7 G`: *"assert the precondition or fail explicitly. Not machine-local."*).
+✅ **RED-PROOF, ISOLATED SO THE VERDICT IS UNAMBIGUOUS:** a throwaway probe removed `mffu_50k` from the **REAL** `firm_config.FIRM_COMMISSIONS` table and asserted `pytest.raises(AssertionError, match="missing from the in-repo FIRM_COMMISSIONS")` → **`1 passed`**, i.e. the guard BITES and produces a FAILURE, not a skip. **Probe deleted; `[MEASURED]` file absent afterwards.**
+⚠️ **FIRST RED-PROOF ATTEMPT WAS AMBIGUOUS AND I DID NOT ACCEPT IT:** running the probe alongside a `import *` of the module printed `2 failed, 37 passed`, which **does not say whether MY probe passed.** Re-run pinned to the single node ID. ★★★★ **`A SUMMARY LINE THAT CANNOT ISOLATE YOUR OWN ASSERTION IS NOT A RESULT.`** (`[gate-verdict]`.)
+✅ **THE 2 REDS IN THAT FILE ARE BASELINE, JOINED BY NODE ID TO `C0`:** `test_no_double_deduction_same_rate` and `test_1min_bars_is_globex` were **already `failed` in `C0`** — **not caused by this cluster**, and not claimed as fixed.
+✅ **POPULATION: `postB → postG` FLIPS `0`, unchanged `2418`, `passed 2385 · failed 31 · REAL SKIPS 0`.**
+
+### §2 — 📌 STATE OF `R3-4`, MEASURED
+```
+CLUSTER  STATUS      rows              evidence
+A        LANDED      13,15,17          AR-968; 4 controls; real skips 3->0
+B        LANDED      6,7,8,9,10,11,25  AR-969; 0 flips; exposed run-composition dependence
+G        LANDED      1                 this AR; red-proofed in isolation
+C        UNSTARTED   26,27,28,29       wrc_spa -- targeted mutation, NOT observation
+D        UNSTARTED   19,21,24          governed evidence -> HARD FAIL/REFUSE
+E        UNSTARTED   18                SAMPLES_DIR / untracked corpora -- the heavy one
+F        UNSTARTED   22,23             git history
+H        FORBIDDEN   30,31,32          STOP [11] -- NOT TOUCHED, NOT COUNTED
+(row 2,3,4,5,12,14,16 = SITE REMOVED by A1/A2 before this seat; row 20 CLOSED at e55a9ef1)
+```
+🛑 **`REAL SKIPS` IN THE GOVERNED POPULATION ARE NOW `0`** (from `3` at `C0`) — ⚠️ **and that is NOT the same as `R3-4` complete: the remaining `9` in-scope sites are skips that DO NOT FIRE ON THIS BOX. `STOP [29]` applies — do not report `0 skips` as completeness.**
+
+### §3 — ⏭️ EXACTLY WHAT THE NEXT SEAT DOES, SO NOTHING IS RE-DERIVED
+- **`C` (rows 26–29, `test_walk_forward_wrc_spa_emission.py:177/:192/:305/:318`).** `R-815 §5` RE-SPECIFIED this: **convict by TARGETED MUTATION, never another cloud run.** Force `wrc["available"] = False` **from a computation failure** in the real path; PRE must skip, POST must fail naming the reason. 🛑 **`R-815`: do NOT alter the intentionally-short-data tests whose contract EXPECTS unavailable state — keep them separate.** ⚠️ `[MEASURED, AR-967 §4]` these PASSED in BOTH `C0` and `C1`, so the clause **never evaluated** — observation cannot convict it, which is exactly why the desk re-specified it.
+- **`D` (rows 19, 21, 24).** `_load_battery` · `_corpus_wait_session_rows` · `docs/` corpora. `[MEASURED, AR-966 §6]` **all are TRACKED** (`146` + `16` files) ⇒ absence is a broken checkout ⇒ **HARD FAIL/REFUSE**. Same shape as row `25`, already done in `B` — **copy that pattern.**
+- **`E` (row 18, `test_spec_family_bindings.py:47`).** `SAMPLES_DIR` = **hardcoded ABSOLUTE path into a sibling worktree, `141` files, `0` tracked.** `R-815 §7 E`: **measure the exact CONSUMED subset FIRST**, then commit the minimal governed subset or generate it deterministically. 🛑 **Do NOT import all 141 because they exist.** ⚠️ **This is the heaviest lane and the only one that ADDS committed evidence.**
+- **`F` (rows 22, 23, `test_spec_family_bindings.py:1914/:1916`).** `_load_module_at_ref` runs `git show <ref>:<path>`. `[MEASURED, AR-966 §6]` a linked worktree SHARES the object store, so this axis is **NOT VARIED** by a fresh tree — pin the exact object and fail clearly, or use a tiny committed fixture. **Never `git unavailable → SKIP`.**
+- **CENSUS:** rows `13`/`15`/`17` carry `R-815`'s six-field schema (census `§10`); **the other rows still carry the retired single Boolean.** Each cluster fills its own rows as it lands.
+
+### §4 — 🛑 OPEN FINDINGS HANDED UP, NOT CLOSED
+🛑 **`ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` (proposed, `AR-969 §3`) — `test_pnl_accuracy.py` is `47/51` ALONE and `50/51` IN POPULATION. Three governed tests pass only in company. Root cause `[UNENUMERATED]`; I did not hunt it (scope).**
+🛑 **HTF passthrough (`AR-968 §4`) — the engine still attempts an S3 read and degrades, so its INTERNAL PATH differs by environment even though the asserted properties do not.**
+⚠️ **`31` baseline reds NOT analysed · rows `26`–`29` untested · per-helper execution traces `[UNENUMERATED]` · `test_black_swan_evaluator.py:682` still an unadjudicated CANDIDATE · no portability claim anywhere.**
+
+### §5 — 🛑 HANDOFF DECLARATION (self-assessment, per `worker-execution §10`)
+**FAN-IN `3 / 7`. The remaining four are UNSTARTED, not blocked** — so I state the reason plainly: **this seat is deep enough into its context that starting `E`, the lane that adds committed evidence and needs a 141-file consumption measurement, risks truncation MID-MEASUREMENT.** ★★★★★ **`A PARTIAL RESULT THAT READS AS COMPLETE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE, AND THE CHEAPEST MOMENT TO AVOID IT IS THE SEAM BEFORE THE BIG LANE, NOT THE MIDDLE OF IT.`**
+✅ **NOTHING IS HALF-BUILT.** Every landed cluster is committed, pushed, `ls-remote`-verified, and population-verified. **No sub-agent was dispatched, so no delivery is owed to this seat.** ✅ **The ruling ear (`Monitor`, persistent, red-proofed) is armed on `ADVISOR-RULINGS.md` and dies with this seat — the next seat must re-arm and backfill from `R-815`.**
+🛑 **DISPOSABLE WORKTREE: none outstanding** (`wt-pristine-r34-20260811` removed, `git worktree list` checked).
+**A fresh worker session is needed to take `C`, `D`, `E`, `F`.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** — `A`/`B`/`G` are complete and gradeable; `R3-4` is NOT, and I am not asking for it to be treated as such.
+
+---
+
 ## AR-969 · 2026-08-11 · ✅ **CLUSTER `B` LANDED — `7` MORE FIXTURE-OUTCOME SKIPS CONVERTED TO HARD FAILURES; `ZERO` FLIPS IN THE GOVERNED POPULATION.** 🛑🛑🛑 **AND THE CONVERSION IMMEDIATELY EXPOSED A DEFECT THE SKIPS WERE HIDING: `test_pnl_accuracy.py` PASSES `50/51` INSIDE THE POPULATION AND ONLY `47/51` ALONE. THREE TESTS PASS **ONLY IN COMPANY**.** ⚖️ **AND ONE OF THE EXPOSING ASSERTIONS IS NOT MINE — IT IS THE PRE-EXISTING `F-4` (`R-630`) ASSERT, SO THIS IS FOUND, NOT CAUSED.**
 
 **SEAT `claude.exe 23692`. CLUSTER FAN-IN `2 / 7` (`A`,`B` done · `C`–`G` UNSTARTED · `H` FORBIDDEN).**
