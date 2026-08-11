@@ -50,6 +50,7 @@ to destroy something is not a boundary anybody has measured.
 from __future__ import annotations
 
 import sys
+import types
 
 import pytest
 
@@ -90,7 +91,45 @@ class _Boundary:
     def __init__(self):
         self.restored_identity = 0
         self.evicted_created = 0
+        self.imports_preserved = 0
         self.tests_bounded = 0
+
+
+def _is_genuine_import(obj):
+    """Was this sys.modules entry produced by the IMPORT SYSTEM, or hand-installed?
+
+    ACCEPT5-LAYER2-OWNERSHIP-REPAIR-1 (R-827 §3, grade finding F-4).
+
+    The boundary used to evict EVERY key the call phase added. That conflates two
+    different things:
+
+        pollution           sys.modules["x"] = MagicMock()/_Marker(...)  hand-installed
+        an ordinary import  import src.engine.backtester                 the import system
+
+    `[MEASURED BY GRADED INSTRUMENT, F-4]` evicting the second kind is what broke
+    5 of 5 sampled governed files: one test body imports the engine, the boundary
+    evicts the whole tree (keys_evicted=1386), and a sibling's re-import then dies
+    on an import line. The boundary MANUFACTURED the failures it then reported.
+
+        "CREATED DURING THE TEST BODY" IS NOT THE SAME PROPERTY AS "POLLUTION
+        OWNED BY THIS TEST". AN ORDINARY IMPORT IS NOT GARBAGE, AND A BOUNDARY
+        THAT CANNOT TELL THEM APART MANUFACTURES THE FAILURES IT THEN REPORTS.
+
+    The import system always sets `__spec__` on what it creates; a hand-installed
+    mock, marker or bare `ModuleType` does not have one. That is the discriminator,
+    and it is a statement about PROVENANCE -- like the rest of this campaign's
+    repairs -- not about presence.
+
+    RESIDUAL, NAMED RATHER THAN IMPLIED: binding an ALREADY-IMPORTED real module
+    object to a NEW key (`sys.modules["fake_pkg"] = real_module`) carries a genuine
+    `__spec__` and is NOT evicted by this predicate. It is a real pollution shape
+    and it is not covered here. A stricter `__spec__.name == key` rule would catch
+    it but would also evict legitimate import aliases (`os.path` -> posixpath), so
+    tightening it needs measurement, not a guess.
+    """
+    if not isinstance(obj, types.ModuleType):
+        return False
+    return getattr(obj, "__spec__", None) is not None
 
 
 def pytest_configure(config):
@@ -119,8 +158,14 @@ class _Layer2:
             return
         before = self._snapshot
         self._snapshot = None
-        # (1) evict keys this boundary owns: absent before, present now.
+        # (1) evict keys this boundary owns: absent before, present now AND
+        #     hand-installed. A genuine import performed by the body is LEFT
+        #     ALONE -- see _is_genuine_import. Evicting it does not restore
+        #     isolation, it destroys the import cache and breaks the next test.
         for key in [k for k in sys.modules if k not in before]:
+            if _is_genuine_import(sys.modules[key]):
+                self._stats.imports_preserved += 1
+                continue
             del sys.modules[key]
             self._stats.evicted_created += 1
         # (2) restore pre-existing keys to the SAME OBJECT IDENTITY. `is`, never
@@ -187,5 +232,6 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     # "nothing leaked" and "the boundary never executed" look identical.
     terminalreporter.write_line(
         f"[ACCEPT5-LAYER2] mode={mode} tests_bounded={st.tests_bounded} "
-        f"keys_evicted={st.evicted_created} identities_restored={st.restored_identity}"
+        f"keys_evicted={st.evicted_created} identities_restored={st.restored_identity} "
+        f"imports_preserved={st.imports_preserved}"
     )
