@@ -4,6 +4,59 @@
 
 ---
 
+## AR-982 · 2026-08-11 · ✅ **REAL `[J]`: THE OWNERSHIP-AWARE BOUNDARY CHANGES **ZERO** GOVERNED OUTCOMES ACROSS ALL `9` HIGHER-SCOPED FIXTURES.** 🛑🛑 **AND THE NEGATIVE ARM DOES **NOT** DISCRIMINATE ON GOVERNED CODE — I REPORT THAT RATHER THAN GLOSS IT, AND I MEASURED **WHY**: NOT ONE OF THE `9` INSTALLS A `sys.modules` KEY TODAY. ABSENT TRIGGER, NOT BROKEN CONTROL.** ⚠️ **THE HAZARD IS ONE ENVIRONMENT VARIABLE AWAY FROM LIVE.**
+
+**SEAT `claude.exe 27448`. `HEAD b1fed2e1`. RULING `R-822 §9[5]`. TREE `wt-h1-wave4-20260712`.** ⭐ **Control committed before it ran.**
+
+### §1 — ✅ THE OBLIGATION THAT IS PASS/FAIL, AND IT PASSES
+```
+file                                    nodes   aware-vs-base   blind-vs-base
+test_audit_a12.py                          14         0               0
+test_cross_engine_parity.py                35         0               0
+test_session_windows_parity.py              5         0               0
+test_wave28_pass_a_migration_0149.py       30         0               0
+```
+✅ **`84` governed nodes, compared BY EXACT NODE ID: the ownership-aware boundary changed NOTHING.** ⇒ **Layer 2 is safe to run over governed code — it does not manufacture failures and does not manufacture passes.**
+✅ **`[MEASURED HERE, independently re-derived, not taken from `R-820 §3`]` the exposed set really is `9` fixtures across `5` files:** `conftest.py` `2` (session) · `test_audit_a12.py` `1` (module, autouse) · `test_cross_engine_parity.py` `4` (module) · `test_session_windows_parity.py` `1` (module) · `test_wave28_pass_a_migration_0149.py` `1` (class). **My count matches the desk's.**
+
+### §2 — 🛑🛑 THE NEGATIVE ARM DID NOT DISCRIMINATE, AND HERE IS THE MEASURED REASON
+🛑 **Ownership-BLIND also changed nothing — `0 / 4` files.** ⇒ **On today's governed population the blind boundary is INDISTINGUISHABLE from the aware one.** ★★★★ **`A CONTROL THAT DOES NOT DISCRIMINATE PROVES NOTHING ABOUT THE THING IT WAS BUILT TO CATCH, AND SAYING SO IS THE ONLY HONEST MOVE. REPORTING "0 DIFFERENCES" ON BOTH ARMS AS IF IT WERE A PASS WOULD BE A FALSE CONTROL.`**
+✅ **BUT IT IS AN ABSENT TRIGGER, NOT A BROKEN CONTROL, AND I PROVED WHICH** `[MEASURED HERE]`:
+```
+sys.modules references, per file holding a higher-scoped fixture
+  conftest.py                             10   (ALL inside mock_vectorbt_session)
+  test_audit_a12.py                        0
+  test_cross_engine_parity.py              0
+  test_session_windows_parity.py           0
+  test_wave28_pass_a_migration_0149.py     0
+conftest.py:32  determinism_mode        -> env vars, BLAS limits, numpy seed. NO sys.modules.
+conftest.py:53  mock_vectorbt_session   -> DOES inject, but gated `if TF_MOCK_VBT != "1": return`
+TF_MOCK_VBT set in: NO runner, config, CI file or script -- docstrings and one
+                    test's own conditional only. In my child env: None.
+```
+⇒ **NOT ONE of the `9` installs a `sys.modules` key under today's configuration, so the blind boundary has nothing to destroy. The design-level conviction stands ENTIRELY on the throwaway arm (`AR-979 §2`), and I do NOT upgrade it to a governed proof.**
+⚠️🛑 **AND THE PART THAT MATTERS FOR THE FUTURE: `mock_vectorbt_session` WOULD install modules the moment `TF_MOCK_VBT=1` is set — a documented, supported workflow (`conftest.py:62`, and three test files document it).** ⇒ **Under an ownership-blind boundary that stub would be evicted at the first test's teardown and every later test in that child would run WITHOUT it, while the fixture reported success.** ★★★★★ **`THE HAZARD IS LATENT ONLY BECAUSE A GATE IS UNSET. AN ISOLATION LAYER THAT IS CORRECT ONLY WHILE AN ENVIRONMENT VARIABLE STAYS UNSET IS NOT CORRECT — AND THE OWNERSHIP-AWARE BOUNDARY COSTS NOTHING TO KEEP.`**
+⚖️ **This is the same shape as `R-819 §5`'s scope hazard and `R-820 §3`'s eviction hazard: LATENT, NAMED, NOT LIVE. I am not proposing to set the variable or to build a campaign around it.**
+
+### §3 — ⚠️ WHAT REAL `[J]` DOES **NOT** ESTABLISH
+⚠️ **IT DOES NOT REPRODUCE `[J]`'s CONVICTION ON GOVERNED CODE.** The conviction is design-level, on a throwaway. **Stated plainly so nobody reads `§1`'s zeros as the negative control having fired.**
+⚠️ **`4` files / `84` nodes — NOT the `108`-child population.** `STOP [41]` still applies; `2419` conservation is untouched by this AR.
+⚠️ **`conftest.py`'s own two fixtures were exercised only incidentally** (it is auto-loaded for every child); I did not build a dedicated arm for them, and `R-819 §4` forbids spending a measurement on that file.
+
+### §4 — 📌 STATUS AND THE NEXT STEP
+```
+[A] PASS(prototype)   [B] PASS(FILE layer)   [C] LANDED (receipts owe SHA+hashes)
+[D] red-proofed 5/5 (parent-path planted child still owed)
+[E] ✅ SATISFIED (AR-981)          [J] real arm ✅ aware-safe; negative arm NOT triggered (this AR)
+[F] real governed arm  OWED -- NEXT      [G][H][I] UNSTARTED
+```
+🛑 **`acceptance_runner.py` UNCHANGED. Nothing promoted. Cluster `E` REMAINS HELD. `R3-4` = `6 / 7`. `R3` = `3 / 5`.**
+⚖️ **`R-822 §6`'s FOUR QUESTIONS ARE NOT YET DUE — they are asked immediately before `[G]`, and real `[F]` sits between. I answer them in the next AR, honestly, and I already know Q1 is currently `NO`.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Real `[F]` on a governed test-time polluter, in a disposable worktree so the shared tree is never modified. No round-trip.**
+
+---
+
 ## AR-981 · 2026-08-11 · ✅✅✅ **`[E]` IS SATISFIED AND IT IS THE STRONGEST RESULT OF THIS LANE: THE PROCESS WALL CONTAINS THE CONTAMINATION, BOTH ORDERS, `0` DIFFERENCES BY EXACT NODE ID.** 🛑🛑🛑 **AND THE NEGATIVE CONTROL MEASURES THE DISEASE DIRECTLY: `7` PnL NODES GO `failed` ALONE → `passed` IN COMPANY. EVERY ONE OF THOSE GREENS IS UNEARNED.** ⚖️ **`7`, NOT `5` — AND I STATE THE PAIRING, BECAUSE IT IS A DIFFERENT DENOMINATOR FROM `R-816 §5`'s.**
 
 **SEAT `claude.exe 27448`. `HEAD 8a6a3ee6`. RULING `R-822 §5`/`§9[3]`. TREE `wt-h1-wave4-20260712`.** ⭐ **Control committed BEFORE it was run (`AR-980 §3`'s adopted remedy).**
