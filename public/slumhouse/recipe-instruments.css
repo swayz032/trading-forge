@@ -1,4 +1,4 @@
-.recipe-instrument { position: relative; min-height: 260px; padding: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); border-radius: 18px; background: linear-gradient(145deg,#20242a,#080a0d 68%); box-shadow: 0 26px 55px rgba(0,0,0,.48), inset 0 1px rgba(255,255,255,.12); transform: perspective(900px) rotateX(1.5deg); transition: opacity .2s ease, transform .2s ease; }
+.recipe-instrument { position: relative; min-height: 230px; margin-top: 18px; padding: 20px; overflow: hidden; border: 1px solid rgba(163,255,18,.2); border-radius: 14px; background: radial-gradient(circle at 50% -20%,rgba(163,255,18,.12),transparent 48%),linear-gradient(145deg,#151a12,#030503 72%); box-shadow: 0 18px 38px rgba(0,0,0,.52), inset 0 1px rgba(210,255,140,.12), 0 0 26px rgba(163,255,18,.05); transform: perspective(900px) rotateX(1.5deg); transition: opacity .2s ease, transform .2s ease; }
 .recipe-instrument:focus { outline: 3px solid #a3ff12; outline-offset: 3px; }
 .instrument-title { color: #a3ff12; font-size: 11px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
 .instrument-bezel,.instrument-screen { padding: 18px; border: 1px solid rgba(163,255,18,.18); border-radius: 12px; background: radial-gradient(circle at 50% 0,rgba(163,255,18,.08),transparent 60%),#050706; }
@@ -9,15 +9,18 @@
 .instrument-readouts div { padding: 12px; border-radius: 9px; background: rgba(255,255,255,.055); }
 .instrument-readouts small { display: block; color: #92999f; text-transform: uppercase; font-size: 8px; }
 .instrument-readouts strong { color: #f3f6ef; font-size: 18px; }
-.instrument-empty { display: grid; min-height: 210px; place-items: center; color: #92999f; border: 1px dashed #40464c; border-radius: 12px; }
-.recipe-instrument--jitter-dials { background: linear-gradient(145deg,#342515,#0c0906 70%); }
-.recipe-instrument--crash { background: linear-gradient(145deg,#35191d,#090506 70%); }
-.recipe-instrument--regimes { background: linear-gradient(145deg,#162e33,#05090a 70%); }
-.recipe-instrument--shuffle { background: linear-gradient(145deg,#2d1e38,#08060a 70%); }
-.recipe-instrument--paper { background: linear-gradient(145deg,#26311e,#070906 70%); }
-.recipe-instrument--drift { background: linear-gradient(145deg,#17243b,#05070b 70%); }
-.recipe-instrument--compliance { background: linear-gradient(145deg,#303034,#080809 70%); }
-.r-feed-click[aria-pressed="true"] { border-color: #a3ff12; background: rgba(163,255,18,.08); }
+.instrument-empty { display:flex; min-height:185px; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:#a3ff12; border:1px solid rgba(163,255,18,.16); border-radius:11px; background:linear-gradient(rgba(163,255,18,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(163,255,18,.025) 1px,transparent 1px),#050705; background-size:22px 22px; text-transform:uppercase; letter-spacing:.12em; }
+.instrument-empty b { font-size:11px; text-shadow:0 0 14px rgba(163,255,18,.45); }
+.instrument-empty small { color:#737b70; font-size:8px; }
+.instrument-ghost { width:76%; height:92px; display:flex; align-items:flex-end; justify-content:center; gap:9px; perspective:500px; }
+.instrument-ghost span { width:13%; height:var(--h,44%); border:1px solid rgba(163,255,18,.42); background:linear-gradient(90deg,rgba(72,110,20,.3),rgba(163,255,18,.12)); box-shadow:5px -4px 0 rgba(53,79,18,.45),0 0 12px rgba(163,255,18,.1); transform:skewY(-5deg); }
+.instrument-ghost span:nth-child(1){--h:26%}.instrument-ghost span:nth-child(2){--h:48%}.instrument-ghost span:nth-child(3){--h:72%}.instrument-ghost span:nth-child(4){--h:58%}.instrument-ghost span:nth-child(5){--h:84%}
+.instrument-ghost--jitter-dials span,.instrument-ghost--regimes span { width:46px; height:46px; border-radius:50%; transform:rotate(-35deg); border-width:4px; background:conic-gradient(rgba(163,255,18,.5) 0 22%,#111 22%); }
+.instrument-ghost--crash span { width:52px; height:64px; clip-path:polygon(50% 0,92% 16%,82% 76%,50% 100%,18% 76%,8% 16%); }
+.instrument-ghost--drift span { width:15%; border-radius:50% 50% 3px 3px; }
+.recipe-instrument--jitter-dials,.recipe-instrument--crash,.recipe-instrument--regimes,.recipe-instrument--shuffle,.recipe-instrument--paper,.recipe-instrument--drift,.recipe-instrument--compliance { background:radial-gradient(circle at 50% -20%,rgba(163,255,18,.12),transparent 48%),linear-gradient(145deg,#151a12,#030503 72%); }
+.r-feed-click { appearance: none; -webkit-appearance:none; width:100%; color:inherit; font:inherit; text-align:left; background:transparent; border:0; }
+.r-feed-click[aria-pressed="true"] { border:1px solid #a3ff12; background: rgba(163,255,18,.08); }
 .r-feed-click:focus-visible,.r-gate-back:focus-visible { outline: 2px solid #a3ff12; outline-offset: 3px; }
 @media (max-width:640px) { .recipe-instrument { min-height:220px; padding:14px; transform:none; } }
 @media (prefers-reduced-motion: reduce) { .recipe-instrument { transition:none; transform:none; } }

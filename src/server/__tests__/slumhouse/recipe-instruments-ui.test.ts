@@ -50,7 +50,12 @@ describe("Recipe premium instruments", () => {
     expect(html).toContain("/slumhouse/recipe-instruments.js");
     expect(html).toContain("/slumhouse/recipe-instruments.css");
     expect(html).toContain('aria-pressed');
-    expect(html).toContain("identity.displayName");
+    expect(html).toContain("r.identity.displayName || cleanName(r.identity.name)");
+    expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderGate(r, name))");
+    expect(html).not.toContain("left.appendChild(instrument)");
+    expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderBacktest(r))");
+    expect(css).toContain("appearance: none");
+    expect(css).toContain("instrument-ghost");
     expect(css).toContain("prefers-reduced-motion: reduce");
   });
 });

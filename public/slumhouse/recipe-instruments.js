@@ -31,7 +31,7 @@
       return finite(value) !== null;
     });
     root.setAttribute("data-state", hasEvidence ? "measured" : "empty");
-    root.innerHTML = hasEvidence ? body : '<div class="instrument-empty">Not run yet.</div>';
+    root.innerHTML = hasEvidence ? body : '<div class="instrument-empty"><div class="instrument-ghost instrument-ghost--' + kind + '"><span></span><span></span><span></span><span></span><span></span></div><b>Awaiting test data</b><small>3D ' + (LABELS[kind] || "evidence instrument") + ' ready</small></div>';
     return root;
   }
 

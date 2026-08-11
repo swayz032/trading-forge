@@ -675,7 +675,7 @@
       app.appendChild(el("div", { class: "r-hero", style: "background-image:linear-gradient(90deg,rgba(5,7,6,.9),rgba(5,7,6,.3)),url('/slumhouse/images/slumdawg-recipe-counter.png')" },
         el("div", { style: "min-width:0" },
           el("div", { class: "r-hero-name" },
-            r.identity.displayName,
+            r.identity.displayName || cleanName(r.identity.name),
             el("span", { class: "r-hero-badge" }, "● " + r.identity.stationStreet),
           ),
           el("div", { class: "r-hero-caveat" },
@@ -718,7 +718,7 @@
     function renderBacktest(r) {
       const { el } = SH;
       const bt = r.backtest || {};
-      return el("div", { class: "r-panel" },
+      const panel = el("div", { class: "r-panel" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Backtest", el("span", { class: "src replay" }, "📼 Replay")),
         ),
@@ -739,6 +739,8 @@
           quantChip("R:R", fmt2(bt.riskReward) + "x", rrSub(bt.riskReward)),
         ),
       );
+      panel.appendChild(window.RecipeInstruments.renderBacktest(r));
+      return panel;
     }
 
     function renderMC(r) {
@@ -1243,10 +1245,9 @@
       if (!left) return;
       left.innerHTML = "";
       document.querySelectorAll(".r-feed-click").forEach(function (row) { row.setAttribute("aria-pressed", row === control ? "true" : "false"); });
-      left.appendChild(renderGateMetric(r, name));
-      var instrument = window.RecipeInstruments.renderGate(r, name);
-      left.appendChild(instrument);
-      instrument.focus({ preventScroll: true });
+      var panel = renderGateMetric(r, name);
+      left.appendChild(panel);
+      panel.focus({ preventScroll: true });
       left.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
     function switchLeftToBacktest(r) {
@@ -1268,7 +1269,7 @@
       var sentence = untested ? "This gate hasn't been run yet — it needs a backtest first." : (t ? t.sentence : "");
       var back = el("a", { href: "#", class: "r-gate-back" }, "‹ Backtest");
       back.addEventListener("click", function (e) { e.preventDefault(); switchLeftToBacktest(r); });
-      return el("div", { class: "r-panel", role: "region", "aria-label": (GATE_TITLE[name] || name) + " evidence" },
+      var panel = el("div", { class: "r-panel", role: "region", tabindex: "-1", "aria-label": (GATE_TITLE[name] || name) + " evidence" },
         el("div", { class: "r-head" }, el("div", { class: "r-h" }, GATE_TITLE[name] || name, el("span", { class: "src replay" }, "🔬 The Gate")), back),
         el("div", { class: "r-cap" }, m.what),
         el("div", { class: "r-gate-body" },
@@ -1278,6 +1279,8 @@
           sentence ? el("div", { class: "r-gate-sentence" }, sentence) : null,
         ),
       );
+      panel.appendChild(window.RecipeInstruments.renderGate(r, name));
+      return panel;
     }
 
     // ─── Helpers ────────────────────────────────────────────────────
