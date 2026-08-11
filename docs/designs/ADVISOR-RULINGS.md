@@ -12,6 +12,151 @@
 
 ---
 
+## R-835 · 2026-08-11 · ✅✅✅ **`AR-1003` APPROVED AS THE FINAL DOER MEASUREMENT. `[G-FILE]` `[G-NODE]` `[I]` `[H]` ALL WORKER-MEASURED PASS, AND I RE-DERIVED THE ORACLE MYSELF FROM ALL FIVE RAW ARMS.** ⚡⚡ **THE INDEPENDENT GRADER IS DISPATCHED — THE LAST GATE BEFORE `RATIFY-1` CAN BE CERTIFIED, AND THE FIRST TIME THIS CAMPAIGN HAS REACHED IT.** 🛑 **I CORRECT AN ARITHMETIC ERROR I INHERITED AND REPUBLISHED: `377.7s` IS `63%` OF THE BUDGET USED, NOT `37%`.** 🛑 **`STOP [50]` IS NOW ACTIVE: THE INSTRUMENT IS FROZEN WHILE THE GRADER ATTACKS IT.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1003`** (`R-416`) — **it IS the AR ruled here; I read it in full and re-derived its central result from the artifacts before writing.** **`HEAD 974cf9b8` · `origin 4257e3e8` · CERT PIN `fb71a3ef` (RESOLVES from origin).** **SEATS `[MEASURED HERE]`: desk `28644` · worker `claude.exe 25076`, NO ROLL.**
+✅ **THE WAIT WAS HELD AND IS DISCHARGED — AND IT WAS HELD OVER A WIDER SURFACE THAN EVER BEFORE.** ⚡ **THE OPERATOR AMENDED HIS OWN AUTHORIZATION MID-FLIGHT (*"wait on gpt before you launch grader"*), extending `[wait-on-gpt]` to a DISPATCH for the first time (`STOP [61]`). The read has now arrived and says DISPATCH NOW. Both conditions are satisfied: the operator's permission and the read's timing.**
+
+### §0 — 🛑 MY ERROR, INHERITED AND REPUBLISHED, CORRECTED AT SOURCE
+🛑 **`AR-1003 §1` wrote *"`377.7s`, i.e. `37%` of the ceiling used."* **THAT IS WRONG, AND I COPIED IT INTO `ADVISOR-STATE` AS `(37%)` WITHOUT DIVIDING.** `[MEASURED HERE]` `377.7 / 600.0 = 62.95%` **USED**; the headroom is `37.05%` (`222.3s` spare).
+⇒ ✅ **THE DURABLE STATEMENT IS: `[H]` PASSED WITH `~37%` HEADROOM — NEVER *"`37%` used."*** ⚖️ **Arithmetic only; no engineering grade moves, and it is materially better than the earlier `~7%` headroom result.** **Corrected in `ADVISOR-STATE` at its original location, not appended below** (`R-727 §1`).
+★★★★★ **`I INHERITED A RATIO I NEVER DIVIDED. A PERCENTAGE IS THE ONE FIGURE A READER RE-USES WITHOUT RE-DERIVING — SO IT PROPAGATES FURTHER THAN THE MEASUREMENT IT SUMMARISES, AND IT PROPAGATED THROUGH ME.`** ⚠️ **This is the desk's own `[unenumerated-ladder]` family: a reader who cannot check the evidence still audits the ARITHMETIC, and this is the third time that has caught this desk.** 🛑 **`STOP [62]` NEW: A PERCENTAGE IS A MEASUREMENT. DIVIDE IT YOURSELF OR DO NOT REPUBLISH IT.**
+
+### §1 — ✅✅ `AR-1003` APPROVED AS THE FINAL DOER MEASUREMENT
+✅ **`[MEASURED HERE — DESK RE-DERIVED FROM ALL FIVE RAW `aggregate.json` FILES, NOT FROM THE WORKER'S COMPARISON OUTPUT]`: six comparisons (`A:B`, `A:C`, `A:D`, `A:E`, `C:D`, `B:D`) — key sets EQUAL and **`0` differing nodes on every one** ⇒ `A == B == C == D` and `A == E` BY EXACT NODE ID → OUTCOME.** ✅ **Per-arm contract satisfied by ALL FIVE: `children=108` · `nodes=2419` · `observed=2419` · `duplicate=0` · `collected_but_unexecuted=0` · `invalid_children=0` · `limited_subset=False` · `arm_start_head == arm_end_head == fb71a3ef`.** ✅ **`4` distinct flag configurations with `A`/`E` identical BY DESIGN (the repeat axis) and `5` DISTINCT run roots ⇒ a real contrast, not five copies.** ✅ **The `33` failures are SET-IDENTICAL across all five.**
+⚖️ **AND THE GRADE SPLIT, STATED RATHER THAN BLURRED: the outcome-map equality, the per-arm contract and `[H]` are `[MEASURED HERE]`. The PROVENANCE REBUILD from child receipts (`rebuilt=2419`), the disjoint-`run_id` proof, the pin-binding assertions, the `104/108` axis-variation witness and the comparator's own `23`-control `--red-proof` are `[MEASURED BY GRADED INSTRUMENT]` — the worker ran them; I did not.** ★★★★★ **`I RE-DERIVED THE ANSWER; I DID NOT RE-DERIVE THE REASONS THE ANSWER IS EVIDENCE — AND THAT EXACT GAP IS WHAT THE INDEPENDENT GRADER EXISTS TO CLOSE.`**
+⭐ **THE WORKER'S TWO SELF-DISCLOSED ERRORS ARE ACCEPTED AS CORRECTLY HANDLED, AND THE HANDLING IS THE FINDING:** it ran `A vs C` with `--mode order`, **the comparator REFUSED it and was right**, and it resolved the question by **READING THE INSTRUMENT'S SOURCE** (`g_order_identity.py:755`, control `C4b`) rather than trying modes until one went green; and it **piped a run through `tail`**, hiding the single `FAIL` line under twelve `OK` lines and manufacturing an apparent contradiction. ✅ **It DISCARDED the refused run entirely rather than harvesting its correct-looking `0 differing node(s)` line.** ★★★★★ **`MODE-SHOPPING UNTIL A GUARD GOES GREEN IS ROUTING AROUND IT WITH EXTRA STEPS` · `A REFUSED RUN'S CORRECT-LOOKING FIELD IS THE MOST TEMPTING FALSE RECEIPT IN THE BUILDING.`**
+⚠️ **LABEL TRAP, RULED SO NO LATER READER MISFILES IT: `A vs C` and `B vs D` wear the tool's `[I]` verdict LABEL because THE LABEL FOLLOWS THE MODE. They ARE the `[G-NODE]` evidence, by the `node axis GENUINELY varied — 104 of 108` assertion INSIDE them.** ★★★★ **`[G-NODE]` IS NOT A MODE; IT IS AN AXIS.**
+🛑 **`RATIFY-1` IS **NOT** CERTIFIED. A five-arm green is `[MEASURED BY THE DOER]`. NO number is published — not `10/10`, not `7/10` (`STOP [49]`).**
+
+### §2 — ✅ `STOP B` STAYS CLOSED, AND THE `33` STAY WHERE THEY ARE
+✅ **`STOP B` REMAINS CLOSED. `AR-1001` established `12 → 0`; `AR-1003` carried that property through the FULL certification geometry with NO carve-out for those nodes.** ⭐ **The `M1` trio — HTF-absent, HTF-empty and unregistered-strategy passthrough — remains ACTIVE COVERAGE rather than stable SKIPs.** 🛑 **No reopening merely because the five-arm run is larger.**
+🛑 **THE `33`: `STABLE POST-REPAIR CANDIDATE FAILURE MAP`, NOT ADJUDICATED, NOT REPAIRED, NOT REDUCED BEFORE GRADING.** **Same `33` node IDs in all five arms is GOOD referee evidence — the question is *"does the referee give the same answer when execution order changes?"*, not *"are all `2419` green?"***
+🛑 **AND A NEW PROHIBITION FROM THE READ, ADOPTED: DO NOT COMPARE THE `33` BACK TOWARD `287` OR `31` AS A TARGET. Those belonged to DIFFERENT HARNESS STATES.** ★★★★ **`A COUNT FROM A SUPERSEDED HARNESS IS NOT A BASELINE, IT IS A DIFFERENT EXPERIMENT`** (`[population-baseline]`, `[unenumerated-ladder]`).
+
+### §3 — ⚡ THE INDEPENDENT GRADER — DISPATCHED, WITH THE BRIEF THAT MAKES IT ADVERSARIAL
+⚡ **DISPATCHED NOW: `accuracy-validator`, against the exact pin `fb71a3efa99af94e37b94738dcdd85e92b571aea`. ITS MISSION IS TO **DISPROVE** `AR-1003`, and the worker's five-arm green is handed to it as a CLAIM, NEVER as authority** (`[grader-agent]`, `advisor-ruling §1`: doer ≠ grader, and independence is someone else's question, not a second look at mine).
+⚡ **THE `13` INDEPENDENT VERIFICATIONS, ADOPTED VERBATIM FROM THE READ `§8`:** `108` children and `2419` nodes per arm · `required == observed == 2419` · zero missing/invented/duplicate/unexecuted/invalid-child/limited-subset defects · every child bound to the exact pin · arm start/end pin identity exact · **provenance outcomes REBUILD from raw child receipts rather than aggregate claims** · run IDs establish genuinely distinct executions · the FILE axis actually varies where claimed · the NODE axis actually varies where claimed · `A == B == C == D` by exact node→outcome · `A == E` by exact node→outcome · the same exact `33` in all five · every arm `<= 600.0s` against the real gate.
+⭐ **PLUS AT LEAST ONE NOVEL FALSE-GREEN ATTACK THE DOER DID NOT PRESCRIBE — AND THE GRADER OWNS THE CHOICE.** ⚡ **The read's suggestion, passed on as a suggestion and not a cap: `CROSS-PAIR EVIDENCE SUBSTITUTION` — associate the WRONG manifest / run-root with an otherwise-genuine aggregate or comparison, so that each piece verifies alone but the combination is not one internally-consistent arm.** 🛑 **NOT another hash corruption; that family is already heavily tested.** ★★★★★ **`LOOK FOR TWO INDIVIDUALLY-VALID PIECES OF EVIDENCE THAT BECOME INVALID ONLY WHEN COMBINED.`**
+🛑 **BOUNDS ON THE GRADE: do NOT adjudicate or repair the `33` · do NOT modify the frozen instrument · do NOT promote, seal or certify · report the honest null (*"no refutation found, here is what I covered and what I could not"*) rather than manufacturing a finding.** ⚡ **DURABLE RECEIPT REQUIRED at a committed path — `docs/designs/GRADE-RATIFY1-FINAL-2026-08-11.md` — naming exact commit, evidence hashes, attack performed, result, final disposition.** ★★★ **`A VERDICT LIVING ONLY IN THE DISPATCHER'S CHAT IS SINGLE-SOURCE, AND THIS CAMPAIGN LOST A FULL GRADE TO THAT ONCE.`**
+
+### §4 — 🛑 THE INSTRUMENT IS FROZEN. `STOP [50]` IS ACTIVE.
+🛑🛑 **FROM THIS MOMENT, UNTIL THE GRADE RETURNS: NO CHANGE TO `g_order_identity.py` · `accept5_isolated_runner.py` · `accept5_isolation_plugin.py` · the provenance/manifest format · the runtime gate.** ⇒ ★★★★★ **`THE GRADER ATTACKS THE THING THAT PRODUCED AR-1003. IF THE WORKER CHANGES THAT THING WHILE IT IS BEING GRADED, THE EVIDENCE TARGET MOVES AND THE GRADE MEASURES NOTHING.`**
+🛑 **IF THE GRADER FINDS A REAL FALSE GREEN: REPORT IT; DO NOT REPAIR IT INSIDE THE SAME EVIDENCE SET.** **The desk then authorizes the minimum repair as its own lane.**
+
+### §5 — ⚖️ NO PUSH, AND THE READ'S REASON IS BETTER THAN MINE
+✅ **ADOPTED, READ `§10`: `AR-1003` NEED NOT BE PUSHED BEFORE THE GRADE. The reader holds the full relay text, independently resolves the certification pin `fb71a3ef` online, and inspected the comparator AT that pin — so publishing the report buys nothing.**
+⭐ **AND THE READ SUPPLIES A REASON I HAD NOT: pushing now would ALSO carry `4` unreviewed desk commits, bundling unrelated authority movement into a publication errand.** ⇒ **`STOP [58]` holds for its own reason AND for this better one.** ★★★★ **`A PUSH IS NOT A NEUTRAL PUBLICATION ACT — IT MOVES EVERY COMMIT BEHIND IT, AND "I ONLY WANTED THE REPORT READABLE" IS NOT A DESCRIPTION OF WHAT IT DOES.`**
+⚡ **AFTER THE GRADE: `AR-1003` + the grader receipt + the final `RATIFY` evidence manifest MUST become origin-resolvable before any promotion — through an EXPLICITLY ADJUDICATED push path, ruled at the time, not bolted onto this one.**
+
+### §6 — ⚖️ WORKTREES — ALL PRESERVED, AND THE REFUSED RECEIPT IS EVIDENCE
+🛑 **`wt-cert5-fb71a3ef` STAYS INTACT THROUGH THE GRADE: do NOT clean it, do NOT re-run inside it, do NOT remove anything.** 🛑 **DO NOT REMOVE THE REFUSED FIRST `A-vs-C` RECEIPT (`cmp_AC.txt`) — the read is right that it is FORENSIC EVIDENCE: it proves the guard actually stopped an incorrect request.** ★★★★ **`THE RECORD OF A GUARD REFUSING IS WORTH MORE THAN THE RECORD OF IT PASSING.`**
+🛑 **`wt-gnode-fb71a3ef` · `wt-m3-44db4eae` · `wt-ratify1-final-f3225b69` · `wt-ctl-d66e46aa` — ALL PRESERVED. Disposal is decided AFTER the grade, in one ruling, never mid-certification.**
+
+### §7 — ⚡ AUTHORIZATION TO SEAT `claude.exe 25076`
+
+> ### ★ WORKER `claude.exe 25076` — START HERE. YOU ARE ON HOLD, DELIBERATELY, AND I NAME WHO OWNS THE NEXT MOVE.
+> **1.** ✅ **`AR-1003` APPROVED AS THE FINAL DOER MEASUREMENT. `[G-FILE]` `[G-NODE]` `[I]` `[H]` all WORKER-MEASURED PASS. `STOP B` stays CLOSED.** ⭐ **Your handling of the comparator refusal is the best work in the report — you read the source instead of shopping for a green.**
+> **2.** 🛑 **`HOLD — because the independent grade is running, and it is MINE, not yours.** This is an explicit HOLD, not a stall: `advisor-ruling §0.5` requires me to name the owner, and the owner is this desk.**
+> **3.** 🛑🛑 **`STOP [50]` IS ACTIVE — THE INSTRUMENT IS FROZEN. Do NOT touch `g_order_identity.py`, `accept5_isolated_runner.py`, `accept5_isolation_plugin.py`, the provenance/manifest format, or the runtime gate until the grade returns.**
+> **4.** 🛑 **DO NOT remove or clean ANY worktree, and specifically DO NOT delete `cmp_AC.txt` — the refused run is forensic evidence that the guard bites.**
+> **5.** 🛑 **DO NOT push. Do NOT adjudicate or repair the `33`. Do NOT compare them to `287` or `31`. Do NOT promote, seal, certify, publish a `RATIFY-1` number, open `CLUSTER-E`, touch `acceptance_runner.py` / the root seal / `margin_expansion.py` / any production engine file / HTF production / `MP1`.**
+> **6.** ⚡ **IF THE GRADER RETURNS CLEAN: the desk rules `RATIFY-1 CERTIFIED` and opens the post-grade lane. IF IT FINDS A REAL FALSE GREEN: the desk authorizes the minimum repair — you do NOT pre-empt either outcome.**
+> **7.** ⚖️ **YOU MAY HAND OFF FREELY DURING THIS HOLD — it is the cleanest seam in the campaign: nothing is in flight, nothing is half-built, and `AR-1003` is self-describing. Four deliveries this seat; if you feel strain, go now rather than at the next authorization.**
+
+```
+RULING ID       : R-835
+ARs RULED       : AR-1003 -- APPROVED as the FINAL DOER MEASUREMENT.
+DECISION        : APPROVE (AR-1003) + DISPATCH (accuracy-validator, adversarial,
+                  against pin fb71a3ef) + FREEZE (STOP [50] active on the
+                  instrument) + HOLD (the worker, owner named: this desk).
+                  [G-FILE], [G-NODE], [I], [H] = WORKER-MEASURED PASS.
+                  RATIFY-1 NOT CERTIFIED -- the grade is the remaining gate.
+                  STOP B stays CLOSED. The 33 NOT adjudicated. No push. No
+                  worktree removed. R3-4 = 6/7. CLUSTER-E HELD. Money path
+                  UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED.
+EXTERNAL READ   : HELD AND DISCHARGED. The operator amended his own grader
+                  authorization mid-flight to require the read first (STOP [61],
+                  the sixth assertion of the wait and the first attached to a
+                  DISPATCH). The read then arrived and authorized dispatch, so
+                  BOTH conditions are satisfied. Adopted on merit; its §3
+                  arithmetic correction is adopted against my own file, and its
+                  §10 no-push reasoning is BETTER than mine and is recorded as
+                  such.
+DESK DEFECT     : I copied "37% of the ceiling used" from AR-1003 into
+                  ADVISOR-STATE without dividing. [MEASURED HERE] 377.7/600.0 =
+                  62.95% USED, 37.05% HEADROOM. Corrected at source. STOP [62]
+                  minted: a percentage is a measurement -- divide it yourself or
+                  do not republish it.
+CLAIMS VERIFIED : [MEASURED HERE, desk re-derivation from all five raw
+                  aggregate.json] six comparisons, key sets equal, 0 differing
+                  nodes on every one => A==B==C==D and A==E by exact node ->
+                  outcome. Per-arm contract satisfied by all five. [H] worst
+                  377.7s of 600.0s. Four distinct flag configurations, A/E
+                  identical by design, five distinct run roots. The 33 failure
+                  SETS identical across all five arms.
+                  [MEASURED HERE] 377.7/600.0 = 62.95%, headroom 37.05%.
+                  [MEASURED BY GRADED INSTRUMENT] provenance rebuild from
+                  receipts, disjoint run_ids, pin binding, 104/108 axis
+                  variation, the comparator's 23-control red-proof. I did NOT
+                  run these -- which is precisely why the grade is dispatched.
+FAILED/UNPROVEN : RATIFY-1 -- UNCERTIFIED. No letter moved.
+                  Everything the doer measured is DOER-MEASURED until the grader
+                  returns.
+                  The merit of the 33 -- UNADJUDICATED, deliberately.
+                  Whether the 2 xfailed nodes deserve that status -- UNMEASURED.
+                  Whether the engine is CORRECT -- entirely out of scope; this is
+                  a referee-determinism result and the two may not share a
+                  sentence.
+ARCHITECTURE
+INVARIANTS      : INSTRUMENT FROZEN (STOP [50] active): g_order_identity.py,
+                  accept5_isolated_runner.py, accept5_isolation_plugin.py, the
+                  provenance/manifest format and the runtime gate are UNTOUCHABLE
+                  until the grade returns. acceptance_runner.py IMPORTED, NEVER
+                  EDITED. Root seal IMMUTABLE. Ceiling FROZEN at 600.0s.
+                  Production engine code UNTOUCHED. Single-writer relay held.
+                  Doer != grader -- enforced by this dispatch.
+                  No agent promotes to live capital.
+FILES / SCOPE   : the grader READS the five arms + comparison outputs at pin
+                  fb71a3ef and WRITES ONE durable receipt at
+                  docs/designs/GRADE-RATIFY1-FINAL-2026-08-11.md. It repairs
+                  nothing. The worker writes nothing during the hold.
+ACCEPTANCE      : an independent adversarial verdict covering the read's 13
+                  points PLUS at least one novel false-green attack of the
+                  grader's own choosing, with a durable committed receipt naming
+                  exact commit, evidence hashes, attack performed, result and
+                  disposition. An honest null IS a complete answer.
+FIRST OBSERVABLE: the grader's durable receipt file. ETA: grader's call.
+STOP CONDITION  : STOP [62] NEW -- a percentage is a measurement; divide it
+                  yourself or do not republish it.
+                  STOP [50] ACTIVE -- instrument frozen during the grade.
+                  A real false green is REPORTED, never repaired inside the same
+                  evidence set. Do not adjudicate the 33, and do not compare them
+                  to 287 or 31 -- different harness states. No push. No worktree
+                  removal, and cmp_AC.txt specifically is preserved evidence.
+                  STOP [49], [58], [61] stand.
+LESSON          : I RE-DERIVED THE ANSWER AND NOT THE REASONS THE ANSWER IS
+                  EVIDENCE -- WHICH IS EXACTLY THE GAP THE INDEPENDENT GRADER
+                  EXISTS TO CLOSE, AND EXACTLY WHY A DESK RE-DERIVATION IS NOT A
+                  SUBSTITUTE FOR ONE.
+                  AND: A PERCENTAGE PROPAGATES FURTHER THAN THE MEASUREMENT IT
+                  SUMMARISES, BECAUSE READERS RE-USE IT WITHOUT RE-DERIVING IT.
+QUEUED NEXT     : independent grade -> (clean) certify RATIFY-1 -> adjudicated
+                  push of AR-1003 + grade + evidence manifest -> promote ->
+                  CLUSTER-E -> post-E authority map -> disposition THAT map (the
+                  33 are the candidate, the post-E map is the authority) ->
+                  six-field 32-row census -> ONE successor seal -> canonical
+                  isolated ACCEPT-5 -> close R3-4 -> bounded R3-5 -> EXIT the
+                  referee loop -> MP1-CANDIDATE-INGRESS-1 -> compiler output into
+                  DB -> /api/backtests -> compiled_spec path -> Opening Range
+                  V1.0 -> edge qualification.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes, and
+                  the route to it is now fully enumerated above.
+```
+
+---
+
 ## R-834 · 2026-08-11 · ✅✅✅ **`STOP B` IS CLOSED. `ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1` CLOSED. `12 → 0` AT FULL POPULATION SCOPE, AND THE `M1` COVERAGE IS ALIVE.** ⚡⚡ **THE FIVE CERTIFYING ARMS ARE AUTHORIZED — THE FIRST TIME THIS CAMPAIGN HAS SAID THAT — CONDITIONAL ON ONE PUSH AND ONE RESOLVE.** ✅ **THE READ'S THIRD CONDITION IS DISCHARGED HERE, BY ME, WITH A POSITIVE CONTROL.** 🛑 **AND I ASK THE WORKER TO PUSH, BECAUSE `STOP [58]` IS MINE AND THE ASK IS ITS DESIGNED ESCAPE.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1001`** (`R-416`) — **it IS the AR ruled here; I read it in full and re-derived its central result myself before writing.** **`HEAD 4257e3e8` · `origin 1817c037` · CERT PIN `fb71a3ef`** `[MEASURED HERE]`. **SEATS: desk `28644` · worker `claude.exe 25076` (`12:06:34`), NO ROLL.**
