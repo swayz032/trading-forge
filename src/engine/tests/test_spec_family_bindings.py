@@ -1897,6 +1897,21 @@ def test_adversarial_control_the_measurement_actually_moves(_role_resolver_on):
 _PREPACKET_REF = "ee49fdca~1"
 _MODULE_REL_PATH = "src/engine/spec_family_bindings.py"
 
+# R-818 §7[3] Cluster F / R-799 §5 form [3]. Every historical revision that
+# _load_module_at_ref() exec's, pinned to the exact git blob object id of
+# _MODULE_REL_PATH at that revision. MEASURED at pin 2d8b1da1 (AR-978); all four
+# commits verified ANCESTORS of origin/h1-wave4-sealed12-driver, so this history
+# is fetchable by anyone with a full clone and is NOT machine-local evidence.
+# ★ A ref that is exec'd but absent from this map is a HARD FAILURE, not a skip:
+#   an unpinned historical input is exactly the machine-local dependency R3-4
+#   exists to remove.
+_PINNED_MODULE_BLOBS = {
+    "ee49fdca~1": "f9a56c7e0016a4675e259c9abbccd012771019b2",  # 50116 bytes
+    "d8cf8043": "02c6bf25b50886671b218f3ce506cce765078da1",  # 75796 bytes
+    "6dd3a00f": "133df1979f8895a380f0161e094abae1943be206",  # 96633 bytes
+    "6a56618b": "c34250cae48c73ed186fadbab5b939fb4a17e1a6",  # 108090 bytes
+}
+
 
 def _load_prepacket_module():
     """Load the module AS IT WAS before the packet landed, straight from git."""
@@ -1912,21 +1927,55 @@ def _load_module_at_ref(ref: str):
     design (its "zero import surface" property, documented in its own
     header), which is precisely what makes exec'ing a historical revision of
     it safe and dependency-free."""
+    import hashlib
     import importlib.util
     import subprocess
 
+    # R-818 §7[3] Cluster F / R-799 §5 form [3]: git history is an EXPLICITLY
+    # PINNED external input WHOSE IDENTITY IS VERIFIED BEFORE EXECUTION. Every
+    # revision this helper execs is reachable from origin (MEASURED, AR-978), so
+    # "git unavailable" means a broken/shallow checkout, not a laptop gap — and a
+    # release-authority test must REFUSE rather than skip.
+    expected_blob = _PINNED_MODULE_BLOBS.get(ref)
+    assert expected_blob is not None, (
+        f"revision {ref!r} is exec'd here but carries no pinned blob id -- add it to "
+        "_PINNED_MODULE_BLOBS; an unpinned historical input cannot be identity-verified"
+    )
     try:
         source = subprocess.run(
             ["git", "show", f"{ref}:{_MODULE_REL_PATH}"],
             cwd=os.path.dirname(os.path.abspath(__file__)),
             capture_output=True,
-            text=True,
             timeout=30,
         )
-    except (OSError, subprocess.SubprocessError) as exc:  # pragma: no cover
-        pytest.skip(f"git unavailable for parent-diff: {exc}")
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise AssertionError(
+            f"git is required to load the pinned revision {ref}:{_MODULE_REL_PATH} and it "
+            f"failed to run ({exc!r}) -- this history is reachable from origin, so its "
+            "absence is a broken checkout, not an environment gap"
+        ) from exc
     if source.returncode != 0 or not source.stdout.strip():
-        pytest.skip(f"revision {ref} unavailable: {source.stderr.strip()[:200]}")
+        raise AssertionError(
+            f"pinned revision {ref}:{_MODULE_REL_PATH} is unavailable in this checkout "
+            f"(git exit {source.returncode}): {source.stderr.decode('utf-8', 'replace').strip()[:200]} "
+            "-- this revision is reachable from origin, so its absence is a broken or "
+            "shallow checkout, not an environment gap"
+        )
+
+    # ★ IDENTITY VERIFIED BEFORE EXECUTION, over BYTES. `git show` is read WITHOUT
+    #   text=True deliberately: text mode decodes with the LOCALE codec (cp1252 on
+    #   this box), which silently corrupts the 1.3k-1.9k non-ASCII bytes each of
+    #   these revisions carries -- so the differential would exec a MIS-DECODED
+    #   module and the hash below would never match. Measured, AR-978.
+    actual_blob = hashlib.sha1(
+        b"blob %d\0" % len(source.stdout) + source.stdout
+    ).hexdigest()
+    assert actual_blob == expected_blob, (
+        f"pinned revision {ref}:{_MODULE_REL_PATH} does not match its recorded identity: "
+        f"expected git blob {expected_blob}, got {actual_blob} ({len(source.stdout)} bytes) "
+        "-- history was rewritten or the wrong object was returned; refusing to exec it"
+    )
+    source_text = source.stdout.decode("utf-8")
 
     import sys
 
@@ -1937,7 +1986,7 @@ def _load_module_at_ref(ref: str):
     # so the module must be registered BEFORE its body executes.
     sys.modules[name] = module
     try:
-        exec(compile(source.stdout, f"<{_PREPACKET_REF}:{_MODULE_REL_PATH}>", "exec"), module.__dict__)
+        exec(compile(source_text, f"<{ref}:{_MODULE_REL_PATH}>", "exec"), module.__dict__)
     except Exception:
         sys.modules.pop(name, None)
         raise

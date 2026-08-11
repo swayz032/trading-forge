@@ -92,8 +92,8 @@ therefore a statement about THIS BOX's state, not a portability claim** (`R-813 
 | 19 | `test_spec_family_bindings.py:569` | `_load_battery` **(helper)** | `h1-battery fixture unavailable at {path}` | h1-battery fixture | ✅ **CLOSED** — Cluster `D`, converted to form `[1]` hard assert (now `:575`); see `§11` | **DID NOT FIRE** |
 | 20 | `test_spec_family_bindings.py:901` | `_governed_split` **(helper)** | `governed grade unavailable at {path}` | blind-readjudication `LOCKED.json` | ✅ **CLOSED** — converted to form `[1]` at `e55a9ef1`, sha `920557eb…`, 978 bytes | **DID NOT FIRE** |
 | 21 | `test_spec_family_bindings.py:914` | `_corpus_wait_session_rows` **(helper)** | `corpus unavailable at {d}` | corpus dir | ✅ **CLOSED** — Cluster `D`, converted to form `[1]` hard assert (now `:924`); see `§11` | **DID NOT FIRE** |
-| 22 | `test_spec_family_bindings.py:1914` | `_load_module_at_ref` **(helper)** | `git unavailable for parent-diff: {exc}` | **git history** | **VIOLATION** — input `[4]` of `R-803`'s four | **DID NOT FIRE** |
-| 23 | `test_spec_family_bindings.py:1916` | `_load_module_at_ref` **(helper)** | `revision {ref} unavailable` | **git history** | **VIOLATION** — input `[4]` | **DID NOT FIRE** |
+| 22 | `test_spec_family_bindings.py:1914` | `_load_module_at_ref` **(helper)** | `git unavailable for parent-diff: {exc}` | **git history** | ✅ **CLOSED** — Cluster `F`, converted to form `[3]` pinned+identity-verified; see `§12` | **DID NOT FIRE** |
+| 23 | `test_spec_family_bindings.py:1916` | `_load_module_at_ref` **(helper)** | `revision {ref} unavailable` | **git history** | ✅ **CLOSED** — Cluster `F`, converted to form `[3]`; see `§12` | **DID NOT FIRE** |
 | 24 | `test_spec_family_bindings.py:2815` | `test_both_flag_arms_agree_on_every_refusal_path_object` | `docs/ corpora unavailable in this checkout` | `docs/` corpora | ✅ **CLOSED** — Cluster `D`, converted to form `[1]` hard assert (now `:2833`); see `§11` | **DID NOT FIRE** |
 | 25 | `test_static_c_partials_ab.py:183` | `test_pf_computation_flag_independent` | `fixture_perfect.json not found in golden dir` | `fixture_perfect.json` | ⚠️ **`R-803`: TRACKED, dead-skip debt, NOT a fifth input** — tracked ⇒ absence must be HARD FAILURE | **DID NOT FIRE** |
 | 26 | `test_walk_forward_wrc_spa_emission.py:177` | `test_wrc_spa_values_present_when_sufficient_obs` | `CPCV paths unavailable — acceptable: {reason}` | computed `wrc.available` | **VIOLATION** — see §4 | **DID NOT FIRE** |
@@ -533,3 +533,98 @@ any other.**
 🛑 **ROWS `2`–`12`, `25`–`29` (Clusters `B`, `C`, `G`) STILL CARRY THE RETIRED SINGLE BOOLEAN and no
 `FINAL_DISPOSITION`/`PROOF_RECEIPT`.** `R-819`'s `ACCEPTANCE` requires all `32` rows to carry them.
 **REPORTED AS AN OPEN DEBT, NOT REPAIRED — those rows are not Cluster `D`'s** (`R-819 §8[8]`, no scope expansion).
+
+---
+
+## 12. ✅ CLUSTER `F` — LANDED. ROWS `22`/`23` CARRY A `FINAL_DISPOSITION` AND A `PROOF_RECEIPT`
+
+**Ruling:** `R-818 §7[3]`, continued by `R-820 §9[1]`. **Schema:** `R-815 §7`'s six fields.
+**Tree:** `wt-h1-wave4-20260712`, pin `2d8b1da1` (`STOP [36]`).
+
+| field | row `22` (`:1914`) | row `23` (`:1916`) |
+|---|---|---|
+| `FIRED_C0` | **NO** | **NO** |
+| `FIRED_C1` | **NO** | **NO** |
+| `AXIS_VARIED` | **NOT VARIED** — `[AR-966 §6]` a linked worktree SHARES the object store, so a fresh tree cannot vary the git-history axis | **NOT VARIED**, same reason |
+| `ROOT_CAUSE` | `git` invocation failure treated as an environment gap | pinned revision absent treated as an environment gap |
+| `FINAL_DISPOSITION` | ✅ **`R-799 §5` form `[3]`** — explicitly pinned external input, **identity VERIFIED before execution**; `pytest.skip` **DELETED** | ✅ **form `[3]`**, same boundary |
+| `PROOF_RECEIPT` | `§12.1` | `§12.1` |
+
+**THE PIN, MEASURED AT `2d8b1da1` — all four commits verified ANCESTORS of `origin/h1-wave4-sealed12-driver`,
+so this history is fetchable from a full clone and is NOT machine-local evidence:**
+```
+ee49fdca~1  ->  blob f9a56c7e0016a4675e259c9abbccd012771019b2    50116 bytes
+d8cf8043    ->  blob 02c6bf25b50886671b218f3ce506cce765078da1    75796 bytes
+6dd3a00f    ->  blob 133df1979f8895a380f0161e094abae1943be206    96633 bytes
+6a56618b    ->  blob c34250cae48c73ed186fadbab5b939fb4a17e1a6   108090 bytes
+```
+⭐ **`_load_module_at_ref` is called with FOUR distinct refs across FIVE sites, so form `[3]` needed a MAP,
+not a constant. A ref exec'd but ABSENT from the map is itself a hard failure** — an unpinned historical
+input is exactly the dependency `R3-4` exists to remove.
+
+### 12.1 THE PROOF RECEIPT — PLANTED TRIGGERS, PRE/POST, IN A DISPOSABLE WORKTREE AT `2d8b1da1`
+```
+ROW 22  git not runnable (OSError branch); plant refuses to arm if target absent
+  PRE  + git unavailable  exit=0  1 skipped  <- REAL false green, reproduced
+  POST + git unavailable  exit=1  1 failed   "...is a broken checkout, not an environment gap"
+ROW 23  bad revision -- REAL trigger, not a forced branch: _MODULE_REL_PATH mutated
+        so `git show` legitimately exits 128
+  PRE  + bad revision     exit=0  1 skipped  <- REAL false green, reproduced
+  POST + bad revision     exit=1  1 failed   git's own stderr quoted back, "broken or shallow"
+NEW form-[3] IDENTITY GUARD (no PRE arm exists -- the guard is new)
+  POST + wrong blob id    exit=1  1 failed   "does not match its recorded identity"
+  POST + correct blob     exit=0  1 passed
+WHOLE FILE  POST 339 passed  ==  PRE 339 passed   => 0 flips, 0 node changes
+```
+⚠️ **Exit codes captured DIRECTLY, never through a pipe** (`[ps-counting-encoding]`).
+⇒ **BOTH rows `22` and `23` were REAL FALSE-GREEN REMOVALS** — unlike Cluster `D`'s row `19`, which was
+already fail-closed. **Cluster `F` accounting: `2` false-green removals `+ 1` new identity guard `+ 1`
+latent-defect repair (`§12.2`).**
+
+### 12.2 🛑🛑 A LATENT DEFECT FOUND WHILE BUILDING THE FORM-`[3]` VERIFIER, AND IT IS THE BIGGER FINDING
+🛑 **`[MEASURED HERE]` the committed helper ran `subprocess.run(..., text=True)` with NO `encoding=`, so it
+decoded each historical revision with the LOCALE codec — `cp1252` on this box — before `exec`ing it.**
+```
+raw bytes   len=50116  blob id f9a56c7e...  == the pinned object   MATCH
+text=True   len=52288  blob id d9eb7c36...  != the pinned object   MISMATCH (+2172 bytes)
+```
+⇒ **the differential was exec'ing a MIS-DECODED module.** `[MEASURED]` the four revisions carry
+`1308`/`1677`/`1814`/`1913` non-ASCII bytes each. **The repair reads BYTES, verifies the blob id, then
+decodes UTF-8 explicitly.**
+⚖️ **NOT SCOPE CREEP — ENTAILED: form `[3]` requires identity verification, identity is a property of BYTES,
+and the old call could not produce bytes.** ★★★★★ **`THE ENCODING BUG WAS INVISIBLE FOR AS LONG AS NOBODY
+ASKED THE INPUT TO PROVE ITS IDENTITY — 339 TESTS PASSED OVER A CORRUPTED MODULE BECAUSE NOTHING EVER READ
+THE CORRUPTED PART.`** ⚠️ **`[MEASURED]` `339 passed` before and after, so no assertion ever depended on the
+mis-decoded bytes. The defect was LATENT, not live.**
+
+### 12.3 ⚖️ A COUNT CORRECTION I OWE THE DESK — AND THE PHANTOM IS MINE
+🛑 **`R-820 §4` records *"`test_spec_family_bindings.py` STILL CONTAINS `5` `pytest.skip` CALLS"*.
+`[MEASURED HERE at `e60b1909`, the exact commit that ruling measured]` **the executable count is `4`.**
+```
+UNANCHORED  grep -c 'pytest\.skip'        5
+EXECUTABLE  grep -cE '^\s*pytest\.skip\(' 4   <- :47 :910 :1927 :1929
+COMMENT                                    1   <- :573
+```
+⚠️ **AND `:573` IS A COMMENT I ADDED IN CLUSTER `D`** describing the skip I had just deleted. **My own
+documentation manufactured a phantom obligation in the desk's next count.** ★★★★★ **`THE CENSUS'S OWN §1
+RECORDS FOUR COMMENT-ONLY MATCHES THAT WOULD HAVE INFLATED THE ORIGINAL DENOMINATOR — AND I THEN WROTE A
+FIFTH INTO EXISTENCE BY EXPLAINING MYSELF IN A COMMENT.`**
+✅ **AFTER `F`, EXECUTABLE `pytest.skip` IN THIS FILE = `2`:** `:47` (row `18`, Cluster `E`, **HELD** by
+`R-820 §9[4]`) and `:910` (row `20`, already form `[1]` since `e55a9ef1` — the resource is committed, so the
+branch is unreachable dead code). 🛑 **NEITHER IS TOUCHED.**
+⚖️ **SCOPE READING I DECLARE RATHER THAN ASSUME: `R-820 §9[8]` says *"do not touch the `5` remaining
+`pytest.skip`"* while `§9[1]` orders *"FINISH `F` (rows `22`,`23`)"* — and rows `22`/`23` ARE two of those
+five. I read `§9[1]` as controlling, because `§9[8]`'s fence is explicitly `(§4, out of scope)` i.e. out of
+CLUSTER `D`'s scope, and the alternative reading makes `§9[1]` unexecutable.** **If the desk meant
+otherwise, this is the line to correct.**
+
+### 12.4 ⚠️ WHAT CLUSTER `F` DOES **NOT** ESTABLISH
+⚠️ **NO PORTABILITY CLAIM.** `[AR-966 §6]` a linked worktree shares the object store, so **the git-history
+axis was never varied by any tree on this box.** The proof is PLANT-based. **A genuinely shallow clone was
+NOT tested.**
+⚠️ **The pinned blob ids are correct AT THIS PIN.** A history rewrite would break them — **deliberately**:
+that is the guard firing, not a defect.
+⚠️ **`_load_module_at_ref` writes a synthetic key into `sys.modules` (`:1938`) and pops it only on
+exception.** `[MEASURED]` the key is uniquely derived from the ref (`_gitref_spec_family_bindings_*`) so it
+shadows no production module. **NAMED, NOT REPAIRED** — it belongs to the `28` `[UNADJUDICATED]`
+nominations, which `R-820 §6` will record `CONTAINED_BY_ACCEPT5_PROCESS_BOUNDARY` if ratification passes.
