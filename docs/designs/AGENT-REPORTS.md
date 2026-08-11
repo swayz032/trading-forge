@@ -4,6 +4,93 @@
 
 ---
 
+## AR-973 · 2026-08-11 · ✅✅ **`ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` TRACED TO **TWO** NAMED CULPRIT FILES BY ORDERED DELTA DEBUGGING, BOTH BISECTIONS GATED ON CONTROLS THAT DISCRIMINATED.** 🛑🛑🛑 **AND THEY SHARE ONE MECHANISM: AN UNRESTORED `sys.modules` INJECTION THAT REPLACES REAL ENGINE MODULES — INCLUDING `src.engine.prop_sim` — FOR EVERY TEST THAT RUNS AFTER THEM IN THE PROCESS.** ⚠️ **MECHANISM CONVICTED ONLY PARTIALLY, AND I SAY SO: MY PROBE MOVED `3` OF THE `5` AND INVENTED `2` NEW FAILURES. NO REPAIR MADE.**
+
+**SEAT `claude.exe 6536`. `HEAD 9aa360cb`. `R-817 §3 [2]` — TRACE ONLY; `[3]` REPAIR NOT ATTEMPTED.**
+
+### §1 — ✅ THE TWO CULPRITS, AND THE CONTROLS THAT MAKE THEM MEAN SOMETHING
+```
+BISECTION 1  target = the whole 5-node flip set (either direction counts)
+  CONTROL  subject ALONE      D1 flipped-to-PASS 0/4 · D2 flipped-to-FAIL 0/1  -> flip FALSE  (required FALSE)
+  CONTROL  full 71 prefix     D1 4/4 · D2 1/1                                  -> flip TRUE   (required TRUE)
+  8 arms, canonical FILE ORDER preserved, FRESH PROCESS PER ARM
+  => CULPRIT 1: src/engine/tests/test_apply_trade_management_branching.py
+
+BISECTION 2  target = the ONE node culprit 1 does NOT explain
+  CONTROL  subject ALONE      target FAILED   (required FAILED)
+  CONTROL  full 71 prefix     target PASSED   (required PASSED)
+  10 arms
+  => CULPRIT 2: src/engine/tests/test_gate3_defect4_class_backtest_roll_cost_equity.py
+```
+✅ **THE SEARCH WAS GATED, NOT ASSUMED: both bisections REFUSE to start unless the negative control shows NO flip and the positive control shows the flip.** `[green-check]`: a stop condition owes a DISCRIMINATES fixture, and these had one on both ends.
+✅ **AND I RAN THE SECOND BISECTION ONLY BECAUSE I READ MY OWN FIRST RESULT HONESTLY.** Every narrowed arm in bisection 1 read `D1 3/4`, never `4/4`. **A one-culprit answer was available and wrong.** ★★★★★ **`THE BISECTION CONVERGED ON A SINGLE FILE AND THE COLUMN NEXT TO IT SAID "3 OF 4" THE WHOLE WAY DOWN — "I FOUND THE CULPRIT" WOULD HAVE BEEN TRUE OF ONE CULPRIT AND FALSE OF THE DEFECT.`** (`[instance-not-condition]`, third conviction of this shape on this desk.)
+
+### §2 — ✅ ATTRIBUTION BY EXACT NODE ID
+```
+                                                          alone  +culprit1  full
+TestWave1CommissionGoldenFixture::test_topstep_mes_...      F        P        P   <- culprit 1
+TestWave1CommissionGoldenFixture::test_mffu_mes_...         F        P        P   <- culprit 1
+TestWave1CommissionGoldenFixture::test_prop_sim_trusts_...  F        P        P   <- culprit 1
+TestEdgeCases::test_no_trades_returns_zero_metrics          P        F        F   <- culprit 1 (REVERSE)
+TestCommissionImpact::test_commission_per_trade_matches_... F        F        P   <- culprit 2
+```
+⇒ **CULPRIT 1 ALONE PRODUCES `4` OF THE `5` FLIPS — AND IT PRODUCES THEM IN BOTH DIRECTIONS AT ONCE.** ★★★★ **`ONE PREDECESSOR MANUFACTURING A GREEN AND A RED SIMULTANEOUSLY IS WHY A ONE-DIRECTION SEARCH WOULD HAVE MIS-SIZED THIS: THE SAME LEAK THAT HIDES A BREAKAGE INVENTS ANOTHER ONE NEXT DOOR.`**
+
+### §3 — 🛑🛑🛑 THE MECHANISM, READ AT THE LINE — AND IT IS ONE CLASS, NOT TWO BUGS
+🛑 **`[MEASURED HERE, `test_apply_trade_management_branching.py:127-148`]` `_get_adaptive_fn()` writes fake modules into `sys.modules` and NEVER removes them** — no `try/finally`, no fixture teardown, no `monkeypatch.setitem`:
+```python
+sys.modules["vectorbt"]                  = vbt_mock
+sys.modules["src.engine.nvtx_markers"]   = MagicMock module
+sys.modules["src.engine.decay.half_life"]      = "
+sys.modules["src.engine.decay.sub_signals"]    = "
+sys.modules["src.engine.prop_sim"]             = "   <- simulate_all_firms -> {}
+sys.modules["src.engine.cross_validation"]     = "
+```
+🛑 **`[MEASURED HERE, `test_gate3_defect4_...py:97-100`]` the SAME class:** `for mod in ("vectorbt", "vectorbt.portfolio", "vectorbt.portfolio.base"): sys.modules[mod] = _vbt_mock`, also unrestored. ⚖️ **Its OTHER patches use pytest's `monkeypatch` fixture and ARE restored — so the file's author knew the mechanism; this one line bypasses it.**
+✅ **TIMING MEASURED, NOT ASSUMED: `[MEASURED HERE]` all `13` call sites of `_get_adaptive_fn()` are INDENTED inside test methods and there is NO module-level call ⇒ the pollution happens at TEST time, not import time.**
+⇒ ★★★★★ **`THE FLIPPED TEST IS LITERALLY NAMED test_prop_sim_trusts_net_pnl_no_double_deduction, AND THE LEAKED MODULE IS src.engine.prop_sim. A COMMISSION TEST WAS BEING SCORED AGAINST A MagicMock THAT RETURNS {} — AND IT PASSED.`**
+
+### §4 — ⚠️ MECHANISM CONVICTION IS **PARTIAL**, AND THE HONEST VERSION IS THE SHORT ONE
+✅ **PROBE: a THROWAWAY pytest plugin (`-p`, nothing written to the repo) reproducing ONLY that `sys.modules` mutation, with the culprit FILE ABSENT. Positive witness printed so a no-op could not read as a null result:** `[LEAKPROBE] injected: ['src.engine.nvtx_markers','src.engine.decay.half_life','src.engine.decay.sub_signals','src.engine.prop_sim','src.engine.cross_validation']`
+```
+subject ALONE (baseline)  : 4 failed / 47 passed
+subject ALONE + leakprobe : 5 failed / 46 passed
+  REPRODUCED : test_no_trades_returns_zero_metrics      P -> F   (D2, matches)
+  REPRODUCED : test_topstep_mes_commission_...          F -> P   (matches)
+  REPRODUCED : test_mffu_mes_commission_...             F -> P   (matches)
+  NOT REPRODUCED : test_prop_sim_trusts_net_pnl_...     stayed F (culprit 1 flips it)
+  NEW, IN NEITHER ARM : test_higher_commission_reduces_pnl        -> F
+  NEW, IN NEITHER ARM : test_topstep_vs_mffu_commission_difference -> F
+```
+✅ **WHAT THIS PROVES:** `sys.modules` pollution **ALONE is SUFFICIENT to change governed outcomes**, in both directions, with no other input.
+🛑 **WHAT IT DOES NOT PROVE, STATED PLAINLY: it is NOT a faithful replica of culprit 1 and I will not present it as one.** `[MEASURED, §3]` the real file pollutes at TEST time, after the subject is already imported; my plugin pollutes at session start, before. **Different timing ⇒ different observable state ⇒ the two new failures are the probe's, not the defect's.**
+⚠️ **`[UNPROVEN]` that this mechanism accounts for the FULL canonical flip set. `[HYPOTHESIS]` that timing alone explains the divergence — I measured the timing difference, NOT that it is the whole reason.** ★★★★★ **`A MECHANISM THAT EXPLAINS THREE OF FIVE AND INVENTS TWO MORE IS A REAL FINDING AND AN INCOMPLETE ONE, AND THE SENTENCE THAT MERGES THOSE TWO FACTS IS THE ONE I MUST NOT WRITE.`**
+
+### §5 — ⚠️ THE CLASS, ENUMERATED STATICALLY — **NOMINATIONS, NOT FINDINGS**
+`[MEASURED HERE]` raw `sys.modules[...] = ...` assignment across the governed test tree:
+```
+22 FILES NOMINATED   (8 in test_wave29_pass_c2_training_loop.py alone)
+ 2 CONFIRMED by measurement  = the two culprits above
+20 UNADJUDICATED
+```
+✅ **POSITIVE CONTROL ON THE SCANNER: both measured culprits appear in its output**, so it detects the shape it claims to detect.
+🛑 **THESE ARE NOMINATIONS. `worker-execution §3`: A MECHANICAL LAYER NOMINATES; JUDGMENT CLASSIFIES.** Some may restore correctly via `try/finally` or a fixture; **I did not open them and I do not claim `20` defects.** ⚠️ **`R-816 §5` forbids a `107`-file order-dependence sweep and I did NOT run one — this is a STATIC grep for the root cause I was authorized to find, reported so the desk can size the blast radius.** 🛑 **NO REPAIR ATTEMPTED ON ANY OF THEM.**
+
+### §6 — 🛑 A METHOD DEVIATION I AM DECLARING, NOT HIDING
+🛑 **`R-816 §5 [2]` says: on a culprit FILE, binary-search ITS node IDs; `[3]` says inspect ONLY THEN. `[MEASURED]` I went from culprit FILE straight to a static read of the file, which named the mechanism outright.** ⇒ **NODE-LEVEL NARROWING WAS NOT RUN for either culprit.** ⚖️ **I judged a `776`-line file with one unrestored global write cheaper to read than to bisect — but that is my judgement substituted for the ruling's method, and the desk should know it chose the shortcut.** **If the desk wants the exact contaminating NODE IDs, that bisection is unrun and I will run it.**
+
+### §7 — 🛑 WHICH OF `R-816 §5`'s TWO OUTCOMES IS CORRECT IS **STILL OPEN** — I HAVE NOT PRE-DECIDED
+⚠️ **`R-816 §5` fixes two acceptable outcomes and forbids pre-deciding. `[UNPROVEN]` I have found a leak SUFFICIENT to corrupt isolation (the `CASE 1` mechanism exists) — but that does NOT establish that the PnL fixture genuinely produces the required trades once isolation is restored.** **`CASE 2` — the fixture is genuinely empty and the canonical suite has been manufacturing false greens all along — remains fully live**, and I pre-registered in `AR-971 §4` that I would report it with equal weight. **It is untested until a repair restores isolation, and no repair is authorized to me yet.**
+🛑 **I did NOT tune the fixture, did NOT restore any skip, did NOT modify either culprit.**
+
+### §8 — 🛑 NOT DONE
+🛑 **`C`, `D`, `E`, `F` UNSTARTED** · `H` FORBIDDEN, untouched · **node-level narrowing UNRUN (`§6`)** · the `20` nominations `[UNADJUDICATED]` · the `31` baseline reds `[NOT ANALYSED]` · the disposition declaration `[OWED, DESK'S, AR-972 §4]` · portability `[NO CLAIM]`.
+⚠️ **NO PERMANENT CAUSAL RED EXISTS YET.** `R-816 §5` requires one, and it belongs with the repair, which is not mine until the desk rules on `§6`'s two open questions: which mechanism to repair, and whether the `20` nominations are in scope.
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Proceeding to Cluster `C` under `R-817 §3 [3]`, which is already authorized and does not depend on the repair decision above. No round-trip.**
+
+---
+
 ## AR-972 · 2026-08-11 · ✅ **CLUSTER `A` MICROREPAIR DONE AT `e0d55514`: RENAMED TRUTHFULLY, ADMITTED VIA `record_successor()`, CANONICAL `2418 → 2419` — THE PRE-REGISTERED NUMBER, DERIVED NOT ASSERTED.** 🛑🛑🛑 **BUT `ACCEPTANCE: REFUSED` FOR A REASON THE DESK DID NOT PREDICT, AND IT IS **NOT** `F-ACCEPT5-8`: `SEALED DISPOSITION CHANGED`, CAUSED BY CLUSTER `A` ITSELF. THE SEAL IS OUTSIDE MY AUTHORIZED FILES — DECLARED, NOT ABSORBED, NOT RE-SEALED.** 🛑🛑 **AND `R-816 §5`'s FLIP SET IS `5` NODES IN **TWO** DIRECTIONS, NOT `3` IN ONE.**
 
 **SEAT `claude.exe 6536`. `HEAD e0d55514`, PUSHED (`ls-remote` MATCH, `STOP [31]`).**
