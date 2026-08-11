@@ -1,30 +1,72 @@
 """Canonical cross-timeframe reaction-shelf merger for Slumdawg.
 
-This is the deterministic semantic oracle for Pine/FXR parity.  Candidate zones
-are fused into physical reaction shelves before TP numbering.  The final TP is
-always placed *inside* the selected shelf.  Context decides whether that means
-the shelf midpoint (move aligned with BIG DIRECTION) or the safer near-middle
-portion (temporary/countertrend move).
+This is the deterministic semantic oracle for Pine/FXR parity. Candidate zones
+are fused into physical reaction shelves before TP numbering. Candidate geometry
+uses the full candle body-to-extreme reaction area rather than a thin wick strip.
+The final TP is always placed strictly inside the selected shelf.
 """
 from __future__ import annotations
 
 from math import ceil, floor, isfinite
 from typing import Iterable, Optional, Tuple
 
-from .reaction_cluster_selector import ReactionCluster, TargetLevel
+from .reaction_cluster_selector import ReactionCluster, ReactionInterval, TargetLevel
+
+
+def reaction_interval_from_candle(
+    *, side: str, open_price: float, close_price: float, high: float, low: float, source_id: str
+) -> ReactionInterval:
+    """Build the full reaction area for a historical turn candle.
+
+    LONG destinations are upper/supply reactions: full body bottom -> high.
+    SHORT destinations are lower/demand reactions: low -> full body top.
+
+    The old body-top->high / low->body-bottom strips are intentionally forbidden;
+    those narrow wick strips caused targets to hug reaction-zone extremes and could
+    make the engine skip the visually obvious middle shelf.
+    """
+    vals = (open_price, close_price, high, low)
+    if side not in {"LONG", "SHORT"}:
+        raise ValueError("side must be LONG or SHORT")
+    if not source_id:
+        raise ValueError("source_id required")
+    if any(not isfinite(v) or v <= 0 for v in vals):
+        raise ValueError("OHLC must be finite and positive")
+    if high < max(open_price, close_price) or low > min(open_price, close_price) or high <= low:
+        raise ValueError("invalid candle geometry")
+    if side == "LONG":
+        lower = min(open_price, close_price)
+        upper = high
+    else:
+        lower = low
+        upper = max(open_price, close_price)
+    return ReactionInterval(lower, upper, source_id)
 
 
 def target_depth_for_context(*, big_direction: int, current_move: int, safe_fraction: float) -> float:
-    """Return the deterministic inside-zone depth for the current market context.
-
-    BIG DIRECTION aligned with CURRENT MOVE -> exact reaction-zone midpoint.
-    Otherwise -> user-configured safer near-middle depth (strictly below 0.5).
-    """
+    """Legacy context helper retained for older fixtures."""
     if big_direction not in {-1, 0, 1} or current_move not in {-1, 0, 1}:
         raise ValueError("directions must be -1, 0, or 1")
     if not isfinite(safe_fraction) or not 0.0 < safe_fraction < 0.5:
         raise ValueError("safe_fraction must be finite and in (0, 0.5)")
     return 0.5 if big_direction != 0 and current_move == big_direction else safe_fraction
+
+
+def target_depth_for_side(*, side: str, long_depth: float = 0.55, short_depth: float = 0.50) -> float:
+    """Return current operator-approved interior placement bias.
+
+    LONG: middle with a small lean toward the upper/far side of the zone.
+    SHORT: middle of the qualified lower reaction zone.
+
+    These are platform-parity defaults for the current visual fixtures, not claims
+    of optimal market performance.
+    """
+    if side not in {"LONG", "SHORT"}:
+        raise ValueError("side must be LONG or SHORT")
+    for value in (long_depth, short_depth):
+        if not isfinite(value) or not 0.0 < value < 1.0:
+            raise ValueError("target depths must be finite and in (0, 1)")
+    return long_depth if side == "LONG" else short_depth
 
 
 def canonicalize_target_shelves(ladders: Iterable[Iterable[TargetLevel]], *, fusion_gap: float) -> Tuple[ReactionCluster, ...]:
@@ -55,8 +97,8 @@ def canonicalize_target_shelves(ladders: Iterable[Iterable[TargetLevel]], *, fus
 def _strict_inside_target(cluster: ReactionCluster, *, side: str, penetration_fraction: float, tick: float) -> Optional[TargetLevel]:
     if side not in {"LONG", "SHORT"}:
         raise ValueError("side must be LONG or SHORT")
-    if not 0.0 < penetration_fraction <= 0.5:
-        raise ValueError("penetration_fraction must be in (0, 0.5]")
+    if not 0.0 < penetration_fraction < 1.0:
+        raise ValueError("penetration_fraction must be in (0, 1)")
     if not isfinite(tick) or tick <= 0:
         raise ValueError("tick must be finite and positive")
     min_inside = cluster.lower + tick
@@ -80,7 +122,7 @@ def select_canonical_target_ladder(
 ) -> Tuple[TargetLevel, ...]:
     """Fuse all candidate shelves first, then rank one TP per physical shelf.
 
-    Distance only rejects/sequences already-qualified shelves.  It never creates a
+    Distance only rejects/sequences already-qualified shelves. It never creates a
     TP price; the displayed TP is computed from the chosen shelf geometry.
     """
     if side not in {"LONG", "SHORT"}:
