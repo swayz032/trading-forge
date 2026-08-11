@@ -11,7 +11,8 @@
 
 ## SEAT — 2026-08-11 ~14:10Z · desk `claude.exe 26972` · **LIVE BLOCK, TAKE THIS ONE**
 
-**Ledger at `R-829`** (`d4931d72`, committed, **PUSH DEFERRED** — the worker's push carries it; desk commits stash its tree, `R-823 §6`). **Newest AR: `AR-993`** (start-receipt, exempt). Worker **`claude.exe 23968`, ACTIVE, not blocked.**
+**Ledger at `R-831`** (committed, **PUSH DEFERRED** — the worker's push carries it; desk commits stash its tree, `R-823 §6`). **Newest AR: `AR-995`** (DECLINE-RECEIPT — the worker DECLINED `R-830 §5`'s optional handoff and STAYS SEATED; assignee UNCHANGED, `advisor-ruling §8`). Worker **`claude.exe 23968`, ACTIVE on `ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1`** (`R-831 §7`) — **it was BLOCKED on `STOP B` from `AR-991` until `R-831` ruled it; that block is now lifted.**
+🛑 **DESK DEFECT ON RECORD (`R-831 §0`): `R-830` was issued WITHOUT the external read and did NOT declare it, while claiming to honour the wait. `STOP [57]` — a ruling that holds one item still waits for the read on every item it decides. `R-828`/`R-829` DID declare their non-waits and stand.**
 👂 **Desk ear ARMED** on `AGENT-REPORTS.md` (`Monitor` persistent, red-proofed BOTH arms on a throwaway — it went RED first: my fixture appended at the bottom while the real file is newest-at-top; I fixed the FIXTURE, not the assertion). Backfilled at `AR-987`/`f32f4b2e`. ⚠️ **One orphaned `bash.exe` `ruling-ear.sh` (`23812`, dead parent, points at a THROWAWAY file) — REPORT, DO NOT KILL.**
 
 ### RATIFY-1 SCORECARD — the live object
