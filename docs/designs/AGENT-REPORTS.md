@@ -4,6 +4,94 @@
 
 ---
 
+## AR-960 · 2026-08-10 · ✅✅ **`R3-2`'s MECHANISM IS BUILT AND GREEN: THE SUCCESSOR CHAIN, THE HERMETICITY PRECONDITION, AND THE SEAL'S THREE MANIFEST FIELDS ARE NOW BOUND.** ⭐ **PAIRED CONTROL PROVES THE HOLE IT CLOSES: DELETE A LANE-`L` TEST AND THE OLD ROOT-SEAL GUARD SEES `0` MISSING; THE CHAIN-DERIVED GUARD SEES `1`.** 🛑🛑 **BUT ONE NAMED SUB-ITEM IS `BLOCKED` ON EVIDENCE, NOT ON EFFORT: THE RED CANNOT BE ADMITTED TO `canonical_regression_population.txt`, BECAUSE THAT MANIFEST IS A *DERIVED* ARTIFACT AND ADMITTING IT REDDENS A GOVERNED MEMBER.** ⚠️ **AND MY OWN SCANNER HAD TWO DEFECTS — BOTH CAUGHT BY ITS CONTROLS, ONE OF THEM A FALSE REFUSAL OF THE EXACT FILE THIS ITEM EXISTS TO ADMIT.**
+
+**SEAT `claude.exe 23936`. TREE `HEAD 7e05c767`. `R3` = `2 / 5` — `R3-2` NOT counted; see `§5`.**
+
+### §1 — ✅ WHAT IS BUILT (`1c6737cb`, `7e05c767`)
+✅ **`scripts/population_successor.py` — the node-ID governance layer `R-799 §4` specifies.** Root seal `08062e12` untouched, unamended, un-re-sealed. `required = sealed + every approved addition − only explicitly authorized removals`, **DERIVED, never asserted.**
+✅ **`required_population()` walks the chain and refuses a broken one:** an entry whose declared parent is not the chain tip · an addition that collides with an existing member · a removal of a node ID that is not there · **any `resulting_population_sha256` that does not re-derive from that entry's own additions and removals.**
+✅ **`record_successor()` DERIVES additions/removals by diffing an OBSERVED collection against the tip — the caller cannot assert them** — then **re-reads the file it just wrote** and prints the recompute. **`STOP [22]` is satisfied by construction, not by discipline.**
+✅ **UNAUTHORIZED SHRINK IS FAIL-CLOSED and names the vanished node IDs** (`STOP [23]`: membership, never cardinality).
+✅ **`validate_seal()` now BINDS `manifest_path` / `manifest_sha256` / `manifest_members`** against out-of-band pins — the same anchor pattern `graded_sha` and the population digest already used. **Previously the seal recorded all three and nothing read them, so a seal could name any manifest, or none, and pass.**
+🛑 **AND I SCOPED THAT BINDING DELIBERATELY, BECAUSE THE OBVIOUS IMPLEMENTATION IS A FALSE-RED GENERATOR:** `[MEASURED]` seal-time is `105` / `2c728e35…`; the live manifest is `107` / `dc615e39…`. **That drift is LEGITIMATE.** ⇒ **Binding these to TODAY's manifest would refuse every run — the exact shape `R-806 §3` caught.** **The pins fix SEAL TIME; the LIVE manifest is governed by the chain.**
+
+### §2 — ⭐ THE HOLE IT ACTUALLY CLOSES, AS A PAIRED CONTROL
+🛑 **`[MEASURED]` the vanish check previously guarded `set(seal["collected_population"])` — the ROOT SEAL ALONE, `2392` node IDs. The root seal PREDATES every test admitted since, so all `25` lane-`L` additions were unguarded.**
+```
+victim: test_mp1_candidate_persistence.py::test_obligation_A_the_golden_compile_plans_exactly_three_candidate_rows
+  OLD  root seal - collected = 0 missing  -> NOT CAUGHT
+  NEW  required  - collected = 1 missing  -> CAUGHT
+```
+★★★★★ **`A GUARD ANCHORED ONLY TO THE ORIGINAL SEAL PROTECTS EXACTLY THE TESTS THAT ARE OLDEST AND LEAST LIKELY TO MOVE, AND LEAVES EVERY TEST THE CAMPAIGN HAS ADDED SINCE COMPLETELY UNPROTECTED — WHILE PRINTING A REASSURING ZERO.`**
+
+### §3 — ✅ ARMS, EACH ALONE, WITH THE UNMUTATED CONTROL FIRST
+```
+[MEASURED HERE, disposable worktree @ 7e05c767, destroyed after]
+ARM 0  pristine chain -> 2417, 0 problems        CORRECT     <- unmutated control
+       pristine seal  -> 0 preflight problems    CORRECT
+A  resulting_population_sha256 altered  -> POPULATION CHAIN FAILURE
+B  parent_population_sha256 altered     -> POPULATION CHAIN FAILURE
+C  an added node ID silently dropped    -> POPULATION CHAIN FAILURE
+D  chain file ABSENT -> 2392, 0 problems (graceful root-seal anchor, NOT an error)
+E  manifest_members 105 -> 106          -> SEAL INTEGRITY FAILURE
+F  manifest_sha256 altered              -> SEAL INTEGRITY FAILURE
+G  manifest_path REMOVED entirely       -> SEAL INTEGRITY FAILURE
+H  paired control (§2)                  -> old NOT CAUGHT / new CAUGHT
+UNAUTHORIZED SHRINK -> refuses, NAMES the node ID, and writes NOTHING
+```
+✅ **`STOP [17]` DOES NOT FIRE — full `R6` on the REAL manifest, conforming worktree:**
+```
+NOTE: [1] manifest members : 107      NOTE: [4] 2417/2417/31/3/2
+[SELF-CHECK] junitxml cases=2417 failures=31
+[SEAL]  preflight problems : 0        [CHAIN] required population : 2417
+[CHAIN] chain problems     : 0        [SEAL]  required members no longer collected : 0
+ACCEPTANCE: REFUSED   R6_EXIT=1   TREE AUTHORITY 0 · PYTEST RUN INVALID 0 · POPULATION CHAIN 0
+```
+⚠️ **`REFUSED` is `F-ACCEPT5-8` on a conforming checkout and is EXPECTED — `R-809 §2` measured the identical `2417/2417/31/3/2` / `REFUSED` before my change. The scoring numbers are UNCHANGED by this patch.**
+
+### §4 — ⚠️ MY OWN SCANNER WAS WRONG TWICE, AND THE CONTROLS CONVICTED IT
+🛑 **`[MEASURED]` the first run of the hermeticity red-proof:**
+```
+FALSE POSITIVE: [A-Za-z]:[\\/] matched  "stdout:\n"  (t: followed by \)
+                -> REFUSED the permanent RED, the exact file R3-2 exists to admit
+FALSE NEGATIVE: argv-list form ["git","log"] slipped an adjacency-only pattern
+                -> a genuine git-history dependency would have been ADMITTED
+```
+✅ **Both fixed; final: `7 / 7` positive controls REFUSE, the RED is ADMITTED, prose-vs-executable discriminates.**
+★★★★★ **`I WROTE A HERMETICITY GATE AND IT WAS BOTH TOO STRICT AND TOO LOOSE AT THE SAME TIME, ON DIFFERENT MECHANISMS. NEITHER DEFECT WAS VISIBLE IN THE REGEX; BOTH WERE VISIBLE IN ONE CONTROL RUN.`** ⇒ **This is why the negative control (a file that MUST be admitted) matters as much as the positive ones — a gate with only positive controls is tuned to refuse, and refusing everything looks exactly like working.**
+
+### §5 — 🛑🛑 `BLOCKED`, WITH EVIDENCE: THE RED CANNOT BE ADMITTED TO THAT MANIFEST
+🛑 **`AR-957 §49` recorded the RED's admission as *"`R3-2`'s call"*. That premise assumed the manifest is a LIST. `[MEASURED]` IT IS NOT — it is a DERIVED artifact:**
+```
+manifest header : "COMPUTED, NEVER HAND-EDITED. Generated by
+                   test_flag_off_parameterized_refusal.py::_regression_population
+                   over _SCAN_ROOT with _CLOSURE_TARGETS =
+                   ('spec_condition_compiler', 'spec_family_bindings')"
+the RED imports spec_condition_compiler : 0        spec_family_bindings : 0
+that guard is GOVERNED MEMBER #67 of the manifest itself
+```
+🛑 **AND I DID NOT ARGUE IT — I PLANTED IT IN A DISPOSABLE WORKTREE:**
+```
+[MEASURED] manifest with the RED inserted at sorted position:
+  [MANIFEST] committed=108 derived=107
+  FAILED ...::test_the_canonical_population_matches_its_committed_manifest_by_member
+  "members differ - in manifest only: ['engine/tests/test_accept5_stale_run_consumption.py']"
+```
+⇒ 🛑 **ADMITTING THE RED BY HAND CREATES A NEW RED IN A GOVERNED MEMBER.** ★★★★★ **`THE ADMISSION STEP AND THE THING IT WOULD ADMIT ARE GOVERNED BY TWO DIFFERENT AUTHORITIES, AND THEY DISAGREE: THE CHAIN GOVERNS NODE IDs, THE MANIFEST IS COMPUTED FROM AN IMPORT CLOSURE. A TEST THAT IS NOT IN THE CLOSURE HAS NO LEGITIMATE ROUTE INTO THAT FILE.`**
+🛑 **I did NOT: regenerate the manifest (forbidden without member-diff review, and regeneration would not produce the RED anyway) · widen `_CLOSURE_TARGETS` (the header records that ONE planted import swung the population `95 → 159`) · weaken the guard. Each of those makes the gate agree with me, which is the one outcome I may not buy.**
+⚖️ **MY RECOMMENDATION, AND IT IS THE DESK'S DECISION BECAUSE IT CHANGES WHAT THE GATE EXECUTES:** the runner needs a SECOND, explicitly-governed member source for admitted contracts that are outside the import closure — chain-governed, executed alongside manifest members. **The chain already separates `added_node_ids` from `current_manifest_identity`, so the data model supports it; the runner's `:605` member resolution does not.** 🛑 **I will not pick that unilaterally: `R-799 §8` forbids me changing what the gate runs, and a wrong choice here is a silent population change.**
+
+### §6 — 🛑 WHAT IS NOT DONE
+🛑 **`R3-2` is NOT complete and I do not count it. `R3` stays `2 / 5`.** **Delivered: the chain · hermeticity · seal manifest binding · successor-population guard · the reconciliation entry (`2392 → 2417`, `25` additions, `0` removals, all named). Outstanding: the RED's admission, `BLOCKED` per `§5`.**
+⚠️ **`ACCEPT5-POPULATION-SUCCESSOR-1` is substantially discharged by `1c6737cb` but I leave it OPEN until the desk rules `§5`, because its own `R3-2` clause includes the admission.**
+⚠️ **NOT MEASURED: whether any OTHER committed canonical RED contract is in the same position as this one. `R-799 §4` says *"every committed canonical RED contract becomes a gate input"*, and I have proven the route into the manifest is closed for at least one of them. I did not enumerate the rest — that is a real question and I am naming it rather than implying it is covered.**
+🛑 **UNTOUCHED, as ordered: `ACCEPT5-LATENT-OTHER-CHECKOUT-3` · `ACCEPT5-EMPTY-POPULATION-FALLBACK-1` · the `S6` root seal · `MP1` ingress · the money path.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** (`worker-execution §11a`). **The `§5` sub-item is `BLOCKED` on a desk architecture decision; the rest of the lane is not.** ⏭️ **CONTINUING NOW to `R3-4` conversion, which `R-802` released independently and `R-808`/`R-809`/`R-810` each record as still released — I am not idling on the `§5` ruling.**
+
+---
+
 ## AR-959 · 2026-08-10 · ✅✅✅ **`R3-3` COMPLETE AT `216ecd90`. BOTH SITES RESOLVE FROM THE EXECUTING TREE, BOTH NODE IDs PRESERVED BYTE-FOR-BYTE, AND `SEALED-MEMBER-CORRECTION-1` IS WRITTEN.** ⭐ **THE CROSS-CHECKOUT CONTROL IS A *PAIRED* ONE AND IT IS DECISIVE: THE SAME MUTATION, SAME MOMENT, SAME FILE — PRE-REPAIR TREE GOES RED, POST-REPAIR TREE STAYS GREEN.** ✅ **`STOP [20]` AND `STOP [21]` BOTH ANSWERED WITH EVIDENCE.** ⚠️ **AND THE HONEST FINDING: THE HISTORICAL GREENS WERE NOT WRONG — THEY WERE *UNEARNED*, WHICH IS HARDER TO SEE AND EXACTLY AS DANGEROUS.**
 
 **SEAT `claude.exe 23936`. TREE `HEAD 216ecd90`. `R3` = `2 / 5`.**
