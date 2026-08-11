@@ -4,6 +4,70 @@
 
 ---
 
+## AR-1004 · 2026-08-11 · 🛑 **CORRECTION TO MY OWN `AR-1003 §1`, RE-DERIVED BEFORE I ACCEPTED IT: `377.7s` IS `63%` OF THE `[H]` BUDGET **USED**, NOT `37%`. I LABELLED THE HEADROOM AS THE CONSUMPTION.** ✅ **THE `[H]` VERDICT IS UNCHANGED — BUT THE COST PICTURE IS TIGHTER THAN MY SENTENCE IMPLIED, AND THAT IS THE PART THAT MATTERED.** 📌 **HOLD RECEIPT (`R-835 §7[2]`) + HANDOFF DECLARATION AT THE SEAM THE DESK CALLS THE CLEANEST IN THE CAMPAIGN.**
+
+**SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. `HEAD` at `AR-1003`'s commit `cbd56601` + desk commits. RULING `R-835 §7`.** 🛑 Nothing measured beyond the arithmetic below · instrument NOT touched (`STOP [50]`) · no push · no worktree removed · `cmp_AC.txt` intact · the `33` untouched.
+
+### §1 — 🛑 THE CORRECTION, AND I CHECKED IT RATHER THAN DEFERRING TO THE DESK
+🛑 **`AR-1003 §1` PUBLISHED: *"worst `377.7s`, i.e. `37%` of the ceiling used."* THAT IS WRONG.**
+✅ **`[MEASURED HERE]` `377.7 / 600.0 = 62.9%` **USED**; `(600.0 − 377.7) / 600.0 = 37.0%` **REMAINING**. ⇒ I computed the HEADROOM correctly and then labelled it as the CONSUMPTION.** ⚖️ **`R-835 §0` names this and says it inherited and republished it; I did not take the correction on the desk's word either — I re-derived both figures before agreeing** (`[external-opinion]`/`[second-reader-anchoring]`: agreeing with a corrector without checking is the same failure as agreeing with a claimant).
+✅ **WHAT DOES NOT CHANGE: the `[H]` VERDICT. `377.7s <= 600.0s` on the worst arm, so every arm passes the hard gate, and all five per-arm numbers in `AR-1003 §1` (`377.7 / 372.7 / 363.2 / 368.2 / 367.9`) are CORRECT AS PRINTED. Only my percentage GLOSS was wrong.**
+🛑 **WHAT DOES CHANGE, AND WHY IT IS NOT COSMETIC: `63%` consumed leaves materially less room than `37%` consumed implies, and this campaign banks a runtime hazard on exactly that margin (`ACCEPT5-RUNTIME-HEADROOM-1`: wake on runtime `>= 9.5` min; `> 10.0` min ⇒ STOP AND REPORT).** ⇒ ★★★★★ **`A WRONG NUMBER THAT DOES NOT MOVE THE VERDICT STILL MOVES THE DECISION THAT COMES AFTER IT — I MADE A GATE WE ARE 63% THROUGH LOOK LIKE ONE WE ARE 37% THROUGH, AND THE NEXT PERSON TO ASK "CAN THE POPULATION GROW?" WOULD HAVE ANSWERED IT FROM MY SENTENCE.`**
+⚖️ **PRESERVE-AND-STRIKE: I do NOT edit `AR-1003` — it is committed at `cbd56601` and its `37%` clause stands in the record, STRUCK BY THIS ENTRY, so the mistake and its correction are both auditable** (`A CORRECTION APPENDED BELOW A FALSE LINE LEAVES THE FALSE LINE CITABLE` — so this entry names the exact clause rather than gesturing at the section).
+
+### §2 — 📌 HOLD RECEIPT (`R-835 §7[2]`)
+✅ **I AM ON HOLD, AND THE DESK NAMED THE OWNER OF THE NEXT MOVE: the independent `accuracy-validator` grade is RUNNING and it is the DESK's, not mine.** ⚖️ **This is an explicit HOLD with a named owner, not a stall — so it needs a receipt exactly like a start** (`worker-execution §10`).
+🛑 **HELD, EXPLICITLY:** `STOP [50]` — I will not touch `g_order_identity.py`, `accept5_isolated_runner.py`, `accept5_isolation_plugin.py`, the provenance/manifest format or the runtime gate while the grader attacks them · **no worktree removed or cleaned, and `cmp_AC.txt` is INTACT** — `R-835 §7[4]` keeps the refused run as forensic evidence that the guard bites, which is exactly why I retained it in the first place · **no push** · the `33` NOT adjudicated, NOT repaired, and NOT compared to the `287` or the `31` · no promotion, seal, certification, `RATIFY-1` number, `CLUSTER-E`, `acceptance_runner.py`, root seal, `margin_expansion.py`, production engine file, HTF production, or `MP1`.
+🛑 **AND I DO NOT PRE-EMPT EITHER GRADE OUTCOME (`R-835 §7[6]`).** I have not prepared a repair, not guessed at a false green, and not drafted a certification. **If the grade convicts my work, that verdict is the result and I will report it as it comes back, including against myself** (`worker-execution §5a`).
+
+### §3 — ⚖️ HANDOFF DECLARATION — AND THE FAN-IN FIRST, BECAUSE THAT IS THE TEST
+⚖️ **`worker-onboarding §5` forbids me from writing a handoff before answering the fan-in question out loud, so: MY FAN-IN IS `12 / 12` ON `R-834 §9`, AND THE REMAINING WORK IS NOT `UNSTARTED` — IT IS `NOT MINE`.**
+```
+R-834 §9 ITEM                                            STATUS
+ 1 AR-1001 approved / STOP B closed -- acknowledged      DONE
+ 2 push the branch (the desk's ask)                      DONE, fast-forward
+ 3 STOP J if the push is refused                         N/A -- accepted first time
+ 4 verify fb71a3ef resolves from origin                  DONE, two ways
+ 5 fresh clean exclusive worktree at the exact pin       DONE, wt-cert5-fb71a3ef
+ 6 run all five arms A/B/C/D/E                           DONE
+ 7 per-arm population contract, both denominators        DONE, all five
+ 8 [H] hard gate <= 600.0s per arm                       DONE, worst 377.7s (63%)
+ 9 STOP K / do not adjudicate the 33                     HELD, never fired
+10 the prohibition list                                  HELD, nothing breached
+11 one seat owns all five arms, no rotation midway       HELD -- I did not rotate
+12 START-RECEIPT + first observable                      DONE, AR-1002
+```
+✅ **NOTHING IS UNSTARTED. NOTHING IS HALF-BUILT. NOTHING IS IN FLIGHT. NO SUB-AGENT IS DISPATCHED AND NONE IS OWED** — I verified that gap is empty rather than assuming it.
+⚖️ **AND THE HONEST GROUND FOR GOING NOW RATHER THAN LATER, which is a cost judgment and not a claim of exhaustion: `R-835 §7[7]` calls this the cleanest seam in the campaign and it is right — the next authorization is EITHER *"certify `RATIFY-1` and open the post-grade lane"* OR *"execute the minimum repair the grade exposes"*, and BOTH are substantial fresh work that a cold seat can take from `AR-1003` and `R-835` alone.** ⇒ **taking this hold to its end and then starting a large lane is exactly the shape `worker-onboarding §4.5` warns about: the most expensive moment to swap and the most dangerous.** ★★★★ **`I AM NOT HANDING OFF AT A LANE BOUNDARY WITH LANES LEFT — I AM HANDING OFF AT A HOLD WITH NO LANES LEFT, WHICH IS THE ONE CASE THE RULE IS NOT AIMED AT.`**
+🛑 **THE DECLARATION IS SELF-ASSESSMENT AND TRANSFERS NOTHING** (`advisor-ruling §0.5`): **the task stays MINE until the operator executes the swap — `[seat-rolls-are-swaps]`, IT DECLARES, THE OPERATOR EXECUTES. I remain seated, my ear stays armed, and I will keep working if the swap is not taken.**
+
+### §4 — 📌 WHAT A FRESH SEAT NEEDS, SO NOTHING IS RE-DERIVED
+```
+POSITION   AR-1003 committed cbd56601. CERT PIN fb71a3ef (resolves from origin).
+           LOCAL commits AHEAD of origin include DESK commits => DO NOT PUSH
+           (R-835 §7[5]; R-833 §4[7] needs the desk's ask, and R-834's ask was
+           spent on the earlier push).
+STATE      STOP B CLOSED. [G-FILE] [G-NODE] [I] [H] = WORKER-MEASURED PASS.
+           RATIFY-1 still UNCERTIFIED -- the independent grade is THE last gate
+           and it is RUNNING, owned by the desk.
+           The operator amended the timing: the grader waits on the GPT read.
+NEXT       NOT the worker's. On a clean grade the desk rules RATIFY-1 CERTIFIED
+           and opens the post-grade lane; on a real false green the desk scopes
+           the minimum repair. Do not pre-empt either.
+FROZEN     STOP [50]: g_order_identity.py, accept5_isolated_runner.py,
+           accept5_isolation_plugin.py, provenance/manifest format, runtime gate.
+KEEP       every worktree, and cmp_AC.txt specifically (forensic evidence).
+EAR        Monitor persistent on ADVISOR-RULINGS.md under claude.exe 25076 --
+           it DIES WITH THIS SEAT. A successor must arm its own and backfill.
+           NOTE: it watches the RULINGS file only; I caught an ADVISOR-STATE
+           change (the operator's grader-timing amendment) via git log, NOT via
+           the ear. A successor should know that blind spot exists.
+IN FLIGHT  NOTHING. No sub-agent dispatched, none owed.
+```
+**RECOMMENDATION: `BLOCKED` (held, owner named: the desk's independent grade), and a HANDOFF is AVAILABLE at the operator's discretion.** ⚖️ **I am not declaring exhaustion and I am not stopping work — I am naming the cheapest moment to swap and leaving the lever where it belongs.**
+
+---
+
 ## AR-1003 · 2026-08-11 · ✅✅✅ **ALL FIVE CERTIFYING ARMS RAN AND THE ORACLE HOLDS: `A == B == C == D` AND `A == E`, `0` DIFFERING NODES ON EVERY COMPARISON, BY THE COMMITTED COMPARATOR WITH THE PROVENANCE CHAIN ON.** ⚡ **`[H]` PASSES AS A HARD GATE — WORST ARM `377.7s` OF `600.0s`.** ⚡ **THE `33` ARE THE SAME `33` NODE IDs IN ALL FIVE ARMS.** 🛑🛑 **AND I MISUSED THE COMPARATOR ONCE: IT REFUSED ME, IT WAS RIGHT, AND I RESOLVED IT BY READING ITS SOURCE — NOT BY TRYING MODES UNTIL ONE WENT GREEN.** 🛑 **I CERTIFY NOTHING. NO `RATIFY-1` NUMBER IS PUBLISHED AND THE GRADER IS NOT DISPATCHED.**
 
 **SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. CERT PIN `fb71a3ef` (RESOLVES from `origin`). WORKTREE `C:/Users/tonio/Projects/wt-cert5-fb71a3ef`. RULING `R-834 §9`.** 🛑 `acceptance_runner.py` untouched · no seal · no promotion · `CLUSTER-E` untouched · `margin_expansion.py` and every production engine file UNOPENED · the `33` NOT adjudicated and NOT repaired · nothing parallelised · no `--limit` · no worktree removed.
