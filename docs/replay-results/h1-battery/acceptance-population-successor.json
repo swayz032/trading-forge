@@ -1,0 +1,50 @@
+{
+  "artifact": "ACCEPT-5 POPULATION SUCCESSOR CHAIN",
+  "authority": "R-799 SS4 (F-R2-2); built in R3-2",
+  "root_seal": "docs/replay-results/h1-battery/acceptance-collection-seal-08062e12.json",
+  "rule": "required = root sealed population + every approved addition - only explicitly authorized removals",
+  "immutable": "The root seal is never amended, regenerated or re-sealed. 'Regenerate the current population' is re-sealing under another name.",
+  "successors": [
+    {
+      "entry_kind": "reconciliation",
+      "authority": "R-799 SS4 (F-R2-2), recorded in R3-2",
+      "note": "Accumulated PRE-CHAIN drift between the immutable root seal 08062e12 (2392 node IDs, manifest 105 members) and the population observed at this commit. DERIVED by diffing an observed collection against the root seal - not asserted. All 25 additions come from exactly two files added by lane L (MP1 candidate persistence/receipt); zero removals. This entry deliberately does NOT claim per-commit attribution for each node ID, because that was not measured; it claims only the delta, which was.",
+      "parent_population_sha256": "63d4b541caf7f0ade8628ac9e2f737ff6f7fdaeec3e12ea653b433e376b2c9b9",
+      "graded_sha": "4979e80c2539ffe1df3dfa320720afa2be6f1847",
+      "added_node_ids": [
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_A_the_golden_compile_plans_exactly_three_candidate_rows",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_B_all_three_rows_share_one_parent_spec_hash",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_C_the_three_rows_carry_distinct_candidate_ids",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_D_the_three_rows_carry_distinct_cache_identities",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_E_replaying_an_identical_candidate_is_idempotent",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_F_an_existing_5m_row_does_not_make_15m_a_duplicate",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_G_an_existing_15m_row_does_not_make_30m_a_duplicate",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_H_a_row_with_no_receipt_refuses",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_I_a_candidate_id_that_disagrees_with_the_receipt_refuses",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_J_a_parent_spec_hash_that_disagrees_with_the_receipt_refuses",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_K_a_legacy_artifact_with_no_receipt_keeps_legacy_dedupe",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_obligation_L_a_missing_candidate_never_becomes_a_default",
+        "src/engine/tests/test_mp1_candidate_persistence.py::test_receipt_cache_recompute_is_load_bearing_without_any_outer_anchor",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_01_the_boundary_produces_exactly_three_receipts",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_02_the_three_receipts_carry_distinct_candidate_ids",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_03_the_three_receipts_carry_distinct_cache_identities",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_04_all_three_receipts_name_the_same_parent_and_it_is_derived",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_05_the_receipt_survives_a_json_round_trip_unchanged",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_06_rehydration_returns_the_same_exact_candidate_identity",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_07_a_missing_receipt_makes_execution_refuse",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_08_a_receipt_swapped_onto_another_persisted_identity_goes_red",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_09_editing_the_duration_without_restamping_identity_goes_red",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_10_editing_the_payload_and_restamping_only_candidate_id_still_goes_red",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_obligation_11_with_no_receipt_nothing_ever_falls_back_to_the_first_candidate",
+        "src/engine/tests/test_mp1_candidate_receipt.py::test_the_golden_record_still_yields_exactly_the_three_taught_candidates"
+      ],
+      "explicitly_authorized_removed_node_ids": [],
+      "resulting_population_sha256": "e95eb0a77f5ccd5a7617fd2aaace8c246c3ea48ce7c388a813e96796c506849c",
+      "current_manifest_identity": {
+        "manifest_path": "src/engine/tests/canonical_regression_population.txt",
+        "manifest_sha256": "dc615e39eecfc69dc086dc9b4192e97ff5cfbbee63d14befd9f709acd2e3f3c9",
+        "manifest_members": 107
+      }
+    }
+  ]
+}
