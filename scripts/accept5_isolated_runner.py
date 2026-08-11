@@ -37,6 +37,7 @@ WHAT IT DELIBERATELY DOES NOT DO
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -60,9 +61,12 @@ def _slug(path: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", path).strip("_")
 
 
-def run_child(target_file, targets, run_root, *, layer2=True, blind=False, timeout=900):
+def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
+              timeout=900, head_sha=None):
     """Execute ONE governed file in its own interpreter and return its receipt."""
     run_id = uuid.uuid4().hex
+    if head_sha is None:
+        head_sha = _runner._git_head()
     child_dir = run_root / _slug(target_file)
     # exist_ok=False is the point: a child that would reuse a directory is a
     # child that could score somebody else's artifacts.
@@ -92,8 +96,15 @@ def run_child(target_file, targets, run_root, *, layer2=True, blind=False, timeo
 
     receipt = {
         "file": target_file, "targets": targets, "run_id": run_id,
+        # R-822 §5[C]: the receipt binds the CHILD, not the parent. It must carry
+        # the exact commit it measured -- a receipt that cannot name its own tree
+        # is a claim about "some checkout", which is what R3 exists to remove.
+        "head_sha": head_sha,
         "child_dir": str(child_dir), "returncode": rc, "elapsed_s": round(elapsed, 2),
         "timed_out": timed_out, "problems": [], "outcomes": {}, "collected": [],
+        # Artifact HASHES, not merely paths. A path proves a file was named; a
+        # hash proves WHICH bytes were scored, and it survives the directory.
+        "artifact_sha256": {},
     }
     P = receipt["problems"]
 
@@ -182,6 +193,10 @@ def run_child(target_file, targets, run_root, *, layer2=True, blind=False, timeo
     if unexecuted:
         P.append(f"{len(unexecuted)} node(s) collected but never executed in "
                  f"{target_file}: {unexecuted[:3]}")
+    for label, path in (("acceptance-run.json", out_json), ("acceptance-run.xml", out_xml)):
+        if path.is_file():
+            receipt["artifact_sha256"][label] = hashlib.sha256(
+                path.read_bytes()).hexdigest()
     receipt["layer2_witness"] = next(
         (ln.strip() for ln in stdout.splitlines() if "[ACCEPT5-LAYER2]" in ln), "")
     if layer2 and not receipt["layer2_witness"]:
