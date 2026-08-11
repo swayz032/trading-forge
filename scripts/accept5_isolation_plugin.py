@@ -154,7 +154,38 @@ def _is_genuine_import(obj):
     """
     if not isinstance(obj, types.ModuleType):
         return False
-    return getattr(obj, "__spec__", None) is not None
+    if getattr(obj, "__spec__", None) is not None:
+        return True
+    # ---- C-EXTENSION SUBMODULES CARRY NO __spec__ -------------------------
+    # `[MEASURED HERE]` duckdb registers `_duckdb._func` and `_duckdb._sqltypes`
+    # into sys.modules ITSELF, from compiled code. They are real ModuleType
+    # objects with `__spec__ is None`, because the import system never created
+    # them. A spec-only test therefore evicted them, and the next
+    # `duckdb.sqltypes` import died on
+    #     ModuleNotFoundError: No module named '_duckdb._sqltypes';
+    #     '_duckdb' is not a package
+    # which is precisely the failure that moved 4 of the STOP-B 12.
+    #
+    #   MY FIRST PREDICATE ASKED "DID THE IMPORT SYSTEM MAKE THIS?" WHEN THE
+    #   QUESTION IS "IS THIS PART OF A REAL IMPORTED PACKAGE?" -- AND A C
+    #   EXTENSION ANSWERS NO TO THE FIRST AND YES TO THE SECOND.
+    #
+    # So a spec-less entry is genuine when it is a SUBMODULE of a package that
+    # is itself genuine. That keeps extension trees intact while a top-level
+    # hand-installed fake -- which has no genuine parent -- is still evicted.
+    #
+    # RESIDUAL, NAMED: `sys.modules["src.engine.x"] = ModuleType("x")` (a bare
+    # spec-less ModuleType planted UNDER a real package) is preserved by this
+    # rule. Mocks and markers are not ModuleType and are still evicted; this
+    # narrows to a shape nothing in the governed tree uses today, and it is a
+    # far smaller residual than breaking every C-extension import.
+    parent = obj.__name__.rpartition(".")[0] if getattr(obj, "__name__", "") else ""
+    while parent:
+        p = sys.modules.get(parent)
+        if isinstance(p, types.ModuleType) and getattr(p, "__spec__", None) is not None:
+            return True
+        parent = parent.rpartition(".")[0]
+    return False
 
 
 def pytest_configure(config):
