@@ -63,6 +63,24 @@
         "manifest_sha256": "dc615e39eecfc69dc086dc9b4192e97ff5cfbbee63d14befd9f709acd2e3f3c9",
         "manifest_members": 107
       }
+    },
+    {
+      "entry_kind": "admission",
+      "authority": "R-817 sec3 (1)(b)",
+      "hermeticity_precondition": "ENFORCED at record time on 1 candidate file(s) (R-799 SS5 forms; R-811 SS3)",
+      "note": "Cluster A permanent cloud-independence control admitted under its TRUTHFUL node ID after the R-817 sec3(1)(a) rename; body unchanged, renamed BEFORE admission so no join key was ever formed on the false name.",
+      "parent_population_sha256": "1c118f3925717d6f12a6758fed4cc74df8cb93eb65383e16677a0950d4ea6c1e",
+      "graded_sha": "120839976c2a3ec7fc68b6ca92cc0aadfb10cefc",
+      "added_node_ids": [
+        "src/engine/tests/test_signal_vector.py::TestBacktesterSignalVectorIntegration::test_signal_vector_contracts_survive_remote_loader_failure"
+      ],
+      "explicitly_authorized_removed_node_ids": [],
+      "resulting_population_sha256": "bfe66ce99f4ce40588c2029bce513ab8aafad0a69153aba6674263c77017d399",
+      "current_manifest_identity": {
+        "manifest_path": "src/engine/tests/canonical_regression_population.txt",
+        "manifest_sha256": "dc615e39eecfc69dc086dc9b4192e97ff5cfbbee63d14befd9f709acd2e3f3c9",
+        "manifest_members": 107
+      }
     }
   ]
 }

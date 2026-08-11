@@ -410,7 +410,11 @@ when the dependency was present in BOTH arms.**
       -> AssertionError("REMOTE LOADER MUST NOT BE CALLED") raised, so the
       plant provably sits on the live path.                             MEASURED
       Shipped as a PERMANENT test, not a throwaway arm:
-        ::test_signal_vector_path_never_reaches_the_remote_loader
+        ::test_signal_vector_path_never_reaches_the_remote_loader   <- RENAMED,
+        see R-817 sec3(1)(a); the name asserted the OPPOSITE of what AR-968 sec4
+        measured. TRUE NODE ID OF RECORD, and the one admitted to the chain:
+        ::test_signal_vector_contracts_survive_remote_loader_failure
+        Body UNCHANGED -- identity corrected, evidence untouched.
 [3] THREE CONTRACT MUTATIONS on the REAL result path
       (backtester.py:5825 "signal_vector": signal_vector -- the engine's own
        emission line, NOT a copy of an assertion)
@@ -430,6 +434,11 @@ that survives every mutation of the thing it guards is not a guard.
 C0 (pre-fix, no creds)  2417 nodes | passed 2381 · failed 31 · REAL SKIPS 3
 postA (fix, no creds)   2418 nodes | passed 2385 · failed 31 · REAL SKIPS 0
   new node: ...::test_signal_vector_path_never_reaches_the_remote_loader
+            RENAMED at R-817 sec3(1)(a) to its true property; ADMITTED to the
+            successor chain under that truthful ID at canonical 2419 (AR-972):
+            ...::test_signal_vector_contracts_survive_remote_loader_failure
+  NOTE: postA's 2418 was MANIFEST-DERIVED, not the canonical authority
+        (R-816 sec1). Canonical after admission = 2419, DERIVED not asserted.
   FLIPS: 3, ALL skipped -> passed (the three signal_vector nodes)
   unchanged: 2414        <- NEGATIVE CONTROL; failures 31 -> 31, no regression
 ```

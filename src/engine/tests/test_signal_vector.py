@@ -277,8 +277,18 @@ class TestBacktesterSignalVectorIntegration:
         # Should not raise
         json.dumps(sv)
 
-    def test_signal_vector_path_never_reaches_the_remote_loader(self, monkeypatch):
+    def test_signal_vector_contracts_survive_remote_loader_failure(self, monkeypatch):
         """R-815 Cluster A CLOUD-INDEPENDENCE CONTROL — the guard that keeps the skip gone.
+
+        R-817 §3 (1)(a) RENAME — the identity, not the body. The previous name was
+        `test_signal_vector_path_never_reaches_the_remote_loader`, which asserted the
+        OPPOSITE of what AR-968 §4 measured: the HTF daily-cache build DOES reach this
+        loader, raises, and is caught (see the HONEST SCOPE paragraph below). The body
+        always proved the true and narrower property — that the signal_vector contracts
+        SURVIVE a hard remote-loader failure — so only the name changed. Renamed BEFORE
+        admission to the successor chain, because a node ID that something has joined on
+        is no longer free to correct ([accept5-join-keys]; two knowingly-misnamed 6B
+        tests are frozen today for exactly that reason).
 
         Deleting a `pytest.skip` only removes the SYMPTOM. What must stay true is that
         this property no longer depends on a remote read at all. So the remote loader is
