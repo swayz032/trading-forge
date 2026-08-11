@@ -1,7 +1,7 @@
 # Slumhouse Recipe — Canonical Identity, Countertop Banner, and Premium Test Instruments
 
-**Date:** 2026-08-11  
-**Status:** Operator-approved design; implementation authorized  
+**Date:** 2026-08-11
+**Status:** Operator-approved design; implementation authorized
 **Surface:** Slumhouse Recipe page, its read-only API assembler, and Recipe-specific static assets
 
 ## Goal
