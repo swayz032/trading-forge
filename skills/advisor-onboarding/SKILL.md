@@ -50,25 +50,37 @@ ledger from the top.** It is append-only and hundreds of rulings deep; almost
 all of it is history you do not need to act.
 
 1. ★★★★★ **`docs/designs/HANDOVER-ADVISOR-2026-08-04.md` — THIS IS THE ENTRY
-   POINT, NOT `ADVISOR-STATE.md`.** ⚠️ **`[RE-MEASURED HERE 2026-08-10]` `687` lines /
-   `106,558` bytes — the `588 / 66,361` in this very block is STALE, as was the
-   `326 / 25 KB` before it.** ★★★ **A CARRIER THAT MEASURES ANOTHER FILE MUST RE-MEASURE
-   IT, NOT QUOTE ITSELF — this block's own number has now aged twice, each time while
-   presenting as `[MEASURED]`.**
+   POINT, NOT `ADVISOR-STATE.md`.** ⚠️ **`[RE-MEASURED HERE 2026-08-11]` `778` lines /
+   `138,439` bytes — the `687 / 106,558` in this very block is STALE, as were the
+   `588 / 66,361` and the `326 / 25 KB` before it.** ★★★ **A CARRIER THAT MEASURES ANOTHER
+   FILE MUST RE-MEASURE IT, NOT QUOTE ITSELF — this block's own number has now aged THREE
+   TIMES, each time while presenting as `[MEASURED]`.** 🛑 **DO NOT TRUST THE NUMBER ABOVE
+   EITHER: it decays the moment any seat rules, because rulings PREPEND here. Treat it as
+   an order of magnitude, never as an address.**
    🛑🛑★★★★★ **AND THE "still one `Read`, well under the `256 KB` cap" CLAUSE WAS FALSE
    AND IS STRUCK. `[MEASURED HERE 2026-08-10]` a whole-file `Read` FAILS OUTRIGHT:
    `File content (34282 tokens) exceeds maximum allowed tokens (25000)`.** ★★★★★ **`THE
    BINDING LIMIT IS THE 25,000-TOKEN CAP, NOT THE 256 KB BYTE CAP — A FILE CAN SIT AT
    40% OF THE BYTE BUDGET AND STILL BE UNREADABLE. NEVER SIZE A READ IN BYTES.`**
-   ⚠️ **The density is NOT uniform, so a fixed `limit` is not portable: `[MEASURED HERE]`
-   `limit: 150` ALSO fails (`30,696` tokens) because lines `1`–`355` are a prepended wall
-   of blockquote blocks with **NO markdown headings at all** (~`200+` tokens/line), while
-   the numbered body below is far sparser.
-   ✅ **MEASURED READ RECIPE, TWO CALLS:** `Read limit: 55` → the LIVE prepended blocks,
-   newest first, each one superseding the blocks under it. Then `Read offset: 359` → `§0`'s
+   ⚠️ **The density is NOT uniform, so a fixed `limit` is not portable: `[MEASURED]`
+   `limit: 150` ALSO fails (`30,696` tokens) because the prepended wall is blockquote
+   blocks with **NO markdown headings at all** (~`200+` tokens/line), while the numbered
+   body below is far sparser. `[RE-MEASURED HERE 2026-08-11]` that wall now runs to line
+   `445`; it was `355`.
+   ✅ **READ RECIPE, TWO CALLS — AND THE SECOND ADDRESS IS COMPUTED, NEVER PINNED:**
+   `Read limit: 55` → the LIVE prepended blocks, newest first, each superseding the blocks
+   under it. Then **`grep -n "^## 0\." <file>` and `Read offset:` THAT line** → `§0`'s
    **two standing operator directives** (**`ARM ONE EAR`** · **`WAIT ON THE GPT READ BEFORE
    EVERY NEW RULING`**) that a seat can violate within its first three minutes if it reads
    anything else first.
+   🛑🛑★★★★★ **THIS RECIPE PINNED `offset: 359` AND IT ROTTED, EXACTLY AS THE LINE COUNT
+   ABOVE IT DID. `[MEASURED HERE 2026-08-11]` `§0` now starts at line `451`, so `359` lands
+   a cold seat ~92 lines short, INSIDE THE SUPERSEDED `R-727`-ERA BLOCK — which reads as
+   current because it is confident, dated prose. THE `R-812` SEAT LOST A READ TO THIS.**
+   ★★★★★ **`A PINNED OFFSET INTO A FILE THAT IS APPENDED-TO AT THE TOP IS A VALUE THAT
+   DECAYS EVERY TIME ANYONE RULES — AND UNLIKE A STALE BYTE COUNT, IT FAILS SILENTLY BY
+   RETURNING THE WRONG CONTENT INSTEAD OF AN ERROR.`** ⇒ **COMPUTE THE ADDRESS; NEVER
+   HAND-COPY IT.** (Same law `advisor-ruling §5` applies to expected values in guards.)
    🛑🛑 **`NO MONITORS` IS **NOT** ONE OF THE TWO DIRECTIVES — IT WAS REVERSED 2026-08-09
    AND THIS BLOCK NAMED THE DEAD ORDER AS CURRENT UNTIL 2026-08-10.** See `§4a`. ★★★★★
    **`THE CARRIER THAT WARNS YOU ABOUT STALE CARRIERS IS NOT EXEMPT FROM BEING ONE.`**
