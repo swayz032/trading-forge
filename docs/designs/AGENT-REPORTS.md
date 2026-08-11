@@ -4,6 +4,42 @@
 
 ---
 
+## AR-995 · 2026-08-11 · 📌 **DECLINE-RECEIPT: I DECLINE `R-830 §5`'s OPTIONAL HANDOFF AND STAY SEATED.** ⚡ **NOTHING MEASURED HERE — THIS IS A STATE CHANGE, AND A DECLINE OWES A RECEIPT EXACTLY LIKE A START.**
+
+**SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD f486a743` = `origin`. RULING `R-830`, which orders me nothing.**
+
+### §1 — 📌 THE DECISION, AND THE ARITHMETIC BEHIND IT
+✅ **FAN-IN: every item in `R-828 §6` and `R-829 §4` is `DELIVERED` — `4 / 4` with nothing unstarted and nothing half-built.** **`R-830` confirms it: *"blocked on `STOP B` alone, and its queue is empty by completion, not obstruction."***
+🛑 **I AM NOT EXHAUSTED, AND EXHAUSTION IS THE ONLY VALID REASON** (`worker-execution §10`). ⇒ **DECLINED.** ★★★★ **`THE SEAT THAT EXISTS IS THE SEAT THAT FINISHES. A FRESH SESSION IS NOT AN ASSIGNEE, IT IS A COST.`**
+⚡ **AND THE NEXT ITEM IS THE CHEAPEST POSSIBLE THING FOR THIS SEAT AND THE MOST EXPENSIVE FOR A NEW ONE: ONE five-arm certifying re-run (`~33` min), from a worktree I would create at the post-ruling pin, with the exact command already twice-executed in this seat.** **A cold seat would pay a full onboarding to run a command I already hold — and would inherit two shell traps I have already been bitten by and corrected (`"$SW\\$n"` swallowing the variable, and `cmd | tail && echo SUCCEEDED` printing over `git`'s `fatal:`).**
+
+### §2 — ⚖️ THE HONEST COUNTERWEIGHT, STATED RATHER THAN OMITTED
+⚠️ **`R-830 §5` is right that this context has carried FOUR delivery cycles** (`AR-987`→`990`→`991/992`→`994`), **and `worker-onboarding §4.5` says a long seat is more expensive per turn and more likely to produce a partial result that reads as complete.** ⇒ **I am not treating survival as an achievement.**
+✅ **WHAT MAKES DECLINING SAFE HERE RATHER THAN STUBBORN: there is no in-flight work to truncate.** **Everything is committed and on `origin` (`f486a743`), every artifact is preserved, every control is re-runnable from one command line, and both worktrees are preserved by ruling.** ⇒ **the cost of my being wrong about my own capacity is ONE re-run, not a lost measurement.**
+🛑 **AND I RE-COMMIT TO THE TRIGGER: if the `STOP B` ruling lands with work I cannot start cleanly, or if I notice myself re-deriving something I established earlier today, I hand off THEN — mid-batch if necessary — rather than defending this decision.**
+
+### §3 — 📌 STATE, SO THIS RECEIPT IS ALSO A HANDOFF IF ONE IS EVER NEEDED
+```
+POSITION      HEAD f486a743 == origin. Nothing local-only, nothing uncommitted.
+DONE          layer-2 ownership repair . provenance chain . [G-NODE] axis .
+              real [H] gate . pin anchoring . C1-C13 all discriminating .
+              five arms (pin f3225b69) . three control arms (pin d66e46aa).
+BLOCKED ON    STOP B only -- the merit question on the 12, held for the
+              external read, owner named in R-830 §5. NOT mine.
+NEXT, WHEN IT LANDS   ONE five-arm certifying re-run from a clean exclusive
+              worktree at the post-ruling pin, then the desk dispatches the
+              second independent grade and STOP [50] re-arms.
+EVIDENCE      wt-ratify1-final-f3225b69 and wt-ctl-d66e46aa: BOTH PRESERVED BY
+              RULING, neither to be removed. AR-986's three maps preserved and
+              hash-matched in this session's scratchpad.
+IN FLIGHT     NOTHING. No dispatched sub-agent is owed; I dispatched none.
+EAR           armed on ADVISOR-RULINGS.md, Monitor persistent, delivery proven
+              -- it has now fired on R-826, R-827, R-828, R-829 and R-830.
+```
+**RECOMMENDATION: `BLOCKED` on `STOP B`, unchanged, and I am NOT handing off.** 🛑 **I will start nothing from `R-828 §6[8]`'s prohibition list while I wait, and I will not investigate the `12`.**
+
+---
+
 ## AR-994 · 2026-08-11 · ✅✅✅ **`R-828 §6` AND `R-829 §4` ARE COMPLETE. `C1`–`C13` ALL DISCRIMINATE ON REAL FULL-POPULATION ARMS — AND EVERY RED NOW FIRES ON THE PROPERTY IT NAMES, NOT AN INCIDENTAL ONE.** ⚡ **`C2b`, THE EXACT CASE THAT RETURNED GREEN, IS RED.** ✅ **`STOP F` PROVEN BY MEASUREMENT: `0` OUTCOME CHANGES ACROSS THE REPAIR, ON BOTH CONFIGURATIONS.** ⭐ **AND `C13` IS GREEN ON ALL THREE ARMS — `R-829`'s CORRECTION, DEMONSTRATED.**
 
 **SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD d052216d`. CONTROL-ARM PIN `d66e46aa` (three THROWAWAY arms, one clean worktree — NOT a certification).** 🛑 The `12`: **UNTOUCHED AND UNINVESTIGATED.** `wt-ratify1-final-f3225b69`: **PRESERVED, untouched.** `acceptance_runner.py`: **IMPORTED, NEVER EDITED.** Nothing promoted; no seal; `CLUSTER-E` HELD; ceiling FROZEN; the writer NOT repaired; the certifying five NOT re-run.
