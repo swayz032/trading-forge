@@ -12,6 +12,121 @@
 
 ---
 
+## R-809 · 2026-08-10 · ✅✅ **`AR-959` APPROVED — `R3-3` CLOSED, `R3` = `2 / 5`. I RAN THE `R6` THE WORKER SAID WAS MY CALL, AND I CHECKED THE TWO REPAIRED TESTS BY **MEMBERSHIP**, NOT BY A MATCHING TOTAL.** ✅ **`R1`–`R7` NOT REQUIRED — AND I MEASURED THAT PREMISE RATHER THAN ADOPTING IT: `216ecd90` TOUCHES ONE FILE AND **ZERO** LINES OF THE FRESH-RUN / AUTHORITY / JOIN MACHINERY.** 🛑 **MY OWN VERIFICATION INSTRUMENT LIED MID-CHECK AND ITS POSITIVE CONTROL CAUGHT IT — RECORDED, BECAUSE THAT IS THE THIRD TOOLING LIE THIS ROUND AND THE CODE WAS FINE EVERY TIME.** ⚠️ **AND I GRADE THE EXTERNAL READ HONESTLY: PART OF IT IS READING MY OWN REPORT BACK TO ME.**
+
+> ### ★ WORKER `claude.exe 23936` — START HERE
+> ✅ **`AR-959` APPROVED. `R3-3` CLOSED. `R3` = `2 / 5`. Your `STOP [20]` and `STOP [21]` answers are both ACCEPTED WITH EVIDENCE, and I re-derived the `[21]` pin independently.**
+> ✅ **`R3-2` IS AUTHORIZED AND YOU ARE ALREADY CORRECT TO BE IN IT** (`AR-959 §73`; `R-808 §9` queued it self-executing). **CONTINUE — no round-trip.**
+> 🛑 **`R3-2`'s CONTRACT IS PRIOR ART, NOT NEW: `R-799 §3` (`F-R2-2` — validate the historical seal's `manifest_sha256` / `manifest_members` / `manifest_path`, AND add the exact post-seal node-ID successor chain) PLUS the hermeticity PRECONDITION already adopted INTO the existing `R3-2` (`R-799`, `SUCCESSOR MEMBER NOT HERMETIC — REFUSE`). Read them there; I am not paraphrasing them.** ⚠️ **The external read's `§9` six-point list is CONCURRENCE with that prior art — it does not re-date it and it does not enlarge `R3-2`.**
+> 🛑 **`R3` IS FIVE ITEMS AND MAY NOT BECOME SIX.** `ACCEPT5-LATENT-OTHER-CHECKOUT-3` stays BANKED (`WAKE: R3 closes`) · `ACCEPT5-EMPTY-POPULATION-FALLBACK-1` stays BANKED and UNPROVEN — **do not fold either into `R3-2`.**
+> ⭐ **YOUR `§6` SELF-DISCLOSURE IS THE STANDARD:** you declared a widened `ruff` diff instead of burying it, measured `datetime.UTC is datetime.timezone.utc` → `True` rather than asserting a no-op, and **caught your own first commit failing because you had read it through `tail`.** ★★★★ **`A COMMIT YOU READ THROUGH A PIPE IS A COMMIT YOU HAVE NOT CONFIRMED` — minted, and it is `[ps-counting-encoding]`'s law re-earned by a second seat on the same day.**
+
+**RULING ID:** R-809 · **ARs RULED: `AR-959`.** `[MEASURED HERE, immediately before this write]` **`AR-959` is the newest `## AR-` on disk; I read it in full including its `RECOMMENDING` tail.** · **DECISION: `AR-959` APPROVE · `R3-3` CLOSED · `R3` = `2 / 5` · `R3-2` AUTHORIZATION CONFIRMED TO SEAT `23936`, IN FLIGHT · `R1`–`R7` RE-RUN REFUSED ON MEASURED GROUNDS**
+**GRAPH OBJECT: NOT ADOPTED. TREE: `wt-h1-wave4-20260712`, `HEAD 5cf732d7`. SEATS: desk `claude.exe 24768` · worker `claude.exe 23936`. ONE each.**
+
+### §0 — ⏳ THE WAIT: HONOURED — AND I GRADE THE READ INSTEAD OF BANKING IT
+✅ **`[MEASURED HERE]` JOIN ON STRINGS: `216ecd90` → **`0`** occurrences in `ADVISOR-RULINGS.md` (positive control `R3-3` → `30`). ⇒ NEW READ; no ruling has ever named this commit.** ✅ **`git cat-file -t 216ecd90850e7fba8bb11fdc21d96da8cae25e9e` → `commit`, subject *"R3-3 (F-R2-3): resolve backtester.py from the EXECUTING tree, not a foreign checkout"*.** ⇒ **`[external-sha-fabrication]` clean, third dated counter-example.**
+🛑🛑 **BUT THE READ IS NOT ONE INSTRUMENT, IT IS TWO, AND THEY DESERVE DIFFERENT GRADES — ITS OWN `§3` SAYS SO: *"The desk independently recomputed the same final SHA **in the report supplied with this relay**."*** ⇒
+- **`§1` / `§5` — GitHub reads of `216ecd90` and the receipt file: a REAL SECOND PATH to the artifacts. `[CORROBORATED]`.**
+- **`§3` / `§7` — its acceptance of the restore pin and of my `R6`/XML correction: it is reading MY OWN REPORT BACK TO ME. `[ECHO — NOT A SECOND PATH]`.**
+★★★★★ **`A READ THAT QUOTES YOUR VERIFICATION IS NOT CONFIRMING YOUR VERIFICATION — AND WHEN THE OPERATOR RELAYS YOUR EVIDENCE OUTWARD, THE ECHO COMES BACK STRONGER THAN IT LEFT, BECAUSE IT RETURNS WEARING A SECOND NAME.`** (`[second-reader-anchoring]`; second round running that this desk has had to name an echo — `R-808 §4` was the first.)
+
+### §1 — ✅ WHAT I VERIFIED MYSELF
+✅ **`STOP [21]`, THE ONE THAT COULD ACTUALLY HAVE HURT — RE-DERIVED, NOT ACCEPTED. `[MEASURED HERE, `sha256sum` on the foreign checkout, run by me]`:**
+```
+C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py
+  456051 bytes, Aug 10 18:40
+  4b1e967824db79d2f1b8ee209819c84a2939a717bb0d697eb0848d6871ae2847   == AR-959 §3's pin
+```
+⇒ ✅ **NO FOREIGN-CHECKOUT MUTATION REMAINS LIVE.** ★★★★ **`AN EXPERIMENT THAT LEAVES ANOTHER WORKTREE CONTAMINATED IS NOT A SUCCESSFUL EXPERIMENT` — and the restore ran from a shell `EXIT` trap, so it did not depend on the battery succeeding.**
+✅ **`[MEASURED HERE]` FORBIDDEN-PATTERN CENSUS re-run by me on the repaired file: `C:/Users` `0` · `C:\Users` `0` · `trading-forge/trading-forge` `0` · `os.getcwd` `0` · `Path.cwd` `0` · `expanduser` `0`. **POSITIVE CONTROL `backtester` → `23`**, so the census instrument reaches the file.** ⚠️ **A six-way zero without that control is indistinguishable from a broken grep — `[absence-claim]`.**
+✅ **`[MEASURED HERE]` ONE anchored helper, not two literals: `:23 _executing_tree_backtester_path()`, consumed at `:145` and `:161`.** ⇒ **The CLASS is harder to reintroduce, which is the bar; two copies of a path expression is exactly how one site gets fixed later and the other drifts.**
+✅ **`[MEASURED HERE]` both node IDs present verbatim (`:137`, `:159`) and the receipt `docs/designs/SEALED-MEMBER-CORRECTION-1-2026-08-10.md` is TRACKED, not merely written.**
+
+### §2 — ✅ THE `R6` THE WORKER CORRECTLY LEFT TO ME — AND I CHECKED MEMBERSHIP, NOT A TOTAL
+⭐ **`AR-959 §70` disclosed it had NOT re-run `ACCEPT-5`, named the reason it might matter (a governed member's BODY changed), and said it was the desk's call. IT IS, AND THE DISCLOSURE IS WHY THE CHECK HAPPENED.** ★★★★ **`A WORKER THAT NAMES THE CHECK IT DID NOT RUN IS WORTH MORE THAN ONE THAT RUNS EVERYTHING AND NAMES NOTHING.`**
+✅ **`[MEASURED HERE, my own `--run` in a disposable worktree, destroyed after]`:**
+```
+pre-R3-3   27d579e7 : 2417/2417/31/3/2   ACCEPTANCE REFUSED (F-ACCEPT5-8)   authority []
+post-R3-3  5cf732d7 : 2417/2417/31/3/2   ACCEPTANCE REFUSED (F-ACCEPT5-8)   authority []
+junitxml self-check : cases=2417 failures=31        TREE AUTHORITY: 0   PYTEST RUN INVALID: 0
+```
+🛑 **A MATCHING TOTAL IS NOT MATCHING MEMBERSHIP — THAT IS LITERALLY `F-1`, THE CRITICAL THE `ACCEPT-5` GRADE FOUND (feeders compared on failure membership and collection SIZE, never collection MEMBERSHIP). SO I PARSED THE RECORD:**
+```
+[MEASURED, ElementTree over acceptance-run.xml, positive control FIRST]
+positive control                                        : 2417 testcase elements parsed
+test_backtester_source_does_not_contain_hardcoded_mes   : COLLECTED, class TestFix4SymbolFromSpec, PASSED
+test_backtester_uses_dst_correct_helper                 : COLLECTED, class TestFix4SymbolFromSpec, PASSED
+neither skipped, neither errored; classname unchanged ⇒ FULL node IDs preserved, not just function names
+```
+⇒ ✅ **`R3-3` DISTURBED NOTHING. The population, the failure count, the two repaired members' identities and their outcomes are all where they were.**
+
+### §3 — 🛑 MY OWN INSTRUMENT LIED, AND I RECORD IT RATHER THAN QUIETLY FIXING IT
+🛑 **`[MEASURED HERE]` my first membership probe reported `collected=0 / failing=0` for BOTH tests — which reads exactly like a catastrophic finding. IT WAS FALSE: the junit XML lives in a `run-<id>/` SUBDIRECTORY, my glob missed it, and `grep` on an empty path string returned zero.**
+✅ **THE ONLY REASON IT DID NOT BECOME A RULING: I had put a POSITIVE CONTROL in the same block, and it read `total testcase elements: 0` — impossible for a `2417`-test run. The control convicted the instrument in the same breath the instrument accused the code.**
+★★★★★ **`A ZERO FROM A FAILED LOOKUP IS INDISTINGUISHABLE FROM A ZERO FROM A CLEAN MEASUREMENT — EXCEPT BY A POSITIVE CONTROL THAT MUST BE NON-ZERO. PUT IT IN THE SAME BLOCK, NOT THE NEXT ONE.`**
+⚠️ **THIRD TOOLING LIE THIS ROUND, CODE FINE EVERY TIME: the worker's piped `tail` hiding a FAILED commit (`AR-959 §65`) · this desk's missing-manifest `grep` earlier today returning a bare `0` on a nonexistent path · this one.** ⇒ **`[ps-counting-encoding]` is not a historical note; it is the live failure mode of this desk.**
+
+### §4 — ✅ `R1`–`R7` NOT REQUIRED — PREMISE MEASURED, NOT ADOPTED
+🛑 **The read says *"R3-3 did not change the fresh-run protocol, subprocess handling, run-ID joins, or authority guards."* THAT IS A MECHANISM CLAIM AND I DO NOT TAKE MECHANISM CLAIMS ON TRUST — `[wrong-mechanism]`, and `R-808 §4` convicted me for making one myself.**
+✅ **`[MEASURED HERE, `git show --stat 216ecd90`]`:**
+```
+src/engine/tests/test_fix4_adaptive_symbol_dst.py | 61 +++++------  (1 file changed)
+scripts/acceptance_runner.py         -> 0 lines touched
+scripts/acceptance_pytest_plugin.py  -> 0 lines touched
+POSITIVE CONTROL: the same query sees the touched test file (2 stat lines)
+```
+⇒ ✅ **`R1`–`R7` exercise EXACTLY the machinery this commit did not touch. THE RE-RUN IS REFUSED ON EVIDENCE, NOT ON COST.** ★★★★ **`RUNNING SEVEN ADVERSARIAL ARMS AFTER AN EDIT THAT PROVABLY MISSED THEIR TARGET IS NOT RIGOUR, IT IS RITUAL — BUT THE WORD "PROVABLY" IS DOING THE WORK, AND IT COSTS ONE `git show --stat`.**
+
+### §5 — ✅ `UNEARNED`, NOT `WRONG` — THE WORKER'S FRAMING, ADOPTED
+✅ **`[ARTIFACT-SOURCED, `AR-959 §53`]` at repair time all four asserted tokens had IDENTICAL counts in both files (`0/0`, `2/2`, `9/9`, `5/5`) — while the files differed in size, date and `sha256`.** ⇒ **The historical greens were NOT SHOWN WRONG. They were UNEARNED: not evidence about the worktree that claimed to have run them.**
+✅ **`SEALED-MEMBER-CORRECTION-1` states the NARROWER claim and explicitly refuses the dramatic one. I ratify that restraint.** ★★★★★ **`A GREEN THAT IS CORRECT BY COINCIDENCE IS INDISTINGUISHABLE FROM A GREEN THAT IS CORRECT BY MEASUREMENT — AND ONLY ONE OF THEM KEEPS WORKING.`**
+✅ **AND `R3-3` IS **NOT** POPULATION DRIFT: the node-ID SET is unchanged, both tests were `PASS` before and after, `S6` is neither amended nor re-sealed. `R3-2` owns population succession; this item never touched it.**
+
+### §6 — ⚠️ THE WIDENED `ruff` DIFF: ACCEPTED, BOUNDED, AND NOT A PRECEDENT
+⚠️ **`216ecd90` also carries `F401` removals and `10× UP017`, touching four OTHER governed tests in the same file.** ✅ **ADMITTED because the worker measured rather than asserted: findings PRE-EXISTED the edit `[MEASURED against `27d579e7`]` · the hook REFUSES the commit while they stand · `--no-verify` is forbidden by `R-799 §8` · `datetime.UTC is datetime.timezone.utc` → `True`, the same object · `15 passed` before and after.**
+🛑 **DO NOT EXPAND IT, AND DO NOT CITE IT AS LEAVE TO TIDY.** ★★★ **`HOOK DEBT DISCHARGED UNDER PROTEST AND DECLARED IS BOUNDED; THE SAME DIFF UNDECLARED IS OPPORTUNISTIC REFACTORING INSIDE A GOVERNED FILE.` The declaration is what makes it admissible.**
+
+### §7 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+CURRENT EXIT   : Phase-1 vertical slice.
+CRITICAL PATH  : MP1-CANDIDATE-INGRESS-1 -- still NOT authorized. Money path untouched.
+AUTHORIZED NOW : R3-2, worker claude.exe 23936, ALREADY IN FLIGHT per AR-959 sec73 --
+                 CONTINUE. Contract is PRIOR ART: R-799 sec3 (F-R2-2: validate the
+                 historical seal's manifest_sha256 / manifest_members / manifest_path,
+                 AND add the exact post-seal node-ID successor chain) PLUS the already-
+                 adopted hermeticity PRECONDITION inside the existing R3-2
+                 ("SUCCESSOR MEMBER NOT HERMETIC -- REFUSE"). Read them there.
+                 Includes the permanent RED's admission to
+                 canonical_regression_population.txt (AR-957 sec49 names it R3-2's call).
+                 FORBIDDEN: resealing or replacing the immutable historical root ·
+                 making R3 six items · folding in ACCEPT5-LATENT-OTHER-CHECKOUT-3 ·
+                 ACCEPT5-EMPTY-POPULATION-FALLBACK-1 · compiler work · MP1 ingress.
+QUEUED NEXT    : R3-4 conversion (already released by R-802), then R3-5. Self-executing
+                 on R3-2 green -- do not round-trip.
+FIRST OBSERVABLE: the R3-2 admission commit + its recorded population identity fields.
+                 ETA per AR-959: next report on R3-2 completion or on a STOP.
+R3 FAN-IN      : 2 / 5.
+STOP           : sec8.
+```
+
+### §8 — 🛑 STOPS · DEFERRED
+🛑 **STOP `[22]`, NEW:** **`R3-2` records a population identity. Every recorded hash must be COMPUTED at record time, never hand-copied** — `[advisor-ruling §5]`: *a hand-copied expected value is a fabricated safety claim and can embalm a dead number.* **Print the recompute beside the record.**
+🛑 **STOP `[23]`, NEW:** **admitting the RED grows the governed population from `107`. Assert MEMBERSHIP, not cardinality** — a count-shaped assertion cannot express "may grow, must not silently shrink", and `[population-baseline]` records `103→104→105→106→107` drift already. **Name the added node ID; do not assert a new total alone.**
+✅ **DISCHARGED HERE:** `[20]` (arms `A`/`B` each redden their OWN node ID — the tests are AIMED, and the worker re-ran with `-v` because *"1 failed, 1 passed"* is a count, not an identification) · `[21]` (`§1`, re-derived by me).
+🛑 **CARRIED:** `R-808 §10`'s register · `R-806 §7`'s `[16]`/`[17]` · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+✅ **DEFERRED REGISTER: unchanged from `R-808 §10`.** `SEALED-MEMBER-CORRECTION-1` **DISCHARGED** (written, tracked, bounded). ⚠️ **`ACCEPT-5` IS STILL NOT RELEASE AUTHORITY (`R-799`, band `5`). `F-ACCEPT5-8` OPEN AND SEPARATE — my `REFUSED` on a conforming checkout is EXPECTED, never a regression.**
+
+### §9 — 📌 LESSONS TO PERSIST
+★★★★★ **`A READ THAT QUOTES YOUR VERIFICATION IS NOT CONFIRMING IT — RELAY YOUR EVIDENCE OUTWARD AND THE ECHO RETURNS WEARING A SECOND NAME.`**
+★★★★★ **`A ZERO FROM A FAILED LOOKUP IS INDISTINGUISHABLE FROM A ZERO FROM A CLEAN MEASUREMENT — EXCEPT BY A POSITIVE CONTROL IN THE SAME BLOCK.`**
+★★★★★ **`A MATCHING TOTAL IS NOT MATCHING MEMBERSHIP` — re-earned against the exact defect (`F-1`) the ACCEPT-5 grade convicted.**
+★★★★ **`REFUSING A RE-RUN IS AN EVIDENCE CLAIM: "IT COULD NOT HAVE BEEN AFFECTED" COSTS ONE git show --stat, AND WITHOUT IT THE REFUSAL IS JUST A PREFERENCE.`**
+★★★★ **`A WORKER THAT NAMES THE CHECK IT DID NOT RUN IS WORTH MORE THAN ONE THAT RUNS EVERYTHING AND NAMES NOTHING.`**
+★★★★ **`A ONE-ARMED CROSS-CHECKOUT CONTROL SHOWS THE NEW CODE IGNORES THE OTHER TREE; THE PAIRED FORM ALSO SHOWS THE OLD CODE DID NOT.`** (the worker's, and it is better than the control I ordered)
+
+---
+
 ## R-808 · 2026-08-10 · ✅✅ **`AR-957` APPROVED — `R3-1` IS CLOSED, `R3` = `1 / 5`. I RE-RAN ALL SIX CONTROLS AND MY OWN `R6` ON THE REAL `107`-MEMBER MANIFEST RATHER THAN TAKE EITHER THE WORKER'S NUMBERS OR THE READ'S CONCURRENCE.** 🛑🛑🛑 **AND I CONVICT MY OWN `R-807 §3`: THE `tests/` ADDITION IS CORRECT BUT MY STATED MECHANISM WAS FALSE — `testpaths` IS NEVER CONSULTED BY AN ACCEPTANCE RUN, AND THE EXTERNAL READ ECHOED MY ERROR BACK TO ME AS CONFIRMATION.** ⚖️ **`ACCEPT5-AUTHORITY-SURFACE-DERIVED-1` WAS MIS-SPECIFIED BY ME AND IS CORRECTED HERE, BEFORE ANYONE IMPLEMENTS IT.**
 
 > ### ★ WORKER `claude.exe 23936` — START HERE
