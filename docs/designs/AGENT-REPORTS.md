@@ -4,6 +4,60 @@
 
 ---
 
+## AR-976 · 2026-08-11 · 📌 **START-RECEIPT — SUCCESSOR SEAT `claude.exe 27448` CLAIMS `R-818 §7[3]` BY `R-784 §3` TRANSFER. EAR ARMED, RED-PROOFED, AND DELIVERING.** 🛑 **`AR-975`'s DESK DECISION IS STILL OWED — `R-818 §7[2]` STAYS BLOCKED AND I DO NOT SELF-AUTHORIZE IT.** ⚠️ **TWO ORPHANED `ruling-ear.sh` LOOPS FROM DEAD SEATS ARE STILL RUNNING ON THIS BOX; I DID NOT ARM THEM AND I DID NOT KILL THEM.**
+
+**SEAT `claude.exe 27448`. `HEAD 7343453e`, PUSHED (`ls-remote` MATCH). This is a receipt, not a stop — I begin Cluster `D` in the same turn (`worker-execution §11a[2]`).**
+
+### §1 — ✅ SEAT ROLL, MEASURED BY IMAGE NAME + BIRTH TIME (NOT BY `TaskList`)
+`[MEASURED HERE, `Win32_Process` + parent walk from my own shell PID `1992`]`:
+```
+MY CHAIN   1992 powershell.exe -> 27448 claude.exe (born 08-11 02:13:51) -> 22452 -> explorer
+LIVE claude.exe : 18244 (born 02:02:46)  ·  27448 (born 02:13:51, MINE)
+GONE            : 6536 (worker, R-818) · 24040 (desk, R-818) · 23692 (retired at R-817)
+```
+⚖️ **`6536` is a SEAT ROLL, not a death — `AR-975` closed at a clean seam with nothing half-built, and I do not investigate it or hunt for lost work.** ⚠️ **`18244` is live and predates me by `11` minutes. I do **NOT** assert it is the desk — I measured a PID, not a role.**
+✅ **AUTHORIZATION: `R-784 §3` — *"`R-783 §6`'s AUTHORIZATION STANDS AND TRANSFERS — THE INCOMING SEAT STARTS ON ITS RECEIPT, NO NEW RULING NEEDED."*** ⇒ **I claim `R-818 §7[3]` (Clusters `C` → `D` → `F` → `E`) on this receipt. `C` is already LANDED (`5b59b3a9`, `AR-974 §3`), so my first item is `D`.**
+
+### §2 — ✅ THE EAR: ARMED, RED-PROOFED, AND PROVEN TO **DELIVER**
+✅ **`Monitor`, `persistent: true`, polling `docs/designs/ADVISOR-RULINGS.md` every `15s` for a new `^## R-` header.** **ARMED `06:16:20Z`, `newest_at_arm = R-818`. Its armed line ARRIVED AS A CHAT NOTIFICATION — that is the DELIVERY proof, not merely liveness.**
+✅ **DETECTOR RED-PROOFED ON A THROWAWAY FIRST, NEVER ON THE REAL FILE** (`[green-check]` — a detector that has never fired is not an instrument):
+```
+NEGATIVE ARM  file unchanged 6s        -> "NEW RULING" lines = 0   (required 0)
+POSITIVE ARM  R-101 prepended          -> "NEW RULING" lines = 1   (required 1, named R-101)
+VERDICT: DETECTOR DISCRIMINATES.  Throwaway deleted.
+```
+✅ **BLIND-WINDOW BACKFILL — arming time is the join key, so an ear armed at `06:16:20Z` hears nothing before it.** **I read the newest ruling on disk by hand, in full: `R-818` (`:15`–`:113`), including its `★ WORKER — START HERE` block at `:55`. The blind window is EMPTY.**
+🛑 **TWO ORPHANED EARS FOUND, REPORTED, NOT TOUCHED** `[MEASURED]`: `bash.exe 23812` (parent `24768`, **GONE**) and `bash.exe 2440` (parent `23864`, **GONE**), both running `ruling-ear.sh` out of dead sessions' scratchpads. ⇒ **I did not arm them, so `§2a[3]` forbids me killing them. And they are not ears in any case: a backgrounded `Bash` loop that never exits notifies nobody, and both their owners are dead.** ★★★ **`LIVENESS IS NOT OWNERSHIP, AND NEITHER IS DELIVERY.` I armed a THIRD only after proving no ear under MY `claude.exe` PID existed — `[one-monitor]` is satisfied because the other two can reach no one.**
+
+### §3 — ✅ TREE STATE, CLASSIFIED (`R-784 §3` receipt fields)
+```
+HEAD            7343453e  ==  origin/h1-wave4-sealed12-driver 7343453e   PUSHED, MATCH
+MODIFIED tracked  docs/wave25-exit-engine-ab-report.md   <- PRE-EXISTING
+UNTRACKED         ~85 docs/ artefacts                    <- PRE-EXISTING
+```
+🛑 **THE ONE MODIFIED TRACKED FILE IS THE EXACT FILE `R-818 §6` NAMED:** *"`git add -u` staged `docs/wave25-exit-engine-ab-report.md`, which was modified before that seat existed."* **It was modified before MY seat existed too.** ⇒ **I will stage BY EXPLICIT PATH ONLY. No `git add -u`, no `git add -A`, ever.** ★★★★ **`ON A SHARED TREE, "ALL MODIFIED FILES" IS NEVER THE SAME SET AS "MY WORK"` (`R-818 §6`).**
+🛑 **NO CONTRADICTORY STATE FOUND** ⇒ `R-784 §3`'s STOP does not fire.
+
+### §4 — 🛑 OUTSTANDING DISPOSABLE WORKTREES — ONE DECLARED, ONE I CANNOT ACCOUNT FOR
+✅ **`wt-accept5-pin-20260811` @ `c2193868` — DECLARED by `AR-975 §5` as deliberate (it is the pinned receipt's tree) and conditioned on *"when the desk has read this."* The desk has NOT ruled on `AR-975`.** ⇒ **I LEAVE IT. Removing it would destroy the tree backing the only non-`[VOIDABLE]` canonical run on record.**
+⚠️ **`wt-accept5-pin-a67f0997` @ `a67f0997` — OUTSTANDING and I find it declared in NO AR I have read.** ⇒ **REPORTED, NOT REMOVED, NOT INVESTIGATED (scope).** ★★★ **`AN UNDECLARED ARTEFACT IS A FINDING, NOT A CHORE — AND CERTAINLY NOT MINE TO DELETE.`**
+
+### §5 — 🛑 WHAT IS OWED TO ME, AND WHAT I WILL NOT DO ABOUT IT
+🛑 **`AR-975 §4`'s DESK DECISION IS UNRULED.** `R-818` (`06-11`) PREDATES `AR-975`; the newest ruling on disk is `R-818` and it cannot have answered a report written after it. ⇒ **`R-818 §7[2]` (adjudicate the nominations) STAYS BLOCKED — its authorized population was `20`, `AR-975 §2` re-measured it to `29`, and `AR-975 §3` disproved the authorized repair shape for `10` of them.** 🛑 **I DO NOT self-authorize options `(a)`–`(d)`, and I do not re-open the STOP.** ★★★ **`A BOUNDED PASS OVER A POPULATION THAT TRIPLED IS NO LONGER THE BOUNDED PASS THAT WAS AUTHORIZED`** (`AR-975 §4`) **— and re-deriving that decision myself would be exactly the `[prior-art-check]` violation of asking the desk to decide something twice, in reverse.**
+🛑 **`ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` REMAINS OPEN** — `3` contaminators named, canonical company still disagrees, further contaminators `[UNENUMERATED]`.
+
+### §6 — 📌 PRIOR-ART CHECK, STATED (`worker-execution §0.-0.5` — an unstated search is indistinguishable from no search)
+**SEARCHED, terms `_load_battery` · `_corpus_wait_session_rows` · `_load_module_at_ref`, across `src/**.py` and the census.** `[MEASURED]` **all three helpers exist and are single-file: every Cluster `D` and `F` site lives in `src/engine/tests/test_spec_family_bindings.py`** (`D` = `:569`, `:914`, `:2815` · `F` = `:1914`, `:1916`). ✅ **AND THE PATTERN IS ALREADY RULED AND ALREADY BUILT — I do not design a new one:** `AR-970 §3` says of `D` *"Same shape as row `25`, already done in `B` — copy that pattern"*, resting on `[MEASURED, AR-966 §6]` that the `146` + `16` files are **TRACKED** ⇒ absence is a broken checkout ⇒ **HARD FAIL/REFUSE, never skip.**
+⚠️ **RULING-FORM OBSERVATION, RAISED BEFORE I START BECAUSE IT IS FREE NOW AND EXPENSIVE AT DELIVERY (`worker-execution §5`/`§5c`):** `R-818 §7[3]` orders `D` → `F` → `E` serially, **and `D` and `F` edit THE SAME FILE** (`test_spec_family_bindings.py`). ⇒ **The serial order is CORRECT here and I am not asking for it to change — but the reason is a shared-file WRITE conflict, not a data dependency. There is no fake edge to report; I note it only so nobody later reads the ordering as evidence that `F` consumes `D`'s output. It does not.**
+
+### §7 — ⏭️ WHAT I AM DOING NOW
+**STARTING CLUSTER `D` (census rows `19`, `21`, `24`).** **FIRST OBSERVABLE: the `D` landing commit carrying all three sites converted from `pytest.skip` to a hard failure, each red-proofed RED-without / GREEN-with, plus a `preD → postD` governed-population flip count.** **ETA: my call, ~40–60 min.**
+🛑 **SCOPE I AM STAYING INSIDE (`R-818 §7[6]`):** not the `31` baseline reds · not `black_swan:682` · not helper fan-out · not a `107`-file order-dependence sweep · not HTF production behaviour · not `MP1` or the money path · `H` FORBIDDEN (`STOP [11]`). **Canonical runs pinned in a disposable worktree at an explicit commit (`STOP [35]`); `ACCEPTANCE: REFUSED` reported only WITH its reason joined (`STOP [34]`).**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Nothing here needs a ruling. `D` → `F` → `E`, no round-trip.**
+
+---
+
 ## AR-975 · 2026-08-11 · 🛑🛑🛑 **`R-818 §5`'s STOP FIRES, AND I AM STOPPING.** ✅ **CONTAMINATOR `3` NAMED: `test_black_swan_evaluator.py` — THE FILE THE RECORD HAS CARRIED AS AN UNADJUDICATED CANDIDATE SINCE `R-814`.** 🛑 **AND MY OWN SCANNER UNDER-COUNTED: THE POPULATION IS `32` FILES, NOT `22` — I ENUMERATED ONE SYNTACTIC FORM AND PUBLISHED IT AS THE CLASS.** 🛑🛑 **`10` OF THEM MUTATE `sys.modules` AT **MODULE LEVEL**, SO THEY ARE UNRESTORABLE BY A PER-TEST FIXTURE **BY CONSTRUCTION** — THE REPAIR SHAPE `R-818 §4` AUTHORIZED CANNOT REACH THEM.**
 
 **SEAT `claude.exe 6536`. `HEAD fc8d8f92`. This AR is a `STOP AND REPORT` under `R-818 §5`, not a handoff.**
