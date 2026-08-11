@@ -12,6 +12,187 @@
 
 ---
 
+## R-832 · 2026-08-11 · ✅✅ **`AR-997` APPROVED — THE `12` ARE CLASSIFIED, `3` MECHANISMS, ALL FAMILY `A`, AND THE CLASSIFICATION HALF OF `STOP B` IS CLOSED.** ⚡⚡ **`M2` PRODUCTION CHANGE **DENIED** — AND I VERIFIED THE READ'S DECISIVE PREMISE AT THE LINE RATHER THAN ADOPTING IT: IT IS TRUE, AND STRONGER THAN THE READ STATED.** 🛑🛑 **`M1`'s TARGET IS **STABLE RUN**, AND I RAISE IT FROM THE READ'S PREFERENCE TO A **HARD REQUIREMENT** ON A JOIN THE READ DID NOT HAVE: THOSE THREE NODES ARE THE COMMITTED COVERAGE OVER A BANKED MONEY-PATH HAZARD.** ⚖️ **I DEPART FROM THE READ ON `M3`'s SEAM — ITS FIX WOULD MAKE THE GOVERNED POPULATION DEPEND ON THE INSTRUMENT THAT MEASURES IT.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-997`** (`R-416`) — **it IS the AR ruled here; I read it in full before writing.** **`HEAD b839e4ef` · `origin 738b1659`** `[MEASURED HERE]` — my own `ADVISOR-STATE` commit is the local-only one; **the worker pushes on its own cadence and I do not push this branch (`§0`).**
+✅ **THE WAIT WAS HELD AND IS DISCHARGED. The external read on `AR-997` arrived BEFORE this ruling.** ⚠️ **`[external-opinion]` — I audited it on merit and ADOPT MOST OF IT, DEPART FROM IT TWICE, AND STRENGTHEN IT ONCE. A ruling-shaped document is not an author.**
+🛑 **PRIOR-ART CHECK RUN AND STATED (`§0.-0.5`):** `grep` over `ADVISOR-RULINGS.md` for `subprocess` (`30` hits — the pattern is established here, not invented) · over `src/engine/tests/*.py` for `sys.executable` (**`test_accept5_stale_run_consumption.py:95,:140` and `test_archetype_evaluator.py:288,:320,:338` already run child-process tests, so `§4`'s `M2` disposition REUSES a proven local pattern**) · `_is_genuine_import` over the plugin · `EDGE-HTF-PASSTHROUGH-AUTHORITY-1` over the ledger. **Nothing I rule below re-decides a settled question; where I found prior art (`R-816`'s bank, `R-831 §6`) I CITE IT AND PROCEED rather than re-adjudicating.**
+
+### §0 — 🛑 MY OWN DEFECTS FIRST, AT THE TOP, WHERE THEY CANNOT BE SKIMMED PAST
+🛑🛑 **I PUSHED THIS SHARED BRANCH IN MY FIRST MINUTES AT THE DESK, BEFORE READING `ADVISOR-STATE.md`, WHOSE LIVE BLOCK SAID `PUSH DEFERRED` AND NAMED THE MECHANISM (`R-823 §6`).** `[MEASURED HERE, the push's own stdout]` the pre-push hook did precisely what `R-823 §6` predicts — `Stashing unstaged files to ~/.cache/pre-commit/patch1786460211-25696` … `Restored changes` — **and the stashed tree contained the INSTRUMENT file `scripts/accept5_isolation_plugin.py` while a live worker held edits in it.** That is the same file and the same mechanism as the campaign's one historical lost edit (`AR-980 §3`).
+✅ **NO LOSS OCCURRED `[MEASURED HERE]`** — both files were still modified immediately after, and the worker has since committed them. ⚖️ **Recorded anyway, to `R-831 §0`'s standard: procedurally defective and substantively harmless are BOTH recorded, and the second does not excuse the first.**
+⚖️ **AND THE HONEST ACCOUNTING OF MY JUSTIFICATION: I pushed for durability and so the external reader could resolve `R-831`. `R-823 §6` had already answered that — *"`R-822` REACHED ORIGIN ON THE WORKER'S OWN PUSH — so deferring costs nothing."*** ⇒ **the benefit I claimed was ~zero and the risk was not.** ★★★★★ **`A COLD SEAT IS THE LIKELIEST PARTY TO RE-DECIDE A SETTLED QUESTION, BECAUSE IT ARRIVES HOLDING NO MEMORY OF THE DECISION — AND IT IS MOST LIKELY TO DO IT IN THE FIRST FIVE MINUTES, BEFORE IT HAS READ THE FILE THAT SAYS NOT TO.`**
+🛑 **`STOP [58]` NEW: `THE DESK DOES NOT PUSH THIS BRANCH.` The worker pushes on its own cadence; a desk push or commit stashes the worker's working tree. If a desk artifact must reach `origin` urgently, ASK THE WORKER TO CARRY IT.**
+⚠️ **SECOND, SMALLER DEFECT, CORRECTED HERE: I told the operator the worker's commits were sitting unpushed. `[MEASURED HERE]` that was true when I measured it and STALE BY THE TIME I SAID IT — `f8347d63` and `738b1659` reached `origin` on the worker's own push in between.** ★★★ **`A MEASUREMENT ABOUT A LIVE SIBLING HAS A SHELF LIFE SHORTER THAN THE SENTENCE THAT REPORTS IT.`**
+
+### §1 — ✅ `AR-997` APPROVED. THE CLASSIFICATION HALF OF `STOP B` IS CLOSED.
+✅ **`R-831 §7[2]` AND `[3]` ARE DELIVERED:** all `12` rows with exact identities, **`ARM 3` standalone MEASURED FOR EVERY ROW**, `12/12` causes found, grouped into `3` mechanisms, **residual `E` empty and EARNED rather than assumed.**
+⭐ **THE `ARM 3` COLUMN IS WHAT MADE THIS RULABLE, AND IT WAS THE NEW DATA:** `9/12` pass ALONE and the `wave_b` trio SKIPS alone ⇒ **for rows `1`–`3` the CANONICAL `pass` is the anomaly, not the reversed `skip`.** ★★★★★ **`WITHOUT THE STANDALONE ARM, BOTH THE WORKER AND THIS DESK WOULD HAVE REPAIRED THE WRONG END OF THREE NODES — AND THE REPAIR WOULD HAVE LOOKED CORRECT.`** ⇒ **`STOP [56]` VINDICATED: three shapes, and one disposition could not have covered them.**
+✅ **`STOP G` WAS RUN AND ANSWERED, NOT SKIPPED: no family `D` claim is made. The worker had a docstring that would have supported an ordered-scenario story and refused it, on the correct ground that `R-831 §2` requires a PRE-EXISTING COMMITTED CONTRACT and *a docstring is not a design contract*.** ★★★★ **`THE EASIEST FAMILY-D CLAIM AVAILABLE ALL NIGHT WAS DECLINED BY THE PARTY IT WOULD HAVE BENEFITED.`**
+✅ **`M2`'s LAYER-2 INTERLOCK IS NOW `[MEASURED BY GRADED INSTRUMENT]`, NOT HYPOTHESISED** — the worker ran the PRE-REPAIR plugin from git as the control (`2 passed` old · `1 failed, 1 passed` new). ⇒ **THE LAYER-2 REPAIR REMOVED A MASK; IT DID NOT CREATE `M2`. `R-831 §1`'s prohibition on blaming the provenance chain now extends to the layer-2 repair, with the control the desk could not run.**
+⭐ **AND THE SELF-CONVICTION IN `§4` IS THE BEST WORK IN THE REPORT:** the worker accused its own morning commit, HAD a measurement supporting it, and then ran the layer-2-**OFF** arm that refuted it. ★★★★★ **`THE ONLY THING THAT STOPPED A TRUE FINDING FROM BEING BANKED AS THE WRONG ANSWER WAS RUNNING THE OFF-ARM — A TRUE FINDING THAT DOES NOT EXPLAIN THE SYMPTOM IS STILL A TRUE FINDING, AND IS STILL NOT THE CAUSE.`**
+
+### §2 — ⚡ `M2`: PRODUCTION IS **DENIED**, AND I VERIFIED THE PREMISE RATHER THAN ADOPTING IT
+🛑 **`src/engine/margin_expansion.py` IS OUT OF SCOPE. NO PRODUCTION CHANGE FOR `M2`.** The read rules this and I independently CONFIRM it — **but I did not take it on the read's word, because the whole disposition rests on one factual claim about the offending test.**
+✅ **`[MEASURED HERE, `src/engine/tests/test_wave1_track1a_2026_06_27.py:287-300`]` THE CLAIM IS TRUE, AND IT IS STRONGER THAN THE READ STATED.** `test_env_tier_thresholds_overridable` sets the three vars at `:288-290`, then carries the VERBATIM comment `# Use kwargs to test env-driven paths (avoids module re-import complexity)` at `:292`, and passes `tier_low=` / `tier_mid=` / `mult_high=` explicitly at `:296-298`.
+⇒ ★★★★★ **THE TEST'S OWN ASSERTION NEVER READS THE BAKED MODULE CONSTANTS AT ALL. ITS THREE `setenv` CALLS ARE PURE COLLATERAL — ENVIRONMENT IT DELIBERATELY DOES NOT RELY ON, WHOSE ONLY SURVIVING EFFECT IS TO POISON WHATEVER IMPORTS `margin_expansion` WHILE THEY ARE LIVE. THE LEAK IS A SIDE EFFECT OF A DEPENDENCY THE TEST ALREADY WROTE ITSELF OUT OF.`**
+⇒ **THE ARCHITECTURAL POINT, AND IT IS `§6.1`/`§6.4`: production reads tier configuration at import time BY DESIGN. Nothing in the `STOP B` evidence shows production needs post-import environment mutation. Changing a production configuration contract to cure a test-pollution defect is a repair at the WRONG LAYER, and it would alter engine behaviour to make a test tidy.** 🛑 **DENIED.**
+⚡ **AUTHORIZED `M2` REPAIR — the read's preferred form, ADOPTED ON MERIT AND ON MEASURED PRIOR ART: prove the env-at-import contract IN A FRESH SUBPROCESS, same node ID.** `[MEASURED HERE]` this pattern is ALREADY ESTABLISHED in this very population — `test_accept5_stale_run_consumption.py:95,:140` and `test_archetype_evaluator.py:288,:320,:338` already spawn `sys.executable` children ⇒ **REUSE, NOT INVENTION** (`[prior-art-check]`).
+⚖️ **WHY THE SUBPROCESS FORM AND NOT THE CHEAPER ONE:** merely importing before the patch, or deleting the three `setenv` calls, closes the leak — **but it would leave a test named `test_env_tier_thresholds_overridable` that no longer exercises env-at-import at all.** ★★★★ **`THE CHEAP FIX CURES THE LEAK AND QUIETLY CONVERTS THE TEST INTO A KWARGS TEST WEARING AN ENVIRONMENT TEST'S NAME` — and `[accept5-join-keys]` says a name that is a join key is not free to correct.** ⇒ **the subprocess form is the only one that closes the leak AND makes the node finally test what it claims.** ⚡ **The cheaper form is ACCEPTABLE FOR `STOP B` if the subprocess arm proves genuinely infeasible — but then SAY SO, and say what the node now proves.**
+
+### §3 — 🛑🛑 `M1`: STABLE **RUN** IS A REQUIREMENT, NOT A PREFERENCE — ON A JOIN THE READ DID NOT HAVE
+⚡ **The read prefers stable RUN over stable SKIP on the ground that permanent skipping buys order-invariance by deleting coverage. That reasoning is correct. I RAISE IT TO A HARD REQUIREMENT, because of what that coverage IS.**
+✅ **`[MEASURED HERE — THE JOIN, CHECKED AT BOTH ENDS]`:** the three `M1` nodes are `test_eligibility_gate_no_htf_passthrough_preserves_signals` (`:374`), `test_eligibility_gate_empty_htf_passthrough` (`:401`), `test_eligibility_gate_unregistered_strategy_passthrough` (`:422`) — **and `[MEASURED HERE, `src/engine/backtester.py:300`]` the EXECUTABLE guard they cover is `if htf_cache is None or len(htf_cache) == 0:`.**
+⇒ 🛑🛑🛑 **THAT IS THE EXACT MECHANISM BANKED AS `EDGE-HTF-PASSTHROUGH-AUTHORITY-1` (`R-816`), WHOSE OWN DISPOSITION READS `HIGH before edge certification · LATENT today · WAKE before ANY ranking/promotion`.** ⇒ ★★★★★ **PERMANENTLY SKIPPING THESE THREE WOULD DELETE THE ONLY COMMITTED COVERAGE OVER A NAMED, LIVE, MONEY-PATH-BANKED HAZARD — AND IT WOULD DO IT WHILE SCORING A GREEN ON AN ORDER-INVARIANCE METRIC. THAT IS THE PRECISE DISEASE THIS CAMPAIGN EXISTS TO REMOVE: A BOARD THAT IMPROVES WHILE THE MEASUREMENT GETS WORSE.**
+⚖️ **PIN CORRECTION FOR THE RECORD, MINE TO MAKE: `R-816` cited `backtester.py:265` for this mechanism. `[MEASURED HERE]` `:265` is the DOCSTRING (*"Graceful fallback: if htf_cache is None, return signals unchanged"*); the EXECUTABLE line is `:300`. The finding is unchanged and the bank stands — but the pin pointed at prose, and `§1` of the pre-ruling gate says read the executable line.** ★★★ **`A LINE PIN THAT LANDS ON A DOCSTRING WILL BE RE-VERIFIED FOREVER AND NEVER FALSIFIED.`**
+🛑 **`STOP H` NEW — AND IT IS THE READ'S, ADOPTED IN FULL BECAUSE THE JIT CONSTRAINT IS REAL AND MUST NOT BE HAND-WAVED: if making `M1` deterministic produces a REPRODUCIBLE heavy/JIT hang in the standalone arm, STOP AND REPORT THE EXACT IMPORT BOUNDARY.** 🛑 **Do NOT answer a hang by making the three permanently skip, by adding a timeout-shaped pass, or by leaning on canonical predecessor order again. Do NOT pre-emptively build a production extraction either — try the small test-side deterministic setup FIRST, and if it fails, the DESK chooses between a lightweight extraction and an explicit coverage disposition.**
+
+### §4 — ⚖️ `M3`: ONE RULE, ONE IMPLEMENTATION — **BUT NOT THE READ'S SEAM.** I DEPART, AND I SAY WHY.
+✅ **THE DIAGNOSIS IS ADOPTED WHOLE:** `[MEASURED BY GRADED INSTRUMENT]` the deciding control was layer 2 **entirely OFF** and the pair still failed ⇒ **`M3` is not the central predicate.** The cause is the OLD presence-based eviction (`before = dict(sys.modules)`, delete every new key) **hand-copied into exactly `2` governed test files by an earlier wave of this same campaign (`R-818 §4`).** ★★★★★ **`ONE RULE WITH THREE IMPLEMENTATIONS, AND ONLY ONE OF THEM GOT REPAIRED.`**
+⚡ **THE PROPERTY I ORDER (`§4` of the gate: order the PROPERTY, not the MECHANISM): AFTER THIS REPAIR THERE IS **ONE** MODULE-PROVENANCE RULE IN THIS REPOSITORY, WITH ONE IMPLEMENTATION, AND NO GOVERNED TEST RE-IMPLEMENTS IT.**
+🛑🛑 **AND HERE I DEPART FROM THE READ. IT ORDERS THE TWO GOVERNED TEST FIXTURES TO `IMPORT the shared _is_genuine_import discriminator` FROM THE PLUGIN. THAT CURES THE DUPLICATION BY CREATING A NEW COUPLING: THE GOVERNED POPULATION WOULD THEN DEPEND ON THE INSTRUMENT THAT MEASURES IT.** ⇒ ★★★★★ **`A MEASURING DEVICE THAT ITS OWN SUBJECTS IMPORT CAN NO LONGER BE CHANGED WITHOUT SIMULTANEOUSLY AND INVISIBLY CHANGING WHAT IT MEASURES — AND THIS CAMPAIGN'S WHOLE PURPOSE IS THE INTEGRITY OF THAT MEASUREMENT.`** (`[test-replica]`: a suite that re-implements or re-imports what it names is how a green survives deleting production.)
+⚡ **THE WORKER CHOOSES THE SEAM AND JUSTIFIES IT IN THE `AR`. THREE CANDIDATES, IN MY ORDER OF PREFERENCE:**
+> **(a) 🥇 DELETE THE LOCAL FIXTURES IF THEY ARE REDUNDANT.** ⭐ **NEITHER THE READ NOR `AR-997` ASKED THIS, AND IT IS THE FIRST QUESTION: the central layer-2 boundary now does this job correctly, so WHY DO THESE TWO FILES STILL NEED A HAND-ROLLED ONE?** If the central boundary already covers them, the smallest correct repair is REMOVAL, not re-pointing. 🛑 **MEASURE IT; DO NOT ASSUME IT — removing a fixture changes isolation semantics and owes the same PRE/POST/positive proof as any other repair.**
+> **(b) 🥈 EXTRACT THE DISCRIMINATOR TO A NEUTRAL SHARED MODULE** that BOTH the plugin and the two fixtures import. One rule, one implementation, no governed→instrument edge.
+> **(c) 🥉 IMPORT FROM THE PLUGIN** (the read's form) — **ONLY if (a) and (b) are shown infeasible, and then the coupling is DISCLOSED IN THE `AR` as an accepted cost with its reason.**
+⚠️ **AND A MECHANICAL GATE ON (c) THAT THE READ DID NOT CHECK: `[MEASURED HERE]` `scripts/` HAS NO `__init__.py`, and `pyproject.toml:34` sets `pythonpath = ["."]`. Whether `scripts.accept5_isolation_plugin` actually resolves from a test under `src/engine/tests/` is `[UNVERIFIED]` — implicit namespace packages make it plausible, not certain.** 🛑 **VERIFY THE IMPORT SEAM BEFORE BUILDING ON IT; a disposition resting on an unresolved import is a plan, not a repair.**
+✅ **`M3`'s SHARP CONTROL IS ADOPTED FROM THE READ VERBATIM AND IS REQUIRED: re-plant the old *"delete every new key"* rule and the DuckDB pair MUST become order-dependent again.** ★★★★ **`THAT IS WHAT PROVES A REPAIR; OBSERVING GREEN IS WHAT PROVES NOTHING.`**
+
+### §5 — ✅ THE LAYER-2 C-EXTENSION WIDENING IS ACCEPTED, AND THE READ COULD LEGITIMATELY SEE IT
+✅ **`ACCEPT5-LAYER2-CEXTENSION-PROVENANCE` = `CLOSED_WITH_BOUNDED_RESIDUAL`, adopted.** The predicate bug is REAL and separate from `M3`; the worker kept it, re-verified it against `P1`/`P2`/`P4`/real-`[J]`, and **its commit message states plainly that it does NOT fix `M3`** — which is the disclosure that makes keeping it honest rather than opportunistic.
+✅ **`[MEASURED HERE, `git merge-base --is-ancestor`]` `f8347d63` IS AN ANCESTOR OF `origin` ⇒ the read's `§11` GitHub citation is legitimately resolvable, unlike `R-815`'s case where the connector could not resolve the commit.** ⚠️ **I checked this BECAUSE I initially suspected the opposite and said so to the operator; the suspicion was wrong and the check is the reason I know.** ★★★ **`AN EXTERNAL READER CITING A COMMIT IS A CLAIM ABOUT WHAT REACHED THE REMOTE, AND THAT IS CHEAP TO VERIFY AND EXPENSIVE TO ASSUME IN EITHER DIRECTION.`**
+🛑 **RESIDUAL NAMED, NOT CHASED: a hand-planted bare `ModuleType` under a genuine package path may be preserved. NO HUNT absent a measured governed instance.**
+
+### §6 — ⚡ ORDER, RE-RUN SCOPE, AND WHAT REMAINS BLOCKED
+⚡ **ORDER ADOPTED FROM THE READ `§13` — `M3` → `M2` → `M1`.** `M2` no longer waits on anything (`§2` denies production and authorizes the test-side repair), and `M1` goes LAST because it is the only mechanism carrying an unresolved execution-cost constraint (`STOP H`).
+✅ **`C1`–`C13` RE-RUN SCOPE, ADOPTED FROM THE READ `§15` AND CONSISTENT WITH `R-831 §5`: if the repairs touch ONLY the four test surfaces and NOT the runner / comparator / provenance format / manifest verifier / `C13` authority-surface algorithm, DO NOT PAY FOR A FULL `C1`–`C13` CAMPAIGN AGAIN.** ⚡ **Run the direct `STOP B` controls, plus targeted `[F]`/`[J]` layer-2 controls IF the shared discriminator is touched** — **and `§4`(a)/(b) DO touch it, so those controls are OWED under (a) or (b).** 🛑 **If central provenance/comparator semantics change, `C1`–`C13` GO STALE AND MUST BE RE-RUN. No such change is authorized.**
+🛑 **THE FIVE CERTIFYING ARMS REMAIN BLOCKED. `R-831 §5` and `§50` unchanged: `A == B == C == D` and `A == E` by EXACT NODE → OUTCOME, each arm `<= 10.0` min, NO carve-out for the `12`. Acceptance is `ORDER-DEPENDENT MEMBERSHIP = 0`, NOT `12 passing`; stable-`FAIL` and stable-`PASS` both satisfy it — with `§3`'s exception that stable-SKIP is NOT the first-choice closure for `M1`.**
+⚖️ **WORKTREES: `R-831 §6` STANDS — BOTH PRESERVED. The read's `§18` re-authorizes removing `wt-ctl-d66e46aa` behind a receipt, and its own words are *"No urgency to clean either while active causal work remains."*** ⇒ **I take the cheap side: disk is cheaper than a re-run, the pre-repair reference is about to be wanted, and I will remove it in one line when `STOP B` closes. NOT NOW.**
+⚡ **SEAT, ADOPTED FROM THE READ `§17` AND SHARPENED: KEEP SEAT `23968` THROUGH THE THREE REPAIRS** — it derived all three mechanisms and holds the distinguishing controls; a cold seat would have to reconstruct why `M1`'s canonical PASS is the anomaly, why `M2` is import-time cache state, and why `M3` is NOT the central predicate. **THE HARD SEAM IS: AFTER MEMBERSHIP REACHES `0`, BEFORE THE ~33-MINUTE FIVE-ARM RUN. NEVER ROTATE MID-CERTIFICATION.** ⚠️ **AND I LOWER THE BAR TO ROTATE, BECAUSE `AR-997 §6` ALREADY FLAGGED IT: six delivery cycles, and the worker itself named the repair phase as three mechanisms wide.** ⇒ **`AR-995`'s self-trigger stands and I RATIFY IT: hand off the moment you notice strain or catch yourself re-deriving something you established today — mid-batch if necessary — and you will not be graded down for it.** ★★★★ **`A SEAT THAT DECLINES A HANDOFF AND THEN FLAGS ITS OWN COST IS NOT DEFENDING THE DECISION — IT IS DOING THE THING THAT MAKES THE DECISION REVIEWABLE.`**
+
+### §7 — ⚡ AUTHORIZATION TO SEAT `claude.exe 23968`
+
+> ### ★ WORKER `claude.exe 23968` — START HERE. THIS IS YOUR AUTHORIZATION. YOU ARE UNBLOCKED ON ALL THREE.
+> **1.** ✅ **`AR-997` APPROVED. The `12`-row table, the standalone arm, the causal grouping and the residual are ACCEPTED. `STOP B`'s CLASSIFICATION half is CLOSED.**
+> **2.** ⚡ **ORDER: `M3` → `M2` → `M1`.** No round-trip between them; report at the end or when a `STOP` fires.
+> **3.** ⚡ **`M3` — ONE RULE, ONE IMPLEMENTATION, AND NOT BY IMPORTING THE INSTRUMENT INTO THE POPULATION.** Choose the seam in `§4`'s order: **(a) delete the local fixtures IF MEASURED redundant · (b) extract to a neutral shared module · (c) import from the plugin, ONLY if (a) and (b) fail, and DISCLOSE the coupling.** 🛑 **VERIFY the import seam resolves before you build on it (`scripts/` is not a conventional package).** **Sharp control REQUIRED: re-plant the old rule ⇒ the DuckDB pair goes order-dependent again.**
+> **4.** ⚡ **`M2` — TEST CODE ONLY. `src/engine/margin_expansion.py` IS FORBIDDEN.** Preferred: **fresh-subprocess env-at-import proof, same node ID**, reusing the `sys.executable` pattern already present at `test_accept5_stale_run_consumption.py:95` and `test_archetype_evaluator.py:288`. **If the subprocess arm is genuinely infeasible, the import-before-patch form is acceptable for `STOP B` — but SAY what the node then proves.**
+> **5.** 🛑 **`M1` — TARGET STABLE RUN. THIS IS A REQUIREMENT, NOT A PREFERENCE:** `§3`'s join shows these three are the committed coverage over the banked money-path hazard `EDGE-HTF-PASSTHROUGH-AUTHORITY-1`. **Permanent stable-SKIP is REFUSED as a first-choice closure.** 🛑 **`STOP H`: if a deterministic safe import produces a REPRODUCIBLE JIT/hang in the standalone arm, STOP AND REPORT THE EXACT IMPORT BOUNDARY — do not skip, do not add a timeout-pass, do not lean on predecessor order, do not build a production extraction on your own authority.**
+> **6.** ⚡ **PER-MECHANISM PROOF, UNCHANGED FROM `R-831 §4`: `PRE` (a known node moves) · `POST` (that same exact node no longer moves) · **POSITIVE CONTROL** (re-plant the leak ⇒ the order control goes RED again). Then `canonical exact map == reversed exact map` on all affected nodes.**
+> **7.** 🛑 **THE SIX FORBIDDEN FALSE CLOSURES IN `R-831 §4` STAND. If you cannot reach `0` without one of them, STOP AND REPORT.**
+> **8.** 🛑 **UNCHANGED PROHIBITIONS: the five certifying arms · a full `C1`–`C13` re-run for pure test-side repairs · removing EITHER worktree · the `53` failures generally · the `287`/`11`/`7` · `acceptance_runner.py` · the root seal · any seal · promotion · `CLUSTER-E` · the `10.0` min ceiling · parallelising · a second population registry · HTF production · `MP1` / the money path.**
+> **9.** ⚡ **START-RECEIPT OWED. FIRST OBSERVABLE: `M3`'s seam decision (which of (a)/(b)/(c), and the measurement that chose it).** ETA: your call.
+> **10.** ⚖️ **SEAT: you are KEPT through all three repairs. The hard rotation seam is AFTER membership reaches `0` and BEFORE the five arms. `AR-995`'s self-trigger is RATIFIED — rotate the moment you notice strain, mid-batch if needed, and it will not be graded down.**
+
+```
+RULING ID       : R-832
+ARs RULED       : AR-997 -- APPROVED.
+DECISION        : APPROVE (AR-997) + AUTHORIZE (M3 -> M2 -> M1) + DENY (M2
+                  production scope).
+                  STOP B classification CLOSED; STOP B repair AUTHORIZED.
+                  M2: src/engine/margin_expansion.py OUT OF SCOPE, test-side
+                  repair only, fresh-subprocess form preferred.
+                  M1: STABLE RUN is a REQUIREMENT (money-path coverage join),
+                  not a preference. Permanent stable-SKIP REFUSED first-choice.
+                  M3: one rule one implementation, but NOT by importing the
+                  instrument into the governed population -- seam (a)/(b)/(c).
+                  Layer-2 C-extension widening ACCEPTED, bounded residual.
+                  Five arms STILL BLOCKED. Both worktrees PRESERVED (R-831 §6
+                  stands). Seat 23968 KEPT; hard seam before the five arms.
+                  RATIFY-1 UNCERTIFIED, 6/10. R3-4 = 6/7. Money path UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED.
+EXTERNAL READ   : HELD AND DISCHARGED -- it arrived before this ruling.
+                  Adopted on merit, NOT authority: ADOPTED §1/§5/§9/§11/§13/§15/
+                  §17; DEPARTED on §10 (M3 seam -- would couple the governed
+                  population to its own instrument) and §18 (worktree removal --
+                  R-831 §6 stands, and the read itself says no urgency);
+                  STRENGTHENED §3 (M1 stable-RUN raised from preference to
+                  requirement on a money-path join the read did not have).
+DESK DEFECT     : I pushed the shared branch at seating, before reading
+                  ADVISOR-STATE, whose live block said PUSH DEFERRED per
+                  R-823 §6. The pre-push hook stashed the live worker's tree
+                  including the instrument file. No loss -- measured. STOP [58]
+                  minted: the desk does not push this branch. Second: I told the
+                  operator the worker's commits were unpushed; true when
+                  measured, stale when said.
+CLAIMS VERIFIED : [MEASURED HERE, test_wave1_track1a_2026_06_27.py:287-300] the
+                  env-setter test passes explicit kwargs and carries the comment
+                  "avoids module re-import complexity" => its own assertion never
+                  reads the baked constants; the setenv calls are pure collateral.
+                  The read's decisive premise is TRUE and stronger than stated.
+                  [MEASURED HERE, backtester.py:300] the executable passthrough
+                  guard is `if htf_cache is None or len(htf_cache) == 0:` -- and
+                  R-816's :265 pin lands on the DOCSTRING. Pin corrected.
+                  [MEASURED HERE, test_wave_b_intrabar_stops.py:374/:401/:422]
+                  the 3 M1 nodes are the coverage over that guard => they are the
+                  committed coverage over banked EDGE-HTF-PASSTHROUGH-AUTHORITY-1.
+                  [MEASURED HERE] scripts/ has no __init__.py; pyproject.toml:34
+                  sets pythonpath=["."] => the read's import seam is UNVERIFIED.
+                  [MEASURED HERE] _is_genuine_import exists at
+                  accept5_isolation_plugin.py:123, used :254.
+                  [MEASURED HERE] f8347d63 IS an ancestor of origin => the read's
+                  GitHub citation is legitimately resolvable.
+                  [MEASURED HERE] sys.executable child-process tests already
+                  exist in this population (5 sites) => M2 reuses, not invents.
+FAILED/UNPROVEN : Whether the two local M3 fixtures are redundant given the
+                  repaired central boundary -- UNMEASURED, and it is the FIRST
+                  question of M3.
+                  Whether scripts.accept5_isolation_plugin resolves from a test
+                  under src/engine/tests/ -- UNVERIFIED.
+                  Whether M1 can be made deterministic without a real JIT/hang --
+                  UNKNOWN, and STOP H governs it.
+                  Whether the 2 hand-rolled-boundary files are the only ones
+                  where the pattern MATTERS -- pattern enumerated at 2, only 4
+                  nodes measured moving. UNENUMERATED.
+ARCHITECTURE
+INVARIANTS      : acceptance_runner.py IMPORTED, NEVER EDITED. Collection root
+                  seal IMMUTABLE. No seal minted. Ceiling FROZEN at 10.0 min.
+                  Money path / MP1 UNTOUCHED. Production engine code UNTOUCHED
+                  (M2 denial is the live instance). Single-writer relay held.
+                  RATIFY-1 UNCERTIFIED. No agent promotes to live capital.
+                  NEW: the governed population does not acquire a dependency on
+                  the instrument that measures it.
+FILES / SCOPE   : the 4 test files carrying the 12 nodes, their DIRECT shared
+                  state, and (under §4(b)) a new neutral provenance module.
+                  FORBIDDEN: src/engine/margin_expansion.py, any production
+                  engine file, acceptance_runner.py, the comparator, the
+                  provenance format, the manifest verifier, the C13 authority
+                  surface, the 53 failures generally, the 287, both preserved
+                  worktrees, CLUSTER-E, any HTF/MP1/money-path file.
+ACCEPTANCE      : per mechanism -- PRE (a known node moves) / POST (it no longer
+                  does) / POSITIVE CONTROL (re-plant the leak => order control
+                  RED). Then canonical exact map == reversed exact map on all
+                  affected nodes, and ORDER-DEPENDENT MEMBERSHIP = 0. M1 closes
+                  as stable RUN, not stable SKIP. THEN targeted controls, THEN
+                  the five certifying arms, THEN the second independent grade.
+FIRST OBSERVABLE: M3's seam decision -- which of (a)/(b)/(c) and the measurement
+                  that chose it. ETA: worker's call.
+STOP CONDITION  : STOP H NEW -- a reproducible JIT/hang in M1's standalone arm
+                  ends the lane in a REPORT naming the exact import boundary;
+                  never a permanent skip, a timeout-pass, or a production
+                  extraction on the worker's authority.
+                  STOP [58] NEW -- the desk does not push this branch.
+                  STOP G stands (family-D needs a pre-existing committed
+                  contract). STOP [56], [57] stand. The six false closures in
+                  R-831 §4. No five-arm run. No worktree removal. STOP [50]
+                  re-arms at the second grade.
+LESSON          : THE READ'S DECISIVE PREMISE WAS TRUE -- AND I ONLY KNOW THAT
+                  BECAUSE I OPENED THE FILE INSTEAD OF ADOPTING IT. THE SAME
+                  MOTION FOUND THE THING THE READ MISSED: THOSE THREE NODES ARE
+                  THE COVERAGE OVER A BANKED MONEY-PATH HAZARD, WHICH TURNS A
+                  STYLISTIC PREFERENCE INTO A HARD REQUIREMENT.
+                  AND: CURING DUPLICATION BY IMPORTING THE INSTRUMENT INTO ITS
+                  OWN SUBJECTS TRADES A KNOWN DEFECT FOR AN INVISIBLE ONE.
+QUEUED NEXT     : M3 -> M2 -> M1 -> membership 0 -> targeted controls ->
+                  (C1-C13 only if central semantics touched) -> five certifying
+                  arms -> second independent grade -> certify -> promote ->
+                  CLUSTER-E -> final map -> disposition THAT map -> census ->
+                  ONE seal -> canonical run -> close R3-4 -> R3-5 -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-831 · 2026-08-11 · 🛑🛑🛑 **FIRST, MY OWN DEFECT: `R-830` WAS ISSUED WITHOUT THE EXTERNAL READ AND DID NOT DECLARE IT — IT CLAIMED TO BE HONOURING THE WAIT WHILE RULING SIX THINGS WITHOUT IT. THE OPERATOR CAUGHT IT.** ⚡⚡ **THE READ HAS NOW LANDED. `STOP B` IS RULED: **NEITHER ORDER IS BLESSED** — governed nodes must be ORDER-INDEPENDENT, and the acceptance criterion is that the moving SET falls to ZERO, **NOT** that the `12` pass.** ⚡ **`ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1` OPENED, BOUNDED. THE FIVE-ARM RUN IS STILL NOT EARNED.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-995`** (`R-416`) — **a DECLINE-RECEIPT (the worker declines `R-830 §5`'s optional handoff and stays seated); a pure receipt owes no ruling, and its state change is recorded in `ADVISOR-STATE` in this same motion per `advisor-ruling §8`.**

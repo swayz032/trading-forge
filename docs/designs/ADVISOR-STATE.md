@@ -11,7 +11,7 @@
 
 ## SEAT — 2026-08-11 ~15:00Z · desk `claude.exe 28644` · **LIVE BLOCK, TAKE THIS ONE**
 
-**Ledger at `R-831`, ON ORIGIN. Newest AR: `AR-997` — SUBSTANTIVE, UNRULED, HELD FOR THE EXTERNAL READ.** Worker **`claude.exe 23968` ACTIVE, NO ROLL** — same seat that wrote `AR-995`/`996`/`997`; it is **NOT BLOCKED** (`R-831 §7[3]/[4]` authorize classify+repair, and it is starting on `M3`/`M1`, both test-side).
+**Ledger at `R-832`. Newest AR: `AR-997` — ✅ RULED AND APPROVED (`R-832`); the external read arrived, the wait was HELD and is DISCHARGED.** Worker **`claude.exe 23968` ACTIVE, NO ROLL** — same seat that wrote `AR-995`/`996`/`997`; it is **NOT BLOCKED** (`R-831 §7[3]/[4]` authorize classify+repair, and it is starting on `M3`/`M1`, both test-side).
 **SEAT ROLL `[MEASURED HERE, `Win32_Process` + parent walk, IMAGE NAME + BIRTH TIME]`: desk `26972` → `28644` (born `08-11 10:53:52`, parent `powershell.exe 8328`). `26972` is GONE from the census. `[seat-rolls-are-swaps]` — planned swap, no work hunted.**
 
 ### 🛑 DESK DEFECT ON RECORD — MINE, AT SEATING
@@ -26,10 +26,14 @@
 ⚠️ **TWO ORPHAN `bash.exe` EARS — REPORT, DO NOT KILL (`advisor-onboarding §4a`):** `17820` `report-ear.sh` on `AGENT-REPORTS.md` (session `5ffbf1a0` = desk `26972`, now dead — **a running process delivering into a dead seat**) · `23812` `ruling-ear.sh` on a THROWAWAY file (dead session). ✅ **`28368` `ruling_ear.sh` on `ADVISOR-RULINGS.md` is the WORKER's LIVE ear — DO NOT TOUCH IT.** ★ **`A STATE FILE CLAIMING "EAR ARMED" IS A CLAIM ABOUT A PROCESS — AND A PROCESS CAN OUTLIVE THE SEAT IT SPEAKS TO.`**
 
 ## AUTHORIZED NOW
-**`R-831 §7` stands unchanged to seat `23968`** — `ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1`: the `12`-row table (**DELIVERED, `AR-997`**) → classify (**DONE: `M1`/`M2`/`M3`, all family `A`**) → **repair the smallest shared mechanism** with `PRE`/`POST`/positive controls → order-dependent membership `= 0`. **The worker is proceeding on `M3` and `M1` (test-side only) under this authorization; no new ruling is needed for it to continue.**
+**`R-832 §7` to seat `23968` — ALL THREE MECHANISMS, ORDER `M3` → `M2` → `M1`, NO ROUND-TRIP BETWEEN THEM.**
+- **`M3`** one rule / one implementation, seam chosen in `R-832 §4`'s order: **(a) delete the local fixtures IF MEASURED redundant · (b) neutral shared module · (c) import from the plugin ONLY if (a)/(b) fail, coupling DISCLOSED.** Sharp control REQUIRED: re-plant the old rule ⇒ DuckDB pair goes order-dependent again.
+- **`M2`** TEST CODE ONLY; fresh-subprocess env-at-import proof, same node ID, reusing the `sys.executable` pattern already in this population.
+- **`M1`** target **STABLE RUN — a REQUIREMENT, not a preference** (`R-832 §3`). `STOP H` governs a JIT/hang.
+- **Per mechanism: `PRE` / `POST` / POSITIVE CONTROL, then `canonical exact map == reversed exact map`, then membership `= 0`.** **FIRST OBSERVABLE: `M3`'s seam decision + the measurement that chose it.**
 
 ## NOT AUTHORIZED
-**`margin_expansion.py` or ANY production file for `M2` — the worker escalated this itself and is correct to; it needs a ruling and the ruling is held for the read.** · the five certifying arms · removing EITHER worktree (`R-831 §6`) · the `12` becoming a `53`-failure campaign · the `287`/`11`/`7` · promotion · any seal · `CLUSTER-E` · raising the frozen `10.0` min ceiling · parallelising · a second population registry · HTF production · **`MP1` / the money path** · **the desk pushing this branch.**
+🛑 **`src/engine/margin_expansion.py` or ANY production engine file — `M2` production scope is DENIED (`R-832 §2`), and the denial is now a RULED answer, not an open question.** · 🛑 **making any governed test depend on the instrument that measures it (`R-832 §4`)** · the five certifying arms · a full `C1`–`C13` re-run for pure test-side repairs · removing EITHER worktree (`R-831 §6` STANDS) · the `12` becoming a `53`-failure campaign · the `287`/`11`/`7` · `acceptance_runner.py` · promotion · any seal · `CLUSTER-E` · raising the frozen `10.0` min ceiling · parallelising · a second population registry · HTF production · **`MP1` / the money path** · **the desk pushing this branch (`STOP [58]`).**
 
 ## STATE, WITH EVIDENCE GRADES
 - `[MEASURED BY GRADED INSTRUMENT — worker, `AR-997 §1`, `ARM 3` run for every row]` **all `12` order-dependent nodes have a cause. THREE mechanisms, ALL family `A`.** `9/12` pass ALONE; the `wave_b` trio SKIPS alone ⇒ **for rows `1`–`3` the canonical `pass` is the anomaly, not the reversed `skip`.**
@@ -39,7 +43,8 @@
 - `[UNENUMERATED — OPEN]` whether `M1`'s three should end stable-SKIP or stable-RUN (**a contract question the worker correctly refuses to answer alone**) · whether `M2` can be repaired without production code · whether the `2` hand-rolled-boundary files are the only ones where it MATTERS (**pattern enumerated at `2`; only `4` nodes measured moving**) · the `278` unsampled `287`-nodes · `ACCEPT5-DOCS-READ-AS-SOURCE-1`.
 
 ## QUEUE (next 4, in order)
-1. **`AR-997`'s ruling — HELD FOR THE EXTERNAL READ; the worker is NOT blocked, so the wait is FREE and there is no exception to invoke.** The ruling owes: `M1`'s stable-SKIP-vs-stable-RUN contract call · whether `M2` may touch `margin_expansion.py` · ratifying `M3`'s import-don't-reimplement disposition. · 2. repair → membership `0` · 3. `C1`–`C13` **only if the instrument was touched** · 4. five certifying arms → second independent grade (`STOP [50]` re-arms).
+1. **`M3` → `M2` → `M1` repairs (`R-832 §7`, LIVE with seat `23968`)** · 2. **order-dependent membership `= 0`** + targeted controls · 3. `C1`–`C13` **only if central provenance/comparator semantics were touched** · 4. **five certifying arms → second independent `accuracy-validator` grade (`STOP [50]` re-arms) → certify → promote → `CLUSTER-E`.**
+🛑 **THE HARD ROTATION SEAM: after membership reaches `0`, BEFORE the ~33-min five-arm run. NEVER mid-certification.** ⚠️ **`AR-997 §6` flagged six delivery cycles; `R-832 §6` RATIFIES `AR-995`'s self-trigger — the worker rotates the moment it notices strain, mid-batch if needed, and is NOT graded down for it.**
 
 ## KNOWN-BENIGN (do not investigate)
 `docs/wave25-exit-engine-ab-report.md` modified in `git status` — **ruled output-only, NOT cruft** · `.numba_cache/*` churn · `ACCEPTANCE: REFUSED` from `SEALED DISPOSITION CHANGED` / `F-ACCEPT5-8` · **the worker's local branch running ahead of `origin`** · **the two orphan ear processes above.**
