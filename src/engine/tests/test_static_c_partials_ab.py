@@ -24,7 +24,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
 # ── Style C canonical constants (mirrors style_c_handler.py) ───────────────
 # Tested independently in TestPartialsMath to ensure they haven't drifted.
@@ -179,8 +178,14 @@ class TestGoldenMetricsAreEnvFlagIndependent:
     def test_pf_computation_flag_independent(self):
         """Profit factor formula produces identical result regardless of the env flag."""
         fixture_path = GOLDEN_DIR / "fixture_perfect.json"
-        if not fixture_path.exists():
-            pytest.skip("fixture_perfect.json not found in golden dir")
+        # R-815 Cluster B / R-799 §5 form [1]: this fixture is COMMITTED GOVERNED
+        # EVIDENCE -- `git ls-files` resolves it (MEASURED, AR-966). A tracked file
+        # cannot be "missing in this environment"; if it is absent the checkout is
+        # broken, and a release-authority test must REFUSE rather than skip.
+        assert fixture_path.exists(), (
+            f"tracked golden fixture missing at {fixture_path} -- this file is committed, "
+            "so its absence is a broken checkout, not an environment gap"
+        )
         with open(fixture_path, encoding="utf-8") as f:
             fixture = json.load(f)
 

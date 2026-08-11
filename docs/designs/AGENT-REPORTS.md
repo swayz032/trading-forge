@@ -4,6 +4,55 @@
 
 ---
 
+## AR-969 · 2026-08-11 · ✅ **CLUSTER `B` LANDED — `7` MORE FIXTURE-OUTCOME SKIPS CONVERTED TO HARD FAILURES; `ZERO` FLIPS IN THE GOVERNED POPULATION.** 🛑🛑🛑 **AND THE CONVERSION IMMEDIATELY EXPOSED A DEFECT THE SKIPS WERE HIDING: `test_pnl_accuracy.py` PASSES `50/51` INSIDE THE POPULATION AND ONLY `47/51` ALONE. THREE TESTS PASS **ONLY IN COMPANY**.** ⚖️ **AND ONE OF THE EXPOSING ASSERTIONS IS NOT MINE — IT IS THE PRE-EXISTING `F-4` (`R-630`) ASSERT, SO THIS IS FOUND, NOT CAUSED.**
+
+**SEAT `claude.exe 23692`. CLUSTER FAN-IN `2 / 7` (`A`,`B` done · `C`–`G` UNSTARTED · `H` FORBIDDEN).**
+
+### §1 — ✅ THE `7` CONVERSIONS, EACH ON `R-815 §7`'s CLUSTER `B` RULE
+> *"if the test controls the fixture, an unexpected output is a FAILURE, not an environment skip."*
+```
+row 6  test_fvg_identity_dispatch.py:182   no entry-bar     -> assert _bars
+row 7  test_levelzone_routing.py:346       no entry-bar     -> assert _bars
+row 8  test_pnl_accuracy.py:866            total_trades==0  -> assert > 0
+row 9  test_pnl_accuracy.py:909            total_trades==0  -> assert > 0
+row 10 test_pnl_accuracy.py:975            total_trades==0  -> assert > 0
+row 11 test_pnl_accuracy.py:992            no daily records -> assert daily_pnl_records
+row 25 test_static_c_partials_ab.py:183    tracked fixture  -> assert path.exists()
+```
+✅ **`[MEASURED HERE]` `pytest.skip` remaining in all four files: `0`.**
+🛑 **THE PREMISE OF ROWS `8`–`11` WAS FACTUALLY FALSE AND I CHECKED IT AT THE LINE:** their message said *"Fixture produced no trades **in this environment**"*, but `[MEASURED]` the data is `self._make_alternating_ohlcv()` generated **in-process** and handed to `run_backtest(..., data=df)`. **There is no environment input on that path at all.** ★★★★★ **`A SKIP MESSAGE IS A CLAIM ABOUT A DEPENDENCY, AND IT IS AS UNVERIFIED AS ANY OTHER CLAIM — THESE THREE NAMED AN ENVIRONMENT THAT NEVER TOUCHED THEM.`**
+✅ **Row `25` is form `[1]` committed governed evidence (`git ls-files` resolves it) ⇒ absence = broken checkout = REFUSE, never skip (`R-799 §5`).**
+
+### §2 — ✅ POPULATION EFFECT: INERT, WHICH IS THE CORRECT RESULT
+```
+postA -> postB (Cluster B edits only), joined BY NODE ID:
+  FLIPS 0 | unchanged 2418 | only-postA 0 | only-postB 0
+  passed 2385 · failed 31 · REAL SKIPS 0 · xfail 2      <- identical to postA
+```
+⇒ ✅ **The escape hatches are gone and NOTHING regressed. `[MEASURED]` these skips were already `DID NOT FIRE` in the population, so inertness there is exactly what a correct conversion predicts.**
+
+### §3 — 🛑🛑🛑 THE FINDING THE CONVERSION EXPOSED: RUN-COMPOSITION DEPENDENCE
+`[MEASURED HERE, same tree, same commit, same box, ONLY the selection differs]`:
+```
+python -m pytest src/engine/tests/test_pnl_accuracy.py            -> 4 failed, 47 passed
+the SAME 51 nodes inside the 107-member population (postB)        -> 1 failed, 50 passed
+                                            (the 1 = test_no_trades_returns_zero_metrics,
+                                             a KNOWN baseline red, failing in BOTH)
+```
+⇒ 🛑 **THREE GOVERNED TESTS PASS ONLY WHEN RUN ALONGSIDE THE REST OF THE POPULATION.** Alone, their in-process fixture yields `total_trades == 0`; in company it yields trades. **Something in the wider run supplies state they depend on and do not declare.**
+⚖️ **THIS IS FOUND, NOT CAUSED, AND THE EVIDENCE IS THAT ONE EXPOSING ASSERT IS NOT MINE:** `[MEASURED, `test_pnl_accuracy.py:470`]` `assert len(result["trades"]) > 0, "no trades produced, so the commission formula was never checked — this test cannot pass vacuously"` — written by the **`F-4` / `R-630` sweep**, long before this seat. **It fails in isolation too.**
+🛑 **I AM NOT TUNING THE FIXTURE UNTIL THE RED GOES AWAY.** That would re-hide it. **`ACCEPT-5` is a release-authority instrument, and `[MEASURED]` its green is a function of RUN COMPOSITION** — a reader who runs one governed file gets a different verdict than the acceptance runner does.
+✅ **BANK PROPOSED (worker-owned, desk to rule): `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1`.** ★★★★★ **`A SUITE WHOSE MEMBERS ONLY PASS TOGETHER HAS AN UNDECLARED PREREQUISITE, AND THE SKIP WAS THE THING KEEPING IT UNDECLARED — REMOVING THE SKIP DID NOT CREATE THE DEPENDENCY, IT PRINTED IT.`**
+⚠️ **ROOT CAUSE `[UNENUMERATED]` — I did NOT hunt it.** `R-815` scopes me to the clusters, its `STOP` fires on scope drift, and a state-leak hunt across `107` members is a new investigation, not a cluster repair. **Named, evidenced, handed up.**
+
+### §4 — 🛑 NOT DONE
+🛑 **`C`–`G` UNSTARTED** · **`H` FORBIDDEN, untouched** · root cause of `§3` `[UNENUMERATED]` · rows `26`–`29` still untested · the `31` baseline reds still NOT analysed or claimed.
+⚠️ **BEHAVIOURAL CHANGE THE DESK SHOULD SEE: after this cluster, running `test_pnl_accuracy.py` ALONE goes RED where it previously went GREEN-WITH-SKIPS.** In the governed population it is unchanged. **I consider the red correct — but it is a change in what a subset run reports, and it is the desk's to ratify.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Continuing to the remaining clusters under the same ruling; no round-trip.** ⚠️ **NOT A HANDOFF at `2 / 7` — the remaining five are UNSTARTED, not blocked.**
+
+---
+
 ## AR-968 · 2026-08-11 · ✅✅ **CLUSTER `A` LANDED WITH ALL FOUR CONTROLS EXECUTED. THE THREE `signal_vector` SKIPS ARE GONE AT THE MECHANISM: THE BROAD `except → pytest.skip` IS **DELETED**, DATA IS A DETERMINISTIC IN-TEST FIXTURE, AND `REAL SKIPS` IN THE GOVERNED POPULATION GO `3 → 0`.** ⭐ **AND IT REPRODUCES `C1`'s OUTCOME **WITHOUT** CREDENTIALS — SAME THREE NODES, SAME DIRECTION, ON A CREDENTIAL-LESS BOX.** 🛑 **ONE RESIDUAL SENSITIVITY REPORTED, NOT ABSORBED: THE ENGINE STILL ATTEMPTS AN S3 HTF READ AND DEGRADES TO PASSTHROUGH.**
 
 **SEAT `claude.exe 23692`. `R3` = `3 / 5`, `R3-4` OPEN. CLUSTER FAN-IN: `A` = `1 / 7` (`B`–`G` UNSTARTED, `H` FORBIDDEN).**

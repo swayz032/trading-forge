@@ -862,8 +862,16 @@ class TestWave1CommissionGoldenFixture:
         # follows the same established pattern rather than hard-failing on an
         # environment-dependent data-availability gap that is orthogonal to
         # the commission-rate contract under test here.
-        if result["total_trades"] == 0:
-            pytest.skip("Fixture produced no trades in this environment — commission contract not exercised")
+        # R-815 Cluster B: the test CONTROLS this fixture -- `_make_alternating_ohlcv()`
+        # is generated in-process and handed to run_backtest via `data=`. There is NO
+        # environment input here, so "in this environment" described a dependency that
+        # does not exist. Zero trades means the fixture or the engine changed, and that
+        # is a FAILURE, not a skip: the commission contract silently going unexercised
+        # is exactly the false green this test exists to prevent.
+        assert result["total_trades"] > 0, (
+            "in-process fixture produced zero trades, so the commission-rate contract "
+            "was never exercised -- fixture or engine regression, not an environment gap"
+        )
         for i, trade in enumerate(result["trades"]):
             size = float(trade["Size"])
             expected_comm = topstep_rate * size * 2
@@ -905,8 +913,16 @@ class TestWave1CommissionGoldenFixture:
         # test_topstep_mes_commission_per_trade_contract — zero trades on this
         # fixture is an environment-dependent data-availability gap, not a
         # commission-rate contract failure.
-        if result["total_trades"] == 0:
-            pytest.skip("Fixture produced no trades in this environment — commission contract not exercised")
+        # R-815 Cluster B: the test CONTROLS this fixture -- `_make_alternating_ohlcv()`
+        # is generated in-process and handed to run_backtest via `data=`. There is NO
+        # environment input here, so "in this environment" described a dependency that
+        # does not exist. Zero trades means the fixture or the engine changed, and that
+        # is a FAILURE, not a skip: the commission contract silently going unexercised
+        # is exactly the false green this test exists to prevent.
+        assert result["total_trades"] > 0, (
+            "in-process fixture produced zero trades, so the commission-rate contract "
+            "was never exercised -- fixture or engine regression, not an environment gap"
+        )
         for i, trade in enumerate(result["trades"]):
             size = float(trade["Size"])
             expected_comm = mffu_rate * size * 2
@@ -971,8 +987,12 @@ class TestWave1CommissionGoldenFixture:
         df = self._make_alternating_ohlcv()
         result = run_backtest(self._make_backtest_request(topstep_rate, "topstep_50k"), data=df)
 
-        if result["total_trades"] == 0:
-            pytest.skip("No trades generated — fixture needs more data")
+        # R-815 Cluster B: in-process fixture, no environment input. Zero trades is a
+        # fixture/engine regression, not a data-availability gap.
+        assert result["total_trades"] > 0, (
+            "in-process fixture produced zero trades -- the double-deduction property "
+            "below would be vacuously satisfied"
+        )
 
         # Build daily_pnl_records as prop_sim expects
         daily_pnl_records = [
@@ -988,8 +1008,15 @@ class TestWave1CommissionGoldenFixture:
                 else:
                     daily_pnl_records = [{"date": f"day_{i}", "pnl": float(p)} for i, p in enumerate(dpnls)]
 
-        if not daily_pnl_records:
-            pytest.skip("No daily_pnl_records available — check run_backtest output shape")
+        # R-815 Cluster B: this one skipped on a SHAPE DEFECT in run_backtest's own
+        # output -- its message literally said "check run_backtest output shape". A test
+        # that skips when the thing it measures is malformed reports nothing precisely
+        # when something is wrong. HARD FAIL.
+        assert daily_pnl_records, (
+            "run_backtest returned no usable daily P&L records from any of "
+            "daily_pnls_detailed / daily_pnls_raw / daily_pnls -- an output-shape "
+            "defect in the subject, not a missing environment input"
+        )
 
         # Net P&L sum from backtester (commissions already deducted once)
         backtester_net = sum(float(t["PnL"]) for t in result["trades"])

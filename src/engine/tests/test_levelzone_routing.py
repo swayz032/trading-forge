@@ -342,8 +342,13 @@ def test_trace_shows_distinct_levelzone_primitive_contributor_when_enabled():
 
     # Re-keyed on record_kind (R-749 §4-1) — see the note in test_fvg_identity_dispatch.
     _bars = [r for r in strat.last_trace if r["record_kind"] == TRACE_RECORD_ENTRY_BAR]
-    if not _bars:
-        pytest.skip("no entry signal fired on this synthetic fixture/seed — nothing to inspect")
+    # R-815 Cluster B: same class as test_fvg_identity_dispatch -- the fixture and seed
+    # are owned by this test, so an unexpected output is a FAILURE, not an environment
+    # skip. No entry bar means the routing under test never ran.
+    assert _bars, (
+        "no entry-bar trace record on a fixture this test fully controls -- the "
+        "levelzone routing was never exercised, so the assertions below prove nothing"
+    )
     fired_primitives = {c["primitive"] for rec in _bars for c in rec["conditions"]}
     assert "levelzone_routing.retest_touch_check" in fired_primitives
     assert "structure_engine.compute_structure_state" not in fired_primitives

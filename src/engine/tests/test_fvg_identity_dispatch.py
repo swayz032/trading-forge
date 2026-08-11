@@ -178,8 +178,15 @@ def test_trace_shows_distinct_fvg_primitive_contributor_when_enabled():
     # `execution_summary` record, so `if not strat.last_trace` stopped being a
     # "no entry fired" test and this skip silently stopped firing.
     _bars = [r for r in strat.last_trace if r["record_kind"] == TRACE_RECORD_ENTRY_BAR]
-    if not _bars:
-        pytest.skip("no entry signal fired on this synthetic fixture/seed — nothing to inspect")
+    # R-815 Cluster B: the fixture and the seed are BOTH owned by this test -- it is a
+    # form [2] deterministic fixture, not an environment input. If no entry bar fires,
+    # the dispatch under test never ran and the assertions below are vacuous. That is a
+    # FAILURE. (This skip had already gone silently dead once: R-749 §4-1 re-keyed the
+    # trace so `if not strat.last_trace` stopped meaning "no entry fired" at all.)
+    assert _bars, (
+        "no entry-bar trace record on a fixture this test fully controls -- the FVG "
+        "dispatch was never exercised, so the primitive assertions below prove nothing"
+    )
     fired_primitives = {c["primitive"] for rec in _bars for c in rec["conditions"]}
     assert "fvg_native.compute_fvg_signal" in fired_primitives
     assert "structure_engine.compute_structure_state" not in fired_primitives
