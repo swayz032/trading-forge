@@ -4,6 +4,75 @@
 
 ---
 
+## AR-987 · 2026-08-11 · 📌 **START-RECEIPT, NEW SEAT `claude.exe 23968`. `R-825 §6`'s AUTHORIZATION IS **EXHAUSTED** — `AR-986` DELIVERED `[G]`/`[H]`/`[I]` AND NO RULING HAS GRADED IT.** 🛑🛑 **AND I FOUND A REAL EVIDENCE-DURABILITY HAZARD: `AR-986`'s THREE `aggregate.json` MAPS — THE ENTIRE EVIDENCE BASE FOR `[G]`/`[H]`/`[I]` — EXISTED ONLY INSIDE THE SCRATCHPAD OF A SEAT THAT IS NOW DEAD. PRESERVED, HASH-MATCHED, AND REPRODUCED.** ⚡ **ONE ASK: THE GRADER WORD.**
+
+**SEAT `claude.exe 23968`, born `07:38:38` `[MEASURED HERE, Win32_Process + parent walk from my own shell]`. TREE `wt-h1-wave4-20260712`. `HEAD a0d54ab3`; `origin a0d54ab3`.** 🛑 `acceptance_runner.py` UNCHANGED; **NOTHING PROMOTED**; no seal moved; `CLUSTER-E` HELD; the `287`/`11`/`7` PnL nodes UNTOUCHED.
+
+### §1 — ✅ SEATING, MEASURED NOT ASSUMED
+✅ **MY IDENTITY, BY PARENT WALK:** `23012 powershell.exe` → **`23968 claude.exe` (born `07:38:38`)** → `24620 powershell.exe` → `4900 explorer.exe`.
+✅ **PREDECESSOR `claude.exe 9592` RETURNS NO PROCESS.** `[seat-rolls-are-swaps]` — recorded as a **PLANNED SEAT ROLL, NOT a death. I did not investigate it and I hunted no lost work.** ⚠️ **The desk seat named in `R-825` (`claude.exe 18244`) is ALSO gone.**
+✅ **A LIVE SIBLING EXISTS: `claude.exe 26972`, born `07:38:42` — four seconds after me.** `[two-operator-windows]` — **I treat it as a live seat, I have not written to `ADVISOR-RULINGS.md`, and I did not touch any rig I did not arm** (`[no-monitors-msg-advisor]`).
+✅ **TREE STATE `[MEASURED HERE]`: `HEAD == origin == a0d54ab3`. ZERO local-only commits** — `AR-986` and every `RATIFY-1` instrument are on origin, so `R-825 §4`'s *"NO LOCAL-ONLY AUTHORITY"* binding is satisfied for the work as it stands.
+
+### §2 — ✅ THE EAR: ARMED, RED-PROOFED ON A THROWAWAY, AND DELIVERY PROVEN
+✅ **NO ear existed under my `claude.exe 23968` — census by OWNERSHIP, not `TaskList`** (`[background-monitors]`, blind 8×). **The prior seat's ear died with `9592`.**
+✅ **RED-PROOFED BEFORE TRUSTING IT, THREE ARMS, on a throwaway file — never on the real ledger:**
+```
+ARM 1  no change            => SILENT   (as required)
+ARM 2  irrelevant append    => SILENT   (as required)
+ARM 3  prepended ruling     => *** FIRED ***
+```
+★★★★ **`A DETECTOR THAT HAS NEVER GONE OFF IS NOT AN INSTRUMENT` — this one discriminates a real ruling from noise, proven before it was pointed at anything that matters.**
+✅ **DELIVERY, NOT MERELY LIVENESS: `Monitor persistent`, so every stdout line lands as a chat notification. The armed line ARRIVED as a notification — the channel proved itself.** 🛑 **NOT a backgrounded `while true` `Bash` loop, which notifies on EXIT only and would have left me deaf beside a firing detector.**
+✅ **BLIND-WINDOW BACKFILL (`[monitor-backfill]`): arming time is the join key. Newest ruling on disk at arming was `R-825`, which I had ALREADY READ BY HAND. Nothing before arming is unread.**
+
+### §3 — 🛑🛑 THE FINDING: THE `[G]`/`[H]`/`[I]` EVIDENCE BASE WAS ONE TEMP-DIR SWEEP FROM GONE
+🛑 **`AR-986 §7` stated plainly that its three `aggregate.json` maps live outside the repo in *"this session's scratchpad"* and are NOT committed — a deliberate, disclosed omission.** **What was not visible at the time it was written: THE SEAT OWNING THAT SCRATCHPAD IS NOW DEAD.** `[MEASURED HERE]` they survive at session `7cfaaa01…`:
+```
+fwd/isolated-73f218d5b051/aggregate.json   327081 bytes   sha256 4ca0aab3…b4e8ad0c
+rev/isolated-72686e294620/aggregate.json   327080 bytes   sha256 ad8c911e…debf991a5c
+rpt/isolated-356ba4143138/aggregate.json   327081 bytes   sha256 fb704503…abb0fd18
+```
+✅ **PRESERVED into this seat's scratchpad; `sha256` BYTE-IDENTICAL on all three** (copy verified against original, not assumed).
+⚖️ **THIS REFINES `R-822 §7` RATHER THAN CONTRADICTING IT.** That ruling requires *"durable artifacts live OUTSIDE disposable execution trees"*, and the scratchpad satisfies the letter of it — it is outside the worktree. **But a per-session `Temp` scratchpad is ITSELF disposable, and it is keyed to a session that has ended.** ⇒ ★★★★★ **`"OUTSIDE THE DISPOSABLE TREE" IS NOT THE SAME PROPERTY AS "DURABLE" — AND THE EVIDENCE FOR AN ENTIRE RATIFICATION GATE SPENT THE NIGHT IN A DEAD SEAT'S TEMP DIRECTORY.`** (`[completion-signal]`, and the `F-2` class in `worker-execution §5b`: a *"4/4 acceptance"* that pointed at unreadable transcripts.)
+⚡ **`AR-986` OFFERED TO COMMIT THEM ON THE DESK'S WORD. I RENEW THAT OFFER AND UPGRADE IT TO A RECOMMENDATION** — `~960` KB total under `docs/designs/`. **I have NOT committed them: `AR-986` explicitly routed that decision to the desk and I do not overturn a predecessor's disclosed routing on my own initiative.**
+
+### §4 — ✅ REPRODUCTION FROM THE PRESERVED ARTIFACTS — AND THIS IS **NOT** A GRADE
+✅ **The committed comparator is clean and unmodified:** `git status --porcelain scripts/ratify1_controls/g_order_identity.py` ⇒ **EMPTY**; committed at `c5da1d4f`.
+✅ **`[G]` REPRODUCES: all `15` verdicts `OK`, `0` differing nodes**, arms genuinely opposed (`fwd.reverse=False`, `rev.reverse=True`), both on commit `4032d954`, neither a limited subset, missing-required `0`, invented `0`.
+✅ **`[I]` REPRODUCES: `0` differing nodes across repeats at an identical pin.**
+✅ **THE INSTRUMENT STILL BITES — red-proof re-run HERE, `15 / 15` arms behave as expected**, including the two cross-mode guards (`[I]` rejects an opposed pair ⇒ RED; `[G]` rejects a same-direction pair ⇒ RED). `[red-path-decay]`: **red paths decay, so I re-measured rather than citing `AR-986`'s run.**
+🛑🛑 **WHAT THIS IS AND IS NOT: this is a REPRODUCTION by the doer seat, proving the PRESERVED ARTIFACTS ARE STILL USABLE EVIDENCE and the comparator still discriminates. IT IS NOT AN INDEPENDENT GRADE, and I do not offer it as one** (`[grader-agent]`, `worker-execution §5`). **Same instrument, same inputs, same role.**
+
+### §5 — 📌 FAN-IN, AND WHY MY QUEUE IS GENUINELY DRY
+```
+COMPLETE (desk-ruled)                        A B C D E F J  = 7   (R-825 §2)
+COMPLETE (worker-measured, AR-986, UNRULED)  G H I          = 3
+                                          CLAIMED FAN-IN 10 / 10
+```
+🛑 **`STOP [48]` HONOURED — I never publish `8 / 10`.** 🛑 **AND THE QUALIFIER IS LOAD-BEARING: `10 / 10` IS A CLAIM, NOT A CERTIFICATION.**
+**I applied `worker-execution §11a` — *"is my next item already authorized?"* — item by item against `R-825 §6[8]`, and it is not:**
+```
+promote isolated architecture  NO  - "before RATIFY-1 passes" discharges only on a
+                                     DESK ruling; promoting on my own predecessor's
+                                     unruled claim is self-ratification (§5d)
+CLUSTER-E                      NO  - STOP [45], and forbidden outright in §6[8]
+mint a disposition seal        NO  - forbidden outright
+adjudicate the 287 / 11 / 7    NO  - STOP [44] / STOP [37]
+new scanner / sweep / audit    NO  - forbidden outright
+```
+⇒ **This is `§11a`'s NAMED exception — a queue that has ACTUALLY run dry — and I can name which clause blocks each item.** ⚖️ **I am NOT idling on a permission I already hold: I checked, and I do not hold one.**
+
+### §6 — ⚡ THE ONE ASK, AND IT IS THE CAMPAIGN'S LATENCY
+⚡ **THE INDEPENDENT GRADE IS OWED BEFORE PROMOTION AND THE GRADER IS LOCAL AND ONE AUTHORIZATION AWAY.** **`AR-986 §6` asked for the word; the seat rolled before an answer arrived, so the ask is UNANSWERED, not refused.** ⇒ **Say the word and I dispatch `accuracy-validator` against pinned commit `a0d54ab3` with: the claim verbatim · a WORKING access recipe (the preserved artifacts + the committed comparator) · an explicit NOVEL false-green hunt request · and a DURABLE RECEIPT path committed under `docs/designs/`** (`worker-execution §5a`/`§5b`; `[grader-agent]`).
+⚠️ **AND THE FORWARD RISK `AR-986` FLAGGED IS STILL UNPRICED AND IS THE DESK'S:** `[H]` passes with `7.2%` headroom (`9.28` min against a `10.0` min pre-registered ceiling). **~`8` more governed files at the current `5.1` s/child mean breaches it.** ★★★★ **`A THRESHOLD PASSED BY 7% IS A MEASUREMENT, NOT A GUARANTEE.`**
+
+**REMAINING UNCERTAINTY:** `[G]`/`[H]`/`[I]` are UNRULED · the `287` failures are unadjudicated BY ORDER · the `11`-vs-`7` join is unresolved by construction · `[H]`'s margin is thin · the artifacts are preserved but STILL NOT COMMITTED.
+**WHAT I DID NOT MEASURE:** I did not re-execute the `108`-child runs (I compared the preserved maps, not fresh ones) · I did not verify the sibling seat `26972`'s role · I did not read `AR-970`–`AR-982` (`R-825 §6[2]` forbids it absent a contradiction, and `[G]` exposed none).
+**RECOMMENDATION: `APPROVAL_REQUESTED`** — and I name the qualifying condition rather than asserting it: **the queue has actually run dry**, every remaining `R-825` item is explicitly unauthorized, and the unblocking act (the grader) is the operator's word. **I hold the seat, the ear is armed and delivering, and I have NOT handed off.**
+
+---
+
 ## AR-986 · 2026-08-11 · ✅✅✅ **`[G]` `[H]` `[I]` ALL SATISFIED ON THE FULL GOVERNED POPULATION — `108` CHILDREN, `2419` NODES, `0` DIFFERING NODES IN BOTH DIRECTIONS AND ACROSS REPEATS.** ⚡ **THE FIRST FULL GOVERNED ISOLATED MAP IN THIS CAMPAIGN'S HISTORY HAS NOW EXECUTED — THREE TIMES.** 🛑 **AND IT SHOWS `287` FAILURES, NOT `31`. I RECORD THAT AND I DO NOT ADJUDICATE IT (`STOP [44]`/`STOP [37]`).** ⚠️ **`[H]` PASSES WITH ONLY `7%` HEADROOM — THAT IS A THIN MARGIN AND I FLAG IT RATHER THAN REPORTING A BARE `OK`.**
 
 **SEAT `claude.exe 9592`. TREE `wt-h1-wave4-20260712`. RULING `R-825 §6`. ALL THREE ARMS PINNED AT `HEAD 4032d954`, VERIFIED UNCHANGED AT EACH ARM'S LAUNCH *AND* END.** 🛑 `acceptance_runner.py` UNCHANGED; **NOTHING PROMOTED**; no seal moved; `CLUSTER-E` HELD.
