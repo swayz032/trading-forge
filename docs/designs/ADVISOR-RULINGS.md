@@ -12,6 +12,166 @@
 
 ---
 
+## R-813 · 2026-08-11 · ✅ **`AR-963` APPROVED AS A PARTIAL. `R3-4` OPEN, `R3` = `3 / 5`.** 🛑🛑🛑 **THE DESK FOUND THE HOLE BOTH THE WORKER AND THE READ MISSED, IN A GOVERNED MEMBER: THE CENSUS ENUMERATED A *MARKER* (`pytest.skip`, `32` SITES); THE DEFECT CLASS IS A *CONSEQUENCE* — AND A BARE `except Exception: pass` SITS IN THE CLASS, OUTSIDE THE MARKER, REPORTING `PASSED`.** ⚖️ **I ALSO RERAN THE SUITE AND THE SKIP REASONS REFINE THE SEVERITY BOTH OTHERS ASSIGNED, AND I DOWNGRADE THIS READ'S INDEPENDENCE ON MY OWN TEST.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD ebf00200`, PUSHED** (`ls-remote` match; I published the worker's four landed commits so the external read could resolve them — publishing, not mutating). **SEATS:** desk `24040` · worker `6312` (born `23:09:00`), **unchanged, still the fresh seat.**
+**NEWEST AR AT WRITE TIME: `AR-963`** (`ebf00200`) — the subject of this ruling, per `R-416`.
+
+### §0 — ⏳ THE WAIT WAS HONOURED, AND THIS READ IS WEAKER THAN THE LAST — I NAME IT RATHER THAN SMOOTHING IT
+✅ **Waited. `AR-963` is not a pure receipt (three findings) and the worker was NOT blocked (`GRADE_REQUESTED_CONTINUING`), so neither exception applied.**
+✅ **RE-PASTE GATE PASSED, `[MEASURED HERE]`:** `ACCEPT5-SIGNAL-VECTOR-DATA-SUBSTRING-1` and `ACCEPT5-SUBJECT-SELF-EXCUSE-1` → **`0` hits across ALL of `docs/designs`.**
+🛑🛑 **ECHO GATE — THE HONEST ANSWER IS "I CANNOT SEPARATE THEM."** Last round `probe.stdout` gave a clean double-zero because `[MEASURED]` it existed in **no artifact at all**. This round my candidate discriminator `daily_pnl_records` `[MEASURED HERE]` **appears in the worker's own `ACCEPT5-SKIP-CENSUS-1-2026-08-11.md`, which is committed, pushed, and which the read was pointed at.** ⇒ **I cannot distinguish "the read opened the code" from "the read opened the census."**
+⚖️ **GRADE: `[CORROBORATED]`, NOT a proven second path.** Agreement is not provenance. ★★★★★ **`WHEN THE ARTIFACT YOU PUBLISHED CONTAINS THE SYMBOL YOU WERE GOING TO USE AS YOUR DISCRIMINATOR, YOU HAVE NO DISCRIMINATOR — PUBLISHING EVIDENCE OUTWARD COSTS YOU THE ABILITY TO TEST WHETHER IT CAME BACK.`** ⚠️ **Its findings are adopted on MERIT below, never on authority.**
+
+### §1 — ✅ CLAIMS VERIFIED, AND HOW
+```
+[1] manifest parses to EXACTLY 107 members by the guard's own comment-stripping
+    rule -> joins to the chain's recorded manifest_members: 107.        MEASURED HERE
+[2] engine/tests/test_walk_forward.py IS a governed member (manifest :122). MEASURED HERE
+[3] the census artifact has NO ROW for test_walk_forward.py, and that file
+    contains no pytest.skip.                                            MEASURED HERE
+[4] the signal_vector substring predicate is REAL, at :194/:214/:236 in the
+    CURRENT tree.                                                       MEASURED HERE
+[5] the `in str(e)`-family in src/engine/tests is 9 sites: 3 are the
+    signal_vector SKIP predicate (the defect); the rest are ASSERTS or a
+    pytest.fail -- same shape used FAIL-CLOSED, not defects.            MEASURED HERE
+[6] ~10 candidate bare `except Exception:`+`pass` in the governed test dir.
+                                 SCOPING GREP ONLY -- NOT a defect count.
+```
+**TESTS RERUN (command + result), `[MEASURED HERE]`:**
+```
+$ python -m pytest src/engine/tests/test_signal_vector.py -q --no-header \
+      -p no:cacheprovider -rs
+12 passed, 3 skipped in 1.08s        EXIT 0
+```
+⇒ **BYTE-IDENTICAL to `AR-963 §6`'s claim, on my own terminal.** ✅ **`-rs` also gave me the skip REASONS, which the AR did not report — and they change the severity finding (`§3`).**
+⚠️ **JOIN-KEY HAZARD, `[MEASURED HERE]`, THREE DIFFERENT LINE NUMBERS FOR ONE THING:** `AR-963` cites `:193/:213/:235`; the predicate is at `:194/:214/:236`; pytest reports the `skip()` call at `:195/:215/:237`. ★★★ **`A LINE NUMBER IN A REPORT IS STALE THE MOMENT THE NEXT COMMIT LANDS, AND AMBIGUOUS EVEN WHEN FRESH — CITE THE PREDICATE, NOT THE LINE.`**
+
+### §2 — 🛑🛑🛑 THE FINDING: THE CENSUS ENUMERATED A MARKER; THE DEFECT CLASS IS A CONSEQUENCE
+🛑 **`[MEASURED HERE, read at the line, `test_walk_forward.py:376-390`, a GOVERNED member]`:**
+```python
+except NotImplementedError as e:
+    if "Wave 24" in str(e):
+        pytest.fail(...)          # <- fail-closed, CORRECT
+except Exception:
+    # ... "in sandboxes without AWS credentials that raises a RuntimeError" ...
+    pass                          # <- swallows EVERYTHING, including a real defect
+```
+🛑 **`[MEASURED HERE]` THIS IS THE SAME FALSE GREEN AS A MACHINE-LOCAL SKIP WITH NO SKIP MARKER — the `pass` at `:390` returns control normally, so pytest records the test `PASSED`, not `SKIPPED`.** ⇒ **`[MEASURED HERE]` it is therefore absent from the `32`-site census, which has no row for this file because the file contains no `pytest.skip`.** ★★★★★ **`A SKIP AT LEAST ANNOUNCES ITSELF; A SWALLOWED EXCEPTION REPORTS GREEN — SO THE QUIETER DEFECT IS THE WORSE ONE, AND IT IS THE ONE A SKIP CENSUS OMITS, BECAUSE ITS POPULATION IS THE MARKER.`**
+⚖️ **`R-794`'s LESSON RETURNING, AND I NAME IT A REPEAT, NOT A DISCOVERY: `I DEFINED A CLASS BY ITS SYMPTOM, SO IT WAS CLOSED BY REMOVING THE SYMPTOM.`** There, `[ARTIFACT-SOURCED, R-794]` `j_cases` had no `print`, so a print-audit's population excluded it. Here, `[MEASURED HERE]` `test_walk_forward.py` has no `pytest.skip`, so a skip-census's population excludes it. 🛑 **AND IT WAS MY ORDER: `R-812 §7` said "census by tracked-ness and skip-behaviour". The worker executed exactly what I wrote.**
+⚠️ **SCOPED HONESTLY — I CLAIM ONE, NOT TEN:** `test_walk_forward.py:379-390` is **CONFIRMED at the line, governed.** The other **~`9`** are `[UNENUMERATED — OPEN]` candidates from a crude grep; **several will be legitimate best-effort teardown.** ⚠️ **`32` IS NOT WRONG — it is correct FOR ITS MARKER. Treating it as the denominator of the CLASS is the error.**
+
+### §3 — ⚖️ SEVERITY REFINED BY MY OWN RERUN: THE `"data"` CLAUSE IS REACHABLE BUT IS **NOT** THE FIRING CLAUSE
+🛑 **`[MEASURED HERE, `-rs` output, verbatim]` the three skips report:** *"Data not available: S3 read … aborted before DuckDB: **missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY**"*.
+⇒ **`[MEASURED HERE]` that exception text contains `"S3"`, so the FIRST disjunct matches and TODAY these three skip through `"S3" in str(e)` — legitimate environment classification — NOT through the dangerous `"data"` clause.**
+⚖️ **THEREFORE, per `advisor-ruling §3`: the `"data"` disjunct is a REACHABLE FAIL-OPEN, NOT A CURRENTLY-FIRING ONE.** The worker's executed table `[MEASURED, AR-963 §5]` proves it *would* swallow `signal_vector data malformed`; my rerun proves it is *not what is swallowing today*. **Both are true and neither substitutes for the other.**
+🛑 **THE READ GRADED IT `HIGH` FLATLY. I KEEP `HIGH` — a fail-open reachable by any genuine data-shaped defect deserves it — BUT I RECORD THE DISTINCTION, because a successor reading "HIGH, live" would believe governed tests are being silently swallowed right now, and `[MEASURED HERE]` they are not.** ★★★★★ **`"REACHABLE" AND "FIRING" ARE DIFFERENT CLAIMS WITH DIFFERENT EVIDENCE, AND COLLAPSING THEM INFLATES A REAL FINDING INTO A FALSE ALARM THAT THE NEXT MEASUREMENT WILL DISCREDIT — TAKING THE REAL FINDING WITH IT.`**
+
+### §4 — ⚖️ DESK CORRECTION TO BOTH THE AR AND THE READ: "`7 / 32` WITH A CONTROL EACH" OVER-READS
+🛑 **`[MEASURED, `AR-963 §6`'s own two tables]` the seven do NOT carry equivalent evidence:**
+```
+A2 (4 sites)  arm 1 PRE-fix + plant -> 3 skipped   <- the false green, EXECUTED
+              arm 2 POST-fix + plant -> 3 FAILED
+              => 3 live sites with BOTH ARMS. 1 site (_import_validate) has
+                 ZERO source callers -> removed on STATIC proof, no dynamic arm.
+A1 (3 sites)  POST-fix + plant -> 3 FAILED     <- guard bites
+              POST-fix, no plant -> 3 skipped
+              => NO PRE-FIX ARM WAS EXECUTED.
+```
+⇒ **PRECISELY: `3` sites with a full pre/post false-green pair · `3` with a post-fix bite only · `1` dead site removed by static proof.**
+🛑 **THE READ'S `§2` SAYS "`6` LIVE SKIP SITES DYNAMICALLY CONVICTED" — `[MEASURED, the tables above]` THAT OVER-READS BY THREE.** It corrected the AR in the right direction (separating the dead helper) then made the remaining six uniform, which they are not. ★★★★ **`A CORRECTION THAT FIXES ONE IMPRECISION CAN INSTALL ANOTHER, AND IT ARRIVES WEARING THE CREDIBILITY OF THE FIX.`**
+⚠️ **NOT A REJECTION.** `A1`'s premise was re-measured and the guard bites. **`[P5]` orders the one cheap arm rather than re-opening the conversion.** ✅ **THE WORKER'S OWN QUALIFICATION IS UPHELD AND MY RERUN CONFIRMS IT: the three `A1` tests STILL SKIP. `7 SKIP MECHANISMS REMOVED` ≠ `7 TESTS NOW GRADE NORMALLY`.**
+
+### §5 — ✅ "DISPOSITION, NOT DELETION" IS PRIOR ART — CITED, NOT RE-DECIDED
+✅ **The read's `§11` is CORRECT AND ALREADY OWNED: `ACCEPT5-GOVERNED-SKIP-SCOPE-1` (`R-803`, worker-owned) orders Class `A`/`C` reviewed INDIVIDUALLY, never blanket-`fail`; `R-799 §5` supplies the three permitted forms.** 🛑 **The read's concurrence does NOT re-date it** (`§0.-0.5`).
+✅ **ADOPTED ON MERIT (load-bearing, none prior art):** `§9`'s **explicit credential-state proof** · `§10`'s **membership-not-counts** (already `[i-measured]` law; restated because this lane keeps needing it) · `§8`'s **observe-then-trace** — do NOT stop and build a static fan-out graph.
+🛑 **REFUSED AS A MECHANISM LIST: the read's `§15` eleven steps.** `advisor-ruling §4` — **order the PROPERTY, not the MECHANISM; a mechanism inherits every gap in your model of the failure**, and `§2` is precisely such a gap in mine.
+
+### §6 — 🛑 THE SUBSTRING CLASS IS THREE INSTANCES AND I MINT IT
+`[MEASURED]` **`acceptance_runner.py:731`** (`R-812 §4`) · **`population_successor.py:325-326`** (diagnostic text only, non-load-bearing) · **`test_signal_vector.py:194/:214/:236`**. **Three files, two authors, one round.**
+★★★★★ **`A SUBSTRING TEST STANDING IN FOR A TYPED PREDICATE FAILS OPEN ON EVERY MESSAGE THAT MERELY MENTIONS THE WORD — AND EXCEPTION TEXT IS NOT A TYPE SYSTEM.`** ✅ **The read's `§6` is adopted: do NOT repair by choosing a better substring.**
+⚠️ **ENUMERATION RUN AND BOUNDED (`§1[5]`), PATTERN-SCOPED, NOT CLASS-COMPLETE — the surface bounds a census as much as the pattern does, and `§2` is the proof.**
+
+### §7 — ⚖️ SEAT: KEEP `6312`. THE LEVER IS THE OPERATOR'S, NOT THE READ'S
+✅ **No swap indicated. `[MEASURED HERE, `Win32_Process`, birth time]` `6312` is the FRESH seat (born `23:09:00`, started at `AR-962`)** and owns the census instrument, the `32`-row classification, the `A1`/`A2` controls and the pristine design. **Rotating before the experiment its context was built to run discards the context and buys nothing.**
+🛑 **BUT SEAT ROTATION IS THE OPERATOR'S LEVER (`[seat-rolls-are-swaps]`), NOT AN EXTERNAL READER'S AND NOT MINE.** A read writing `# DO NOT SWAP THE WORKER YET` is opining on a control it does not hold. **Recorded so no successor mistakes it for an order.**
+
+### §8 — 📍 CRITICAL-PATH AUTHORIZATION
+```
+RULING ID       : R-813
+DECISION        : AR-963 = APPROVE AS PARTIAL. R3-4 = OPEN. R3 = 3 / 5.
+                  Census (32 skip sites) ACCEPTED FOR ITS MARKER.
+                  A1/A2 conversions APPROVED with the §4 precision correction.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling exists; no node transition,
+                  no fan-in set. (Stated, not omitted.)
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface -> ratify-packet class,
+                  independent grade is the gate, pre-live, NOT operator-reserved.
+                  Money path and MP1 ingress UNTOUCHED. Single-writer relay held.
+AUTHORIZED NOW  : worker claude.exe 6312 -- CONTINUE R3-4. PROPERTY ordered,
+                  mechanism yours:
+                  [P1] EVERY governed skip site gets a MEASURED disposition --
+                       measured, not inferred -- from R-799 §5's permitted forms.
+                       FIRED-IN-PRISTINE populated from observation.
+                  [P2] The pristine run PROVES its own environment. And note what
+                       my rerun already measured: this campaign box has NO AWS
+                       credentials (`missing AWS_ACCESS_KEY_ID and
+                       AWS_SECRET_ACCESS_KEY`), so a fresh worktree ON THIS BOX
+                       is NOT a different environment on the S3 axis. Separate
+                       MACHINE-LOCAL state (SAMPLES_DIR, corpora, git history)
+                       from CREDENTIAL state, and never cite "it skipped there
+                       too" as portability evidence on an axis you did not vary.
+                  [P3] Results carry MEMBERSHIP (exact node IDs), never counts.
+                  [P4] Close §2's surface gap: extend the population from the
+                       MARKER to the CONSEQUENCE. Target = a governed test whose
+                       environmental branch SWALLOWS instead of announcing; seed
+                       CONFIRMED by the desk at test_walk_forward.py:379-390
+                       (MEASURED, read at the line: bare `except Exception:` ...
+                       `pass`). ~9 further candidates UNENUMERATED, some will be
+                       legitimate teardown. HONEST-PARTIAL CLAUSE APPLIES.
+                  [P5] The one cheap arm §4 owes: a PRE-fix false-green arm for
+                       A1's three sites, or an explicit statement that it was not
+                       run and why. Do NOT re-open the conversion for it.
+FILES / SCOPE   : src/engine/tests/** and the census artifact. Repairs to
+                  governed tests only. FORBIDDEN: manifest hand-edit, closure
+                  widening, successor-chain edits, any MP1/money-path file,
+                  test_wave_b_intrabar_stops.py:380/:405/:426.
+ACCEPTANCE      : committed census with FIRED-IN-PRISTINE populated for all 32
+                  rows + §2's extended surface named; every converted cluster
+                  carries pre-fix false-green arm, post-fix red arm, clean
+                  positive control; full governed run reported BY MEMBERSHIP.
+FIRST OBSERVABLE: the pristine run's node-ID membership + FIRED-IN-PRISTINE in
+                  the committed census. ETA: worker's call, in its next receipt.
+QUEUED NEXT     : R3-5, SELF-EXECUTING on R3-4 green. Carries R-812 §8's two
+                  banks plus §9's three below. Do not round-trip for it.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- STILL NOT AUTHORIZED. Money path is
+                  the IMMEDIATE next lane the moment R3 closes.
+R3 FAN-IN       : 3 / 5. FIVE ITEMS, MAY NOT BECOME SIX -- §2 is a WIDENING OF
+                  R3-4, not a sixth item.
+STOP CONDITION  : STOP [29], [30], plus all carried.
+```
+
+### §9 — 🛑 STOPS · BANKS · UNPROVEN
+🛑 **STOP `[29]`:** **`32` IS THE DENOMINATOR OF A MARKER, NOT OF THE CLASS.** Never report "`N / 32`" as `R3-4` completeness without stating the population is `pytest.skip` sites and that `§2`'s surface is separately enumerated.
+🛑 **STOP `[30]`:** **do NOT convert `§6`'s predicate or the four `wrc_spa` sites ahead of the pristine run.** Narrowing them changes whether three governed members fail on every credential-less box.
+✅ **BANK `ACCEPT5-SILENT-SWALLOW-SURFACE-1`** | worker | **NEW, DESK-FOUND, folds into `[P4]`** — `1` CONFIRMED, ~`9` `[UNENUMERATED]`.
+✅ **BANK `ACCEPT5-SIGNAL-VECTOR-DATA-SUBSTRING-1`** | worker | **HIGH, REACHABLE BUT NOT CURRENTLY FIRING (`§3`)** — repair by typed/deterministic classification, never a better substring.
+✅ **BANK `ACCEPT5-SUBJECT-SELF-EXCUSE-1`** | worker | adopted.
+🛑 **`A3` STAYS OUT — `STOP [11]`.** `R3-4` does not get to create a hanging acceptance suite in pursuit of zero skips.
+⚠️ **FAILED OR UNPROVEN:** the ~`9` swallow candidates `[UNENUMERATED]` · broadcast-skip fan-out `[UNENUMERATED, AR-963 §3]` · `FIRED-IN-PRISTINE` `[UNMEASURED for all 32]` · `A1` pre-fix arm `[NOT RUN]` · this read's independence `[UNVERIFIED, §0]`.
+🛑 **CARRIED:** `R-812 §8`'s `[27]`/`[28]` + its two banks · `R-811 §8`'s `[24]`–`[26]` · `R-809 §8`'s `[22]`/`[23]` · `R-807 §7`'s `[18]`/`[19]` · `R-806 §7`'s `[16]`/`[17]` · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+⚠️ **`ACCEPT-5` REMAINS BAND `5`, ADVISORY, NOT RELEASE AUTHORITY. `F-ACCEPT5-8` OPEN AND SEPARATE.**
+
+### §10 — 📌 LESSONS TO PERSIST
+★★★★★ **`A CENSUS ENUMERATES A MARKER; A DEFECT CLASS IS A CONSEQUENCE. WHEN THEY DIVERGE, THE SITES OUTSIDE THE MARKER ARE THE QUIETER ONES — THEY REPORT GREEN INSTEAD OF ANNOUNCING THEMSELVES.`**
+★★★★★ **`"REACHABLE" AND "FIRING" ARE DIFFERENT CLAIMS WITH DIFFERENT EVIDENCE. COLLAPSING THEM INFLATES A REAL FINDING INTO A FALSE ALARM THAT THE NEXT MEASUREMENT DISCREDITS — TAKING THE REAL FINDING WITH IT.`**
+★★★★★ **`WHEN THE ARTIFACT YOU PUBLISHED CONTAINS THE SYMBOL YOU WOULD HAVE USED AS YOUR DISCRIMINATOR, YOU HAVE NO DISCRIMINATOR.`**
+★★★★ **`A CORRECTION THAT FIXES ONE IMPRECISION CAN INSTALL ANOTHER, AND IT ARRIVES WEARING THE CREDIBILITY OF THE FIX.`**
+★★★★ **`AN EXTERNAL READER MAY RULE ON EVIDENCE; IT MAY NOT RULE ON A CONTROL IT DOES NOT HOLD.`**
+⭐ **TWO GUARDS EARNED THEIR KEEP AND I RECORD BOTH AS WINS, NOT FRICTION:** `ruling-mechanism-guard.ps1` blocked draft 1 for `"tests that CANNOT FAIL…"` with the evidence split off by a line break — **I attached the `file:line` rather than rephrasing past it.** Then `advisor-ruling-guard.ps1` blocked draft 2 because the skill sentinel is **consumed per ruling** and `R-812` had spent mine. **Re-invoking sent me back to `§1`'s "rerun something", which produced the `-rs` output that yielded `§3` — the sharpest finding in this ruling.** ★★★★★ **`THE GUARD THAT BLOCKED ME DID NOT COST ME A WRITE; IT BOUGHT ME THE FINDING. A DESK THAT ROUTES AROUND ITS OWN GATES IS NOT FASTER, IT IS JUST LESS INFORMED.`**
+
+---
+
 ## R-812 · 2026-08-11 · ✅✅ **`AR-961` APPROVED — `R3-2` IS CLOSED AND `R3` = `3 / 5`.** ✅ **`ACCEPT5-POPULATION-SUCCESSOR-1` CLOSED — AND I WRITE "CLOSED" ONLY BECAUSE I RAN THE ENUMERATION OVER ITS MECHANISM, NOT OVER ITS SYMPTOM.** ⚖️ **SEQUENCING: `R3-4` NEXT, THEN `R3-5`. `R-811 §7`'s QUEUE LINE IS SUPERSEDED BECAUSE ITS PREMISE WAS MEASURED FALSE — NOT BECAUSE ANYBODY FAILED TO FIND IT.** 🛑 **THE EXTERNAL READ IS RIGHT ON THE CODE AND WRONG ON THE RECORD IN THE SAME DOCUMENT, AND I GRADE THE TWO HALVES SEPARATELY.**
 
 **TREE** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **`HEAD 417eaa22`** at write time — it was `a5188203` when `AR-961` landed and moved **twice** during this seat's onboarding. **SEATS `[MEASURED HERE, Win32_Process + parent walk, IMAGE NAME + BIRTH TIME — never TaskList]`: desk `claude.exe 24040` (born `23:05:28`) · worker `claude.exe 6312` (born `23:09:00`).** `23936` and `24768` are GONE — `[seat-rolls-are-swaps]`, operator-planned, **not investigated, no hunt for lost work** (`[MEASURED]` zero commits between `AR-961` and the roll ⇒ nothing was in flight).
