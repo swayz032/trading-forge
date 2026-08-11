@@ -12,6 +12,106 @@
 
 ---
 
+## R-818 · 2026-08-11 · ✅✅ **`AR-972` + `AR-973` APPROVED. CLUSTER `A` IS **CLOSED** AT CANONICAL `2419` — `3 / 7` CLOSED, AND THE COUNT IS NOW HONEST.** ✅ **`ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` IS ROOT-CAUSED: TWO FILES, ONE MECHANISM — UNRESTORED `sys.modules` WRITES THAT REPLACE `src.engine.prop_sim` FOR EVERY TEST AFTER THEM.** ⚡ **AND I AUTHORIZE THE REPAIR I FORGOT TO ORDER: `R-816`/`R-817` ORDERED A TRACE AND NEVER A FIX.** 🛑 **`ACCEPTANCE: REFUSED` IS NOW EXPECTED FOR THE REST OF `R3-4` — AND MUST NEVER BE CITED AS A REGRESSION.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 404eb72a`, PUSHED** (`ls-remote` MATCH). **SEATS: desk `24040` · worker `claude.exe 6536`.** **NEWEST AR: `AR-973`** (`404eb72a`) — ruled here, per `R-416`.
+⚠️ **THE RELAYED READ ARRIVED TRUNCATED MID-`§11` (`"### OUT"`). I RULE ON WHAT ARRIVED AND DO NOT RECONSTRUCT THE REMAINDER.** `§11` was opening the *"which PnL reality is true"* question, which `AR-973 §4` and `R-816 §5` already answer identically — **pre-decide nothing** — so the loss is bounded. ★★★ **`A TRUNCATED SOURCE IS AN UNENUMERATED SOURCE: SAY WHERE IT STOPPED, RULE ON THE PREFIX, AND NEVER LET A CONTINUATION YOU DID NOT RECEIVE BECOME A PREMISE.`**
+
+### §1 — ✅ CLUSTER `A` IS CLOSED, AND MY `R-817 §1` LABEL IS DISCHARGED, NOT OVERTURNED
+✅ **`[MEASURED HERE, at the artifact]` the chain now carries **3** entries and the new admission names `…::test_signal_vector_contracts_survive_remote_loader_failure` — renamed truthfully, body untouched, admitted by DERIVED `+1` at canonical **`2419`**, the number `R-816 §1` pre-registered before the run.** ✅ **`[RELAYED, AR-972 §2-§3]` `STOP [22]` recompute-from-disk MATCHES, an independent process re-derives `2419`, and BOTH post-seal obligations are `COLLECTED · EXECUTED · PASSED` by exact node ID.**
+⚖️ **`R-817 §1` labelled `A` `LANDED, GOVERNANCE PENDING`. That label named exactly these two microrepairs; they are done, so it is DISCHARGED — not reversed.** ⇒ **`3` CLOSED (`A`,`B`,`G`) · `4` REMAINING (`C`,`D`,`E`,`F`) · `H` FORBIDDEN and in no denominator.** 🛑 **The disposition-baseline question in `§2` is a CAMPAIGN-level matter, not a Cluster `A` defect, and may not be used to hold `A` open.**
+⭐ **AND THE RENAME WAS PROVEN FREE BEFORE IT WAS TAKEN: `[RELAYED, AR-972 §1]` the only code occurrence was the definition — no seal, no chain entry, no test referenced it.** ★★★★★ **`R-816 §1` SAID *"THE CHEAPEST MOMENT TO FIX AN IDENTITY IS THE LAST MOMENT BEFORE SOMETHING ELSE JOINS ON IT"*, AND IT WAS LITERALLY TRUE — ONE ADMISSION LATER AND THE FALSE NAME WOULD HAVE BEEN PERMANENT.**
+
+### §2 — ⚖️ THE DISPOSITION SEAL: IT MAY ADVANCE, IT MAY NOT ERASE, AND IT DOES NOT MOVE YET
+✅ **TWO DISTINCT AUTHORITIES, `[MEASURED HERE]`: `acceptance-collection-seal-08062e12.json` (`population_successor.py:54`, `SEAL_REL`) and `acceptance-disposition-seal-08062e12.json` (`acceptance_runner.py:312`).** ⇒ **The `never amend / never regenerate / never re-seal` contract governs the COLLECTION ROOT, which stays frozen permanently. The DISPOSITION authority answers a different question and MUST be able to advance — otherwise every legitimate removal of a false SKIP would make `ACCEPT-5` permanently unusable.**
+✅ **AND THE TOOL ALREADY SUPPORTS DOING IT WITHOUT ERASURE — `[MEASURED HERE]` `generate_disposition_seal.py:58` takes `--out` as a REQUIRED argument and `:161` writes to `args.out`. It does NOT overwrite a fixed path.** ⇒ 🛑 **THE READ'S CONDITIONAL (*"if it currently overwrites one fixed file, make the minimum change"*) DOES NOT FIRE. NO GENERATOR CHANGE IS AUTHORIZED OR NEEDED.** ★★★ **`I CHECKED WHETHER THE ORDERED REPAIR WAS ALREADY UNNECESSARY BEFORE ORDERING IT — THE CHEAPEST WORK IS THE WORK A MEASUREMENT DELETES.`**
+🛑 **BUT NOT YET. `C`/`D`/`E`/`F` are expected to remove more false SKIPs, so minting a baseline per cluster is churn.** ⇒ **HOLD the `SEALED DISPOSITION CHANGED` refusal for the remainder of `R3-4`. Record every authorized disposition delta in the census with its receipt as it lands. THEN, once `C`–`F` and the composition defect are closed: freeze a commit · verify EVERY delta by exact node ID against an approved `R3-4` receipt · mint ONE successor seal via `--out` · PRESERVE the prior file · re-run.** 🛑 **NO unexplained disposition change may ride inside that update.**
+🛑🛑 **CONSEQUENCE, AND IT IS THE MOST MISREADABLE LINE IN THIS RULING: `ACCEPTANCE: REFUSED` IS NOW THE EXPECTED VERDICT FOR THE REST OF `R3-4`, FOR A SECOND, DIFFERENT REASON ALONGSIDE `F-ACCEPT5-8`.** ⇒ **`STOP [34]`: never cite either refusal as a regression, and never let "REFUSED" be reported without its REASON joined to it.** ★★★★★ **`AR-972` PROVED WHY: I PREDICTED THE VERDICT WORD AND GOT IT RIGHT FOR THE WRONG REASON, AND A SEAT THAT TRUSTED MY PREDICTION WOULD HAVE FILED A REAL SIGNAL AS NOMINAL. `A VERDICT IS NOT A REASON. JOIN ON THE REASON.`**
+
+### §3 — ✅ `AR-973`: ROOT CAUSE CONFIRMED, AND THE METHOD DEVIATION IS ACCEPTED
+✅ **TWO CULPRITS BY GATED BISECTION — both refused to start unless the negative control showed NO flip and the positive control showed it** (`[green-check]`, discriminating on both ends): **`test_apply_trade_management_branching.py`** (`4` of `5` flips, in BOTH directions at once) and **`test_gate3_defect4_class_backtest_roll_cost_equity.py`** (the `5`th).
+⭐ **AND IT RAN THE SECOND BISECTION ONLY BECAUSE IT READ ITS OWN FIRST RESULT HONESTLY — every narrowed arm said `3/4`, never `4/4`.** ★★★★★ **`THE BISECTION CONVERGED ON A SINGLE FILE AND THE COLUMN NEXT TO IT SAID "3 OF 4" THE WHOLE WAY DOWN — "I FOUND THE CULPRIT" WOULD HAVE BEEN TRUE OF ONE CULPRIT AND FALSE OF THE DEFECT.`** (`[instance-not-condition]`.)
+🛑 **THE MECHANISM, `[RELAYED, AR-973 §3, read at the line]`: `_get_adaptive_fn()` (`:127-148`) writes fakes into `sys.modules` and NEVER removes them — including `src.engine.prop_sim`, whose `simulate_all_firms` returns `{}`. The second file does the same for `vectorbt` (`:97-100`) — and its OTHER patches use `monkeypatch` and ARE restored, so the author knew the mechanism and one line bypassed it.**
+✅ **METHOD DEVIATION ACCEPTED, NODE-LEVEL BISECTION WAIVED, NO GRADE-DOWN — and the reason is mine, not deference: the defect is a SHARED GLOBAL-STATE WRITE, so which of the `13` in-method call sites happens to fire first in canonical order changes neither the owner, the repair site, nor the required proof.** ⭐ **The worker DECLARED the shortcut and offered to run the bisection. `A DEVIATION DECLARED IS A DEVIATION THE DESK CAN PRICE; A DEVIATION ABSORBED IS ONE IT CANNOT.`**
+⚠️ **CONVICTION IS PARTIAL AND STAYS PARTIAL: the probe moved `3` of `5` and invented `2`, because it pollutes at session start while the real file pollutes at TEST time.** ✅ **What IS proven: `sys.modules` pollution ALONE suffices to change governed outcomes in both directions.** ★★★★★ **`A MECHANISM THAT EXPLAINS THREE OF FIVE AND INVENTS TWO MORE IS A REAL FINDING AND AN INCOMPLETE ONE, AND THE SENTENCE THAT MERGES THOSE TWO FACTS IS THE ONE I MUST NOT WRITE.`** (the worker's.)
+
+### §4 — ⚡ THE REPAIR I FAILED TO ORDER, NOW AUTHORIZED
+🛑 **DESK DEFECT, MINE: `R-816 §5` ordered a TRACE and `R-817 §3[2]` repeated it, and NEITHER ever authorized the FIX. The worker traced it, reported `NO REPAIR MADE`, and correctly moved to authorized work rather than self-authorizing.** ★★★★ **`I ORDERED THE DIAGNOSIS AND FORGOT THE TREATMENT — §0.5's "A RULING THAT CLOSES WORK WITHOUT AUTHORIZING THE NEXT IS A STALL ORDER", IN THE ONE FORM THAT DOES NOT LOOK LIKE ONE BECAUSE OTHER LANES WERE STILL OPEN.`**
+✅ **AUTHORIZED: repair BOTH confirmed files AT THE GLOBAL-STATE OWNER — `monkeypatch.setitem`, or explicit snapshot + `try/finally`, or any mechanism that PROVES exact restoration.** 🛑 **DO NOT repair the PnL tests. DO NOT tune their fixtures. DO NOT restore any skip.**
+🛑 **POSTCONDITION, ADOPTED VERBATIM BECAUSE IT NAMES A TRAP A NAIVE FIX WALKS INTO: restoring only the directly-replaced keys is NOT sufficient — a module IMPORTED WHILE THE MOCKS WERE ACTIVE can stay cached in `sys.modules` holding the fake dependencies in its globals. The boundary must cover both.** ⇒ **After the culprit returns: every protected key that existed before is the SAME OBJECT IDENTITY after; every key that did not exist before is ABSENT after; and `src.engine.prop_sim` must never remain the MagicMock.**
+✅ **PROOF SHAPE — strengthen the CULPRIT tests with a restoration postcondition rather than building a new harness (no unnecessary new node IDs).** **POST-FIX, BY EXACT NODE OUTCOME, NOT COUNTS: `PnL alone` == `culprit1 + PnL` == `culprit2 + PnL` == `canonical company`. EXPECTED: ZERO run-composition flips.** ⚠️ **The PRE-FIX witness already exists and is the permanent causal RED.**
+
+### §5 — ⚠️ THE `20` NOMINATIONS GET ONE BOUNDED ADJUDICATION, NOT A CAMPAIGN
+✅ **`[RELAYED, AR-973 §5]` `22` files statically nominated for raw `sys.modules[...] =`; `2` CONFIRMED by measurement; `20` UNADJUDICATED — and the worker refused to call them defects, with a positive control proving its scanner detects the shape it claims.** ★★★★ **`A MECHANICAL LAYER NOMINATES; JUDGMENT CLASSIFIES.`**
+⚡ **AUTHORIZED, BOUNDED: ONE pass over the `20` classifying each as RESTORED (`try/finally`, fixture, `monkeypatch`) or UNRESTORED — a READ, not a repair. Repair only those that are UNRESTORED **and** write a module the governed population imports.** 🛑 **This is NOT an order-dependence sweep of `107` files (`R-816 §5` still forbids that), NOT a new lane, and NOT `R3-6`. If the count of genuinely-unrestored files exceeds `5`, STOP and report rather than repairing them all.**
+
+### §6 — 🛑 A HAZARD THE DESK CREATES, AND THE DESK OWNS THE FIX
+🛑 **`[MEASURED, AR-973 §6]` MY OWN RULING COMMITS MOVED `HEAD` ON THE BRANCH THE WORKER MEASURES ON — `R-816` (`723c773d`) and `R-817` (`12083997`), twice in ~`25` minutes — and the runner correctly VOIDED a run whose tree moved under it. A canonical run takes ~`2.5` min.** ⇒ **a docs-only ruling commit, changing no code, can invalidate a valid `ACCEPT-5` receipt.**
+✅ **ORDERED: pin every canonical/acceptance run in a DISPOSABLE WORKTREE at an EXPLICIT COMMIT.** ★★★★★ **`THE INSTRUMENT IS RIGHT TO REFUSE, SO THE FIX IS NOT TO LOOSEN IT — IT IS TO STOP MEASURING ON A MOVING TREE.`** ⚖️ **AND THE DESK TAKES ITS HALF: I will not pretend a ruling cadence is free. `STOP [35]` — a receipt taken on the shared branch during an active ruling cycle is `[VOIDABLE]` and may not be cited as final.**
+✅ **`AR-973 §6[4]` NEAR-MISS UPHELD AND GENERALISED: `git add -u` staged `docs/wave25-exit-engine-ab-report.md`, which was modified before that seat existed. It unstaged it.** ★★★★ **`ON A SHARED TREE, "ALL MODIFIED FILES" IS NEVER THE SAME SET AS "MY WORK".`**
+
+### §7 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 6536` — START HERE
+> **AUTHORIZED. NO ROUND-TRIP. Finish any atomic unit you are inside first.**
+> **1.** ⚡ **REPAIR THE TWO CONFIRMED `sys.modules` LEAKERS (`§4`)** at the global-state owner, with the full restoration postcondition **including modules imported while the mocks were live.** Strengthen the culprit tests with the restoration assertion. **PROVE: `PnL alone` == `culprit1 + PnL` == `culprit2 + PnL` == `canonical company`, BY EXACT NODE OUTCOME. Expected ZERO flips.** 🛑 **Do NOT touch the PnL tests or their fixtures.**
+> **2.** ⚡ **THEN adjudicate the `20` nominations (`§5`) — ONE read pass, classify RESTORED vs UNRESTORED. Repair only unrestored writers of modules the governed population imports. If genuinely-unrestored exceeds `5`, STOP AND REPORT.**
+> **3.** ⚡ **THEN Clusters `C` → `D` → `F` → `E` (`E` last).** Specs: `AR-970 §3`. 🛑 **`H` FORBIDDEN, `STOP [11]`.**
+> **4.** 🛑 **`ACCEPTANCE: REFUSED` IS EXPECTED FOR THE REST OF `R3-4` — from `F-ACCEPT5-8` AND from `SEALED DISPOSITION CHANGED` (`§2`). NEVER report a refusal without its REASON. NEVER cite either as a regression. DO NOT mint a new disposition seal; RECORD each authorized disposition delta with its receipt in the census as it lands.**
+> **5.** 🛑 **PIN EVERY CANONICAL RUN IN A DISPOSABLE WORKTREE AT AN EXPLICIT COMMIT (`§6`)** — the desk's own ruling commits will keep moving this branch.
+> **6.** 🛑 **NO SCOPE EXPANSION:** not the `31` baseline reds · not `black_swan:682` · not helper fan-out · not a `107`-file order-dependence sweep · not HTF production behaviour · not `MP1` or the money path. **`EDGE-HTF-PASSTHROUGH-AUTHORITY-1` remains BANKED.**
+
+```
+RULING ID       : R-818
+DECISION        : AR-972 APPROVE -- CLUSTER A CLOSED at canonical 2419.
+                  AR-973 APPROVE FOR TRACE -- root cause CONFIRMED, conviction
+                  PARTIAL and stays partial. Method deviation ACCEPTED, node-level
+                  bisection WAIVED, no grade-down.
+                  R3-4 = OPEN (3 CLOSED / 4 REMAINING).  R3 = 3 / 5.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live, independent grade
+                  is the gate. Collection root seal IMMUTABLE. Money path / MP1
+                  UNTOUCHED. Single-writer relay held. No agent promotes to live
+                  capital. NO LIVE-MONEY INCIDENT IS PROVEN BY §3.
+FILES / SCOPE   : src/engine/tests/** , the census artifact, the successor chain
+                  via record_successor() ONLY. FORBIDDEN: the collection root
+                  seal, generate_disposition_seal.py (no change needed, §2),
+                  manifest hand-edit, closure widening, hand-edited
+                  added_node_ids, any MP1/money-path or HTF/eligibility-gate
+                  production file, test_wave_b_intrabar_stops.py:380/:405/:426.
+ACCEPTANCE      : ZERO run-composition flips by exact node outcome across all
+                  four contexts; the 20 nominations classified; C/D/F/E disposed
+                  with FINAL_DISPOSITION + PROOF_RECEIPT on all 32 rows; then ONE
+                  successor disposition seal with every delta receipted.
+FIRST OBSERVABLE: the restoration postcondition landing on culprit 1, with the
+                  four-context node-outcome comparison. ETA: worker's call.
+QUEUED NEXT     : R3-5 SELF-EXECUTING on R3-4 green.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes,
+                  then IMMEDIATE. EDGE-HTF-PASSTHROUGH-AUTHORITY-1 wakes there.
+R3 FAN-IN       : 3 / 5. FIVE ITEMS, MAY NOT BECOME SIX.
+STOP CONDITION  : STOP [34], [35] below, plus all carried.
+```
+
+### §8 — 🛑 STOPS · BANKS · UNPROVEN
+🛑 **STOP `[34]`:** **never report `ACCEPTANCE: REFUSED` without joining its REASON.** Two distinct refusals are now expected simultaneously; a verdict word without its reason is how a real signal gets filed as nominal.
+🛑 **STOP `[35]`:** **an acceptance receipt taken on the shared branch during an active ruling cycle is `[VOIDABLE]`.** Pin runs in a disposable worktree at an explicit commit.
+✅ **BANKS:** `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` **ROOT-CAUSED, REPAIR AUTHORIZED, NOT CLOSED** · `EDGE-HTF-PASSTHROUGH-AUTHORITY-1` **HIGH before edge certification / LATENT today** · `ELIGIBILITY-MODE-CONSUMER-TRACE` **WAKE with `MP1`** · `ACCEPT5-SUBJECT-SELF-EXCUSE-1` **OPEN** (Cluster `C`) · `ACCEPT5-SILENT-SWALLOW-SURFACE-1` **DEFERRED, not closed** · `R-812 §8`'s two.
+🛑 **CARRIED:** `R-816 §8`'s `[33]` · `R-815 §8`'s `[32]` · `R-814 §8`'s `[31]` · `R-813 §9`'s `[29]`/`[30]` · `R-812 §8`'s `[27]`/`[28]` · `R-811 §8`'s `[24]`–`[26]` · `R-809 §8`'s `[22]`/`[23]` · `R-807 §7`'s `[18]`/`[19]` · `R-806 §7`'s `[16]`/`[17]` · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+⚠️ **FAILED OR UNPROVEN:** the mechanism accounting for the FULL flip set `[UNPROVEN]` · timing-alone-explains-divergence `[HYPOTHESIS]` · the `20` nominations `[UNADJUDICATED]` · which PnL reality is true `[UNDECIDED BY DESIGN]` · rows `26`–`29` `[ANTECEDENT NEVER FIRED]` · the `31` baseline reds `[NOT ANALYSED]` · the eligibility-mode consumer census `[DESK-MEASURED, NOT INDEPENDENTLY REPROVED]` · portability `[NO CLAIM]` · the external read's `§11` remainder `[NOT RECEIVED]`.
+⚠️ **`ACCEPT-5` REMAINS BAND `5`, ADVISORY, NOT RELEASE AUTHORITY.**
+
+### §9 — 📌 LESSONS TO PERSIST
+★★★★★ **`A VERDICT IS NOT A REASON. JOIN ON THE REASON — I PREDICTED "REFUSED" AND WAS RIGHT FOR THE WRONG CAUSE, AND A SEAT THAT TRUSTED ME WOULD HAVE FILED A REAL SIGNAL AS NOMINAL.`**
+★★★★★ **`THE FLIPPED TEST IS LITERALLY NAMED test_prop_sim_trusts_net_pnl_no_double_deduction AND THE LEAKED MODULE IS src.engine.prop_sim — IT WENT GREEN WHILE NOT TESTING THE REAL SIMULATOR.`**
+★★★★★ **`I ORDERED THE DIAGNOSIS AND FORGOT THE TREATMENT. A STALL ORDER DOES NOT LOOK LIKE ONE WHEN OTHER LANES ARE STILL OPEN.`**
+★★★★★ **`THE INSTRUMENT IS RIGHT TO REFUSE, SO THE FIX IS NOT TO LOOSEN IT — IT IS TO STOP MEASURING ON A MOVING TREE.`**
+★★★★ **`A TRUNCATED SOURCE IS AN UNENUMERATED SOURCE: SAY WHERE IT STOPPED AND NEVER LET A CONTINUATION YOU DID NOT RECEIVE BECOME A PREMISE.`**
+★★★★ **`THE CHEAPEST WORK IS THE WORK A MEASUREMENT DELETES — `--out` ALREADY EXISTED, SO THE ORDERED GENERATOR CHANGE WAS CANCELLED BEFORE IT WAS ORDERED.`**
+★★★★ **`A DEVIATION DECLARED IS A DEVIATION THE DESK CAN PRICE; A DEVIATION ABSORBED IS ONE IT CANNOT.`**
+
+---
+
 ## R-817 · 2026-08-11 · ⚖️ **AMENDMENT TO `R-816`, NOT A NEW GRADE. SEAT `23692` RETIRED; AUTHORIZATION PASSES TO `claude.exe 6536`.** 🛑 **TWO CORRECTIONS I OWE: `LANDED ≠ CLOSED` — the honest count is `2` CLOSED, NOT `3` — AND I RE-ORDER MY OWN `R-816 §7`, PUTTING CLUSTER `A`'s MICROREPAIR BEFORE THE TRACE.** ⚡ **NO NEW WORK IS ADDED AND NO GRADE MOVES.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 723c773d`, PUSHED** (`ls-remote` MATCH). **SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `24040` (`08-10 23:05:28`) · worker `claude.exe 6536` (born `08-11 01:15:52`). `23692` GONE — its `AR-970` handoff was RATIFIED at `R-816 §6` and the operator executed it.**
