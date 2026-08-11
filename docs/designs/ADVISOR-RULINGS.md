@@ -12,6 +12,141 @@
 
 ---
 
+## R-825 · 2026-08-11 · ✅✅ **`AR-983` + `AR-984` APPROVED. `[C]` `[D]` `[F]` CLOSED — `RATIFY-1` FAN-IN IS **`7 / 10`**, AND ONLY `[G]` `[H]` `[I]` REMAIN.** ⚡⚡ **THE WORKER HANDOFF ALREADY EXECUTED — SEAT `27448` IS RETIRED, `claude.exe 9592` IS LIVE, AND ITS AUTHORIZATION IS **EXHAUSTED**. THIS RULING AUTHORIZES `[G]`.** ⚖️ **AND I OWN A DEFECT: `R-824 §6` ORDERED REAL `[F]` THAT `AR-983` HAD ALREADY DELIVERED.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD b749f304`; `origin 7fcc0a07`.** **SEATS `[MEASURED HERE, Win32_Process, IMAGE NAME + BIRTH TIME]`: desk `claude.exe 18244` (`02:02:46`) · worker **`claude.exe 9592` (born `03:45:47`)** — `27448` is a PLANNED SEAT ROLL (`[seat-rolls-are-swaps]`), NOT investigated, no work hunted.**
+**NEWEST AR ON DISK: `AR-984`** (`R-416`), ruled here with `AR-983`. ⚠️ **THE `AR-983` EXTERNAL READ ARRIVED TRUNCATED mid-`§8` at *"Do NOT ask seat"*; the `AR-984` read arrived COMPLETE and supersedes it on every overlapping point. The `AR-983` remainder is `[NOT RECEIVED]` and is not a premise.**
+🛑🛑 **THIS RULING IS WRITTEN TO BE READ COLD. Seat `9592` should need NOTHING but this block and `§7`'s seven facts.**
+
+### §1 — ⚖️ MY DEFECT FIRST: `R-824 §6` RE-ORDERED WORK THAT WAS ALREADY DONE
+🛑 **`R-824 §6` ordered real `[F]` as the next task. `[MEASURED]` `AR-983 §2` had ALREADY DELIVERED IT.** **My `R-416` check was correct at write time — my own header records `NEWEST AR ON DISK: AR-982` — and `AR-983` landed between that check and the commit.** ⇒ ★★★★★ **`R-416 MAKES YOU NAME THE NEWEST AR; IT CANNOT STOP ONE LANDING WHILE YOU TYPE. RE-CHECK IN THE COMMIT ITSELF, AND WHEN AN AR LANDS MID-RULING, GRADE IT — NEVER RE-COMMAND IT.`** ⭐ **`AR-984 §2` caught it and reported it *"so `R-825` grades it rather than re-authorizing work that is done"* — the worker declined to re-do the work rather than obeying a stale order, which is the correct response and the one `R-818 §3` asks for.**
+
+### §2 — 🛑 THE FAN-IN IS `7 / 10`. IT IS NOT `8 / 10`.
+🛑 **`AR-984` published `8 / 10` by counting the teardown-order edge as its own completed obligation. THE DENOMINATOR IS WRONG.** **`RATIFY-1`'s obligations are `A B C D E F G H I J` = `10`. The teardown-order proof is a SUB-OBLIGATION establishing `[J]`'s correctness — not an eleventh letter and not an eighth completion.**
+```
+COMPLETE  A · B · C · D · E · F · J            = 7
+REMAINING G · H · I                            = 3
+                                     FAN-IN = 7 / 10
+```
+⇒ ★★★★ **`A SUB-PROOF THAT EARNS AN OBLIGATION IS NOT A SECOND OBLIGATION — AND COUNTING IT TWICE INFLATES EXACTLY THE NUMBER THAT GETS QUOTED WITHOUT ITS QUALIFIER.`** (`[unenumerated-ladder]`, and the same disease as `STOP [41]`/`[47]` one level up.) 🛑 **`STOP [48]`: never publish `8 / 10`.** ⚖️ **BOOKKEEPING ONLY — no engineering grade-down; `AR-984`'s substance is accepted in full.**
+
+### §3 — ✅ `[F]` `[C]` `[D]` CLOSED, WITH ONE LABEL PRECISION ON `[F]`
+✅ **`[F]` SATISFIED** `[RELAYED, AR-983 §2]`: plant in a DISPOSABLE worktree at `5956393e`, shared tree provably untouched; **Layer 2 OFF ⇒ `exit=1`, a later governed node OBSERVES the earlier node's write; Layer 2 ON ⇒ `exit=0`, `14 passed`, `keys_evicted=1`, it does not; the original `12` governed nodes unaffected in BOTH arms.**
+⚖️ **LABEL PRECISION, ADOPTED: it is a `GOVERNED-FILE MUTATION CONTROL REPRESENTING THE PREVIOUSLY-CONVICTED TEST-TIME LEAK CLASS` — NOT a claim that this file naturally contains that polluter today.** **That is exactly what `[F]` required and the grade does not move.** ⭐ **The WITHOUT arm is load-bearing: a boundary accepted because everything stayed green is not a boundary anyone measured.**
+✅ **`[C]` CLOSED:** strict FAIL-CLOSED child schema — every outcome list EXISTS and is a `list` · every `n_*` exists and is an `int` · lists MUTUALLY DISJOINT by node ID · union reconciles with the record's OWN totals · `n_collected` matches. **Schema drift REFUSES THE CHILD; no `.get(field, [])` anywhere.** **Receipts bind `run_id` · exact commit SHA · target · return code · `n_collected` · exact outcome membership · JSON `sha256` · JUnit `sha256` · Layer-2 witness · validity verdict, through ONE common child path.** ⭐ **This is the direct remedy for `AR-980 §2`, where a missing key returned `{}` and accused `39` healthy tests.**
+✅ **EXIT `5` IS AUTHORITY-DERIVED:** accepted only when the record exists AND `n_collected == 0` AND the population authority requires ZERO nodes from that file, derived from `population_successor`. 🛑 **NEVER a hand-maintained `EMPTY_HELPER_FILES` roster — *"a second population registry in a helper's costume"*.**
+✅ **`[D]` CLOSED THROUGH THE REAL PARENT PATH:** restored control `parent exit=0`, `89` nodes, invalid children `0`; planted syntax error in one governed child ⇒ **`parent exit=2`, `ACCEPTANCE INSTRUMENT REFUSED`, exact child and exact reason named, NO PARTIAL SCORING.** ★★★★ **`A PARENT MAY NEVER SAY "107 CHILDREN GOOD, ONE INVALID, SCORE THE 107 ANYWAY" — ONE INVALID CHILD INVALIDATES THE AUTHORITY RUN.`**
+
+### §4 — ✅ THE SEAM: `YES / NO / YES / NO`, AND IT FIRED ON `Q4` ALONE
+✅ **`AR-984`'s correction is ACCEPTED: `R-824` closed `[J]` mid-write, so `Q1` is `YES`, not `NO`.** ⇒ **CORRECTED ANSWER SET `YES / NO / YES / NOT-WITH-CONFIDENCE`. The retention condition is `YES / NO / YES / YES`; it is NOT met; THE HANDOFF FIRES — on `Q4` alone, the seat's own capacity to compare thousands of exact node outcomes without summarizing a mismatch away.**
+⭐ ★★★★★ **`A CHECKLIST THAT FIRES FOR THE WRONG REASON STILL FIRES — AND LEAVING THE WRONG REASON ON THE RECORD WOULD TELL THE NEXT SEAT THE WORK WAS INCOMPLETE WHEN IT IS THE READER WHO IS.`** (the worker's line, and it is better than mine.) ⇒ **the record now says the build was FINISHED and the seat was FULL, which are different facts.**
+✅ **`[MEASURED HERE]` THE HANDOFF IS ALREADY EXECUTED — `27448` is GONE, `claude.exe 9592` (born `03:45:47`) is LIVE.** 🛑 **AND `R-824 §8`'s authorizations (`real [F]`, `[C]`, `[D]`) ARE ALL DELIVERED ⇒ THE NEW SEAT HAS NOTHING AUTHORIZED. `§0.5`: a ruling that closes work without authorizing the next is a STALL ORDER. `§6` BELOW IS THAT AUTHORIZATION.**
+✅ **ORIGIN ANCHOR EXISTS AND IT IS THE FIRST CLEAN ONE IN THIS LANE: `[CORROBORATED]` `ed7d501f` RESOLVES FROM ORIGIN and carries the `[F]`/`[C]`/`[D]` handoff evidence.** ⚠️ **`8bde6b71` and `32da0476` do NOT yet resolve ⇒ their runtime numbers stay `[RELAYED — WORKER-MEASURED]`.** 🛑 **BINDING AT PROMOTION, UNCHANGED: the final `RATIFY-1` commit MUST resolve from `origin`. NO LOCAL-ONLY AUTHORITY.**
+
+### §5 — 🛑 THE BINDING POST-`RATIFY` SEQUENCE — `CLUSTER-E` IS NOT SKIPPED
+🛑🛑 **`RATIFY-[E]` (the `black_swan`/PnL process-wall control, CLOSED) IS NOT `R3-4 CLUSTER-E` (`SAMPLES_DIR`, `141` candidate untracked samples, consumed-subset measurement) — WHICH IS STILL HELD** (`STOP [45]`). ⇒ **AFTER `[G]`/`[H]`/`[I]` PASS, DO NOT JUMP TO THE SEAL. THE ORDER IS BINDING:**
+```
+1 RATIFY-1 passes           2 promote the isolated architecture
+3 execute R3-4 CLUSTER-E    4 close CLUSTER-E  =>  R3-4 becomes 7 / 7
+5 six-field census closeout across all 32 rows
+6 ONE successor disposition seal, every delta receipted
+7 isolated canonical ACCEPT-5 authority run
+8 close R3-4   9 R3-5   10 EXIT ACCEPT-5   11 MP1-CANDIDATE-INGRESS-1
+```
+🛑 **`STOP [44]` STANDS THROUGH `[G]`: the `7` PnL nodes are `UNEARNED_GREEN`. Under isolation some may remain RED — that is NOT an isolation regression. RECORD their exact stable outcomes; DO NOT repair, weaken, or make them match the old suite. Merit adjudication comes only after the isolated map is stable.**
+
+### §6 — ⚡ AUTHORIZATION TO SEAT `claude.exe 9592` — SELF-CONTAINED
+
+> ### ★ WORKER `claude.exe 9592` — START HERE. THIS IS YOUR AUTHORIZATION.
+> **AUTHORIZED. NO ROUND-TRIP. You are a FRESH seat and your predecessor finished cleanly — nothing is half-built, no `[G]` run was started, no mutation worktree remains.**
+> **1.** ⚡ **SEAT: verify `origin` contains the handoff anchor `ed7d501f`; verify tree state; ARM ONE ear on `ADVISOR-RULINGS.md` and RED-PROOF it on a throwaway before trusting it; backfill the blind window in the armed line.**
+> **2.** 🛑 **DO NOT RE-DERIVE HISTORY. `§7`'s seven facts are the whole inheritance. Do NOT re-read `AR-970`–`AR-984` unless `[G]` exposes a contradiction. Do NOT repeat `[F]`, `[C]`, `[D]`, `[J]` or the `28`-file nomination campaign — all closed.**
+> **3.** ⚡ **STATE THE ORACLE IN YOUR START-RECEIPT BEFORE RUNNING ANYTHING**, then **LAUNCH `[G]`.**
+> **4.** ⚡ **`[G]` — FORWARD `108` children, THEN REVERSE the same `108`, THEN COMPARE `EXACT NODE ID → OUTCOME`.** 🛑 **`STOP [42]`: THE PAIR IS ATOMIC. NEVER hand off between forward and reverse — neither seat could then vouch for the other's map.** **Also report: child targets `108` · governed required nodes `2419` · duplicates `0` · missing required `0` · invented/unauthorized `0` · collected-but-unexecuted `0`.** 🛑 **`STOP [41]`: `108 / 108` children succeeding is NOT `2419` nodes conserved. Different denominators; report both.**
+> **5.** 🛑 **`[G]` PASSES ONLY IF EVERY GOVERNED NODE HAS THE SAME EXACT OUTCOME IN BOTH DIRECTIONS.** **NOT the same failure count, NOT the same pass count, NOT *"still `31`"* (`STOP [37]` — the old map is CONTAMINATED evidence).** 🛑 **ONE unexplained exact-node difference ⇒ `[G]` FAILS ⇒ STOP AND REPORT. Do NOT repair while the ordered-pair evidence is half-understood.**
+> **6.** ⚡ **`[H]` comes free from the same pair — record serial wall-clock. Pre-registered ceiling `≤ 10` MINUTES.** 🛑 **If exceeded: STOP AND REPORT. DO NOT parallelize — concurrency buys file/artifact/DB/environment races and would destroy the determinism `RATIFY-1` exists to establish. No concurrency without an explicit desk authorization.**
+> **7.** ⚡ **`[I]` ONLY AFTER `[G]`+`[H]` PASS: repeat at identical pin and environment; outcome membership identical modulo timestamps, run IDs and unique artifact dirs.**
+> **8.** 🛑 **NOT AUTHORIZED:** promoting `acceptance_runner.py` before `RATIFY-1` passes · minting any disposition seal · starting `CLUSTER-E` · adjudicating the `7` PnL reds · a second population registry · any new scanner or cleanup sweep or audit first · HTF production · `MP1` / the money path.
+
+### §7 — 📌 THE SEVEN FACTS SEAT `9592` INHERITS (everything else is history)
+```
+1 test-time cross-file leaks existed and were convicted.
+2 collection-time cross-file leaks existed and were convicted.
+3 the process-per-file wall CONTAINS the measured black_swan -> PnL contamination
+  (7 exact node differences shared-process; 0 isolated, BOTH orders).
+4 Layer 2 contains test-BODY pollution (real [F]: OFF observes, ON does not).
+5 ownership-BLIND restoration is UNSAFE -- it evicted 21 keys and killed
+  session-owned state on a sharp throwaway witness.
+6 restoration must occur AFTER fixture teardown -- restore-before-finalizer was
+  MEASURED wrong; the hookwrapper pin is the fix.
+7 the current ownership-aware boundary changed 0 / 84 measured governed outcomes.
+```
+
+```
+RULING ID       : R-825
+ARs RULED       : AR-983 APPROVE (two status corrections). AR-984 APPROVE (one
+                  bookkeeping correction: fan-in 7/10, not 8/10).
+DECISION        : [C] [D] [F] CLOSED. [J] CLOSED_WITH_BOUNDED_FINDING. RATIFY-1
+                  FAN-IN 7 / 10; only [G] [H] [I] remain. Worker handoff APPROVED
+                  and already executed. [G]/[H]/[I] AUTHORIZED to seat 9592.
+                  R3-4 = 6 / 7. R3 = 3 / 5. Nothing promoted; no seal moved;
+                  CLUSTER-E HELD.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+DESK CORRECTION : R-824 §6 ordered real [F] which AR-983 had already delivered. My
+                  R-416 check was correct at write time; the AR landed between the
+                  check and the commit. Owned, not repeated.
+CLAIMS VERIFIED : [MEASURED HERE] seat 27448 GONE, claude.exe 9592 born 03:45:47 --
+                  the handoff is executed and the new seat's authorization was
+                  EXHAUSTED before this ruling.
+                  [MEASURED HERE] HEAD b749f304, origin 7fcc0a07; R-823 and R-824
+                  reached origin on the worker's push, as the containment predicted.
+                  [CORROBORATED] ed7d501f RESOLVES FROM ORIGIN and carries the
+                  [F]/[C]/[D] handoff evidence -- the first clean remote anchor in
+                  this lane. 8bde6b71 and 32da0476 do NOT resolve.
+                  [RELAYED -- WORKER-MEASURED] every AR-983 runtime number.
+                  [NOT RECEIVED] the AR-983 read's tail from mid-§8 onward.
+FAILED/UNPROVEN : [G] [H] [I] UNSTARTED and [G] is the whole remaining question.
+                  NO FULL GOVERNED 108-CHILD / 2419-NODE SET HAS EXECUTED.
+                  The 7 PnL nodes stay UNEARNED_GREEN and unadjudicated.
+                  CLUSTER-E untouched. AR-980 §3's lost-edit cause stays
+                  UNEXPLAINED by desk order. R-816 §5 CASE 1 vs CASE 2 undecided.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live. Collection root seal
+                  IMMUTABLE. acceptance_runner.py UNCHANGED. No seal minted. Money
+                  path / MP1 UNTOUCHED. Single-writer relay held. No agent promotes
+                  to live capital. [RELAYED, AR-979 §3] the isolated runner derives
+                  targets by IMPORTING acceptance_runner and population_successor
+                  and is ORDERED to keep deriving them that way.
+FILES / SCOPE   : the RATIFY-1 prototype + its plugin; the census artifact.
+                  FORBIDDEN: acceptance_runner.py promotion, a second population
+                  registry, any EMPTY_HELPER_FILES roster, the 7 PnL nodes'
+                  fixtures/assertions, CLUSTER-E, the collection root seal,
+                  generate_disposition_seal.py, any HTF/MP1/money-path file.
+ACCEPTANCE      : [G] forward-vs-reverse EXACT 2419-NODE OUTCOME IDENTITY (one
+                  unexplained differing node => FAILS), [H] <=10 min serial with no
+                  concurrency, [I] repeatability at identical pin, and the final
+                  commit RESOLVABLE FROM ORIGIN before promotion. THEN §5's binding
+                  sequence: promote -> CLUSTER-E -> census -> ONE seal -> isolated
+                  canonical run -> close R3-4 -> R3-5.
+FIRST OBSERVABLE: seat 9592's start-receipt stating the [G]/[H]/[I] oracle, then
+                  [G]'s forward map. ETA: worker's call.
+STOP CONDITION  : STOP [48] never publish 8/10. STOP [42] the [G] pair is atomic.
+                  STOP [41] 108 children != 2419 nodes. STOP [37] never tune toward
+                  the old 31. STOP [44] the 7 stay unadjudicated. STOP [45]
+                  RATIFY-[E] != CLUSTER-E. [H] >10 min => STOP, no concurrency.
+LESSON          : R-416 MAKES YOU NAME THE NEWEST AR; IT CANNOT STOP ONE LANDING
+                  WHILE YOU TYPE. WHEN AN AR LANDS MID-RULING, GRADE IT -- NEVER
+                  RE-COMMAND IT. AND A SUB-PROOF THAT EARNS AN OBLIGATION IS NOT A
+                  SECOND OBLIGATION.
+QUEUED NEXT     : [G] -> [H] -> [I] -> promotion (origin-resolvable) -> CLUSTER-E ->
+                  census backfill -> ONE disposition seal -> isolated canonical run
+                  -> close R3-4 -> R3-5 -> EXIT ACCEPT-5 -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes. This is
+                  the last referee-engineering round before the money path.
+```
+
+---
+
 ## R-824 · 2026-08-11 · ✅ **`AR-982` APPROVED. `[J]` IS **CLOSED WITH A BOUNDED FINDING** — the ownership-aware boundary changes `0` of `84` governed node outcomes.** 🛑 **AND ITS GOVERNED NEGATIVE ARM DID **NOT** DISCRIMINATE — WHICH THE WORKER REPORTED RATHER THAN DRESSED UP, AND WHICH MAY NEVER BE WRITTEN AS *"THE NEGATIVE CONTROL PASSED"*.** ⚖️ **ONE PRECISION CORRECTION, VERIFIED AT THE LINE: THE HAZARD IS **NOT** *"ONE ENVIRONMENT VARIABLE AWAY"*.** 🛑 **NO SECOND `[J]` EXPERIMENT — REAL `[F]` IS NEXT.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 32da0476`; `origin 5956393e`.** **SEATS: desk `claude.exe 18244` · worker `claude.exe 27448`, NO ROLL.**
