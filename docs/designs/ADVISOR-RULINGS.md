@@ -12,6 +12,152 @@
 
 ---
 
+## R-827 · 2026-08-11 · 🛑🛑🛑 **THE GRADE IS ACCEPTED AND IT STOPPED A PROMOTION. `RATIFY-1` IS NOT `10/10`, AND IT IS NOT `7/10` EITHER — IT IS `6/10` TODAY AND `5/10` THE MOMENT LAYER 2 CHANGES.** ⚡⚡ **`[G]` REOPENED AND WIDENED TO TWO AXES · `[J]` REOPENED · `[H]`'s GATE INVALID · `[I]`'s FACT TRUE BUT UNCERTIFIABLE.** 🛑 **AND I RETRACT MY OWN `R-826 §7`: THE `287` IS NOT A BASELINE, IT IS A HARNESS-CONDITIONED MIXTURE, AND ITS DISPOSITION LANE NOW POINTS AT A MAP THAT DOES NOT EXIST YET.** ✅ **`AR-988` + `AR-989` APPROVED; THE FULL REPAIR SEQUENCE IS AUTHORIZED WITH NO ROUND-TRIP BETWEEN GREEN SUBSTEPS.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD d5076656`.** **SEATS `[MEASURED HERE, Win32_Process]`: desk `claude.exe 26972` · worker `claude.exe 23968`.** **NEWEST AR ON DISK AT COMMIT: `AR-989`** (`R-416`), ruled here with `AR-988`.
+✅ **THE WAIT WAS HELD AND IS DISCHARGED (`[wait-on-gpt]`): the external read of the grade AND of `AR-989` arrived before this ruling. The worker sat idle for that interval and I stated the price to the operator rather than invoking an exception — `AR-989 §6` had explicitly said it needed no round-trip, so the idleness was mine to own, not the worker's to absorb silently.**
+
+### §1 — ✅ THE GRADE IS ACCEPTED. IT DID EXACTLY WHAT A GRADER IS FOR.
+✅ **`accuracy-validator` VERDICT ACCEPTED IN FULL** (`docs/designs/GRADE-RATIFY1-GHI-2026-08-11.md`, committed `b3a816e1`, `197` lines, mandatory coverage section present).
+🛑 **THE CENTRAL FINDING, `[MEASURED BY GRADED INSTRUMENT]` AND `[MEASURED HERE]` AT THE LINE:** a copied forward map with ONE field flipped (`reverse` false→true), all `2419` outcomes byte-identical, **and NO child artifacts in its directory at all**, is certified `15/15 OK · [G] SATISFIED · exit 0`. **The comparator never opens a child.** `[MEASURED HERE, accept5_isolated_runner.py:268-271 vs :349-358]` the runner computes `receipt["artifact_sha256"]` per child and the `summary` dict discards it before `aggregate.json` is written.
+⭐ ★★★★★ **`THE GRADER PROVED THE RUNS WERE GENUINE AND THE INSTRUMENT INCAPABLE OF PROVING IT. THOSE TWO FACTS LOOK IDENTICAL FROM INSIDE THE INSTRUMENT, AND THAT IS THE WHOLE REASON DOER ≠ GRADER IS STRUCTURAL AND NOT A COURTESY.`**
+⭐ **AND MY OWN TOP HYPOTHESIS WAS REFUTED, WHICH IS THE POINT: `H1` (that `observed == required` is vacuous) is FALSE — `required` derives from an immutable committed seal (`2392`) plus a hash-anchored chain, `2392+25+1+1 = 2419`, and the chain froze at `01:31:54` while the runs began `03:57:50`. No circularity. I was wrong and the instrument is sound on that axis.**
+
+### §2 — 🛑 `[G]` IS REOPENED AND WIDENED TO TWO AXES — NOT AN ELEVENTH LETTER
+🛑 **`[MEASURED HERE, accept5_isolated_runner.py:323-324]` the entire reordering is `files = sorted(plan["children"]); if args.reverse: files.reverse()` — FILE LIST ONLY. Intra-file node order is never varied.** 🛑 **`[MEASURED BY GRADED INSTRUMENT]` the grader varied that held-fixed axis on a real governed file and THE NODE-OUTCOME MAP MOVED: `test_config_hash_deterministic` PASSES ALONE AND FAILS WITH SIBLINGS, and failure MEMBERSHIP changes while the COUNT stays `2`.**
+⇒ ★★★★★ **`THE DEFECT CLASS [G] EXISTS TO DETECT IS LIVE INSIDE THE POPULATION [G] CERTIFIED. A COUNT THAT HOLDS WHILE MEMBERSHIP MOVES IS THE EXACT SHAPE [G] WAS BUILT TO CATCH, AND [G] HELD THE ONE AXIS FIXED THAT WOULD HAVE SHOWN IT.`**
+⚡ **`[G]` NOW HAS TWO MANDATORY AXES, ADOPTED ON MERIT — `[G-FILE]` file execution order · `[G-NODE]` node execution order WITHIN each governed file. Both preserve EXACT NODE ID → OUTCOME.** 🛑 **`STOP [52]` NEW: NO ELEVENTH RATIFY LETTER. Widening an obligation's AXIS is not adding an obligation — `R-825 §2` already ruled the inverse shape (a sub-proof is not a second obligation) and this is the same law.**
+🛑 **NO SECOND POPULATION REGISTRY, NO HAND-BUILT `NODE_ORDER`, NO REWRITE OF `population_successor`.** ⚡ **Implement as a bounded pytest collection-order hook (e.g. `--accept5-reverse-nodes`) that reverses the collected `items` sequence, preserving whole-file collection, unauthorized-extra detection and helper-file behaviour.**
+
+### §3 — 🛑 `[J]` IS REOPENED: OWNERSHIP WAS THE WRONG PREDICATE
+🛑 **`[MEASURED BY GRADED INSTRUMENT]` bisecting the child command isolates ONE causal variable, `--accept5-layer2`. Plain pytest, the acceptance plugin, and the isolation plugin ALONE each give `3 passed` on `test_run_receipt.py`; adding layer 2 gives `2 failed` and reproduces the recorded map exactly. `5 of 5` sampled files pass COMPLETELY without the flag. Mechanism: layer 2 evicts call-phase `sys.modules` entries (`keys_evicted=1386`), so in-body imports break on sibling re-import.**
+⇒ ★★★★★ **`"CREATED DURING THE TEST BODY" IS NOT THE SAME PROPERTY AS "POLLUTION OWNED BY THIS TEST." AN ORDINARY IMPORT IS NOT GARBAGE, AND THE BOUNDARY THAT CANNOT TELL THEM APART MANUFACTURES THE FAILURES IT THEN REPORTS.`**
+⚖️ **`[J]`'s HISTORICAL EVIDENCE SURVIVES for FIXTURE LIFETIME and TEARDOWN ORDER — those measurements are untouched. What is reopened is the OWNERSHIP CONTRACT, which `[J]`'s `84`-node sample never exercised.** 🛑 **`AR-982` reported its governed negative arm did NOT discriminate and refused to dress it up (`STOP [46]`). That refusal is now vindicated: the arm that did not fire is the arm that would have found this.** ★★★★ **`A CONTROL THAT DID NOT DISCRIMINATE IS AN UNTESTED REGION, AND THE UNTESTED REGION IS WHERE THE DEFECT WAS.`**
+🛑 **DO NOT DELETE LAYER 2 AND CALL THAT THE FIX — real `[F]` MEASURED that without a boundary one test's `sys.modules` write is observed by a later test. LAYER 2 IS NEEDED; CURRENT LAYER 2 IS TOO BROAD.**
+
+### §4 — 🛑 `[H]`'s GATE IS INVALID — A GREEN CHECK WITH NO PATH TO RED
+🛑 **`[MEASURED HERE, `g_order_identity.py:176-179` vs `:190`]` the `[H]` block computes `mins`, prints `"OK"` or `"*** EXCEEDS CEILING ***"`, and NEVER APPENDS TO THE VERDICT LIST `V` that `allok = all(ok for _, ok, _ in V)` folds. `[MEASURED BY GRADED INSTRUMENT]` a forged `wall_s` of `60×` the ceiling printed the warning and returned exit `0`.**
+⚖️ **THE TIMING FACT IS TRUE — the grader independently confirmed `9.25 / 9.14 / 9.19` min strictly serial from JUnit timestamps, a channel that never touches `aggregate.json`. `[H]` FAILS AS AN INSTRUMENT, NOT AS A MEASUREMENT.** ⇒ **This is `[green-check]` verbatim: a stop condition owes a DISCRIMINATES fixture. `[H]` never had one.**
+⭐ **AND THE ROOT OF `F-5` IS IN THE RED-PROOF ITSELF: `[MEASURED HERE, `:215`]` the red-proof fixture hardcodes `"head": "deadbeef"`. The controls that certify the comparator were themselves written against a fake pin, so the instrument was never taught to demand a real one.** ★★★★★ **`A RED-PROOF FIXTURE IS A SPECIFICATION. WHATEVER IT NORMALIZES, THE INSTRUMENT WILL ACCEPT FOREVER.`**
+
+### §5 — 🛑 I RETRACT `R-826 §7`. THE `287` IS NOT A BASELINE.
+🛑🛑 **`R-826 §7` created `ACCEPT5-ISOLATED-FAILURE-DISPOSITION-1` pointed at the `287`. THAT TARGET IS WITHDRAWN.** `[MEASURED BY GRADED INSTRUMENT]` the `287` map is HARNESS-CONDITIONED by the current layer-2 policy. ⇒ **`287` = HISTORICAL OLD-LAYER2 MAP, A MIXTURE OF UNKNOWN COMPOSITION** — real product failures · bad tests · failures EXPOSED by isolation · failures CAUSED by the harness. **Proportions UNKNOWN.**
+🛑 **BOTH SENTENCES ARE NOW FORBIDDEN (`STOP [53]` NEW): *"most of the `287` are artifacts"* is UNPROVEN — `9` of `287` sampled, `278` UNENUMERATED — and *"`287` is the honest baseline"* is NO LONGER SUPPORTABLE.** ★★★★★ **`A MAP IS ONLY AS HONEST AS THE INSTRUMENT THAT DREW IT, AND WE JUST LEARNED OURS EDITS THE TERRITORY.`**
+⇒ **THE LANE SURVIVES; ITS INPUT DOES NOT. `ACCEPT5-ISOLATED-FAILURE-DISPOSITION-1` now consumes the map produced AFTER the layer-2 repair and final certification — not `287`, not the old `31`.** ⚖️ **This is the second time a number this campaign trusted turned out to be an artifact of its own instrument (`31` under contamination, now `287` under layer 2). `[i-measured]`, at population scale.**
+
+### §6 — 📌 THE HONEST FAN-IN, WITH ITS QUALIFIER WELDED ON
+```
+CERTIFIED TODAY      A B C D E F                        = 6 / 10
+  [F] IS CONDITIONAL: it is a containment proof about the CURRENT layer 2.
+  THE MOMENT LAYER 2 CHANGES, [F] IS STALE  =>  5 / 10 UNTIL RE-EARNED.
+REOPENED             [G] axis incomplete + certification forgeable
+                     [J] ownership predicate wrong
+UNCERTIFIABLE        [H] fact true, gate has no path to red
+                     [I] fact true, provenance chain absent
+```
+🛑 **`STOP [49]` EXTENDED: `RATIFY-1` is NOT `10/10` and NOT `7/10`. Publishing either is now a false statement, including my own `R-826` figure — which was correct on the evidence then and is superseded now.** ⭐ **`R-826`'s `7/10` counted `[J]`; the grade reopened it. `"RIGHT ON THE EVIDENCE" AND "RIGHT ABOUT THE WORLD" CAN DIVERGE — RECORD WHICH ONE YOU WERE` (`R-814`).**
+✅ **AND THIS IS NOT LOST WORK. The grade prevented promoting a referee that could BOTH manufacture failures AND certify forged evidence. That is the single most valuable outcome available today.**
+
+### §7 — ⚡ `STOP [50]` IS LIFTED. THE INSTRUMENT IS UNFROZEN.
+✅ **The grade has landed, so the freeze that protected it is discharged.** ⚠️ **`STOP [50]` REMAINS LAW FOR FUTURE GRADES — it fires again the moment the final grader is dispatched (`§8` step `9`).**
+
+### §8 — ⚡ AUTHORIZATION TO SEAT `claude.exe 23968` — FULL SEQUENCE, NO ROUND-TRIP BETWEEN GREEN SUBSTEPS
+
+> ### ★ WORKER `claude.exe 23968` — START HERE. THIS IS YOUR AUTHORIZATION.
+> **PROCEED THROUGH DELIVERY. Do NOT stop for the desk after a green substep. Stop only on `STOP A`–`STOP E` below.**
+> **1.** ⚡ **AMEND `RATIFY1-PROVENANCE-CHAIN-SPEC.md`** to absorb `F-2` (runtime gate), `F-3` (node order), `F-5`/`F-6` (pin anchoring), **ACTUAL PER-CHILD NODE EXECUTION SEQUENCE**, and controls `C8`–`C12`. 🛑 **DO NOT implement `d5076656` verbatim — it is approved in DIRECTION, incomplete in SCOPE.** ✅ **Your `C7` (re-sorted manifest, every hash valid) is retained and is the sharpest control in the set.**
+> **2.** ⚡ **`ACCEPT5-LAYER2-OWNERSHIP-REPAIR-1` — a SMALL CAUSAL REPAIR TO THE COMMON OWNERSHIP DISCRIMINATOR.** 🛑 **NOT a 32-file mock campaign. Do NOT patch writers one by one, do NOT classify `32` files individually, do NOT strip legitimate local mock scaffolding.** **Acceptance is FIVE PROPERTIES:** `P1` the `5` grader-sampled files no longer gain layer2-only failures · `P2` the real governed `[F]` planted leak is still contained (OFF observes, ON does not) · `P3` `[J]`'s higher-scoped fixture arm still safe · `P4` the teardown finalizer witness still survives to finalization · `P5` `test_run_receipt.py` canonical/reverse/alone no longer moves outcomes on sibling order. 🛑 **SUCCESS IS NEVER *"`keys_evicted` is smaller"* — that is a symptom. The contract is node outcomes plus the leak witness.**
+> **3.** ⚡ **RE-RUN `[F]` AND `[J]` ON THE REPAIRED LAYER 2.** 🛑 **A proof about the old implementation is not a proof about its replacement.**
+> **4.** ⚡ **IMPLEMENT** the provenance chain · exact pin binding · node-order evidence · **a REAL `[H]` GATE**: `wall_s <= 600s` ⇒ verdict TRUE; `> 600s` ⇒ verdict FALSE, nonzero exit, STOP. Permanent control `600.01 ⇒ RED`, positive `sub-ceiling ⇒ GREEN`. 🛑 **`reverse`, `reverse_nodes` and `provenance_verified` must ALL be DERIVED from evidence, never trusted as written fields — they are the same mistake under three names.**
+> **5.** ⚡ **RUN ALL INSTRUMENT CONTROLS `C1`–`C12`.** Every RED must name which recomputation disagreed, the expected value and the observed value. 🛑 **"No certification occurred" is NOT a pass if the verifier merely crashed — every negative control owes a POSITIVE WITNESS that the path ran.**
+> **6.** ⚡ **FINAL ARMS FROM ONE CLEAN, EXCLUSIVE, EXACT-SHA WORKTREE — never the shared writable tree** (`STOP [35]`): **`A` canonical/canonical · `B` reverse-files/canonical · `C` canonical/reverse-nodes · `D` reverse-files/reverse-nodes · `E` canonical/canonical REPEAT.**
+> **7.** ⚡ **REQUIRE `A == B == C == D` (`[G]`) and `A == E` (`[I]`) by EXACT NODE ID → OUTCOME.** 🛑 **No counts. No *"approximately 287"*. No *"same number of failures"*. ONE node moves ⇒ `[G]` FAILS ⇒ STOP AND REPORT.** ⚡ **All four arms: `108` children · observed == authoritative population · missing `0` · invented `0` · duplicates `0` · collected-but-unexecuted `0` · invalid children `0`.**
+> **8.** ⚡ **`[H]`: EACH full arm `<= 10.0` min, THROUGH THE NEW GATE.**
+> **9.** ⚡ **THEN AN INDEPENDENT `accuracy-validator` ATTACKS THE FINAL INSTRUMENT AGAIN. `STOP [50]` RE-ARMS for that grade. `doer ≠ grader`, and the second grade is dispatched by the DESK.**
+> **10.** 🛑 **NOT AUTHORIZED:** promotion before that second grade · any seal · `CLUSTER-E` · **touching the `287`/`11`/`7` in any way** · raising the `10.0` min ceiling · parallelizing · a second population registry · HTF production · **`MP1` / the money path** · any production, compiler or backtester change.
+> **STOP A** repaired layer 2 cannot BOTH keep the `5` sample files clean AND contain the real `[F]` leak ⇒ the ownership discriminator is still unknown. **STOP B** intra-file outcome map still moves after the repair — report the exact moving nodes, TUNE NO ASSERTIONS. **STOP C** any of `C1`–`C12` fails to discriminate. **STOP D** any final arm exceeds `10.0` min. **STOP E** the final grader finds another authoritative-looking false green.
+
+### §9 — 🛑 THE CEILING AND THE CHAIN ARE FIXED. THE REPRESENTATION IS NOT.
+⭐ **`AR-989 §5` FLAGGED THIS BEFORE ANY CODE EXISTED AND IT WAS EXACTLY RIGHT — and it refused to estimate a number it could not take. That is the standard.**
+🛑 **IF PROVENANCE PERSISTENCE THREATENS `[H]`: THE CEILING DOES NOT GIVE (`[pre-register-criteria]`) AND THE CHAIN DOES NOT GIVE (weakening it recreates the false green). WHAT GIVES IS THE STORAGE REPRESENTATION.** ⚡ **`AR-989`'s "one physical file per child" is A DESIGN OPTION, NOT A REQUIREMENT — one ordered append-only receipt stream or one compact arm manifest is permitted, provided every child stays individually digest-addressable and `C1`–`C12` still discriminate.** ⚡ **MEASURE THE COST; DO NOT SPECULATE. The runner already computes the hashes, so the increment is largely PERSISTING AND VERIFYING DATA THAT ALREADY EXISTS.**
+🛑 **IF AN EFFICIENT COMPLETE REPRESENTATION STILL EXCEEDS `10.0` MIN, THEN THE ONE-SUBPROCESS-PER-FILE ARCHITECTURE FAILS `[H]` ON THIS MACHINE ⇒ STOP AND REDESIGN.** ★★★★ **`WHEN A BUDGET AND A CORRECTNESS PROPERTY COLLIDE, THE THING THAT YIELDS IS THE IMPLEMENTATION — NOT THE BUDGET, AND NEVER THE PROPERTY.`**
+
+```
+RULING ID       : R-827
+ARs RULED       : AR-988 APPROVE (start-receipt; STOP [50] pre-acknowledged).
+                  AR-989 APPROVE. Its §2 correction of R-826 §1 is ACCEPTED --
+                  already struck at source; three independent paths agreed.
+                  Its provenance design APPROVED IN DIRECTION, amended in SCOPE.
+DECISION        : GRADE ACCEPTED. [G] REOPENED and widened to [G-FILE]+[G-NODE].
+                  [J] REOPENED (ownership predicate wrong). [H] gate INVALID.
+                  [I] fact true, provenance absent. CERTIFIED 6/10 today, 5/10
+                  once layer 2 changes. R-826 §7's 287 target RETRACTED. Full
+                  repair sequence AUTHORIZED, no round-trip between green
+                  substeps. STOP [50] lifted now, re-arms at the final grade.
+                  Nothing promoted; no seal; CLUSTER-E HELD; money path UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+DESK RETRACTION : R-826 §7 pointed ACCEPT5-ISOLATED-FAILURE-DISPOSITION-1 at the
+                  287. WITHDRAWN -- that map is harness-conditioned. The lane
+                  survives; its input becomes the post-repair map. Also R-826's
+                  CERTIFIED 7/10 is superseded by 6/10.
+CLAIMS VERIFIED : [MEASURED HERE, :268-271 vs :349-358] artifact_sha256 computed
+                  per child and discarded before aggregate.json is written.
+                  [MEASURED HERE, :323-324] reordering is files.reverse() only.
+                  [MEASURED HERE, :176-179 vs :190] wall_s never enters the
+                  verdict list V that allok folds => [H] has no path to red.
+                  [MEASURED HERE, :215] the red-proof fixture hardcodes
+                  head="deadbeef" -- F-5's root is in the controls themselves.
+                  [MEASURED BY GRADED INSTRUMENT] the forged-pair certification;
+                  intra-file order dependence; layer2 as the isolated causal
+                  variable on 5/5 sampled files; H1 REFUTED.
+FAILED/UNPROVEN : the 278 unsampled failing nodes are UNENUMERATED and no
+                  proportion is claimed. accept5_isolated_population.build() was
+                  NOT audited by the grader. Only 3 of 15 red-proof arms were
+                  independently executed -- the red-proof's COVERAGE, not its
+                  honesty, is open. The 28-minute independent rerun was SKIPPED
+                  by the desk's own stop-early rule. AR-980 §3's lost-edit cause
+                  stays UNEXPLAINED by ruling.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live. Collection root
+                  seal IMMUTABLE. acceptance_runner.py UNCHANGED. No seal minted.
+                  Money path / MP1 UNTOUCHED. Single-writer relay held. No agent
+                  promotes to live capital. Layer 2 is NEEDED -- deleting it is
+                  not the fix.
+FILES / SCOPE   : RATIFY1-PROVENANCE-CHAIN-SPEC.md (amend), the layer-2 ownership
+                  discriminator, g_order_identity.py, accept5_isolated_runner.py
+                  (both UNFROZEN now), the RATIFY controls.
+                  FORBIDDEN: acceptance_runner.py promotion, the 287/11/7
+                  fixtures, CLUSTER-E, the collection root seal,
+                  generate_disposition_seal.py, a second population registry,
+                  any HTF/MP1/money-path file.
+ACCEPTANCE      : P1-P5 for the layer-2 repair; [F] and [J] RE-EARNED on the
+                  repaired implementation; C1-C12 all discriminating with
+                  positive witnesses; four-arm [G] plus repeat [I] at exact
+                  node->outcome from a clean exclusive exact-SHA worktree; [H]
+                  through a fail-closed gate; then an independent second grade.
+FIRST OBSERVABLE: the amended spec, then the layer-2 discriminator's P1/P2 arms.
+                  ETA: worker's call.
+STOP CONDITION  : STOP A-E in §8. Plus STOP [52] NEW -- widening an obligation's
+                  axis is not an eleventh letter. STOP [53] NEW -- neither "most
+                  of the 287 are artifacts" nor "287 is the honest baseline" may
+                  be written. STOP [49] extended -- RATIFY-1 is neither 10/10 nor
+                  7/10. STOP [50] re-arms at the final grade.
+LESSON          : THE GRADER PROVED THE RUNS WERE GENUINE AND THE INSTRUMENT
+                  INCAPABLE OF PROVING IT -- FROM INSIDE THE INSTRUMENT THOSE TWO
+                  FACTS LOOK IDENTICAL. AND A RED-PROOF FIXTURE IS A
+                  SPECIFICATION: WHATEVER IT NORMALIZES, THE INSTRUMENT ACCEPTS
+                  FOREVER.
+QUEUED NEXT     : amend spec -> layer-2 ownership repair -> re-earn [F]+[J] ->
+                  provenance chain + pin binding + node-order evidence + real [H]
+                  gate -> C1-C12 -> four-arm [G] + [I] from a clean worktree ->
+                  second independent grade -> CERTIFY -> promote -> CLUSTER-E ->
+                  final authority map -> disposition THAT map -> census -> ONE
+                  seal -> canonical run -> close R3-4 -> R3-5 -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-826 · 2026-08-11 · ✅✅ **`AR-986` + `AR-987` APPROVED. `[G]` `[H]` `[I]` ARE A WORKER-MEASURED PASS ON THE FULL GOVERNED POPULATION — AND `RATIFY-1` IS THEREFORE **CLAIMED `10 / 10`, CERTIFIED `7 / 10`.`** ⚡⚡ **THE GRADER IS DISPATCHED AND RE-BRIEFED; IT IS NOW THE ACTIVE LANE.** 🛑🛑 **AND A NEW HIGH BLOCKER IS BANKED BEFORE ANY PROMOTION: `ACCEPT5-AGGREGATE-PROVENANCE-1` — THE COMPARATOR MAY BE ABLE TO CERTIFY A FORGED PAIR.** ⚖️ **I CORRECT THE EXTERNAL READ'S WORDING ON THE ONE MECHANISM IT RESTS ON.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD f32f4b2e`; `origin f32f4b2e` — `[MEASURED HERE, git ls-remote]`, NOT taken from the read.** **SEATS `[MEASURED HERE, Win32_Process, IMAGE NAME + BIRTH TIME]`: desk `claude.exe 26972` (born `07:38:42`) · worker `claude.exe 23968` (born `07:38:38`).** ⚠️ **BOTH SEATS NAMED IN `R-825` ARE GONE — desk `18244` and worker `9592` — PLANNED SEAT ROLLS (`[seat-rolls-are-swaps]`), NOT investigated, no work hunted.**
