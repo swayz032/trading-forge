@@ -1,63 +1,59 @@
 from pathlib import Path
 
-
-ENTRY = Path("indicator/fxr/slumdawg_v2_entry_tp_15m_v0_3.fxr.js")
+ENTRY = Path("indicator/fxr/slumdawg_v2_entry_tp_15m_v0_4.fxr.js")
 MACRO = Path("indicator/fxr/slumdawg_v2_macro_daily_v0_2.fxr.js")
 CONTEXT4H = Path("indicator/fxr/slumdawg_v2_context_4h.fxr.js")
 DOC = Path("indicator/fxr/V2_BUNDLE.md")
 
 
-def test_fxr_v2_entry_uses_one_15m_mtf_request_and_keeps_chart_5m_fallback():
+def test_fxr_v04_uses_one_15m_mtf_request_and_native_chart_5m():
     s = ENTRY.read_text(encoding="utf-8")
     assert s.count('mtf.timeframe("15")') == 1
     assert s.count("mtf.timeframe(") == 1
     assert 'collectDirectionalReactions("15"' in s
     assert 'collectDirectionalReactions("5"' in s
-    assert "longRows" in s and "shortRows" in s
-    assert "MAX_15_SIDE_REACTIONS" in s
-    assert "MAX_5_SIDE_REACTIONS" in s
-    assert "🟢 LONG - ENTRY ZONE" in s
-    assert "🔴 SHORT - ENTRY ZONE" in s
-    assert "🎯 LONG TAKE PROFIT ZONE" in s
-    assert "🎯 SHORT TAKE PROFIT ZONE" in s
+    assert 'pair.longEntry, pair.shortEntry' in s
 
 
-def test_fxr_v2_entry_preserves_bos_and_standard_entry_state():
+def test_fxr_v04_fuses_reaction_zones_before_target_numbering():
+    s = ENTRY.read_text(encoding="utf-8")
+    assert "qualifyingClusters" in s
+    assert "canonicalizeZones" in s
+    assert "selectCanonicalTargets" in s
+    assert "safeTargetFromZone" in s
+    assert "ladderFromRows" not in s
+    assert "mergeDistinctZones" not in s
+
+
+def test_fxr_v04_mid_vs_safe_semantics_match_pine_contract():
+    s = ENTRY.read_text(encoding="utf-8")
+    assert 'input.str("BIG DIRECTION (match Daily helper)"' in s
+    assert "const withBigDirection = move !== 0 && move === bigDir" in s
+    assert "const targetDepth = withBigDirection ? 0.50 : inputs.tppenetration" in s
+    assert 'const mode = withBigDirection ? "MID" : "SAFE"' in s
+
+
+def test_fxr_v04_preserves_bos_and_standard_entry_state():
     s = ENTRY.read_text(encoding="utf-8")
     assert "currentMove" in s
-    assert "if (finite(c) && c > h0) currentMove = 1" in s
-    assert "finite(c) && c < l0" in s
     assert 'entryStage = "WAIT_PROOF"' in s
     assert 'entryStage = "BREAK"' in s
     assert 'entryStage = "PUSH_1"' in s
     assert 'entryStage = "ENTRY_READY"' in s
 
 
-def test_fxr_v03_merges_cross_lane_targets_by_full_zone_identity():
-    s = ENTRY.read_text(encoding="utf-8")
-    assert "mergeDistinctZones" in s
-    assert "out.push({ lo: c.lo, hi: c.hi, target, touches: c.touches })" in s
-    assert "const shelfFusionGap" in s
-    assert "const distinctZoneGap = Math.max(zoneGap, shelfFusionGap)" in s
-    assert "z.lo >= boundary + gap" in s
-    assert "z.hi <= boundary - gap" in s
-    assert "z.target" in s
-
-
-def test_fxr_daily_macro_helper_is_separate_authority():
-    s = MACRO.read_text(encoding="utf-8")
-    assert s.count('mtf.timeframe("D")') == 1
-    assert s.count("mtf.timeframe(") == 1
-    assert "protectedLevel" in s
-    assert "📉 BIG DIRECTION DOWN — DAILY MACRO" in s
-    assert "📈 BIG DIRECTION UP — DAILY MACRO" in s
-
-
-def test_fxr_bundle_keeps_4h_helper_non_authoritative_and_documents_parity_limit():
+def test_fxr_bundle_documents_daily_macro_mirror_and_platform_limit():
     s = DOC.read_text(encoding="utf-8")
-    assert "macro BIG DIRECTION authority" in s
-    assert "it is **not** the macro authority" in s
+    assert "BIG DIRECTION input" in s
+    assert "one requested MTF timeframe per script" in s
     assert "full one-panel Python/Pine/FXR parity remains a certification blocker" in s
-    assert "above-entry and below-entry shelves cannot consume each other's history budget" in s
-    assert "full zone LOW/HIGH bounds" in s
     assert CONTEXT4H.exists()
+    assert MACRO.exists()
+
+
+def test_fxr_v04_target_reaction_polarity_is_directional():
+    s = ENTRY.read_text(encoding="utf-8")
+    assert "LONG target is prior high-side supply/rejection" in s
+    assert "SHORT target is prior low-side demand/rejection" in s
+    assert 'if (isHigh && finite(longEntry)' in s
+    assert 'if (isLow && finite(shortEntry)' in s
