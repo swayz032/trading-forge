@@ -656,6 +656,23 @@ def main():
         # hold node IDs outside A's import closure. The runner executes BOTH.
         # DERIVED here at run time, never cached and never hard-coded.
         manifest_targets = {f"src/{m}" for m in resolved}
+        # 🛑 THE CHAIN GOVERNS THE **CANONICAL** POPULATION ONLY.
+        # A caller-supplied --manifest is a DIFFERENT population by construction
+        # (fixture runs build a one-member manifest in tmp_path). Injecting
+        # chain targets there defeats the fixture's own scoping — MEASURED: it
+        # broke test_accept5_stale_run_consumption's explicit NO-RECURSION
+        # defence, whose docstring notes the fixture manifest deliberately does
+        # not name that file "so the inner runner never re-enters this test even
+        # if this file is later admitted to the canonical population". The arrow
+        # bypassed the manifest and re-entered it.
+        # This is a SCOPE, not an exemption: every canonical run still carries
+        # the full chain obligation.
+        canonical_run = args.manifest.resolve() == MANIFEST.resolve()
+        supplemental, _chain_probs = [], []
+        if not canonical_run:
+            print("NOTE:     supplemental targets from the chain : SKIPPED "
+                  "(non-canonical --manifest; the chain governs the canonical "
+                  "population only)")
         try:
             import population_successor as _popsucc
             _required, _chain_probs = _popsucc.required_population(REPO)
@@ -664,7 +681,7 @@ def main():
                   f"derived ({type(exc).__name__}: {exc}), so the set of tests this "
                   f"run must execute is unknown. pytest was not started.")
             raise SystemExit(2) from exc
-        if _chain_probs:
+        if _chain_probs and canonical_run:
             for pr in _chain_probs:
                 print(f"      {pr}")
             print("ACCEPTANCE INSTRUMENT REFUSED - POPULATION CHAIN INVALID: the "
@@ -674,9 +691,10 @@ def main():
 
         # Only node IDs whose FILE is not already a manifest target — appending
         # all of them would double-collect and blow the Windows command line.
-        supplemental = sorted(
-            n for n in _required if n.split("::")[0] not in manifest_targets
-        )
+        if canonical_run:
+            supplemental = sorted(
+                n for n in _required if n.split("::")[0] not in manifest_targets
+            )
         # Control I: a required node ID whose file is gone must name ITS OWN
         # layer. Left to pytest this is exit 4 -> "PYTEST RUN INVALID", which is
         # correct and illegible: it reads as broken infrastructure when the truth
@@ -691,9 +709,10 @@ def main():
                   f"longer exist. A governed obligation was deleted; this is not a "
                   f"pytest usage error. pytest was not started.")
             raise SystemExit(2)
-        print(f"NOTE:     supplemental targets from the chain : {len(supplemental)}")
-        for n in supplemental:
-            print(f"          + {n}")
+        if canonical_run:
+            print(f"NOTE:     supplemental targets from the chain : {len(supplemental)}")
+            for n in supplemental:
+                print(f"          + {n}")
 
         cmd = [sys.executable, "-m", "pytest",
                *[f"src/{m}" for m in resolved], *supplemental,
@@ -920,16 +939,23 @@ def main():
         # opened the chain to close. FAIL-CLOSED: a chain that cannot be read
         # refuses; it never falls back to the root seal, because falling back
         # would silently shrink the guarded set to the one that already passes.
+        # Scoped exactly as the supplemental arrow is: the chain states what the
+        # CANONICAL population must contain. Holding a fixture run to it would
+        # report thousands of "missing" members that the fixture never claimed.
         required_pop = sealed_pop
-        try:
-            import population_successor as _popsucc
-            required_pop, chain_problems = _popsucc.required_population(REPO)
-        except Exception as exc:  # noqa: BLE001 - any failure here must REFUSE
-            chain_problems = [
-                f"POPULATION CHAIN UNAVAILABLE: {type(exc).__name__}: {exc}. The "
-                f"successor chain could not be derived, so the required population "
-                f"is unknown and no authoritative verdict may be issued."
-            ]
+        chain_problems = []
+        if args.manifest.resolve() != MANIFEST.resolve():
+            print("[CHAIN] non-canonical --manifest: chain obligation NOT applied")
+        else:
+            try:
+                import population_successor as _popsucc
+                required_pop, chain_problems = _popsucc.required_population(REPO)
+            except Exception as exc:  # noqa: BLE001 - any failure here must REFUSE
+                chain_problems = [
+                    f"POPULATION CHAIN UNAVAILABLE: {type(exc).__name__}: {exc}. The "
+                    f"successor chain could not be derived, so the required population "
+                    f"is unknown and no authoritative verdict may be issued."
+                ]
         print(f"[CHAIN] required population (seal+chain) : {len(required_pop)} node IDs")
         print(f"[CHAIN] chain problems                   : {len(chain_problems)}")
         for pr in chain_problems:
