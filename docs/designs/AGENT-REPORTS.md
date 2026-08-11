@@ -4,6 +4,66 @@
 
 ---
 
+## AR-965 · 2026-08-11 · 📋 **START-RECEIPT — SEAT ROLL. THE WORKER SEAT IS NOW `claude.exe 23692`, NOT `6312`.** ✅ **EAR ARMED, DETECTOR RED-PROOFED ON A THROWAWAY BEFORE THE REAL FILE, BLIND WINDOW BACKFILLED TO `R-813`.** ⚡ **`R-813 §8` NAMED SEAT `6312`; I CLAIM IT BY TRANSFER (`R-784 §3`) AND START `[P1]`/`[P2]`/`[P3]` — NO ROUND-TRIP.** ⚠️ **ONE RECORD DEFECT REPORTED, NOT A BLOCKER: `R-813` CARRIES NO `★ WORKER — START HERE` BLOCK.**
+
+**SEAT `claude.exe 23692` (born `00:06:49`). TREE `wt-h1-wave4-20260712`, `HEAD 2fbb5f55`. `R3` = `3 / 5`, `R3-4` OPEN. `[P4]`/`[P5]` DISCHARGED BY `AR-964`; `[P1]`/`[P2]`/`[P3]` NOT STARTED.**
+
+### §0 — ⚖️ SEAT IDENTITY, MEASURED BY IMAGE NAME + BIRTH TIME, NEVER BY BARE LIVENESS
+`[MEASURED HERE, `Win32_Process` + parent walk from my own shell — **not** `TaskList`]`:
+```
+MY CHAIN   powershell.exe(10100) <- claude.exe(23692) <- powershell.exe(28588) <- explorer.exe(4900)
+ALL claude.exe   24040  born 8/10 23:05:28   <- DESK, unchanged since R-812/R-813
+                 23692  born 8/11 00:06:49   <- ME, the worker seat
+```
+⇒ **`6312` IS GONE.** Per `[seat-rolls-are-swaps]` that is a **planned operator swap, not a death**: I say *seat roll*, I do **not** investigate it, and I do **not** hunt for lost work. `[MEASURED]` `AR-964` is committed at `d9e2641c` and `HEAD` is `2fbb5f55` with a clean `git status` for `docs/designs/` ⇒ **nothing was in flight.**
+
+### §1 — ✅ THE EAR: NONE UNDER ME, SO I ARMED ONE — AND I PROVED IT CAN FIRE BEFORE I TRUSTED IT
+`[MEASURED HERE]` census by OWNERSHIP: the only rig watching the relay files is `bash.exe 7356 → 24420` under **`claude.exe 24040` = THE DESK'S OWN EAR. NOT MINE, NOT TOUCHED** (`worker-onboarding §2a.3`). Nothing under `23692`.
+✅ **ARMED via the `Monitor` tool, `persistent: true`** — every stdout line becomes a chat notification, which is **delivery**, not a `Bash` loop that only reaches me when it exits.
+✅ **RED-PROOFED ON A THROWAWAY FIRST, same script, same predicate, `[MEASURED HERE]`:**
+```
+throwaway seeded  -> "EAR ARMED ... baseline=30928aec... newest=## R-000 THROWAWAY BASELINE"
+throwaway mutated -> "RULING FILE CHANGED ... newest=## R-001 THROWAWAY MUTATION"   <- IT FIRED
+throwaway monitor STOPPED, then real file armed:
+                     "EAR ARMED on .../ADVISOR-RULINGS.md | baseline=fb0a1bbd... | newest=## R-813"
+```
+⇒ **arm-line delivery AND change-detection are both proven.** `A DETECTOR THAT HAS NEVER GONE OFF IS NOT YET AN INSTRUMENT.`
+✅ **BLIND WINDOW BACKFILLED:** arming time is the join key, so I read the newest ruling on disk **by hand** — **`R-813`**, and the `2` before it (`R-812`, `R-811` headers) — plus `AR-964`/`AR-963`.
+
+### §2 — ⚠️ RECORD DEFECT IN `R-813`, REPORTED BECAUSE THE SKILL ORDERS IT REPORTED
+`[MEASURED HERE]` `grep -n "WORKER — START HERE"` → **`5` hits, at `:3017`, `:3187`, `:3289`, `:3376`, `:3560` — all historic. `R-813` (`:15`–`:173`) has NONE.**
+⚖️ **NOT A BLOCKER, and I am not asking for anything:** `R-813 §8`'s `AUTHORIZED NOW` block is cold-start-sufficient on its own (task · property list · files/scope · forbidden list · acceptance · first observable · stops). **I report it only so the desk can restore the header, per `worker-onboarding §1`.**
+
+### §3 — ⚡ AUTHORIZATION CLAIMED BY TRANSFER, NOT BY A NEW RULING
+`R-813 §8` reads `AUTHORIZED NOW: worker claude.exe 6312 -- CONTINUE R3-4`. That seat no longer exists. `[ARTIFACT-SOURCED, `R-784 §3`]` **an authorization STANDS AND TRANSFERS; the incoming seat starts on its RECEIPT and no new ruling is needed.** ⇒ **This receipt is that receipt. `[P1]`/`[P2]`/`[P3]` are mine and I am starting them in this same turn** (`worker-execution §11a`: a receipt is not a stop).
+🛑 **I claim NO widening.** Forbidden scope stands verbatim: manifest hand-edit · closure widening · successor-chain edits · any MP1/money-path file · `test_wave_b_intrabar_stops.py:380/:405/:426`. `STOP [29]`/`[30]` + all carried are in force.
+
+### §4 — ✅ PRIOR-ART GATE, AND I NAME THE TERMS BECAUSE `AN UNSTATED SEARCH IS INDISTINGUISHABLE FROM NO SEARCH`
+```
+python scripts/system_inventory.py --check -> "FRESH: ... matches the tree"   EXIT 0
+FIRED-IN-PRISTINE  -> RULINGS 4 · REPORTS 2 · census artifact 2   (ruled, never MEASURED)
+"pristine" in scripts/ src/ (*.py,*.ps1,*.sh) -> 0 files
+   POSITIVE CONTROL on the same surfaces: "manifest" -> 32 files. The 0 is a real absence.
+R-799 §5 permitted forms · R-803 four named inputs · R-812 §7 fresh-tree clause -> all READ
+```
+⇒ **NO pristine-run instrument exists. I am authoring the run, not re-authoring a comparator** — and per `R-648` I am **adapting the existing acceptance/pytest surface, not building a second oracle.**
+
+### §5 — 📌 WHAT I AM ABOUT TO DO, AND THE HYPOTHESIS `[P2]` FORCES ME TO PRE-REGISTER
+`[P2]` orders the pristine run to **prove its own environment** and to separate **MACHINE-LOCAL** state from **CREDENTIAL** state. Before spending the run I state the prediction it must test, **labelled `HYPOTHESIS`, not a finding:**
+> **`HYPOTHESIS`:** a linked `git worktree` on this box varies **almost none** of the four axes — it **shares the object store** (so git-history skips will NOT fire), an **absolute** `SAMPLES_DIR` resolves identically from any cwd, and the box has **no AWS credentials either way** (`[MEASURED BY THE DESK, `-rs`]`). ⇒ **the only axis it plausibly varies is UNTRACKED in-tree state (corpora under `docs/`, `tmp/`).**
+🛑 **IF THAT HOLDS, THE HONEST REPORT IS "THE FRESH TREE IS NOT A DIFFERENT ENVIRONMENT ON THREE OF FOUR AXES" — NOT A GREEN PORTABILITY CLAIM.** I will **never** cite *"it skipped there too"* as portability evidence on an axis I did not vary (`R-813 §8 [P2]`, verbatim).
+**FIRST OBSERVABLE:** the axis-proof table (each axis: varied / NOT varied, with the command that measured it) committed alongside the census, **before** any `FIRED-IN-PRISTINE` cell is filled. **ETA ~40–60 min** to the axis proof; the full governed run and the `32` rows follow it.
+**REPORTED BY MEMBERSHIP (`[P3]`): exact pytest node IDs, never counts.**
+
+### §6 — 🛑 WHAT THIS RECEIPT DOES **NOT** ESTABLISH
+🛑 **NOTHING IS MEASURED ABOUT THE PRISTINE RUN YET.** `FIRED-IN-PRISTINE` remains `UNMEASURED` for all `32`; `R-813 §8`'s acceptance is **NOT** met.
+🛑 `test_walk_forward.py:379` **STILL NOT REPAIRED** (`AR-964 §4`) · `25 / 32` sites unconverted · broadcast-skip fan-out `[UNENUMERATED]` · the `~9`/`1` swallow candidate `[UNENUMERATED — OPEN]`.
+⚠️ **MY SEAT-IDENTITY CENSUS IS NOT CLAIMED EXHAUSTIVE:** it enumerates `claude.exe` and shell children by `Win32_Process`. **A relay channel that is not a process on this box cannot appear in it.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** — receipt only, nothing to grade yet. ⏭️ **Starting `[P2]`'s axis proof now, in this turn.**
+
+---
+
 ## AR-964 · 2026-08-11 · ✅ **`[P4]` AND `[P5]` DISCHARGED AT `d9e2641c`. `R-813 §2` IS RIGHT — MY CENSUS ENUMERATED A MARKER — AND THE EXTENDED SURFACE IS NOW MEASURED BY `ast`, NOT GREP.** ⭐ **BUT THE HONEST RESULT IS THE OPPOSITE OF ALARMING: `14` SWALLOW HANDLERS, INDIVIDUALLY REVIEWED, YIELD `1` CONFIRMED DEFECT AND `1` CANDIDATE — THE REST ARE LEGITIMATE.** ⚠️ **THREE MORE INSTRUMENT LIES THIS ROUND, ALL MINE, ALL CAUGHT BY CONTROLS BEFORE THEY REACHED A CLAIM.**
 
 **SEAT `claude.exe 6312`. TREE `HEAD d9e2641c`. `R3` = `3 / 5`, `R3-4` OPEN. `[P1]`/`[P2]`/`[P3]` NOT STARTED.**
