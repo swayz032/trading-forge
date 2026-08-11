@@ -4,6 +4,54 @@
 
 ---
 
+## AR-981 · 2026-08-11 · ✅✅✅ **`[E]` IS SATISFIED AND IT IS THE STRONGEST RESULT OF THIS LANE: THE PROCESS WALL CONTAINS THE CONTAMINATION, BOTH ORDERS, `0` DIFFERENCES BY EXACT NODE ID.** 🛑🛑🛑 **AND THE NEGATIVE CONTROL MEASURES THE DISEASE DIRECTLY: `7` PnL NODES GO `failed` ALONE → `passed` IN COMPANY. EVERY ONE OF THOSE GREENS IS UNEARNED.** ⚖️ **`7`, NOT `5` — AND I STATE THE PAIRING, BECAUSE IT IS A DIFFERENT DENOMINATOR FROM `R-816 §5`'s.**
+
+**SEAT `claude.exe 27448`. `HEAD 8a6a3ee6`. RULING `R-822 §5`/`§9[3]`. TREE `wt-h1-wave4-20260712`.** ⭐ **Control committed BEFORE it was run (`AR-980 §3`'s adopted remedy).**
+
+### §1 — 🛑🛑🛑 THE NEGATIVE CONTROL: THE DISEASE, MEASURED, IN THE DIRECTION THAT MATTERS
+🛑 **`[MEASURED HERE]` `test_black_swan_evaluator.py` + `test_pnl_accuracy.py` in ONE pytest process, canonical order, vs `test_pnl_accuracy.py` ALONE — `51` PnL nodes both arms, **`7` DIFFER**, and ALL SEVEN in the same direction:**
+```
+alone=failed  ->  in-company=passed
+  TestEdgeCases::test_winning_days_count_correct
+  TestEquityCurve::test_daily_pnls_sum_matches_equity_change
+  TestEquityCurve::test_equity_curve_reconciles_with_trades
+  TestMaxDrawdown::test_backtest_drawdown_is_positive_dollar_amount
+  TestWave1CommissionGoldenFixture::test_mffu_mes_commission_per_trade_contract
+  TestWave1CommissionGoldenFixture::test_prop_sim_trusts_net_pnl_no_double_deduction
+  (+1 more)
+```
+⇒ **THESE ARE UNEARNED GREENS. They pass BECAUSE a fake replaced the real module, not because the code is right.** ⭐ **AND IT CORROBORATES `R-820 §1` BY MY OWN INDEPENDENT MEASUREMENT: `test_prop_sim_trusts_net_pnl_no_double_deduction` is literally named for the simulator it was not testing.** ★★★★★ **`THE TEST NAMED AFTER THE THING IT TRUSTS WENT GREEN WHILE THAT THING WAS A MOCK RETURNING {}.`**
+⚖️ **DENOMINATOR DISCIPLINE, BECAUSE `7 ≠ 5`: `R-816 §5`'s flip set was measured over the FULL CANONICAL COMPANY. Mine is the `black_swan` + `PnL` PAIR ALONE. `[unenumerated-ladder]` — DIFFERENT POPULATIONS, and I do not claim mine supersedes or contradicts that one.** 🛑 **I also do NOT claim `7` is the complete set: other predecessors were not in this pairing.**
+
+### §2 — ✅✅ THE PROCESS WALL HOLDS, IN BOTH ORDERS
+```
+BASELINE   PnL alone, own child                     51 nodes   (positive witness)
+NEGATIVE   both files, ONE process, no Layer 2      7 differences   <- DISCRIMINATES
+ISOLATED   black_swan child THEN PnL child          0 differences
+ISOLATED   PnL child THEN black_swan child          0 differences
+```
+✅ **COMPARED BY EXACT NODE ID, NEVER BY COUNTS.** ⭐ **THE NEGATIVE ARM IS THE LOAD-BEARING ONE: without it, two `0 differences` results would be equally consistent with "there was never anything to contain", and every green above would be vacuous. It is asserted, not merely printed.**
+✅ **`[E]` USED THE CONTAMINATION THAT ALREADY HURT US, AS `R-822 §5` REQUIRED — no synthetic pollutant was invented.**
+🛑 **`STOP [37]` OBSERVED: the oracle here is node-outcome identity under reordering. Nothing was tuned toward the old `31`, and the `31` is not mentioned in any arm.**
+
+### §3 — ⚠️ WHAT `[E]` DOES **NOT** ESTABLISH
+⚠️ **THIS IS A TWO-FILE PAIRING, NOT THE `108`-CHILD POPULATION.** `[G]`'s forward-vs-reverse over the full governed set is UNSTARTED and is the claim that actually matters. **`STOP [41]`: nothing here speaks to `2419`-node conservation.**
+⚠️ **LAYER 2 WAS DISABLED IN THE NEGATIVE ARM ON PURPOSE** (to reproduce the historical shared-interpreter model). **The isolated arms ran WITH Layer 2, so `[E]` proves the COMBINATION contains it; it does not separate Layer 1's contribution from Layer 2's.** **Stated rather than implied — separating them was not required and I did not do it.**
+⚠️ **THE `7` ARE NOT ADJUDICATED. `R-816 §5`'s CASE 1 vs CASE 2 — which PnL reality is correct — REMAINS UNDECIDED, AND I STILL DO NOT PRE-DECIDE IT.** `R-820 §8`: if isolation makes them fail everywhere, that is a RESULT to record as `PREVIOUSLY MASKED / UNEARNED GREEN` and adjudicate on merit — **not a regression, and not a number to tune away.**
+
+### §4 — 📌 STATUS
+```
+[A] PASS(prototype)  [B] PASS(FILE layer only)  [C] LANDED, receipts owe SHA+hashes
+[D] red-proofed 5/5, PARENT-path planted child still owed
+[E] ✅ SATISFIED (this AR)      [F][J] real governed arms OWED; §9[6] ordering DISCHARGED
+[G][H][I] UNSTARTED
+```
+🛑 **`acceptance_runner.py` UNCHANGED. Nothing promoted. `E` (the cluster) REMAINS HELD. `R3-4` = `6 / 7`. `R3` = `3 / 5`.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Real `[F]` and real `[J]` on governed files next, then `R-822 §6`'s four questions before `[G]`. No round-trip.**
+
+---
+
 ## AR-980 · 2026-08-11 · ✅ **`R-822 §9[6]` DISCHARGED BY WITNESS, NOT INSPECTION — THE TEARDOWN PHASE ORDER IS PINNED AND THE DESK'S FINDING WAS NOT MERELY THEORETICAL: `[MEASURED]` THE UNPINNED IMPLEMENTATION REALLY DID RESTORE **BEFORE** THE FINALIZER.** ✅ **`[C]`/`[D]` LANDED AT `a643b149` — AND MY OWN AGGREGATOR HAD LIED ABOUT `39` HEALTHY TESTS BEFORE I CAUGHT IT.** 🛑🛑 **INCIDENT: A VERIFIED-ON-DISK INSTRUMENT EDIT WAS SILENTLY LOST ON THE SHARED TREE. CAUSE UNEXPLAINED AND I DO NOT INVENT ONE.**
 
 **SEAT `claude.exe 27448`. `HEAD aff86d76`. RULING `R-822 §9[1]`–`[6]`. TREE `wt-h1-wave4-20260712`. 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted.**
