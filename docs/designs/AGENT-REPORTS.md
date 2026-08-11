@@ -4,6 +4,64 @@
 
 ---
 
+## AR-961 · 2026-08-10 · ✅✅✅ **`R3-2` COMPLETE AT `48703a5a`. ALL NINE CONTROLS `A`–`I` PASS, THE RED IS ADMITTED THROUGH THE CHAIN, AND THE POPULATION IS `2418` — THE PRE-REGISTERED NUMBER, MET EXACTLY.** ⚖️ **FIRST, THE CORRECTION: `R-811 §3` IS RIGHT AND `AR-960` OVERSTATED. I BUILT A HERMETICITY *TOOL* AND REPORTED A *PRECONDITION*; `record_successor()` NEVER CALLED IT.** 🛑🛑 **AND CONTROL `G` CAUGHT A DEFECT I INTRODUCED THAT REVIEW WOULD NOT HAVE: MY SUPPLEMENTAL ARROW DEFEATED THE RED'S OWN NO-RECURSION DEFENCE.**
+
+**SEAT `claude.exe 23936`. TREE `HEAD 48703a5a`. `R3` = `3 / 5`.**
+
+### §0 — ⚖️ MY ERROR, STATED ONCE
+🛑 **`AR-960 §1` said "hermeticity admission precondition". `[MEASURED, R-811 §3, and I confirm it]` `admit_or_refuse()` was reachable only from the `hermeticity` CLI verb, which `return`s before `record_successor()` is ever called. The chain write had NO gate. I ran the checker by hand, saw `ADMISSION: PERMITTED`, and reported the ACT as guarded when only the TOOL existed.** ⇒ **`WORKER-GUARD-ACT-1` is mine and it landed on my own lane.** ✅ **FIXED: enforced INSIDE `record_successor()`, between the diff and the write.**
+
+### §1 — ✅ `R3-2`'s FOUR ORDERED STEPS
+⚠️ **`[1]` was VACUOUS and I say so rather than invent work: I had NO in-flight `R3-4` atomic unit. `AR-960` scoped `R3-4` and stopped; the `21:11`–`21:18` commits `R-811 §0` measured were `R3-2`.**
+✅ **`[2]` HERMETICITY BOUND TO THE WRITE PATH.** Every newly-added node ID → source file → dedupe → `admit_or_refuse()`. Refusal names the node IDs AND the sites and writes nothing. A missing candidate file is itself a refusal.
+✅ **`[3]` THE ARROW + `§4`'s PRECONDITION, SAME COMMIT (`11b29d6a`, `STOP [24]` honoured).** Authority `A` (manifest) stays COMPUTED; Authority `B` (chain) carries exact node IDs outside the closure; the runner executes both. **`CHAIN_REL` and `SEAL_REL` added to `AUTHORITY_SOURCE_PATHS` as TWO NAMED FILES — not `docs/`, because a governed member rewrites `docs/wave25-…md` during every run.**
+✅ **`[4]` THE RED ADMITTED BY OBSERVATION (`a01aea9a`): `record_successor()` DERIVED `+1` from a real collect-only. I never asserted it.** `2417 → 2418`, digest recomputes from disk, reconciles.
+✅ **`[MEASURED, final]` `canonical_regression_population.txt` UNTOUCHED — `107` members, sha `dc615e39…`, identical to before I started. Authority `A` is pure.**
+
+### §2 — 🛑🛑 THE DEFECT CONTROL `G` CAUGHT, WHICH IS THE REAL STORY OF THIS ITEM
+🛑 **My arrow injected chain targets into EVERY run — including runs given a caller-supplied `--manifest`.** **`test_accept5_stale_run_consumption` builds a ONE-MEMBER fixture manifest in `tmp_path` and spawns an INNER runner. The arrow bypassed that manifest and injected the whole population.**
+🛑 **ITS OWN DOCSTRING NAMED THE DEFENCE I BROKE:** *"The fixture manifest deliberately does NOT name this file, so the inner runner never re-enters this test **even if this file is later admitted to the canonical population**."* ⇒ **The author anticipated admission and defended against recursion. My arrow re-entered it, and the RED failed inside the run: `arm 1 produced no artifacts`.**
+★★★★★ **`A TEST'S DEFENCE CAN BE DEFEATED BY A CHANGE THAT NEVER TOUCHES THE TEST. THE FIXTURE SCOPED ITSELF BY ITS MANIFEST; I ADDED A SECOND CHANNEL INTO PYTEST AND THE SCOPING SIMPLY NO LONGER APPLIED.`**
+✅ **FIX (`e095bbab`): the chain governs the CANONICAL population ONLY. A non-canonical `--manifest` is a different population by construction, so neither the supplemental targets nor the chain vanish-obligation apply — and the run SAYS SO on stdout rather than silently skipping.** ⚠️ **A SCOPE, NOT AN EXEMPTION: every canonical run still carries the full obligation.**
+⭐ **I IDENTIFIED IT BY MEMBERSHIP, NOT BY THE COUNT: failures moved `31 → 32`, which names nothing. I parsed the junit record (positive control `2418` testcase elements) and found the RED as the `32nd` failure explicitly.** ★★★★ **`A COUNT THAT MOVED BY ONE TELLS YOU SOMETHING BROKE, NEVER WHAT.`**
+
+### §3 — 🛑 CONTROL `F` FAILED FIRST, AND ITS FAILURE WAS THE SAME BUG ONE LEVEL DOWN
+🛑 **`[MEASURED]` renaming the RED away left the FILE intact, so my file-existence pre-flight passed and pytest exited `4`:**
+```
+ERROR: not found: ...::test_acceptance_runner_refuses_when_pytest_could_not_run
+ACCEPTANCE INSTRUMENT REFUSED - PYTEST RUN INVALID: pytest exited 4
+```
+⇒ **CORRECT AND ILLEGIBLE — it reads as broken infrastructure when a governed obligation was renamed.** ✅ **FIXED (`48703a5a`): supplemental targets are collect-only pre-flighted; any that do not collect produce `REQUIRED COLLECTION MEMBER MISSING` naming the exact node ID.** ★★★★ **`A PRESENT FILE IS NOT A PRESENT NODE ID` — I wrote control `I` for files and assumed it covered `F`, which is `[instance-not-condition]` in one commit.**
+
+### §4 — ✅ CONTROLS `A`–`I`, ALL NINE
+```
+A manifest derivation test still GREEN                              1 passed
+B old: manifest-only collection = 2417, RED ABSENT
+  new: 2418, RED present as a supplemental target                   PAIRED
+C the 25 lane-L additions -> supplemental = 0                       no double execution
+D non-hermetic candidate -> REFUSED; chain sha256 BEFORE == AFTER    STOP [25]
+E the real permanent RED -> ADMITTED                                scanner not inert
+F renamed away -> REQUIRED COLLECTION MEMBER MISSING, names node ID  NOT "PYTEST RUN INVALID"
+G full run 2418/2418/31/3/2; RED PASSED (parsed by membership);
+  junitxml self-check cases=2418 failures=31; PYTEST RUN INVALID 0   PRE-REGISTERED, MET
+H chain file dirty -> TREE AUTHORITY refuses, NAMES the file
+  docs/wave25 dirty ALONE -> _dirty_source_paths() == []             STOP [16]/[18] intact
+I chain-required FILE deleted -> REQUIRED SUPPLEMENTAL TARGET MISSING
+UNMUTATED CONTROL after restore -> 2418/2418/31/3/2, gate silent
+```
+⚠️ **`ACCEPTANCE: REFUSED` throughout is `F-ACCEPT5-8` on a conforming checkout and is EXPECTED (`R-811 §5`), not a regression.** ✅ **`STOP [26]` DOES NOT FIRE: `2418` was pre-registered in `R-811 §2` before the run and observed exactly.**
+
+### §5 — 🛑 WHAT IS NOT DONE
+🛑 **`R3-4` conversion · `R3-5` — UNSTARTED. `R3` = `3 / 5`.**
+⚠️ **`R3-4`'s scope note, carried: `ACCEPT5-GOVERNED-SKIP-SCOPE-1` was re-assigned DESK→**worker** at `R-803` (Class `A`/`C` reviewed INDIVIDUALLY, never blanket-`fail`), and `test_wave_b_intrabar_stops.py:380/:405/:426` stay OUT — a naive `REFUSE` re-arms a `vectorbt` JIT hang.**
+⚠️ **NOT MEASURED: whether the collect-only pre-flight adds meaningful wall-clock at larger supplemental counts. It is `1` target today; at hundreds it is a second full collection. Naming it now rather than discovering it later.**
+⚠️ **`ACCEPT5-POPULATION-SUCCESSOR-1` — I believe `§1`/`§4` discharge it, but `R-811 §3` reopened it once on a claim I made too early, so I leave that call to the desk.**
+🛑 **UNTOUCHED: `ACCEPT5-LATENT-OTHER-CHECKOUT-3` · `ACCEPT5-EMPTY-POPULATION-FALLBACK-1` · `ACCEPT5-CANONICAL-RED-BACKLOG-1` · the `S6` root seal · `_CLOSURE_TARGETS` · the manifest · `MP1` ingress · the money path.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`. `R3-2` complete at `48703a5a`; `R3` = `3 / 5`.** ⏭️ **CONTINUING to `R3-5`, which `R-811 §7` queues self-executing on `R3-2` green.** ⚠️ **SEAT NOTE, self-assessment only: this seat has now run `AR-958`–`AR-961` end to end and is deep into its context. Nothing is half-built and everything is committed and pushed. A fresh seat would carry `R3-4`/`R3-5` more safely; the lever is the operator's and I am not stopping.**
+
+---
+
 ## AR-960 · 2026-08-10 · ✅✅ **`R3-2`'s MECHANISM IS BUILT AND GREEN: THE SUCCESSOR CHAIN, THE HERMETICITY PRECONDITION, AND THE SEAL'S THREE MANIFEST FIELDS ARE NOW BOUND.** ⭐ **PAIRED CONTROL PROVES THE HOLE IT CLOSES: DELETE A LANE-`L` TEST AND THE OLD ROOT-SEAL GUARD SEES `0` MISSING; THE CHAIN-DERIVED GUARD SEES `1`.** 🛑🛑 **BUT ONE NAMED SUB-ITEM IS `BLOCKED` ON EVIDENCE, NOT ON EFFORT: THE RED CANNOT BE ADMITTED TO `canonical_regression_population.txt`, BECAUSE THAT MANIFEST IS A *DERIVED* ARTIFACT AND ADMITTING IT REDDENS A GOVERNED MEMBER.** ⚠️ **AND MY OWN SCANNER HAD TWO DEFECTS — BOTH CAUGHT BY ITS CONTROLS, ONE OF THEM A FALSE REFUSAL OF THE EXACT FILE THIS ITEM EXISTS TO ADMIT.**
 
 **SEAT `claude.exe 23936`. TREE `HEAD 7e05c767`. `R3` = `2 / 5` — `R3-2` NOT counted; see `§5`.**
