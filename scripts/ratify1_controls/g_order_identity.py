@@ -180,7 +180,7 @@ def verify_chain(tag, arm):
     # Every receipt recomputes from its own bytes, and every child artifact
     # recomputes from ITS bytes. This is the step that opens a child at all.
     bad_receipt, bad_artifact, missing = [], [], []
-    heads, rebuilt, seqs = set(), {}, {}
+    heads, rebuilt, seqs, run_ids = set(), {}, {}, set()
     for e in entries:
         rp = root / "receipts" / f"{e['ordinal']:04d}-{_slug_like(e['target'])}.json"
         if not rp.is_file():
@@ -192,9 +192,17 @@ def verify_chain(tag, arm):
         except Exception:                                      # noqa: BLE001
             bad_receipt.append(e["target"]); continue
         heads.add(r.get("head_sha"))
+        run_ids.add(r.get("run_id"))
         seqs[e["target"]] = list(r.get("node_sequence") or [])
         rebuilt.update(r.get("outcomes") or {})
-        cd = Path(r.get("child_dir", ""))
+        # RESOLVE CHILD ARTIFACTS RELATIVE TO *THIS* ARM, never via the absolute
+        # child_dir the receipt recorded. `[MEASURED, C2]` following the recorded
+        # path made the verifier read the ORIGINAL arm's untampered artifacts
+        # while verifying a tampered COPY -- so C2 came back GREEN.
+        #
+        #   A VERIFIER THAT FOLLOWS A PATH THE ARTIFACT SUPPLIED IS VERIFYING
+        #   WHATEVER THAT PATH POINTS AT, NOT THE THING IN FRONT OF IT.
+        cd = root / _slug_like(e["target"])
         for label, digest in (r.get("artifact_sha256") or {}).items():
             ap = cd / label
             if not ap.is_file() or _sha_bytes(ap) != digest:
@@ -231,6 +239,7 @@ def verify_chain(tag, arm):
         f"claimed={arm['reverse']!r} derived={derived_rev!r}")
 
     arm["_node_sequences"] = seqs
+    arm["_run_ids"] = run_ids
     return V
 
 
@@ -331,6 +340,19 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
     if chain:
         V.extend(verify_chain("forward", fwd))
         V.extend(verify_chain("reverse", rev))
+
+        # ---- ARE THESE TWO RUNS AT ALL? ------------------------------------
+        # `[MEASURED, C5]` comparing an arm against a COPY of itself passed:
+        # the "distinct artifacts" guard only compares _path strings, and a copy
+        # lives at a different path. Every child run_id is minted per execution,
+        # so disjoint run_id sets is the cheapest proof of two real executions.
+        #
+        #   TWO FILES IN TWO DIRECTORIES ARE NOT TWO PIECES OF EVIDENCE.
+        ra, rb = fwd.get("_run_ids") or set(), rev.get("_run_ids") or set()
+        shared_ids = ra & rb
+        V.append(("arms are two DISTINCT EXECUTIONS (run_ids disjoint)",
+                  bool(ra) and bool(rb) and not shared_ids,
+                  f"fwd={len(ra)} rev={len(rb)} shared={len(shared_ids)}"))
 
         # ---- [G-NODE] CROSS-ARM RELATIONSHIP -------------------------------
         # node_axis="same"    the pair must NOT vary intra-file order
@@ -593,8 +615,14 @@ def red_proof_chain(workdir, a1, a2, a3):
     import subprocess
     W = Path(workdir)
     W.mkdir(parents=True, exist_ok=True)
-    PIN = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(REPO),
-                         capture_output=True, text=True).stdout.strip()
+
+    # THE PIN UNDER CERTIFICATION IS THE ARMS' OWN, NOT THE CURRENT HEAD.
+    # The first version used `git rev-parse HEAD`, which had moved on past the
+    # commit the arms measured -- so the pin-binding verdict failed for EVERY
+    # case, all six negatives were red for a reason unrelated to what they test,
+    # and once again the POSITIVE controls were the only thing that noticed.
+    # Second time this exact shape appeared here; see 4.2b in the spec.
+    PIN = load_arm(a1)["head"]
 
     req = authority_nodes()
     cases = []
@@ -625,6 +653,11 @@ def red_proof_chain(workdir, a1, a2, a3):
         fn(d)
         Path(p).write_text(_json.dumps(d, indent=2, sort_keys=True), encoding="utf-8")
         return p
+
+    # The pin is taken from the arms, so it must be ANCHORED independently or
+    # the binding check would be circular: an arm cannot vouch for its own pin.
+    cases.append(("C10c the arms' pin RESOLVES to a real commit",
+                  _resolves_to_commit(PIN), f"{PIN[:12]}..."))
 
     # ---- POSITIVE CONTROLS FIRST ------------------------------------------
     run("C4  genuine independent pair, full chain => GREEN", a1, a2, True,

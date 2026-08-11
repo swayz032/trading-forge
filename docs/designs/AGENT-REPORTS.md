@@ -4,6 +4,83 @@
 
 ---
 
+## AR-991 · 2026-08-11 · 🛑🛑🛑 **`STOP B` AND `STOP C` HAVE BOTH FIRED. I AM STOPPING AND REPORTING, AND I HAVE TUNED NOTHING.** ⚡⚡ **`[G-FILE]` PASSES `0/2419` · `[I]` PASSES `0/2419` · **`[G-NODE]` FAILS WITH EXACTLY `12` MOVING NODES** — AND THE SAME `12` MOVE IN A SECOND INDEPENDENT PAIR, SO IT IS REPRODUCIBLE, NOT FLAKE.** ✅ **`[H]` PASSES WITH `33%` HEADROOM — THE REPAIR MADE IT FASTER, NOT SLOWER.** 🛑 **AND MY OWN CHAIN HAS A HOLE A CONTROL FOUND: `2` OF `108` CHILDREN HAVE UNBOUND ARTIFACTS.**
+
+**SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. EXECUTION PIN `f3225b69` (five arms, one clean exclusive worktree). COMPARATOR PIN `52fa46e5`+.** 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted; no seal; `CLUSTER-E` HELD; the ceiling NOT raised; nothing parallelized; **NO ASSERTION AND NO FIXTURE TUNED.**
+
+### §1 — 🛑 THE HEADLINE: THE TWO AXES DISAGREE, AND THE DISAGREEMENT IS EXACT
+```
+PAIR    AXIS VARIED                      DIFFERING NODES   OBLIGATION
+A vs B  file order only                        0           [G-FILE]  PASS
+A vs E  nothing (repeat, identical pin)        0           [I]       PASS
+C vs D  file order, with nodes reversed        0           [G-FILE]  PASS (2nd witness)
+A vs C  NODE order only                       12           [G-NODE]  *** FAIL ***
+B vs D  NODE order, with files reversed       12           [G-NODE]  *** FAIL *** (2nd witness)
+A vs D  both axes                             12           [G]       *** FAIL ***
+```
+🛑🛑 **`A-vs-C`'s moving set and `B-vs-D`'s moving set are the SAME `12` NODES — set-identical, measured in two independent pairs.** ⇒ ★★★★★ **`THIS IS NOT FLAKE AND IT IS NOT ORDERING NOISE. IT REPRODUCES EXACTLY, IT IS ORTHOGONAL TO FILE ORDER, AND IT IS INVISIBLE TO EVERY FILE-LEVEL COMPARISON — WHICH IS PRECISELY WHY [G] CERTIFIED IT FOR MONTHS.`**
+✅ **THE GRADER'S `F-3` IS CONFIRMED AT POPULATION SCALE.** It measured the shape on ONE file by hand; the `[G-NODE]` axis now measures it across all `108` and finds it live in `4`.
+
+### §2 — 🛑 THE `12` MOVING NODES, IN FULL, NEVER SLICED (`STOP B`: report them, tune nothing)
+```
+transitions: passed->failed 7 . passed->skipped 3 . failed->passed 2
+
+test_apply_trade_management_branching.py                                    (2)
+  failed  -> passed   TestAnchoredVwapTrueVolumeWeighting::test_avwap_trail_stop_is_volume_weighted_not_structural
+  passed  -> failed   TestDispatchRouting::test_static_styleC_calls_static_handler
+test_gate3_defect4_class_backtest_roll_cost_equity.py                       (2)
+  passed  -> failed   TestGate3Defect4...::test_no_reconciliation_error_with_large_roll_cost
+  failed  -> passed   TestGate3Defect4...::test_small_roll_cost_also_reconciles
+test_wave1_track1a_2026_06_27.py                                            (5)
+  passed  -> failed   TestVixAtrMultiplier::test_enabled_vix_above_30_returns_high_tier
+  passed  -> failed   TestVixAtrMultiplier::test_enabled_vix_below_20_returns_low_tier
+  passed  -> failed   TestVixAtrMultiplier::test_enabled_vix_crisis_55_returns_high_tier
+  passed  -> failed   TestVixAtrMultiplier::test_enabled_vix_exactly_30_returns_mid_tier
+  passed  -> failed   TestVixAtrMultiplier::test_env_flag_true_activates_tiers
+test_wave_b_intrabar_stops.py                                               (3)
+  passed  -> skipped  TestIntrabarsStopsAndTP::test_eligibility_gate_empty_htf_passthrough
+  passed  -> skipped  TestIntrabarsStopsAndTP::test_eligibility_gate_no_htf_passthrough_preserves_signals
+  passed  -> skipped  TestIntrabarsStopsAndTP::test_eligibility_gate_unregistered_strategy_passthrough
+```
+🛑 **I DO NOT ADJUDICATE ONE OF THESE and I did not touch a fixture or an assertion.** ⭐ **The `failed -> passed` PAIR inside one file is the most informative row and I flag it without explaining it: within `test_gate3_defect4...`, reversing node order makes one test start failing and its sibling start passing.** ★★★★ **`A DEFECT THAT MOVES A PASS AND A FAIL IN OPPOSITE DIRECTIONS INSIDE ONE FILE IS SHARED STATE BETWEEN SIBLINGS, NOT A BROKEN TEST` — but WHICH direction is correct is a merit question and it is the desk's.**
+🛑 **AND THE `passed -> skipped` TRIO IS ITS OWN CLASS: a node that SKIPS depending on execution position is a test whose skip predicate reads state an earlier sibling set.** ⚠️ **`STOP [37]`-adjacent: I make no claim about which order is "right".**
+
+### §3 — ✅ `[H]`: THE COST QUESTION IS ANSWERED BY MEASUREMENT, AND FAVOURABLY
+```
+ARM  A 6.72   B 6.56   C 6.40   D 6.47   E 6.39   min   CEILING 10.0
+```
+✅ **ALL FIVE UNDER THE FROZEN CEILING WITH `~33%` HEADROOM, THROUGH THE NEW GATE** — up from `AR-986`'s `7.2%`. ⭐ **AND THE CHAIN WAS ADDED IN THE SAME CHANGE.** ⇒ **`AR-989 §5`'s forward risk and `ACCEPT5-RUNTIME-HEADROOM-1` are answered: the layer-2 repair removed ~`1,376` evictions-and-re-imports per child, and that saving exceeds the chain's persistence cost.** ★★★★ **`THE CORRECTNESS REPAIR PAID FOR THE PROVENANCE REPAIR. I DID NOT PREDICT THAT AND I WOULD NOT HAVE BELIEVED AN ESTIMATE OF IT — R-827 §9 SAID MEASURE, NOT SPECULATE, AND IT WAS RIGHT.`**
+🛑 **NO CEILING CHANGE IS REQUESTED OR IMPLIED.**
+
+### §4 — 🛑 `STOP C`: A CONTROL FOUND A HOLE IN MY OWN CHAIN
+🛑 **`C2` (tampered child artifact ⇒ must be RED) came back GREEN. `[MEASURED HERE]` the cause is exact: `2` of `108` children — the `empty_by_design` helpers `_a_packet_harness.py` and `_forensics_fixtures.py` — hit an EARLY RETURN in `run_child` **before** `artifact_sha256` is computed, so their receipts carry NO digests and their artifacts are UNBOUND. My tamper landed on the first such child.**
+⇒ ★★★★★ **`A PROVENANCE CHAIN IS ONLY AS BINDING AS ITS LEAST-BOUND MEMBER, AND AN EARLY RETURN IS A HOLE THE HAPPY PATH CANNOT SHOW YOU.`**
+⚡ **THE REPAIR I HAVE **NOT** APPLIED, AND WHY:** the class fix is (a) hash artifacts on every `run_child` return path and (b) a verifier rule that **NO FILE IN A CHILD DIRECTORY MAY BE UNBOUND** — which closes every early return, present and future, rather than this one instance (`[instance-not-condition]`). 🛑 **I did not apply it because `STOP B` and `STOP C` had already fired and `R-827 §8[7]` says *"Do NOT repair while the ordered-pair evidence is half-understood."* Applying it also forces a fresh `5`-arm re-run, which should happen once, after the desk rules on `§2`.**
+
+### §5 — ⚖️ TWO FIXTURE FLAWS, BOTH CAUGHT BY POSITIVE CONTROLS, BOTH MINE
+🛑 **`C1`–`C7` were written first against `--limit 2` arms. `--limit` sets `limited_subset=True`, which the comparator correctly refuses ⇒ ALL SIX NEGATIVES WENT RED FOR A REASON UNRELATED TO THE CHAIN.**
+🛑 **Rewritten against real arms, they then used `git rev-parse HEAD` as the pin — which had moved past the arms' pin ⇒ EVERY case red again, same disease.**
+⇒ ★★★★★ **`BOTH TIMES THE SIX NEGATIVES "PASSED" AND ONLY THE TWO POSITIVE CONTROLS FAILED. A NEGATIVE CONTROL THAT WOULD HAVE BEEN RED ANYWAY MEASURES NOTHING, AND THE POSITIVE ARM IS THE ONLY THING IN THE SUITE THAT CAN TELL YOU SO.`** **This is exactly why `R-827 §8[3]` demands `C4`, and I now believe `C4`/`C9` are the two most load-bearing controls in the set.**
+⚖️ **AND TWO REAL VERIFIER DEFECTS THE SAME CONTROLS CONVICTED, both now fixed and re-measured RED:** `C2`'s first form followed the receipt's own ABSOLUTE `child_dir`, so it verified the ORIGINAL arm while checking a tampered COPY (**`A VERIFIER THAT FOLLOWS A PATH THE ARTIFACT SUPPLIED IS VERIFYING WHATEVER THAT PATH POINTS AT`**); and `C5` passed because I had SPECIFIED `run_id` disjointness in the spec and never implemented it — **two files in two directories are not two pieces of evidence.**
+
+### §6 — ⚖️ AN INSTRUMENT LIE I CAUSED AND CAUGHT
+🛑 **My arm-launch shell used `"$SW\\$n"`; bash read `\\$` as an escaped `$`, so all five arms wrote into ONE directory literally named `finalarms$n`.** ✅ **NO DATA LOST — five distinct `isolated-*` run roots, `5` distinct manifests, all at pin `f3225b69`.** ✅ **AND I DID NOT RE-MAP THEM BY ASSUMPTION: each arm was identified by ITS OWN RECORDED `reverse`/`reverse_nodes` FLAGS against the expected `A..E` pattern — all five MATCH.** ★★★ **`WHEN THE DIRECTORY NAMES ARE UNTRUSTWORTHY, JOIN ON WHAT THE ARTIFACT RECORDS ABOUT ITSELF.`** (`[ps-counting-encoding]`, ~19th instrument lie in this campaign, code fine again.)
+
+### §7 — 📌 THE POST-REPAIR MAP, RECORDED AND **NOT** ADJUDICATED
+```
+canonical arms A/B/E   passed 2364   failed 53   xfailed 2            = 2419
+node-reversed  C/D     passed 2356   failed 58   skipped 3  xfailed 2 = 2419
+```
+🛑🛑 **`STOP [53]` HONOURED, AND THIS IS THE SENTENCE I REFUSE TO WRITE: I do NOT claim that `287 - 53` were harness artifacts.** **The `287` was measured under the OLD layer 2 at a DIFFERENT commit; the `53` is a different measurement of a different configuration. `278` of the `287` remain `UNENUMERATED` and no proportion is derivable from these two numbers.** ★★★★★ **`TWO NUMBERS MEASURED THROUGH DIFFERENT INSTRUMENTS DO NOT SUBTRACT.`** 🛑 **`STOP [44]`: none of the `53` is adjudicated here.**
+
+### §8 — 📌 STATUS, AND WHAT I AM NOT CLAIMING
+**DELIVERED:** spec `A1`+`A2` · the layer-2 ownership repair (`P1`–`P5`, `AR-990`) · the provenance chain (persisted receipts, ordered manifest, derived aggregate, `verify_chain`) · the `[G-NODE]` axis and its execution-order witness · a REAL `[H]` gate · pin anchoring · controls `C1`–`C12` executed against real full-population arms · five arms from one clean exclusive worktree.
+🛑 **NOT CLAIMED, EXPLICITLY: `RATIFY-1` IS NOT CERTIFIED AND `[G]` DOES NOT PASS.** **`F-1` IS CLOSED FOR `106` OF `108` CHILDREN AND OPEN FOR `2` (`§4`) — I do not round that to "closed".** **Certified fan-in is UNCHANGED at `R-827`'s `6 / 10`; I have moved no letter.**
+**WHAT I DID NOT MEASURE:** why any of the `12` move (deliberately — `STOP B`) · whether files beyond the `4` carry latent node-order shapes that these two orders happen not to expose · the `53` failures' merit · any re-run with the `§4` chain fix.
+**RECOMMENDATION: `BLOCKED`** — and this is the honest one, not a hedge. **`STOP B` and `STOP C` have both fired; `R-827 §8` says stop and report on either, and `§8[7]` forbids repairing while the ordered-pair evidence is half-understood.** ⚡ **What I need from the desk: a ruling on the `12` (merit adjudication is yours, and `STOP [44]`/`STOP [37]` are adjacent), and authorization for the `§4` chain fix + ONE fresh five-arm re-run afterwards.** **I hold the seat, the ear is armed, and I have NOT handed off.**
+
+---
+
 ## AR-990 · 2026-08-11 · ✅✅✅ **`R-827 §8` STEPS `1`–`3` DELIVERED. `ACCEPT5-LAYER2-OWNERSHIP-REPAIR-1` IS IN AT `e956d76d` AND ALL FIVE PROPERTIES `P1`–`P5` HOLD.** ⚡⚡ **THE NEGATIVE CONTROL REPRODUCES THE GRADER'S `F-4` NUMBERS **EXACTLY** ON ALL `5` FILES — RED WITHOUT THE REPAIR, GREEN WITH IT.** ⭐ **AND THE HEADLINE MEASUREMENT: `imports_preserved=1075` ALONGSIDE `keys_evicted=7`.** ⚖️ **I OWN ONE PROCESS ERROR: I RAN `git worktree remove --force` WHILE PRINTING TEXT SAYING I WOULD NOT.**
 
 **SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD e956d76d`. RULING `R-827 §8`, proceeding through delivery per its no-round-trip clause.** 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted; no seal; `CLUSTER-E` HELD; the `287`/`11`/`7` UNTOUCHED; ceiling NOT raised; nothing parallelized.
