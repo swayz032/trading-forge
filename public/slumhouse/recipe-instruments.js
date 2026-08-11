@@ -7,7 +7,7 @@
     crash: "Crash chamber",
     regimes: "Market regime wheel",
     shuffle: "Luck shuffle table",
-    paper: "Paper-trial ledger",
+    paper: "One-week paper-trial ledger",
     drift: "Live-match scope",
     compliance: "Rule-control board",
     backtest: "Backtest replay deck"
