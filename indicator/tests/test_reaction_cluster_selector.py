@@ -90,6 +90,92 @@ class ReactionClusterSelectorTests(unittest.TestCase):
         )
         self.assertEqual(ladder, ())
 
+    def test_weak_near_long_shelf_cannot_outrank_real_reaction_zone(self):
+        # Frozen Aug-11 semantic class: LONG entry ~29,900.  A weak micro-cluster
+        # just above entry must not consume TP1 ahead of the first meaningful
+        # reaction shelf around the upper 29,93x area.
+        intervals = [
+            ReactionInterval(29912.0, 29918.0, "weak-near-a", reaction_strength=0.20),
+            ReactionInterval(29913.0, 29919.0, "weak-near-b", reaction_strength=0.25),
+            ReactionInterval(29934.0, 29944.0, "real-zone-a", reaction_strength=0.85),
+            ReactionInterval(29935.0, 29943.0, "real-zone-b", reaction_strength=0.75),
+            ReactionInterval(29936.0, 29945.0, "real-zone-c", reaction_strength=0.90),
+        ]
+        ladder = select_target_ladder(
+            intervals,
+            side="LONG",
+            entry=29900.0,
+            entry_gap=5.0,
+            zone_gap=5.0,
+            tolerance=3.0,
+            min_touches=2,
+            penetration_fraction=0.25,
+            tick=0.25,
+            max_targets=1,
+            min_reaction_strength=0.50,
+        )
+        self.assertEqual(len(ladder), 1)
+        self.assertGreaterEqual(ladder[0].cluster.lower, 29934.0)
+        self.assertGreater(ladder[0].price, 29900.0)
+        self.assertTrue(all("weak-near" not in member for member in ladder[0].cluster.member_ids))
+
+    def test_reaction_quality_gate_runs_before_distance(self):
+        intervals = [
+            ReactionInterval(101.0, 104.0, "near-weak-a", reaction_strength=0.10),
+            ReactionInterval(101.5, 104.5, "near-weak-b", reaction_strength=0.10),
+            ReactionInterval(110.0, 116.0, "far-strong-a", reaction_strength=1.00),
+            ReactionInterval(111.0, 115.0, "far-strong-b", reaction_strength=0.90),
+        ]
+        ladder = select_target_ladder(
+            intervals,
+            side="LONG",
+            entry=90.0,
+            entry_gap=5.0,
+            zone_gap=5.0,
+            tolerance=2.0,
+            min_touches=2,
+            penetration_fraction=0.25,
+            tick=0.25,
+            min_reaction_strength=0.50,
+            max_targets=1,
+        )
+        self.assertEqual(ladder[0].cluster.member_ids, ("far-strong-a", "far-strong-b"))
+
+    def test_profit_side_is_hard_invariant(self):
+        long_ladder = select_target_ladder(
+            [
+                ReactionInterval(110.0, 120.0, "long-a", reaction_strength=1.0),
+                ReactionInterval(111.0, 119.0, "long-b", reaction_strength=1.0),
+            ],
+            side="LONG",
+            entry=100.0,
+            entry_gap=5.0,
+            zone_gap=2.0,
+            tolerance=2.0,
+            min_touches=2,
+            penetration_fraction=0.25,
+            tick=0.25,
+            min_reaction_strength=0.5,
+        )
+        self.assertTrue(all(level.price > 100.0 for level in long_ladder))
+
+        short_ladder = select_target_ladder(
+            [
+                ReactionInterval(80.0, 90.0, "short-a", reaction_strength=1.0),
+                ReactionInterval(81.0, 89.0, "short-b", reaction_strength=1.0),
+            ],
+            side="SHORT",
+            entry=100.0,
+            entry_gap=5.0,
+            zone_gap=2.0,
+            tolerance=2.0,
+            min_touches=2,
+            penetration_fraction=0.25,
+            tick=0.25,
+            min_reaction_strength=0.5,
+        )
+        self.assertTrue(all(level.price < 100.0 for level in short_ladder))
+
     def test_cross_lane_same_shelf_cannot_consume_tp2(self):
         # Two timeframe adapters describe adjacent pieces of one physical shelf.
         # The first shelf should count once; the genuinely deeper shelves promote.
