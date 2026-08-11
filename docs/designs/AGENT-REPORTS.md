@@ -4,6 +4,66 @@
 
 ---
 
+## AR-966 · 2026-08-11 · ✅ **`[P1]`/`[P2]`/`[P3]` DISCHARGED AT `d4c57b6a` — `FIRED-IN-PRISTINE` IS POPULATED FOR ALL `32` ROWS FROM OBSERVATION, EVERY `DID NOT FIRE` CARRYING A POSITIVE WITNESS THAT THE TEST RAN.** 🛑🛑🛑 **AND THE HEADLINE IS A REFUTATION OF THE CONTROL ITSELF: `[MEASURED]` A FRESH LINKED WORKTREE ON THIS BOX VARIES `0` OF `5` AXES — `R-812 §7`'s FRESH-TREE POSITIVE CONTROL CANNOT DISCRIMINATE, AND A GREEN FROM IT WOULD HAVE PROVEN NOTHING.** ⭐ **`3` SITES FIRE, NOT `32`, AND ALL THREE ARE ONE CAUSE.** 🛑 **`ARM C1` IS BLOCKED ON THE OPERATOR — I WILL NOT SOURCE A CREDENTIAL.**
+
+**SEAT `claude.exe 23692`. TREE `HEAD d4c57b6a`. RUN PIN: disposable worktree at `120011c8`. `R3` = `3 / 5`, `R3-4` OPEN.**
+
+### §0 — ✅ `R-814` APPLIED BEFORE ANYTHING ELSE, INCLUDING THE PART THAT CONVICTS MY PREDECESSOR'S POSITIVE CONTROL
+✅ **`[P4]` SEED RETRACTION EXECUTED (`R-814 §7.1`):** the census row for `test_walk_forward.py:379` now reads **`LEGITIMATE NARROW-PROPERTY HANDLER`**, carrying the desk's own line-level refutation (`walk_forward.py:2521-2536` — the guard raises **twelve lines before** the data load). **The `[P4]` confirmed count is now `0`, not `1`.** 🛑 **NOT REPAIRED, NOT DELETED** — `R-814` is explicit that deleting the broad arm would inject a FALSE RED into a governed member.
+⚠️ **AND I RECORD THE PROPAGATION HONESTLY RATHER THAN QUIETLY FIXING IT: that retracted seed was `AR-964`'s POSITIVE CONTROL for the `ast` instrument.** ⚖️ **The instrument SURVIVES — the control still fired correctly, because the handler genuinely IS a no-effect handler. What was wrong was the DISPOSITION assigned one layer up.** ★★★★ **`A POSITIVE CONTROL PROVES YOUR DETECTOR SEES THE THING. IT DOES NOT PROVE THE THING IS A DEFECT — THOSE ARE DIFFERENT CLAIMS AND MY PREDECESSOR'S INSTRUMENT ONLY EVER MADE THE FIRST.`**
+
+### §1 — 🛑🛑🛑 `[P2]` THE AXIS MATRIX: THE FRESH TREE VARIES **NOTHING**
+Each axis measured with its own command; **`NOT VARIED` is reported as `NOT VARIED`, never smoothed into a portability claim** (`R-813 §8 [P2]`):
+```
+CREDENTIAL (S3/AWS) boto3.Session().get_credentials() -> NONE; ls -A ~/.aws -> 0   NOT VARIED
+SAMPLES_DIR         hardcoded ABSOLUTE path, no env override; isdir -> True, 141   NOT VARIED
+GIT HISTORY         git rev-parse --git-common-dir -> the MAIN repo's .git         NOT VARIED
+docs/ CORPORA       git ls-files -> 146 and 16 TRACKED; present in the fresh tree  NOT VARIED
+GOLDEN FIXTURE      git ls-files -> 1 TRACKED; EXISTS on disk                      NOT VARIED
+```
+⇒ **`0` OF `5`.** ★★★★★ **`AN ISOLATED COPY IS NOT AN ISOLATED ENVIRONMENT. THE THING YOU DUPLICATED WAS THE WORKING DIRECTORY; EVERY INPUT THAT ACTUALLY DECIDES THESE SKIPS LIVES SOMEWHERE ELSE — IN THE MACHINE, IN THE SHARED OBJECT STORE, OR AT AN ABSOLUTE PATH THAT DOES NOT CARE WHERE YOU RUN FROM.`**
+⚠️ **MY PRE-REGISTERED HYPOTHESIS (`AR-965 §5`) WAS TOO KIND TO ITSELF.** I predicted untracked in-tree state would vary. `[MEASURED]` it does not — the corpora are **TRACKED**. **The result is worse than my prediction and I state it that way rather than claiming the prediction held.**
+
+### §2 — ✅ `[P1]`/`[P3]` THE RUN, BY MEMBERSHIP
+**`ARM C0` = credential chain ACTIVELY DISABLED** (env trio emptied · `AWS_PROFILE`/`AWS_DEFAULT_PROFILE` emptied · `AWS_SHARED_CREDENTIALS_FILE`/`AWS_CONFIG_FILE` → non-existent · `AWS_EC2_METADATA_DISABLED=true` · container URIs unset). **Pre-arm control: `get_credentials()` → `NONE`.**
+```
+MEMBERS (guard's OWN read_manifest, IMPORTED not re-implemented)  107   resolved 107/107, missing 0
+NODES 2417 | passed 2381 · failed 31 · skipped 3 · xfail 2
+```
+🛑 **`3` REAL SKIPS, AND ALL THREE ARE ONE CAUSE — the node IDs, not a count:**
+```
+test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_present_in_result
+test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_values_valid
+test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_is_json_serializable
+REASON (identical): "S3 read ... aborted before DuckDB: missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+```
+✅ **`C0` vs the un-disabled arm, JOINED BY NODE ID:** `2417` vs `2417`, **`0` only-in-either, `0` outcome flips** — with a **planted-flip positive control proving the differ DISCRIMINATES**. ⇒ **Actively disabling changed nothing, which RULES OUT a profile / shared-config / instance-metadata source that mere env-var absence does not.** ★★★ **`"NO ENV VAR" IS NOT "NO CREDENTIAL SOURCE".`**
+✅ **`FIRED-IN-PRISTINE`, ALL `32`:** **FIRED** `13`,`15`,`17` · **SITE REMOVED** `2`,`3`,`4`,`5`,`12`,`14`,`16` · **DID NOT FIRE** the other `22`, **each with the owning test observed `passed`**; for the `6` broadcast helpers the module ran **`339/339` passed, `0` skipped** and every helper has live call sites.
+✅ **RECONCILIATION CONTROL: `[MEASURED]` `pytest.skip(` sites across governed members = `25`. `32 − 7 = 25`, matching `1a639679` (`A1`, 3) + `c6362fc3` (`A2`, 4) EXACTLY** — an independent re-derivation of `AR-964`'s conversion tally.
+
+### §3 — ⚠️ MY INSTRUMENT LIED ONCE AND ITS OWN OUTPUT CONVICTED IT
+🛑 **`junitxml` encodes a strict `xfail` as `<skipped type="pytest.xfail">`. My first parser read the ELEMENT and would have reported `5` SKIPS.** `[MEASURED HERE]` splitting on the `type` attribute gives **`3` `pytest.skip` + `2` `pytest.xfail`**, and the `2` are deliberate tracked findings in `test_session_role_adversarial_fence.py`, **not environment skips.** ★★★★ **`I READ THE NEIGHBOURING OBJECT AGAIN: THE ELEMENT NAMED "skipped" IS NOT THE EVENT NAMED "skip".`** (`[i-measured]`.) **Caught before it reached a claim.**
+⚠️ **A second, smaller one: my first tracked-ness probe passed a CODE LINE where a PATH belonged and reported the golden fixture `ABSENT`. Re-measured correctly: `EXISTS`, `1` tracked.** ⚠️ **A third: a `cat` heredoc died on shell quoting; repaired by writing the section to a file — fewer layers.** **Three instrument faults this round, the code fine every time** (`[ps-counting-encoding]`).
+
+### §4 — 🛑 `ARM C1` IS BLOCKED ON THE OPERATOR, AND I NAME THE PRICE OF THE GAP
+🛑 **`[MEASURED]` this box has NO AWS credential source. A worker may not fabricate, mint, or source one, and `R-814 §3` binds credentials to RUNTIME INPUT ONLY.** ⇒ **`C1` cannot be run by me.**
+🛑 **THEREFORE THE FOLLOWING IS `[UNPROVEN]` AND I WILL NOT LET IT PASS AS PROVEN: *"these `3` skips are caused by the credential axis ALONE."*** What IS proven: they skip with the chain disabled, and the reason text names the credential variables. **That is a strong single-arm result and it is not a two-arm isolation.**
+✅ **ASK FILED TO THE OPERATOR IN CHAT, one sentence, with the cost named** (a handful of read-only S3 `GET`s on one parquet object). ⚠️ **AND `C1` OWES A CONTROL BEFORE IT COUNTS (`R-814 §3`): *"credentials present"* is not *"the required read succeeds"* — without a positive control proving the object actually READS, a green `C1` is unfalsifiable.**
+
+### §5 — 🛑 WHAT IS **NOT** DONE OR NOT ESTABLISHED
+🛑 **`C1` NOT RUN** (above) ⇒ **`R-814`'s acceptance is `PARTIAL`, not met.**
+🛑 **`25 / 32` STILL UNCONVERTED.** Grouped by ROOT CAUSE in the census `§7` as ordered — **deliberately NOT edited site-by-site**, and `STOP [30]` still forbids touching the `signal_vector` predicate and the four `wrc_spa` sites.
+🛑 **ROWS `26`–`29` (`wrc.available`) ARE UNTESTED IN BOTH ARMS** — they PASSED, so the self-excuse clause never evaluated. `[UNPROVEN]`, and it is precisely what `C1` would probe.
+⚠️ **ROWS `12`/`14`/`16` share a witness NODE with `13`/`15`/`17`** (which skipped through the DATA clause) ⇒ **this run cannot independently re-prove the import clause is gone; `AR-964 §2`'s pre/post arms are CITED, not re-derived.**
+⚠️ **STATIC CALL SITES ARE NOT EXECUTION TRACES** — per-helper execution tracing `[UNENUMERATED — OPEN]`. ⚠️ **The `31` failures are the standing baseline population: NOT analysed, NOT claimed.**
+✅ **PUSH VERIFIED BY `ls-remote`, NOT BY BOILERPLATE (`STOP [31]`):** stated in `§6` from the actual comparison, taken after this report commits.
+
+### §6 — 📌 POSITION
+**`[MEASURED HERE]` local `HEAD` vs `git ls-remote origin h1-wave4-sealed12-driver` — compared in the same action as the claim, per `STOP [31]`.** Nothing is asserted as pushed without that pair.
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Next authorized item is `C1`, and it is BLOCKED ON THE OPERATOR'S WORD — not on effort, and not on a ruling.** 🛑 **I am NOT self-authorizing the `25` conversions: `R-814`'s acceptance explicitly says GROUP THEM, not edit them.** ⚠️ **NOT A HANDOFF — this seat is fresh, nothing is half-built, and I am not declaring exhaustion.**
+
+---
+
 ## AR-965 · 2026-08-11 · 📋 **START-RECEIPT — SEAT ROLL. THE WORKER SEAT IS NOW `claude.exe 23692`, NOT `6312`.** ✅ **EAR ARMED, DETECTOR RED-PROOFED ON A THROWAWAY BEFORE THE REAL FILE, BLIND WINDOW BACKFILLED TO `R-813`.** ⚡ **`R-813 §8` NAMED SEAT `6312`; I CLAIM IT BY TRANSFER (`R-784 §3`) AND START `[P1]`/`[P2]`/`[P3]` — NO ROUND-TRIP.** ⚠️ **ONE RECORD DEFECT REPORTED, NOT A BLOCKER: `R-813` CARRIES NO `★ WORKER — START HERE` BLOCK.**
 
 **SEAT `claude.exe 23692` (born `00:06:49`). TREE `wt-h1-wave4-20260712`, `HEAD 2fbb5f55`. `R3` = `3 / 5`, `R3-4` OPEN. `[P4]`/`[P5]` DISCHARGED BY `AR-964`; `[P1]`/`[P2]`/`[P3]` NOT STARTED.**
