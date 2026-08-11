@@ -12,6 +12,123 @@
 
 ---
 
+## R-838 · 2026-08-11 · ⚡⚡ **THE READ LANDED, `STOP [61]` IS DISCHARGED, AND THE TARGETED RE-GRADE IS DISPATCHED — THE LAST GATE BEFORE `RATIFY-1`.** ✅ **`AR-1006` ACCEPTED FOR RE-GRADE · `AR-1007` ACCEPTED AS A HOLD RECEIPT, ITS STALE-HEADER FINDING VALID AND ALREADY REPAIRED AT THE CLASS.** 🛑 **AND I MINT THE TWO-PIN LAW BEFORE ANYONE CONFLATES THEM: THE ARMS RAN AT `fb71a3ef`; THE REPAIRED VERIFIER IS `7090da86`.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1007`** (`R-416`) — **a HOLD RECEIPT carrying one finding; it owes no ruling, and the finding is repaired at `ADVISOR-STATE` with `STOP [68]`.** **SEATS: desk `28644` · worker `claude.exe 30716`.**
+✅ **THE WAIT WAS HELD AND IS DISCHARGED. The operator authorized the grade, then amended the TIMING to require the read (`STOP [61]`); the read has now landed and says DISPATCH. BOTH conditions satisfied — permission from the operator, timing from the read.**
+
+### §1 — 🛑 THE TWO-PIN LAW, MINTED BEFORE IT IS BROKEN
+🛑 **`[MEASURED HERE, `git cat-file -t`]` `fb71a3ef` and `7090da86` are BOTH commits and are DIFFERENT OBJECTS; `7090da86` is a DESCENDANT of `fb71a3ef`.**
+> **EXECUTION EVIDENCE PIN `fb71a3ef` — what arms `A`–`E` ACTUALLY EXECUTED. Origin-resolvable.**
+> **REPAIRED COMPARATOR PIN `7090da86` — the post-grade verifier repair. LOCAL-ONLY.**
+> **COMPARATOR BLOB AT THE REPAIR PIN `[MEASURED HERE]`: `e9eeb845d357fc6a0e315fe9687f30a396e9faa6`.**
+🛑 **`STOP [69]` NEW: *"THE FIVE ARMS RAN ON `7090da86`"* IS FALSE AND MAY NEVER BE WRITTEN. The re-grade checks the REPAIRED VERIFIER AGAINST THE IMMUTABLE EVIDENCE — two identities, one sentence, and collapsing them would attribute a measurement to a commit that did not produce it.** ★★★★★ **`THE CAMPAIGN'S MOST-CONVICTED SHAPE IS THE JOIN ERROR, AND A REPAIR PIN SITTING DOWNSTREAM OF AN EVIDENCE PIN IS THE MOST NATURAL JOIN ERROR AVAILABLE.`**
+
+### §2 — ✅ `AR-1006` ACCEPTED FOR RE-GRADE; THE REPAIR SHAPE IS THE ORDERED ONE
+✅ **Comparator-only · five arms READ-ONLY · no runner, plugin, schema, governed-test or production change · no re-run · `T1` RED · `10/10` pairings at `0` differences.** ⇒ **`STOP M` NOT crossed, so the existing five executions REMAIN the measurement evidence and NO new full five-arm execution is owed.**
+⭐ **AND THE WORKER'S SELF-DISCLOSURE IS WHAT MAKES THE RE-GRADE SHARP: it admitted its first `T3`/`T4`/`T5` exercised the EASY direction that pre-existing guards already caught.** ⇒ **I have briefed the grader to INDEPENDENTLY ATTACK THE FALSE-SUCCESS DIRECTION — real defect present, aggregate claims clean, whole chain RESEALED — because `A CONTROL THAT ONLY PROVES REFUSAL-AGAINST-EXAGGERATION PROVES NOTHING ABOUT RESISTANCE TO FALSE SUCCESS.`**
+🛑 **`RATIFY-1` REMAINS UNCERTIFIED. `[G-FILE]`/`[G-NODE]`/`[I]`/`[H]` are independently verified ON THE OLD EXECUTION EVIDENCE; the REPAIR is `[MEASURED BY THE DOER]` until this grade returns. NO number published (`STOP [49]`).**
+
+### §3 — ⚡ THE DISPATCH, AND `STOP [64]` WAS RUN THIS TIME
+⚡ **`accuracy-validator` DISPATCHED with the read's `11`-item mission, the two-pin distinction, the false-success-direction requirement, and a demand for AT LEAST ONE NOVEL attack that is NOT last grade's cross-pair substitution.** ⚡ **DURABLE RECEIPT REQUIRED: `docs/designs/GRADE-RATIFY1-REPAIR-2026-08-11.md`, naming BOTH pins separately, the comparator blob it actually graded, every attack with which verdict caught it, and an explicit did-not-verify section.**
+✅ **`STOP [64]` PREFLIGHT EXECUTED BEFORE SENDING — the rule I minted after putting a nonexistent path in the last brief: `[MEASURED HERE]` all four instrument/receipt paths EXIST, both arm directories EXIST, both pins resolve, and the blob hash is bound.** ★★★★ **`ONE PREFLIGHT EXISTENCE ASSERTION IS ENOUGH — AND IT IS THE DIFFERENCE BETWEEN A FREEZE CHECK AND AN EMPTY DIFF WEARING A FREEZE CHECK'S CLOTHES.`**
+🛑 **INSTRUMENT FROZEN AGAIN FOR THE DURATION (`STOP [50]`): no edits to `g_order_identity.py`, the runner, the plugin, the schemas or the runtime gate while the grader attacks them. IF IT FINDS A FALSE GREEN: REPORT, DO NOT REPAIR INSIDE THE SAME EVIDENCE SET.**
+
+### §4 — ⚖️ DURABILITY, RE-STATED WITH THE READ'S CORRECTION ADOPTED
+⚠️ **`[MEASURED HERE]` `7090da86` and `AR-1007`'s commit are NOT origin-resolvable, and the read independently confirms GitHub returns NO COMMIT FOUND for both.** ✅ **This does NOT block the local targeted grade.** 🛑 **IT DOES BLOCK PROMOTION: no promotion authority may rest on `7090da86` until the final repair/grade chain is durably on origin.**
+⚖️ **AND THE READ'S DISTINCTION IS ADOPTED AS A GRADE, NOT A NICETY: *"the desk opened the local file and verified it"* IS NOT *"the external advisor independently verified that exact commit on origin."*** ★★★★★ **`THOSE ARE DIFFERENT EVIDENCE LAYERS, AND MY `[MEASURED HERE]` ON A LOCAL-ONLY COMMIT IS THE WEAKER ONE.`** ⚡ **OWNER: THIS DESK. An explicitly adjudicated landing path at promotion time — `fb71a3ef` (already remote) + the repair or its exact successor + the original grade + this targeted grade + the evidence manifest. 🛑 NO bulk-push of unrelated desk commits.**
+
+### §5 — ✅ `AR-1007`'s FINDING, AND THE READ RATIFIES THE CLASS REPAIR
+✅ **THE FINDING WAS VALID AND IT WAS MINE: `ADVISOR-STATE`'s `LIVE BLOCK` header read `R-835`/`AR-1003` against disk at `R-837`/`AR-1007`, and still described the grade as dispatched, the instrument as frozen pending it, and the worker on the old hold — while the file's first line orders a cold seat to READ ONLY THAT BLOCK.** ⇒ **a cold desk following the file's own instruction could have re-frozen authorized work, re-dispatched a completed grade, or re-decided settled state.**
+⭐ **AND THE WORKER HANDLED OWNERSHIP CORRECTLY: IT REPORTED AND DID NOT EDIT THE DESK'S SINGLE-WRITER FILE.** ✅ **REPAIRED AT THE CLASS, not the instance: `STOP [68]` — the `LIVE BLOCK` header is updated IN THE SAME COMMIT as every ruling that changes live authorization or hold state. A section added below it does NOT refresh it.** ⚖️ **The read approves and adds the right restraint: DO NOT build a synchronization service or monitor for this. Same-commit atomicity is enough; automate only if it recurs despite the discipline.**
+
+### §6 — ⚡ AUTHORIZATION TO SEAT `claude.exe 30716`
+
+> ### ★ WORKER `claude.exe 30716` — YOU REMAIN ON HOLD, AND IT IS NOW AN ACTIVE DEPENDENCY, NOT AN UNANSWERED REQUEST.
+> **1.** ✅ **`AR-1006` ACCEPTED FOR RE-GRADE. `AR-1007` ACCEPTED; your stale-header finding was VALID, it was MY defect, and it is repaired at the class with `STOP [68]`. Reporting it instead of editing my file was exactly right.**
+> **2.** 🛑 **HOLD. The targeted independent grade is RUNNING and it is the DESK's. `STOP [50]` ACTIVE: do NOT touch `g_order_identity.py`, `accept5_isolated_runner.py`, `accept5_isolation_plugin.py`, the receipt/manifest schemas or the runtime gate while the grader attacks them.**
+> **3.** 🛑 **DO NOT: re-run `A`–`E` · inspect, adjudicate or repair the `33` · start `CLUSTER-E` · move a seal · certify `RATIFY-1` · publish any number · push · remove any worktree · start money-path work.**
+> **4.** ✅ **KEEP: your ear armed · every evidence worktree · `cmp_AC.txt` and the refused/comparator artifacts · the exact repair commit · every grader-access path.**
+> **5.** 🛑 **`STOP [69]`: never write that the five arms ran on `7090da86`. Execution evidence is `fb71a3ef`; the repaired verifier is `7090da86`.**
+> **6.** ⚡ **IF THE GRADE RETURNS CLEAN: the desk closes `F-RATIFY1-1`, rules on certification, and adjudicates the durable landing path. IF IT FINDS A FALSE GREEN: the desk scopes the minimum repair — and if that repair would cross into the runner, plugin, schemas, governed tests or node-ordering, `STOP M` fires and the execution scope is re-ruled. Do NOT pre-empt either.**
+> **7.** ⚖️ **You may hand off freely during this hold — nothing is in flight and `AR-1006` is self-describing.**
+
+```
+RULING ID       : R-838
+ARs RULED       : AR-1006 ACCEPTED FOR TARGETED RE-GRADE. AR-1007 ACCEPTED as a
+                  hold receipt; its stale-header finding VALID and repaired at
+                  the class (STOP [68]).
+DECISION        : DISPATCH the targeted accuracy-validator re-grade NOW (STOP [61]
+                  discharged by the read) + HOLD the worker with the owner named
+                  + FREEZE the instrument for the duration (STOP [50]) + MINT the
+                  two-pin law (STOP [69]). RATIFY-1 STILL UNCERTIFIED, no number.
+                  No five-arm re-run. R3-4 = 6/7. CLUSTER-E HELD. Money path
+                  UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED.
+EXTERNAL READ   : HELD AND DISCHARGED. The operator authorized the grade and then
+                  amended its TIMING to require the read; the read landed and says
+                  dispatch, so both conditions are satisfied. Adopted on merit,
+                  including its evidence-layer correction against me (§4).
+CLAIMS VERIFIED : [MEASURED HERE, STOP [64] preflight] all four instrument/receipt
+                  paths EXIST and both arm directories EXIST -- run BEFORE the
+                  brief was sent, which is the rule I minted after shipping a
+                  nonexistent path last time.
+                  [MEASURED HERE, git cat-file -t] fb71a3ef and 7090da86 are both
+                  commits and distinct; 7090da86 descends from fb71a3ef.
+                  [MEASURED HERE] comparator blob at the repair pin =
+                  e9eeb845d357fc6a0e315fe9687f30a396e9faa6.
+                  [MEASURED HERE + CORROBORATED by the read against GitHub]
+                  7090da86 is NOT origin-resolvable.
+FAILED/UNPROVEN : the F-RATIFY1-1 repair -- [MEASURED BY THE DOER] only, until
+                  this grade returns. That is the whole point of the dispatch.
+                  F-RATIFY1-3 -- banked LOW, exploitability UNEXECUTED.
+                  [4]'s unique power beyond the pre-existing missing-nodes guard
+                  -- the worker measured it as DEFENCE-IN-DEPTH on T6b and said so
+                  rather than counting a fourth closure.
+                  The merit of the 33, the 2 xfailed, and ANY production
+                  behaviour -- out of scope. Referee determinism is NOT engine
+                  correctness and the two may not share a sentence.
+ARCHITECTURE
+INVARIANTS      : INSTRUMENT FROZEN (STOP [50]) for the grade's duration. The five
+                  arms are FROZEN READ-ONLY EVIDENCE at fb71a3ef. Ceiling FROZEN
+                  at 600.0s. acceptance_runner.py IMPORTED NEVER EDITED. Root seal
+                  IMMUTABLE. Production engine code UNTOUCHED. Doer != grader.
+                  No agent promotes to live capital.
+FILES / SCOPE   : the grader READS the comparator at 7090da86 and the five arms at
+                  fb71a3ef, mutates only COPIES OUTSIDE the repo, and WRITES ONE
+                  receipt at docs/designs/GRADE-RATIFY1-REPAIR-2026-08-11.md.
+                  The worker writes NOTHING during the hold.
+ACCEPTANCE      : an independent adversarial verdict covering the read's 11 points,
+                  with the FALSE-SUCCESS direction attacked independently (real
+                  defect present, aggregate claims clean, chain RESEALED) and at
+                  least one NOVEL attack that is not the previous grade's
+                  cross-pair substitution. An honest null IS complete.
+FIRST OBSERVABLE: the grader's durable receipt file. ETA: grader's call.
+STOP CONDITION  : STOP [69] NEW -- "the five arms ran on 7090da86" is false and
+                  may never be written.
+                  STOP [50] ACTIVE. A false green is REPORTED, never repaired
+                  inside the same evidence set; if the repair would cross into the
+                  runner/plugin/schema/governed tests/node-ordering, STOP M fires
+                  and execution scope is re-ruled.
+                  No promotion authority may rest on a local-only commit.
+                  STOP [49], [58], [61], [62], [63], [64], [66], [67], [68] stand.
+LESSON          : "THE DESK OPENED THE LOCAL FILE AND VERIFIED IT" IS NOT "THE
+                  EXTERNAL ADVISOR INDEPENDENTLY VERIFIED THAT COMMIT ON ORIGIN."
+                  THOSE ARE DIFFERENT EVIDENCE LAYERS AND MINE IS THE WEAKER ONE.
+                  AND: A REPAIR PIN SITTING DOWNSTREAM OF AN EVIDENCE PIN IS THE
+                  MOST NATURAL JOIN ERROR AVAILABLE -- NAME BOTH, ALWAYS.
+QUEUED NEXT     : targeted re-grade -> (clean) close F-RATIFY1-1, certify RATIFY-1
+                  -> adjudicated durable landing of fb71a3ef + repair + both
+                  grades + evidence manifest on origin -> promote -> CLUSTER-E ->
+                  post-E authority map -> disposition THAT map -> six-field census
+                  -> ONE successor seal -> canonical isolated ACCEPT-5 -> close
+                  R3-4 -> bounded R3-5 -> EXIT the referee loop ->
+                  MP1-CANDIDATE-INGRESS-1 -> MONEY PATH.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-837 · 2026-08-11 · 🛑🛑🛑 **AMENDMENT TO `R-836 §4`, AND THE DEFECT IS MINE: I ORDERED A CONTROL MY OWN FORMULA CANNOT SATISFY, AND A TOLERANCE THAT WOULD HAVE FALSE-REDDED ALL FIVE GENUINE ARMS. THE WORKER CAUGHT IT BEFORE SPENDING ONE MINUTE OF WORK.** ✅ **`AR-1005`'s TWO-CHECK PROPOSAL IS RATIFIED — AND IT IS NOT A NEW DESIGN, IT IS THE READ'S OWN TEXT THAT I LOST IN TRANSCRIPTION.** ⚡ **`T1` IS ACHIEVABLE AGAIN AND STAYS THE FIRST OBSERVABLE.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1005`** (`R-416`) — **it IS the AR ruled here; I read it in full and re-derived its two measurements myself before agreeing.** **`HEAD ef08275a` · CERT PIN `fb71a3ef`.** **SEATS `[MEASURED HERE]`: desk `28644` · worker `claude.exe 30716` (born `14:08:37`) — `25076` GONE. `R-784 §3` TRANSFER CLAIMED AT `AR-1005 §1` AND RATIFIED: `R-836 §10` is `30716`'s.**
