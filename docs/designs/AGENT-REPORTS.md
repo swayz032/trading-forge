@@ -4,6 +4,60 @@
 
 ---
 
+## AR-1011 · 2026-08-11 · ✅ **`R-840 §3[A]`–`[D]` BUILT, `§5 A`–`J` GREEN, `§6` REPLAY `0` DIFFERENCES, AND THE ONE CANONICAL ARM'S MAP IS EXACTLY ARM `A`.** 🛑 **ONE STRUCTURAL CONSEQUENCE THE RULING DID NOT NAME, AND IT IS THE DECISION: THE REPAIRED CONTRACT CANNOT CERTIFY THE FIVE HISTORICAL ARMS.**
+
+**SEAT `claude.exe 28956`. COMMIT `f4e9a9d2`. FAN-IN `3/3` on `R-840 §8[1]`.** 🛑 No push · no seal · no `RATIFY-1` number · the `33` untouched · `CLUSTER-E`/`MP1`/HTF untouched · `STOP M` NOT crossed.
+
+**WHAT CHANGED** (`scripts/ratify1_controls/g_order_identity.py`, `scripts/accept5_isolated_runner.py`, new `scripts/ratify1_controls/redproof_evidence_contract.py`):
+- **`[A]`** `--pin` + `--no-chain` ⇒ **REFUSED before comparison**; a chain-off run is structurally incapable of printing the certifying headline.
+- **`[B]`** every verdict carries a stable proof ID; certification requires `OBSERVED ⊇ REQUIRED` **and** all true. **`REQUIRED_PROOFS` is a hand-declared frozen literal, NOT derived from the emitting code** — deriving it would put both sides of the completeness check in the same layer.
+- **`[C]`** `VerifiedArm`: reading a field no authority derived **raises** instead of falling back to the arm's claim. Rows `5`/`6` now derive from RAW primitives — `set(collected) − set(outcomes)` exact IDs, and `returncode`/`timed_out`/`run_id`/schema/artifact-existence — never the receipt's `collected_but_unexecuted`/`problems` summaries. The **oracle itself** now compares REBUILT maps.
+- **`[D]`** `[H]` moved to the runner: `time.monotonic`, refusal at source above `600s`, witness inside the **digest-bound manifest**. **Value frozen, owner moved.** `[MEASURED HERE, `git diff`]` the runner diff is **TIMING-ONLY** — 4 clock swaps, the constant, the witness, the manifest key, the refusal branch. No child command, population, ordering, isolation, plugin or outcome parsing.
+
+**RED → GREEN (exact commands in `AGENT-LOGS`-grade detail below):**
+```
+--red-proof                       26/26  OK   (pre-existing suite, NO regression)
+redproof_evidence_contract A..J   12/12  OK   exit 0 unpiped
+  C2 removes an ENTIRE evidence layer -> 55 required proofs MISSING -> REFUSED
+  F/G/I are UNIQUE catches (exactly one failing verdict each)
+  H fires 4 verdicts -> defence-in-depth, NOT a unique catch. Stated, not counted.
+  E  runner clock injected >600s -> RUNNER REFUSES AT SOURCE, exit 2
+  E+ same runner, real clock      -> exit 0 and the witness is MINTED
+§6[1] replay, all 10 historical pairings: 0 DIFFERENCES, 0 MISSING PROOFS
+§6[2] ONE canonical arm @ f4e9a9d2: 108 children, 2419/2419, 0 missing,
+      0 invented, EXACT node->outcome map == arm A (33 failed / 2384 passed /
+      2 xfailed), runner [H] 379.038s <= 600.0s GREEN
+```
+✅ **`[MEASURED HERE]` no governed test file changed between `fb71a3ef` and `HEAD`, so the canonical arm is an UNCONFOUNDED comparison. `§6[3]` does NOT fire.**
+
+🛑 **THE DECISION I OWE THE DESK, AND I WILL NOT SOLVE IT MYSELF.** The five historical arms predate `[D]`, so their manifests carry **no timing witness** and they fail `VERIFIED/TIMING_AUTHORITY` + `VERIFIED/H_CEILING` **by construction** — `[MEASURED]` those 4 IDs are the ONLY failures across all 10 replays. ⇒ **`RATIFY-1` cannot be certified on the preserved five under the repaired contract.** ⚠️ **The obvious "fix" — a legacy-evidence exemption — IS `--no-chain` REBORN, and I refuse to build it (`STOP [70]`).** The live options are the desk's: certify on newly-minted arms (cost: `§1[3]` allows ONE), or rule an explicitly-recorded provision. **I have NOT pre-empted either.**
+
+🛑 **NOT CLOSED, NOT BUILT, AND MEASURED RATHER THAN ASSUMED — `R-840 §3` says "four items, no others", so I REPORT (`R-648`):**
+- **`CRITICAL-2` SURVIVES.** `[MEASURED HERE, grep]` the comparator names `acceptance-run.json` only for an EXISTENCE check (`:339`); it never parses artifact CONTENT. A receipt can still contradict its own digest-bound artifact.
+- **The vacuity `HIGH` SURVIVES.** `[MEASURED HERE, `:899`]` the anti-vacuity guard is still a single global `bool(varied)`.
+- **`manifest.node_sequence_sha256` STILL UNREAD.** `[MEASURED HERE]` `0` hits in the comparator, `1` in the runner — the anchor `R-840` itself calls out.
+
+🛑 **`STOP [71]` HONOURED VERBATIM: I do NOT claim all false-green routes are eliminated. The honest claim is `THE MEASURED ROUTES ARE CLOSED AND THE CERTIFYING PATH NOW HAS A CLOSED EVIDENCE CONTRACT.`** ⚠️ **And `[instance-not-condition]`: the required set is a set I WROTE. That it is complete is exactly what an independent grader must attack.**
+
+🛑 **MY OWN ERRORS, ALL FOUR DISCLOSED — EVERY ONE WAS MY HARNESS LYING BEFORE THE CODE DID:** (1) a `cd … && …` chain backgrounded with `&` wrote to a different directory, so my first ear red-proof read empty; (2) PowerShell `Measure-Object -Line` reported the instrument as `971` lines when it is `1088` — it **does not count blank lines**, and three POSIX instruments agreed; (3) control `C2` asserted on the substring `"SATISFIED"` and caught the refusal's OWN explanatory sentence; (4) control `E` patched `time.monotonic` GLOBALLY, which broke `subprocess`'s internal deadline math so `git rev-parse` "timed out" and the runner refused for a reason I had not caused — **a control that gets the right exit code for the wrong reason is a false green wearing a red coat.** Also: control `I` first stole a node from receipt index `0`, which is an `empty_by_design` child with zero outcomes, so the mutation did not bite. ★ **`[ps-counting-encoding]` again, and the fixture-that-normalizes-what-it-skips again.**
+
+**RECOMMENDATION: `GRADE_REQUESTED` — `§8[1]` is `3/3` COMPLETE and the next act is explicitly the DESK's (`§8[5]`: adversarial `accuracy-validator`, ≥1 NOVEL false-green attack).** ⚖️ **I do not certify and I hold no number. Attack surfaces I nominate: the REQUIRED set's own completeness · `CLAIMED/` never satisfying a requirement · the synthetic timing witness in control `J`'s clones · and the three routes above that I did NOT close.**
+
+---
+
+## AR-1010 · 2026-08-11 · 📌 **START-RECEIPT — `R-840` RECEIVED VIA MY OWN EAR, HOLD LIFTED, WORK STARTED.**
+
+**SEAT `claude.exe 28956`. TREE `wt-h1-wave4-20260712`.** ⚡ **My `Monitor` ear DELIVERED `R-840` as a chat notification (`count 818 -> 819`) — the channel is proven in production, not just red-proofed.**
+
+- **TASK, AS I READ IT:** `R-840 §3[A]`→`[D]` in the `§4` files → `§5` controls `A`–`J` → `§6` replay + at most ONE canonical arm. **No permission round-trip (`§8[2]`).**
+- **FIRST OBSERVABLE (`§8[4]`):** the `REQUIRED_PROOFS` closed structure + the `--no-chain` certifying refusal, committed. **ETA ~45–75 min.**
+- **CONSERVATION MODE ACKNOWLEDGED (`§1`):** compact reports, exact files only, no sweeps, no `33`, one arm max. **This AR is the format.**
+- ⚖️ **ONE SCOPE NOTE, STATED NOW RATHER THAN AS A SURPRISE LATER:** `§3[D]` requires `time.time()` → `time.monotonic()` in `accept5_isolated_runner.py`. **`§4` authorizes it as TIMING-ONLY and `§3[D]` names it required.** If any part of it reaches ordering, isolation or outcome parsing, **`STOP M` fires and I report instead of proceeding.**
+- 🛑 **NOT DOING:** the `33` · `CLUSTER-E` · `MP1` · seals · push · any `RATIFY-1` number (`STOP [49]`) · self-certification. **I will not write "all false-green routes eliminated" (`STOP [71]`).**
+- **BLOCKER: NONE.**
+
+---
+
 ## AR-1009 · 2026-08-11 · 📌 **SEATING RECEIPT — SEAT ROLL `30716` → `claude.exe 28956`. THE HOLD IS INHERITED, NOT RE-OPENED.** ✅ **EAR ARMED ON THE `Monitor` CHANNEL AND RED-PROOFED BOTH WAYS ON A THROWAWAY BEFORE I TRUSTED IT.** 🛑 **NOTHING MEASURED BEYOND THE SEATING FACTS, NOTHING BUILT, NOTHING REQUESTED.**
 
 **SEAT `claude.exe 28956`** (born `2026-08-11 18:38:34`, parent `powershell.exe 31520`). **TREE `wt-h1-wave4-20260712`, `HEAD d2808b00`, branch `h1-wave4-sealed12-driver`, `24` ahead of `origin`.** 🛑 Read-only seating · instrument NOT touched · no arm re-run · the `33` untouched · no push · no worktree removed · `ADVISOR-RULINGS.md` and `ADVISOR-STATE.md` NOT edited.
