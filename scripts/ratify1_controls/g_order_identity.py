@@ -84,6 +84,27 @@ def load_arm(path):
     return d
 
 
+def _resolves_to_commit(sha):
+    """Does this SHA name a real commit object in THIS repo?
+
+    R-827 §8[4] / grade finding F-5. The old guard asserted only that the two
+    arms AGREED on `head`. `[MEASURED BY GRADED INSTRUMENT]` setting BOTH arms to
+    `deadbeefdeadbeef...` therefore yielded "OK both arms measured the SAME
+    commit" and "[G] SATISFIED", exit 0.
+
+        TWO ARMS AGREEING ON A COMMIT THAT DOES NOT EXIST AGREE ABOUT NOTHING.
+    """
+    import subprocess
+    if not isinstance(sha, str) or not sha:
+        return False
+    try:
+        out = subprocess.run(["git", "cat-file", "-t", sha], cwd=str(REPO),
+                             capture_output=True, text=True, timeout=30)
+    except Exception:                                          # noqa: BLE001
+        return False
+    return out.returncode == 0 and out.stdout.strip() == "commit"
+
+
 def authority_nodes():
     """The governed population, from the SAME authority [A]/[B] import.
     Never a hand-maintained roster (R-823 §5)."""
@@ -95,7 +116,7 @@ def authority_nodes():
     return set(required)
 
 
-def compare(fwd, rev, required, out_dir=None, mode="order"):
+def compare(fwd, rev, required, out_dir=None, mode="order", pin=None):
     """Return (verdicts, differences). Verdicts are (name, ok, detail).
 
     mode="order"   [G]: the arms must be OPPOSED -- canonical vs REVERSE.
@@ -126,6 +147,31 @@ def compare(fwd, rev, required, out_dir=None, mode="order"):
               f"fwd.reverse={fwd['reverse']!r} rev.reverse={rev['reverse']!r}"))
     V.append(("both arms measured the SAME commit", fwd["head"] == rev["head"],
               f"{fwd['head']} vs {rev['head']}"))
+
+    # ---- F-5 / F-6: ANCHOR THE PIN, DO NOT MERELY AGREE ON IT --------------
+    # Agreement between arms is a relation between two claims. Neither of them
+    # is bound to a commit that exists, nor to the commit being certified.
+    for tag, arm in (("forward", fwd), ("reverse", rev)):
+        V.append((f"{tag}: head RESOLVES to a real commit",
+                  _resolves_to_commit(arm["head"]), f"{arm['head']}"))
+    # Fail-closed: an unsupplied pin is a MISSING binding, never a waived one.
+    V.append(("arms are bound to the CERTIFIED pin", pin is not None
+              and fwd["head"] == pin and rev["head"] == pin,
+              f"pin={pin!r} fwd={fwd['head']!r} rev={rev['head']!r}"
+              + ("  <- NO --pin SUPPLIED; a certifying run must bind one"
+                 if pin is None else "")))
+
+    # ---- F-2: [H] IS A GATE, NOT A PRINTED LINE ----------------------------
+    # The wall-clock check used to live only in report(); it never entered the
+    # verdict list that the exit code folds, so a forged wall_s of 60x the
+    # ceiling printed its own warning and returned 0.
+    #
+    #   A CHECK THAT PRINTS ITS OWN FAILURE AND EXITS ZERO IS NOT A GATE --
+    #   IT IS A LOG LINE WITH AN OPINION.
+    for tag, arm in (("forward", fwd), ("reverse", rev)):
+        mins = arm["wall_s"] / 60.0
+        V.append((f"{tag}: [H] wall clock <= {CEILING_MIN} min",
+                  mins <= CEILING_MIN, f"{mins:.2f} min"))
     V.append(("arms are distinct artifacts", fwd["_path"] != rev["_path"],
               f"{fwd['_path']} vs {rev['_path']}"))
     V.append(("neither arm is a LIMITED SUBSET",
@@ -209,10 +255,24 @@ def red_proof():
     req = set(BASE)
     seq = [0]
 
+    # C12 / F-5's ROOT: these fixtures used to hardcode head="deadbeef", so the
+    # controls that certify this comparator were themselves written against a
+    # pin that resolves nowhere -- and the instrument was therefore never taught
+    # to demand a real one.
+    #
+    #   A RED-PROOF FIXTURE IS A SPECIFICATION. WHATEVER IT NORMALIZES, THE
+    #   INSTRUMENT WILL ACCEPT FOREVER.
+    #
+    # The default fixture pin is now this repo's real HEAD, and C12 below
+    # asserts that it genuinely resolves rather than assuming it.
+    import subprocess
+    REAL_PIN = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(REPO),
+                              capture_output=True, text=True).stdout.strip()
+
     def arm(outcomes, *, reverse, **kw):
         seq[0] += 1
         d = {"outcomes": dict(outcomes), "children": 2, "nodes": len(outcomes),
-             "wall_s": 12.0, "reverse": reverse, "head": "deadbeef",
+             "wall_s": 12.0, "reverse": reverse, "head": REAL_PIN,
              "duplicate_nodes": 0, "collected_but_unexecuted": 0,
              "invalid_children": [], "limited_subset": False,
              "_path": f"/synthetic/arm-{seq[0]}.json"}
@@ -221,8 +281,8 @@ def red_proof():
 
     cases = []
 
-    def run(name, f, r, expect_pass, mode="order"):
-        V, _ = compare(f, r, req, mode=mode)
+    def run(name, f, r, expect_pass, mode="order", pin=REAL_PIN):
+        V, _ = compare(f, r, req, mode=mode, pin=pin)
         ok = all(v for _, v, _ in V)
         cases.append((name, ok is expect_pass,
                       f"expected {'GREEN' if expect_pass else 'RED'}, "
@@ -275,6 +335,42 @@ def red_proof():
     run("[G] rejects a SAME-DIRECTION ([I]) pair => RED", arm(BASE, reverse=False),
         arm(BASE, reverse=False), False, mode="order")
 
+    # ---- C8..C12, ADDED UNDER R-827 §8[1] ---------------------------------
+    # C8/C9 close F-2: the ceiling must have a demonstrated path to RED *and*
+    # a positive arm, or it is satisfied by a gate that reds on everything.
+    over = CEILING_MIN * 60.0 + 0.01
+    run(f"C8  wall_s over the ceiling ({over:.2f}s) => RED",
+        arm(BASE, reverse=False, wall_s=over), arm(BASE, reverse=True), False)
+    run("C9  wall_s under the ceiling => GREEN", arm(BASE, reverse=False),
+        arm(BASE, reverse=True), True)
+    # The grader's exact F-2 attack, kept verbatim so the fixture names the
+    # measurement it descends from.
+    run("C8b the grader's forged wall_s=36000.0 (60x) => RED",
+        arm(BASE, reverse=False, wall_s=36000.0), arm(BASE, reverse=True), False)
+    # C10 closes F-5: BOTH arms agreeing on a commit that resolves nowhere.
+    DEAD = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    run("C10 both arms on a NON-RESOLVING commit => RED",
+        arm(BASE, reverse=False, head=DEAD), arm(BASE, reverse=True, head=DEAD),
+        False, pin=DEAD)
+    # ...and the same maps with a real, bound pin must still pass, or C10 would
+    # be indistinguishable from "the comparator dislikes this fixture".
+    run("C10b same maps with a REAL bound pin => GREEN", arm(BASE, reverse=False),
+        arm(BASE, reverse=True), True)
+    # C11: an arm whose head is real but is NOT the pin being certified.
+    run("C11 arms not bound to the certified pin => RED", arm(BASE, reverse=False),
+        arm(BASE, reverse=True), False, pin=DEAD)
+    # Fail-closed: no pin supplied at all is a MISSING binding, not a waiver.
+    run("C11b no --pin supplied => RED", arm(BASE, reverse=False),
+        arm(BASE, reverse=True), False, pin=None)
+
+    # C12: the control suite audits ITS OWN fixtures. This is the only case here
+    # whose subject is the other cases, and it may not be dropped as meta --
+    # F-5 existed precisely because nobody asserted this.
+    cases.append(("C12 the red-proof's OWN default pin RESOLVES",
+                  _resolves_to_commit(REAL_PIN),
+                  f"{REAL_PIN[:12]}... resolves="
+                  f"{_resolves_to_commit(REAL_PIN)}"))
+
     print("=== [G]/[I] COMPARATOR RED-PROOF ===")
     for name, ok, detail in cases:
         print(f"  {'OK  ' if ok else 'FAIL'}  {name:40s} {detail}")
@@ -295,6 +391,10 @@ def main(argv=None):
                     help="order = [G] canonical vs REVERSE; "
                          "repeat = [I] same direction twice at an identical pin "
                          "(--forward/--reverse are then run-1/run-2)")
+    ap.add_argument("--pin", default=None,
+                    help="The exact commit SHA being certified. Both arms' "
+                         "'head' must EQUAL it and it must RESOLVE (F-5). "
+                         "Fail-closed: omitting it FAILS a certifying run.")
     ap.add_argument("--red-proof", action="store_true",
                     help="prove this comparator can go RED, then exit")
     args = ap.parse_args(argv)
@@ -306,7 +406,8 @@ def main(argv=None):
 
     fwd, rev = load_arm(args.forward), load_arm(args.reverse)
     required = authority_nodes()
-    V, D = compare(fwd, rev, required, out_dir=args.out_dir, mode=args.mode)
+    V, D = compare(fwd, rev, required, out_dir=args.out_dir, mode=args.mode,
+                   pin=args.pin)
     return 0 if report(fwd, rev, required, V, D, mode=args.mode) else 1
 
 
