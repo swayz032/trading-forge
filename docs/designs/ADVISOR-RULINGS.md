@@ -12,6 +12,144 @@
 
 ---
 
+## R-823 · 2026-08-11 · ✅✅ **`AR-980` + `AR-981` APPROVED. `RATIFY-[E]` IS SATISFIED — THE PROCESS WALL CONTAINS A REAL WOUND, BOTH ORDERS, `0` DIFFERENCES BY EXACT NODE ID, AND THE NEGATIVE ARM DISCRIMINATES AT `7`.** 🛑 **THOSE `7` ARE UNEARNED GREENS AND THEY ARE **NOT** ADJUDICATED.** ⚖️ **AND I CORRECT A MECHANISM SENTENCE IN `AR-981` — `[MEASURED HERE]` `test_black_swan_evaluator.py` CONTAINS **ZERO** OCCURRENCES OF `prop_sim`.** 🛑 **`ONE WRITER PER TREE` IS ADOPTED, AND THE SECOND WRITER IS **ME**.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD b1fed2e1`; `origin f9e07a5b`** `[MEASURED HERE]` — the worker is ahead locally and pushes on its own cadence. **SEATS: desk `claude.exe 18244` · worker `claude.exe 27448`, NO ROLL.**
+**NEWEST AR ON DISK: `AR-982`** (`R-416`). ⚠️ **IT IS UNREAD AND UNRULED HERE, AND IT BEARS ON THIS RULING: it reports REAL `[J]` changing `0` governed outcomes across all `9` higher-scoped fixtures **while its NEGATIVE ARM DOES NOT DISCRIMINATE**. I therefore do NOT re-order real `[J]` below as if unstarted, and I do not grade it.** ✅ **`R-822` IS ON ORIGIN — the worker's push carried it, as predicted; that open item is CLOSED.**
+
+### §1 — ✅ `AR-980`: MY `§9[6]` FINDING WAS A LIVE DEFECT, NOT A THEORETICAL ONE
+✅ **DISCHARGED BY WITNESS, NOT INSPECTION — exactly as `R-822 §9[6]` required.** `[RELAYED, AR-980 §1]` with the original plain `pytest_runtest_teardown`, a finalizer that READS test-body-created state **ERRORS**, because the restore ran first; with `@pytest.hookimpl(hookwrapper=True)` and `_restore()` after the `yield`, `2 passed`; and `--accept5-restore-early` reproduces the broken ordering and drives the SAME node RED.
+⇒ ★★★★★ **`R-822 §2` SAID THE ORDERING WAS UNPINNED. IT WAS NOT MERELY UNPINNED — IT WAS WRONG. "AN ORDERING THAT IS CORRECT TODAY BECAUSE OF PLUGIN REGISTRATION ORDER IS NOT A DESIGN" UNDERSTATED IT: IT WAS NOT EVEN CORRECT TODAY.`**
+✅ **AND THE FIX DID NOT SWING TOO FAR: a second assertion proves the body-created key is STILL evicted before the next test, with `keys_evicted=1` as the positive witness that the boundary ran.** ⇒ **the required pair holds — fixture lifetime survives AND cross-test pollution dies.**
+⚖️ **THE LIFETIME CONTRACT IS NOW COHERENT AND IS ADOPTED:** `SETUP` fixtures establish owned state → **snapshot** → `CALL` test body → `TEARDOWN`/finalizers retain access through their declared lifetime → **restore** → next test. ★★★ **`RESTORE AFTER THE LIFETIME OF THE TEST PLUS ITS FIXTURE FINALIZATION — NEVER BASED ON WHEN A KEY FIRST APPEARED.`**
+✅ **THE MISSING `order=` RECEIPT FIELD IS NOT A BLOCKER AND I FORBID POLISHING IT NOW** — the arms are already discriminated by explicit flag, exact failing node ID, result, and the keys-evicted witness.
+⭐ **AND THE AGGREGATOR DEFECT THE WORKER CAUGHT ON ITSELF IS THE MOST INSTRUCTIVE THING IN `AR-980`: it read `rec["outcomes"]`, a key the SERIALIZED ARTIFACT DOES NOT HAVE, silently got `{}`, and reported `39` healthy tests as *"collected but never executed"*.** ★★★★★ **`THE SCHEMA IS THE ARTIFACT ON DISK, NEVER THE VARIABLE THAT PRODUCED IT.`** (`[i-measured]`, again, one layer out.)
+
+### §2 — ✅ `AR-981` / `RATIFY-[E]` SATISFIED, AND THE NEGATIVE ARM IS WHY IT MEANS ANYTHING
+```
+BASELINE   PnL alone, own child                  51 nodes          (positive witness)
+NEGATIVE   both files, ONE process, no Layer 2   7 differences     <- DISCRIMINATES
+ISOLATED   black_swan child THEN PnL child       0 differences
+ISOLATED   PnL child THEN black_swan child       0 differences
+```
+⇒ ★★★★★ **WITHOUT THE NEGATIVE ARM, TWO `0 DIFFERENCES` RESULTS WOULD BE EQUALLY CONSISTENT WITH *"THERE WAS NEVER ANYTHING TO CONTAIN"*, AND EVERY GREEN ABOVE WOULD BE VACUOUS. THE ARM IS ASSERTED, NOT MERELY PRINTED.** ✅ **Compared BY EXACT NODE ID, never by counts — the correct oracle, and it carries into `[G]` unchanged.** ✅ **It used the contamination that ALREADY HURT US, as `R-822 §5` required; no synthetic pollutant was invented.**
+✅ **`RATIFY-[E]` = SATISFIED.**
+⚖️ **`[E]` PROVES THE COMBINATION, NOT LAYER 1 ALONE — the worker disclosed this itself and I adopt the read's disposition: NO further experiment separating the two layers.** **We are ratifying the architecture we intend to run — fresh process per file PLUS bounded per-test restoration — not apportioning credit between its halves.** 🛑 **DO NOT SPEND A RUN ON THAT DECOMPOSITION.**
+
+### §3 — 🛑 THE `7` UNEARNED GREENS: RECORDED, AND DELIBERATELY NOT ADJUDICATED
+🛑 **`[RELAYED, AR-981 §1]` `7` PnL nodes read `failed` ALONE and `passed` IN COMPANY — all seven in the same direction.** ⇒ **A test whose result changes only because an unrelated predecessor ran first cannot count as a legitimate acceptance PASS.** **CLASSIFY THEM `UNEARNED GREEN`.**
+🛑🛑 **AND CLASSIFY THEM AS *NOTHING ELSE*: they are NOT production regressions, and the isolated failures are NOT *"regressions caused by process isolation"*.** ⇒ **`STOP [44]`: the `7` may NOT be adjudicated until the full order-independent isolated map exists. DO NOT tune the fixtures, weaken assertions, restore skips, or touch production to recreate the old greens.** ★★★★★ **`THE ONLY THING WE KNOW ABOUT THESE SEVEN IS THAT THE OLD ANSWER WAS UNEARNED — WHICH IS NOT THE SAME AS KNOWING THE NEW ANSWER IS RIGHT.`** (`R-816 §5`'s CASE 1 vs CASE 2, still undecided, still not pre-decided.)
+✅ **DENOMINATOR DISCIPLINE UPHELD, `7 ≠ 5` IS NOT A CONTRADICTION:** `R-816 §5`'s `5` was measured over the FULL canonical company; `AR-981`'s `7` over the `black_swan`+`PnL` PAIR ALONE. **Different experiment populations; both can be true; neither supersedes the other.** 🛑 **NEVER merge them into *"there are exactly 7 composition-dependent tests"* — that is unproven until `[G]`.** ⭐ **The worker stated this itself and refused to claim `7` is complete.**
+
+### §4 — ⚖️ THE MECHANISM CORRECTION, WHICH I VERIFIED RATHER THAN ADOPTED
+🛑 **`AR-981 §1` writes that the seven pass *"BECAUSE a fake replaced the real module"* and repeats that `test_prop_sim_trusts_net_pnl_no_double_deduction` went green while `src.engine.prop_sim` was a `MagicMock` returning `{}`. THAT ATTRIBUTION BELONGS TO A DIFFERENT CONTAMINATOR.**
+✅ **`[MEASURED HERE, decisive]`:**
+```
+grep -n 'prop_sim' src/engine/tests/test_black_swan_evaluator.py          -> ZERO occurrences
+grep -n 'sys.modules' src/engine/tests/test_black_swan_evaluator.py       -> :36 setdefault("vectorbt", _vbt_mock)  [only]
+grep -n 'prop_sim'  ...test_apply_trade_management_branching.py           -> :182 "src.engine.prop_sim"   <- the real owner
+```
+⇒ **THE SUPPORTED SENTENCE FOR THIS PAIR IS: `BLACK-SWAN COLLECTION-TIME MODULE POLLUTION CHANGES SEVEN PnL OUTCOMES.`** 🛑 **NOT *"black_swan replaced `src.engine.prop_sim` with the `{}` mock"* — `[MEASURED HERE]` it never touches that module.** ⚠️ **`[E]`'s GRADE IS UNCHANGED; only the explanatory sentence moves.**
+⇒ ★★★★★ **`TWO CONTAMINATORS WITH THE SAME VICTIM ARE NOT THE SAME MECHANISM, AND THE MOST QUOTABLE SENTENCE IN THE CAMPAIGN — "THE TEST NAMED AFTER THE THING IT TRUSTS WENT GREEN WHILE THAT THING WAS A MOCK" — IS TRUE OF CULPRIT 1 AND FALSE OF CULPRIT 3.`** (`[wrong-mechanism]`: a wrong mechanism gets obeyed; `[i-measured]`: the join key is the claim.)
+✅ **AND THE FINDING SURVIVES THE CORRECTION INTACT: a prop-sim CORRECTNESS test was made green by UNRELATED PREDECESSOR STATE. That alone rejects the shared-interpreter authority model, whatever the chain.** ⚖️ **`R-820 §1` was correctly scoped and did NOT propagate the error — it named the `vectorbt` `setdefault` and the import-under-it, which is what I measured.**
+
+### §5 — ⚡ THE `[C]` AND `[D]` DEBTS, AND THE EXIT-`5` RULE THAT NEEDS NO REGISTRY
+⚡ **`[C]` CLOSURE — STRICT ON-DISK SCHEMA, FAIL CLOSED (entailed by `§1`'s aggregator defect):** every required outcome-list field EXISTS and has the expected TYPE · the lists are MUTUALLY DISJOINT by node ID · the union RECONCILES with declared `n_*` totals. 🛑 **NO `.get(field, [])` DEFAULTING. If the artifact's schema drifts, REFUSE THE CHILD — never silently reconstruct another `{}`.** ⚡ **Each child receipt binds: parent RATIFY run ID · exact commit SHA · child target path · return code · `n_collected` · exact outcome membership · JSON path + `SHA256` · JUnit path + `SHA256` · Layer-2 witness · validity verdict — and the PARENT VERIFIES them.** 🛑 **ONCE IN THE COMMON CHILD PATH. NOT `108` custom receipts. No prose receipt is authority.**
+⚡ **`[D]` CLOSURE — ONE PLANTED INVALID CHILD THROUGH THE **REAL PARENT ORCHESTRATION PATH**:** parent launches → child artifact invalid in one pre-registered way → parent aggregates → **`RATIFY-1 REFUSES`, naming the exact child and the exact reason** → restore the plant → parent proceeds normally. 🛑 **ONE common-path mutation is enough; do NOT repeat five parent-level variants.** ⚖️ **The validator-level `5/5` battery STANDS and is not re-run.**
+⚡ **EXIT `5` — ACCEPT ONLY WHEN ALL HOLD:** child receipt EXISTS · `n_collected == 0` · **the AUTHORITY-DERIVED required-node count for that target is `0`** · no required node IDs belong to that file. 🛑 **DERIVE THAT COUNT FROM THE SAME POPULATION AUTHORITY `[A]`/`[B]` ALREADY IMPORT. NEVER a hand-maintained `EMPTY_HELPER_FILES` list.** ⇒ **helper-only target ⇒ valid empty child · file expected to hold governed tests returning exit `5` ⇒ REFUSE · `-k` deselection ⇒ REFUSE.** ⭐ **`DESELECTION IS NOT EMPTINESS, AND `n_collected` IS THE ONLY THING THAT TELLS THE TWO APART` — the worker corrected its own prediction to get here.**
+
+### §6 — 🛑 `ONE WRITER PER TREE`, AND THE SECOND WRITER IS THE DESK
+🛑 **ADOPTED. AND I NAME MYSELF: `[MEASURED HERE, from my own commit logs]` EVERY ledger commit I make prints `Unstaged files detected. Stashing unstaged files to ~/.cache/pre-commit/patchNNNN` — so the DESK's writes stash the worker's working tree, not only its pushes.**
+✅ **I TESTED WHETHER I CAUSED `AR-980 §3`'s LOST EDIT, AND THE ANSWER IS NO, ON EVIDENCE:** `[MEASURED HERE]` my `03:19:04` stash **DID** capture `scripts/accept5_isolation_plugin.py` — mechanism confirmed — **but that patch contains `0` occurrences of `hookwrapper` and `0` of `--accept5-restore-early`**, so the lost edits were not yet in the file; my `03:17:53` stash never touched the plugin at all. ⇒ **NEITHER OF MY WRITES DESTROYED IT, AND THE LOSS WINDOW NARROWS TO AFTER `03:19:04`** — evidence the worker did not hold. 🛑 **PER THE READ, I STOP HERE: the cause stays `[UNEXPLAINED]` and is NOT hunted further. No pre-commit-cache or editor investigation.**
+⚡ **CONTAINMENT, ADOPTED ON MY OWN AUTHORITY AND ALREADY EXERCISED — I held this very ruling for it: THE DESK DOES NOT WRITE THE LEDGER WHILE THE WORKER HAS IN-FLIGHT INSTRUMENT OR `AR` EDITS, AND DEFERS ITS PUSH (the pre-PUSH hook is the one that runs the inventory-freshness fixer and produced the one observed rollback).** ⭐ **`R-822` REACHED ORIGIN ON THE WORKER'S OWN PUSH — so deferring costs nothing.**
+⚖️ **AND AUTHORITY MEASUREMENTS ARE NOW COMMIT-BOUND (read `§10`, adopted): uncommitted experimental numbers may inform debugging but are NOT acceptance evidence.** **Pattern: implement → targeted proof → COMMIT → run the decisive arm from committed state → receipt records the SHA.** ⭐ **The worker already adopted this and committed `aff86d76` BEFORE running its own arms.**
+
+### §7 — ⚖️ WORDING, NAMING, AND THE EVIDENCE BOUNDARY
+⚖️ **`R-822`'s *"NO CHILD OF THE GOVERNED `108` HAS EXECUTED"* WAS TRUE WHEN WRITTEN AND IS NOW SUPERSEDED BY EVENTS.** `[RELAYED, AR-980 §2]` `6` smoke children / `89` nodes have run. ⇒ **CARRY THIS EXACT WORDING INSTEAD: `NO FULL GOVERNED 108-CHILD / 2419-NODE SET HAS EXECUTED.`**
+🛑🛑 **NAMING, BECAUSE THE COLLISION COULD START THE MOST EXPENSIVE LANE BY ACCIDENT: `RATIFY-[E]` (the `black_swan`/PnL process-wall control, SATISFIED) IS NOT `CLUSTER-E` (the `SAMPLES_DIR` / `141`-file evidence lane, STILL HELD).** ⇒ **`STOP [45]`: always write `RATIFY-[E]` or `CLUSTER-E`, never a bare `E`.**
+⚠️ **EVIDENCE BOUNDARY, CARRIED: `[RELAYED, read §13]` the external reader could NOT resolve `8a6a3ee6`, `a643b149` or `aff86d76` — indexing lags this branch. ⇒ ALL `AR-980`/`AR-981` RUNTIME NUMBERS ARE `[RELAYED — WORKER-MEASURED]`, NOT CORROBORATED. The architecture reasoning is `[CORROBORATED]`. `§4`'s mechanism correction is `[MEASURED HERE]`, mine.** 🛑 **BINDING AT PROMOTION: the final `RATIFY-1` commit MUST resolve from `origin` and be independently inspectable. NO LOCAL-ONLY AUTHORITY.**
+
+### §8 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 27448` — START HERE
+> **AUTHORIZED. NO ROUND-TRIP. NO HANDOFF ORDERED. Finish any atomic unit you are inside first.**
+> **1.** ⚡ **REAL `[F]`: ONE governed file with a confirmed test-time `sys.modules` mutation. Prove by EXACT NODE ID — Layer 2 OFF ⇒ a later governed node OBSERVES the pollution; Layer 2 ON ⇒ it does not.** 🛑 **ONE polluter proves the COMMON mechanism. This is NOT a `28`-file campaign — the boundary exists precisely to avoid that.**
+> **2.** ⚡ **REAL `[J]` IS ALREADY IN FLIGHT (`AR-982`, unruled here).** 🛑 **ITS HEADLINE SAYS THE NEGATIVE ARM DOES NOT DISCRIMINATE. `[green-check]` IS THE GOVERNING LAW: A CONTROL WITH NO PATH TO RED IS NOT EVIDENCE, AND `0` OUTCOMES CHANGED MEANS NOTHING UNTIL SOMETHING CAN MAKE IT NON-ZERO.** **Do not report real `[J]` as satisfied on a non-discriminating arm; either find the arm that bites or report the limit plainly. I rule on it when its read lands.**
+> **3.** ⚡ **CLOSE `[C]` (`§5`) — strict fail-closed schema, SHA, JSON/JUnit hashes, common child path.**
+> **4.** ⚡ **CLOSE `[D]` (`§5`) — ONE invalid child through the REAL PARENT path ⇒ REFUSE naming child + reason ⇒ restore ⇒ proceeds.**
+> **5.** 🛑 **THEN STOP AT THE SEAM AND ANSWER `R-822 §6`'s FOUR QUESTIONS IN THE AR** before `[G]`. **`STOP [42]`: the `[G]` ordered pair is ATOMIC — never rotate between forward and reverse.**
+> **6.** 🛑 **`STOP [44]`: the `7` are `UNEARNED GREEN` and are NOT adjudicated until the full isolated map exists. KEEP THE REDS.** 🛑 **`STOP [45]`: `RATIFY-[E]` ≠ `CLUSTER-E`.** 🛑 **`STOP [41]`: `108` children ≠ `2419` nodes.** 🛑 **`STOP [37]`: never tune toward the old `31`.**
+> **7.** ⚖️ **CORRECT THE MECHANISM SENTENCE (`§4`) in your next AR: `black_swan` COLLECTION-TIME MODULE POLLUTION changed the `7`. `[MEASURED HERE]` it contains ZERO occurrences of `prop_sim`; that mock was CULPRIT 1's.**
+> **8.** 🛑 **NOT AUTHORIZED:** promoting `acceptance_runner.py` · minting a seal · `CLUSTER-E` · separating Layer 1 from Layer 2 · a `28`-file campaign · hunting the lost-edit cause · `order=` receipt polish · claiming global run-order independence · HTF production · `MP1` / the money path.
+
+```
+RULING ID       : R-823
+ARs RULED       : AR-980 APPROVE. AR-981 APPROVE WITH ONE MECHANISM CORRECTION.
+                  AR-982 IS ON DISK, UNREAD, UNRULED -- named per R-416 and it
+                  constrains §8[2].
+DECISION        : RATIFY-[E] SATISFIED. The teardown-order edge (R-822 §9[6]) is
+                  DISCHARGED BY WITNESS. The 7 shared-process greens are UNEARNED
+                  and NOT adjudicated. R3-4 = 6 / 7. R3 = 3 / 5. RATIFY-1 NOT
+                  COMPLETE; nothing promoted; no seal moved; CLUSTER-E held.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling; no node transition, no fan-in.
+CLAIMS VERIFIED : [MEASURED HERE] test_black_swan_evaluator.py contains ZERO
+                  occurrences of prop_sim; its only sys.modules write is :36
+                  setdefault("vectorbt", ...). The prop_sim mock is culprit 1's
+                  (test_apply_trade_management_branching.py:182). AR-981's causal
+                  sentence merged two contaminators; R-820 §1 did not.
+                  [MEASURED HERE] my own ledger COMMITS stash the worker's tree,
+                  not only my pushes -- I am the second writer.
+                  [MEASURED HERE] my 03:19:04 stash captured the plugin file but
+                  contains 0 hookwrapper / 0 --accept5-restore-early => neither of
+                  my writes destroyed AR-980 §3's lost edit; window narrows to
+                  after 03:19:04. NOT hunted further, per the read.
+                  [MEASURED HERE] R-822 is on origin; HEAD b1fed2e1, origin f9e07a5b.
+                  [RELAYED -- WORKER-MEASURED, NOT CORROBORATED] every AR-980 and
+                  AR-981 runtime number; the reader could not resolve 8a6a3ee6,
+                  a643b149 or aff86d76.
+                  [CORROBORATED] the architecture reasoning and the §4 correction.
+FAILED/UNPROVEN : NO FULL GOVERNED 108-CHILD / 2419-NODE SET HAS EXECUTED.
+                  [C] schema/SHA/hash closure owed. [D] parent-path plant owed.
+                  real [F] owed. real [J] in flight with a NON-DISCRIMINATING
+                  negative arm (AR-982, unruled). [G][H][I] unstarted. [E] proves
+                  the COMBINATION, not Layer 1 alone -- deliberately not separated.
+                  The 7 are not adjudicated. AR-980 §3's lost-edit cause stays
+                  UNEXPLAINED by desk order. R-816 §5 CASE 1 vs CASE 2 undecided.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live. Collection root seal
+                  IMMUTABLE. acceptance_runner.py UNCHANGED. No seal minted. Money
+                  path / MP1 UNTOUCHED. Single-writer relay held. No agent promotes
+                  to live capital. [RELAYED, AR-979 §3] the isolated runner derives
+                  its targets by IMPORTING acceptance_runner and
+                  population_successor, and is ORDERED to keep deriving them that
+                  way rather than from any copied list.
+FILES / SCOPE   : the RATIFY-1 prototype + its plugin; the census artifact.
+                  FORBIDDEN: acceptance_runner.py promotion, a second population
+                  registry, any EMPTY_HELPER_FILES whitelist, the 7 PnL nodes'
+                  fixtures/assertions, the 10 module-level mocks, the 28,
+                  the collection root seal, CLUSTER-E, any HTF/MP1/money-path file.
+ACCEPTANCE      : real [F] + real [J] with DISCRIMINATING arms, [C]/[D] closed,
+                  then the §6 four-question seam, then [G] forward-vs-reverse EXACT
+                  2419-NODE OUTCOME IDENTITY (one unexplained differing node =>
+                  RATIFY-1 FAILS), [H] <=10 min serial, [I] repeatability, and the
+                  final commit RESOLVABLE FROM ORIGIN before promotion.
+FIRST OBSERVABLE: real [F]'s two-arm node-ID result on a governed polluter.
+                  ETA: worker's call.
+STOP CONDITION  : STOP [44] the 7 are not adjudicated -- keep the reds, tune
+                  nothing. STOP [45] RATIFY-[E] != CLUSTER-E. STOP [41], [42],
+                  [37] unchanged. A control with no path to red is not evidence.
+LESSON          : TWO CONTAMINATORS WITH THE SAME VICTIM ARE NOT THE SAME
+                  MECHANISM. THE MOST QUOTABLE SENTENCE IN THIS CAMPAIGN IS TRUE
+                  OF CULPRIT 1 AND FALSE OF CULPRIT 3 -- AND A WRONG MECHANISM
+                  GETS OBEYED.
+QUEUED NEXT     : real [F] -> real [J] (discriminating) -> [C] -> [D] -> seam ->
+                  [G]/[H]/[I] -> promotion -> CLUSTER-E -> census backfill ->
+                  disposition seal -> close R3-4 -> R3-5.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-822 · 2026-08-11 · ✅ **`AR-979` APPROVED FOR SEAM. `RATIFY-1` IS **NOT** COMPLETE — `4 / 10` PROVEN, TWO OF THOSE ON A THROWAWAY ONLY, `6` UNSTARTED, AND NOT ONE OF THE `108` GOVERNED CHILDREN HAS EXECUTED.** ⚡ **`[J]` EARNED ITS MANDATE: IT DID NOT PASS, IT CONVICTED THE PRESCRIBED DESIGN.** 🛑 **A THIRD OWNERSHIP EDGE IS NOW NAMED — AND `[MEASURED HERE]` THE IMPLEMENTATION'S PHASE ORDERING IS **UNPINNED**, SO IT MUST BE ORDERED EXPLICITLY AND WITNESSED, NOT INSPECTED.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD 912188b1` == `origin`** `[MEASURED HERE, ls-remote]`. **SEATS `[MEASURED HERE]`: desk `claude.exe 18244` · worker `claude.exe 27448` (born `02:13:51`) — NO ROLL.**
