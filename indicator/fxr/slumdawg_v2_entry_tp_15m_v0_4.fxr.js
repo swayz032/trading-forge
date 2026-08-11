@@ -1,5 +1,5 @@
 //@version=1
-// Slumdawg FX Replay V2.0.4.1 - PARSER-SAFE REACTION-ZONE TARGETS
+// Slumdawg FX Replay V2.0.4.2 - FXR-SCOPE-SAFE REACTION-ZONE TARGETS
 // PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
 // Run on 5m NQ/MNQ. One requested MTF lane: 15m.
 
@@ -149,15 +149,15 @@ const selectOuterPair = (memory) => {
   let i = 0;
 
   while (i < pivots.highs.length) {
-    const p = pivots.highs[i].price;
-    if (outerHigh === null || p > outerHigh) outerHigh = p;
+    const highPrice = pivots.highs[i].price;
+    if (outerHigh === null || highPrice > outerHigh) outerHigh = highPrice;
     i += 1;
   }
 
   i = 0;
   while (i < pivots.lows.length) {
-    const p = pivots.lows[i].price;
-    if (outerLow === null || p < outerLow) outerLow = p;
+    const lowPrice = pivots.lows[i].price;
+    if (outerLow === null || lowPrice < outerLow) outerLow = lowPrice;
     i += 1;
   }
 
@@ -406,12 +406,12 @@ const selectCanonicalTargets = (side, entry, entryGap, zoneGap, zones, depth) =>
   let i = 0;
 
   while (i < zones.length) {
-    const z = zones[i];
+    const candidateZone = zones[i];
     const ok = side === "LONG"
-      ? z.lo >= entry + entryGap
-      : z.hi <= entry - entryGap;
+      ? candidateZone.lo >= entry + entryGap
+      : candidateZone.hi <= entry - entryGap;
 
-    if (ok) eligible.push(z);
+    if (ok) eligible.push(candidateZone);
     i += 1;
   }
 
@@ -428,22 +428,22 @@ const selectCanonicalTargets = (side, entry, entryGap, zoneGap, zones, depth) =>
   i = 0;
 
   while (i < eligible.length && out.length < 3) {
-    const z = eligible[i];
+    const selectedZone = eligible[i];
     const distinct = side === "LONG"
-      ? z.lo >= boundary + requiredGap
-      : z.hi <= boundary - requiredGap;
+      ? selectedZone.lo >= boundary + requiredGap
+      : selectedZone.hi <= boundary - requiredGap;
 
     if (distinct) {
-      const target = safeTargetFromZone(z, side, depth);
+      const target = safeTargetFromZone(selectedZone, side, depth);
       if (finite(target)) {
         out.push({
-          lo: z.lo,
-          hi: z.hi,
+          lo: selectedZone.lo,
+          hi: selectedZone.hi,
           target: target,
-          touches: z.touches
+          touches: selectedZone.touches
         });
 
-        boundary = side === "LONG" ? z.hi : z.lo;
+        boundary = side === "LONG" ? selectedZone.hi : selectedZone.lo;
         requiredGap = zoneGap;
       }
     }
@@ -512,7 +512,7 @@ const updateEntryState = (length, side, proof, atr5) => {
       return;
     }
   } else if (entryStage === "BREAK") {
-    const push = Math.max(TICK * 2, atr5 * 0.08);
+    const pushBreak = Math.max(TICK * 2, atr5 * 0.08);
     const recoil = Math.max(TICK * 2, atr5 * 0.20);
     const hard = armedSide === 1
       ? closeC(0) <= momentumAnchor - recoil
@@ -523,8 +523,8 @@ const updateEntryState = (length, side, proof, atr5) => {
       momentumAnchor = referencePrice;
     } else {
       const p1 = armedSide === 1
-        ? high(0) >= momentumAnchor + push
-        : low(0) <= momentumAnchor - push;
+        ? high(0) >= momentumAnchor + pushBreak
+        : low(0) <= momentumAnchor - pushBreak;
 
       if (p1) {
         momentumAnchor = armedSide === 1 ? high(0) : low(0);
@@ -532,10 +532,10 @@ const updateEntryState = (length, side, proof, atr5) => {
       }
     }
   } else if (entryStage === "PUSH_1") {
-    const push = Math.max(TICK * 2, atr5 * 0.08);
+    const pushSecond = Math.max(TICK * 2, atr5 * 0.08);
     const p2 = armedSide === 1
-      ? high(0) >= momentumAnchor + push
-      : low(0) <= momentumAnchor - push;
+      ? high(0) >= momentumAnchor + pushSecond
+      : low(0) <= momentumAnchor - pushSecond;
 
     if (p2) entryStage = "ENTRY_READY";
   }
