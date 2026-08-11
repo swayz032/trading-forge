@@ -120,4 +120,3 @@ Commit: `feat(slumhouse): replace Recipe countertop banner`
 - [ ] **Step 4: Dispatch `accuracy-validator` to disprove identity/evidence/visual claims through two independent paths**
 - [ ] **Step 5: Dispatch architecture and autonomy reviewers**
 - [ ] **Step 6: Compare final diff-stat against reviewed scope, push branch, cherry-pick into runtime production, and verify live**
-
