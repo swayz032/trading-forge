@@ -4,6 +4,65 @@
 
 ---
 
+## AR-964 · 2026-08-11 · ✅ **`[P4]` AND `[P5]` DISCHARGED AT `d9e2641c`. `R-813 §2` IS RIGHT — MY CENSUS ENUMERATED A MARKER — AND THE EXTENDED SURFACE IS NOW MEASURED BY `ast`, NOT GREP.** ⭐ **BUT THE HONEST RESULT IS THE OPPOSITE OF ALARMING: `14` SWALLOW HANDLERS, INDIVIDUALLY REVIEWED, YIELD `1` CONFIRMED DEFECT AND `1` CANDIDATE — THE REST ARE LEGITIMATE.** ⚠️ **THREE MORE INSTRUMENT LIES THIS ROUND, ALL MINE, ALL CAUGHT BY CONTROLS BEFORE THEY REACHED A CLAIM.**
+
+**SEAT `claude.exe 6312`. TREE `HEAD d9e2641c`. `R3` = `3 / 5`, `R3-4` OPEN. `[P1]`/`[P2]`/`[P3]` NOT STARTED.**
+
+### §0 — ⚖️ THREE CORRECTIONS OF `R-813` ACCEPTED, WITHOUT ARGUMENT
+✅ **`§2` — my population was the MARKER (`pytest.skip`), not the defect CLASS.** A swallowed exception returns control normally and pytest records `PASSED`, so it is invisible to a skip census **by construction**. **Accepted; `[P4]` below closes it.**
+✅ **`§3` — the `"data"` disjunct is REACHABLE, not FIRING.** `[MEASURED HERE, `-rs`]` the live skip reason is *"S3 read … missing `AWS_ACCESS_KEY_ID`"*, so the FIRST disjunct matches today. **My `AR-963 §5` proved reachability by execution and did not measure which disjunct fires — that distinction is real and I did not draw it.**
+✅ **`§4` — `"7 / 32 with a control each"` OVER-READ.** Corrected tally in `§2`. ✅ **`§1`'s join hazard accepted: I cited `:193/:213/:235`, the predicate is at `:194/:214/:236`. **CITE THE PREDICATE, NOT THE LINE** — adopted.**
+
+### §1 — ✅ `[P4]` THE SURFACE, EXTENDED AND THEN **CLASSIFIED**
+**INSTRUMENT: `ast`, not grep** — an `ExceptHandler` whose body has no observable effect (`pass`/`continue`/bare `return`), docstrings stripped.
+```
+members from manifest ....... 107     missing 0     parsed 107/107
+SWALLOW handlers ............  14
+ACTIVE handlers .............  14     <- NEGATIVE CONTROL, must be >> 0
+distinct FILES ..............   8
+DESK SEED test_walk_forward.py:379 present: True   <- POSITIVE CONTROL
+```
+🛑 **`1` CONFIRMED DEFECT: `test_walk_forward.py:379`** — the desk's seed, verified by me at the line. `except NotImplementedError` is fail-closed and CORRECT; the bare arm after it swallows everything else and **reports `PASSED`.**
+⚠️ **`1` CANDIDATE: `test_black_swan_evaluator.py:682`** — swallows an `__import__` failure whose bound name the following assertion does not use. **NOT CLAIMED as a defect.**
+✅ **THE OTHER `12` ARE LEGITIMATE, REVIEWED ONE AT A TIME (`ACCEPT5-GOVERNED-SKIP-SCOPE-1` forbids a blanket verdict):** three `except SystemExit` absorbing a CLI exit · two `except Exception` carrying `# noqa: BLE001` **and a written rationale** · three corpus-iteration `continue`s · two narrow typed handlers · **two MP1 fail-closed idioms where refusing IS the pass condition and the non-raising path falls through to `pytest.fail`** — 🛑 **and those two are ALSO FORBIDDEN SCOPE (`R-813 §8`): NAMED, NOT TOUCHED.**
+⇒ ★★★★★ **`A WIDER POPULATION IS NOT A LONGER DEFECT LIST. WIDENING THE SURFACE AND CLASSIFYING IT ARE TWO ACTS, AND SHIPPING ONLY THE FIRST MANUFACTURES ALARM.`**
+⚠️ **`[UNENUMERATED — OPEN]`** a handler that LOGS-and-continues, or returns a sentinel, has the same consequence and is **NOT** in this population. The surface is wider than the marker and still not the class.
+
+### §2 — ✅ `[P5]` THE ARM I OWED, RUN — AND THE REASON IS THE JOIN KEY
+`[MEASURED, disposable worktree at `c6362fc3`, the A1 conversion's parent, same planted import]`:
+```
+PRE-fix  + plant -> 3 SKIPPED
+  SKIPPED test_signal_vector.py:185: backtester not importable in this test environment
+  SKIPPED test_signal_vector.py:206: backtester not importable in this test environment
+  SKIPPED test_signal_vector.py:228: backtester not importable in this test environment
+POST-fix + plant -> 3 FAILED
+```
+✅ **`-rs` proves it skipped through the IMPORT clause, not the data clause** — so the arm convicts the mechanism the conversion actually removed, by MEMBERSHIP rather than a count. ✅ **Worktree removed; no orphan registration.**
+⇒ ✅ **CORRECTED TALLY, REPLACING `AR-963`'s: `6` sites with a full pre-fix-false-green + post-fix-red PAIR (3 `A2` + 3 `A1`) · `1` (`_import_validate`) removed on STATIC proof of zero callers, no dynamic arm.**
+
+### §3 — ⚠️ THREE MORE INSTRUMENT LIES, ALL MINE, ALL CAUGHT
+```
+[1] "distinct files: 8" for 4 files -- I cut on '|' so the field was file:LINE.
+    I counted SITES and labelled them FILES. [i-measured]: the label lied,
+    not the data. Caught with `cat -A`.
+[2] python could not read /tmp/gov.txt -- MSYS /tmp is invisible to Windows
+    python. Repaired by reading the MANIFEST directly: fewer layers.
+[3] my shell cross-check of the handler total printed 0 -- broken arithmetic
+    from `grep -c || echo 0`. OBVIOUSLY wrong, so it convicted itself; I did
+    NOT rely on it. The AST count stands alone (107/107 parsed + both controls).
+```
+⚠️ **That is `3` this round on top of `AR-963 §1`'s, and the CODE WAS FINE EVERY TIME** (`[ps-counting-encoding]`).
+
+### §4 — 🛑 WHAT IS **NOT** DONE
+🛑 **`[P1]`/`[P2]`/`[P3]` NOT STARTED. `FIRED-IN-PRISTINE` REMAINS `UNMEASURED` FOR ALL `32` ROWS** — the acceptance in `R-813 §8` is **NOT** met.
+🛑 **`test_walk_forward.py:379` IS NOT REPAIRED** — confirmed and reported only.
+✅ **AND I HOLD `[P2]`'s WARNING BEFORE I SPEND A RUN ON IT: `[MEASURED BY THE DESK, `-rs`]` this box has NO AWS credentials, so a fresh worktree ON THIS BOX does not vary the S3 axis at all.** ⇒ **The pristine run must separate MACHINE-LOCAL state (`SAMPLES_DIR`, corpora, git history) from CREDENTIAL state, and I may not cite *"it skipped there too"* as portability evidence on an axis I did not vary.**
+🛑 **`25 / 32` SITES STILL UNCONVERTED · `A3` UNTOUCHED (`STOP [11]`) · broadcast-skip fan-out `[UNENUMERATED]` · MP1, money path, `S6`, manifest, `_CLOSURE_TARGETS`, successor chain ALL UNTOUCHED.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Next is `[P1]`/`[P2]`/`[P3]` — the pristine run with the credential/machine-local axes separated.** ⚠️ **SEAT NOTE, SELF-ASSESSMENT ONLY: everything is committed and pushed and nothing is half-built. `R-813 §7` kept this seat deliberately, and I am not declaring exhaustion — but the pristine run is the largest single measurement in `R3-4` and the operator holds the swap lever if he wants it run by a fresher seat.**
+
+---
+
 ## AR-963 · 2026-08-11 · ⏳ **`R3-4` PARTIAL — CENSUS COMPLETE AND COMMITTED; `7 / 32` SITES CONVERTED WITH A DISCRIMINATING CONTROL EACH.** 🛑🛑 **AND THE CENSUS FOUND A LIVE FALSE-GREEN MECHANISM THE FOUR NAMED INPUTS DID NOT PREDICT: A `str(e).lower()` SUBSTRING TEST THAT CONVERTS `signal_vector data malformed` — THE EXACT DEFECT THOSE TESTS EXIST TO CATCH — INTO A SKIP.** ⚠️ **MY OWN CENSUS INSTRUMENT READ `0` AND WAS FALSE; ITS POSITIVE CONTROL CONVICTED IT BEFORE IT REACHED A CLAIM.**
 
 **SEAT `claude.exe 6312`. TREE `HEAD 1a639679`. `R3` = `3 / 5`, `R3-4` IN FLIGHT.**
