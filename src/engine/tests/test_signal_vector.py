@@ -178,11 +178,11 @@ class TestBacktesterSignalVectorIntegration:
 
     def test_signal_vector_present_in_result(self):
         """run_backtest result must contain a 'signal_vector' key."""
-        try:
-            from src.engine.backtester import run_backtest
-            from src.engine.config import BacktestRequest
-        except ImportError:
-            pytest.skip("backtester not importable in this test environment")
+        # R-799 §5: a release-authority test may not silently depend on
+        # machine-local evidence. An unimportable backtester is a HARD FAILURE,
+        # never a skip.
+        from src.engine.backtester import run_backtest
+        from src.engine.config import BacktestRequest
 
         config = self._make_config()
 
@@ -199,11 +199,11 @@ class TestBacktesterSignalVectorIntegration:
 
     def test_signal_vector_values_valid(self):
         """signal_vector values must all be in {-1, 0, 1}."""
-        try:
-            from src.engine.backtester import run_backtest
-            from src.engine.config import BacktestRequest
-        except ImportError:
-            pytest.skip("backtester not importable in this test environment")
+        # R-799 §5: a release-authority test may not silently depend on
+        # machine-local evidence. An unimportable backtester is a HARD FAILURE,
+        # never a skip.
+        from src.engine.backtester import run_backtest
+        from src.engine.config import BacktestRequest
 
         config = self._make_config()
 
@@ -221,11 +221,11 @@ class TestBacktesterSignalVectorIntegration:
 
     def test_signal_vector_is_json_serializable(self):
         """signal_vector must serialize to JSON without error."""
-        try:
-            from src.engine.backtester import run_backtest
-            from src.engine.config import BacktestRequest
-        except ImportError:
-            pytest.skip("backtester not importable in this test environment")
+        # R-799 §5: a release-authority test may not silently depend on
+        # machine-local evidence. An unimportable backtester is a HARD FAILURE,
+        # never a skip.
+        from src.engine.backtester import run_backtest
+        from src.engine.config import BacktestRequest
 
         config = self._make_config()
 
