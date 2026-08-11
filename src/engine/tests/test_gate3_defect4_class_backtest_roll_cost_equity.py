@@ -61,44 +61,6 @@ import polars as pl
 import pytest
 
 
-@pytest.fixture(autouse=True)
-def _sys_modules_boundary():
-    """R-818 §4 — CONTAIN this file's sys.modules writes. Second confirmed source of
-    `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1`.
-
-    `_install_vbt_one_trade_mock()` below writes `vectorbt`, `vectorbt.portfolio`
-    and `vectorbt.portfolio.base` into `sys.modules` and never removed them.
-    [MEASURED, AR-973] that alone flips
-    `test_pnl_accuracy.py::TestCommissionImpact::test_commission_per_trade_matches_formula`
-    from FAILED (alone) to PASSED — the one flip the other culprit does not explain.
-
-    ⚖️ This file's OTHER patches already use pytest's `monkeypatch` and ARE restored;
-    only the raw `sys.modules[...] =` loop escaped that discipline. The repair puts
-    that one line back inside the same boundary the rest of the file already honours.
-
-    Postcondition (R-818 §4), asserted not assumed: keys present before are the SAME
-    OBJECT after; keys absent before are ABSENT after — a module imported while the
-    stub was live caches it in its own globals, so evicting it is part of the
-    boundary. Asserted inside the existing node IDs; no new test identities minted.
-    """
-    before = dict(sys.modules)
-    try:
-        yield
-    finally:
-        for key in [k for k in sys.modules if k not in before]:
-            del sys.modules[key]
-        for key, mod in before.items():
-            if sys.modules.get(key) is not mod:
-                sys.modules[key] = mod
-
-        leaked = sorted(k for k in sys.modules if k not in before)
-        swapped = sorted(k for k, m in before.items() if sys.modules.get(k) is not m)
-        assert not leaked, f"sys.modules boundary leaked NEW keys: {leaked}"
-        assert not swapped, (
-            f"sys.modules boundary failed to restore object identity for: {swapped}"
-        )
-
-
 def _install_vbt_one_trade_mock():
     """Inject a vectorbt stub whose Portfolio.from_signals() deterministically
     returns a portfolio with exactly one trade, independent of the actual
