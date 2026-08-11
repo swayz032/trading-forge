@@ -574,6 +574,7 @@
       .r-cal-cell:not(.empty):hover { transform: none; }
     }
   </style>
+  <link rel="stylesheet" href="/slumhouse/recipe-instruments.css">
 </head>
 <body>
   <header class="sh-header">
@@ -630,6 +631,7 @@
 
   <script src="/slumhouse/slumhouse.js"></script>
   <script src="/slumhouse/progress-line.js"></script>
+  <script src="/slumhouse/recipe-instruments.js"></script>
   <script>
     (async () => {
       const id = new URLSearchParams(location.search).get("id");
@@ -670,10 +672,10 @@
 
       // HERO
       const ringStyle = `background: conic-gradient(var(--lime) 0% ${r.slumdawgScore}%, rgba(255,255,255,0.1) ${r.slumdawgScore}% 100%);`;
-      app.appendChild(el("div", { class: "r-hero" },
+      app.appendChild(el("div", { class: "r-hero", style: "background-image:linear-gradient(90deg,rgba(5,7,6,.9),rgba(5,7,6,.3)),url('/slumhouse/images/slumdawg-recipe-counter.png')" },
         el("div", { style: "min-width:0" },
           el("div", { class: "r-hero-name" },
-            premiumTitle(r.identity.name),
+            r.identity.displayName,
             el("span", { class: "r-hero-badge" }, "● " + r.identity.stationStreet),
           ),
           el("div", { class: "r-hero-caveat" },
@@ -1222,7 +1224,7 @@
       for (const t of (r.otherTests || [])) {
         var status = untested ? "wait" : t.status;
         var desc = untested ? "Not run yet." : t.sentence;
-        var row = el("div", { class: "r-feed-row r-feed-click" },
+        var row = el("button", { class: "r-feed-row r-feed-click", type: "button", "aria-pressed": "false" },
           el("div", { class: "r-feed-light " + status }),
           el("div", {},
             el("div", { class: "r-feed-name" }, GATE_TITLE[t.name] || t.name),
@@ -1230,17 +1232,21 @@
             el("div", { class: "r-feed-desc" }, desc),
           ),
         );
-        (function (name) { row.addEventListener("click", function () { switchLeftToGate(r, name); }); })(t.name);
+        (function (name, control) { control.addEventListener("click", function () { switchLeftToGate(r, name, control); }); })(t.name, row);
         panel.appendChild(row);
       }
       return panel;
     }
 
-    function switchLeftToGate(r, name) {
+    function switchLeftToGate(r, name, control) {
       const left = document.getElementById("r-left");
       if (!left) return;
       left.innerHTML = "";
+      document.querySelectorAll(".r-feed-click").forEach(function (row) { row.setAttribute("aria-pressed", row === control ? "true" : "false"); });
       left.appendChild(renderGateMetric(r, name));
+      var instrument = window.RecipeInstruments.renderGate(r, name);
+      left.appendChild(instrument);
+      instrument.focus({ preventScroll: true });
       left.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
     function switchLeftToBacktest(r) {
@@ -1248,6 +1254,7 @@
       if (!left) return;
       left.innerHTML = "";
       left.appendChild(renderBacktest(r));
+      document.querySelectorAll(".r-feed-click").forEach(function (row) { row.setAttribute("aria-pressed", "false"); });
     }
     function renderGateMetric(r, name) {
       const { el } = SH;
@@ -1261,7 +1268,7 @@
       var sentence = untested ? "This gate hasn't been run yet — it needs a backtest first." : (t ? t.sentence : "");
       var back = el("a", { href: "#", class: "r-gate-back" }, "‹ Backtest");
       back.addEventListener("click", function (e) { e.preventDefault(); switchLeftToBacktest(r); });
-      return el("div", { class: "r-panel" },
+      return el("div", { class: "r-panel", role: "region", "aria-label": (GATE_TITLE[name] || name) + " evidence" },
         el("div", { class: "r-head" }, el("div", { class: "r-h" }, GATE_TITLE[name] || name, el("span", { class: "src replay" }, "🔬 The Gate")), back),
         el("div", { class: "r-cap" }, m.what),
         el("div", { class: "r-gate-body" },

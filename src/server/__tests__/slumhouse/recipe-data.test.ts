@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({ execute: vi.fn() }));
 vi.mock("../../db/index.js", () => ({ db: { execute: mocks.execute } }));
 
-const ORDER = ["strategy", "backtest", "mc", "paper", "shadow", "health"] as const;
+const ORDER = ["strategy", "backtest", "mc", "frankenstein", "blackSwan", "paper", "shadow", "health"] as const;
 
 // FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — CRIT
 // finding): these fixtures previously used `total_pnl` / `trade_count` /
@@ -29,25 +29,33 @@ const ORDER = ["strategy", "backtest", "mc", "paper", "shadow", "health"] as con
 // terminal P&L = last - first) are the real columns (were `result_json`).
 function setupQueries(custom: Partial<Record<typeof ORDER[number], unknown[]>> = {}) {
   const responses: Record<string, unknown[]> = {
-    strategy: [{ id: "s1", name: "vwap-band-mes", symbol: "MES", lifecycle_state: "DEPLOY_READY" }],
+    strategy: [{ id: "s1", name: "vwap-band-mes", symbol: "MES", symbols: ["MES"], timeframe: "5m", config: {}, lifecycle_state: "DEPLOY_READY" }],
     backtest: [{
       total_trades: 1283,
       daily_pnls: JSON.stringify([
         { date: "2026-05-01", pnl: 118 }, { date: "2026-05-02", pnl: 340 }, { date: "2026-05-03", pnl: -430 },
       ]),
       equity_curve: JSON.stringify([0, 500, 1200, 2300]),
+      win_rate: 0.61, sharpe_ratio: 1.75, profit_factor: 1.92, max_drawdown: 0.08,
+      walk_forward_results: JSON.stringify({ wfe_overall: 0.78, folds: [0.72, 0.81, 0.8] }),
+      b15_battery: JSON.stringify({ passed: true, sdr: 0.91, psi: 0.03, rws: 0.12 }),
+      mrp_regime_breakdown: JSON.stringify({ trend: 1.2, chop: 0.7 }),
+      prop_compliance: JSON.stringify({ pass_rate: 1 }),
       result_extras: JSON.stringify({
-        wfe_overall: 0.78, b15_passed: true, a14_severity: "warn",
-        b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1.0,
+        wfe_overall: 0.01, b15_passed: false, a14_severity: "warn",
+        b10_pass: false, frankenstein_pass: false, compliance_pass_rate: 0,
+        sharpe_ratio: 9.99,
       }),
     }],
+    frankenstein: [{ passed: true, p95_sharpe: 0.21, median_pf: 1.02 }],
+    blackSwan: [{ survival_rate: 0.8, num_regimes_tested: 5, num_regimes_survived: 4, worst_regime_drawdown: 0.12, worst_regime_label: "2008" }],
     mc: [{
       risk_metrics: JSON.stringify({ probability_of_ruin_ci: { ci_high: 0.03 } }),
       paths: JSON.stringify([[50000, 47160], [50000, 92500], [50000, 144200]]), // terminal P&L: -2840, 42500, 94200
       probability_of_ruin: 0.03,
     }],
     paper: [{ paper_total: 3840 }],
-    shadow: [{ divergence_pct: 0.018 }],
+    shadow: [{ divergence_vs_backtest: 0.018 }],
     health: [{ composite_score: 0.84 }],
     ...custom,
   };
@@ -65,6 +73,8 @@ describe("recipe-data", () => {
     const r = await assembleRecipeData({ strategyId: "s1" });
 
     expect(r.identity.name).toBe("vwap-band-mes");
+    const { resolvePremiumName } = await import("../../lib/slumhouse/premium-names.js");
+    expect(r.identity.displayName).toBe(resolvePremiumName({ name: "vwap-band-mes", symbols: ["MES"], timeframe: "5m", config: {} }).displayName);
     expect(r.identity.stationStreet).toBe("Small Plates");
     expect(r.slumdawgScore).toBe(84);
 
@@ -72,6 +82,7 @@ describe("recipe-data", () => {
     expect(r.backtest.tradesCount).toBe(1283);
     expect(r.backtest.worstDay).toBe("−$430");
     expect(r.backtest.winningDays).toBe(2);
+    expect(r.backtest.sharpeRatio).toBe(1.75);
 
     expect(r.monteCarlo.blowUpOdds).toBe("3 outta 100");
     expect(r.monteCarlo.worstYear).toBe("−$2,840");
@@ -86,6 +97,8 @@ describe("recipe-data", () => {
     expect(r.otherTests.find((t) => t.name === "Worst Day Test")?.status).toBe("warn"); // a14_severity=warn
     expect(r.otherTests.find((t) => t.name === "Preseason")?.sentence).toContain("$3,840");
     expect(r.otherTests.find((t) => t.name === "Real-Time Match")?.status).toBe("pass"); // 1.8% < 5%
+    expect(r.gateMetrics["Real-Time Match"].instrument).toMatchObject({ kind: "drift", divergence: 0.018 });
+    expect(r.gateMetrics["Real or Lucky"].instrument).toMatchObject({ kind: "shuffle", p95Sharpe: 0.21 });
   });
 
   // ── Slumhouse progress line — gate journey from otherTests + lifecycle ──
@@ -99,6 +112,7 @@ describe("recipe-data", () => {
           b10_pass: true, frankenstein_pass: false, compliance_pass_rate: 1.0,
         }),
       }],
+      frankenstein: [{ passed: false, p95_sharpe: 0.5, median_pf: 1.4 }],
     });
     const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
     const { GATE_DEFS } = await import("../../lib/slumhouse/gate-journey.js");
@@ -131,7 +145,7 @@ describe("recipe-data", () => {
   });
 
   it("marks Real-Time Match as fail when divergence > 5%", async () => {
-    setupQueries({ shadow: [{ divergence_pct: 0.08 }] });
+    setupQueries({ shadow: [{ divergence_vs_backtest: 0.08 }] });
     const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
     const r = await assembleRecipeData({ strategyId: "s1" });
     expect(r.otherTests.find((t) => t.name === "Real-Time Match")?.status).toBe("fail");
@@ -292,7 +306,7 @@ describe("recipe-data", () => {
         total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         // frankenstein_pass intentionally omitted — untested, must NOT default to pass
         result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, b10_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
-      }],
+      }], frankenstein: [],
     });
     const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
     const r = await assembleRecipeData({ strategyId: "s1" });
