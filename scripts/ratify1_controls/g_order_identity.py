@@ -95,14 +95,34 @@ def authority_nodes():
     return set(required)
 
 
-def compare(fwd, rev, required, out_dir=None):
-    """Return (verdicts, differences). Verdicts are (name, ok, detail)."""
+def compare(fwd, rev, required, out_dir=None, mode="order"):
+    """Return (verdicts, differences). Verdicts are (name, ok, detail).
+
+    mode="order"   [G]: the arms must be OPPOSED -- canonical vs REVERSE.
+    mode="repeat"  [I]: the arms must be the SAME direction, run twice at an
+                        identical pin and environment.
+
+    EACH MODE ASSERTS THE RELATIONSHIP *IT* NEEDS, and this is NOT a relaxation
+    of [G]'s guard: a [G] pair handed to repeat mode FAILS, and a repeat pair
+    handed to order mode FAILS. Both are red-proofed below.
+
+        `A COMPARISON WHOSE ARMS ARE NOT IN THE CLAIMED RELATIONSHIP IS NOT
+         EVIDENCE FOR THAT CLAIM -- IT IS TWO NUMBERS THAT HAPPEN TO MATCH.`
+    """
     V = []
 
-    # ---- ARMS-ARE-OPPOSED GUARD -------------------------------------------
-    # Two forward runs diff to zero and read as a perfect pass. Refuse first.
-    opposed = (fwd["reverse"] is False) and (rev["reverse"] is True)
-    V.append(("arms genuinely OPPOSED (fwd=canonical, rev=REVERSE)", opposed,
+    # ---- ARM-RELATIONSHIP GUARD -------------------------------------------
+    # Two same-direction runs diff to zero and would read as a perfect [G]
+    # pass; two OPPOSED runs prove nothing about REPEATABILITY. Refuse first.
+    if mode == "order":
+        rel_ok = (fwd["reverse"] is False) and (rev["reverse"] is True)
+        rel_name = "[G] arms genuinely OPPOSED (canonical vs REVERSE)"
+    elif mode == "repeat":
+        rel_ok = fwd["reverse"] == rev["reverse"]
+        rel_name = "[I] arms are the SAME direction, run twice"
+    else:
+        raise SystemExit(f"{REFUSED} - unknown mode {mode!r}")
+    V.append((rel_name, rel_ok,
               f"fwd.reverse={fwd['reverse']!r} rev.reverse={rev['reverse']!r}"))
     V.append(("both arms measured the SAME commit", fwd["head"] == rev["head"],
               f"{fwd['head']} vs {rev['head']}"))
@@ -131,43 +151,52 @@ def compare(fwd, rev, required, out_dir=None):
 
     # ---- THE ORACLE --------------------------------------------------------
     D = diff(fwd["outcomes"], rev["outcomes"])
-    V.append(("[G] EXACT node-outcome identity forward vs reverse", not D,
+    V.append((("[G] EXACT node-outcome identity forward vs reverse"
+               if mode == "order" else
+               "[I] EXACT node-outcome identity across repeats"), not D,
               f"{len(D)} differing node(s)"))
 
     if D and out_dir:
-        p = Path(out_dir) / "G-DIFFERENCES.txt"
+        p = Path(out_dir) / f"{'G' if mode == 'order' else 'I'}-DIFFERENCES.txt"
         p.write_text("".join(f"{k}\tforward={a}\treverse={b}\n" for k, a, b in D),
                      encoding="utf-8")
         print(f"  ALL {len(D)} differences persisted in full to {p}")
     return V, D
 
 
-def report(fwd, rev, required, V, D):
+def report(fwd, rev, required, V, D, mode="order"):
+    ob = "[G]" if mode == "order" else "[I]"
+    a, b = (("forward", "reverse") if mode == "order" else ("run-1  ", "run-2  "))
     print()
-    print("=== [G] DENOMINATORS -- STOP [41]: THESE ARE DIFFERENT NUMBERS ===")
-    print(f"  child targets (files)     forward {fwd['children']:5d}   reverse {rev['children']:5d}")
-    print(f"  governed nodes observed   forward {fwd['nodes']:5d}   reverse {rev['nodes']:5d}")
+    print(f"=== {ob} DENOMINATORS -- STOP [41]: THESE ARE DIFFERENT NUMBERS ===")
+    print(f"  child targets (files)     {a} {fwd['children']:5d}   {b} {rev['children']:5d}")
+    print(f"  governed nodes observed   {a} {fwd['nodes']:5d}   {b} {rev['nodes']:5d}")
     print(f"  governed nodes REQUIRED   {len(required)}  (population authority)")
     print()
     print(f"=== [H] SERIAL WALL CLOCK -- pre-registered ceiling {CEILING_MIN} min per arm ===")
-    for tag, arm in (("forward", fwd), ("reverse", rev)):
+    for tag, arm in ((a.strip(), fwd), (b.strip(), rev)):
         mins = arm["wall_s"] / 60.0
         note = "OK" if mins <= CEILING_MIN else "*** EXCEEDS CEILING -- STOP AND REPORT, DO NOT PARALLELIZE ***"
         print(f"  {tag:8s} {mins:6.2f} min   {note}")
     print()
     if D:
-        print(f"=== [G] DIFFERENCES -- ALL {len(D)}, NEVER SLICED ===")
-        for k, a, b in D:
-            print(f"  {k}\n      forward={a}   reverse={b}")
+        print(f"=== {ob} DIFFERENCES -- ALL {len(D)}, NEVER SLICED ===")
+        for nid, x, y in D:
+            print(f"  {nid}\n      {a.strip()}={x}   {b.strip()}={y}")
         print()
-    print("=== [G] VERDICT ===")
+    print(f"=== {ob} VERDICT ===")
     for name, ok, detail in V:
         print(f"  {'OK  ' if ok else 'FAIL'}  {name:52s} {detail}")
     allok = all(ok for _, ok, _ in V)
     print()
-    print("[G] SATISFIED - EXACT NODE-OUTCOME IDENTITY UNDER REORDERING" if allok
-          else "*** [G] NOT SATISFIED -- STOP AND REPORT. Do NOT repair while the "
-               "ordered-pair evidence is half-understood (R-825 sec6[5]). ***")
+    if allok:
+        print(f"{ob} SATISFIED - " + ("EXACT NODE-OUTCOME IDENTITY UNDER REORDERING"
+                                      if mode == "order" else
+                                      "EXACT NODE-OUTCOME IDENTITY ACROSS REPEATS "
+                                      "AT AN IDENTICAL PIN"))
+    else:
+        print(f"*** {ob} NOT SATISFIED -- STOP AND REPORT. Do NOT repair while the "
+              f"evidence is half-understood (R-825 sec6[5]). ***")
     return allok
 
 
@@ -192,8 +221,8 @@ def red_proof():
 
     cases = []
 
-    def run(name, f, r, expect_pass):
-        V, _ = compare(f, r, req)
+    def run(name, f, r, expect_pass, mode="order"):
+        V, _ = compare(f, r, req, mode=mode)
         ok = all(v for _, v, _ in V)
         cases.append((name, ok is expect_pass,
                       f"expected {'GREEN' if expect_pass else 'RED'}, "
@@ -232,7 +261,21 @@ def red_proof():
     run("collected-but-unexecuted => RED", arm(BASE, reverse=False),
         arm(BASE, reverse=True, collected_but_unexecuted=2), False)
 
-    print("=== [G] COMPARATOR RED-PROOF ===")
+    # ---- [I] REPEAT MODE, and the CROSS-MODE guard ------------------------
+    # Each mode must reject the OTHER mode's pair, or "repeat" would be a
+    # back door that launders a [G] pair into an [I] claim and vice versa.
+    run("[I] two canonical repeats, identical => GREEN", arm(BASE, reverse=False),
+        arm(BASE, reverse=False), True, mode="repeat")
+    run("[I] repeats with ONE flipped outcome => RED", arm(BASE, reverse=False),
+        arm(flipped, reverse=False), False, mode="repeat")
+    run("[I] two REVERSE repeats, identical => GREEN", arm(BASE, reverse=True),
+        arm(BASE, reverse=True), True, mode="repeat")
+    run("[I] rejects an OPPOSED ([G]) pair => RED", arm(BASE, reverse=False),
+        arm(BASE, reverse=True), False, mode="repeat")
+    run("[G] rejects a SAME-DIRECTION ([I]) pair => RED", arm(BASE, reverse=False),
+        arm(BASE, reverse=False), False, mode="order")
+
+    print("=== [G]/[I] COMPARATOR RED-PROOF ===")
     for name, ok, detail in cases:
         print(f"  {'OK  ' if ok else 'FAIL'}  {name:40s} {detail}")
     allok = all(ok for _, ok, _ in cases)
@@ -248,6 +291,10 @@ def main(argv=None):
     ap.add_argument("--reverse", help="aggregate.json from the REVERSE-order arm")
     ap.add_argument("--out-dir", default=None,
                     help="where to persist the FULL difference list, if any")
+    ap.add_argument("--mode", choices=("order", "repeat"), default="order",
+                    help="order = [G] canonical vs REVERSE; "
+                         "repeat = [I] same direction twice at an identical pin "
+                         "(--forward/--reverse are then run-1/run-2)")
     ap.add_argument("--red-proof", action="store_true",
                     help="prove this comparator can go RED, then exit")
     args = ap.parse_args(argv)
@@ -259,8 +306,8 @@ def main(argv=None):
 
     fwd, rev = load_arm(args.forward), load_arm(args.reverse)
     required = authority_nodes()
-    V, D = compare(fwd, rev, required, out_dir=args.out_dir)
-    return 0 if report(fwd, rev, required, V, D) else 1
+    V, D = compare(fwd, rev, required, out_dir=args.out_dir, mode=args.mode)
+    return 0 if report(fwd, rev, required, V, D, mode=args.mode) else 1
 
 
 if __name__ == "__main__":

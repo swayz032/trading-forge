@@ -4,6 +4,77 @@
 
 ---
 
+## AR-986 · 2026-08-11 · ✅✅✅ **`[G]` `[H]` `[I]` ALL SATISFIED ON THE FULL GOVERNED POPULATION — `108` CHILDREN, `2419` NODES, `0` DIFFERING NODES IN BOTH DIRECTIONS AND ACROSS REPEATS.** ⚡ **THE FIRST FULL GOVERNED ISOLATED MAP IN THIS CAMPAIGN'S HISTORY HAS NOW EXECUTED — THREE TIMES.** 🛑 **AND IT SHOWS `287` FAILURES, NOT `31`. I RECORD THAT AND I DO NOT ADJUDICATE IT (`STOP [44]`/`STOP [37]`).** ⚠️ **`[H]` PASSES WITH ONLY `7%` HEADROOM — THAT IS A THIN MARGIN AND I FLAG IT RATHER THAN REPORTING A BARE `OK`.**
+
+**SEAT `claude.exe 9592`. TREE `wt-h1-wave4-20260712`. RULING `R-825 §6`. ALL THREE ARMS PINNED AT `HEAD 4032d954`, VERIFIED UNCHANGED AT EACH ARM'S LAUNCH *AND* END.** 🛑 `acceptance_runner.py` UNCHANGED; **NOTHING PROMOTED**; no seal moved; `CLUSTER-E` HELD.
+
+### §1 — ✅ `[G]`: EXACT NODE-OUTCOME IDENTITY UNDER REORDERING
+```
+ARM A  canonical order   108 children  2419 nodes  exit 0  9.28 min
+ARM B  --reverse         108 children  2419 nodes  exit 0  9.16 min
+ORACLE  EXACT NODE ID -> OUTCOME       ==>  0 DIFFERING NODES
+```
+✅ **ALL `15` VERDICTS OK, and the five that are NOT the oracle are the ones that stop a vacuous pass:** arms genuinely OPPOSED (`fwd.reverse=False`, `rev.reverse=True`) · both arms measured the SAME commit `4032d954` · arms are DISTINCT artifacts · neither is a LIMITED SUBSET · invalid children `0` in both.
+🛑 **`STOP [41]` HONOURED — FOUR DENOMINATORS, NEVER COLLAPSED:** **child targets `108`** · **governed nodes observed `2419`** · **governed nodes REQUIRED by the authority `2419`** · **differing nodes `0`.** ⭐ **`observed == required` EXACTLY, in all three arms: missing-required `0` and invented/unauthorized `0`, derived from `population_successor`, never from a roster.**
+✅ **`STOP [37]` HONOURED: the oracle was node-outcome IDENTITY. At no point did I compare against `31`, and nothing was tuned toward it.**
+
+### §2 — ✅ `[H]`: SERIAL, NO CONCURRENCY — BUT THE MARGIN IS THIN AND I SAY SO
+```
+forward 9.28 min   reverse 9.16 min   repeat 9.21 min      CEILING 10.0 min
+```
+✅ **ALL THREE UNDER THE PRE-REGISTERED CEILING. `[H]` SATISFIED. NO CONCURRENCY WAS USED OR CONSIDERED** — `R-825 §6[6]` forbids it and the reason is sound: concurrency buys file/artifact/DB/environment races and would destroy the determinism `RATIFY-1` exists to establish.
+⚠️ **BUT THE HEADROOM IS `0.72` min — `7.2%`.** 🛑 **I do NOT report this as a clean `OK`.** **The ceiling is a PRE-REGISTERED constant, while the run time is a property of a box and a growing test population. `108` children on a slower machine, or ~`8` more governed files at the current mean of `5.1` s/child, breaches it.** ⇒ **THIS IS A FORWARD RISK, NOT A TODAY-FAILURE, and it is the desk's to price.** ★★★★ **`A THRESHOLD PASSED BY 7% IS A MEASUREMENT, NOT A GUARANTEE — AND REPORTING IT AS "OK" WOULD HIDE THE ONE FACT THAT DECIDES WHETHER IT PASSES NEXT MONTH.`**
+
+### §3 — ✅ `[I]`: REPEATABILITY AT AN IDENTICAL PIN
+```
+run-1  canonical  2419 nodes  9.28 min       run-2  canonical  2419 nodes  9.21 min
+SAME commit 4032d954 . SAME interpreter . DISTINCT artifact dirs . DISTINCT run IDs
+ORACLE  EXACT NODE ID -> OUTCOME       ==>  0 DIFFERING NODES
+```
+✅ **`[I]` SATISFIED — outcome membership identical modulo timestamps, run IDs and unique artifact directories, exactly as `R-825 §6[7]` specifies.**
+✅ **INTERPRETER PINNED AND MEASURED, because "identical environment" is a claim: `[MEASURED HERE]` PowerShell and Git Bash BOTH resolve `C:\Program Files\Python313\python.exe`, `3.13.0`. All three arms ran the same interpreter, so no shell difference is hiding in the pin.**
+
+### §4 — ⚖️ THE INSTRUMENT CHANGED AFTER `[G]` WAS COMPUTED, SO I RE-TOOK `[G]`
+🛑 **`[I]` needed a comparison mode the `[G]` driver did not have — its arms-are-OPPOSED guard correctly REFUSES two same-direction arms, which is precisely what `[I]` is.** ⇒ **I added `--mode repeat` and gave it its OWN relationship assertion rather than relaxing `[G]`'s.**
+✅ **AND I RED-PROOFED THE CROSS-MODE GUARD, because a second mode is exactly how a guard gets laundered:** **`[I]` REJECTS an OPPOSED (`[G]`) pair ⇒ RED** · **`[G]` REJECTS a SAME-DIRECTION (`[I]`) pair ⇒ RED.** ★★★★ **`A COMPARISON WHOSE ARMS ARE NOT IN THE CLAIMED RELATIONSHIP IS NOT EVIDENCE FOR THAT CLAIM — IT IS TWO NUMBERS THAT HAPPEN TO MATCH.`**
+✅ **RED-PROOF NOW `15` ARMS, ALL AS EXPECTED** — the original `10` behave IDENTICALLY, so `[G]`'s guard was not weakened: identical opposed maps GREEN (positive control) · one flipped outcome RED · node absent in one arm RED · invented node RED · two FORWARD arms RED · different commits RED · limited subset RED · invalid child RED · duplicate node IDs RED · collected-but-unexecuted RED · `[I]` identical canonical repeats GREEN · `[I]` one flipped outcome RED · `[I]` identical REVERSE repeats GREEN · `[I]` rejects opposed RED · `[G]` rejects same-direction RED.
+⚖️ **I THEN RE-RAN `[G]` THROUGH THE MODIFIED COMPARATOR AND RE-CONFIRMED `0` DIFFERING NODES.** ★★★★ **`[red-path-decay]`: A NUMBER CARRIED ACROSS A CHANGE TO ITS OWN INSTRUMENT IS STALE EVEN WHEN THE WORDS AROUND IT ARE FRESH — SO I DID NOT CARRY IT.**
+
+### §5 — 🛑 WHAT THE FIRST FULL ISOLATED MAP ACTUALLY SAYS, RECORDED AND NOT ADJUDICATED
+🛑 **`R-825` recorded that NO FULL GOVERNED `108`-CHILD / `2419`-NODE SET HAD EVER EXECUTED. ONE HAS NOW, THREE TIMES, AND ITS DISTRIBUTION IS STABLE ACROSS ALL THREE ARMS:**
+```
+failed  287     passed 2127     skipped 3     xfailed 2        = 2419
+287 failures spread across 45 of the 108 governed files
+```
+🛑🛑 **I DO NOT ADJUDICATE ONE OF THESE (`STOP [44]`).** **They are the tree's behaviour when tests can no longer contaminate one another; the old `31` was measured under contamination and `STOP [37]` forbids treating it as a target. Merit adjudication comes only after the isolated map is stable — and stability is what this AR establishes, not what it spends.**
+🛑 **AND A DENOMINATOR TRAP I REFUSE TO WALK INTO: `test_pnl_accuracy.py` holds `51` nodes of which `11` FAIL under isolation. `11` IS NOT `THE 7`.** **`[RELAYED, AR-983 §1 / R-823]` "the `7`" is the set of PnL outcomes that CHANGE between shared-process and isolated — a shared-vs-isolated difference. `11` is a count of failures in the isolated arm ALONE. Deciding which of the `11` are among the `7` requires the SHARED-process map, which is `[E]`'s evidence and is not in `[G]`'s two arms.** ⇒ **`UNRESOLVED HERE, BY CONSTRUCTION — I state the `11` exactly and I do NOT claim it contains, equals, or supersedes the `7`.** ★★★★★ **`TWO NUMBERS ABOUT THE SAME FILE ARE NOT THE SAME POPULATION, AND THE ONE I CAN MEASURE IS NOT AUTOMATICALLY THE ONE THE STOP IS ABOUT.`** (`[unenumerated-ladder]`, `[i-measured]`.)
+✅ **The `11` exact node IDs are recorded verbatim in this run's artifacts and reproduce identically in all three arms.**
+
+### §6 — 📌 FAN-IN, AND I DO NOT GRADE MY OWN WORK
+```
+COMPLETE (desk-ruled)     A B C D E F J          = 7   (R-825 §2)
+COMPLETE (worker-measured, THIS AR, UNRULED)   G H I  = 3
+                                            CLAIMED FAN-IN 10 / 10
+```
+🛑 **`STOP [48]` HONOURED — I never publish `8 / 10`; the teardown-order edge is a SUB-PROOF of `[J]`, not an eleventh letter.**
+🛑🛑 **AND THE QUALIFIER IS LOAD-BEARING: `7` of those are DESK-RULED; `[G]` `[H]` `[I]` are WORKER-MEASURED AND UNRULED. `10 / 10` IS A CLAIM, NOT A CERTIFICATION. I am the doer and I do not certify my own instrument** (`[grader-agent]`, `worker-execution §5`). ⇒ ⚡ **AN INDEPENDENT GRADE IS OWED BEFORE PROMOTION, AND THE GRADER IS LOCAL AND ONE AUTHORIZATION AWAY: say the word and I will dispatch `accuracy-validator` against this pinned commit with a durable receipt path, asking explicitly for a NOVEL false-green hunt.**
+🛑 **NOT DONE, AND DELIBERATELY: I did NOT promote `acceptance_runner.py`, did NOT mint a seal, did NOT start `CLUSTER-E`, did NOT touch the `7`/`11` PnL nodes, and did NOT begin the money path.** **`R-825 §5`'s sequence puts promotion at step `2` and it is the desk's call, not a consequence of my run.**
+
+### §7 — 📌 EVIDENCE, REPRODUCIBLE
+```
+python scripts/accept5_isolated_runner.py --out-dir <D>/fwd
+python scripts/accept5_isolated_runner.py --out-dir <D>/rev --reverse
+python scripts/accept5_isolated_runner.py --out-dir <D>/rpt
+python scripts/ratify1_controls/g_order_identity.py --mode order  --forward <fwd>/aggregate.json --reverse <rev>/aggregate.json
+python scripts/ratify1_controls/g_order_identity.py --mode repeat --forward <fwd>/aggregate.json --reverse <rpt>/aggregate.json
+python scripts/ratify1_controls/g_order_identity.py --red-proof
+```
+⚠️ **ARTIFACT LOCATION, STATED PLAINLY: the three `aggregate.json` maps live OUTSIDE the repo, in this session's scratchpad (`R-822 §7` — durable artifacts outside disposable execution trees; and it keeps the shared tree clean). They are NOT committed. If the desk wants them as durable `RATIFY-1` evidence, say so and I will commit them under `docs/designs/` — that is a deliberate omission, not an oversight.**
+**REMAINING UNCERTAINTY:** the `287` failures are unadjudicated by order · the `11`-vs-`7` join is unresolved by construction · `[H]`'s `7%` margin is a forward risk · `[G]`/`[H]`/`[I]` are unruled.
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`** — `RATIFY-1`'s remaining obligations are measured and I am not stopping; but `R-825 §6[8]` does NOT authorize promotion, `CLUSTER-E`, or a seal, so the next step is genuinely the desk's. **I hold the seat, the ear is armed, and I have not handed off.**
+
+---
+
 ## AR-985 · 2026-08-11 · 📌 **START-RECEIPT, SEAT `claude.exe 9592`. EAR ARMED, RED-PROOFED, AND IT HAS ALREADY FIRED ON `R-825` ITSELF.** ⚡ **THE `[G]`/`[H]`/`[I]` ORACLE STATED BEFORE ANYTHING RUNS, PER `R-825 §6[3]`.** 🛑 **ONE GAP FOUND BEFORE STARTING: `[G]`'s COMPARISON *FUNCTION* IS RATIFIED AND EXISTS, BUT NO `[G]` *DRIVER* DOES — AND THE RATIFIED CONTROL PRINTS ITS DIFFERENCES `[:6]`, WHICH IS EXACTLY THE `Q4` HAZARD.**
 
 **SEAT `claude.exe 9592`, born `03:45:47`. TREE `wt-h1-wave4-20260712`. `HEAD b749f304`; `origin 7fcc0a07`. RULING `R-825 §6`.** 🛑 `acceptance_runner.py` UNCHANGED; nothing promoted; no seal moved; `CLUSTER-E` HELD.
