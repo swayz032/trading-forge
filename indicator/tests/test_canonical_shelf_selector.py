@@ -2,8 +2,10 @@ import unittest
 
 from indicator.reference.canonical_shelf_selector import (
     canonicalize_target_shelves,
+    reaction_interval_from_candle,
     select_canonical_target_ladder,
     target_depth_for_context,
+    target_depth_for_side,
 )
 from indicator.reference.reaction_cluster_selector import ReactionCluster, TargetLevel
 
@@ -35,6 +37,40 @@ class CanonicalShelfSelectorTests(unittest.TestCase):
         )
         self.assertEqual(out[0].price, 115.0)
         self.assertGreater(out[0].price, 110.0)
+
+    def test_full_body_to_extreme_zone_replaces_thin_wick_strip(self):
+        long_zone = reaction_interval_from_candle(
+            side="LONG", open_price=29948.0, close_price=29960.0,
+            high=29980.0, low=29940.0, source_id="long-reaction",
+        )
+        short_zone = reaction_interval_from_candle(
+            side="SHORT", open_price=29592.0, close_price=29608.0,
+            high=29615.0, low=29572.0, source_id="short-reaction",
+        )
+        self.assertEqual((long_zone.lower, long_zone.upper), (29948.0, 29980.0))
+        self.assertEqual((short_zone.lower, short_zone.upper), (29572.0, 29608.0))
+        # Old forbidden strips would have been 29960->29980 and 29572->29592.
+        self.assertLess(long_zone.lower, 29960.0)
+        self.assertGreater(short_zone.upper, 29592.0)
+
+    def test_operator_side_bias_is_middle_with_long_top_lean_and_short_middle(self):
+        self.assertEqual(target_depth_for_side(side="LONG"), 0.55)
+        self.assertEqual(target_depth_for_side(side="SHORT"), 0.50)
+        long_lane = (level(29940.0, 29964.0, 29950.0, "a", "b"),)
+        short_lane = (level(29582.0, 29620.0, 29600.0, "c", "d"),)
+        long_out = select_canonical_target_ladder(
+            (long_lane,), side="LONG", entry=29900.0, entry_gap=1.0,
+            zone_gap=1.0, fusion_gap=0.0,
+            penetration_fraction=target_depth_for_side(side="LONG"), tick=0.25, max_targets=1,
+        )[0]
+        short_out = select_canonical_target_ladder(
+            (short_lane,), side="SHORT", entry=29666.0, entry_gap=1.0,
+            zone_gap=1.0, fusion_gap=0.0,
+            penetration_fraction=target_depth_for_side(side="SHORT"), tick=0.25, max_targets=1,
+        )[0]
+        self.assertGreater(long_out.price, (29940.0 + 29964.0) / 2)
+        self.assertLess(long_out.price, 29964.0)
+        self.assertEqual(short_out.price, 29601.0)
 
     def test_duplicate_cross_tf_shelf_counts_once_and_deeper_promotes(self):
         lane15 = (
