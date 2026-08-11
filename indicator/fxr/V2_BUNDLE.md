@@ -2,61 +2,46 @@
 
 Status: **PLATFORM PARITY / RESEARCH ONLY**. Not live-decision-support approved.
 
-The FXR adapter keeps higher-timeframe responsibilities separated instead of inventing unsupported cross-timeframe shortcuts. The bundle must reproduce the same semantic objects as the canonical Slumdawg reference engine, but full one-box parity is not claimed until cross-script synchronization is certified.
+## Executable entry / target adapter
 
-## Load on a 5-minute MNQ/NQ replay chart
+Load `slumdawg_v2_entry_tp_15m_v0_4.fxr.js` on a **5-minute NQ/MNQ** replay chart.
 
-1. `slumdawg_v2_entry_tp_15m_v0_3.fxr.js`
-   - persistent 15m CURRENT MOVE / BOS state
-   - 🟢 LONG / 🔴 SHORT Entry Zones
-   - directional reaction-history retention: above-entry and below-entry shelves cannot consume each other's history budget
-   - deeper 15m primary + dense 5m body/turn fallback reaction-shelf TP search
-   - cross-lane TP candidates retain **full zone LOW/HIGH bounds** plus the conservative inside-zone target
-   - adjacent/overlapping 5m and 15m descriptions of the same physical shelf count as **one** TP destination
-   - TP2/TP3 must be structurally beyond the entire prior selected zone, not merely a few points beyond its target line
-   - 🎯 TP1/TP2/TP3 lines when qualified
-   - standard reference/BREAK/PUSH state foundation
+The v0.4 adapter closes the Aug-10 target-distance defect:
 
-2. `slumdawg_v2_macro_daily_v0_2.fxr.js`
-   - **macro BIG DIRECTION authority** for the FXR bundle
-   - persistent Daily higher-high/higher-low or lower-high/lower-low structure
-   - large lower-timeframe pullbacks do not flip macro direction by themselves
-   - draws the protected macro swing level with `📈/📉 BIG DIRECTION` wording
+- the final 15m Entry Zone is the shared anchor for both 15m and native-chart 5m reaction discovery;
+- 5m no longer invents a separate outer-swing anchor that can delete closer reaction zones;
+- a candidate needs repeated reaction evidence before it can become a target shelf;
+- target polarity is directional: LONG targets come from prior high-side rejection/supply; SHORT targets come from prior low-side reaction/demand;
+- 15m + 5m views of the same physical shelf are fused before TP1/TP2/TP3 numbering;
+- distance only rejects or sequences already-qualified shelves; it does not manufacture a TP price;
+- when CURRENT MOVE matches BIG DIRECTION, TP is placed at the **reaction-zone midpoint** (`MID`);
+- for a temporary/countertrend move, TP is placed in the **safer near-middle** (`SAFE`): upper-middle for SHORT, lower-middle for LONG;
+- target rounding must remain strictly inside the reaction zone by at least one NQ/MNQ tick on each side.
 
-3. `slumdawg_v2_context_4h.fxr.js`
-   - retained only as a 4H protected-structure research/corroboration helper
-   - it is **not** the macro authority once the Daily helper is loaded
-   - do not treat a strong 4H pullback as a macro reversal merely because the helper turns locally bullish
+## BIG DIRECTION input
 
-4. Existing Daily key-level helper
-   - `slumdawg_daily_levels_v0_1.fxr.js`
-   - PDH/PDL only; distinct from the Daily macro-direction helper
+FXR currently documents one requested MTF timeframe per script and does not document a supported cross-script shared-state bus. The entry/TP adapter therefore requests **15m once** and uses the native chart for 5m. Daily macro direction stays in the separate Daily helper.
 
-5. Existing Weekly key-level helper
-   - `slumdawg_weekly_levels_v0_1.fxr.js`
+Set the adapter's `BIG DIRECTION (match Daily helper)` input to the direction shown by `slumdawg_v2_macro_daily_v0_2.fxr.js`. This is explicit rather than silently guessing or pretending cross-script state exists.
 
-## Important parity limitation
+## Load this bundle
 
-The current bundle has separate scripts for Daily macro state, 4H corroboration, 15m current move/Entry/TP, and D/W key levels. Until a supported and tested cross-script state-sharing mechanism is available, FX Replay cannot honestly render the exact combined TradingView `🤖 SLUMDAWG TRADERS` panel from one canonical shared in-platform state.
+1. `slumdawg_v2_entry_tp_15m_v0_4.fxr.js` — 5m chart + requested 15m; CURRENT MOVE, Entry Zones, reaction-zone TP ladder, entry-state foundation.
+2. `slumdawg_v2_macro_daily_v0_2.fxr.js` — Daily BIG DIRECTION authority.
+3. `slumdawg_v2_context_4h.fxr.js` — 4H corroboration/context only; not TP authority.
+4. `slumdawg_daily_levels_v0_1.fxr.js` — PDH/PDL.
+5. `slumdawg_weekly_levels_v0_1.fxr.js` — PWH/PWL.
 
-Therefore:
+## Why 1H/4H are not executable TP lanes in v0.4
 
-- Entry/TP geometry is directly testable in FXR.
-- Daily macro BIG DIRECTION is directly testable in FXR.
-- The human can compare macro state + current move across the loaded bundle.
-- Full one-panel Python/Pine/FXR parity remains a certification blocker, not something to fake.
+TradingView can request several timeframes inside one Pine script. FXR's documented MTF contract is narrower. Rather than let Pine use 1H/4H target lanes that FXR cannot reproduce honestly, the parity slice uses **15m + native 5m** for target geometry. 1H/4H remain context / NEXT-WALL evidence until a supported, tested parity mechanism exists.
 
-## Golden regressions from 2026-08-10
+## Golden Aug-10 regression
 
-The FXR bundle must preserve the same semantics as the TradingView fixtures:
+The rejected MNQU2026 5m screenshot showed BIG DIRECTION = DOWN, CURRENT MOVE = DOWN WITH DIRECTION, SHORT ENTRY `29666.00`, and garbage distant targets `29198.50`, `29117.25`, `28958.75`.
 
-- a strong bullish 4H rally may still be an `UP PULLBACK` inside `BIG DIRECTION = DOWN`;
-- after bearish resumption, CURRENT MOVE may become `DOWN WITH DIRECTION`;
-- a short Entry Zone near the reviewed ~29,719 structure must not produce an overlapping TP around ~29,714;
-- deeper approved reaction shelves must not disappear merely because recent irrelevant reactions filled a shared candidate cap;
-- two target prices generated by different timeframe views of the **same reaction shelf** must not consume TP1 and TP2 separately;
-- once duplicate/same-shelf candidates are fused, the next genuinely deeper shelf promotes to TP2 and the search continues for a distinct TP3.
+Those values are not approved destinations. The regression contract is semantic: for that aligned short context, the adapter must discover qualified downside reaction zones from the shared entry anchor and place each target at the **middle of its selected zone**. It must not recreate those old prices merely because a distant wick passed a spacing filter.
 
-## No hidden fallback
+## Certification boundary
 
-If a target cannot be produced after the supported 15m + chart-5m search, do not invent one. The adapter must expose the missing-data/detector limitation during parity review and the fixture must remain failing until the supported detector is improved.
+Source/static checks can prove that the FXR adapter uses the documented APIs and matches the frozen geometry semantics. Actual FX Replay Editor execution, replay/rewind behavior, and chart agreement still require a platform run. Until that evidence is captured, **full one-panel Python/Pine/FXR parity remains a certification blocker**.
