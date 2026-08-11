@@ -295,10 +295,46 @@ def record_successor(
             "(R-799 SS4).",
         ]
 
+    # --- HERMETICITY IS A PRECONDITION OF THE WRITE, NOT A SUBCOMMAND -------
+    # R-811 §3. The first cut of this module exposed `admit_or_refuse()` only as
+    # a CLI verb, so the chain write below had NO hermeticity gate at all and
+    # AR-960 reported a precondition that did not exist. `A GUARD THAT WATCHES A
+    # TOOL IS NOT A GUARD ON THE ACT` (WORKER-GUARD-ACT-1). Every newly-added
+    # node ID is mapped back to its source file, deduped, and checked HERE —
+    # after the diff, before anything is written.
+    refusals = []
+    for src_file in sorted({n.split("::")[0] for n in added}):
+        candidate = tree / src_file
+        if not candidate.is_file():
+            refusals.append(
+                f"{REFUSAL_NOT_HERMETIC}\n"
+                f"  candidate : {src_file}\n"
+                f"  reason    : the file contributing this node ID does not exist "
+                f"in the tree being recorded; its hermeticity cannot be assessed."
+            )
+            continue
+        ok, lines = admit_or_refuse(candidate)
+        if not ok:
+            refusals.append("\n".join(lines))
+    if refusals:
+        # STOP [25]: a refusal that modifies the chain is not a refusal.
+        return None, [
+            "SUCCESSOR ADMISSION REFUSED - NOTHING WRITTEN.",
+            f"  {len(refusals)} candidate file(s) failed the hermeticity "
+            f"precondition. The node IDs they contribute are:",
+            *[f"    {n}" for n in added if (tree / n.split('::')[0]).as_posix()
+              and any(n.split("::")[0] in r for r in refusals)],
+            *refusals,
+        ]
+
     resulting = (current | set(added)) - authorized
     entry = {
         "entry_kind": entry_kind,
         "authority": authority,
+        "hermeticity_precondition": (
+            f"ENFORCED at record time on {len({n.split('::')[0] for n in added})} "
+            f"candidate file(s) (R-799 SS5 forms; R-811 SS3)"
+        ),
         "note": note,
         "parent_population_sha256": population_sha256(current),
         "graded_sha": graded_sha,

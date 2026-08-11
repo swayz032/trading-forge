@@ -112,6 +112,17 @@ TREE_AUTHORITY_UNAVAILABLE = (
 AUTHORITY_SOURCE_PATHS = (
     "src", "scripts", "tests",
     "pyproject.toml", "pytest.ini", "tox.ini", "setup.cfg", "conftest.py",
+    # --- R-811 §4: these two DECIDE WHAT PYTEST EXECUTES ------------------
+    # The successor chain now contributes supplemental pytest targets, and the
+    # seal anchors it. Both live under docs/, which this surface deliberately
+    # ignores — so without these two exact paths an execution-authority input
+    # would sit OUTSIDE the gate that exists to attest the tested bytes.
+    # `A CLOSED DEFECT CLASS RE-OPENS THROUGH THE DOOR ITS OWN FIX BUILT.`
+    # 🛑 TWO NAMED FILES, NOT the docs/ tree: a governed member rewrites
+    # docs/wave25-exit-engine-ab-report.md during every run, so guarding docs/
+    # would refuse every authoritative run (STOP [16]/[18]).
+    "docs/replay-results/h1-battery/acceptance-population-successor.json",
+    "docs/replay-results/h1-battery/acceptance-collection-seal-08062e12.json",
 )
 
 
@@ -639,7 +650,53 @@ def main():
                   f"authoritative verdict would describe a tree that is not any commit: "
                   f"{listed}. pytest was not started; nothing was scored.")
             raise SystemExit(2)
-        cmd = [sys.executable, "-m", "pytest", *[f"src/{m}" for m in resolved],
+        # --- R-811 §2: SUPPLEMENTAL TARGETS FROM THE SUCCESSOR CHAIN --------
+        # AUTHORITY A (the manifest) is a COMPUTED file population; AUTHORITY B
+        # (the chain) is the post-seal EXACT node-ID population and may legally
+        # hold node IDs outside A's import closure. The runner executes BOTH.
+        # DERIVED here at run time, never cached and never hard-coded.
+        manifest_targets = {f"src/{m}" for m in resolved}
+        try:
+            import population_successor as _popsucc
+            _required, _chain_probs = _popsucc.required_population(REPO)
+        except Exception as exc:  # noqa: BLE001 - any failure here must REFUSE
+            print(f"{TREE_AUTHORITY_UNAVAILABLE}: the successor chain could not be "
+                  f"derived ({type(exc).__name__}: {exc}), so the set of tests this "
+                  f"run must execute is unknown. pytest was not started.")
+            raise SystemExit(2) from exc
+        if _chain_probs:
+            for pr in _chain_probs:
+                print(f"      {pr}")
+            print("ACCEPTANCE INSTRUMENT REFUSED - POPULATION CHAIN INVALID: the "
+                  "required population could not be derived, so this run cannot know "
+                  "what it was obliged to execute. pytest was not started.")
+            raise SystemExit(2)
+
+        # Only node IDs whose FILE is not already a manifest target — appending
+        # all of them would double-collect and blow the Windows command line.
+        supplemental = sorted(
+            n for n in _required if n.split("::")[0] not in manifest_targets
+        )
+        # Control I: a required node ID whose file is gone must name ITS OWN
+        # layer. Left to pytest this is exit 4 -> "PYTEST RUN INVALID", which is
+        # correct and illegible: it reads as broken infrastructure when the truth
+        # is that a governed obligation was deleted.
+        gone = sorted({n.split("::")[0] for n in supplemental
+                       if not (REPO / n.split("::")[0]).is_file()})
+        if gone:
+            for g in gone:
+                print(f"      REQUIRED SUPPLEMENTAL TARGET MISSING: {g}")
+            print(f"ACCEPTANCE INSTRUMENT REFUSED - REQUIRED SUPPLEMENTAL TARGET "
+                  f"MISSING: {len(gone)} file(s) carrying chain-required node IDs no "
+                  f"longer exist. A governed obligation was deleted; this is not a "
+                  f"pytest usage error. pytest was not started.")
+            raise SystemExit(2)
+        print(f"NOTE:     supplemental targets from the chain : {len(supplemental)}")
+        for n in supplemental:
+            print(f"          + {n}")
+
+        cmd = [sys.executable, "-m", "pytest",
+               *[f"src/{m}" for m in resolved], *supplemental,
                "-q", "--no-header", "-p", "no:cacheprovider",
                "-p", "scripts.acceptance_pytest_plugin",
                f"--acceptance-out={run_json}", f"--junitxml={run_xml}",
