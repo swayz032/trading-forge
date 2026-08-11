@@ -79,9 +79,19 @@ try:
     #
     #   `THE TWO CASES SHARE AN EXIT CODE AND NOTHING ELSE. n_collected IS THE
     #    ONLY THING THAT TELLS THEM APART.`
+    #
+    # NEEDLE UPDATED, AND THE CODE WAS NOT: R-823 §5 replaced the n_collected-only
+    # rule with an AUTHORITY-DERIVED one, so this arm is now refused for a
+    # STRONGER reason -- "the population authority requires N node(s) from it" --
+    # and the old needle no longer matched. The surprising result accused the
+    # instrument first and the instrument was indeed the stale part.
     empty = R.run_child(GOOD, [GOOD, "-k", "this_matches_no_test_at_all"], root / "d")
+    msg = " | ".join(empty["problems"])
+    assert ("did not prove genuine emptiness" in msg
+            or "population authority requires" in msg), (
+        f"exit-5 refusal reason is neither of the two supported ones: {msg}")
     check("exit 5 with tests present", empty, expect_problem=True,
-          needle="did not prove genuine emptiness")
+          needle="population authority requires")
     assert not empty.get("empty_by_design"), (
         "the exit-5 allowance fired on a file that DOES contain tests -- it is a "
         "waiver, not a discriminator")
