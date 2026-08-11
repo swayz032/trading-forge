@@ -11,7 +11,7 @@
 
 ## SEAT — 2026-08-11 ~15:00Z · desk `claude.exe 28644` · **LIVE BLOCK, TAKE THIS ONE**
 
-**Ledger at `R-832`. Newest AR: `AR-997` — ✅ RULED AND APPROVED (`R-832`); the external read arrived, the wait was HELD and is DISCHARGED.** Worker **`claude.exe 23968` ACTIVE, NO ROLL** — same seat that wrote `AR-995`/`996`/`997`; it is **NOT BLOCKED** (`R-831 §7[3]/[4]` authorize classify+repair, and it is starting on `M3`/`M1`, both test-side).
+**Ledger at `R-832`. Newest AR: `AR-998` — 🛑 UNRULED, HELD FOR THE EXTERNAL READ** (`AR-997` was ruled by `R-832`). ⚠️ **WORKER HAS DECLARED A HANDOFF (`AR-998 §6`) AT THE SEAM `R-832 §6` NAMED — and `[MEASURED HERE, Win32_Process]` seat `23968` IS STILL ALIVE. `[seat-rolls-are-swaps]`: IT DECLARES, THE OPERATOR EXECUTES. Do not treat it as dead.** ⚡ **`R-832 §7`'s FOUR ITEMS ARE ALL DELIVERED; the worker is blocked BY COMPLETION, not obstruction — which this desk declined to treat as the wait's exception at `AR-967` and `AR-995`, and declines again here.** Worker **`claude.exe 23968`, NO ROLL** — same seat that wrote `AR-995`/`996`/`997`; it is **NOT BLOCKED** (`R-831 §7[3]/[4]` authorize classify+repair, and it is starting on `M3`/`M1`, both test-side).
 **SEAT ROLL `[MEASURED HERE, `Win32_Process` + parent walk, IMAGE NAME + BIRTH TIME]`: desk `26972` → `28644` (born `08-11 10:53:52`, parent `powershell.exe 8328`). `26972` is GONE from the census. `[seat-rolls-are-swaps]` — planned swap, no work hunted.**
 
 ### 🛑 DESK DEFECT ON RECORD — MINE, AT SEATING
@@ -26,7 +26,16 @@
 ⚠️ **TWO ORPHAN `bash.exe` EARS — REPORT, DO NOT KILL (`advisor-onboarding §4a`):** `17820` `report-ear.sh` on `AGENT-REPORTS.md` (session `5ffbf1a0` = desk `26972`, now dead — **a running process delivering into a dead seat**) · `23812` `ruling-ear.sh` on a THROWAWAY file (dead session). ✅ **`28368` `ruling_ear.sh` on `ADVISOR-RULINGS.md` is the WORKER's LIVE ear — DO NOT TOUCH IT.** ★ **`A STATE FILE CLAIMING "EAR ARMED" IS A CLAIM ABOUT A PROCESS — AND A PROCESS CAN OUTLIVE THE SEAT IT SPEAKS TO.`**
 
 ## AUTHORIZED NOW
-**`R-832 §7` to seat `23968` — ALL THREE MECHANISMS, ORDER `M3` → `M2` → `M1`, NO ROUND-TRIP BETWEEN THEM.**
+🛑 **NOTHING NEW — AND THAT IS A HOLD I DECLARE, NOT AN OVERSIGHT.** `R-832 §7`'s items are **ALL DELIVERED** (`AR-998`). **The next action is the FIVE CERTIFYING ARMS, which `R-832 §6` blocks. Lifting that block is a RULING, and the ruling waits for the external read on `AR-998`.** ⚠️ **A fresh worker seat arriving before that read WILL find itself with no authorized next task — that is the honest state, and the desk owns it rather than papering over it.**
+⚖️ **AND A TENSION IN MY OWN RULING THAT THE WORKER CORRECTLY FLAGGED, FOR THE READ TO SETTLE: `R-832 §6` blocks the five arms until membership `= 0`, but the POPULATION-scope membership proof IS the five-arm run** ⇒ **on `R-832 §6`'s literal wording the gate's precondition can only be measured by the gated action.** ✅ **`R-831 §5`'s sequence is looser and is satisfied — *"targeted canonical/reverse proof over affected files → `12 → 0` → … THEN the five arms"* — and `AR-998` completed exactly that.** ★★★ **`I WROTE A GATE TIGHTER THAN THE ONE I INHERITED AND TURNED A SEQUENCE INTO A DEADLOCK; THE WORKER READ BOTH AND REPORTED THE CONFLICT INSTEAD OF PICKING THE CONVENIENT READING.`**
+
+### ✅ DELIVERED BY `AR-998` — verified where marked
+- `[MEASURED HERE, `git show --stat` over `dd18db5c` `099cf1d0` `ff2105f1`]` **the three repairs touch ONLY `4` files, all `src/engine/tests/*.py`.** The single non-test file in the range is the pre-push hook's regenerated `SYSTEM-INVENTORY.md` (`3d205d63`), which the worker disclosed. ⇒ **the "no full `C1`–`C13` re-run" precondition (`R-832 §6`) HOLDS.**
+- `[RELAYED — worker-measured, not re-run here]` all `4` affected files order-stable (`canonical == reversed`); **`M3` closed by seam `(a)` DELETION, chosen by measurement, with `R-818 §4`'s own named witness unchanged** · `M2` proven in a child interpreter with **no kwargs**, `margin_expansion.py` UNTOUCHED · **`M1` STABLE RUN, `STOP H` probed FIRST and did not fire (`0.92s`, no hang)**.
+- ⭐ **`M1`'s cheap closure was AVAILABLE and REFUSED on `R-832 §3`'s money-path join.** ★★★★★ **`THE ONE DECISION THIS DESK ADDED TO THE EXTERNAL READ IS THE ONE THE WORKER SAYS IT WOULD OTHERWISE HAVE GOT WRONG.`**
+- ⚠️ **`[NOT MEASURED, worker-declared]` whether any node OUTSIDE the `12` became order-dependent as a consequence — only the `4` affected files were measured. **THE POPULATION ARM IS WHAT WOULD SHOW IT.**
+
+### (superseded, delivered) `R-832 §7` to seat `23968` — ORDER `M3` → `M2` → `M1`
 - **`M3`** one rule / one implementation, seam chosen in `R-832 §4`'s order: **(a) delete the local fixtures IF MEASURED redundant · (b) neutral shared module · (c) import from the plugin ONLY if (a)/(b) fail, coupling DISCLOSED.** Sharp control REQUIRED: re-plant the old rule ⇒ DuckDB pair goes order-dependent again.
 - **`M2`** TEST CODE ONLY; fresh-subprocess env-at-import proof, same node ID, reusing the `sys.executable` pattern already in this population.
 - **`M1`** target **STABLE RUN — a REQUIREMENT, not a preference** (`R-832 §3`). `STOP H` governs a JIT/hang.
@@ -50,7 +59,9 @@
 `docs/wave25-exit-engine-ab-report.md` modified in `git status` — **ruled output-only, NOT cruft** · `.numba_cache/*` churn · `ACCEPTANCE: REFUSED` from `SEALED DISPOSITION CHANGED` / `F-ACCEPT5-8` · **the worker's local branch running ahead of `origin`** · **the two orphan ear processes above.**
 
 ## OPERATOR-FACING
-**Nothing is waiting on him. No spend, no capital, no irreversible act.** **He is the courier to the external GPT reader — `AR-997` was PRINTED IN CHAT IN FULL** (`[ar-on-screen-for-gpt]`). ⚠️ **`[wait-on-gpt]` holds and is UNEXERCISED this seat: `AR-997` is substantive, the worker is not blocked, and I am not ruling until the read lands.**
+**No spend, no capital, no irreversible act.** **He is the courier to the external GPT reader — `AR-997` and `R-832` were PRINTED IN CHAT IN FULL, and `AR-998` with them** (`[ar-on-screen-for-gpt]`).
+⚡ **TWO THINGS ARE HIS, AND BOTH ARE ACTIONS RATHER THAN JUDGEMENTS: (1) RELAY `AR-998` for the read that unblocks the five arms · (2) THE WORKER SEAT SWAP — `23968` declared a handoff at a clean seam after EIGHT delivery cycles; the seat is still alive and the swap lever is his (`[seat-rolls-are-swaps]`). A fresh seat needs only `AR-998` and `R-832 §6`.**
+⚠️ **`[wait-on-gpt]` HOLDS AND IS STILL UNEXERCISED THIS SEAT: `AR-998` is substantive and I am NOT ruling on it. The blocked-worker exception is genuinely unavailable — the worker is blocked BY COMPLETION, the shape this desk declined at `AR-967` and `AR-995`, and a precedent invoked against one option binds on the next** (`[stated-price-not-prohibition]`).
 
 ---
 
