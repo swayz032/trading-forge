@@ -95,7 +95,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   // (already being fetched and parsed for the Calendar panel) rather than
   // reading a scalar column that was never persisted.
   const [bt] = (await db.execute(sql`
-    SELECT total_trades, daily_pnls, equity_curve, result_extras,
+    SELECT id::text AS backtest_id, total_trades, daily_pnls, equity_curve, result_extras,
            win_rate, sharpe_ratio, profit_factor, max_drawdown,
            walk_forward_results, b15_battery, mrp_regime_breakdown, prop_compliance
     FROM backtests
@@ -122,8 +122,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const [mc] = (await db.execute(sql`
     SELECT mc.risk_metrics, mc.paths, mc.probability_of_ruin
     FROM monte_carlo_runs mc
-    JOIN backtests bt2 ON bt2.id = mc.backtest_id
-    WHERE bt2.strategy_id = ${args.strategyId}::uuid
+    WHERE mc.backtest_id = ${bt?.backtest_id ?? null}::uuid
       AND mc.status = 'completed'
     ORDER BY mc.created_at DESC LIMIT 1
   `).catch(() => [] as any[])) as any[];
@@ -131,7 +130,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const [frankenstein] = (await db.execute(sql`
     SELECT passed, p95_sharpe, median_pf
     FROM frankenstein_test_runs
-    WHERE strategy_id = ${args.strategyId}::uuid AND status = 'completed'
+    WHERE backtest_id = ${bt?.backtest_id ?? null}::uuid AND status = 'completed'
     ORDER BY created_at DESC LIMIT 1
   `).catch(() => [] as any[])) as any[];
 
@@ -139,13 +138,14 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     SELECT survival_rate, num_regimes_tested, num_regimes_survived,
            worst_regime_drawdown, worst_regime_label
     FROM synthetic_black_swan_runs
-    WHERE strategy_id = ${args.strategyId}::uuid AND status = 'completed'
+    WHERE backtest_id = ${bt?.backtest_id ?? null}::uuid AND status = 'completed'
     ORDER BY created_at DESC LIMIT 1
   `).catch(() => [] as any[])) as any[];
 
   // 4. Recent paper P&L for Preseason status
   const [paper] = (await db.execute(sql`
-    SELECT COALESCE(SUM(pt.pnl::float), 0)::float AS paper_total
+    SELECT COALESCE(SUM(pt.pnl::float), 0)::float AS paper_total,
+           COUNT(*)::int AS paper_count
     FROM paper_trades pt
     JOIN paper_sessions ps ON ps.id = pt.session_id
     WHERE ps.strategy_id = ${args.strategyId}::uuid
@@ -275,6 +275,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const complianceRaw = propCompliance?.pass_rate ?? propCompliance?.passRate ?? extras?.compliance_pass_rate ?? null;
   const compliancePassRate = complianceRaw == null ? null : Number(complianceRaw);
   const paperTotal = Number(paper?.paper_total ?? 0);
+  const paperCount = Number(paper?.paper_count ?? 0);
 
   const otherTests: RecipeData["otherTests"] = [
     {
@@ -316,8 +317,10 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     {
       name: "Preseason",
-      sentence: `One week of fake money, real market. Pocketed ${formatBag(paperTotal)} in practice.`,
-      status: paperTotal > 0 ? "pass" : paperTotal === 0 ? "warn" : "fail",
+      sentence: paperCount > 0
+        ? `One week of fake money, real market. Pocketed ${formatBag(paperTotal)} in practice.`
+        : "The one-week paper trial hasn't been run yet.",
+      status: paperCount === 0 ? "warn" : paperTotal > 0 ? "pass" : paperTotal === 0 ? "warn" : "fail",
     },
     {
       name: "Real-Time Match",
@@ -326,9 +329,11 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     {
       name: "Plays Clean",
-      sentence: compliancePassRate !== null && compliancePassRate >= 1.0
-        ? "Followed every house rule. Won't get the account shut down."
-        : "Broke house rules in testing. Not clean yet.",
+      sentence: compliancePassRate === null
+        ? "The rulebook check hasn't been run yet."
+        : compliancePassRate >= 1.0
+          ? "Followed every house rule. Won't get the account shut down."
+          : "Broke house rules in testing. Not clean yet.",
       status: compliancePassRate === null ? "warn" : compliancePassRate >= 1.0 ? "pass" : compliancePassRate >= 0.95 ? "warn" : "fail",
     },
   ];
@@ -375,10 +380,10 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     "Preseason": {
       what: "One week of fake money on the live market — did it actually make money?",
-      value: paperTotal !== 0 ? formatBag(paperTotal) : "Not run yet",
+      value: paperCount > 0 ? formatBag(paperTotal) : "Not run yet",
       threshold: "must end green",
       verdict: otherTests[5].status,
-      instrument: { kind: "paper", pnl: paper ? paperTotal : null },
+      instrument: { kind: "paper", pnl: paperCount > 0 ? paperTotal : null, tradeCount: paperCount > 0 ? paperCount : null },
     },
     "Real-Time Match": {
       what: "Compared its live-called shots against the tested signals.",
@@ -435,7 +440,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   }
 
   const premium = resolvePremiumName({
-    name: String(strat.name), symbols: Array.isArray(strat.symbols) ? strat.symbols.map(String) : [String(strat.symbol)],
+    name: String(strat.name), symbols: Array.isArray(strat.symbols) ? strat.symbols.map(String) : [],
     timeframe: String(strat.timeframe ?? ""), config: parseJSON(strat.config) ?? {},
   });
   return {
