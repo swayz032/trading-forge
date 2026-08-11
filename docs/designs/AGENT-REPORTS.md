@@ -4,6 +4,80 @@
 
 ---
 
+## AR-1003 · 2026-08-11 · ✅✅✅ **ALL FIVE CERTIFYING ARMS RAN AND THE ORACLE HOLDS: `A == B == C == D` AND `A == E`, `0` DIFFERING NODES ON EVERY COMPARISON, BY THE COMMITTED COMPARATOR WITH THE PROVENANCE CHAIN ON.** ⚡ **`[H]` PASSES AS A HARD GATE — WORST ARM `377.7s` OF `600.0s`.** ⚡ **THE `33` ARE THE SAME `33` NODE IDs IN ALL FIVE ARMS.** 🛑🛑 **AND I MISUSED THE COMPARATOR ONCE: IT REFUSED ME, IT WAS RIGHT, AND I RESOLVED IT BY READING ITS SOURCE — NOT BY TRYING MODES UNTIL ONE WENT GREEN.** 🛑 **I CERTIFY NOTHING. NO `RATIFY-1` NUMBER IS PUBLISHED AND THE GRADER IS NOT DISPATCHED.**
+
+**SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. CERT PIN `fb71a3ef` (RESOLVES from `origin`). WORKTREE `C:/Users/tonio/Projects/wt-cert5-fb71a3ef`. RULING `R-834 §9`.** 🛑 `acceptance_runner.py` untouched · no seal · no promotion · `CLUSTER-E` untouched · `margin_expansion.py` and every production engine file UNOPENED · the `33` NOT adjudicated and NOT repaired · nothing parallelised · no `--limit` · no worktree removed.
+
+### §1 — ✅ THE ORACLE
+```
+COMPARISON              MODE    NODE-AXIS  EXIT  FAIL-LINES  VERDICT
+A vs B  [G-FILE]        order   same        0        0       [G] SATISFIED
+A vs C  [G-NODE]        repeat  reverse     0        0       [I] SATISFIED  (see §3 on the label)
+A vs D  [G] both axes   order   reverse     0        0       [G] SATISFIED
+A vs E  [I] repeat      repeat  same        0        0       [I] SATISFIED
+--- second independent witnesses, AR-991's pattern, not required by R-834 ---
+C vs D  [G-FILE] 2nd    order   same        0        0       [G] SATISFIED
+B vs D  [G-NODE] 2nd    repeat  reverse     0        0       [I] SATISFIED
+```
+⚡ **EVERY comparison: `0 differing node(s)`.** ⇒ **`A == B == C == D` and `A == E` by EXACT NODE ID → OUTCOME, which is `R-834 §5`'s oracle exactly.**
+```
+ARM  FLAGS                        CHILDREN  NODES  OBSERVED  wall_s   OUTCOMES
+A    (none)                          108     2419    2419    377.7    33F/2384P/2xf
+B    --reverse                       108     2419    2419    372.7    33F/2384P/2xf
+C    --reverse-nodes                 108     2419    2419    363.2    33F/2384P/2xf
+D    --reverse --reverse-nodes       108     2419    2419    368.2    33F/2384P/2xf
+E    (none, repeat of A)             108     2419    2419    367.9    33F/2384P/2xf
+```
+✅ **`[H]` PASSES AS A HARD GATE (`R-834 §9[8]`): every arm `<= 600.0s`; worst `377.7s`, i.e. `37%` of the ceiling used. I did not raise the ceiling and did not parallelise.** ⚖️ **This IS the `[H]` measurement — unlike `AR-1001`'s wall times, which I declined to dress as one.**
+✅ **PER-ARM POPULATION CONTRACT, INDEPENDENTLY, ALL FIVE (`R-834 §9[7]`, `STOP [41]`): `children = 108` AND `nodes = 2419` AND `observed = 2419` — BOTH DENOMINATORS REPORTED, NEITHER SUBSTITUTING FOR THE OTHER · `missing required 0` · `duplicate_nodes 0` · `collected_but_unexecuted 0` · `invalid_children 0` · `limited_subset False` · `arm_start_head == arm_end_head == fb71a3ef`.** ✅ **Enforced MECHANICALLY between arms by the red-proofed guard (`AR-1002 §3`), so `STOP K` could actually have halted the run — it was never asked to.**
+
+### §2 — ✅ WHY THIS `0` IS EVIDENCE AND NOT TWO NUMBERS THAT HAPPEN TO MATCH
+🛑 **The comparator states the danger in its own source: `A 0-DIFFERENCE RESULT PROVES THE TWO INPUTS AGREE; IT CARRIES NO TERM FOR WHETHER THEY ARE TWO INDEPENDENT PIECES OF EVIDENCE. THE CHAIN IS WHAT ADDS THAT TERM.` So I ran it WITH the chain — `--no-chain` was never used, and `R-834` forbids it for a certifying run.**
+✅ **`[MEASURED BY GRADED INSTRUMENT]` on every comparison:**
+> **PROVENANCE REBUILT FROM BYTES, NOT BELIEVED:** *"outcomes REBUILD from the receipts — `rebuilt=2419 aggregate=2419`"* on BOTH arms of every pair ⇒ **the outcome map is recomputed from the child receipts rather than read out of `aggregate.json`.**
+> **TWO GENUINELY SEPARATE EXECUTIONS:** *"arms are two DISTINCT EXECUTIONS (run_ids disjoint) — `fwd=108 rev=108 shared=0`"* ⇒ **not one run compared with itself.**
+> **THE PIN IS REAL AND BOUND:** *"head RESOLVES to a real commit `fb71a3ef…`"* on both arms, *"every child measured the arm's pin — distinct child heads = 1"*, and `--pin` was supplied on every call (**the comparator's own red-proof shows `C11b no --pin supplied => RED`**).
+> **THE AXES GENUINELY MOVED — the non-vacuity term:** for `A vs C` and `A vs D`, *"`[G-NODE]` the node axis GENUINELY varied — **`104` child(ren) with `>=2` nodes actually reordered, of `108` shared**"*; for `A vs B` and `A vs E`, *"intra-file order is SAME across the arms — `0` violating"*. ⇒ **each pair asserted the relationship it CLAIMED, in the instrument's own words: `A COMPARISON WHOSE ARMS ARE NOT IN THE CLAIMED RELATIONSHIP IS NOT EVIDENCE FOR THAT CLAIM.`**
+✅ **AND THE COMPARATOR ITSELF WAS RED-PROOFED BEFORE I TRUSTED IT — `--red-proof`, `23` controls, EVERY ONE demonstrating a path to RED (or GREEN where GREEN was the expected answer):** invented/unauthorized node · two same-direction arms handed to `[G]` · arms on different commits · limited subset · invalid child · duplicate node IDs · collected-but-unexecuted · one flipped outcome in `[I]` · `[I]` rejecting a `[G]` pair and vice versa · `C8` wall over ceiling · `C8b` the grader's forged `wall_s=36000` · `C10` non-resolving commit · `C11/C11b` pin binding · `C13a/b/c` authority-surface digest moves and restores. **Closing line: `COMPARATOR DISCRIMINATES - demonstrated path to RED on every arm`.** ★★★★★ **`I DID NOT BUILD THIS BATTERY AND I DID NOT NEED TO — REUSING THE COMMITTED INSTRUMENT BOUGHT A STRONGER SELF-PROOF THAN ANYTHING I WOULD HAVE AUTHORED` (`R-648`: adapt, do not author).**
+
+### §3 — 🛑 MY OWN ERROR, THE GUARD THAT CAUGHT IT, AND HOW I RESOLVED IT
+🛑 **I FIRST RAN `A vs C` WITH `--mode order`. THE COMPARATOR REFUSED IT:** `FAIL [G] arms genuinely OPPOSED (canonical vs REVERSE) — fwd.reverse=False rev.reverse=False`. **`A` and `C` are both file-canonical, so the pair was not in the relationship `--mode order` asserts. THE TOOL WAS RIGHT AND I WAS WRONG.**
+⚠️ **AND THE FAILURE NEARLY READ AS A CERTIFICATION FAILURE BECAUSE OF A SECOND, SEPARATE MISTAKE OF MINE: I piped that first run through `tail`, so I saw `12` lines of `OK` — including `EXACT node-outcome identity … 0 differing node(s)` — sitting under a verdict of `NOT SATISFIED`, with the one `FAIL` line scrolled off.** ★★★★★ **`I TRUNCATED A RESULT I WAS RELYING ON AND MANUFACTURED AN APPARENT CONTRADICTION — THE `[ps-counting-encoding]` LAW, AND I BROKE IT IN THE MIDDLE OF A CERTIFICATION.` The repair was to re-run and print EVERY non-`OK` line, which took one command and immediately named the real cause.**
+✅ **HOW I RESOLVED THE MODE QUESTION — AND THIS IS THE PART THAT MATTERS: I DID NOT TRY MODES UNTIL ONE WENT GREEN.** **I read the instrument's SOURCE and found its own internal control `C4b` (`g_order_identity.py:755`) comparing the canonical arm against the node-reversed arm with exactly `mode="repeat", node_axis="reverse"`, and the docstring at `:286-306` stating that `mode` asserts the FILE-direction relationship while `node_axis` is orthogonal.** ⇒ **the correct pairing came from the committed instrument, not from my preference.** ★★★★★ **`MODE-SHOPPING UNTIL A GUARD GOES GREEN IS ROUTING AROUND IT WITH EXTRA STEPS; READING WHY IT REFUSED IS THE ONLY HONEST EXIT.`**
+⚖️ **I DISCARDED the refused run entirely and did NOT harvest its `0 differing node(s)` line. A comparison the instrument REFUSED is not evidence, even when a number inside it happens to be the number I later measured properly.** ★★★ **`A REFUSED RUN'S CORRECT-LOOKING FIELD IS THE MOST TEMPTING FALSE RECEIPT IN THE BUILDING.`**
+⚠️ **CONSEQUENCE FOR THE READER, STATED PLAINLY: `A vs C` and `B vs D` carry the tool's `[I]` verdict LABEL, because the label follows the MODE. They ARE the `[G-NODE]` evidence — what makes them so is the `node axis GENUINELY varied / 104 of 108` assertion inside them, not the headline. `[G-NODE]` is not a mode; it is an axis.**
+
+### §4 — ⚡ THE `33`, PER `R-834 §6` — REPORTED, NOT ADJUDICATED, NOT REPAIRED
+✅ **`[MEASURED HERE]` the `33` failures are the SAME `33` NODE IDs in ALL FIVE ARMS — set-identical to arm `A`, `0` arms differing, and the full `2419` node-ID key set is identical across all five.**
+⇒ ⚡ **THIS IS `R-834 §6`'s SATISFIED CASE: stable red in every order IS acceptable certification evidence, and the `33` become the LATER disposition lane's candidate failure map.**
+🛑 **I DID NOT ADJUDICATE ONE OF THEM, DID NOT OPEN ONE, AND DID NOT REPAIR ONE.** ★★★★★ **`REPAIRING A STABLE FAILURE HERE WOULD BE THE SIXTH FALSE CLOSURE IN A NEW HAT — MAKING THE BOARD GREENER WHILE THE MEASUREMENT LEARNS NOTHING.`** ⚖️ **The certification question is *"does the referee report the same answer regardless of file order, node order and repeat execution?"* — NOT *"are all `2419` green?"*, and I held to that distinction.**
+
+### §5 — 🛑 WHAT THIS IS NOT
+🛑 **THIS DOES NOT CERTIFY `RATIFY-1`. A five-arm green is `[MEASURED BY THE DOER]` and self-certifies nothing (`R-834 §7`). I publish NO `RATIFY-1` number — not `10/10`, not `7/10`, not any figure (`STOP [49]`).**
+🛑 **I DID NOT DISPATCH THE GRADER. `R-834 §7`/`§9[10]` makes it the DESK's, and I name it rather than reporting it blocked** (`[grader-agent]`): **`accuracy-validator`, ADVERSARIALLY briefed to DISPROVE, against the final exact pin `fb71a3ef` and the evidence bundle below; attack surfaces the desk named — provenance chain · actual node order · file order · exact pin binding · the runtime gate · repeat independence — **plus at least one NOVEL false-green I have not prescribed**, and a DURABLE RECEIPT PATH, because a verdict living only in chat is single-source.**
+🛑 **NO seal · NO promotion · `CLUSTER-E` untouched · no worktree removed · `acceptance_runner.py` unchanged.**
+⚠️ **WHAT I DID NOT MEASURE:** the merit of the `33` · anything outside the governed population · whether the `2` `xfailed` nodes deserve that status · `ACCEPT5-DOCS-READ-AS-SOURCE-1` · any production behaviour whatsoever — **this is a referee-determinism result, NOT a statement that the engine is correct.** ★★★ **`PROVING THE MEASUREMENT IS ORDER-INVARIANT SAYS NOTHING ABOUT WHETHER WHAT IT MEASURES IS RIGHT, AND I WILL NOT LET THOSE TWO TRAVEL IN ONE SENTENCE.`**
+
+### §6 — 📌 EVIDENCE BUNDLE AND POSITION
+```
+CERT PIN   fb71a3ef  (RESOLVES from origin; ls-remote tip 4257e3e8 contains it)
+ARMS       C:/Users/tonio/Projects/wt-cert5-fb71a3ef/cert-arms/{A,B,C,D,E}/
+             isolated-*/aggregate.json  + manifest.json + receipts/
+             + per-child node-sequence.json
+COMPARISONS same dir: cmp_A_vs_B_*.txt . cmp_A_vs_C_*.txt . cmp_A_vs_D_*.txt
+             cmp_A_vs_E_*.txt . cmp_C_vs_D_*.txt . cmp_B_vs_D_*.txt
+             (full output retained, including the REFUSED first A-vs-C at cmp_AC.txt,
+              kept deliberately as the record of my error -- preserve-and-strike)
+WORKTREES  wt-cert5-fb71a3ef  NOT removed (R-834 §8: not before the grade)
+           wt-gnode-fb71a3ef  NOT removed . wt-m3-44db4eae  kept
+           wt-ratify1-final-f3225b69 . wt-ctl-d66e46aa  PRESERVED BY RULING
+IN FLIGHT  NOTHING. No sub-agent dispatched, none owed.
+EAR        armed under claude.exe 25076; delivered R-833 and R-834 in production.
+```
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING` for the measurement, and the next step is NOT MINE** — it is the desk's dispatch of the independent grade. 🛑 **I am not treating a clean five-arm run as permission for anything, and `STOP [50]` re-arms at that grade: the instrument is FROZEN while the grader attacks it, so I will not touch `g_order_identity.py`, the runner, or the plugin from here.**
+
+---
+
 ## AR-1002 · 2026-08-11 · 📌 **START-RECEIPT, `R-834 §9[12]`. THE FIVE CERTIFYING ARMS ARE RUNNING.** ✅ **FIRST OBSERVABLE DELIVERED IN FULL: PUSH DONE (FAST-FORWARD, `STOP J` DID NOT FIRE) · `fb71a3ef` RESOLVES FROM `origin` ⇒ **THE BLOCK IS LIFTED BY ITS OWN OBJECTIVE CONDITION** · FRESH WORKTREE `wt-cert5-fb71a3ef`.** 🛑 **I RED-PROOFED THE `STOP K` / `[H]` GUARD BEFORE TRUSTING IT TO HALT A 30-MINUTE RUN — GREEN ON REAL DATA, RED ON FOUR MUTATIONS.** ⚖️ **AND I ANSWERED THE ROTATION QUESTION BEFORE ARM `A`, NOT DURING.**
 
 **SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. CERT PIN `fb71a3ef`. WORKTREE `C:/Users/tonio/Projects/wt-cert5-fb71a3ef`. RULING `R-834 §9`.** 🛑 No grader dispatched · no promotion · no seal · no `RATIFY-1` number published · `CLUSTER-E` untouched · `acceptance_runner.py` untouched · `margin_expansion.py` and every production engine file UNOPENED · the `33` NOT adjudicated · nothing parallelised · no `--limit`.
