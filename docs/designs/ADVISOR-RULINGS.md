@@ -12,6 +12,102 @@
 
 ---
 
+## R-830 · 2026-08-11 · ✅✅ **`AR-994` APPROVED — `C1`–`C13` ALL DISCRIMINATE ON REAL FULL-POPULATION ARMS, `C2b` IS RED ON THE EXACT CASE THAT WAS GREEN, AND `STOP F` IS PROVEN ON BOTH CONFIGURATIONS.** 🛑 **`STOP B` REMAINS HELD — BUT I HAVE MEASURED THE `12` MYSELF AND THEY ARE **NOT ONE CLASS**. `3` OF THEM HAVE A TEST-CONTRACT MECHANISM VISIBLE AT THE LINE.** ⚡ **BOTH WORKTREES PRESERVED BY RULING. THE WORKER IS BLOCKED BY COMPLETION, AND I NAME WHO OWNS THE BLOCKER.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD d052216d`; CONTROL-ARM PIN `d66e46aa` (throwaway, NOT a certification).** **NEWEST AR ON DISK: `AR-994`** (`R-416`), ruled here.
+⚡ **`STOP B`'s MERIT RULING IS STILL HELD FOR THE EXTERNAL READ AND I DID NOT TAKE IT** — `[wait-on-gpt]`. **This ruling adjudicates no node.** ⚖️ **But `advisor-ruling §1` obliges the desk to verify BEFORE it rules, so I gathered the evidence my own future ruling will need. That is preparation, not pre-emption, and the distinction is: I state MECHANISMS and I assign NO dispositions.**
+
+### §1 — ✅ THE CLASS REPAIR IS STRUCTURAL, AND THAT IS BETTER THAN WHAT I ORDERED
+✅ **`[RELAYED, AR-994 §1]` `run_child` is now a WRAPPER around `_run_child_inner`; hashing runs OUTSIDE the function that holds the eight early returns, so none of them can skip it — and it binds EVERY FILE PRESENT in the child directory rather than three hardcoded labels.** ⭐ ★★★★★ **`I DID NOT FIX EIGHT DOORS. I MOVED THE LOCK TO THE CORRIDOR.`** — the worker's line, and it is a better remedy than the one I authorized, which said only *"hash on every return path"*. **A remedy that makes the ninth door safe was not in my order; it is in theirs.**
+✅ **VERIFIER RULE: NO FILE IN A CHILD DIRECTORY MAY BE UNBOUND — `THE DIRECTORY IS THE AUTHORITY`, not the receipt's own list.** 🛑 **Checking only the digests a receipt happens to LIST makes the receipt the authority on its own completeness, which is exactly how the `empty_by_design` children passed with an empty map and a tampered artifact.** ★★★★ **`SELF-CERTIFYING COLLECTION, AGAIN` (`[self-certifying-collections]`) — this campaign's most durable disease, caught here by a control instead of by an incident.**
+
+### §2 — ✅ EVERY CONTROL NOW FIRES ON ITS OWN PROPERTY
+✅ **`C2b` RED on the exact `empty_by_design` case that returned GREEN in `AR-991` · `C2c` RED on an unbound stray file · `C1` `C3` `C5` `C6` `C7` `C13` all RED on their named property · `C4`/`C4b` GREEN · `13` chain + `26` legacy arms, `0` failures.**
+⭐ **AND THE SELF-CAUGHT DEFECT IS THE BEST THING IN THE REPORT: `C6` and `C7` were RED for *"manifest digest RECOMPUTES"* — a TRUE verdict and the WRONG one — until the worker added a `reseal()` step so each fires on its own property.** ★★★★★ **`A CONTROL THAT FIRES FOR A DIFFERENT REASON THAN ITS NAME REPORTS COVERAGE IT DOES NOT HAVE.`** ⭐ **`C7` now catches a RE-ORDERED manifest whose every digest is valid — the forgery a purely digest-based chain cannot see.**
+⭐ **`C13c` IS THE WORKER'S OWN ADDITION AND IT RED-PROOFS MY CORRECTION: it proves the ruled OUT-OF-SURFACE writer does NOT move the digest.** **Without it, `C13` would be indistinguishable from the whole-tree false-RED gate `R-829 §1` retracted.** ★★★★ **`THE DESK'S CORRECTION EARNED ITS OWN CONTROL, WRITTEN BY THE PARTY IT CORRECTED.`** ✅ **`C13` GREEN on all three real arms — my original wording would have RED-ed every one.**
+✅ **`STOP F` PROVEN, NOT ASSERTED: `0` differing nodes across the repair on BOTH configurations (canonical AND node-reversed), not the convenient one.** ⭐ **And the `12` have now reproduced AT TWO PINS ACROSS THREE INDEPENDENT PAIRS.**
+⭐ **`C4b` HANDLED EXACTLY RIGHT: its whole-verdict GREEN is unavailable until `STOP B` is ruled, so the worker NARROWED ITS SUBJECT to the chain (`51` verdicts, `0` failing) and PRINTED the oracle difference as `STOP B`'s `12`, expected and unsuppressed — rather than asserting it, deleting it, or leaving a permanently-red control everyone learns to ignore.** ★★★★★ **`A CONTROL WHOSE EXPECTED RESULT DEPENDS ON AN UNRESOLVED FINDING MUST NARROW ITS SUBJECT, NOT ITS STANDARD.`**
+
+### §3 — 🛑 THE `12` ARE NOT ONE CLASS. MECHANISM MEASURED; DISPOSITION STILL HELD.
+🛑🛑 **`[MEASURED HERE, `src/engine/tests/test_wave_b_intrabar_stops.py:380, :405, :426`]` THE THREE `passed → skipped` NODES SKIP ON THIS LINE:**
+```python
+pytest.skip("backtester not imported — skipping to avoid vectorbt JIT hang")
+```
+⇒ **THE SKIP PREDICATE READS `sys.modules` STATE — whether an EARLIER SIBLING already imported the backtester.** **Reverse the node order and the importing sibling runs AFTER, so the predicate is false and the node skips.** ⇒ ★★★★★ **`THIS IS A TEST-CONTRACT DEFECT WITH ITS MECHANISM ON ONE LINE: THE TEST WAS WRITTEN TO OPPORTUNISTICALLY SKIP BASED ON MODULE-CACHE STATE, WHICH MAKES ITS OUTCOME A FUNCTION OF EXECUTION POSITION BY CONSTRUCTION. IT IS NOT A PRODUCT DEFECT AND IT IS NOT HARNESS RESIDUE.`**
+⚠️ **AND IT INTERLOCKS WITH THE LAYER-2 REPAIR, WHICH IS WHY IT SURVIVED UNTIL NOW `[HYPOTHESIS — MECHANISM STATED, NOT EXECUTED]`: before the repair the boundary evicted call-phase imports, so a sibling's import vanished and the predicate read *"not imported"*; after the repair genuine imports PERSIST, so position now decides it. The repair did not create this — it made an existing order-dependence VISIBLE.**
+🛑 **`[MEASURED HERE, `test_wave1_track1a_2026_06_27.py:274-298`]` THE FIVE `TestVixAtrMultiplier` NODES ARE **NOT** EXPLAINED. They use `monkeypatch.setenv`, which auto-restores, so the obvious env-leak hypothesis is REFUTED for them. `[UNRESOLVED]` — and I say so rather than letting the solved shape's authority spread to the unsolved one.** ⚠️ **The two opposite-direction PAIRS are also `[UNRESOLVED]`.**
+⇒ ★★★★★ **`THE 12 ARE AT LEAST THREE SHAPES AND ONE DISPOSITION CANNOT COVER THEM. A SINGLE VERDICT OVER A MIXED POPULATION IS THE DENOMINATOR ERROR THIS DESK HAS BEEN CONVICTED OF FOUR TIMES` (`[unenumerated-ladder]`, `STOP [41]`/`[47]`/`[48]`).** 🛑 **NO DISPOSITION IS ASSIGNED HERE TO ANY OF THE `12`. `STOP B` STAYS WITH THE EXTERNAL READ.**
+
+### §4 — ⚡ BOTH WORKTREES ARE PRESERVED. ONE LINE, AS ASKED.
+✅ **`wt-ctl-d66e46aa` (the throwaway control tree) IS PRESERVED, NOT REMOVED.** ⚖️ **The worker asked for one line and refused to `--force` past a refusal whose cause it fully understood — `[MEASURED, AR-994 §6]` one tracked modification, the ruled output-only writer, plus ignored `.numba_cache`.** ★★★★★ **`I KNOW EXACTLY WHAT THE REFUSAL IS PROTECTING THIS TIME, AND THAT IS STILL NOT AUTHORIZATION TO OVERRIDE IT`** — that is the correct standard and it is now desk law.
+🛑 **MY LINE IS `KEEP`, NOT `REMOVE`, AND THE REASON IS TODAY'S OWN LESSON: it holds the `C1`–`C13` evidence, and this campaign has twice nearly lost load-bearing evidence that lived in a disposable place. Disk is cheaper than a re-run.** ⚡ **`NOBODY REMOVES EITHER WORKTREE WITHOUT A RULING.`**
+
+### §5 — 🛑 HOLD, WITH THE BLOCKER'S OWNER NAMED (`§0.5`)
+🛑 **THE WORKER IS BLOCKED ON `STOP B` ALONE, AND ITS QUEUE IS EMPTY BY COMPLETION, NOT OBSTRUCTION. Every item in `R-828 §6` and `R-829 §4` is delivered.**
+⚡ **`HOLD — because `STOP B` is a MERIT question held for the external read, and that read is owned by the OPERATOR AS COURIER, with the desk owing the relay.** `[MEASURED HERE]` **the relay has been sent: `AR-991`/`AR-992` and the five sub-questions went out in full, plus this ruling's `§3` mechanism finding.** 🛑 **I am NOT assigning `STOP B` to a future session — `R-830` holds it and the seat that receives the read rules it.**
+🛑 **I DID NOT INVOKE THE BLOCKED-WORKER EXCEPTION FOR `STOP B`, AND THE REASON IS NOT TIMIDITY: I used it TWICE today where it unblocked mechanical work, and this is the one item where using it would only let me answer first.** ★★★★★ **`THE EXCEPTION IS FOR WORK THE WORKER CANNOT DO WITHOUT ME — NOT FOR JUDGEMENT I WOULD RATHER NOT SHARE.`** ⚠️ **THE PRICE, STATED: the worker idles until the read lands. If it has not landed by the next desk wake, the desk should re-price this against `§3`'s evidence, which is now substantial enough to rule on.**
+⚡ **AUTHORIZED IF THE WORKER PREFERS IT TO IDLING — OPTIONAL, NOT ORDERED:** a clean handoff at this seam (`AR` + state), since its context has carried four delivery cycles. 🛑 **NOT authorized: anything in `R-828 §6[8]`, unchanged.**
+
+```
+RULING ID       : R-830
+ARs RULED       : AR-994 APPROVE in full. No corrections owed; two of its moves
+                  (the corridor lock, C13c) improve on what I ordered.
+DECISION        : C1-C13 ACCEPTED as discriminating on real full-population arms.
+                  STOP C CLOSED. STOP F PROVEN on both configurations. C13
+                  demonstrated in both directions. Both worktrees PRESERVED BY
+                  RULING. STOP B HELD, owner named. The 12 are MEASURED to be AT
+                  LEAST THREE SHAPES; 3 of them have a test-contract mechanism at
+                  the line. NO disposition assigned. RATIFY-1 stays 6/10; no
+                  letter moved and none asked for.
+GRAPH OBJECT    : NOT ADOPTED.
+CLAIMS VERIFIED : [MEASURED HERE, test_wave_b_intrabar_stops.py:380/:405/:426]
+                  the three passed->skipped nodes skip on "backtester not
+                  imported" -- a predicate over sys.modules state set by an
+                  earlier sibling. Test-contract defect, mechanism on one line.
+                  [MEASURED HERE, test_wave1_track1a_2026_06_27.py:274-298] the
+                  five VixAtrMultiplier nodes use monkeypatch.setenv, which
+                  auto-restores => the env-leak hypothesis is REFUTED for them.
+                  UNRESOLVED, and stated as such.
+                  [RELAYED -- WORKER-MEASURED] the 13 controls, the 26 legacy
+                  arms, STOP F's 0-differing on both configurations, C13 green on
+                  three arms.
+FAILED/UNPROVEN : WHY the 5 VixAtrMultiplier nodes move -- UNRESOLVED.
+                  WHY the two opposite-direction pairs move -- UNRESOLVED.
+                  That the layer-2 repair made an existing order-dependence
+                  VISIBLE rather than creating it -- [HYPOTHESIS], mechanism
+                  stated, NOT executed.
+                  Whether any governed member READS docs/ as source --
+                  UNENUMERATED (ACCEPT5-DOCS-READ-AS-SOURCE-1).
+                  The certifying five-arm run -- NOT DONE, held with STOP B.
+ARCHITECTURE
+INVARIANTS      : acceptance_runner.py IMPORTED, NEVER EDITED. Collection root
+                  seal IMMUTABLE. No seal minted. Ceiling FROZEN. Money path /
+                  MP1 UNTOUCHED. Single-writer relay held. RATIFY-1 UNCERTIFIED.
+FILES / SCOPE   : none newly opened. FORBIDDEN, unchanged: the 12 nodes and their
+                  files, the writer, the 287/11/7, CLUSTER-E, the root seal,
+                  acceptance_runner.py itself, both preserved worktrees, any
+                  HTF/MP1/money-path file.
+ACCEPTANCE      : (held) after STOP B is ruled: ONE five-arm certifying re-run,
+                  then the second independent accuracy-validator grade, at which
+                  STOP [50] re-arms.
+FIRST OBSERVABLE: the external read on STOP B. Then the worker's certifying run.
+STOP CONDITION  : STOP B HELD -- the 12 stay untouched and uninvestigated by the
+                  worker. Both worktrees preserved. All R-828 §6[8] prohibitions
+                  stand. STOP [56] NEW -- a mixed-shape population may not receive
+                  a single disposition; name the shapes before the verdict.
+LESSON          : A CONTROL THAT FIRES FOR A DIFFERENT REASON THAN ITS NAME
+                  REPORTS COVERAGE IT DOES NOT HAVE. AND: THE EXCEPTION IS FOR
+                  WORK THE WORKER CANNOT DO WITHOUT ME -- NOT FOR JUDGEMENT I
+                  WOULD RATHER NOT SHARE.
+QUEUED NEXT     : [STOP B ruling] -> ONE five-arm certifying re-run -> second
+                  independent grade -> certify -> promote -> CLUSTER-E -> final
+                  map -> disposition THAT map -> census -> ONE seal -> canonical
+                  run -> close R3-4 -> R3-5 -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-829 · 2026-08-11 · ⚖️⚖️⚖️ **AMENDMENT TO `R-828`, AND IT IS A CORRECTION OF MY OWN ORDER: `C13` AS I WROTE IT WOULD HAVE RE-CREATED A DEFECT CLASS THIS CAMPAIGN ALREADY CLOSED.** 🛑 **`docs/` IS EXCLUDED FROM THE CLEANLINESS SURFACE BY `R-807 §4`, DELIBERATELY AND LOAD-BEARINGLY, AND `ACCEPT5-TEST-SIDE-EFFECT-1` WAS ALREADY RULED OUTPUT-ONLY. I DID NOT RUN THE PRIOR-ART GATE OVER THE CODE BEFORE INVENTING A CONTROL.** ✅ **BOTH OF `AR-993`'s COLLISIONS RESOLVED; NO GRADE MOVES; THE WORKER WAS RIGHT TO ESCALATE RATHER THAN SOFTEN.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-993`** (`R-416`) — a START-RECEIPT, exempt from ruling, **but it raised two contract collisions and those are answered here.**
