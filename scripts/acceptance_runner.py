@@ -179,6 +179,23 @@ def _git_head():
 SEAL_APPROVED_GRADED_SHA = "08062e12b3e2b59d44eada150c8d8b8653796c90"
 SEAL_APPROVED_POP_SHA256 = "63d4b541caf7f0ade8628ac9e2f737ff6f7fdaeec3e12ea653b433e376b2c9b9"
 
+# --- R3-2 / F-R2-2 (R-799 §4) ----------------------------------------------
+# The seal ALSO records which manifest it was taken over — `manifest_path`,
+# `manifest_sha256`, `manifest_members`. Until now nothing read them, so a seal
+# could name any manifest and no check disagreed.
+#
+# 🛑 THESE PIN SEAL TIME AND ARE DELIBERATELY **NOT** COMPARED TO THE LIVE
+# MANIFEST. `[MEASURED 2026-08-10]` the live manifest is 107 members /
+# dc615e39…, against the seal's 105 / 2c728e35… — that drift is LEGITIMATE
+# (lane L). Binding these to today's manifest would refuse every run, which is
+# the false-RED shape R-806 §3 caught. Seal-time identity is pinned here; the
+# LIVE manifest is governed by the successor chain instead.
+SEAL_APPROVED_MANIFEST_PATH = "src/engine/tests/canonical_regression_population.txt"
+SEAL_APPROVED_MANIFEST_SHA256 = (
+    "2c728e35f3c60e70b32b7d0e7276ef3ba86aac76d7a7d342fe6fd7ea75e1fa03"
+)
+SEAL_APPROVED_MANIFEST_MEMBERS = 105
+
 # ---------------------------------------------------------------------------
 # F-2 (R-794 §6) — THE FAILURE BASELINE'S APPROVED IDENTITY, ALSO OUT-OF-BAND.
 # The baseline DEFINES `NEW` and `GONE`; it is the most authoritative input this
@@ -395,6 +412,26 @@ def validate_seal(seal):
         probs.append(
             "SEAL INTEGRITY FAILURE: the sealed population does not match the approved hash "
             "pinned in this runner. A seal that recomputes its own digest cannot authorize itself.")
+
+    # --- R3-2 / F-R2-2: the manifest identity fields are now BOUND ----------
+    # The seal recorded which manifest it was taken over and nothing read it, so
+    # a seal could name a different manifest, or none, and pass. These compare
+    # against the runner's out-of-band pins — NOT against the live manifest,
+    # which has legitimately moved on (see the pins' own note).
+    for field, approved in (
+        ("manifest_path", SEAL_APPROVED_MANIFEST_PATH),
+        ("manifest_sha256", SEAL_APPROVED_MANIFEST_SHA256),
+        ("manifest_members", SEAL_APPROVED_MANIFEST_MEMBERS),
+    ):
+        if field not in seal:
+            probs.append(
+                f"SEAL INTEGRITY FAILURE: {field} is absent from the seal. The seal must "
+                f"name the manifest it was taken over; a seal that cannot say which "
+                f"population it describes cannot anchor a successor chain.")
+        elif seal.get(field) != approved:
+            probs.append(
+                f"SEAL INTEGRITY FAILURE: {field} is {seal.get(field)!r}, not the approved "
+                f"seal-time value {approved!r} pinned in this runner.")
     return probs
 
 
@@ -819,16 +856,39 @@ def main():
         failures_of_the_gate.extend(seal_problems)
 
         sealed_pop = set(seal["collected_population"])
-        vanished = sorted(sealed_pop - collected)
+
+        # --- R3-2 / F-R2-2: guard the SUCCESSOR population, not just the root -
+        # The root seal predates every test admitted since. Guarding only it
+        # leaves each approved addition unprotected — exactly the hole R-799 §4
+        # opened the chain to close. FAIL-CLOSED: a chain that cannot be read
+        # refuses; it never falls back to the root seal, because falling back
+        # would silently shrink the guarded set to the one that already passes.
+        required_pop = sealed_pop
+        try:
+            import population_successor as _popsucc
+            required_pop, chain_problems = _popsucc.required_population(REPO)
+        except Exception as exc:  # noqa: BLE001 - any failure here must REFUSE
+            chain_problems = [
+                f"POPULATION CHAIN UNAVAILABLE: {type(exc).__name__}: {exc}. The "
+                f"successor chain could not be derived, so the required population "
+                f"is unknown and no authoritative verdict may be issued."
+            ]
+        print(f"[CHAIN] required population (seal+chain) : {len(required_pop)} node IDs")
+        print(f"[CHAIN] chain problems                   : {len(chain_problems)}")
+        for pr in chain_problems:
+            print(f"      {pr}")
+        failures_of_the_gate.extend(chain_problems)
+
+        vanished = sorted(required_pop - collected)
         print(f"[SEAL] sealed collection @ {str(seal.get('graded_sha'))[:8]} : {len(sealed_pop)} node IDs")
-        print(f"[SEAL] sealed members no longer collected : {len(vanished)}")
+        print(f"[SEAL] required members no longer collected : {len(vanished)}")
         for n in vanished[:15]:
-            print(f"      SEALED COLLECTION MEMBER MISSING: {n}")
+            print(f"      REQUIRED COLLECTION MEMBER MISSING: {n}")
         if vanished:
             failures_of_the_gate.append(
-                f"SEALED COLLECTION MEMBER MISSING: {len(vanished)} test(s) that were "
-                f"collected at the sealed commit are no longer collected. New tests may "
-                f"be added; no sealed test may silently vanish."
+                f"REQUIRED COLLECTION MEMBER MISSING: {len(vanished)} test(s) that the "
+                f"root seal or an approved successor requires are no longer collected. "
+                f"New tests may be added; no required test may silently vanish."
             )
     else:
         failures_of_the_gate.append(
