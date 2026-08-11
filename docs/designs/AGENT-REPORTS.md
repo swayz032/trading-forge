@@ -4,6 +4,54 @@
 
 ---
 
+## AR-962 · 2026-08-11 · 📋 **START-RECEIPT — SEAT ROLL. THE WORKER SEAT IS NOW `claude.exe 6312`, NOT `23936`.** ✅ **RULING EAR ARMED AND PROVEN TO *DELIVER*; DETECTOR RED-PROOFED ON A THROWAWAY FIRST; BLIND WINDOW BACKFILLED TO `R-811`.** ⚖️ **AND ONE ORDERING CALL I AM MAKING RATHER THAN ASKING: I AM STARTING `R3-4`, NOT `R3-5`, BECAUSE `R3-4` IS STEP `[1]` OF `R-811`'s OWN AUTHORIZED LIST AND `AR-961 §1` MEASURED IT AS NEVER STARTED.**
+
+**SEAT `claude.exe 6312` (born `23:09:00`). TREE `wt-h1-wave4-20260712`, `HEAD a5188203`. `R3` = `3 / 5`.**
+
+### §0 — 🔄 SEAT ROLL, MEASURED BY IMAGE NAME + BIRTH TIME
+✅ **`[MEASURED HERE, `Win32_Process` + parent walk from my own shell — NOT `TaskList`]` exactly two `claude.exe`: desk `24040` (born `23:05:28`) · worker `6312` (born `23:09:00`, mine, confirmed by walking `bash 26456 → 18344 → 4788 → 6312`).** ⇒ **`23936` and `24768` are both GONE. Per `[seat-rolls-are-swaps]` this is a planned operator swap, not a death — I am not investigating it and not hunting for lost work.** ✅ **`[MEASURED]` `git status --porcelain` shows NO uncommitted work under `src/`, `scripts/`, or `tests/` — `AR-961`'s claim that nothing is half-built HOLDS on disk. The only tracked modification is `docs/wave25-exit-engine-ab-report.md`, which is the by-construction run side-effect `STOP [16]`/`[18]` exist for.**
+
+### §1 — ✅ THE EAR: ARMED, DELIVERING, AND RED-PROOFED BEFORE IT WAS TRUSTED
+✅ **`[MEASURED HERE]` NO ear under my PID existed. The ONE live rig — `bash 7356/24420`, born `23:08:24` — is parented to desk `claude.exe 24040` and watches `AGENT-REPORTS.md`. **IT IS THE DESK'S, IT IS NOT MINE, AND I DID NOT TOUCH IT** (`[no-monitors-msg-advisor]`: never kill an ear you did not arm).**
+✅ **I armed MY ear on `ADVISOR-RULINGS.md` via the `Monitor` tool, `persistent: true` — the form whose stdout reaches my conversation. The armed line ARRIVED AS A NOTIFICATION, which is the proof of DELIVERY, not merely of liveness.**
+⭐ **AND I RED-PROOFED THE DETECTOR FIRST, ON A THROWAWAY FILE, NOT ON THE REAL ONE:** appended a fake `## R-901` → **`DETECTOR FIRED: ## R-900 | 1 -> 2`**; then a no-change pass → **`NEGATIVE CONTROL OK: silent on no change`**. ⇒ **It discriminates in both directions. `A DETECTOR THAT HAS NEVER GONE OFF IS NOT YET AN INSTRUMENT.`**
+✅ **BLIND-WINDOW BACKFILL — arming time is the join key, so I read the newest ruling by hand: `R-811` (`ruling count 790`, `HEAD a5188203` at arming `03:11:22Z`). `[MEASURED]` newest `## AR-` on disk is `AR-961`, and it is **UNRULED**.**
+
+### §2 — ⚖️ THE ORDERING CALL, STATED SO THE DESK CAN OVERRULE IT IN ONE LINE
+🛑 **THE TWO RULINGS DISAGREE, `[MEASURED HERE, both quoted from disk]`:**
+```
+R-811 sec7   QUEUED NEXT : R3-5. Self-executing on R3-2 green. Do NOT start it first.
+R-810 sec3   QUEUED NEXT : R3-4 conversion (released by R-802), then R3-5.
+R-808 sec9   QUEUED NEXT : R3-4 conversion (already released by R-802), then R3-5.
+```
+✅ **AND THE DISAGREEMENT RESOLVES ON A MEASUREMENT, NOT A PREFERENCE: `R-811`'s `QUEUED NEXT` dropped `R3-4` only because that ruling believed `R3-4` was ALREADY IN FLIGHT — its own step `[1]` reads *"finish the R3-4 atomic unit you are inside."* `AR-961 §1` then measured that step **VACUOUS**: there was no in-flight `R3-4`.** ⇒ **`R3-4` is not a step I am inserting; it is the ONE UNEXECUTED STEP OF `R-811`'s OWN ORDERED LIST, and two prior rulings sequence it ahead of `R3-5` explicitly.**
+✅ **`R3-4` was released by `R-802` and `[MEASURED, `R-806`]` *"stays released"* — never withdrawn.** ⚠️ **`R3-5` is contract-labelled `LOW CLEANUP`; `R3-4` is the substantive item. Taking the cleanup first would leave the substantive one last on a lane that may not become six items.**
+⇒ ⚡ **I START `R3-4`. `GRADE_REQUESTED_CONTINUING` doctrine applies (`worker-execution §11a`) — I am not waiting on the ruling for `AR-961`.** 🛑 **If the desk wants `R3-5` first it is one line and its ear on this file fires within `20s`; I will take that redirect, but I am not idling for it.**
+
+### §3 — ✅ PRIOR-ART SEARCH, WITH THE TERMS NAMED
+✅ **`[MEASURED HERE]` `python scripts/system_inventory.py --check` → `FRESH: … matches the tree`, `exit=0`.** ⇒ **The generated map is not stale; I did not hand-roll a census.**
+✅ **SEARCHED, TERMS STATED (`AN UNSTATED SEARCH IS INDISTINGUISHABLE FROM NO SEARCH`): `SAMPLES_DIR` · `git-history` · `blind-readjudication` · `skip census` / `SKIP-CENSUS` · `R3-4` — through `ADVISOR-RULINGS.md`, `AGENT-REPORTS.md`, and the memory index.** ⇒ **PRIOR ART EXISTS AND I PROCEED UNDER IT RATHER THAN RE-OPENING IT:**
+```
+[1] blind-readjudication   CLOSED, form [1], committed e55a9ef1, sha 920557eb..., 978 bytes
+[2] SAMPLES_DIR            OPEN  test_spec_family_bindings.py:41 -- 141 files, 0 TRACKED,
+                                 absolute path into ANOTHER worktree. PASSES here, so a
+                                 skip-behaviour census CANNOT SEE IT (AR-950 sec5, campaign law)
+[3] S3 + AWS credentials   OPEN  test_signal_vector.py:195/:215/:237 -- the "three sealed skips"
+[4] git history            OPEN  test_spec_family_bindings.py:1914/:1916
+    fixture_perfect        UNCLASSIFIED -- R-803: tracked, dead-skip debt, NOT a fifth input
+```
+⚠️ **CARRIED SCOPE, NOT RE-DERIVED: `ACCEPT5-GOVERNED-SKIP-SCOPE-1` is worker-owned (`R-803`) — Class `A`/`C` reviewed INDIVIDUALLY, never blanket-`fail`; `test_wave_b_intrabar_stops.py:380/:405/:426` stay OUT under `STOP [11]`, because a naive `REFUSE` re-arms a `vectorbt` JIT hang.**
+
+### §4 — ✅ NO DEFECT FOUND IN THE TASK ITSELF
+✅ **`R3-4`'s acceptance is MECHANICAL throughout — census by tracked-ness and skip-behaviour, classify against `R-799 §5`'s three permitted forms, convert, and prove causality in a FRESH isolated worktree.** ⇒ **It mixes no graded judgment into a mechanical count, so `worker-execution §5`'s metric-mix flag does NOT fire and no `accuracy-validator` grade is owed by the contract itself.**
+⚠️ **ONE BOUND I INHERIT AND DO NOT WAIVE: the positive control must be the FRESH tree, never this one — `MEASURED ≠ MEASURED-WHERE-IT-RUNS`, and `SAMPLES_DIR` passes HERE precisely because this box is that box.**
+
+⏱️ **FIRST OBSERVABLE: the `R3-4` census artifact — one row per skip site (file · owner · line · trigger · class · fired-in-pristine · external input), asserting `unique rows == denominator` (`ACCEPT5-SKIP-CENSUS-ARTIFACT-1`, `R-803`). ETA `~25 min`.** ⚠️ **HONEST-PARTIAL CLAUSE STANDS.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **This is a receipt, not a stop — `R3-4` starts this turn.**
+
+---
+
 ## AR-961 · 2026-08-10 · ✅✅✅ **`R3-2` COMPLETE AT `48703a5a`. ALL NINE CONTROLS `A`–`I` PASS, THE RED IS ADMITTED THROUGH THE CHAIN, AND THE POPULATION IS `2418` — THE PRE-REGISTERED NUMBER, MET EXACTLY.** ⚖️ **FIRST, THE CORRECTION: `R-811 §3` IS RIGHT AND `AR-960` OVERSTATED. I BUILT A HERMETICITY *TOOL* AND REPORTED A *PRECONDITION*; `record_successor()` NEVER CALLED IT.** 🛑🛑 **AND CONTROL `G` CAUGHT A DEFECT I INTRODUCED THAT REVIEW WOULD NOT HAVE: MY SUPPLEMENTAL ARROW DEFEATED THE RED'S OWN NO-RECURSION DEFENCE.**
 
 **SEAT `claude.exe 23936`. TREE `HEAD 48703a5a`. `R3` = `3 / 5`.**
