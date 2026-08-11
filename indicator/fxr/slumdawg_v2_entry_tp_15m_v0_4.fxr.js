@@ -1,15 +1,16 @@
 //@version=1
-// Slumdawg FX Replay V2.0.4.4 - FXR-OBSERVABLE REACTION-ZONE TARGETS
+// Slumdawg FX Replay V2.0.4.5 - QUALITY-FIRST REACTION-ZONE TARGETS
 // PLATFORM PARITY / RESEARCH ONLY. NOT LIVE-DECISION-SUPPORT APPROVED.
 // Run on 5m NQ/MNQ. One requested MTF lane: 15m.
 //
-// v0.4.4 observability correction:
-// - standard plot.line output mirrors entry/TP band lines so a band-render issue cannot look like a dead script;
-// - an optional close-price heartbeat (circles) proves the Slumdawg script is alive while FXR MTF/structure is building;
-// - missing 15m structure remains fail-closed: no fake entry or TP is manufactured just to force output.
+// v0.4.5 target correction:
+// - a historical candidate must prove a measurable reaction away from its near zone edge;
+// - reaction quality is checked BEFORE distance ranking, so weak nearby micro-structure cannot consume TP1;
+// - LONG targets are hard-rejected unless above LONG Entry; SHORT targets unless below SHORT Entry;
+// - MID/SAFE inside-zone placement, canonical fusion, heartbeat, and plot/band observability remain intact;
+// - reaction-displacement inputs are research/calibration placeholders, not approved NQ/MNQ settings.
 //
 // FXR runtime note: primitive top-level constants are intentionally avoided.
-// FX Replay v1 may evaluate helper functions outside that primitive scope.
 // Mutable array state follows the platform's documented top-level array pattern.
 // [0]=currentMove [1]=entryStage [2]=armedSide [3]=armedProof
 // [4]=referencePrice [5]=referenceLength [6]=momentumAnchor [7]=lastLength
@@ -28,6 +29,8 @@ init = () => {
   input.float("TP Cluster Tolerance x 15m ATR", 0.25, "tptolerance", 0.05, 0.75, 0.05);
   input.float("TP Entry Separation x 15m ATR", 0.35, "tpentrygap", 0.10, 1.50, 0.05);
   input.float("TP-to-TP Separation x 15m ATR", 0.15, "tpzonegap", 0.05, 0.75, 0.05);
+  input.int("TP Reaction Confirm Bars", 6, "reactionbars", 2, 20, 1);
+  input.float("Minimum TP Reaction x ATR", 0.75, "minreactionatr", 0.10, 3.00, 0.05);
   mtf.timeframe("15");
 };
 
@@ -233,7 +236,35 @@ const interval5 = (i, kind) => {
   return { lo: lo, hi: hi };
 };
 
-const collectDirectionalReactions = (lane, scan, longEntry, shortEntry, entryGap, maxPerSide, includeBodyTurns) => {
+const reactionDownStrength = (lane, index, confirmBars, zoneNear, atrBasis) => {
+  let postLow = null;
+  let stepDown = 1;
+  const usableDown = Math.min(confirmBars, index);
+  while (stepDown <= usableDown) {
+    const idxDown = index - stepDown;
+    const valueDown = lane === "15" ? mtf.low(idxDown, false) : low(idxDown);
+    if (finite(valueDown)) postLow = postLow === null ? valueDown : Math.min(postLow, valueDown);
+    stepDown += 1;
+  }
+  if (postLow === null || !finite(atrBasis) || atrBasis <= 0) return 0;
+  return Math.max(0, zoneNear - postLow) / atrBasis;
+};
+
+const reactionUpStrength = (lane, index, confirmBars, zoneNear, atrBasis) => {
+  let postHigh = null;
+  let stepUp = 1;
+  const usableUp = Math.min(confirmBars, index);
+  while (stepUp <= usableUp) {
+    const idxUp = index - stepUp;
+    const valueUp = lane === "15" ? mtf.high(idxUp, false) : high(idxUp);
+    if (finite(valueUp)) postHigh = postHigh === null ? valueUp : Math.max(postHigh, valueUp);
+    stepUp += 1;
+  }
+  if (postHigh === null || !finite(atrBasis) || atrBasis <= 0) return 0;
+  return Math.max(0, postHigh - zoneNear) / atrBasis;
+};
+
+const collectDirectionalReactions = (lane, scan, longEntry, shortEntry, entryGap, maxPerSide, includeBodyTurns, reactionBars, minReactionAtr, atrBasis) => {
   const longRows = [];
   const shortRows = [];
   let i = 3;
@@ -244,15 +275,21 @@ const collectDirectionalReactions = (lane, scan, longEntry, shortEntry, entryGap
 
     if (isHigh && finite(longEntry) && longRows.length < maxPerSide) {
       const zHigh = lane === "15" ? interval15(i, "HIGH") : interval5(i, "HIGH");
-      if (zHigh !== null && zHigh.lo >= longEntry + entryGap) {
-        longRows.push(zHigh);
+      if (zHigh !== null) {
+        const highReactionStrength = reactionDownStrength(lane, i, reactionBars, zHigh.lo, atrBasis);
+        if (highReactionStrength >= minReactionAtr && zHigh.lo >= longEntry + entryGap) {
+          longRows.push(zHigh);
+        }
       }
     }
 
     if (isLow && finite(shortEntry) && shortRows.length < maxPerSide) {
       const zLow = lane === "15" ? interval15(i, "LOW") : interval5(i, "LOW");
-      if (zLow !== null && zLow.hi <= shortEntry - entryGap) {
-        shortRows.push(zLow);
+      if (zLow !== null) {
+        const lowReactionStrength = reactionUpStrength(lane, i, reactionBars, zLow.hi, atrBasis);
+        if (lowReactionStrength >= minReactionAtr && zLow.hi <= shortEntry - entryGap) {
+          shortRows.push(zLow);
+        }
       }
     }
 
@@ -263,10 +300,12 @@ const collectDirectionalReactions = (lane, scan, longEntry, shortEntry, entryGap
       const bodyHi = Math.max(openC(i), closeC(i));
 
       if (finite(bodyLo) && finite(bodyHi) && bodyHi > bodyLo) {
-        if (bearishTurn && finite(longEntry) && bodyLo >= longEntry + entryGap && longRows.length < maxPerSide) {
+        const bearBodyStrength = reactionDownStrength("5", i, reactionBars, bodyLo, atrBasis);
+        const bullBodyStrength = reactionUpStrength("5", i, reactionBars, bodyHi, atrBasis);
+        if (bearishTurn && bearBodyStrength >= minReactionAtr && finite(longEntry) && bodyLo >= longEntry + entryGap && longRows.length < maxPerSide) {
           longRows.push({ lo: bodyLo, hi: bodyHi });
         }
-        if (bullishTurn && finite(shortEntry) && bodyHi <= shortEntry - entryGap && shortRows.length < maxPerSide) {
+        if (bullishTurn && bullBodyStrength >= minReactionAtr && finite(shortEntry) && bodyHi <= shortEntry - entryGap && shortRows.length < maxPerSide) {
           shortRows.push({ lo: bodyLo, hi: bodyHi });
         }
       }
@@ -435,7 +474,8 @@ const selectCanonicalTargets = (side, entry, entryGap, zoneGap, zones, depth) =>
 
     if (distinct) {
       const target = safeTargetFromZone(selectedZone, side, depth);
-      if (finite(target)) {
+      const profitSide = side === "LONG" ? finite(target) && target > entry : finite(target) && target < entry;
+      if (profitSide) {
         out.push({
           lo: selectedZone.lo,
           hi: selectedZone.hi,
@@ -553,8 +593,6 @@ const drawTargets = (rows, sideName, mode) => {
 onTick = (length, _moment, _, ta, inputs) => {
   if (length < 100) return;
 
-  // Always-visible FXR acceptance heartbeat. It follows candle closes with small circles.
-  // Turn this input OFF after the platform-render gate is proven.
   if (inputs.showheartbeat) {
     plot.line("SLUMDAWG ACTIVE", closeC(0), "#808080", 6, 0, 0, "slumdawg_active");
   }
@@ -564,8 +602,6 @@ onTick = (length, _moment, _, ta, inputs) => {
   const move = updateCurrentMove(pair.pivots, runtimeState);
   const side = move;
 
-  // A valid running script must never look dead. If FXR MTF has not produced both
-  // structural sides yet, show an explicit fail-closed BUILDING line at current price.
   if ((pair.longEntry === null || pair.shortEntry === null) && inputs.showheartbeat) {
     band.line("SLUMDAWG BUILDING STRUCTURE", closeC(0), "#808080", 2, 1, true);
   }
@@ -590,7 +626,10 @@ onTick = (length, _moment, _, ta, inputs) => {
     pair.shortEntry,
     entryGap,
     80,
-    false
+    false,
+    inputs.reactionbars,
+    inputs.minreactionatr,
+    basis15
   );
 
   const d5 = collectDirectionalReactions(
@@ -600,7 +639,10 @@ onTick = (length, _moment, _, ta, inputs) => {
     pair.shortEntry,
     entryGap,
     120,
-    true
+    true,
+    inputs.reactionbars,
+    inputs.minreactionatr,
+    basis5
   );
 
   const long15 = qualifyingClusters(
