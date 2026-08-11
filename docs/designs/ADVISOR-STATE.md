@@ -9,7 +9,39 @@
 > Truncating to the skill's ~40-line target would destroy them. I PREPENDED instead — nothing lost,
 > debt still open.**
 
-## SEAT — 2026-08-11 ~15:00Z · desk `claude.exe 28644` · **LIVE BLOCK, TAKE THIS ONE**
+## SEAT — 2026-08-11 ~19:15Z · desk `claude.exe 28644` **RETIRING** · **LIVE BLOCK, TAKE THIS ONE. EVERYTHING BELOW IS OLDER.**
+
+🛑🛑🛑 **FRESH DESK: READ EXACTLY SIX THINGS AND STOP. `R-839 §7`, external-read-ordered.**
+> **(1)** THIS BLOCK · **(2)** `docs/designs/GRADE-RATIFY1-REPAIR-2026-08-11.md` — the FAILED re-grade (committed `8c6ef980`) · **(3)** `AR-1008` · **(4)** `R-839` — it carries the external read's whole architecture in its `§3` · **(5)** verifier blob `e9eeb845…` at pin `7090da86` · **(6)** execution pin `fb71a3ef`.
+> 🛑 **DO NOT RE-READ `AR-970`..`AR-1007`, AND DO NOT READ THIS FILE BELOW THIS BLOCK.** ★★★★★ **`A HANDOFF THAT MAKES THE SUCCESSOR RECONSTRUCT THE PREDECESSOR'S CONTEXT HAS NOT SAVED ANYTHING — IT HAS MOVED THE COST AND ADDED A SEAM.`**
+
+**LEDGER `R-839`. NEWEST AR `AR-1008` — RULED.** **WORKER `claude.exe 30716`: HELD, correctly stopped, NOT to be rotated for symmetry.** **DESK: ROTATING — the operator holds the lever.**
+
+### WHERE THE CAMPAIGN ACTUALLY IS
+✅ **THE FIVE HISTORICAL ARMS ARE GOOD AND STAY: `108` children · `2419` nodes · `0` differences across ALL `10` arm pairs · the same `33` stable failures · real runtimes under `600s`. Independently verified through non-overlapping paths. `[G]`/`[I]` substantive results HOLD.**
+🛑 **WHAT FAILED IS THE REUSABLE REFEREE AROUND THEM. `RATIFY-1` UNCERTIFIED. `F-RATIFY1-1` OPEN. NO number published (`STOP [49]`) — the graders' bands are not `RATIFY-1` scores.**
+🛑 **TWO ARCHITECTURAL DEFECTS, BOTH INDEPENDENTLY CONVICTED AND BOTH DESK-CONFIRMED AT THE LINE:**
+> **`CRITICAL` CERTIFICATION-BYPASS — `--no-chain` deletes all five rebuilds AND every node-axis verdict while `--node-axis` is still accepted, and the instrument emits `SATISFIED` at exit `0`.**
+> **`HIGH CLASS` SELF-ASSERTION — rebuilds compare one self-asserted value against another from the SAME tamperable layer.** ★★★★★ **`IF BOTH SIDES OF A CHECK COME FROM THE SAME RESEALABLE CLAIM LAYER, AGREEMENT IS NOT INDEPENDENT EVIDENCE.`**
+⚠️ **AND THE GOVERNING CAVEAT: the grader proved `SIX` false-green routes WITHOUT bounding the set at six. Closing them is `SIX INSTANCES CLOSED`, NEVER `THE CLASS CLOSED` (`STOP [71]`).**
+
+### YOUR FIRST ACT — DO NOT WRITE REPAIR CODE FIRST
+⚡ **THE ONE-PAGE CERTIFICATION AUTHORITY TABLE (`R-839 §3[C]`). Per load-bearing claim: `CLAIM · WHAT CURRENTLY ASSERTS IT · RAW OBSERVABLE · INDEPENDENT AUTHORITY · HOW DERIVED · WHAT MAKES IT REFUSE`.** 🛑 **NO IMPLEMENTATION UNTIL EVERY LOAD-BEARING GREEN HAS A NAMED AUTHORITY.** ⇒ **then `[A]` one fail-closed certifying path · `[B]` a COMPLETENESS property (`REQUIRED_EVIDENCE_SET == OBSERVED_EVIDENCE_SET`, absence of a required proof is itself REFUSED) · `[D]` a VerifiedArm the oracle consumes instead of `arm[...]` · `[E]` `[H]` moves to the RUNNER's live monotonic clock.**
+⚡ **SCOPE: comparator-only is RETRACTED for `[H]` ONLY — a TIMING-ONLY runner change is authorized. `STOP M`: child commands · population · file/node ordering · isolation · plugins · outcome parsing · governed tests · production ⇒ **STOP AND REPORT.****
+⚡ **EVIDENCE PLAN: keep `A`–`E`; if the runner diff is timing-only, ONE canonical arm under the repaired runner, exact `2419`-node map `==` historical `A`. If it differs, STOP. DO NOT spend five more arms.**
+⚡ **CONTROLS OWED: `C-A`..`C-I` in `R-839 §5`; at least one must remove an ENTIRE evidence layer, not mutate a field.**
+
+### STANDING, AND THE ONES THAT WILL BITE YOU
+🛑 **`STOP [61]`: the GPT wait covers RULINGS **and** the GRADER DISPATCH — operator-asserted six times. The operator is the courier; PRINT every substantive AR and ruling IN CHAT IN FULL.** 🛑 **`STOP [58]`: THE DESK DOES NOT PUSH THIS BRANCH — ask the worker.** 🛑 **`STOP [68]`: update THIS header in the SAME COMMIT as every ruling; a section added below does NOT refresh it (I broke this and a worker caught it).** 🛑 **`STOP [64]`: `ls` every path in a grader brief before sending — I shipped a nonexistent path and got an empty diff that read as "identical".** 🛑 **`STOP [69]`: execution pin `fb71a3ef` ≠ verifier pin `7090da86`; never one sentence.** 🛑 **`STOP [67]`: execute a control against its mechanism before the ruling ships — I ordered a control my own formula could not satisfy.**
+⚠️ **DURABILITY OWED, OWNER = DESK: `fb71a3ef` is on origin; `7090da86`, both grade receipts and the recent desk commits are NOT. Fine for repair, NOT fine for promotion. Land them through an explicitly adjudicated path; NO bulk-push.**
+✅ **KNOWN-BENIGN: `docs/wave25-exit-engine-ab-report.md` modified in `git status` (ruled output-only) · the worker's branch running ahead of origin · orphan `bash.exe` ears from retired seats — REPORT, NEVER KILL.**
+
+### OPERATOR-FACING
+**No spend, no capital, no irreversible act.** **He relays to GPT by copy-paste — that channel is the campaign's only external check and it has caught real defects in three consecutive rulings, including two of mine.** ⚡ **He holds the seat-rotation lever; the desk rotation is external-read-approved and recommended NOW.**
+
+---
+
+## SEAT — 2026-08-11 ~15:00Z · desk `claude.exe 28644` · **SUPERSEDED by the block above — historical, not current state**
 
 🛑🛑 **HEADER DEFECT FOUND BY THE WORKER (`AR-1007`) AND FIXED HERE — IT WAS MINE.** `[MEASURED HERE]` this block read `Ledger at R-835 / Newest AR AR-1003` while disk held `R-837` / `AR-1007`, **and it still said the grade was DISPATCHED, the instrument FROZEN pending it, and the worker on the OLD hold — all superseded.** ⇒ ★★★★★ **`THIS FILE'S FIRST LINE ORDERS A COLD SEAT TO READ ONLY THIS BLOCK, SO A STALE HEADER HERE IS NOT AN INACCURACY — IT IS A FALSE BRIEFING WITH THE AUTHORITY OF A CURRENT ONE. I PREPENDED FIVE CORRECT SECTIONS BELOW IT AND LEFT THE ONE LINE A SUCCESSOR IS TOLD TO TRUST.`** 🛑 **`STOP [68]` NEW: THE `LIVE BLOCK` HEADER IS UPDATED IN THE SAME COMMIT AS EVERY RULING. A SECTION ADDED BELOW IT DOES NOT REFRESH IT.**
 

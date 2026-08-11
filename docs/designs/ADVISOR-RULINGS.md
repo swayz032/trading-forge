@@ -12,6 +12,141 @@
 
 ---
 
+## R-839 · 2026-08-11 · 🛑🛑🛑 **`AR-1008` ACCEPTED. THE FAILED RE-GRADE IS THE CORRECT OUTCOME AND I WILL NOT MINIMISE IT BECAUSE THE FIVE ORIGINAL RUNS WERE GOOD.** ⚡⚡ **THE METHOD CHANGES: STOP PATCHING ROUTES, DEFINE WHICH LAYER IS AUTHORITY. THE CLASS SPEC IS THE NEXT DESK'S FIRST ACT — AND THE READ ROTATES THIS SEAT TO WRITE IT.** 🛑 **WORKER HELD. INSTRUMENT FROZEN. `RATIFY-1` UNCERTIFIED. NO REPAIR UNTIL THE BOUNDED CLASS SPECIFICATION EXISTS.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1008`** (`R-416`) — **it IS the AR ruled here; I read it in full and re-derived its no-drift claim myself.** **SEATS: desk `28644` (ROTATING) · worker `claude.exe 30716` (HELD).**
+✅ **THE WAIT WAS HELD AND IS DISCHARGED. The read on the failed re-grade arrived BEFORE this ruling and decided the method, the scope, and the rotation.**
+🛑 **THIS RULING DELIBERATELY DOES NOT WRITE THE CLASS REPAIR. The read assigns that to a FRESH desk seat because the next decision is architectural, and `advisor-onboarding §4.5` is explicit that the most dangerous moment to design is the one where the session is deepest. I am `~9` hours and `12` rulings deep. THAT IS THE REASON, AND IT IS A GOOD ONE.**
+
+### §1 — ✅ `AR-1008` ACCEPTED, AND WHAT IT ADDED IS THE ROOT
+✅ **The worker did exactly what must happen after an independent conviction: REPRODUCED the failure, verified it against its OWN UNCHANGED code, reported additional evidence AGAINST ITSELF, repaired nothing, certified nothing.** `[MEASURED HERE]` **the instrument blob on disk is `e9eeb845…`, identical to `7090da86` and to the hash I briefed the grader with — three-way, NO DRIFT, so `STOP [50]` genuinely held and the verdict binds to what is still there.**
+🛑 **THE FACT IT VOLUNTEERED IS THE ROOT CAUSE, NOT A DETAIL: its comparator printed `OK  forward: [H] wall clock <= 10.0 min … <- NO CHAIN: the ceiling rests on the arm's own claim` AT EXIT `0`.** ⇒ **THE CODE ALREADY KNEW THE CONDITION WAS WEAKER. IT REPRESENTED THE WEAKNESS AS PROSE RATHER THAN AS AUTHORITY.** ★★★★★ **`A CAPTION IS WHAT YOU WRITE WHEN YOU HAVE NOTICED SOMETHING AND DECIDED NOT TO ACT ON IT.`**
+⚖️ **AND THE WORKER'S OWN DIAGNOSIS IS ADOPTED AS THE LAW: it moved `[H]` outside `if chain:` so the ceiling would still run with the chain off. `KEEP A WEAKER CHECK RATHER THAN NONE` IS THE DEFECT.** 🛑 **`STOP [70]` NEW: FOR A LOAD-BEARING CERTIFICATION PROPERTY, `FULL EVIDENCE UNAVAILABLE` MEANS **REFUSE** — NEVER `USE WEAKER EVIDENCE`.** ⇒ **`[never-flag]`, which this desk has now watched break in the one file built to enforce it.**
+
+### §2 — 🛑 TWO ARCHITECTURAL PROBLEMS, AND THEY ARE NOT SIX PATCHES
+🛑 **`CRITICAL` — CERTIFICATION-BYPASS: a certifying invocation can disable the evidence needed to prove the property it requests, the missing checks SILENTLY DISAPPEAR, the remaining ones are all green, and the instrument emits `SATISFIED` at exit `0` — while `--node-axis` is still accepted syntactically and does nothing.** ⇒ **broader than timing: it suppresses provenance rebuilds, node-axis proof AND rebuilt integrity facts.**
+🛑 **`HIGH CLASS` — SELF-ASSERTION AUTHORITY: several "rebuilds" compare one self-asserted value against another produced by the SAME tamperable layer.** ★★★★★ **`IF BOTH SIDES OF A CHECK COME FROM THE SAME RESEALABLE CLAIM LAYER, AGREEMENT IS NOT INDEPENDENT EVIDENCE.`**
+🛑 **THEREFORE THE TASK IS NOT *"FIX THE SIX GRADER EXAMPLES"* — IT IS `FIX WHAT IS ALLOWED TO COUNT AS EVIDENCE`.** ⚠️ **AND THE WORKER'S PRE-EMPTIVE `[instance-not-condition]` STANDS AS THE GOVERNING CAVEAT: the grader proved `SIX` routes WITHOUT bounding the set at six. Closing them is `SIX INSTANCES CLOSED`, NEVER `THE CLASS CLOSED`.** 🛑 **`STOP [71]` NEW: DO NOT PUBLISH *"ALL FALSE-GREEN ROUTES ELIMINATED."* The honest claim is `THE MEASURED ROUTES ARE CLOSED AND THE CERTIFYING PATH NOW HAS A CLOSED EVIDENCE CONTRACT.`**
+
+### §3 — ⚡ THE CLASS-REPAIR ARCHITECTURE, ADOPTED FROM THE READ AND RECORDED SO IT CANNOT BE LOST
+> **`[A]` ONE FAIL-CLOSED CERTIFYING PATH. There must NOT be `certifying-with-chain` and `certifying-without-chain`. A diagnostic mode may exist but must be STRUCTURALLY INCAPABLE of printing `[G]/[H]/[I] SATISFIED` or exiting with the certifying success code. NO CLI FLAG MAY CONVERT THE FIRST INTO THE SECOND INVISIBLY.**
+> **`[B]` A COMPLETENESS PROPERTY, NOT JUST INDIVIDUAL CHECKS. A certifying result is valid ONLY IF `REQUIRED_EVIDENCE_SET == OBSERVED_EVIDENCE_SET` **AND** every required verdict is TRUE. `ABSENT CHECK = NO PROBLEM` is the bug that made `all(remaining_checks)` true. ABSENCE OF A REQUIRED PROOF IS ITSELF REFUSED.** ⚠️ **This is NOT a second population registry — it is the closed contract of what ONE `RATIFY` comparison means: pin · provenance · population · file-axis · node-axis · runtime authority · exact outcome oracle · independent-run identity.**
+> **`[C]` THE ONE-PAGE AUTHORITY TABLE, BEFORE ANOTHER LINE OF REPAIR CODE. Per load-bearing claim: `CLAIM · WHAT CURRENTLY ASSERTS IT · RAW OBSERVABLE · INDEPENDENT AUTHORITY / SECOND PRODUCER · HOW IT IS DERIVED · WHAT MAKES IT REFUSE`.** 🛑 **NO IMPLEMENTATION UNTIL EVERY LOAD-BEARING GREEN HAS A NAMED AUTHORITY.** ★★★★ **This is aimed squarely at the worker's repeated pattern of grabbing the nearest summary field — and at `[one-level-short]`, now FOUR convictions.**
+> **`[D]` VERIFIED ARM, NOT TRUSTED AGGREGATE. `aggregate.json` becomes a LOCATOR / CLAIM BUNDLE ONLY. The certifying oracle consumes `verified.*` fields that EXIST ONLY AFTER their authority checks completed — never `arm["wall_s"]`, `arm["invalid_children"]`, `arm["limited_subset"]` directly.** ⇒ **removes the whole category of *"I verified field X and forgot field Y."***
+> **`[E]` `[H]` NEEDS A DIFFERENT OWNER — AND THIS RETRACTS MY OWN `COMPARATOR-ONLY` SCOPE. The comparator is DOWNSTREAM and cannot recover parent wall-clock truth after the fact. THE RUNNER OWNS THE `600`-SECOND HARD STOP, at its live monotonic clock: `>600s` ⇒ REFUSE, no certifiable arm.** 🛑 **RED-PROOF IT WITH AN INJECTED/FAKE CLOCK — do not literally wait ten minutes.** ★★★★★ **`THE OWNER OF A FACT ENFORCES THE FACT.`**
+
+### §4 — ⚖️ SCOPE: A NARROW RUNNER CHANGE IS NOW AUTHORIZED, AND `STOP M` IS RE-DRAWN
+⚡ **`R-836`/`R-838`'s COMPARATOR-ONLY CONSTRAINT IS RETRACTED FOR `[H]` ONLY.** **AUTHORIZED in the runner: runtime measurement · fail-closed timing enforcement · the timing witness. NOTHING ELSE.**
+🛑 **`STOP M` RE-DRAWN AND STILL LIVE: DO NOT change child commands · population · file ordering · node ordering · isolation behaviour · pytest plugins · outcome parsing · governed tests · production engine. IF THE IMPLEMENTATION NEEDS ANY OF THEM, **STOP AND REPORT** — that crosses from TIMING AUTHORITY into EXECUTION SEMANTICS.**
+✅ **THE FIVE ARMS ARE NOT THROWN AWAY. Their substantive facts remain independently verified (`2419` nodes · `0` differences across all `10` pairs · the same `33` · actual runtimes under `600s`).** ⚡ **THE EFFICIENT ROUTE, ADOPTED: preserve `A`–`E` as immutable `[G]`/`[I]` evidence → repair the contract and the `[H]` owner → red-proof `[H]` with a controlled fake clock → **IF the runner diff is timing-only, run ONE canonical full-population arm** under the repaired runner → require its exact `2419`-node outcome map `==` the historical `A` map → independently grade that seam.** 🛑 **DO NOT spend five more full arms unless the runner change touches EXECUTION SEMANTICS. If the single canonical arm DIFFERS, **STOP** — the old five-arm evidence cannot simply be carried across.**
+
+### §5 — ⚡ THE CONTROL SET THE NEXT ATTEMPT OWES (`C-A`..`C-I`)
+```
+C-A  certifying invocation + no-chain attempt      => REFUSE BEFORE COMPARISON (no SATISFIED headline)
+C-B  certifying invocation without node-axis       => REFUSE
+C-C  suppress ONE load-bearing verification        => REFUSE FOR INCOMPLETE CERTIFICATION EVIDENCE
+C-D  downward [H] (arm duration faked below truth) => RED / REFUSED
+C-E  injected runner clock > 600s                  => RUNNER REFUSES THE ARM
+C-F  collected-unexecuted resealed summary         => RED
+C-G  invalid-child resealed summary (problems=[])  => RED
+C-H  limited-subset false-clean (claims full pop)  => RED
+C-I  untouched known-good evidence                 => GREEN
+```
+🛑 **AT LEAST ONE CONTROL MUST REMOVE AN ENTIRE EVIDENCE LAYER, NOT MUTATE ONE FIELD — that is the direct defence against another one-level-short implementation.** ⚡ **`C-C` is the new one and it is the important one: it attacks the class behind `all(remaining_checks)`.**
+
+### §6 — ⚖️ DURABILITY, UNCHANGED AND STILL OWED
+⚠️ **`[MEASURED HERE + CORROBORATED by the read against GitHub]` `fb71a3ef` resolves remotely; `7090da86` and the newer desk commits DO NOT.** ✅ **Fine for the repair cycle. 🛑 NOT fine for promotion.** ⚡ **Before certification/promotion, the final runner+verifier commit, the ORIGINAL grade, THIS FAILED re-grade, the final successful grade and the evidence manifest must ALL become origin-resolvable through an EXPLICITLY REVIEWED landing path. 🛑 NO bulk-push of unrelated desk commits. OWNER: the incoming desk.**
+
+### §7 — ⚡ THE DESK SEAT ROTATES. THIS IS THE HANDOFF.
+⚡ **THE READ APPROVES THE ROTATION I RECOMMENDED, and its reasoning is the operative one: *"Not because current seat did bad work. Because: next decision is architectural; current session is deep; live state is now compact; reload cost is low."*** 🛑 **DO NOT rotate the worker for symmetry — `30716` stopped correctly and stays frozen until the fresh desk delivers the class-repair ruling.**
+🛑🛑 **THE FRESH DESK READS EXACTLY SIX THINGS AND NOTHING ELSE:** **(1)** `ADVISOR-STATE`'s LIVE BLOCK · **(2)** `docs/designs/GRADE-RATIFY1-REPAIR-2026-08-11.md` (the failed re-grade, committed `8c6ef980`) · **(3)** `AR-1008` · **(4)** THIS RULING, which carries the external read's architecture in `§3` · **(5)** the current verifier blob `e9eeb845…` at pin `7090da86` · **(6)** the execution pin `fb71a3ef`.
+🛑 **DO NOT RE-READ `AR-970`..`AR-1007`. THAT WOULD SPEND EXACTLY THE BUDGET THE ROTATION EXISTS TO SAVE.** ★★★★★ **`A HANDOFF THAT REQUIRES THE SUCCESSOR TO RECONSTRUCT THE PREDECESSOR'S CONTEXT HAS NOT SAVED ANYTHING — IT HAS MOVED THE COST AND ADDED A SEAM.`**
+
+### §8 — ⚡ AUTHORIZATION / HOLD
+
+> ### ★ WORKER `claude.exe 30716` — HOLD. THE OWNER IS THE INCOMING DESK SEAT, AND THE OPERATOR HOLDS THE ROTATION LEVER.
+> **1.** ✅ **`AR-1008` ACCEPTED IN FULL. Reproducing the conviction against your own unchanged code, and volunteering the caption evidence the grader never found, is the best work in this lane.**
+> **2.** 🛑 **NO REPAIR UNTIL THE FRESH DESK ISSUES THE BOUNDED CLASS SPECIFICATION (`§3[C]`, the one-page authority table). `STOP [50]` REMAINS ACTIVE.**
+> **3.** 🛑 **DO NOT: re-run any arm · adjudicate or repair the `33` · start `CLUSTER-E` · move a seal · certify · publish any `RATIFY-1` number · push · remove any worktree · touch production, HTF or `MP1`.**
+> **4.** ✅ **KEEP: your ear armed · every evidence worktree · `cmp_AC.txt` · the exact repair commit `7090da86` and its blob · every grader-access path · both grade receipts.**
+> **5.** ⚡ **WHEN THE FRESH DESK RULES, expect `§3`'s architecture and `§5`'s `C-A`..`C-I` battery. Your `HYPOTHESIS — UNPROVEN` on the `--node-axis` symmetry is RECORDED and explicitly NOT adopted: it closes `CRITICAL-1` only, and `CRITICAL-2` and the vacuity `HIGH` survive it. You were right to say so.**
+> **6.** ⚖️ **You may hand off during this hold; nothing is in flight. But you are NOT rotated for symmetry.**
+
+```
+RULING ID       : R-839
+ARs RULED       : AR-1008 -- ACCEPTED. The failed re-grade is the correct outcome.
+DECISION        : ACCEPT + HOLD + ROTATE THE DESK SEAT. The class-repair
+                  specification is DEFERRED TO THE INCOMING DESK BY EXTERNAL
+                  RULING, not parked. Comparator-only scope RETRACTED for [H]
+                  only; a NARROW runner timing change is authorized. Five arms
+                  PRESERVED, not discarded. RATIFY-1 UNCERTIFIED. F-RATIFY1-1
+                  OPEN. R3-4 NOT closed. CLUSTER-E HELD. Money path HELD.
+GRAPH OBJECT    : NOT ADOPTED.
+EXTERNAL READ   : HELD AND DISCHARGED. It decided the method (authority-first,
+                  not route-patching), the scope (narrow runner change for [H]),
+                  the evidence disposition (keep the five arms, one canonical
+                  re-arm if timing-only) and the rotation. Adopted on merit.
+CLAIMS VERIFIED : [MEASURED HERE] the instrument blob on disk == the blob at
+                  7090da86 == the hash briefed to the grader: three-way, no
+                  drift, so STOP [50] held and the conviction binds.
+                  [MEASURED HERE, :1034 / :1082 / if chain: at :509 with the
+                  [G-NODE] block at :523-558] --no-chain has no fail-closed guard
+                  while --node-axis does; the node-axis verdicts live inside the
+                  chain block and vanish with it.
+                  [MEASURED HERE] manifest.node_sequence_sha256: 0 hits in the
+                  comparator, 1 in the runner -- an anchor written and never read.
+FAILED/UNPROVEN : F-RATIFY1-1 -- OPEN. The certification-bypass and the
+                  self-assertion authority class -- OPEN.
+                  Whether SIX is the whole set of false-green routes -- NOT
+                  PROVEN, and STOP [71] forbids claiming otherwise.
+                  Whether the governed population itself can be forged -- the
+                  grader did NOT attack population_successor or the runner, and
+                  if it can, [4] falls with it. UNENUMERATED.
+                  The merit of the 33, the 2 xfailed, and ANY production
+                  behaviour -- out of scope. Referee determinism is NOT engine
+                  correctness.
+ARCHITECTURE
+INVARIANTS      : STOP [50] ACTIVE. The five arms are FROZEN READ-ONLY EVIDENCE
+                  at fb71a3ef. The 600s ceiling is FROZEN -- it MOVES OWNER, not
+                  value. acceptance_runner.py may take a TIMING-ONLY change and
+                  nothing else (STOP M re-drawn). Root seal IMMUTABLE.
+                  Production engine UNTOUCHED. Doer != grader. No agent promotes
+                  to live capital.
+FILES / SCOPE   : NONE authorized to the worker until the fresh desk's class
+                  specification. The incoming desk writes the one-page authority
+                  table FIRST.
+ACCEPTANCE      : the C-A..C-I battery in §5, with at least one control removing
+                  an ENTIRE evidence layer; then a targeted independent grade
+                  attacking bypass, missing-proof completeness, resealed
+                  self-assertions, timing, and one novel route.
+FIRST OBSERVABLE: the incoming desk's one-page certification authority table.
+STOP CONDITION  : STOP [70] NEW -- for a load-bearing certification property,
+                  "full evidence unavailable" means REFUSE, never "use weaker
+                  evidence".
+                  STOP [71] NEW -- never publish "all false-green routes
+                  eliminated"; the honest claim is that the MEASURED routes are
+                  closed and the certifying path has a closed evidence contract.
+                  STOP M re-drawn: timing authority only; execution semantics
+                  STOP AND REPORT.
+                  STOP [49], [50], [58], [64], [66], [67], [68], [69] stand.
+LESSON          : THE REPAIR KEPT MOVING ONE LAYER DOWN WITHOUT EVER DEFINING
+                  WHICH LAYER IS AUTHORITY. THAT IS WHY EACH ROUND CLOSED THE
+                  DEMONSTRATED ROUTE AND LEFT THE CLASS OPEN.
+                  AND: THE CODE PRINTED THE REASON IT SHOULD HAVE REFUSED, AT
+                  EXIT ZERO. NOTICING A WEAKNESS AND CAPTIONING IT IS NOT A
+                  CONTROL -- THE OWNER OF A FACT MUST ENFORCE THE FACT.
+QUEUED NEXT     : rotate desk -> one-page authority table -> fail-closed
+                  certifying path + completeness property -> VerifiedArm -> [H]
+                  to the runner's live clock (fake-clock red-proof) -> C-A..C-I ->
+                  ONE canonical arm if the diff is timing-only, exact map == A ->
+                  targeted independent grade -> certify RATIFY-1 -> adjudicated
+                  durable landing -> promote -> CLUSTER-E -> R3 closeout -> MP1 ->
+                  MONEY PATH.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-838 · 2026-08-11 · ⚡⚡ **THE READ LANDED, `STOP [61]` IS DISCHARGED, AND THE TARGETED RE-GRADE IS DISPATCHED — THE LAST GATE BEFORE `RATIFY-1`.** ✅ **`AR-1006` ACCEPTED FOR RE-GRADE · `AR-1007` ACCEPTED AS A HOLD RECEIPT, ITS STALE-HEADER FINDING VALID AND ALREADY REPAIRED AT THE CLASS.** 🛑 **AND I MINT THE TWO-PIN LAW BEFORE ANYONE CONFLATES THEM: THE ARMS RAN AT `fb71a3ef`; THE REPAIRED VERIFIER IS `7090da86`.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1007`** (`R-416`) — **a HOLD RECEIPT carrying one finding; it owes no ruling, and the finding is repaired at `ADVISOR-STATE` with `STOP [68]`.** **SEATS: desk `28644` · worker `claude.exe 30716`.**
