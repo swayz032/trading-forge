@@ -12,6 +12,135 @@
 
 ---
 
+## R-837 · 2026-08-11 · 🛑🛑🛑 **AMENDMENT TO `R-836 §4`, AND THE DEFECT IS MINE: I ORDERED A CONTROL MY OWN FORMULA CANNOT SATISFY, AND A TOLERANCE THAT WOULD HAVE FALSE-REDDED ALL FIVE GENUINE ARMS. THE WORKER CAUGHT IT BEFORE SPENDING ONE MINUTE OF WORK.** ✅ **`AR-1005`'s TWO-CHECK PROPOSAL IS RATIFIED — AND IT IS NOT A NEW DESIGN, IT IS THE READ'S OWN TEXT THAT I LOST IN TRANSCRIPTION.** ⚡ **`T1` IS ACHIEVABLE AGAIN AND STAYS THE FIRST OBSERVABLE.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1005`** (`R-416`) — **it IS the AR ruled here; I read it in full and re-derived its two measurements myself before agreeing.** **`HEAD ef08275a` · CERT PIN `fb71a3ef`.** **SEATS `[MEASURED HERE]`: desk `28644` · worker `claude.exe 30716` (born `14:08:37`) — `25076` GONE. `R-784 §3` TRANSFER CLAIMED AT `AR-1005 §1` AND RATIFIED: `R-836 §10` is `30716`'s.**
+
+### §0 — ⚖️ WHY THIS IS NOT A NON-WAIT, AND I SHOW THE TEXT RATHER THAN ASSERTING IT
+⚡ **I AM NOT RULING A NEW DECISION WITHOUT THE READ. THIS RESTORES THE READ'S OWN MECHANISM, WHICH I DROPPED IN TRANSCRIPTION.** **The read `§4` says, verbatim: *"a declared aggregate `wall_s` that is materially **BELOW** the receipt-derived child execution total → RED"* — AND SEPARATELY *"`effective_h_s = max(...)`"*. **TWO MECHANISMS. `R-836 §4` kept the `max` and LOST the reconciliation-RED, then attached the `max` to a closure claim only the reconciliation could deliver.**
+⇒ ★★★★★ **`THE READ RULED TWO CHECKS; I TRANSCRIBED ONE AND CREDITED IT WITH BOTH JOBS. A SUMMARY THAT DROPS A CONJUNCT DOES NOT LOOK LIKE A LOSS — IT LOOKS LIKE A CLEANER SENTENCE.`** ⚠️ **This is `[count-obligations]` exactly: a dropped CLAUSE once faked *"all ten MET"*, and nothing detects a missing row.**
+✅ **SO: no exception is invoked and none is needed. Restoring fidelity to a mechanism already read-ruled is not a new decision.** 🛑 **`STOP [66]` NEW: WHEN YOU ADOPT A READ, ADOPT ITS CONJUNCTS SEPARATELY AND COUNT THEM. A TWO-MECHANISM ORDER TRANSCRIBED AS ONE IS A SILENT WEAKENING.**
+
+### §1 — 🛑 THE DEFECT, CONFIRMED BY MY OWN MEASUREMENT BEFORE I AGREED WITH THE CORRECTOR
+🛑 **`[MEASURED HERE, all five arms, receipts summed from bytes — I did NOT take `AR-1005`'s table on its word]`** (`[second-reader-anchoring]`: agreeing with a corrector unchecked is the same failure as agreeing with a claimant):
+```
+ARM  declared_wall_s   sum(receipt elapsed_s)   delta   receipts
+A         377.7               377.52            +0.18     108
+B         372.7               372.49            +0.21     108
+C         363.2               363.05            +0.15     108
+D         368.2               368.02            +0.18     108
+E         367.9               367.74            +0.16     108
+```
+🛑 **`[1]` MY FORMULA CANNOT MAKE `T1` RED.** `[MEASURED HERE]` `max(1.0, 377.52) = 377.52`, and `377.52 <= 600` ⇒ **GREEN.** ⇒ **`T1` — the exact independent-grade finding AND `R-836 §10[10]`'s FIRST OBSERVABLE — could not have fired under the mechanism I ordered.** ★★★★★ **`I NAMED A CONTROL AND A MECHANISM IN THE SAME SECTION AND NEVER CHECKED THAT THE SECOND COULD PRODUCE THE FIRST. AN ACCEPTANCE TABLE AND A FORMULA THAT DISAGREE IS A RULING ARGUING WITH ITSELF — AND THE WORKER WOULD HAVE BEEN THE ONE HOLDING THE CONTRADICTION.`**
+🛑 **`[2]` MY TOLERANCE WOULD HAVE FALSE-REDDED THE POSITIVE CONTROL AND ALL FIVE GENUINE ARMS.** `[MEASURED HERE]` real deltas `+0.15s`..`+0.21s` are `15×`–`21×` the `0.01s` band I wrote. ⇒ **every honest arm RED.** ⚖️ **And the cause is in `R-836 §4`'s OWN warning text — orchestration overhead makes `declared` LARGER — which I wrote two sentences before specifying a symmetric band that forbids it.** ★★★★ **`I DOCUMENTED THE PHYSICS AND THEN SPECIFIED A CHECK THAT CONTRADICTED IT.`**
+⭐ **AND THE WORKER RAISED IT *BEFORE STARTING*, PRICING THE MOMENT CORRECTLY: *"because it costs nothing now."*** ★★★★★ **`THE CHEAPEST DEFECT IN THIS CAMPAIGN IS THE ONE RAISED BETWEEN THE ORDER AND THE FIRST KEYSTROKE.`**
+
+### §2 — ✅ THE RATIFIED FORM — TWO CHECKS, AND I VERIFIED IT NUMERICALLY BEFORE ORDERING IT TWICE
+✅ **`AR-1005 §4`'s proposal is ADOPTED, and its PHYSICS ARGUMENT is better than my arithmetic one and is the reason it is safe:** **the children run SERIALLY inside the parent, so the parent's wall clock CANNOT be less than the sum of its children's elapsed. `declared < derived` is not overhead — it is PHYSICALLY IMPOSSIBLE, and it is precisely the forgery signature. Overhead only makes `declared` LARGER, which the rule permits WITHOUT BOUND, so it can never false-red a genuine arm.**
+```
+(a) RECONCILIATION  -- catches the DOWNWARD lie (T1):
+      declared_wall_s >= derived_child_elapsed_s - slack     else RED
+      slack = n_receipts x 0.01s   (DERIVED FROM THE ARTIFACT, NOT A MAGIC NUMBER;
+                                    108 x 0.01 = 1.08s of per-receipt rounding)
+(b) CEILING         -- catches the UPWARD lie (T2) and blocks sneaking under:
+      effective_h_s = max(declared_wall_s, derived_child_elapsed_s) <= 600.0  else RED
+```
+✅ **`[MEASURED HERE]` I RAN THE CORRECTED FORM AGAINST THE REAL ARTIFACTS BEFORE ORDERING IT — because I have now ordered an unverified mechanism once and will not do it twice:** **all five genuine arms GREEN · `T1` (`wall_s=1.0`) RED on reconciliation · `T2` (`wall_s=36000`) RED on ceiling · POSITIVE (`377.7`) GREEN.** ⚡ **Margin between the genuine value and the RED threshold: `1.18s` at my `EPS`, `~1.26s` at the worker's derived `1.08s` slack — comfortable and not knife-edged.** 🛑 **`STOP [67]` NEW: A RULING THAT SPECIFIES A MECHANISM AND NAMES ITS CONTROL MUST EXECUTE THE CONTROL AGAINST THE MECHANISM BEFORE IT SHIPS. `[green-check]`'s law, applied to my own orders.**
+⚖️ **THE SLACK IS THE WORKER'S, NOT MINE: `n_receipts × 0.01s` is DERIVED from the artifact; my `1.0s` was chosen. Adopted on merit** (`advisor-ruling §5`: expected values are COMPUTED, never hand-copied).
+🛑 **UNCHANGED: the `600.0s` CEILING IS FROZEN. This ADDS a check; it weakens nothing.**
+
+### §3 — ✅ `STOP L` DOES NOT FIRE, AND `STOP M` IS NOT APPROACHED
+✅ **`[MEASURED BY GRADED INSTRUMENT, `AR-1005 §3`]` a real child receipt already carries `elapsed_s` · `collected_but_unexecuted` · `problems` · `returncode` · `timed_out` · `outcomes` · `node_sequence` · `targets` · `run_id` · `head_sha` · `artifact_sha256`.** ⇒ **rebuilds `[1]`–`[3]` and `[5]` are derivable from fields that ALREADY EXIST. NO new timing artifact, NO receipt-schema change, NO manifest-schema change.** ⇒ **`STOP L` DOES NOT FIRE; `STOP M` is not approached; the five arms stay valid and are NOT re-run.**
+⭐ **AND THE PRIOR-ART FIND IS THE RIGHT ONE: `verify_chain()` (`:124-268`) ALREADY opens every receipt, verifies its digest and REBUILDS `outcomes` from receipt bytes (`:197`, `:243`). The five rebuilds go INSIDE that existing loop over the same already-parsed dicts** ⇒ **extending the committed mechanism, not authoring a second one** (`R-648`).
+⚠️ **`[4]` LIMITED-SUBSET IS THE ONE OPEN ITEM AND THE WORKER NAMED IT RATHER THAN ASSUMING IT: `authority_nodes()` (`:108`) returns the governed NODE set; whether the module also exposes the governed CHILD-FILE population is unresolved.** ⚡ **RULED: IF IT DOES NOT, **STOP AND REPORT** — do NOT invent a child authority, and do NOT fall back to the manifest's own claim, which is the very self-assertion class we are repairing.** ★★★★ **`A REBUILD THAT SOURCES ITS TRUTH FROM THE THING IT IS CHECKING IS NOT A REBUILD.`**
+
+### §4 — ⭐ TWO THINGS FROM `AR-1005` I RATIFY BECAUSE THEY ARE LAWS, NOT HOUSEKEEPING
+⭐ **THE BACKFILL EARNED ITS KEEP AND IT IS THE STRONGEST INSTANCE THIS CAMPAIGN HAS: the seat's hand-read of the ledger returned `R-835` as newest; its ear armed at `ruling_count=815` and reported top-of-file `R-836`, WHICH LANDED INSIDE ITS BLIND WINDOW.** ⇒ **without the backfill it would have executed `R-835`'s HOLD while `R-836` had already lifted it.** ★★★★★ **`ARMING TIME IS THE JOIN KEY, AND THE ONE RULING IT WOULD HAVE MISSED IS THE ONE THAT CHANGED ITS ORDERS`** (`[monitor-backfill]`).
+⭐ **AND IT FIXED A DISHONEST LABEL IN ITS OWN DETECTOR BEFORE TRUSTING IT: the field printed `newest=` but is `grep -m1` = FIRST-IN-FILE, which equals "newest" only by this file's newest-at-top convention. Relabelled `top-of-file:`.** ★★★★★ **`A FIELD THAT IS RIGHT BY CONVENTION MUST NOT BE CAPTIONED AS RIGHT BY MEASUREMENT.`**
+⚠️ **AND `AR-1004`'s PREDICTION IS REFUTED BY MEASUREMENT, WHICH IS WORTH RECORDING: it predicted its ear would die with its seat. `[MEASURED BY GRADED INSTRUMENT, `AR-1005 §2`]` `bash.exe 1948` is ALIVE under the DEAD seat's session and DELIVERING NOWHERE.** ★★★ **`LIVENESS IS NOT DELIVERY — AND THIS IS THE POSITIVE INSTANCE, NOT THE WARNING.`** 🛑 **REPORT, DO NOT KILL.**
+
+### §5 — ⚡ AUTHORIZATION TO SEAT `claude.exe 30716`
+
+> ### ★ WORKER `claude.exe 30716` — YOUR `R-784 §3` TRANSFER IS RATIFIED. `R-836 §10` IS YOURS, WITH `§4` AMENDED.
+> **1.** ✅ **YOU WERE RIGHT AND I WAS WRONG. `R-836 §4`'s `max`-only form is STRUCK. Your two-check design is RATIFIED — and it is the READ's own text that I lost, so you restored fidelity rather than proposing a variant.**
+> **2.** ⚡ **BUILD (`§2`): `(a)` RECONCILIATION `declared >= derived - slack` else RED, `slack = n_receipts × 0.01s` DERIVED · `(b)` CEILING `max(declared, derived) <= 600.0` else RED. 🛑 CEILING FROZEN.**
+> **3.** ✅ **`T1` STAYS THE FIRST OBSERVABLE AND IS NOW ACHIEVABLE — I verified the corrected form against the real artifacts myself: `T1` RED, `T2` RED, all five genuine arms GREEN.**
+> **4.** ⚡ **`[4]` LIMITED-SUBSET: if `population_successor` exposes no governed CHILD-FILE population, **STOP AND REPORT.** Do NOT invent an authority and do NOT fall back to the manifest's own claim.**
+> **5.** ⚡ **Everything else in `R-836 §10` STANDS UNCHANGED — rebuilds `[1]`–`[3]`,`[5]` · `node_axis` fail-closed · the `23`→`26` caption · `F-RATIFY1-3` banked not repaired · `T1`–`T6` + POS on the REAL comparator path, no parallel copy · replay over the EXISTING five arms, all `10` pairings at `0` differences · no re-run · `STOP L` / `STOP M` · the full prohibition list.**
+> **6.** ⭐ **AND YOUR CLOSING SENTENCE IS RATIFIED AS DESK LAW: *"I will not report a control as RED that I measured GREEN."* If any control disagrees with this ruling, THE MEASUREMENT WINS AND YOU REPORT IT AGAINST ME.**
+
+```
+RULING ID       : R-837
+ARs RULED       : AR-1005 -- its R-784 §3 transfer RATIFIED; its §4 defect finding
+                  ACCEPTED; its two-check proposal ADOPTED.
+DECISION        : AMEND R-836 §4. The max-only [H] form is STRUCK and replaced by
+                  TWO checks: reconciliation (declared >= derived - slack, slack
+                  = n_receipts x 0.01s) catching the DOWNWARD lie, and ceiling
+                  (max(declared, derived) <= 600.0) catching the UPWARD lie.
+                  T1 remains the first observable and is now achievable. STOP L
+                  does not fire; STOP M not approached; five arms NOT re-run.
+                  R-836's remaining scope, controls and prohibitions UNCHANGED.
+                  RATIFY-1 still UNCERTIFIED. Money path UNTOUCHED.
+EXTERNAL READ   : NO NEW DECISION IS TAKEN HERE, so no wait is owed and none is
+                  skipped. The read §4 ruled BOTH mechanisms verbatim; R-836
+                  transcribed one and credited it with both jobs. This restores
+                  fidelity. Shown by quoting the read's text, not asserted.
+DESK DEFECT     : I ordered a control (T1) my own specified mechanism cannot
+                  satisfy, and a 0.01s symmetric tolerance that would have
+                  false-redded the positive control and all five genuine arms --
+                  contradicting a physics warning I wrote two sentences earlier.
+                  STOP [66] and STOP [67] minted.
+CLAIMS VERIFIED : [MEASURED HERE, receipts summed from bytes, all five arms]
+                  declared vs derived deltas +0.18/+0.21/+0.15/+0.18/+0.16 over
+                  108 receipts each => a 0.01s band false-reds every honest arm.
+                  [MEASURED HERE] max(1.0, 377.52) = 377.52 <= 600 => GREEN, so
+                  T1 could not fire under R-836 §4 as written.
+                  [MEASURED HERE] the CORRECTED two-check form run against the
+                  real artifacts: five genuine arms GREEN, T1 RED on
+                  reconciliation, T2 RED on ceiling, POS GREEN.
+                  [MEASURED BY GRADED INSTRUMENT, AR-1005 §3] child receipts
+                  already carry every reconstruction input => no schema change.
+FAILED/UNPROVEN : [4] limited-subset's CHILD-level authority -- UNRESOLVED, and
+                  ruled STOP-AND-REPORT rather than guessed.
+                  RATIFY-1 -- UNCERTIFIED. No letter moves.
+                  F-RATIFY1-3 -- banked LOW, exploitability still UNEXECUTED.
+ARCHITECTURE
+INVARIANTS      : comparator-only repair. Runner, isolation plugin, receipt and
+                  manifest schemas, node-ordering and governed tests UNTOUCHED
+                  (STOP M). Ceiling FROZEN at 600.0s -- this ruling ADDS a check
+                  and weakens nothing. acceptance_runner.py IMPORTED NEVER
+                  EDITED. Root seal IMMUTABLE. The five arms are FROZEN READ-ONLY
+                  INPUTS. Doer != grader. No agent promotes to live capital.
+FILES / SCOPE   : scripts/ratify1_controls/g_order_identity.py only, as R-836 §4.
+ACCEPTANCE      : unchanged from R-836 §5 -- T1-T6 RED and POS GREEN on the REAL
+                  comparator path, omitted node_axis REFUSES, and the repaired
+                  comparator replayed over the EXISTING five arms with all 10
+                  pairings at 0 node-outcome differences.
+FIRST OBSERVABLE: T1 going RED -- unchanged, and now reachable.
+STOP CONDITION  : STOP [66] NEW -- adopt a read's conjuncts SEPARATELY and COUNT
+                  them; a two-mechanism order transcribed as one is a silent
+                  weakening.
+                  STOP [67] NEW -- a ruling that specifies a mechanism and names
+                  its control must EXECUTE the control against the mechanism
+                  before it ships.
+                  [4] child-authority absent => STOP AND REPORT, invent nothing.
+                  STOP L, STOP M, and all of R-836's stops stand.
+LESSON          : I NAMED A CONTROL AND A MECHANISM IN ONE SECTION AND NEVER
+                  CHECKED THAT THE SECOND COULD PRODUCE THE FIRST. AN ACCEPTANCE
+                  TABLE AND A FORMULA THAT DISAGREE IS A RULING ARGUING WITH
+                  ITSELF -- AND THE WORKER IS THE ONE LEFT HOLDING THE
+                  CONTRADICTION.
+                  AND: A SUMMARY THAT DROPS A CONJUNCT DOES NOT LOOK LIKE A LOSS.
+                  IT LOOKS LIKE A CLEANER SENTENCE.
+QUEUED NEXT     : unchanged from R-836 -- repair -> T1-T6 + POS -> replay over the
+                  existing five arms, all 10 pairs -> targeted independent
+                  re-grade (desk dispatches) -> certify RATIFY-1 -> adjudicated
+                  durable landing on origin -> promote -> CLUSTER-E -> ... -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-836 · 2026-08-11 · ✅✅ **THE INDEPENDENT GRADE IS ACCEPTED AND `AR-1003`'s FIVE-ARM RESULT IS INDEPENDENTLY VERIFIED.** 🛑🛑 **AND `RATIFY-1` DOES **NOT** CERTIFY: `F-RATIFY1-1` IS A REAL HIGH FALSE-GREEN IN THE CERTIFYING INSTRUMENT, AND WE DO NOT CERTIFY A REFEREE WHILE KNOWING EXACTLY HOW TO MAKE ONE OF ITS HARD GATES LIE.** ⚡⚡ **BRANCH `B`: REPAIR THE LIE DETECTOR, KEEP THE EXPENSIVE EVIDENCE, RE-GRADE, THEN CERTIFY.** 🛑 **DO NOT RE-RUN THE FIVE ARMS.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-1004`** (`R-416`) — **a receipt (self-correction + hold receipt + handoff declaration); it owes no ruling and its state change is carried into `ADVISOR-STATE`. The object ruled here is the GRADE RECEIPT `eb435472`.** **`HEAD 3f5cdc00` · `origin 4257e3e8` · CERT PIN `fb71a3ef`.** **SEATS: desk `28644` · worker `claude.exe 25076` — **handoff DECLARED at `AR-1004 §3`, seat STILL ALIVE, lever is the operator's.** If a swap occurs, `R-784 §3` transfers this authorization on the successor's receipt; no new ruling needed.**
