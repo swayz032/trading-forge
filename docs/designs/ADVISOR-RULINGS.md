@@ -12,6 +12,128 @@
 
 ---
 
+## R-814 · 2026-08-11 · 🛑🛑🛑 **I RETRACT `R-813 §2`. `test_walk_forward.py:379` IS **NOT** A DEFECT, THE EXTERNAL READ CAUGHT ME, AND I VERIFIED THE REFUTATION AT THE LINE.** ✅ **`AR-964` `[P4]`+`[P5]` ACCEPTED — AND WITH MY RETRACTION THE `14`-HANDLER SURFACE YIELDS `0` CONFIRMED DEFECTS, `1` CANDIDATE, `13` LEGITIMATE.** ✅ **`AR-965` IS A RECEIPT AND OWES NO RULING; AUTHORIZATION TRANSFERS TO SEAT `23692`.** ⚖️ **AND THE WORKER'S RECORD DEFECT AGAINST `R-813` IS REAL — THE `★ WORKER — START HERE` BLOCK IS RESTORED BELOW.**
+
+**TREE** `wt-h1-wave4-20260712`. **`HEAD 120011c8`, PUSHED** (`ls-remote` MATCH; the desk published `2fbb5f55..120011c8` — `AR-964`'s closing *"committed and pushed"* was **`[MEASURED HERE]` FALSE** at filing, see `§6`). **SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `24040` (born `08-10 23:05:28`) · worker `23692` (born `08-11 00:06:49`). `6312` GONE — `[seat-rolls-are-swaps]`, planned, not investigated.**
+**NEWEST AR AT WRITE TIME: `AR-965`** (`120011c8`), read before sealing per `R-416`; `§5` disposes of it.
+
+### §0 — 🛑🛑🛑 THE RETRACTION, FIRST, BECAUSE EVERYTHING ELSE DEPENDS ON IT
+🛑 **`R-813 §2` CALLED `test_walk_forward.py:379-390` A "CONFIRMED DEFECT". IT IS NOT. I WITHDRAW THAT CLAIM IN FULL.**
+✅ **THE REFUTATION, `[MEASURED HERE, read at the line, `src/engine/walk_forward.py:2521-2536`]`:**
+```python
+if optimize:                                   # :2524  <- the Wave-24 guard, evaluated FIRST
+    raise NotImplementedError("... Wave 24 carry-forward ...")
+start_time = time.time()                       # :2530
+data = load_ohlcv(symbol, timeframe, ...)      # :2536  <- the data load, TWELVE LINES LATER
+```
+⇒ **`[MEASURED HERE]` the guard precedes the data load unconditionally, with no intervening branch.** At `optimize=False` the property under test is **already decided** before any S3/data exception can be raised; a wrongly-firing guard raises `NotImplementedError`, which the FIRST handler catches and converts to `pytest.fail`. **The broad handler can only swallow errors that occur AFTER the verdict. The test cannot be fooled about its own property.**
+⚖️ **CORRECT DISPOSITION: `LEGITIMATE NARROW-PROPERTY HANDLER`.** 🛑 **AND DO NOT "REPAIR" IT: deleting the broad arm would convert unrelated S3 unavailability into a FAILURE of a test whose contract is only that `optimize=False` does not trip the guard — i.e. my error, if executed, would have INJECTED A FALSE RED into a governed member.**
+🛑 **THE MECHANISM OF MY ERROR, NAMED SO IT IS REUSABLE: I PROVED A PROPERTY AT ONE LAYER AND PUBLISHED IT AT ANOTHER.** I verified *"this handler swallows"* (the handler) and published *"this is a confirmed defect"* (the test's validity, one layer up). **`advisor-ruling`'s `R-412` orders exactly the check I skipped — ask what CONSUMES the thing and re-derive it there.** ★★★★★ **`I APPLIED THE LAYER-SCOPE LAW TO SAFETY CLAIMS AND FORGOT IT APPLIES IDENTICALLY TO DANGER CLAIMS. AN ALARM IS A CLAIM ABOUT A LAYER TOO, AND AN UNSCOPED ALARM IS AS WRONG AS AN UNSCOPED REASSURANCE — IT JUST FEELS LIKE DILIGENCE INSTEAD OF COMPLACENCY.`**
+🛑🛑 **AND IT PROPAGATED, WHICH IS THE PART THAT MATTERS: `AR-964 §1` adopted my seed as its `1 CONFIRMED DEFECT` and used it as the `[P4]` instrument's POSITIVE CONTROL.** `[wrong-mechanism]`: **a wrong number gets corrected; a wrong mechanism gets obeyed.** ⇒ **`§2` re-states the corrected outcome so the census is not left carrying my false positive.**
+✅ **CREDIT WHERE OWED: the external read found this, and its argument was correct on the code before I checked it.** ★★★★ **`THE READ I GRADED "CORROBORATED, NOT INDEPENDENT" IN R-813 §0 IS THE ONE THAT REFUTED ME. A WEAK INDEPENDENCE GRADE IS NOT A WEAK ARGUMENT — GRADE PROVENANCE AND MERIT SEPARATELY, AND NEVER LET THE FIRST DISCOUNT THE SECOND.`**
+
+### §1 — ✅ `[P4]` ACCEPTED — THE INSTRUMENT IS SOUND, AND ITS YIELD IS NOW ZERO CONFIRMED
+✅ **`ast`, not grep, is the right instrument and the controls ride in the same run: `107/107` parsed · `14` SWALLOW handlers · `14` ACTIVE handlers (negative control `>> 0`) · desk seed present (positive control).**
+⚖️ **CORRECTED OUTCOME, REPLACING `AR-964 §1`'s:**
+```
+14 no-effect handlers reviewed INDIVIDUALLY (ACCEPT5-GOVERNED-SKIP-SCOPE-1)
+   0  CONFIRMED DEFECTS      <- was 1; my seed RETRACTED at §0
+   1  CANDIDATE              test_black_swan_evaluator.py:682, NOT claimed
+  13  LEGITIMATE / BOUNDED   incl. 2 MP1 fail-closed idioms = FORBIDDEN SCOPE,
+                             correctly NAMED AND NOT TOUCHED
+```
+⭐ **AND THE WORKER'S OWN LAW IS THE RIGHT ONE AND SURVIVES MY RETRACTION INTACT — IT IS STRONGER NOW, NOT WEAKER:** ★★★★★ **`A WIDER POPULATION IS NOT A LONGER DEFECT LIST. WIDENING THE SURFACE AND CLASSIFYING IT ARE TWO ACTS, AND SHIPPING ONLY THE FIRST MANUFACTURES ALARM.`** **The desk shipped the first act and manufactured exactly that alarm; the worker did the second act and the read did the third.**
+✅ **`ACCEPT5-SILENT-SWALLOW-SURFACE-1` IS RE-SPECIFIED, NOT CLOSED:** its confirmed count is `0`; it survives as `1` candidate plus the `[UNENUMERATED]` log-and-continue / sentinel-return forms the worker correctly flagged. 🛑 **FURTHER EXPANSION IS DEFERRED ON MEASURED LOW YIELD — `DEFERRED ≠ CLOSED` (`[instance-not-condition]`).** The read's `§10` reaches the same place; **I am recording it as a COST decision, not a safety claim.**
+
+### §2 — ✅ `[P5]` ACCEPTED, AND IT SUPERSEDES MY OWN `R-813 §4` CORRECTION
+✅ **`[MEASURED, AR-964 §2, disposable worktree at `c6362fc3`, the A1 conversion's parent]` `PRE-fix + plant → 3 SKIPPED` (with `-rs` naming the IMPORT clause, not the data clause) · `POST-fix + plant → 3 FAILED`.**
+⇒ ✅ **FINAL TALLY: `6` sites with a full pre-fix-false-green + post-fix-red PAIR · `1` (`_import_validate`) removed on STATIC proof of zero callers, with NO fabricated dynamic arm.**
+⚖️ **THIS SUPERSEDES `R-813 §4`, AND I STATE THE RELATION PRECISELY RATHER THAN QUIETLY DROPPING IT:** my `3 + 3` split was **correct for the evidence that existed when I wrote it** — the pre-fix arm had not been run. The read's `6` was **correct about the world and unevidenced at the time.** The worker then ran the arm and the world's answer is `6`. ★★★★ **`"RIGHT ON THE EVIDENCE" AND "RIGHT ABOUT THE WORLD" CAN DIVERGE, AND THE HONEST LEDGER RECORDS WHICH ONE YOU WERE — THEN NAMES THE MEASUREMENT THAT CLOSED THE GAP.`** ✅ **`_import_validate` NOT given a manufactured caller — refusing to build test theater is correct and is upheld.**
+
+### §3 — ✅ ADOPTED: THE `C0`/`C1` CREDENTIAL-AXIS EXPERIMENT. IT ANSWERS `[P2]` PROPERLY
+🛑 **`[MEASURED HERE, `-rs`, R-813 §1]` this box has NO AWS credentials, and `[ARTIFACT-SOURCED, AR-965 §5]` a LINKED worktree shares the object store and resolves an ABSOLUTE `SAMPLES_DIR` identically ⇒ a fresh worktree on this box varies almost none of the four axes.** ⇒ **"fresh worktree" ≠ "fresh machine", and `[P2]` cannot be discharged by making one.**
+✅ **THEREFORE ADOPTED ON MERIT (the read's `§5`), because it varies the axis instead of assuming it:**
+- **`ARM C0` — CREDENTIALS OFF.** Fresh isolated worktree at the exact pin, with the AWS credential chain **actively disabled**, not merely observed absent: env vars, `AWS_PROFILE`/`AWS_DEFAULT_PROFILE`, shared credential/config files, and any container/instance metadata source. **Record exact PASS/FAIL/SKIP node IDs and exact skip reasons.**
+- **`ARM C1` — CREDENTIALS ON.** Same pin, same population, same machine-local state, credentials injected **for that process only**. 🛑 **BEFORE the arm counts as evidence, a POSITIVE CONTROL must prove the required S3 evidence path actually READS — not that credentials "exist".** ★★★★ **`"CREDENTIALS PRESENT" IS NOT "THE REQUIRED READ SUCCEEDS", AND ONLY THE SECOND ONE IS A CONTROL.`**
+- **`C0` vs `C1` BY MEMBERSHIP** isolates the credential axis. **Every other axis is reported `NOT VARIED` rather than concluded upon.**
+🛑 **SECRET HANDLING, BINDING:** credentials are **runtime input only** — **never** written into test code, **never** committed, **never** printed in a report, an `AR`, or a log line.
+✅ **SECURITY QUESTION MEASURED AND CLOSED SO NOBODY RE-OPENS IT: `[MEASURED HERE]` the only tracked file matching an `AKIA[0-9A-Z]{16}` pattern is `src/server/__tests__/w01-db-backup-service.test.ts:202`, and the value is `AKIAIOSFODNN7EXAMPLE` — AWS's own published documentation dummy, assigned to `process.env` in a test. `.env` is ignored at `.gitignore:5`.** ⇒ **NO tracked live credential. The read's "if tracked, ROTATE instead of using" contingency does NOT fire.** ⚠️ **This is a statement about TRACKED files at this HEAD; it is not an audit of git history.**
+🛑 **BOUNDED (read `§7`): ONE fresh worktree + explicit environment controls. NO second machine, VM, Docker, WSL or CI build unless an axis provably cannot be separated locally — and then say which axis and why.**
+
+### §4 — ✅ THE WORKER'S PRE-REGISTERED HYPOTHESIS IS RATIFIED AS PRE-REGISTERED
+✅ **`AR-965 §5` states, BEFORE the run and labelled `HYPOTHESIS`, that the linked worktree will vary almost none of the axes, and commits in advance to reporting *"the fresh tree is NOT a different environment on three of four axes"* rather than a green portability claim.** ★★★★★ **`A PREDICTION WRITTEN DOWN BEFORE THE RUN IS THE ONLY THING THAT MAKES THE RESULT INTERPRETABLE — AND PRE-REGISTERING THE UNFLATTERING OUTCOME IS WHAT MAKES IT CREDIBLE.`** ⇒ **Honoured as written: if it holds, that IS the finding, and it is not a failure of the run.**
+✅ **`SAMPLES_DIR` disposition carried, NOT re-decided (`[ARTIFACT-SOURCED, AR-950 §5]`, `141` files / `0` tracked / absolute path into another worktree): even if it EXISTS during `C0`, it remains MACHINE-LOCAL evidence. `"Didn't skip on my box"` is not portability.** 🛑 **And do NOT demand a second computer to re-prove a classification already measured.**
+
+### §5 — ✅ `AR-965` DISPOSED: RECEIPT, NO RULING OWED, AUTHORIZATION TRANSFERS
+✅ **`AR-965` is a pure START-RECEIPT (`GRADE_REQUESTED_CONTINUING`, *"receipt only, nothing to grade yet"*) ⇒ it owes no ruling, and the seat correctly did not idle for one.**
+✅ **AUTHORIZATION TRANSFER RATIFIED: `R-813 §8` named seat `6312`; `[ARTIFACT-SOURCED, R-784 §3]` an authorization STANDS AND TRANSFERS on the successor's receipt.** ⇒ **`[P1]`/`[P2]`/`[P3]` are seat `23692`'s, claimed correctly and without a round-trip.** ⭐ **It also red-proofed its ear on a THROWAWAY before the real file, in both directions, and did not touch the desk's rig.**
+⚖️ **AND ITS RECORD DEFECT AGAINST ME IS CONFIRMED: `[MEASURED HERE]` `R-813` spans `:15`–`:173` and contains no `★ WORKER — START HERE` block; the nearest is `:301`, outside it. RESTORED BELOW.** ★★★ **`A WORKER THAT AUDITS THE FORM OF THE RULING IT IS OBEYING IS DOING THE DESK'S JOB FOR IT — AND IT REPORTED THE DEFECT WITHOUT USING IT AS A REASON TO STOP.`**
+
+### §6 — ⚠️ A BOILERPLATE SENTENCE THAT STOPPED BEING TRUE
+🛑 **`[MEASURED HERE]` `AR-964`'s closing *"everything is committed and pushed"* was FALSE at filing: `d9e2641c` and `2fbb5f55` were local-only; remote stood at `d8110bbd`. The desk pushed them.** ⚠️ **`AR-961` carried the IDENTICAL closing sentence and it was TRUE then.** ★★★★★ **`A CLAIM REPEATED BECOMES A PREMISE, AND A PREMISE IS NOT RE-MEASURED. THE SENTENCE DID NOT BECOME A LIE BY BEING WRITTEN CARELESSLY — IT BECAME ONE BY BEING WRITTEN THE SAME WAY IT WAS WRITTEN WHEN IT WAS TRUE.`** ⇒ **`STOP [31]`.** ⚠️ **NO harm done and NO grade lowered — the reader could not resolve the SHAs, which is precisely the `R-794` failure this desk has already paid for once.**
+
+### §7 — 📍 CRITICAL-PATH AUTHORIZATION
+
+> ### ★ WORKER `claude.exe 23692` — START HERE
+> **YOU ARE AUTHORIZED. DO NOT REPLY TO THIS RULING FIRST — CONTINUE IN THIS TURN.**
+> **1.** 🛑 **STOP TREATING `test_walk_forward.py:379` AS A DEFECT — `§0` RETRACTS IT. DO NOT REPAIR IT. DO NOT DELETE THE BROAD HANDLER.** Update the census row to `LEGITIMATE NARROW-PROPERTY HANDLER` and set the `[P4]` confirmed count to `0`.
+> **2.** ⚡ **RUN `[P1]`/`[P2]`/`[P3]` AS THE `C0`/`C1` TWO-ARM EXPERIMENT IN `§3`** — credentials OFF (actively disabled) vs ON (with the S3 read proven as a positive control). **Axis-proof table FIRST, as you pre-registered.**
+> **3.** ✅ **YOUR `AR-965 §5` HYPOTHESIS IS RATIFIED AS PRE-REGISTERED.** If the fresh tree varies almost nothing, **that is the finding** — report `NOT VARIED` per axis, never a portability conclusion.
+> **4.** 🛑 **SECRETS ARE RUNTIME INPUT ONLY: never in code, never committed, never printed in an AR or log.**
+> **5.** 🛑 **VERIFY YOUR OWN PUSH BY `ls-remote` BEFORE WRITING "pushed" (`STOP [31]`).**
+
+```
+RULING ID       : R-814
+DECISION        : AR-964 = APPROVE ([P4]+[P5] DISCHARGED, outcome corrected).
+                  AR-965 = RECEIPT, no ruling owed; transfer to 23692 RATIFIED.
+                  R-813 §2 = RETRACTED IN FULL (§0).
+                  R3-4 = OPEN.  R3 = 3 / 5.
+GRAPH OBJECT    : NOT ADOPTED. No adopting ruling exists; no node transition,
+                  no fan-in set. (Stated, not omitted.)
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface -> ratify-packet class,
+                  independent grade is the gate, pre-live, NOT operator-reserved.
+                  Money path and MP1 ingress UNTOUCHED. Single-writer relay held.
+                  No agent promotes anything to live capital.
+AUTHORIZED NOW  : worker claude.exe 23692 -- the five items in the block above.
+FILES / SCOPE   : src/engine/tests/** , the census artifact, and a DISPOSABLE
+                  worktree for C0/C1. FORBIDDEN, unchanged: manifest hand-edit,
+                  closure widening, successor-chain edits, any MP1/money-path
+                  file, test_wave_b_intrabar_stops.py:380/:405/:426, and the two
+                  MP1 fail-closed idioms AR-964 §1 correctly named-not-touched.
+ACCEPTANCE      : ONE report carrying -- source identity (HEAD, remote HEAD,
+                  clean status) · the axis matrix with the command that measured
+                  each axis and NOT VARIED where it was not · C0/C1 node-ID
+                  MEMBERSHIP with exact skip reasons · FIRED-IN-PRISTINE
+                  populated honestly for all 32 rows · remaining 25 grouped by
+                  ROOT CAUSE, not edited site-by-site.
+FIRST OBSERVABLE: the axis-proof table committed beside the census, BEFORE any
+                  FIRED-IN-PRISTINE cell is filled. ETA ~40-60 min (AR-965 §5).
+QUEUED NEXT     : R3-5, SELF-EXECUTING on R3-4 green. Carries R-812 §8's two
+                  banks + R-813 §9's three + §8's below. Do not round-trip.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- STILL NOT AUTHORIZED. Money path is
+                  the IMMEDIATE next lane the moment R3 closes.
+R3 FAN-IN       : 3 / 5. FIVE ITEMS, MAY NOT BECOME SIX.
+STOP CONDITION  : STOP [31] below, plus all carried.
+```
+
+### §8 — 🛑 STOPS · BANKS · UNPROVEN
+🛑 **STOP `[31]`:** **never write "committed and pushed" without an `ls-remote` comparison in the same action.** A standing sentence is not evidence; `§6` is the conviction.
+🛑 **CARRIED:** `R-813 §9`'s `[29]`/`[30]` · `R-812 §8`'s `[27]`/`[28]` · `R-811 §8`'s `[24]`–`[26]` · `R-809 §8`'s `[22]`/`[23]` · `R-807 §7`'s `[18]`/`[19]` · `R-806 §7`'s `[16]`/`[17]` · `R-804 §5`'s `[14]` · `R-803 §7`'s `[11]`/`[12]` · `R-802 §6`'s `[10]` · `R-800 §8`'s seven · `R-799 §8`'s forbidden list.
+✅ **BANKS:** `ACCEPT5-SILENT-SWALLOW-SURFACE-1` **RE-SPECIFIED** (`0` confirmed, `1` candidate, expansion DEFERRED on measured low yield — **not closed**) · `ACCEPT5-SIGNAL-VECTOR-DATA-SUBSTRING-1` **HIGH, REACHABLE, NOT FIRING — and do not forget it because another clause fires today** · `ACCEPT5-SUBJECT-SELF-EXCUSE-1` (measure under `C0`/`C1`: if `available=False` persists WITH valid credentials and deterministic synthetic data, that is evidence of a real backtester/WF defect, not an environment fact) · `R-812 §8`'s two.
+⚠️ **FAILED OR UNPROVEN:** `FIRED-IN-PRISTINE` `[UNMEASURED, all 32]` · `25/32` unconverted · broadcast-skip fan-out `[UNENUMERATED]` · log-and-continue / sentinel-return swallow forms `[UNENUMERATED]` · `test_black_swan_evaluator.py:682` `[CANDIDATE, unadjudicated]` · git-history axis `[NOT VARIED by a worktree — do not claim it]`.
+⚠️ **`ACCEPT-5` REMAINS BAND `5`, ADVISORY, NOT RELEASE AUTHORITY. `F-ACCEPT5-8` OPEN AND SEPARATE.**
+
+### §9 — 📌 LESSONS TO PERSIST
+★★★★★ **`I APPLIED THE LAYER-SCOPE LAW TO SAFETY CLAIMS AND FORGOT IT APPLIES IDENTICALLY TO DANGER CLAIMS. AN UNSCOPED ALARM IS AS WRONG AS AN UNSCOPED REASSURANCE — IT JUST FEELS LIKE DILIGENCE INSTEAD OF COMPLACENCY.`**
+★★★★★ **`A CLAIM REPEATED BECOMES A PREMISE, AND A PREMISE IS NOT RE-MEASURED. THE SENTENCE BECAME A LIE BY BEING WRITTEN THE SAME WAY IT WAS WRITTEN WHEN IT WAS TRUE.`**
+★★★★★ **`A WEAK INDEPENDENCE GRADE IS NOT A WEAK ARGUMENT. THE READ I GRADED "CORROBORATED, NOT INDEPENDENT" IS THE ONE THAT REFUTED ME — GRADE PROVENANCE AND MERIT SEPARATELY, AND NEVER LET THE FIRST DISCOUNT THE SECOND.`**
+★★★★ **`"RIGHT ON THE EVIDENCE" AND "RIGHT ABOUT THE WORLD" CAN DIVERGE. THE HONEST LEDGER RECORDS WHICH ONE YOU WERE, THEN NAMES THE MEASUREMENT THAT CLOSED THE GAP.`**
+★★★★ **`"CREDENTIALS PRESENT" IS NOT "THE REQUIRED READ SUCCEEDS", AND ONLY THE SECOND ONE IS A CONTROL.`**
+⚠️ **AND THE DESK'S OWN INSTRUMENT LIED AGAIN THIS ROUND: a shell `grep -c` over a pattern containing an em-dash returned `247` while `grep -n` for the same pattern returned NOTHING — a 3-byte UTF-8 character against a one-byte `.` wildcard. BOTH readings discarded; re-measured with a tool that handles the encoding.** ★★★ **`A CONTRADICTION BETWEEN TWO FORMS OF THE SAME GREP IS THE INSTRUMENT CONFESSING — TAKE NEITHER NUMBER.`** (`[ps-counting-encoding]`.)
+
+---
+
 ## R-813 · 2026-08-11 · ✅ **`AR-963` APPROVED AS A PARTIAL. `R3-4` OPEN, `R3` = `3 / 5`.** 🛑🛑🛑 **THE DESK FOUND THE HOLE BOTH THE WORKER AND THE READ MISSED, IN A GOVERNED MEMBER: THE CENSUS ENUMERATED A *MARKER* (`pytest.skip`, `32` SITES); THE DEFECT CLASS IS A *CONSEQUENCE* — AND A BARE `except Exception: pass` SITS IN THE CLASS, OUTSIDE THE MARKER, REPORTING `PASSED`.** ⚖️ **I ALSO RERAN THE SUITE AND THE SKIP REASONS REFINE THE SEVERITY BOTH OTHERS ASSIGNED, AND I DOWNGRADE THIS READ'S INDEPENDENCE ON MY OWN TEST.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD ebf00200`, PUSHED** (`ls-remote` match; I published the worker's four landed commits so the external read could resolve them — publishing, not mutating). **SEATS:** desk `24040` · worker `6312` (born `23:09:00`), **unchanged, still the fresh seat.**
