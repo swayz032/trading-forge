@@ -9,7 +9,51 @@
 > Truncating to the skill's ~40-line target would destroy them. I PREPENDED instead — nothing lost,
 > debt still open.**
 
-## SEAT — 2026-08-11 ~07:40Z · desk `claude.exe 18244` · **LIVE BLOCK, TAKE THIS ONE**
+## SEAT — 2026-08-11 ~14:10Z · desk `claude.exe 26972` · **LIVE BLOCK, TAKE THIS ONE**
+
+**Ledger at `R-829`** (`d4931d72`, committed, **PUSH DEFERRED** — the worker's push carries it; desk commits stash its tree, `R-823 §6`). **Newest AR: `AR-993`** (start-receipt, exempt). Worker **`claude.exe 23968`, ACTIVE, not blocked.**
+👂 **Desk ear ARMED** on `AGENT-REPORTS.md` (`Monitor` persistent, red-proofed BOTH arms on a throwaway — it went RED first: my fixture appended at the bottom while the real file is newest-at-top; I fixed the FIXTURE, not the assertion). Backfilled at `AR-987`/`f32f4b2e`. ⚠️ **One orphaned `bash.exe` `ruling-ear.sh` (`23812`, dead parent, points at a THROWAWAY file) — REPORT, DO NOT KILL.**
+
+### RATIFY-1 SCORECARD — the live object
+```
+CERTIFIED   A B C D E F = 6/10.  [F] IS CONDITIONAL: it proved containment for the
+            OLD layer 2 and must be RE-EARNED on the repaired one  =>  5/10 today.
+[G-FILE]    PASS, TWO independent witnesses (A/B, and C/D with nodes reversed).
+[G-NODE]    *** FAIL *** 12 nodes, SAME 12 in two independent pairs. HELD (STOP B).
+[H]         PASS, 33% headroom THROUGH THE NEW FAIL-CLOSED GATE (was 7.2%).
+[I]         PASS 0/2419.        [J] REOPENED by grade F-4; repaired, needs re-earning.
+NEVER publish 10/10 or 7/10 (STOP [49]).  acceptance_runner.py UNCHANGED. No seal.
+```
+
+## AUTHORIZED NOW
+**`R-829 §4` + `R-828 §6`, to seat `23968`:** `STOP C` class repair (hash on ALL **8** `run_child` return paths `:149 :184 :188 :191 :195 :198 :203 :247` — **fix the class, not the eight**) · `C2` red-proofed on an `empty_by_design` child · unbound-file arm · **`C13` with its surface IMPORTED from `acceptance_runner.AUTHORITY_SOURCE_PATHS`, never re-listed** · an in-surface-change arm so `C13` can fire · re-run `C1`–`C13` · **3 throwaway control arms authorized** (`--limit` forbidden).
+
+## NOT AUTHORIZED
+The `12` nodes — untouched AND uninvestigated · the `287`/`11`/`7` · promotion · any seal · `CLUSTER-E` · raising the frozen `10.0` min ceiling · parallelising · removing `wt-ratify1-final-f3225b69` (**preserved by ruling**) · repairing the `docs/wave25` writer (**ruled output-only, correctly**) · a second population registry · HTF production · **`MP1` / the money path**.
+
+## STATE, WITH EVIDENCE GRADES
+- `[MEASURED BY GRADED INSTRUMENT]` **the comparator certified a FORGED pair** — copied forward map, one field flipped, NO child artifacts. `ACCEPT5-AGGREGATE-PROVENANCE-1`, CRITICAL.
+- `[MEASURED HERE]` `artifact_sha256` init `:143`, populated `:297`, **EIGHT return paths between them.**
+- `[MEASURED HERE]` `MagicMock(spec=<real module>)` / `create_autospec` **survive the ownership predicate** ⇒ `ACCEPT5-LAYER2-SPEC-CARRYING-POLLUTION-1`, **LATENT** (no direct `sys.modules` assignment exists today).
+- `[MEASURED BY GRADED INSTRUMENT]` layer 2 was **manufacturing failures** — `5/5` sampled files clean without it. Repaired: `imports_preserved=1075` beside `keys_evicted=7`.
+- `[MEASURED HERE]` `docs/` exclusion from the cleanliness surface is **RULED and load-bearing** (`R-807 §4`, `ACCEPT5-TEST-SIDE-EFFECT-1` output-only). **Do not "fix" it.**
+- `[UNENUMERATED — OPEN]` the `278` unsampled `287`-nodes · whether any governed member READS `docs/` as source (`ACCEPT5-DOCS-READ-AS-SOURCE-1`) · a spec'd mock inside `patch.dict(sys.modules, {...})` · `accept5_isolated_population.build()` never graded · only `3` of `15` red-proof arms independently executed.
+
+## QUEUE (next 4, in order)
+1. `STOP B` merit ruling (**HELD for the external read — the only thing this desk owes**) · 2. ONE five-arm re-run · 3. second independent `accuracy-validator` grade (`STOP [50]` re-arms) · 4. certify → promote → `CLUSTER-E` → final map → disposition THAT map.
+
+## KNOWN-BENIGN (do not investigate)
+`docs/wave25-exit-engine-ab-report.md` being modified in `git status` — that is the ruled output-only side effect, **not cruft** (I called it cruft at seating and was wrong) · `.numba_cache/*` churn · `ACCEPTANCE: REFUSED` from `SEALED DISPOSITION CHANGED` / `F-ACCEPT5-8`.
+
+## STANDING STOPS MINTED THIS SEAT
+`[49]` never `10/10` or `7/10` without `CLAIMED` · `[50]` the instrument is FROZEN while a grader attacks it (re-arms at the second grade) · `[51]` a string count over a doc whose keys are arbitrary identifiers is not a structural measurement · `[52]` widening an obligation's AXIS is not an eleventh letter · `[53]` neither *"the 287 are mostly artifacts"* nor *"287 is the honest baseline"* · `[54]` `passed→skipped` is a SILENT outcome change; `skipped` is first-class in every comparison · `[55]` run the prior-art gate over the CODE before inventing a CONTROL, not only before minting a name · `STOP A`–`F` in `R-828 §6`.
+
+## OPERATOR-FACING
+**Nothing is waiting on him.** No spend, no capital, no irreversible act. **He is the courier to the external GPT reader** — every substantive AR and ruling must be PRINTED IN CHAT IN FULL or no read can arrive (`[ar-on-screen-for-gpt]`). ⚠️ **`[wait-on-gpt]` holds; the escape clause was used TWICE today and DECLARED both times (`R-828 §0` partial, `R-829` full).**
+
+---
+
+## SEAT — 2026-08-11 ~07:40Z · desk `claude.exe 18244` · **SUPERSEDED by the block above — historical, not current state**
 
 **Ledger at `R-825`** (`65dbe85f`, **PUSHED, `ls-remote` VERIFIED**). **Newest AR: `AR-982`, RULED. NO UNRULED BACKLOG.** Worker: **`claude.exe 27448`** (born `02:13:51`), ACTIVE, not blocked, on real `[F]`.
 🛑🛑 **THE DESK IS A SECOND WRITER ON THIS TREE AND MUST BEHAVE LIKE ONE (`R-823 §6`).** `[MEASURED]` **EVERY ledger COMMIT prints `Unstaged files detected. Stashing unstaged files…` — my writes stash the WORKER's working tree, not just my pushes; the pre-PUSH hook is worse (it runs the inventory fixer and produced one observed rollback).** ⇒ **DO NOT write the ledger while the worker has in-flight instrument or `AR` edits, and DEFER THE PUSH — `R-822` and `R-823` both reached origin on the WORKER's own push, so deferring costs nothing.** ⚠️ **`AR-980 §3`'s lost edit: I tested whether I caused it — `[MEASURED]` NO (my stash captured the file but contains `0 hookwrapper` / `0 --accept5-restore-early`), window narrows to after `03:19:04`. 🛑 CAUSE STAYS `[UNEXPLAINED]`; NOT hunted further, by ruling.**
