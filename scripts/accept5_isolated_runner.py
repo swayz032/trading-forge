@@ -52,6 +52,7 @@ if str(SCRIPTS) not in sys.path:
 
 import accept5_isolated_population as _pop     # noqa: E402
 import acceptance_runner as _runner            # noqa: E402
+import population_successor as _popsucc        # noqa: E402
 
 REPO = _runner.REPO
 REFUSED = "ACCEPTANCE INSTRUMENT REFUSED"
@@ -59,6 +60,31 @@ REFUSED = "ACCEPTANCE INSTRUMENT REFUSED"
 
 def _slug(path: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", path).strip("_")
+
+
+
+_REQUIRED_BY_FILE = None
+
+
+def _required_nodes_for(target_file):
+    """Node IDs the POPULATION AUTHORITY requires from this file.
+
+    R-823 §5: the exit-5 allowance must consult the SAME authority [A]/[B]
+    already import -- never a hand-maintained EMPTY_HELPER_FILES list. A
+    hardcoded roster is a second population registry wearing a helper's costume,
+    and it would silently bless a file that stopped holding tests.
+    """
+    global _REQUIRED_BY_FILE
+    if _REQUIRED_BY_FILE is None:
+        required, problems = _popsucc.required_population(REPO)
+        if problems:
+            raise _pop.PopulationError(
+                f"the successor chain could not be derived: {problems[:3]}")
+        by_file = {}
+        for nid in required:
+            by_file.setdefault(nid.split("::")[0], set()).add(nid)
+        _REQUIRED_BY_FILE = by_file
+    return _REQUIRED_BY_FILE.get(target_file, set())
 
 
 def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
@@ -134,9 +160,21 @@ def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
                 _r = json.loads(out_json.read_text(encoding="utf-8"))
             except Exception:                                  # noqa: BLE001
                 _r = None
-            if _r is not None and int(_r.get("n_collected", -1)) == 0:
+            required_here = _required_nodes_for(target_file)
+            if (_r is not None
+                    and isinstance(_r.get("n_collected"), int)
+                    and _r["n_collected"] == 0
+                    and not required_here):
+                # ALL of: record exists, it collected nothing, and the AUTHORITY
+                # requires no node from this file. A file the authority expects
+                # tests from is REFUSED on exit 5, and so is -k deselection
+                # (n_collected > 0).
                 receipt["empty_by_design"] = True
                 receipt["collected_but_unexecuted"] = []
+                return receipt
+            if required_here:
+                P.append(f"pytest exited 5 for {target_file} but the population "
+                         f"authority requires {len(required_here)} node(s) from it")
                 return receipt
         P.append(f"pytest exited 5 for {target_file} but the child did not prove "
                  f"genuine emptiness (no record, or n_collected != 0)")
@@ -172,20 +210,54 @@ def run_child(target_file, targets, run_root, *, layer2=True, blind=False,
     # attribute) and assumed the serialized key.
     #
     #   `THE SCHEMA IS THE ARTIFACT ON DISK, NEVER THE VARIABLE THAT PRODUCED IT.`
-    outcomes = {}
-    for bucket in ("passed", "failed", "skipped", "xfailed", "xpassed"):
-        key = "failures" if bucket == "failed" else bucket
-        for nid in (rec.get(key) or []):
+    # R-823 §5: STRICT, FAIL-CLOSED. No `.get(field, [])` anywhere below.
+    # The defect this replaces is the reason: reading a key the artifact does not
+    # have returned {} and accused 39 healthy tests of never executing. A schema
+    # that has drifted must REFUSE THE CHILD, never be silently reconstructed.
+    #
+    #   IF THE ARTIFACT CANNOT BE READ ON ITS OWN TERMS, THE ANSWER IS "REFUSE",
+    #   NOT "ASSUME EMPTY".
+    BUCKETS = {"passed": "passed", "failed": "failures", "skipped": "skipped",
+               "xfailed": "xfailed", "xpassed": "xpassed"}
+    schema_bad = False
+    for field in (*BUCKETS.values(), "collected"):
+        if field not in rec:
+            P.append(f"record for {target_file} is missing required field {field!r} "
+                     f"-- schema drift; refusing the child rather than defaulting")
+            schema_bad = True
+        elif not isinstance(rec[field], list):
+            P.append(f"record for {target_file} has {field!r} of type "
+                     f"{type(rec[field]).__name__}, expected list")
+            schema_bad = True
+    for field in [f"n_{b}" for b in (*BUCKETS.values(), "collected")]:
+        if field not in rec or not isinstance(rec[field], int):
+            P.append(f"record for {target_file} is missing or mistyped {field!r}")
+            schema_bad = True
+    if schema_bad:
+        return receipt
+
+    outcomes, seen_in = {}, {}
+    for bucket, field in BUCKETS.items():
+        for nid in rec[field]:
+            if nid in seen_in:
+                # Mutual disjointness: a node in two outcome lists means the
+                # record cannot say what happened to it, so nothing may be scored.
+                P.append(f"record for {target_file} lists {nid} in BOTH "
+                         f"{seen_in[nid]!r} and {field!r} -- outcome lists must be "
+                         f"mutually disjoint")
+            seen_in[nid] = field
             outcomes[nid] = bucket
     receipt["outcomes"] = outcomes
-    receipt["collected"] = list(rec.get("collected") or [])
-    # Cross-check the reconstruction against the plugin's own totals, so a future
-    # schema change cannot silently empty this map again.
-    declared = sum(int(rec.get(f"n_{b}", 0)) for b in
-                   ("passed", "failures", "skipped", "xfailed", "xpassed"))
+    receipt["collected"] = list(rec["collected"])
+    receipt["n_collected"] = rec["n_collected"]
+    # The union must reconcile with the record's OWN declared totals.
+    declared = sum(rec[f"n_{f}"] for f in BUCKETS.values())
     if declared != len(outcomes):
         P.append(f"outcome reconstruction for {target_file} disagrees with the "
                  f"record's own totals: rebuilt {len(outcomes)}, declared {declared}")
+    if rec["n_collected"] != len(rec["collected"]):
+        P.append(f"record for {target_file} declares n_collected="
+                 f"{rec['n_collected']} but lists {len(rec['collected'])}")
     # A node that was collected and never produced an outcome is invisible to
     # every failure list and reads as NEW=0. It is its own recorded fact.
     unexecuted = sorted(set(receipt["collected"]) - set(receipt["outcomes"]))
