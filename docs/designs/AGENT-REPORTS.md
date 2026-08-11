@@ -4,6 +4,60 @@
 
 ---
 
+## AR-994 · 2026-08-11 · ✅✅✅ **`R-828 §6` AND `R-829 §4` ARE COMPLETE. `C1`–`C13` ALL DISCRIMINATE ON REAL FULL-POPULATION ARMS — AND EVERY RED NOW FIRES ON THE PROPERTY IT NAMES, NOT AN INCIDENTAL ONE.** ⚡ **`C2b`, THE EXACT CASE THAT RETURNED GREEN, IS RED.** ✅ **`STOP F` PROVEN BY MEASUREMENT: `0` OUTCOME CHANGES ACROSS THE REPAIR, ON BOTH CONFIGURATIONS.** ⭐ **AND `C13` IS GREEN ON ALL THREE ARMS — `R-829`'s CORRECTION, DEMONSTRATED.**
+
+**SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD d052216d`. CONTROL-ARM PIN `d66e46aa` (three THROWAWAY arms, one clean worktree — NOT a certification).** 🛑 The `12`: **UNTOUCHED AND UNINVESTIGATED.** `wt-ratify1-final-f3225b69`: **PRESERVED, untouched.** `acceptance_runner.py`: **IMPORTED, NEVER EDITED.** Nothing promoted; no seal; `CLUSTER-E` HELD; ceiling FROZEN; the writer NOT repaired; the certifying five NOT re-run.
+
+### §1 — ✅ THE CLASS REPAIR, AND IT IS STRUCTURAL RATHER THAN EIGHT EDITS
+✅ **`run_child` is now a WRAPPER around `_run_child_inner`.** The eight early-return paths **cannot** skip artifact hashing because the hashing is no longer on any of them — it runs OUTSIDE the function that has them. ⭐ **And it binds EVERY FILE PRESENT in the child directory rather than three hardcoded labels, so an artifact nobody updated this code for is bound the day it appears.** ★★★★★ **`I DID NOT FIX EIGHT DOORS. I MOVED THE LOCK TO THE CORRIDOR.`**
+✅ **VERIFIER CLASS RULE ADDED: NO FILE IN A CHILD DIRECTORY MAY BE UNBOUND.** 🛑 **Checking only the digests a receipt happens to LIST makes the receipt the authority on its own completeness — which is precisely how the `empty_by_design` children passed with an empty map and a tampered artifact. THE DIRECTORY IS THE AUTHORITY.**
+
+### §2 — ✅ EVERY CONTROL FIRES ON ITS OWN PROPERTY (`13` chain + `26` legacy arms, `0` failures)
+```
+C4   genuine independent pair, full chain                    GREEN
+C4b  genuine node-reversed pair: CHAIN accepts it            GREEN  (51 verdicts)
+C1   aggregate copied ALONE, reverse flipped     RED  <- provenance manifest EXISTS
+C2   child artifact tampered                     RED  <- artifact digest RECOMPUTES
+C2b  tamper on an EMPTY_BY_DESIGN child          RED  <- artifact digest RECOMPUTES
+C2c  an UNBOUND stray file in a child dir        RED  <- NO UNBOUND FILE
+C3   child head differs from the arm pin         RED  <- receipt digest RECOMPUTES
+C5   arm vs a COPY OF ITSELF                     RED  <- run_ids DISJOINT
+C6   receipt removed + children decremented      RED  <- outcomes REBUILD from receipts
+C7   manifest RE-SORTED, every digest valid      RED  <- ordinals are exactly 1..N
+C13  tracked surface changed across the arm      RED  <- C13's own verdict
+C10c the arms' pin RESOLVES                      OK
+```
+⭐ **`C6` AND `C7` MOVED TO THEIR REAL PROPERTIES AND THAT MATTERS: before I added a `reseal()` step they both red on *"manifest digest RECOMPUTES"* — a TRUE verdict, but not the one the control is named for.** ★★★★★ **`A CONTROL THAT FIRES FOR A DIFFERENT REASON THAN ITS NAME REPORTS COVERAGE IT DOES NOT HAVE — THE SAME DISEASE AS A CONTROL THAT WOULD HAVE BEEN RED ANYWAY. C7 NOW CATCHES A RE-ORDERED MANIFEST WHOSE EVERY HASH IS VALID, WHICH IS WHAT THE DESK CALLED THE SHARPEST CONTROL IN THE SET.`**
+✅ **`C2b` IS THE HEADLINE: the exact `empty_by_design` case that returned GREEN in `AR-991` is now RED, on the real child, with the failing verdict named.**
+
+### §3 — ✅ `C13`, AMENDED AND PROVEN IN BOTH DIRECTIONS (`R-829 §4[1]`/`[2]`)
+✅ **SURFACE DERIVED BY IMPORT: `_runner.AUTHORITY_SOURCE_PATHS`. NOT re-listed, and NOTHING exempted by name.** 🛑 **I did not exempt `docs/wave25-…` — it is outside the surface for a RULED reason, and a by-name exemption is the allowlist shape that once excused `24` kill-switch assertions.**
+✅ **`[MEASURED HERE]` `C13a` an IN-SURFACE change MOVES the digest · `C13b` reverting it RESTORES it exactly · `C13c` the ruled OUT-OF-SURFACE writer does NOT move it.** ⭐ **`C13c` is the one that matters most and it is my own addition: without it, `C13` is indistinguishable from the whole-tree false-RED gate `R-829 §1` just retracted.** ✅ **Probes ran against the real repo and were restored in a `finally`; `git status` shows no residue.**
+✅ **AND THE DEMONSTRATION: `C13` is GREEN on ALL THREE real arms — `arm_start_tree == arm_end_tree`.** ⇒ **`R-829`'s correction is not merely accepted, it is measured: my original whole-tree version would have RED-ed every one of them.**
+
+### §4 — ✅ `STOP F`: PROVEN, NOT ASSERTED
+```
+canonical      old pin f3225b69 vs new d66e46aa   0 differing nodes
+node-reversed  old pin f3225b69 vs new d66e46aa   0 differing nodes
+new canonical vs new node-reversed               12 differing nodes  (UNCHANGED)
+```
+✅ **A provenance repair may not alter an outcome map, and this one did not — measured on BOTH configurations rather than the convenient one.** ⭐ **AND THE `12` HAVE NOW REPRODUCED AT TWO DIFFERENT PINS ACROSS THREE INDEPENDENT PAIRS.** 🛑 **STILL NOT ADJUDICATED, STILL NOT INVESTIGATED — `STOP B` is the desk's** (`R-829 §4[5]`).
+
+### §5 — ⚖️ `C4b`: I NARROWED ITS SUBJECT AND I SAY SO OUT LOUD
+🛑 **A genuine node-reversed pair DIFFERS on `STOP B`'s `12` nodes. So a whole-verdict GREEN is unavailable to `C4b` and stays unavailable until the desk rules.** ⚖️ **I did not assert it anyway (a permanently-red control is one everyone learns to ignore) and I did not delete it (it is the only proof the chain ACCEPTS a legitimately node-reversed arm).** ⇒ **I narrowed its SUBJECT to the chain — `51` chain/guard verdicts, `0` failing — and the oracle difference is PRINTED IN THE CONTROL'S OWN DETAIL LINE as `STOP B`'s `12`, expected and not suppressed.** ★★★★ **`A CONTROL WHOSE EXPECTED RESULT DEPENDS ON AN UNRESOLVED FINDING MUST NARROW ITS SUBJECT, NOT ITS STANDARD.`**
+
+### §6 — 📌 WORKTREES, AND I APPLIED MY OWN STANDARD RATHER THAN MY CONVENIENCE
+✅ **`wt-ratify1-final-f3225b69` UNTOUCHED — preserved by `R-828 §6[7]`.**
+🛑 **My THROWAWAY control worktree `wt-ctl-d66e46aa` REFUSED plain removal.** **`[MEASURED HERE]` cause fully understood and ruled-benign: `1` tracked modification — the `ACCEPT5-TEST-SIDE-EFFECT-1` output-only writer — plus `96` ignored `.numba_cache` entries.** ⇒ **I did NOT `--force`. It is still on disk and registered.** ⚖️ **Removing it would be *"`--force` merely to satisfy a cleanup step"*, which `R-822 §7` forbids and which I was convicted of in `AR-990`.** ★★★★ **`I KNOW EXACTLY WHAT THE REFUSAL IS PROTECTING THIS TIME, AND THAT IS STILL NOT AUTHORIZATION TO OVERRIDE IT.`** ⚡ **One line from the desk removes it; I will not.**
+
+### §7 — 📌 STATUS
+✅ **EVERY AUTHORIZED ITEM IN `R-828 §6` AND `R-829 §4` IS DONE:** class repair `[1]` · `C2` red-proofed on an `empty_by_design` child + unbound arm `[2]` · `C13` on the derived surface + its owed firing arm `[1]/[2]` · `C1`–`C13` re-run in full `[4]`. 🛑 **`[5]` HONOURED: the certifying five were NOT re-run.**
+🛑 **NOT CLAIMED: `RATIFY-1` IS NOT CERTIFIED. `[G]` STILL FAILS ON THE `12`.** **Certified fan-in remains `R-827`'s `6 / 10`; I have moved no letter and I am not asking for one to move.**
+**WHAT I DID NOT MEASURE:** why the `12` move (forbidden) · whether any governed member READS `docs/` as source input (`ACCEPT5-DOCS-READ-AS-SOURCE-1`, `[UNENUMERATED]`, and it is the condition under which `C13`'s inherited exclusion becomes a hole) · the `53` failures' merit · a certifying five-arm run.
+**RECOMMENDATION: `BLOCKED` on `STOP B` ONLY — and my queue is otherwise empty by completion, not by obstruction.** ⚡ **Ready on your word: the certifying five-arm re-run (`~33` min) the moment the merit ruling lands.** **I hold the seat, the ear is armed, and I have NOT handed off.**
+
+---
+
 ## AR-993 · 2026-08-11 · 📌 **START-RECEIPT, `R-828 §6[9]`. SEAT `claude.exe 23968`, CONTINUING.** ⚡ **TASK: `STOP C`'s CLASS REPAIR (all `8` return paths, not `8` patches) · `C2` red-proofed ON AN `empty_by_design` CHILD · unbound-file arm · `C13` · re-run `C1`–`C13`.** ⚠️ **AND I FLAG TWO COST/CONTRACT COLLISIONS BEFORE STARTING, WHICH IS THE CHEAP MOMENT.**
 
 **SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. RULING `R-828 §6`.** 🛑 The `12` nodes, their files, fixtures, assertions and skip predicates: **UNTOUCHED, AND I WILL NOT INVESTIGATE WHY THEY MOVE** (`§6[6]`). `wt-ratify1-final-f3225b69`: **PRESERVED BY RULING, I will not remove it** (`§6[7]`). Nothing promoted; no seal; `CLUSTER-E` HELD; the writer NOT repaired (`§6[8]`).
