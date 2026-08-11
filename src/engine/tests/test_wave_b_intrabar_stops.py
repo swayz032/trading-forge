@@ -39,7 +39,6 @@ import os
 
 import numpy as np
 import polars as pl
-import pytest
 
 # Allow fixed_contracts=1 in test configs
 os.environ.setdefault("TF_ALLOW_FIXED_1", "true")
@@ -63,12 +62,53 @@ def _minimal_df(n: int = 10) -> pl.DataFrame:
     })
 
 
-def _signals(n: int = 10, true_at: list[int] | None = None) -> "np.ndarray":
+def _signals(n: int = 10, true_at: list[int] | None = None) -> np.ndarray:
     sig = np.zeros(n, dtype=bool)
     if true_at:
         for i in true_at:
             sig[i] = True
     return sig
+
+
+
+def _eligibility_gate_deterministic():
+    """Import apply_eligibility_gate WITHOUT depending on sibling execution order.
+
+    M1 of ACCEPT5-STOP-B-12-ORDER-DEPENDENCE-1 (R-832 §3 / §7[5]).
+
+    The three eligibility-gate nodes used to open with
+
+        if "src.engine.backtester" not in sys.modules:
+            pytest.skip("backtester not imported -- skipping to avoid vectorbt JIT hang")
+
+    which makes the OUTCOME A FUNCTION OF EXECUTION POSITION BY CONSTRUCTION:
+    run after a sibling that imported the backtester they RUN, run first they
+    SKIP. `[MEASURED, AR-997 §1]` standalone they SKIP, so the canonical PASS was
+    the anomaly, not the reversed skip.
+
+    STABLE SKIP WAS REFUSED AS THE CLOSURE, and R-832 §3 is why: `[MEASURED,
+    R-832 §3]` these three are the committed coverage over `backtester.py:300`
+    `if htf_cache is None or len(htf_cache) == 0:` -- the mechanism banked as
+    EDGE-HTF-PASSTHROUGH-AUTHORITY-1, a live money-path hazard.
+
+        SKIPPING THEM WOULD HAVE BOUGHT ORDER-INVARIANCE BY DELETING THE ONLY
+        COVERAGE OVER A NAMED MONEY-PATH HAZARD -- A BOARD THAT IMPROVES WHILE
+        THE MEASUREMENT GETS WORSE.
+
+    The JIT concern was real and is addressed rather than dismissed: vectorbt is
+    stubbed in sys.modules BEFORE the import, the same containment sibling files
+    already use. `[MEASURED HERE]` the import then completes in 0.92s with no
+    hang, so STOP H does not fire. If the backtester is already genuinely
+    imported, that real module is used untouched and nothing is stubbed.
+    """
+    import sys
+    if "src.engine.backtester" not in sys.modules:
+        from unittest.mock import MagicMock
+        _vbt = MagicMock()
+        for _m in ("vectorbt", "vectorbt.portfolio", "vectorbt.portfolio.base"):
+            sys.modules.setdefault(_m, _vbt)
+    from src.engine.backtester import apply_eligibility_gate
+    return apply_eligibility_gate
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -218,7 +258,7 @@ def _make_trade_record(
     direction: str,
     entry_idx: int,
     exit_idx: int,
-) -> "pd.DataFrame":
+) -> pd.DataFrame:
     import pandas as pd
     return pd.DataFrame([{
         "Avg Entry Price": entry_p,
@@ -375,11 +415,7 @@ class TestIntrabarsStopsAndTP:
         """With no htf_cache, apply_eligibility_gate returns signals unchanged (backward compat)."""
         # Import only the function symbol (AST-safe, no vectorbt JIT trigger
         # when the module is already loaded by prior tests in this session).
-        import sys
-        if "src.engine.backtester" not in sys.modules:
-            pytest.skip("backtester not imported — skipping to avoid vectorbt JIT hang")
-
-        from src.engine.backtester import apply_eligibility_gate
+        apply_eligibility_gate = _eligibility_gate_deterministic()
 
         n = 10
         signals = _signals(n, true_at=[2, 5, 8])
@@ -400,11 +436,7 @@ class TestIntrabarsStopsAndTP:
 
     def test_eligibility_gate_empty_htf_passthrough(self):
         """Empty htf_cache dict also triggers passthrough (same backward-compat path)."""
-        import sys
-        if "src.engine.backtester" not in sys.modules:
-            pytest.skip("backtester not imported — skipping to avoid vectorbt JIT hang")
-
-        from src.engine.backtester import apply_eligibility_gate
+        apply_eligibility_gate = _eligibility_gate_deterministic()
 
         n = 10
         signals = _signals(n, true_at=[3, 7])
@@ -421,11 +453,7 @@ class TestIntrabarsStopsAndTP:
 
     def test_eligibility_gate_unregistered_strategy_passthrough(self):
         """Unregistered strategy_name → passthrough (prevents new strategies being killed)."""
-        import sys
-        if "src.engine.backtester" not in sys.modules:
-            pytest.skip("backtester not imported — skipping to avoid vectorbt JIT hang")
-
-        from src.engine.backtester import apply_eligibility_gate
+        apply_eligibility_gate = _eligibility_gate_deterministic()
 
         n = 10
         signals = _signals(n, true_at=[1, 4, 9])
