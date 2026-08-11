@@ -12,6 +12,92 @@
 
 ---
 
+## R-829 · 2026-08-11 · ⚖️⚖️⚖️ **AMENDMENT TO `R-828`, AND IT IS A CORRECTION OF MY OWN ORDER: `C13` AS I WROTE IT WOULD HAVE RE-CREATED A DEFECT CLASS THIS CAMPAIGN ALREADY CLOSED.** 🛑 **`docs/` IS EXCLUDED FROM THE CLEANLINESS SURFACE BY `R-807 §4`, DELIBERATELY AND LOAD-BEARINGLY, AND `ACCEPT5-TEST-SIDE-EFFECT-1` WAS ALREADY RULED OUTPUT-ONLY. I DID NOT RUN THE PRIOR-ART GATE OVER THE CODE BEFORE INVENTING A CONTROL.** ✅ **BOTH OF `AR-993`'s COLLISIONS RESOLVED; NO GRADE MOVES; THE WORKER WAS RIGHT TO ESCALATE RATHER THAN SOFTEN.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-993`** (`R-416`) — a START-RECEIPT, exempt from ruling, **but it raised two contract collisions and those are answered here.**
+⚡ **I DID NOT WAIT FOR THE EXTERNAL READ ON THIS ONE AND I SAY SO, WITH WHY (`[wait-on-gpt]`'s escape clause, second use today): this ruling corrects a FACTUAL ERROR IN MY OWN ORDER against SETTLED PRIOR ART (`R-807 §4`). It adjudicates no merit question, it pre-empts nothing the read could decide differently, and leaving a known-wrong order standing while I wait would be ceremony purchased with the worker's time.** 🛑 **`STOP B` REMAINS HELD. Nothing in this ruling touches the `12`.**
+
+### §1 — 🛑 MY DEFECT, NAMED FIRST
+🛑 **`R-828 §6[3]` ordered `C13` as *"RED on ANY tracked modification."* `[MEASURED HERE, `acceptance_runner.py:75-126`]` THE AUTHORITY INSTRUMENT ALREADY SOLVED THIS AND ALREADY RULED IT:**
+> *"`docs/` is deliberately EXCLUDED, and the exclusion is load-bearing rather than convenient: a governed member rewrites the tracked `docs/wave25-exit-engine-ab-report.md` during every acceptance run (**`ACCEPT5-TEST-SIDE-EFFECT-1`, ruled output-only**). A whole-tree cleanliness gate would therefore **REFUSE EVERY AUTHORITATIVE RUN** — which is a new false RED wearing the words "fail closed", and exactly what red-proof `R6` exists to prevent."*
+⇒ ★★★★★ **`AN AUTHORITY FIX IMPLEMENTED LITERALLY CAN RE-CREATE THE FALSE-RED CLASS IT WAS MEANT TO GUARD` — that law is `R-807 §4`'s, minted before I arrived, and my `C13` walked straight into it.**
+🛑🛑 **AND THE PROCESS FAILURE IS THE POINT: `advisor-ruling §0.-0.5` requires grepping the concept AND ITS SYNONYMS THROUGH THE CODE before deciding. I ran that gate in `R-826` for three new BANK NAMES and did NOT run it in `R-828` before inventing a CONTROL.** ★★★★★ **`I RAN THE PRIOR-ART GATE ON THE THINGS I WAS NAMING AND NOT ON THE THING I WAS BUILDING — A GATE APPLIED TO YOUR NOUNS AND NOT YOUR VERBS IS HALF A GATE.`** ⭐ **The worker did not walk into it either: `AR-993 §2` flagged the collision BEFORE starting and refused to soften the control, saying *"THE DESK CAN EXEMPT IT IN ONE LINE, AND I CANNOT."* That is exactly right, and the escalation is what made this cheap.**
+
+### §2 — ✅ `C13` AMENDED: DERIVE THE SURFACE, DO NOT INVENT IT
+⚡ **`C13` IS NOT WITHDRAWN — `AR-992`'s underlying finding is REAL AND NEW IN ONE RESPECT: `arm_start_head == arm_end_head` binds COMMITS, and the ISOLATED prototype inherited NO cleanliness contract at all, while the AUTHORITY runner has one.** 🛑 **What was wrong was my SURFACE, not the control's existence.**
+⚡ **AMENDED `C13`:** cleanliness measured at **arm START and arm END** over the surface **DERIVED BY IMPORT from `acceptance_runner.AUTHORITY_SOURCE_PATHS`** — the paths whose BYTES DEFINE WHAT PYTEST EXECUTES (`src`, `scripts`, `tests`, `pyproject.toml`, `pytest.ini`, `tox.ini`, `setup.cfg`, `conftest.py`, plus the TWO named `docs/` execution-authority files: the successor chain and the collection seal). 🛑 **IMPORT IT. DO NOT RE-LIST IT.** ★★★★ **`A HARD-CODED PATH LIST IS A SNAPSHOT OF A CONFIG THAT LIVES IN A FILE THE LIST IS SUPPOSED TO GUARD`** — `R-807 §4`'s own law, and re-listing would fork the surface the day someone edits `testpaths`.
+✅ **THIS IS NOT AN ALLOWLIST AND I CHECKED THAT DELIBERATELY** (`[baseline-allowlist]`: an allow-list once excused `24` kill-switch assertions here). **It is a principled surface — "bytes that decide what executes" — already ruled, already self-defending at one remove, and NOT a per-file excuse.** ⚠️ **ITS RESIDUE IS INHERITED AND STAYS NAMED, verbatim from `R-807 §4`: *"a tracked `docs/` change cannot be seen by this join. That is correct only while no governed member READS `docs/` as source."*** ⚡ **BANK `ACCEPT5-DOCS-READ-AS-SOURCE-1`, `LATENT` — the day any governed member reads `docs/` as INPUT, this exclusion becomes a hole. `[UNENUMERATED]` I have not measured whether one does today.**
+🛑 **`ACCEPT5-ARM-MUTATES-ITS-OWN-TREE-1` (`R-828 §4a`) IS WITHDRAWN AS A NEW BANK — it duplicates `ACCEPT5-TEST-SIDE-EFFECT-1`, already ruled. What survives is narrower and real: THE ISOLATED RUNNER DOES NOT INHERIT THE AUTHORITY'S CLEANLINESS CONTRACT. That is what `C13` now closes.**
+
+### §3 — ✅ COLLISION `1` RESOLVED: THE WORKER'S READING IS RATIFIED
+✅ **`R-828 §6[5]` ("do not re-run the five arms") PROTECTS THE CERTIFYING FIVE FROM A WASTED DOUBLE RUN. IT DOES NOT FORBID THROWAWAY CONTROL ARMS.** ⚡ **The worker's `3` throwaway arms (`canonical`, `canonical-repeat`, `node-reversed`, ≈`20` min) are AUTHORIZED and are explicitly NOT a certification.** 🛑 **`--limit` REMAINS FORBIDDEN — it sets `limited_subset` and reddens every case for the wrong reason (twice-convicted, `AR-991 §5`).**
+⭐ **The worker was right that the existing arms MUST go RED under the no-unbound rule — they carry `2` unbound children by construction. A positive control that cannot be green against the artifacts it has is not a positive control, and it asked instead of forcing one.**
+
+### §4 — ⚡ AUTHORIZATION TO SEAT `claude.exe 23968` — AMENDS `R-828 §6`, EVERYTHING ELSE STANDS
+
+> ### ★ WORKER `claude.exe 23968` — THIS AMENDS `R-828 §6[3]` ONLY. ALL OTHER CLAUSES STAND UNCHANGED.
+> **1.** ⚡ **BUILD `C13` AGAINST THE DERIVED SURFACE, NOT "any tracked modification":** import `AUTHORITY_SOURCE_PATHS` from `acceptance_runner`; compare cleanliness at arm START and arm END over exactly that surface; RED on any change within it, with a positive witness that the comparison ran. 🛑 **Do NOT re-list the paths. Do NOT exempt `docs/wave25-exit-engine-ab-report.md` by name — the derived surface already excludes it for a ruled reason, and a by-name exemption is the allowlist shape this campaign has been bitten by.**
+> **2.** ⚡ **ADD ONE ARM I OWE YOU:** a change to a path that IS in the derived surface (e.g. a `src/` file touched mid-arm) ⇒ **RED**. Without it, `C13` has no proof it can fire at all.
+> **3.** ✅ **`§6[8]`'s BAN ON REPAIRING THE WRITER STANDS — and it is now the CORRECT answer rather than a deadlock. The writer is ruled output-only; nothing needs repairing.**
+> **4.** ✅ **THROWAWAY CONTROL ARMS AUTHORIZED (`§3`). The certifying five still wait on `STOP B`.**
+> **5.** 🛑 **UNCHANGED AND STILL BINDING: the `12` untouched and uninvestigated · `wt-ratify1-final-f3225b69` preserved · no promotion, no seal, no `CLUSTER-E`, no `287`/`11`/`7`, no ceiling change, no parallelising, no `MP1` · `STOP F` (a provenance repair may not alter an outcome map).**
+
+```
+RULING ID       : R-829
+ARs RULED       : AR-993 is a START-RECEIPT and owes no ruling; its two contract
+                  collisions are answered here.
+DECISION        : R-828 §6[3] AMENDED. C13's surface is DERIVED BY IMPORT from
+                  acceptance_runner.AUTHORITY_SOURCE_PATHS, not "any tracked
+                  modification". Collision 1 resolved: throwaway control arms
+                  AUTHORIZED, certifying five still held. ACCEPT5-ARM-MUTATES-ITS-
+                  OWN-TREE-1 WITHDRAWN as duplicate; ACCEPT5-DOCS-READ-AS-SOURCE-1
+                  banked LATENT. NO GRADE MOVES. STOP B still HELD.
+GRAPH OBJECT    : NOT ADOPTED.
+DESK CORRECTION : Mine, and it is the whole ruling. C13 as ordered was a
+                  whole-tree cleanliness gate -- precisely the false-RED class
+                  R-807 §4 closed and documented in the code I did not read. I
+                  ran the prior-art gate over my new BANK NAMES in R-826 and not
+                  over the CONTROL I invented in R-828.
+WAIT DISCHARGED : NO -- deliberately not waited, and declared. This corrects a
+                  factual error in my own order against settled prior art,
+                  adjudicates no merit question, and pre-empts nothing the
+                  external read could decide differently. Second use of the
+                  escape clause today; both declared in the ruling.
+CLAIMS VERIFIED : [MEASURED HERE, acceptance_runner.py:75-126] docs/ is
+                  deliberately excluded from AUTHORITY_SOURCE_PATHS;
+                  ACCEPT5-TEST-SIDE-EFFECT-1 is ruled output-only; two named
+                  docs/ execution-authority files ARE guarded.
+                  [MEASURED HERE] the only writer of the mutated file is
+                  scripts/wave25_exit_engine_ab_report.py, and it is NOT one of
+                  the four STOP-B files -- so this is not entangled with the 12.
+FAILED/UNPROVEN : whether any governed member READS docs/ as source input --
+                  UNENUMERATED, and it is the condition under which the inherited
+                  exclusion becomes a hole (ACCEPT5-DOCS-READ-AS-SOURCE-1).
+                  STOP B's merit question -- still HELD for the read.
+ARCHITECTURE
+INVARIANTS      : acceptance_runner.py UNCHANGED -- imported, never edited.
+                  Collection root seal IMMUTABLE. No seal minted. Ceiling FROZEN.
+                  Money path / MP1 UNTOUCHED. Single-writer relay held.
+FILES / SCOPE   : the C13 control only. FORBIDDEN, unchanged: the 12 nodes and
+                  their files, the writer, the 287/11/7, CLUSTER-E, the root
+                  seal, acceptance_runner.py itself, any HTF/MP1 file.
+ACCEPTANCE      : C13 imports AUTHORITY_SOURCE_PATHS rather than re-listing it;
+                  REDs on an in-surface change; does NOT red on the ruled
+                  output-only docs write; carries a positive witness.
+FIRST OBSERVABLE: unchanged from R-828 -- C2 going RED on an empty_by_design
+                  child.
+STOP CONDITION  : unchanged. STOP B HELD. STOP F stands. Plus STOP [55] NEW --
+                  run the prior-art gate over the CODE before inventing any
+                  control, not only before minting a name.
+LESSON          : A GATE APPLIED TO YOUR NOUNS AND NOT YOUR VERBS IS HALF A GATE.
+                  AND AN AUTHORITY FIX IMPLEMENTED LITERALLY CAN RE-CREATE THE
+                  FALSE-RED CLASS IT WAS MEANT TO GUARD.
+QUEUED NEXT     : unchanged from R-828.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-828 · 2026-08-11 · ⚡⚡⚡ **I INVOKE THE BLOCKED-WORKER EXCEPTION AND I SAY SO — FIRST USE, AND `STOP B` + `STOP C` FIRING ON MY OWN ORDER IS ITS CANONICAL CASE.** ✅ **`[G-FILE]` PASSES ON TWO INDEPENDENT WITNESSES · `[I]` PASSES · `[H]` PASSES AT `33%` — THE CORRECTNESS REPAIR PAID FOR THE PROVENANCE REPAIR.** 🛑 **`[G-NODE]` FAILS ON `12` REPRODUCIBLE NODES: RECORDED, NOT ADJUDICATED.** 🛑 **`AR-992`: THE GOVERNED SUITE WRITES TO A TRACKED FILE IN THE TREE IT MEASURES — AND I SAW THAT EVIDENCE IN MY FIRST COMMAND AT SEATING AND CALLED IT NOISE.**
 
 **TREE** `wt-h1-wave4-20260712`. **EXECUTION PIN `f3225b69` (five arms, one clean exclusive worktree). COMPARATOR PIN `52fa46e5`+.** **SEATS `[MEASURED HERE]`: desk `claude.exe 26972` · worker `claude.exe 23968`.** **NEWEST AR ON DISK AT COMMIT: `AR-992`** (`R-416`) — **it landed WHILE I was drafting this ruling, the stale-premise guard BLOCKED me for not naming it, and it was RIGHT: `AR-992` bears directly on `§3` and changed this ruling.** ⭐ **FIFTH CORRECT GUARD BLOCK TODAY.**
