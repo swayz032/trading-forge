@@ -4,6 +4,21 @@
 
 ---
 
+## AR-993 · 2026-08-11 · 📌 **START-RECEIPT, `R-828 §6[9]`. SEAT `claude.exe 23968`, CONTINUING.** ⚡ **TASK: `STOP C`'s CLASS REPAIR (all `8` return paths, not `8` patches) · `C2` red-proofed ON AN `empty_by_design` CHILD · unbound-file arm · `C13` · re-run `C1`–`C13`.** ⚠️ **AND I FLAG TWO COST/CONTRACT COLLISIONS BEFORE STARTING, WHICH IS THE CHEAP MOMENT.**
+
+**SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. RULING `R-828 §6`.** 🛑 The `12` nodes, their files, fixtures, assertions and skip predicates: **UNTOUCHED, AND I WILL NOT INVESTIGATE WHY THEY MOVE** (`§6[6]`). `wt-ratify1-final-f3225b69`: **PRESERVED BY RULING, I will not remove it** (`§6[7]`). Nothing promoted; no seal; `CLUSTER-E` HELD; the writer NOT repaired (`§6[8]`).
+
+✅ **THE EIGHT RETURN PATHS ARE ADOPTED AS THE DESK MEASURED THEM** (`:149 :184 :188 :191 :195 :198 :203 :247`, all before `:297`). ⭐ **The desk's widening is the important half of the finding: I found ONE door and refused to fix only that door — there are EIGHT, and an instance fix would have left seven open behind a GREEN `C2` proving them safe** (`[instance-not-condition]`). ⚡ **I will fix the CLASS STRUCTURALLY — hashing that cannot be skipped by any return, present or future — not eight edits.**
+
+### ⚠️ TWO COLLISIONS I RAISE NOW RATHER THAN AT DELIVERY (`worker-execution §5`: the cheap moment)
+🛑 **(1) `C1`–`C13` "IN FULL" NEEDS ARMS THE FIXED RUNNER PRODUCED, AND `§6[5]` FORBIDS RE-RUNNING THE FIVE.** Every existing arm has `2` unbound children BY CONSTRUCTION, so under the new no-unbound rule they must ALL go RED — **correctly.** ⇒ **the positive controls `C4`/`C4b` CANNOT be green against them.** ⚡ **MY READING, AND I PROCEED ON IT: `§6[5]` protects THE CERTIFYING FIVE from a wasted double run; it does not forbid building throwaway CONTROL arms. I will build `3` (`canonical`, `canonical-repeat`, `node-reversed`) ≈ `20` min, and they are NOT a certification.** 🛑 **I will NOT use `--limit` — that sets `limited_subset` and makes every case red for the wrong reason, twice-convicted (`AR-991 §5`).**
+🛑 **(2) `C13` AS ORDERED WILL RED EVERY REAL ARM, AND `§6[8]` FORBIDS THE FIX THAT WOULD STOP IT.** `C13` is *"RED on any tracked modification"*; `[MEASURED, AR-992]` the suite ALWAYS writes `docs/wave25-exit-engine-ab-report.md`; `§6[8]` banks that writer and forbids repairing it now. ⇒ **`C13` blocking ⇒ no arm can ever certify until the writer is repaired or exempted.** ⚡ **I IMPLEMENT IT EXACTLY AS ORDERED — BLOCKING — AND REPORT THE CONSEQUENCE RATHER THAN QUIETLY SOFTENING IT.** ★★★★ **`A CONTROL WEAKENED TO KEEP THE BOARD GREEN IS THE DEFECT THIS WHOLE CAMPAIGN EXISTS TO REMOVE; THE DESK CAN EXEMPT IT IN ONE LINE, AND I CANNOT.`**
+
+**FIRST OBSERVABLE** — `C2` going **RED** on an `empty_by_design` child (`§6[9]`). **ETA: within this working block.** 🛑 **`STOP F` PRE-ACKNOWLEDGED: if hashing every return path cannot be done without changing what a child REPORTS, I stop — a provenance repair may not alter an outcome map. I will diff the outcome maps to prove it did not.**
+**RECOMMENDATION: `PROCEEDING`** — `R-828 §6` is self-contained and I am inside it.
+
+---
+
 ## AR-992 · 2026-08-11 · 🛑 **ADDENDUM TO `AR-991`: THE GOVERNED SUITE **WRITES TO A TRACKED FILE IN THE TREE IT IS MEASURING.** `[MEASURED HERE]` — and I found it only because I honoured a `git worktree remove` REFUSAL instead of forcing past it, which is the exact error I disclosed one report ago.** ⚡ **THE ARMS WORKTREE IS LEFT IN PLACE, DELIBERATELY.**
 
 **SEAT `claude.exe 23968`. Worktree `wt-ratify1-final-f3225b69`, pin `f3225b69`.** 🛑 Nothing promoted; nothing tuned; `STOP B`/`STOP C` still standing from `AR-991`.
