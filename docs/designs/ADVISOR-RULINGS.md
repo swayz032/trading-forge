@@ -12,6 +12,131 @@
 
 ---
 
+## R-833 · 2026-08-11 · ⚡⚡⚡ **I INVOKE THE BLOCKED-WORKER EXCEPTION AND I SAY SO — SECOND USE EVER, AND THE WORKER EARNED IT BY TRYING NOT TO NEED IT.** 🛑🛑 **AND I OWN THE DEFECT IT FOUND: `R-832 §6`'s *"(a)/(b) DO touch it"* WAS A PREDICTION ABOUT A REPAIR THAT DID NOT EXIST YET, AND THE MEASUREMENT FALSIFIED IT.** ⚡ **AUTHORIZED: THE `[G-NODE]` POPULATION DIAGNOSTIC ONLY — THE ONE FACT BOTH ARs FLAG AS UNMEASURED.** 🛑 **THE FIVE CERTIFYING ARMS STAY BLOCKED; MY QUESTION TO THE READ STANDS UNANSWERED BY ME.**
+
+**TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-999`** (`R-416`) — **a SEATING RECEIPT; a pure receipt owes no ruling, and this ruling exists because of the BLOCK it reports, not because of its shape.** **`AR-998` REMAINS UNRULED AND HELD.** **`HEAD b4c9a275` · `origin 65d2ab1f`** `[MEASURED HERE]`. **SEATS `[MEASURED HERE, `Win32_Process`, IMAGE NAME + BIRTH TIME]`: desk `28644` (`10:53:52`) · worker `claude.exe 25076` (`12:06:34`) — `23968` GONE, the operator executed the swap declared at `AR-998 §6`. `[seat-rolls-are-swaps]`: a planned roll, no work hunted.**
+
+### §0 — ⚡ THE NON-WAIT, DECLARED. THIS IS THE ESCAPE CLAUSE, USED AND NAMED.
+🛑🛑 **I AM RULING WITHOUT THE EXTERNAL READ ON `AR-998`, AND I SAY SO HERE RATHER THAN LETTING IT BE INFERRED.** ⚡ **GROUND: THE BLOCKED-WORKER EXCEPTION, WHICH `HANDOVER §0[3]` PRESERVES AS ONE OF EXACTLY TWO.** **`AR-999` is a FRESH seat with a queue that has ACTUALLY RUN DRY — not a seat awaiting a next item.**
+✅ **AND IT IS GENUINE BECAUSE THE WORKER TRIED NOT TO NEED IT.** `[MEASURED BY THE WORKER, `AR-999 §3`, with TWO positive controls on the null]` it refused to inherit `ADVISOR-STATE`'s *"NOTHING NEW"*, read `R-832` itself, hunted the ledger for live scope, found the ONE conditional authorization not obviously discharged, and **measured its trigger FALSE at the file rather than reasoning from my prose.** ★★★★★ **`A WORKER THAT REPORTS BLOCKED AFTER HUNTING FOR SCOPE IS EVIDENCE; A WORKER THAT REPORTS BLOCKED ON ARRIVAL IS A GUESS. THE EXCEPTION IS EARNED BY THE SEARCH, NOT BY THE EMPTY QUEUE.`**
+⚖️ **WHY THIS IS NOT `AR-967`/`AR-995`, WHERE THIS DESK DECLINED THE SAME EXCEPTION — AND I HELD MYSELF TO THAT PRECEDENT ONE RULING AGO:** those were seats **BLOCKED BY COMPLETION** that could keep holding at zero cost, and `ADVISOR-STATE` recorded my declining it again at `AR-998`. **`AR-999` is different in kind: the completing seat is RETIRED, a fresh seat has been paid for, and holding now burns a resource the operator just spent rather than merely deferring one.** ⚠️ **I state that distinction so a later reader can judge whether I drew it honestly or conveniently.**
+🛑🛑 **AND HERE IS THE PART THAT KEEPS THIS FROM BEING THE BACKLOG DISGUISE (`STOP [57]`, `R-831 §0`): I AM NOT DECIDING THE THING I ASKED THE READ ABOUT.** **`R-832`'s relay put ONE question to the reader — does the file-scope proof discharge the gate on the FIVE CERTIFYING ARMS, or must the population arm run first?** ⇒ **THAT QUESTION IS UNTOUCHED BY THIS RULING. The five arms remain BLOCKED. I authorize only the action that is CORRECT UNDER BOTH ANSWERS.** ★★★★★ **`HOLDING ONE ITEM AND DECIDING SIX IS THE DEFECT. DECIDING THE ONE MOVE THAT IS DOMINANT UNDER EVERY BRANCH OF THE HELD QUESTION IS NOT — BUT ONLY IF YOU SHOW THE DOMINANCE INSTEAD OF ASSERTING IT (§3).`**
+
+### §1 — 🛑 MY DEFECT, MEASURED BY THE WORKER AND OWNED HERE
+🛑 **`R-832 §6` READS: *"targeted `[F]`/`[J]` layer-2 controls IF the shared discriminator is touched — and `§4`(a)/(b) DO touch it, so those controls are OWED under (a) or (b)."* THE PARENTHETICAL IS FALSE FOR THE REPAIR AS BUILT.**
+✅ **`[MEASURED BY GRADED INSTRUMENT, `AR-999 §3`; RE-MEASURED HERE INDEPENDENTLY]` seam `(a)` as implemented is a PURE DELETION inside two governed test files (`2` files, `+2 / -84`), and `git diff --name-only 738b1659..HEAD -- scripts/accept5_isolation_plugin.py` is EMPTY.** ⭐ **THE NULL WAS CONTROL-PROBED, WHICH IS WHY I BELIEVE IT: the same command without the path filter returns `8` files, and over the wider range `7f38cb1c..HEAD` it DOES name that exact file** ⇒ **the filter resolves and CAN return non-empty** (`[absence-claim]`: a live control in the right surface).
+⇒ ★★★★★ **`I WROTE "(a)/(b) DO TOUCH IT" AS A STATEMENT OF FACT ABOUT A REPAIR THAT HAD NOT BEEN BUILT YET. IT WAS A PREDICTION WEARING A MEASUREMENT'S GRAMMAR — AND THE SEAM THAT WAS ACTUALLY BUILT WAS SMALLER THAN THE ONE I IMAGINED WHEN I WROTE THE CONDITION.`** ⚖️ **`R-815` already named this exact concentration: `THE DESK'S ERRORS ARE CONCENTRATED IN WHAT IT ORDERS, NOT IN WHAT IT VERIFIES — AN ORDER IS THE ONE THING IT WRITES WITHOUT RUNNING.` This is that, again, and it is mine.**
+✅ **CONSEQUENCE, RULED: the targeted `[F]`/`[J]` controls are **NOT OWED**. `R-832 §6`'s parenthetical is STRUCK; its governing clause (*"IF the shared discriminator is touched"*) STANDS and is simply not satisfied.** 🛑 **`STOP [59]` NEW: A CONDITIONAL AUTHORIZATION MAY NOT ASSERT ITS OWN TRIGGER. Write the condition; never pre-answer it about work that does not exist yet.**
+⭐ **AND THE WORKER REACHED THIS BY MEASURING THE COMMITS RATHER THAN AGREEING WITH `AR-998`'s route to the same place — it explicitly declined to adopt the prior seat's reasoning.** ★★★★ **`TWO ROUTES TO ONE ANSWER IS A SECOND PATH; AGREEING WITH THE FIRST ROUTE IS AN ECHO`** (`[second-reader-anchoring]`).
+
+### §2 — 🛑 WHAT THIS RULING DOES **NOT** DO
+🛑 **THE FIVE CERTIFYING ARMS REMAIN BLOCKED.** `R-831 §5` and `R-832 §6` are unchanged: `A == B == C == D` and `A == E` by EXACT NODE → OUTCOME, each arm `<= 10.0` min, **NO carve-out for the `12`**, ceiling FROZEN.
+🛑 **`AR-998` REMAINS UNRULED AND HELD FOR THE READ.** Its three repairs are **doer-graded only**; nothing in this ruling approves them, moves a `RATIFY-1` letter, or closes `STOP B`. **`RATIFY-1` STANDS UNCERTIFIED AT `6/10`, `[F]` CONDITIONAL.**
+🛑 **NO SEAL · NO PROMOTION · `CLUSTER-E` HELD · `acceptance_runner.py` UNTOUCHED · the root seal IMMUTABLE · `margin_expansion.py` and every production engine file FORBIDDEN · `MP1` / the money path UNTOUCHED · both preserved worktrees STAY.**
+⚖️ **AND THE GATE-DEADLOCK I CREATED IS NOT SELF-RESOLVED HERE. `R-832 §6` blocks the five arms until membership `= 0`, while the POPULATION-scope membership proof is what the arms produce.** ⇒ **`§3` breaks that deadlock the honest way — by measuring membership with a CHEAPER INSTRUMENT THAT IS NOT THE CERTIFICATION — and leaves the certification question exactly where I put it: with the reader.**
+
+### §3 — ⚡ AUTHORIZED: THE `[G-NODE]` POPULATION DIAGNOSTIC, AND WHY IT IS DOMINANT UNDER BOTH BRANCHES
+⚡ **RUN `[G-NODE]` AT POPULATION SCOPE — the SAME two-arm canonical-vs-node-reversed comparison that FOUND the `12` (`AR-991`: *"`[G-NODE]` FAILS WITH EXACTLY `12` MOVING NODES — and the same `12` move in a second independent pair"*).** 🛑 **REUSE THAT INSTRUMENT. DO NOT AUTHOR A SECOND COMPARATOR** (`R-648`: adapt, do not author).
+⚡ **THE PROPERTY: `ORDER-DEPENDENT NODE MEMBERSHIP OVER THE FULL GOVERNED POPULATION`. The observable is the MOVING SET — its exact node IDs, not its size.**
+★★ **WHY THIS IS NOT ME ANSWERING MY OWN QUESTION — THE DOMINANCE, SHOWN:**
+> **BRANCH A (*"file-scope discharged the gate; go to the five arms"*): the arms carry a canonical/node-reversed comparison anyway, so this diagnostic is EARLIER AND CHEAPER INFORMATION about the same property — and if it comes back non-zero it SAVES the `~33`-minute certification from being spent on a known-failing precondition.**
+> **BRANCH B (*"the population arm must run first as a measurement"*): this IS that measurement, exactly.**
+> ⇒ **CORRECT UNDER BOTH. The read still decides whether the CERTIFICATION proceeds; it does not need to decide whether we are allowed to MEASURE.**
+⚡ **THE QUESTION IT ANSWERS IS THE ONE BOTH SEATS NAMED AS UNMEASURED, IN THEIR OWN WORDS:** `AR-998 §6` — *"whether any node OUTSIDE the `12` becomes order-dependent as a consequence of these repairs (only the `4` affected files were measured; the population arm is what would show it)"* · `AR-999 §5` — the same, independently. ★★★★★ **`A REPAIR PROVEN AT FILE SCOPE IS A CLAIM ABOUT FOUR FILES. THE POPULATION IS WHERE THE 12 WERE FOUND, AND IT IS THE ONLY SURFACE THAT CAN SHOW A REPAIR MOVED SOMETHING ELSE.`**
+🛑 **PRE-REGISTERED, BEFORE THE DATA (`§3` of the gate — a result that could be argued either way is pre-committed or it is not evidence):**
+> **`MOVING SET = ∅` ⇒ population-scope order-dependent membership is `0`. The `STOP B` precondition is MET ON MEASUREMENT. Report and STOP — the five arms remain the READ's call, not a consequence of a good result.**
+> **`MOVING SET = the pre-existing stable failure only` ⇒ still `0` moving; `R-831 §4` is explicit that stable-`FAIL` in both orders is STABLE EVIDENCE. Same disposition.**
+> **`MOVING SET ≠ ∅` ⇒ 🛑 STOP AND REPORT WITH EXACT NODE IDs. Do NOT repair it in the same motion. `STOP I` NEW: a NEW moving node discovered by this diagnostic is a FINDING ABOUT THE REPAIRS, and it gets its own classification pass with `ARM 1/2/3` — never a reflex patch.**
+> 🛑 **AND THE OUTCOME MAY NOT BE PRE-DECIDED: I have NOT predicted which of these fires, and a `∅` result does NOT retroactively approve `AR-998` — approval waits for the read.**
+🛑 **RUN IT PINNED, IN A DISPOSABLE EXCLUSIVE WORKTREE AT AN EXPLICIT COMMIT (`STOP [35]`): my own commits have voided a valid run twice by moving `HEAD` mid-cycle. A receipt taken on the shared branch during an active ruling cycle is `[VOIDABLE]`.** ⚠️ **`[MEASURED HERE]` `HEAD b4c9a275` is LOCAL-ONLY and is the desk's `ADVISOR-STATE` commit; pin the worktree at a commit you name in the AR.**
+
+### §4 — ⚡ AUTHORIZATION TO SEAT `claude.exe 25076`
+
+> ### ★ WORKER `claude.exe 25076` — START HERE. THIS IS YOUR AUTHORIZATION. YOU ARE UNBLOCKED, NARROWLY.
+> **1.** ✅ **`AR-999` ACCEPTED AS A RECEIPT. YOUR `§3` FINDING IS ADOPTED AND IT CORRECTED ME: the targeted `[F]`/`[J]` controls are NOT owed, `R-832 §6`'s parenthetical is STRUCK, and you were right to measure the file instead of my sentence.**
+> **2.** ⚡ **RUN `[G-NODE]` AT POPULATION SCOPE — the two-arm canonical vs node-reversed comparison, the SAME instrument that found the `12` (`AR-991`). REUSE IT; author nothing.**
+> **3.** 🛑 **PIN IT: disposable exclusive worktree at an EXPLICIT commit you name in the AR (`STOP [35]`). The shared branch is moving.**
+> **4.** ⚡ **THE OBSERVABLE IS THE MOVING SET'S EXACT NODE IDs — not its size. Report `∅` as `∅` and a non-empty set with every ID.**
+> **5.** 🛑 **`STOP I` NEW: if the moving set is NON-EMPTY, STOP AND REPORT. It is a finding ABOUT THE REPAIRS and it earns its own `ARM 1/2/3` classification pass — NOT a reflex patch, and NOT a repair in the same motion.**
+> **6.** 🛑 **DO NOT RUN THE FIVE CERTIFYING ARMS.** A `∅` result does NOT unlock them — **that is the READ's call and it is pending.** ★ **This is the one place you could over-read your authorization, so I name it: a good measurement is not a lifted block.**
+> **7.** 🛑 **UNCHANGED PROHIBITIONS: no promotion · no seal · `CLUSTER-E` · `acceptance_runner.py` · the root seal · the `10.0` min ceiling · parallelising · a second population registry or comparator · the `53` failures generally · the `287`/`11`/`7` · removing EITHER preserved worktree (`wt-m3-44db4eae` is YOURS to keep until `STOP B` closes) · `margin_expansion.py` or ANY production engine file · HTF production · `MP1` / the money path · pushing on the desk's behalf unless I ask.**
+> **8.** ⚡ **START-RECEIPT OWED. FIRST OBSERVABLE: the pinned commit + the worktree path. ETA: your call.**
+> **9.** ⚖️ **HONEST-PARTIAL CLAUSE: if the diagnostic cannot be made to run at population scope inside the ceiling, SAY SO and name the surface you covered. A partial that reads as complete is this campaign's most-convicted shape, and you already quoted that back at me.**
+
+```
+RULING ID       : R-833
+ARs RULED       : AR-999 -- a SEATING RECEIPT, owes no ruling; its §3 finding is
+                  ADOPTED and corrects R-832 §6. AR-998 REMAINS UNRULED AND HELD.
+DECISION        : AUTHORIZE (the [G-NODE] population diagnostic, narrowly) +
+                  STRIKE (R-832 §6's "(a)/(b) DO touch it" parenthetical).
+                  Five certifying arms STILL BLOCKED. AR-998 unruled. RATIFY-1
+                  UNCERTIFIED 6/10, [F] conditional. STOP B NOT closed. R3-4 =
+                  6/7. Money path UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED.
+EXTERNAL READ   : *** NOT WAITED FOR, AND DECLARED (§0). *** Ground: the
+                  BLOCKED-WORKER exception -- a fresh seat whose queue has
+                  ACTUALLY run dry, proven by its own scope hunt, after the
+                  operator spent a seat swap. The held question (do the five
+                  arms proceed?) is NOT decided here; only the action that is
+                  dominant under BOTH of its branches is authorized, and the
+                  dominance is shown in §3 rather than asserted.
+DESK DEFECT     : R-832 §6 asserted its own trigger -- "(a)/(b) DO touch it" --
+                  about a repair that did not exist yet. Seam (a) as BUILT is a
+                  pure deletion touching no instrument. Falsified by AR-999 §3
+                  with two positive controls; re-measured here. STOP [59] minted.
+CLAIMS VERIFIED : [MEASURED HERE] git diff --name-only 738b1659..HEAD --
+                  scripts/accept5_isolation_plugin.py is EMPTY; the null is
+                  control-probed two ways (no-filter => 8 files; wider range =>
+                  names that exact file). The shared discriminator is UNTOUCHED
+                  since AR-997 => R-832 §6's trigger is FALSE.
+                  [MEASURED HERE, git show --stat] the 3 repairs touch exactly 4
+                  files, all src/engine/tests/*.py.
+                  [MEASURED HERE, Win32_Process] 23968 GONE, 25076 born 12:06:34,
+                  desk 28644 live. The swap the operator holds the lever on was
+                  executed.
+FAILED/UNPROVEN : POPULATION-scope order-dependent membership -- UNMEASURED, and
+                  it is exactly what §3 authorizes.
+                  Whether any node OUTSIDE the 12 moved as a consequence of the
+                  repairs -- UNMEASURED (both AR-998 and AR-999 flag it).
+                  AR-998's three repairs -- DOER-GRADED ONLY, unruled, and the
+                  second independent grade is still queued behind the arms.
+                  The 1 pre-existing stable failure in test_wave_b_intrabar_
+                  stops.py -- NOT adjudicated, and stable-FAIL satisfies R-831 §4.
+ARCHITECTURE
+INVARIANTS      : acceptance_runner.py IMPORTED, NEVER EDITED. Collection root
+                  seal IMMUTABLE. No seal minted. Ceiling FROZEN at 10.0 min.
+                  Production engine code UNTOUCHED. The governed population does
+                  not depend on the instrument that measures it (R-832, upheld
+                  by seam (a) being a deletion). Single-writer relay held.
+                  RATIFY-1 UNCERTIFIED. No agent promotes to live capital.
+FILES / SCOPE   : READ-ONLY over the governed population + a DISPOSABLE pinned
+                  worktree for the two arms. No repair authorized by this ruling.
+ACCEPTANCE      : the moving set's EXACT node IDs at population scope, from a
+                  pinned disposable worktree, by the AR-991 instrument. Empty set
+                  => precondition MET ON MEASUREMENT (not a lifted block).
+FIRST OBSERVABLE: the pinned commit + worktree path. ETA: worker's call.
+STOP CONDITION  : STOP I NEW -- a non-empty moving set STOPS the lane and earns
+                  its own ARM 1/2/3 classification; never a reflex patch.
+                  STOP [59] NEW -- a conditional authorization may not assert its
+                  own trigger.
+                  STOP [35] -- pin the run; the shared branch is moving.
+                  A ∅ result does NOT unlock the five arms. STOP G, [56], [57],
+                  [58] stand. The six false closures in R-831 §4.
+LESSON          : I ASSERTED THE TRIGGER OF MY OWN CONDITION ABOUT WORK THAT DID
+                  NOT EXIST YET, AND A FRESH SEAT CAUGHT IT BY MEASURING THE FILE
+                  INSTEAD OF READING MY SENTENCE.
+                  AND: WHEN A HELD QUESTION BLOCKS A WORKER, THE HONEST MOVE IS
+                  NOT TO ANSWER IT EARLY -- IT IS TO FIND THE ACTION THAT IS
+                  CORRECT UNDER EVERY BRANCH, AND TO SHOW THE DOMINANCE.
+QUEUED NEXT     : [G-NODE] population diagnostic -> (read lands) -> rule AR-998 ->
+                  five certifying arms -> second independent grade -> certify ->
+                  promote -> CLUSTER-E -> final map -> disposition THAT map ->
+                  census -> ONE seal -> canonical run -> close R3-4 -> R3-5 -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-832 · 2026-08-11 · ✅✅ **`AR-997` APPROVED — THE `12` ARE CLASSIFIED, `3` MECHANISMS, ALL FAMILY `A`, AND THE CLASSIFICATION HALF OF `STOP B` IS CLOSED.** ⚡⚡ **`M2` PRODUCTION CHANGE **DENIED** — AND I VERIFIED THE READ'S DECISIVE PREMISE AT THE LINE RATHER THAN ADOPTING IT: IT IS TRUE, AND STRONGER THAN THE READ STATED.** 🛑🛑 **`M1`'s TARGET IS **STABLE RUN**, AND I RAISE IT FROM THE READ'S PREFERENCE TO A **HARD REQUIREMENT** ON A JOIN THE READ DID NOT HAVE: THOSE THREE NODES ARE THE COMMITTED COVERAGE OVER A BANKED MONEY-PATH HAZARD.** ⚖️ **I DEPART FROM THE READ ON `M3`'s SEAM — ITS FIX WOULD MAKE THE GOVERNED POPULATION DEPEND ON THE INSTRUMENT THAT MEASURES IT.**
 
 **TREE** `wt-h1-wave4-20260712`. **NEWEST AR ON DISK: `AR-997`** (`R-416`) — **it IS the AR ruled here; I read it in full before writing.** **`HEAD b839e4ef` · `origin 738b1659`** `[MEASURED HERE]` — my own `ADVISOR-STATE` commit is the local-only one; **the worker pushes on its own cadence and I do not push this branch (`§0`).**
