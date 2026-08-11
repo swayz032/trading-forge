@@ -124,6 +124,61 @@ IT IS THE SUBJECT BEING ALLOWED TO EXCUSE ITSELF FROM ITS OWN EXAM.`
 campaign law): if `wrc` is available on this box these four PASS, appear in no skip list and no
 failure list, and the dependency is undetectable from the outcome alone.
 
+## 4b. `[P4]` THE SURFACE EXTENDED FROM THE **MARKER** TO THE **CONSEQUENCE** (`R-813 §2`)
+
+🛑 **`R-813 §2` is right and the gap is real: §3's population is `pytest.skip` — a MARKER. The defect
+CLASS is "a governed test whose environmental branch SWALLOWS instead of announcing", and a swallowed
+exception reports `PASSED`, so it is invisible to a skip census by construction.**
+
+**INSTRUMENT: `ast`, not grep** — an `ExceptHandler` whose body has no observable effect
+(`pass` / `continue` / bare `return`), docstring-only statements stripped.
+
+```
+members from manifest ............ 107      missing on disk 0      parsed 107/107
+SWALLOW handlers (no effect) ..... 14
+ACTIVE handlers (do something) ... 14       <- NEGATIVE CONTROL, must be >> 0
+distinct FILES with a swallow .... 8
+DESK SEED test_walk_forward.py:379 in population: True   <- POSITIVE CONTROL
+```
+
+### Individual review — `ACCEPT5-GOVERNED-SKIP-SCOPE-1` forbids a blanket verdict
+
+| site | handler | disposition |
+|---|---|---|
+| `test_walk_forward.py:379` | `except Exception: pass` | 🛑 **CONFIRMED DEFECT** — desk-verified at the line. `except NotImplementedError` is fail-closed and CORRECT; the following bare arm swallows everything else, its own comment says *"other errors (data load, etc.) — that's OK"*, and control returns normally ⇒ **reports `PASSED`** |
+| `test_black_swan_evaluator.py:682` | `except Exception: pass` | ⚠️ **CANDIDATE** — swallows an `__import__` failure; the bound name is not used by the assertion that follows. Needs its own read; **not claimed as a defect** |
+| `test_trigger_safety_refusal.py:1042` · `:1102` | `except Exception: pass` | ✅ **DELIBERATE** — carries `# noqa: BLE001` and a written rationale: the neighbour arm may fail *downstream* of the consumers, and the question asked is *which consumers were reached*. Same shape, documented intent |
+| `test_trigger_safety_refusal.py:1040` · `:1100` · `:1173` | `except SystemExit: pass` | ✅ **LEGITIMATE** — absorbing a CLI `SystemExit` is the point of the call |
+| `test_mp1_candidate_persistence.py:287` · `test_mp1_candidate_receipt.py:402` | `except Exception: return` | ✅ **CORRECT FAIL-CLOSED IDIOM** — *"refusing is the correct behaviour"*, and the non-raising path falls through to `pytest.fail(...)`. 🛑 **ALSO FORBIDDEN SCOPE — MP1 files, `R-813 §8`. Named, not touched** |
+| `test_spec_family_bindings.py:536` · `:545` · `:2794` | `except OSError/SyntaxError/Exception: continue` | ✅ **LEGITIMATE ITERATION** — skipping unparseable members while walking a corpus |
+| `test_flag_off_parameterized_refusal.py:331` · `test_s6_candidate_transport_and_adapter_execution.py:552` | `except SyntaxError/TypeError` | ✅ **LEGITIMATE** — narrow, typed, control-flow |
+
+⇒ ★★★★★ **THE EXTENSION ADDS `1` CONFIRMED DEFECT AND `1` CANDIDATE — NOT `14`.**
+**`R-813 §2` predicted this** (*"several will be legitimate teardown"*), and the individual review is
+what separates them. ★★★★ **`A WIDER POPULATION IS NOT A LONGER DEFECT LIST — WIDENING THE SURFACE
+AND CLASSIFYING IT ARE TWO ACTS, AND SHIPPING ONLY THE FIRST MANUFACTURES ALARM.`**
+⚠️ **`[UNENUMERATED — OPEN]`** the swallow pattern covers `pass` / `continue` / bare `return`. A
+handler that logs-and-continues, or returns a sentinel, has the same consequence and is **NOT** in
+this population.
+
+## 4c. `[P5]` THE A1 PRE-FIX ARM THE DESK SAID I OWED — NOW RUN
+
+`R-813 §4` was right that `"7 / 32 with a control each"` over-read. The missing arm is now executed,
+in a disposable worktree at `c6362fc3` (the parent of the A1 conversion), same planted import:
+
+```
+PRE-fix  + planted broken backtester import -> 3 SKIPPED
+  SKIPPED [1] test_signal_vector.py:185: backtester not importable in this test environment
+  SKIPPED [1] test_signal_vector.py:206: backtester not importable in this test environment
+  SKIPPED [1] test_signal_vector.py:228: backtester not importable in this test environment
+POST-fix + same plant                       -> 3 FAILED
+```
+✅ **The `-rs` REASON is the join key: it skipped through the IMPORT clause, not the data clause** —
+so the arm convicts the mechanism the conversion actually removed. **Worktree removed; `git worktree
+list` shows no orphan.**
+⇒ **CORRECTED TALLY: `6` sites with a full pre-fix-false-green + post-fix-red pair (3 `A2` + 3 `A1`)
+· `1` site (`_import_validate`) removed on STATIC proof of zero callers, no dynamic arm.**
+
 ## 5. 🛑 WHAT THIS ARTIFACT DOES **NOT** ESTABLISH
 
 - 🛑 **`FIRED-IN-PRISTINE` IS `UNMEASURED` FOR ALL 32.** No fresh-tree run was performed in this
