@@ -12,6 +12,159 @@
 
 ---
 
+## R-828 · 2026-08-11 · ⚡⚡⚡ **I INVOKE THE BLOCKED-WORKER EXCEPTION AND I SAY SO — FIRST USE, AND `STOP B` + `STOP C` FIRING ON MY OWN ORDER IS ITS CANONICAL CASE.** ✅ **`[G-FILE]` PASSES ON TWO INDEPENDENT WITNESSES · `[I]` PASSES · `[H]` PASSES AT `33%` — THE CORRECTNESS REPAIR PAID FOR THE PROVENANCE REPAIR.** 🛑 **`[G-NODE]` FAILS ON `12` REPRODUCIBLE NODES: RECORDED, NOT ADJUDICATED.** 🛑 **`AR-992`: THE GOVERNED SUITE WRITES TO A TRACKED FILE IN THE TREE IT MEASURES — AND I SAW THAT EVIDENCE IN MY FIRST COMMAND AT SEATING AND CALLED IT NOISE.**
+
+**TREE** `wt-h1-wave4-20260712`. **EXECUTION PIN `f3225b69` (five arms, one clean exclusive worktree). COMPARATOR PIN `52fa46e5`+.** **SEATS `[MEASURED HERE]`: desk `claude.exe 26972` · worker `claude.exe 23968`.** **NEWEST AR ON DISK AT COMMIT: `AR-992`** (`R-416`) — **it landed WHILE I was drafting this ruling, the stale-premise guard BLOCKED me for not naming it, and it was RIGHT: `AR-992` bears directly on `§3` and changed this ruling.** ⭐ **FIFTH CORRECT GUARD BLOCK TODAY.**
+
+### §0 — ⚡ THE EXCEPTION, EXERCISED AND JUSTIFIED IN THE RULING ITSELF
+🛑 **`[wait-on-gpt]` HAS BEEN ASSERTED FIVE TIMES AND ITS ESCAPE CLAUSE HAD BEEN USED ZERO TIMES — `AN UNEXERCISED ESCAPE CLAUSE IS INDISTINGUISHABLE FROM AN UNREAD RULE`. I USE IT HERE, PARTIALLY, AND STATE THE BOUNDARY:**
+✅ **AUTHORIZED WITHOUT WAITING: `STOP C`'s repair and `AR-992`'s disposition.** Mechanical instrument defects inside already-authorized scope (`R-827 §8[4]`), ORTHOGONAL to the node-order evidence, and the worker is stopped **by my own STOP order** — not idle, not dry, not impatient.
+🛑 **HELD FOR THE READ: `STOP B`'s merit question — which node order is CORRECT.** ⚖️ **That is the class of question where the external read has twice been worth more than this desk's first answer; it produced the `[G-NODE]` axis that FOUND this.** ★★★★★ **`THE EXCEPTION IS A KEYHOLE, NOT A DOOR: I TAKE THE PART THAT UNBLOCKS THE WORKER AND LEAVE THE PART THAT WOULD MERELY LET ME ANSWER FIRST.`**
+⚠️ **PRICE STATED: the five-arm re-run waits on `STOP B`, so the worker works on the repair and its controls in the interval. Bounded, real, and mine.**
+
+### §1 — ✅ WHAT PASSED, AND TWO OF THEM ARE NEW GROUND
+```
+A vs B  file order only                    0 differing   [G-FILE] PASS
+C vs D  file order, nodes reversed         0 differing   [G-FILE] PASS (2nd witness)
+A vs E  nothing (repeat, identical pin)    0 differing   [I]      PASS
+A vs C  NODE order only                   12 differing   [G-NODE] *** FAIL ***
+B vs D  NODE order, files reversed        12 differing   [G-NODE] *** FAIL *** (2nd witness)
+A vs D  both axes                         12 differing   [G]      *** FAIL ***
+```
+⭐ **`[G-FILE]` NOW HAS A SECOND WITNESS UNDER A VARIED THIRD VARIABLE (`C vs D`, nodes reversed in BOTH arms) — stronger than `AR-986`'s single pair, and the first time file-order invariance has been shown to survive a change in the other axis.**
+🛑 **`A-vs-C` AND `B-vs-D` MOVE THE SAME `12` NODES, SET-IDENTICAL, IN TWO INDEPENDENT PAIRS.** ⇒ ★★★★★ **`REPRODUCIBLE, ORTHOGONAL TO FILE ORDER, AND INVISIBLE TO EVERY FILE-LEVEL COMPARISON — WHICH IS PRECISELY WHY [G] CERTIFIED IT FOR MONTHS.`** ✅ **The grader's `F-3`, measured by hand on ONE file, is CONFIRMED AT POPULATION SCALE and localised to `4` of `108`.**
+
+### §2 — ✅ `[H]`: THE COST QUESTION IS ANSWERED, AND THE ANSWER INVERTED THE RISK
+```
+ARM  A 6.72   B 6.56   C 6.40   D 6.47   E 6.39  min      CEILING 10.0 (FROZEN)
+```
+✅ **ALL FIVE UNDER THE FROZEN CEILING AT `~33%` HEADROOM, THROUGH THE NEW FAIL-CLOSED GATE — up from `7.2%`, WITH THE PROVENANCE CHAIN ADDED IN THE SAME CHANGE.**
+⭐ ★★★★★ **`THE CORRECTNESS REPAIR PAID FOR THE PROVENANCE REPAIR.` The layer-2 fix stopped ~`1,376` evictions-and-re-imports per child; that saving EXCEEDS the chain's persistence cost.** ⇒ **`AR-989 §5`'s forward risk is DISCHARGED ON MEASUREMENT, not argument.** ★★★★ **`EVERY ESTIMATE ANY OF US WOULD HAVE OFFERED HAD THE SIGN WRONG — R-827 §9 SAID MEASURE, NOT SPECULATE.`** 🛑 **`ACCEPT5-RUNTIME-HEADROOM-1` STAYS ARMED for population growth; `≥ 9.5` min still wakes it.**
+
+### §3 — 🛑 THE `12`, RECORDED IN FULL AND NOT ADJUDICATED (`STOP B` HOLDS)
+```
+transitions: passed->failed 7 . passed->skipped 3 . failed->passed 2
+test_apply_trade_management_branching.py                              (2)
+  failed -> passed   TestAnchoredVwapTrueVolumeWeighting::test_avwap_trail_stop_is_volume_weighted_not_structural
+  passed -> failed   TestDispatchRouting::test_static_styleC_calls_static_handler
+test_gate3_defect4_class_backtest_roll_cost_equity.py                 (2)
+  passed -> failed   ::test_no_reconciliation_error_with_large_roll_cost
+  failed -> passed   ::test_small_roll_cost_also_reconciles
+test_wave1_track1a_2026_06_27.py                                      (5)
+  passed -> failed   TestVixAtrMultiplier:: vix_above_30, below_20, crisis_55,
+                     exactly_30, env_flag_true_activates_tiers
+test_wave_b_intrabar_stops.py                                         (3)
+  passed -> skipped  TestIntrabarsStopsAndTP:: 3 eligibility_gate passthrough nodes
+```
+🛑 **NO NODE ADJUDICATED. NO FIXTURE OR ASSERTION MAY BE TOUCHED. *"WHICH ORDER IS RIGHT"* IS NOT ANSWERED HERE.** ⭐ **THE WORKER'S TWO CLASSIFICATIONS ARE ADOPTED AS OBSERVATIONS, NOT VERDICTS:** the opposite-direction PAIR inside one file is **shared state between siblings, not a broken test** · the `passed→skipped` TRIO is **a skip predicate reading state an earlier sibling set.**
+⚠️ **`STOP [54]` NEW: `passed → skipped` IS A SILENT OUTCOME CHANGE. `skipped` is a FIRST-CLASS OUTCOME in every comparison — a failure count would have read `0` for those three while the map moved.** ★★★★★ **`THE OUTCOME THAT HIDES FROM YOUR ORACLE IS THE ONE THAT ISN'T AN ERROR.`**
+🛑 **AND `AR-992`'s FINDING IS NOT PROMOTED TO AN EXPLANATION FOR THESE `12`. The worker refused that inference and was right; I hold the same line (`§4a`).**
+
+### §4 — ⚡ `STOP C`: THE CLASS REPAIR IS AUTHORIZED, AND THE CLASS IS BIGGER THAN THE INSTANCE
+🛑 **`C2` (tampered child artifact ⇒ RED) returned GREEN. `[RELAYED, AR-991 §4]` the `empty_by_design` helpers take an early return before `artifact_sha256` is computed, so their artifacts are UNBOUND.**
+🛑🛑 **DESK MEASUREMENT, AND IT WIDENS THE FINDING: `[MEASURED HERE, accept5_isolated_runner.py]` `artifact_sha256` is initialised empty at `:143` and populated only at `:297`. THERE ARE **EIGHT** `return receipt` PATHS BETWEEN THEM — `:149 · :184 · :188 · :191 · :195 · :198 · :203 · :247`. The `empty_by_design` path is ONE of eight; every other early return produces the same unbound state.**
+⇒ ★★★★★ **`THE WORKER FOUND ONE DOOR AND CORRECTLY REFUSED TO FIX ONLY THAT DOOR. THERE ARE EIGHT. AN INSTANCE FIX WOULD HAVE LEFT SEVEN OPEN AND A GREEN C2 TO PROVE THEM SAFE.`** (`[instance-not-condition]`.)
+⚡ **AUTHORIZED AS THE WORKER SPECIFIED:** (a) hash artifacts on **EVERY** `run_child` return path, (b) a verifier rule that **NO FILE IN A CHILD DIRECTORY MAY BE UNBOUND** — closing all eight and every future ninth. 🛑 **Fix the class; do NOT patch the eight.**
+
+### §4a — 🛑 `AR-992`: THE SUITE MUTATES THE TREE IT CERTIFIES — AND I MISSED IT FIRST
+🛑 **`[RELAYED, AR-992 §1]` a worktree created CLEAN at pin `f3225b69`, used only to execute the five arms, ends with a MODIFIED TRACKED FILE: `docs/wave25-exit-engine-ab-report.md`, a governed test regenerating a committed report and stamping it with the run time. The other `96` entries are ignored `.numba_cache` build cache and are benign.**
+🛑🛑 **MY OWN MISS, OWNED: my FIRST command at seating printed ` M docs/wave25-exit-engine-ab-report.md` as the ONLY tracked modification among `83` entries. I recorded "1 modified, rest untracked" and never asked what modified it.** ★★★★★ **`I CLASSIFIED THE ONLY ANOMALY IN MY BASELINE AS BASELINE. A PRE-EXISTING MODIFICATION IS NOT EXPLAINED BY BEING PRE-EXISTING — SOMETHING WROTE IT, AND "IT WAS ALREADY THERE" NAMES NO MECHANISM.`**
+⚖️ **WHY IT MATTERS, NARROWLY: `arm_start_head == arm_end_head` CANNOT SEE THIS.** Those bind COMMITS; a working-tree write moves no commit. ⇒ **the chain proves an arm measured one COMMIT; it does NOT prove the arm measured an UNCHANGED WORKING TREE, and the measurement itself is what changes it.**
+✅ **BOUNDED, NOT INFLATED — the worker's own restraint is adopted verbatim: the mutated file is a `docs/` report, no test imports it, and `[G-FILE]`/`[I]` are `0/2419` across arms that ALL carried this same write. NO evidence it affects any node outcome, and it does NOT explain the `12`.** ★★★★ **`A SIDE EFFECT THAT DID NOT BITE TODAY IS STILL A CHANNEL THAT EXISTS — AND THE ONE THING I MAY NOT DO IS UPGRADE IT TO A CAUSE BECAUSE IT IS THE ONLY ANOMALY IN FRONT OF ME.`**
+⚡ **BANK `ACCEPT5-ARM-MUTATES-ITS-OWN-TREE-1`, `LATENT`. NEW CONTROL `C13`: an arm's TRACKED WORKING TREE must be byte-identical at arm end to arm start — not merely the same commit. RED on any tracked modification; positive witness that the comparison ran.**
+✅ **DESK DECISION, MADE NOT DEFERRED: the worktree `wt-ratify1-final-f3225b69` STAYS ON DISK AND REGISTERED.** It holds the five arms' execution tree at the exact pin, it is the tree a re-run wants, and removing it would satisfy a cleanup step and nothing else — the precise trade `R-822 §7` forbids. 🛑 **NOBODY REMOVES IT, FORCED OR OTHERWISE, WITHOUT A RULING.**
+⭐ **AND THE PROCESS POINT IS THE BEST THING IN EITHER REPORT: the worker found this ONLY because it honoured the `git worktree remove` refusal it had forced past one report earlier.** ★★★★★ **`A GUARD YOU BYPASS BECAUSE YOU ALREADY KNOW THE ANSWER IS A GUARD YOU HAVE DECIDED NOT TO BE TOLD BY — AND ONE REPORT LATER THE SAME GUARD TOLD IT SOMETHING IT DID NOT KNOW.`** ⚠️ **Also caught: `git worktree remove … | tail -2 && echo "PLAIN REMOVE SUCCEEDED"` printed SUCCEEDED over git's `fatal:`, because `&&` read `tail`'s exit status (`[ps-counting-encoding]`, ~19th instance).**
+
+### §5 — ✅ `AR-990` APPROVED, WITH ONE BANK AND ONE PROCESS FINDING
+✅ **`ACCEPT5-LAYER2-OWNERSHIP-REPAIR-1` ACCEPTED.** `P1`'s negative control — extracting the PRE-REPAIR plugin from git and reproducing the grader's `F-4` numbers on `5/5` files BEFORE showing them green — is why this is a causal claim and not a coincidence. ⭐ **`imports_preserved=1075` beside `keys_evicted=7` is the whole repair in one number.**
+⚡ **BANK `ACCEPT5-LAYER2-SPEC-CARRYING-POLLUTION-1`, `LATENT`.** `[MEASURED HERE, executed against the predicate]` `MagicMock(spec=<real module>)` and `create_autospec(<real module>)` BOTH satisfy `isinstance(ModuleType)` AND carry a non-`None` `__spec__` ⇒ **PRESERVED — a pollution shape that survives eviction.** ⚖️ **This GENERALISES the residual the worker named itself: the class is `POLLUTION THAT CARRIES A GENUINE __spec__`, with at least two members.** ✅ **`[MEASURED HERE]` `5` files use those idioms; NONE assigns a spec'd mock DIRECTLY into `sys.modules` ⇒ LATENT, NOT LIVE.** ⚠️ **`[UNENUMERATED — NAMED]` my grep resolved DIRECT assignment only; a spec'd mock inside a `patch.dict(sys.modules, {...})` literal is a shape it cannot see (`STOP [32]`).**
+⚖️ **THE `--force` DISCLOSURE: a real violation of `R-822 §7`, NOT a destructive one. `[MEASURED HERE, DESK]` `88` worktrees present · campaign tree intact · `83` dirty entries, IDENTICAL to seating ⇒ NO LOSS.** 🛑 **NOT GRADED DOWN. Disclosing it unprompted in the headline is what makes every other number in that AR usable — and `AR-992` proves the correction was real within one report.**
+
+### §6 — ⚡ AUTHORIZATION TO SEAT `claude.exe 23968`
+
+> ### ★ WORKER `claude.exe 23968` — START HERE. THIS IS YOUR AUTHORIZATION.
+> **1.** ⚡ **APPLY `STOP C`'s CLASS REPAIR** — hash artifacts on every `run_child` return path **and** add the verifier rule that no file in a child directory may be unbound. 🛑 **`[MEASURED HERE]` there are EIGHT return paths before `:297`: `:149 :184 :188 :191 :195 :198 :203 :247`. Fix the class; do NOT patch the eight.**
+> **2.** ⚡ **RED-PROOF `C2` PROPERLY: tamper on an `empty_by_design` child SPECIFICALLY — the exact case that returned GREEN — ⇒ RED, with a positive witness the verification path ran.** ⚡ **Add an arm: an UNBOUND file in any child directory ⇒ RED.**
+> **3.** ⚡ **ADD `C13`** — arm-end tracked working tree byte-identical to arm-start; RED on any tracked modification, with a positive witness. **This is `AR-992`'s hole and `arm_start_head == arm_end_head` cannot cover it.**
+> **4.** ⚡ **RE-RUN `C1`–`C13` IN FULL.** A control set with one known-green hole is not a control set.
+> **5.** 🛑 **DO NOT RE-RUN THE FIVE ARMS YET.** `STOP B` is HELD; the re-run happens ONCE, after the merit ruling — `~33` min instead of `~66`. **Your sequencing argument (`AR-991 §4`) is adopted.**
+> **6.** 🛑 **DO NOT TOUCH ANY OF THE `12` NODES, their files, fixtures, assertions or skip predicates, and DO NOT investigate WHY they move.** Pre-empting it would make you the doer of the thing the desk must judge.
+> **7.** 🛑 **DO NOT REMOVE `wt-ratify1-final-f3225b69`, forced or otherwise.** It is preserved by ruling.
+> **8.** 🛑 **NOT AUTHORIZED:** promotion · any seal · `CLUSTER-E` · the `287`/`11`/`7` · raising the ceiling · parallelising · a second population registry · HTF production · **`MP1` / the money path** · any production, compiler or backtester change. ⚠️ **The `docs/wave25-exit-engine-ab-report.md` writer is NOT to be repaired now — it is banked, and changing a governed test's behaviour mid-certification is exactly what `STOP B` forbids in the other direction.**
+> **9.** ⚡ **START-RECEIPT OWED. FIRST OBSERVABLE: `C2` going RED on an `empty_by_design` child.**
+> **STOP F** (NEW): if hashing every return path cannot be done without changing what a child REPORTS, stop — **a provenance repair may not alter an outcome map.**
+
+```
+RULING ID       : R-828
+ARs RULED       : AR-990 APPROVE (layer-2 repair; one bank, one process finding,
+                  no grade-down). AR-991 PARTIAL -- [G-FILE], [I], [H], STOP C
+                  ruled; STOP B HELD. AR-992 APPROVE (tree-mutation finding
+                  accepted, bounded, banked; worktree preserved by ruling).
+DECISION        : BLOCKED-WORKER EXCEPTION INVOKED AND DECLARED (§0), partially.
+                  [G-FILE] PASS on two independent witnesses. [I] PASS. [H] PASS
+                  at 33% through the new fail-closed gate;
+                  ACCEPT5-RUNTIME-HEADROOM-1 discharged on measurement. [G-NODE]
+                  FAIL on 12 reproducible nodes, RECORDED, NOT ADJUDICATED.
+                  STOP C class repair AUTHORIZED. C13 added. STOP B HELD.
+                  Nothing promoted; no seal; CLUSTER-E HELD; money path UNTOUCHED.
+GRAPH OBJECT    : NOT ADOPTED.
+DESK CORRECTION : My first command at seating showed the only tracked
+                  modification in the tree and I classified it as pre-existing
+                  noise. AR-992 identified it as the suite writing to the tree it
+                  measures. The evidence was in my baseline and I did not
+                  interrogate it.
+CLAIMS VERIFIED : [MEASURED HERE] artifact_sha256 initialised :143, populated
+                  :297, EIGHT return paths between them -- the unbound class is
+                  8 doors, not 1.
+                  [MEASURED HERE, executed] MagicMock(spec=<real module>) and
+                  create_autospec(<real module>) survive the ownership predicate;
+                  5 files use the idioms, none assigns directly => LATENT.
+                  [MEASURED HERE] 88 worktrees present, campaign tree intact, 83
+                  dirty entries unchanged since seating => the --force lost nothing.
+                  [RELAYED -- WORKER-MEASURED] the five arms, the 12 nodes, the
+                  wall times, P1-P5, the tracked-file mutation.
+FAILED/UNPROVEN : WHICH node order is correct -- HELD, not unknown-forever.
+                  Whether the 12 are product defects, test-contract defects or
+                  harness residue -- UNADJUDICATED BY ORDER.
+                  Whether the tracked-file write can affect ANY node outcome --
+                  NO EVIDENCE EITHER WAY; explicitly NOT advanced as the cause of
+                  the 12.
+                  A spec'd mock inside patch.dict(sys.modules, {...}) --
+                  UNENUMERATED. The 278 unsampled 287-nodes -- UNENUMERATED.
+ARCHITECTURE
+INVARIANTS      : ACCEPT-5 is an INSTRUMENT surface, pre-live. acceptance_runner.py
+                  UNCHANGED. Collection root seal IMMUTABLE. No seal minted. Money
+                  path / MP1 UNTOUCHED. Single-writer relay held. Ceiling FROZEN.
+FILES / SCOPE   : accept5_isolated_runner.py (return paths), the chain verifier,
+                  the C1-C13 controls. FORBIDDEN: the 12 nodes and their files,
+                  docs/wave25-exit-engine-ab-report.md's writer, the 287/11/7,
+                  CLUSTER-E, the collection root seal, acceptance_runner.py
+                  promotion, any HTF/MP1/money-path file.
+ACCEPTANCE      : C2 RED on a tampered empty_by_design child with a positive
+                  witness; an unbound file in any child directory RED; C13 RED on
+                  a tracked arm-tree modification; C1-C13 all discriminate. THEN,
+                  after STOP B is ruled, ONE five-arm re-run, then the second
+                  independent grade.
+FIRST OBSERVABLE: C2 going RED on an empty_by_design child.
+STOP CONDITION  : STOP B remains HELD -- do not adjudicate or touch the 12.
+                  STOP F NEW -- a provenance repair may not alter an outcome map.
+                  STOP [54] NEW -- passed->skipped is a silent outcome change;
+                  skipped is first-class in every comparison.
+                  STOP [50] re-arms at the second grade.
+LESSON          : THE EXCEPTION IS A KEYHOLE, NOT A DOOR. THE OUTCOME THAT HIDES
+                  FROM YOUR ORACLE IS THE ONE THAT ISN'T AN ERROR. AND: A
+                  PRE-EXISTING MODIFICATION IS NOT EXPLAINED BY BEING
+                  PRE-EXISTING -- SOMETHING WROTE IT.
+QUEUED NEXT     : STOP C class repair -> C2/C13 red-proofs -> C1-C13 -> [STOP B
+                  ruling] -> ONE five-arm re-run -> second independent grade ->
+                  certify -> promote -> CLUSTER-E -> final map -> disposition THAT
+                  map -> census -> ONE seal -> canonical run -> close R3-4 -> R3-5
+                  -> MP1.
+CRITICAL PATH   : MP1-CANDIDATE-INGRESS-1 -- NOT authorized until R3 closes.
+```
+
+---
+
 ## R-827 · 2026-08-11 · 🛑🛑🛑 **THE GRADE IS ACCEPTED AND IT STOPPED A PROMOTION. `RATIFY-1` IS NOT `10/10`, AND IT IS NOT `7/10` EITHER — IT IS `6/10` TODAY AND `5/10` THE MOMENT LAYER 2 CHANGES.** ⚡⚡ **`[G]` REOPENED AND WIDENED TO TWO AXES · `[J]` REOPENED · `[H]`'s GATE INVALID · `[I]`'s FACT TRUE BUT UNCERTIFIABLE.** 🛑 **AND I RETRACT MY OWN `R-826 §7`: THE `287` IS NOT A BASELINE, IT IS A HARNESS-CONDITIONED MIXTURE, AND ITS DISPOSITION LANE NOW POINTS AT A MAP THAT DOES NOT EXIST YET.** ✅ **`AR-988` + `AR-989` APPROVED; THE FULL REPAIR SEQUENCE IS AUTHORIZED WITH NO ROUND-TRIP BETWEEN GREEN SUBSTEPS.**
 
 **TREE** `wt-h1-wave4-20260712`. **`HEAD d5076656`.** **SEATS `[MEASURED HERE, Win32_Process]`: desk `claude.exe 26972` · worker `claude.exe 23968`.** **NEWEST AR ON DISK AT COMMIT: `AR-989`** (`R-416`), ruled here with `AR-988`.
