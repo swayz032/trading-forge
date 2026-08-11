@@ -59,45 +59,50 @@ AND THE CENSUS ROW LOOKS EXACTLY LIKE A SINGLE-TEST ONE.`
 
 ## 3. THE CENSUS — 32 ROWS
 
-`FIRED-IN-PRISTINE` is **`UNMEASURED` in every row.** It requires the FRESH isolated worktree
-(`R-812 §7`: *"positive control must be the FRESH isolated tree, never this one"*), which has not
-been run in this pass. **It is not blank because the answer is no; it is blank because I have not
-measured it, and `SAMPLES_DIR` passes HERE precisely because this box is that box.**
+✅ **`FIRED-IN-PRISTINE` IS NOW POPULATED FROM OBSERVATION FOR ALL `32` ROWS** — see `§6` (axis matrix)
+and `§7` (the run, by membership). **Every `DID NOT FIRE` carries a POSITIVE WITNESS that the owning
+test actually EXECUTED**, because an unfired guard and an unrun test are indistinguishable from a
+blank cell.
+🛑 **AND THE CONTROL THAT WAS SUPPOSED TO PRODUCE THIS COLUMN DOES NOT WORK: `[MEASURED, §6]` a FRESH
+LINKED WORKTREE ON THIS BOX VARIES ZERO AXES.** `R-812 §7`'s *"positive control must be the FRESH
+isolated tree"* cannot discriminate here — it is a control with no contrast. **The column below is
+therefore a statement about THIS BOX's state, not a portability claim** (`R-813 §8 [P2]`), and
+`SAMPLES_DIR` still passes HERE precisely because this box is that box.
 
 | # | file · line | owner | trigger | external input | §5 class | fired-in-pristine |
 |---|---|---|---|---|---|---|
-| 1 | `test_accuracy_fixes.py:466` | `test_delta_only_applied_when_firm_more_expensive` | `mffu_50k not in FIRM_COMMISSIONS` | in-repo config table | **NOT machine-local** — config-shape skip | UNMEASURED |
-| 2 | `test_accuracy_fixes.py:561` | `_import_validate` **(helper)** | `exits module has pre-existing import error` | importability of `exits` | **VIOLATION** — masks a real import defect | UNMEASURED |
-| 3 | `test_accuracy_fixes.py:568` | `test_divisible_by_3_passes_unchanged` | `exits import error` | same | **VIOLATION** | UNMEASURED |
-| 4 | `test_accuracy_fixes.py:578` | `test_non_divisible_rounds_down_with_warning` | `exits import error` | same | **VIOLATION** | UNMEASURED |
-| 5 | `test_accuracy_fixes.py:594` | `test_result_never_below_3` | `exits import error` | same | **VIOLATION** | UNMEASURED |
-| 6 | `test_fvg_identity_dispatch.py:182` | `test_trace_shows_distinct_fvg_primitive_contributor_when_enabled` | `no entry signal fired on this synthetic fixture/seed` | own synthetic fixture | **VIOLATION** — form `[2]` fixture that skips on its own output | UNMEASURED |
-| 7 | `test_levelzone_routing.py:346` | `test_trace_shows_distinct_levelzone_primitive_contributor_when_enabled` | `no entry signal fired on this synthetic fixture/seed` | own synthetic fixture | **VIOLATION** — same class as 6 | UNMEASURED |
-| 8 | `test_pnl_accuracy.py:866` | `test_topstep_mes_commission_per_trade_contract` | `Fixture produced no trades in this environment` | fixture outcome | **VIOLATION** — "in this environment" is the tell | UNMEASURED |
-| 9 | `test_pnl_accuracy.py:909` | `test_mffu_mes_commission_per_trade_contract` | `Fixture produced no trades in this environment` | fixture outcome | **VIOLATION** | UNMEASURED |
-| 10 | `test_pnl_accuracy.py:975` | `test_prop_sim_trusts_net_pnl_no_double_deduction` | `No trades generated — fixture needs more data` | fixture data volume | **VIOLATION** | UNMEASURED |
-| 11 | `test_pnl_accuracy.py:992` | `test_prop_sim_trusts_net_pnl_no_double_deduction` | `No daily_pnl_records available — check run_backtest output shape` | backtest output shape | **VIOLATION** — skips on a shape defect | UNMEASURED |
-| 12 | `test_signal_vector.py:185` | `test_signal_vector_present_in_result` | `backtester not importable in this test environment` | importability | **VIOLATION** | UNMEASURED |
-| 13 | `test_signal_vector.py:195` | `test_signal_vector_present_in_result` | `Data not available: {e}` | **S3 + AWS creds** | **VIOLATION** — input `[3]` of `R-803`'s four | UNMEASURED |
-| 14 | `test_signal_vector.py:206` | `test_signal_vector_values_valid` | `backtester not importable` | importability | **VIOLATION** | UNMEASURED |
-| 15 | `test_signal_vector.py:215` | `test_signal_vector_values_valid` | `Data not available: {e}` | **S3 + AWS creds** | **VIOLATION** | UNMEASURED |
-| 16 | `test_signal_vector.py:228` | `test_signal_vector_is_json_serializable` | `backtester not importable` | importability | **VIOLATION** | UNMEASURED |
-| 17 | `test_signal_vector.py:237` | `test_signal_vector_is_json_serializable` | `Data not available: {e}` | **S3 + AWS creds** | **VIOLATION** | UNMEASURED |
-| 18 | `test_spec_family_bindings.py:47` | `_load_sample` **(helper)** | `reference sample corpus unavailable at {path}` | **`SAMPLES_DIR`** — 141 files, **0 tracked**, absolute path into ANOTHER worktree | **VIOLATION** — input `[2]` of `R-803`'s four | UNMEASURED |
-| 19 | `test_spec_family_bindings.py:569` | `_load_battery` **(helper)** | `h1-battery fixture unavailable at {path}` | h1-battery fixture | **VIOLATION** | UNMEASURED |
-| 20 | `test_spec_family_bindings.py:901` | `_governed_split` **(helper)** | `governed grade unavailable at {path}` | blind-readjudication `LOCKED.json` | ✅ **CLOSED** — converted to form `[1]` at `e55a9ef1`, sha `920557eb…`, 978 bytes | UNMEASURED |
-| 21 | `test_spec_family_bindings.py:914` | `_corpus_wait_session_rows` **(helper)** | `corpus unavailable at {d}` | corpus dir | **VIOLATION** | UNMEASURED |
-| 22 | `test_spec_family_bindings.py:1914` | `_load_module_at_ref` **(helper)** | `git unavailable for parent-diff: {exc}` | **git history** | **VIOLATION** — input `[4]` of `R-803`'s four | UNMEASURED |
-| 23 | `test_spec_family_bindings.py:1916` | `_load_module_at_ref` **(helper)** | `revision {ref} unavailable` | **git history** | **VIOLATION** — input `[4]` | UNMEASURED |
-| 24 | `test_spec_family_bindings.py:2815` | `test_both_flag_arms_agree_on_every_refusal_path_object` | `docs/ corpora unavailable in this checkout` | `docs/` corpora | **VIOLATION** — "in this checkout" is the tell | UNMEASURED |
-| 25 | `test_static_c_partials_ab.py:183` | `test_pf_computation_flag_independent` | `fixture_perfect.json not found in golden dir` | `fixture_perfect.json` | ⚠️ **`R-803`: TRACKED, dead-skip debt, NOT a fifth input** — tracked ⇒ absence must be HARD FAILURE | UNMEASURED |
-| 26 | `test_walk_forward_wrc_spa_emission.py:177` | `test_wrc_spa_values_present_when_sufficient_obs` | `CPCV paths unavailable — acceptable: {reason}` | computed `wrc.available` | **VIOLATION** — see §4 | UNMEASURED |
-| 27 | `test_walk_forward_wrc_spa_emission.py:192` | `test_wrc_spa_p_values_are_floats_in_unit_interval` | `CPCV unavailable in test environment` | computed `wrc.available` | **VIOLATION** — see §4 | UNMEASURED |
-| 28 | `test_walk_forward_wrc_spa_emission.py:305` | `test_wrc_spa_values_present_when_sufficient_obs` | `Plain WF unavailable in test environment` | computed `wrc.available` | **VIOLATION** — see §4 | UNMEASURED |
-| 29 | `test_walk_forward_wrc_spa_emission.py:318` | `test_wrc_spa_p_values_in_unit_interval_plain` | `Plain WF unavailable in test environment` | computed `wrc.available` | **VIOLATION** — see §4 | UNMEASURED |
-| 30 | `test_wave_b_intrabar_stops.py:380` | `test_eligibility_gate_no_htf_passthrough_preserves_signals` | `backtester not imported — avoid vectorbt JIT hang` | importability | 🛑 **OUT OF SCOPE — `STOP [11]`** | UNMEASURED |
-| 31 | `test_wave_b_intrabar_stops.py:405` | `test_eligibility_gate_empty_htf_passthrough` | same | importability | 🛑 **OUT OF SCOPE — `STOP [11]`** | UNMEASURED |
-| 32 | `test_wave_b_intrabar_stops.py:426` | `test_eligibility_gate_unregistered_strategy_passthrough` | same | importability | 🛑 **OUT OF SCOPE — `STOP [11]`** | UNMEASURED |
+| 1 | `test_accuracy_fixes.py:466` | `test_delta_only_applied_when_firm_more_expensive` | `mffu_50k not in FIRM_COMMISSIONS` | in-repo config table | **NOT machine-local** — config-shape skip | **DID NOT FIRE** |
+| 2 | `test_accuracy_fixes.py:561` | `_import_validate` **(helper)** | `exits module has pre-existing import error` | importability of `exits` | **VIOLATION** — masks a real import defect | ✅ **SITE REMOVED** (converted) |
+| 3 | `test_accuracy_fixes.py:568` | `test_divisible_by_3_passes_unchanged` | `exits import error` | same | **VIOLATION** | ✅ **SITE REMOVED** (converted) |
+| 4 | `test_accuracy_fixes.py:578` | `test_non_divisible_rounds_down_with_warning` | `exits import error` | same | **VIOLATION** | ✅ **SITE REMOVED** (converted) |
+| 5 | `test_accuracy_fixes.py:594` | `test_result_never_below_3` | `exits import error` | same | **VIOLATION** | ✅ **SITE REMOVED** (converted) |
+| 6 | `test_fvg_identity_dispatch.py:182` | `test_trace_shows_distinct_fvg_primitive_contributor_when_enabled` | `no entry signal fired on this synthetic fixture/seed` | own synthetic fixture | **VIOLATION** — form `[2]` fixture that skips on its own output | **DID NOT FIRE** |
+| 7 | `test_levelzone_routing.py:346` | `test_trace_shows_distinct_levelzone_primitive_contributor_when_enabled` | `no entry signal fired on this synthetic fixture/seed` | own synthetic fixture | **VIOLATION** — same class as 6 | **DID NOT FIRE** |
+| 8 | `test_pnl_accuracy.py:866` | `test_topstep_mes_commission_per_trade_contract` | `Fixture produced no trades in this environment` | fixture outcome | **VIOLATION** — "in this environment" is the tell | **DID NOT FIRE** |
+| 9 | `test_pnl_accuracy.py:909` | `test_mffu_mes_commission_per_trade_contract` | `Fixture produced no trades in this environment` | fixture outcome | **VIOLATION** | **DID NOT FIRE** |
+| 10 | `test_pnl_accuracy.py:975` | `test_prop_sim_trusts_net_pnl_no_double_deduction` | `No trades generated — fixture needs more data` | fixture data volume | **VIOLATION** | **DID NOT FIRE** |
+| 11 | `test_pnl_accuracy.py:992` | `test_prop_sim_trusts_net_pnl_no_double_deduction` | `No daily_pnl_records available — check run_backtest output shape` | backtest output shape | **VIOLATION** — skips on a shape defect | **DID NOT FIRE** |
+| 12 | `test_signal_vector.py:185` | `test_signal_vector_present_in_result` | `backtester not importable in this test environment` | importability | **VIOLATION** | ✅ **SITE REMOVED** (converted) |
+| 13 | `test_signal_vector.py:195` | `test_signal_vector_present_in_result` | `Data not available: {e}` | **S3 + AWS creds** | **VIOLATION** — input `[3]` of `R-803`'s four | 🛑 **FIRED** |
+| 14 | `test_signal_vector.py:206` | `test_signal_vector_values_valid` | `backtester not importable` | importability | **VIOLATION** | ✅ **SITE REMOVED** (converted) |
+| 15 | `test_signal_vector.py:215` | `test_signal_vector_values_valid` | `Data not available: {e}` | **S3 + AWS creds** | **VIOLATION** | 🛑 **FIRED** |
+| 16 | `test_signal_vector.py:228` | `test_signal_vector_is_json_serializable` | `backtester not importable` | importability | **VIOLATION** | ✅ **SITE REMOVED** (converted) |
+| 17 | `test_signal_vector.py:237` | `test_signal_vector_is_json_serializable` | `Data not available: {e}` | **S3 + AWS creds** | **VIOLATION** | 🛑 **FIRED** |
+| 18 | `test_spec_family_bindings.py:47` | `_load_sample` **(helper)** | `reference sample corpus unavailable at {path}` | **`SAMPLES_DIR`** — 141 files, **0 tracked**, absolute path into ANOTHER worktree | **VIOLATION** — input `[2]` of `R-803`'s four | **DID NOT FIRE** |
+| 19 | `test_spec_family_bindings.py:569` | `_load_battery` **(helper)** | `h1-battery fixture unavailable at {path}` | h1-battery fixture | **VIOLATION** | **DID NOT FIRE** |
+| 20 | `test_spec_family_bindings.py:901` | `_governed_split` **(helper)** | `governed grade unavailable at {path}` | blind-readjudication `LOCKED.json` | ✅ **CLOSED** — converted to form `[1]` at `e55a9ef1`, sha `920557eb…`, 978 bytes | **DID NOT FIRE** |
+| 21 | `test_spec_family_bindings.py:914` | `_corpus_wait_session_rows` **(helper)** | `corpus unavailable at {d}` | corpus dir | **VIOLATION** | **DID NOT FIRE** |
+| 22 | `test_spec_family_bindings.py:1914` | `_load_module_at_ref` **(helper)** | `git unavailable for parent-diff: {exc}` | **git history** | **VIOLATION** — input `[4]` of `R-803`'s four | **DID NOT FIRE** |
+| 23 | `test_spec_family_bindings.py:1916` | `_load_module_at_ref` **(helper)** | `revision {ref} unavailable` | **git history** | **VIOLATION** — input `[4]` | **DID NOT FIRE** |
+| 24 | `test_spec_family_bindings.py:2815` | `test_both_flag_arms_agree_on_every_refusal_path_object` | `docs/ corpora unavailable in this checkout` | `docs/` corpora | **VIOLATION** — "in this checkout" is the tell | **DID NOT FIRE** |
+| 25 | `test_static_c_partials_ab.py:183` | `test_pf_computation_flag_independent` | `fixture_perfect.json not found in golden dir` | `fixture_perfect.json` | ⚠️ **`R-803`: TRACKED, dead-skip debt, NOT a fifth input** — tracked ⇒ absence must be HARD FAILURE | **DID NOT FIRE** |
+| 26 | `test_walk_forward_wrc_spa_emission.py:177` | `test_wrc_spa_values_present_when_sufficient_obs` | `CPCV paths unavailable — acceptable: {reason}` | computed `wrc.available` | **VIOLATION** — see §4 | **DID NOT FIRE** |
+| 27 | `test_walk_forward_wrc_spa_emission.py:192` | `test_wrc_spa_p_values_are_floats_in_unit_interval` | `CPCV unavailable in test environment` | computed `wrc.available` | **VIOLATION** — see §4 | **DID NOT FIRE** |
+| 28 | `test_walk_forward_wrc_spa_emission.py:305` | `test_wrc_spa_values_present_when_sufficient_obs` | `Plain WF unavailable in test environment` | computed `wrc.available` | **VIOLATION** — see §4 | **DID NOT FIRE** |
+| 29 | `test_walk_forward_wrc_spa_emission.py:318` | `test_wrc_spa_p_values_in_unit_interval_plain` | `Plain WF unavailable in test environment` | computed `wrc.available` | **VIOLATION** — see §4 | **DID NOT FIRE** |
+| 30 | `test_wave_b_intrabar_stops.py:380` | `test_eligibility_gate_no_htf_passthrough_preserves_signals` | `backtester not imported — avoid vectorbt JIT hang` | importability | 🛑 **OUT OF SCOPE — `STOP [11]`** | **DID NOT FIRE** |
+| 31 | `test_wave_b_intrabar_stops.py:405` | `test_eligibility_gate_empty_htf_passthrough` | same | importability | 🛑 **OUT OF SCOPE — `STOP [11]`** | **DID NOT FIRE** |
+| 32 | `test_wave_b_intrabar_stops.py:426` | `test_eligibility_gate_unregistered_strategy_passthrough` | same | importability | 🛑 **OUT OF SCOPE — `STOP [11]`** | **DID NOT FIRE** |
 
 **`unique rows == denominator`: 32 == 32.** ✅ Asserted, per `ACCEPT5-SKIP-CENSUS-ARTIFACT-1`.
 
@@ -145,7 +150,7 @@ DESK SEED test_walk_forward.py:379 in population: True   <- POSITIVE CONTROL
 
 | site | handler | disposition |
 |---|---|---|
-| `test_walk_forward.py:379` | `except Exception: pass` | 🛑 **CONFIRMED DEFECT** — desk-verified at the line. `except NotImplementedError` is fail-closed and CORRECT; the following bare arm swallows everything else, its own comment says *"other errors (data load, etc.) — that's OK"*, and control returns normally ⇒ **reports `PASSED`** |
+| `test_walk_forward.py:379` | `except Exception: pass` | ✅ **LEGITIMATE NARROW-PROPERTY HANDLER** — 🛑 **RETRACTED FROM `CONFIRMED DEFECT` BY `R-814 §0`, AND THE RETRACTION IS THE DESK'S OWN.** `[ARTIFACT-SOURCED, `R-814 §0`, read at `src/engine/walk_forward.py:2521-2536`]` the `optimize` guard raises **TWELVE LINES BEFORE** the data load, with no intervening branch ⇒ at `optimize=False` the property under test is **already decided** before any S3/data exception can occur; a wrongly-firing guard raises `NotImplementedError`, which the FIRST handler converts to `pytest.fail`. **The broad arm can only swallow errors occurring AFTER the verdict.** 🛑 **DO NOT REPAIR: deleting it would convert unrelated S3 unavailability into a FALSE RED in a governed member** |
 | `test_black_swan_evaluator.py:682` | `except Exception: pass` | ⚠️ **CANDIDATE** — swallows an `__import__` failure; the bound name is not used by the assertion that follows. Needs its own read; **not claimed as a defect** |
 | `test_trigger_safety_refusal.py:1042` · `:1102` | `except Exception: pass` | ✅ **DELIBERATE** — carries `# noqa: BLE001` and a written rationale: the neighbour arm may fail *downstream* of the consumers, and the question asked is *which consumers were reached*. Same shape, documented intent |
 | `test_trigger_safety_refusal.py:1040` · `:1100` · `:1173` | `except SystemExit: pass` | ✅ **LEGITIMATE** — absorbing a CLI `SystemExit` is the point of the call |
@@ -153,9 +158,17 @@ DESK SEED test_walk_forward.py:379 in population: True   <- POSITIVE CONTROL
 | `test_spec_family_bindings.py:536` · `:545` · `:2794` | `except OSError/SyntaxError/Exception: continue` | ✅ **LEGITIMATE ITERATION** — skipping unparseable members while walking a corpus |
 | `test_flag_off_parameterized_refusal.py:331` · `test_s6_candidate_transport_and_adapter_execution.py:552` | `except SyntaxError/TypeError` | ✅ **LEGITIMATE** — narrow, typed, control-flow |
 
-⇒ ★★★★★ **THE EXTENSION ADDS `1` CONFIRMED DEFECT AND `1` CANDIDATE — NOT `14`.**
-**`R-813 §2` predicted this** (*"several will be legitimate teardown"*), and the individual review is
-what separates them. ★★★★ **`A WIDER POPULATION IS NOT A LONGER DEFECT LIST — WIDENING THE SURFACE
+⇒ ★★★★★ **CORRECTED BY `R-814 §1`: THE EXTENSION ADDS `0` CONFIRMED DEFECTS, `1` CANDIDATE, `13`
+LEGITIMATE — NOT `14`, AND NOT `1`.** 🛑 **The single "confirmed" was the desk's own seed and it has
+been RETRACTED IN FULL** (`§0` of `R-814`); this census carried it for one round and no longer does.
+⚠️ **`ACCEPT5-SILENT-SWALLOW-SURFACE-1` IS RE-SPECIFIED, NOT CLOSED** — `0` confirmed, `1` candidate,
+further expansion **DEFERRED on measured low yield**, and `DEFERRED ≠ CLOSED` (`[instance-not-condition]`).
+**`R-813 §2` predicted the shape** (*"several will be legitimate teardown"*), and the individual review is
+what separates them. ★★★★★ **`AN UNSCOPED ALARM IS AS WRONG AS AN UNSCOPED REASSURANCE — IT JUST FEELS
+LIKE DILIGENCE INSTEAD OF COMPLACENCY.`** ⚠️ **The `[P4]` instrument used that retracted seed as its
+POSITIVE CONTROL. The control still fired correctly (the handler IS a no-effect handler); what was
+wrong was the DISPOSITION assigned to it, one layer up — so the instrument is sound and only its
+verdict column changed.** ★★★★ **`A WIDER POPULATION IS NOT A LONGER DEFECT LIST — WIDENING THE SURFACE
 AND CLASSIFYING IT ARE TWO ACTS, AND SHIPPING ONLY THE FIRST MANUFACTURES ALARM.`**
 ⚠️ **`[UNENUMERATED — OPEN]`** the swallow pattern covers `pass` / `continue` / bare `return`. A
 handler that logs-and-continues, or returns a sentinel, has the same consequence and is **NOT** in
@@ -181,14 +194,125 @@ list` shows no orphan.**
 
 ## 5. 🛑 WHAT THIS ARTIFACT DOES **NOT** ESTABLISH
 
-- 🛑 **`FIRED-IN-PRISTINE` IS `UNMEASURED` FOR ALL 32.** No fresh-tree run was performed in this
-  pass. **Nothing here may be read as "these skip / these do not" in a clean checkout.**
-- 🛑 **NO CONVERSION HAS BEEN PERFORMED.** This pass is the census only. `R3-4`'s remaining halves —
-  convert each in-scope class to a permitted form, and prove causality in a FRESH isolated
-  worktree — are **NOT DONE**.
+- ✅ **SUPERSEDED BY `§6`/`§7`: `FIRED-IN-PRISTINE` IS NOW MEASURED FOR ALL 32.** ⚠️ **BUT THE ORIGINAL
+  WARNING SURVIVES IN A SHARPER FORM: `[MEASURED, §6]` the fresh tree varies NO axis, so the column
+  says what fires ON THIS BOX and is **NOT** a clean-checkout claim.**
+- ⚠️ **CONVERSIONS ARE `7 / 32`, NOT `0` AND NOT `32`** (`A1`+`A2`, `AR-964 §2`). The remaining `25`
+  are unconverted; `§7` groups them by ROOT CAUSE rather than site-by-site.
 - ⚠️ **THE `§5`-CLASS COLUMN IS MY CLASSIFICATION, NOT A RUN.** It is read from the executable
   trigger line at each site. It NOMINATES the conversion work; it does not prove disposition.
 - ⚠️ **BROADCAST-SKIP FAN-OUT IS UNCOUNTED.** `§2` names the 6 helper sites but does **not**
   enumerate how many tests each silences. `[UNENUMERATED — OPEN]`
 - ⚠️ **`ACCEPT5-GOVERNED-SKIP-SCOPE-1` (worker-owned, `R-803`) REQUIRES CLASS `A`/`C` TO BE REVIEWED
   INDIVIDUALLY, NEVER A BLANKET `fail`.** No blanket conversion is proposed here.
+
+---
+
+## 6. 🛑 `[P2]` THE AXIS MATRIX — AND IT REFUTES THE CONTROL THAT WAS SUPPOSED TO PRODUCE `§3`'s COLUMN
+
+**Instrument:** worker `claude.exe 23692` · **Ruling:** `R-814 §7` (`AUTHORIZED NOW`, items 2–3) ·
+**Pin:** disposable worktree `wt-pristine-r34-20260811`, **detached at `120011c8`**.
+⚠️ **JOIN KEY — the pin is NOT current `HEAD`, and I state the delta rather than hiding it:**
+`[MEASURED HERE]` `git diff --stat 120011c8 4ccad27c` = **2 files, both under `docs/designs/`,
+`0` lines of executable code.** ⇒ the run measures the same executable tree as current `HEAD`.
+
+`R-813 §8 [P2]` orders MACHINE-LOCAL state separated from CREDENTIAL state, and forbids citing
+*"it skipped there too"* on an axis that was not varied. **So each axis is reported with the command
+that measured it, and `NOT VARIED` where it was not varied:**
+
+| axis | mechanism in the code | command that measured it | varied by a FRESH LINKED WORKTREE? |
+|---|---|---|---|
+| **CREDENTIAL** (S3/AWS) | `load_ohlcv` → S3 read, aborts before DuckDB | `boto3.Session().get_credentials()` → `NONE`; env probe; `ls -A ~/.aws` → `0` entries | 🛑 **NOT VARIED** — absent on the box itself, so a worktree cannot change it |
+| **`SAMPLES_DIR`** | `test_spec_family_bindings.py:41`, a **hardcoded ABSOLUTE path**, no env override | `os.path.isdir(...)` from inside the fresh tree → `True`, `141` files | 🛑 **NOT VARIED** — an absolute path resolves identically from any cwd |
+| **GIT HISTORY** | `_load_module_at_ref` → `git show <ref>:<path>` | `git rev-parse --git-common-dir` → **the MAIN repo's `.git`** | 🛑 **NOT VARIED** — a linked worktree SHARES the object store |
+| **`docs/` CORPORA** | `_BATTERY_DIR`, shakedown corpus, `_all_wait_session_objects` (repo-relative) | `git ls-files` → **146** and **16** TRACKED; present in the fresh tree | 🛑 **NOT VARIED** — a checkout materialises tracked files |
+| **GOLDEN FIXTURE** | `GOLDEN_DIR / "fixture_perfect.json"` | `git ls-files` → **1 TRACKED**, `EXISTS on disk` | 🛑 **NOT VARIED** — same reason |
+
+⇒ 🛑🛑🛑 **A FRESH LINKED WORKTREE ON THIS BOX VARIES `0` OF `5` AXES.** `R-812 §7`'s *"the positive
+control must be the FRESH isolated tree"* **cannot discriminate here — it is a control with no
+contrast**, and a green from it would have proven nothing.
+★★★★★ **`AN ISOLATED COPY IS NOT AN ISOLATED ENVIRONMENT. THE THING YOU DUPLICATED WAS THE WORKING
+DIRECTORY; EVERY INPUT THAT ACTUALLY DECIDES THESE SKIPS LIVES SOMEWHERE ELSE — IN THE MACHINE, IN
+THE SHARED OBJECT STORE, OR AT AN ABSOLUTE PATH THAT DOES NOT CARE WHERE YOU RUN FROM.`**
+✅ **This was PRE-REGISTERED as `HYPOTHESIS` in `AR-965 §5` before the run and RATIFIED as
+pre-registered by `R-814 §4`.** ⚠️ **The measured result is WORSE than my own prediction — I predicted
+untracked in-tree state would vary; `[MEASURED]` it does not, because the corpora are TRACKED.**
+
+## 7. ✅ `[P1]`/`[P3]` THE RUN — `ARM C0`, REPORTED BY MEMBERSHIP
+
+**`ARM C0` = credential chain ACTIVELY DISABLED, not merely observed absent** (`R-814 §3`):
+`AWS_ACCESS_KEY_ID`/`SECRET`/`SESSION_TOKEN` emptied · `AWS_PROFILE`/`AWS_DEFAULT_PROFILE` emptied ·
+`AWS_SHARED_CREDENTIALS_FILE` and `AWS_CONFIG_FILE` pointed at non-existent paths ·
+`AWS_EC2_METADATA_DISABLED=true` · container-credential URIs unset.
+**Pre-arm control, `[MEASURED HERE]`:** `boto3.Session().get_credentials()` → `NONE`.
+
+```
+MEMBERS (by the guard's OWN read_manifest, imported not re-implemented)  107
+  resolved 107 / 107      missing 0        <- existence control
+NODES COLLECTED                                                        2417
+  passed 2381 · failed 31 · skipped 3 · xfail 2
+```
+🛑 **`3` REAL SKIPS, NOT `5` — AND THE `2` ARE MINE TO OWN:** `[MEASURED HERE]` `junitxml` encodes a
+strict `xfail` as `<skipped type="pytest.xfail">`. My first parser read the ELEMENT and would have
+reported `5` skips. **Corrected by splitting on the `type` attribute before any claim was made.**
+★★★★ **`I READ THE NEIGHBOURING OBJECT AGAIN: THE ELEMENT NAMED "skipped" IS NOT THE EVENT NAMED
+"skip".`** (`[i-measured]`.) The `2` are deliberate tracked findings in
+`test_session_role_adversarial_fence.py` (`strict=True` xfail), **not environment skips.**
+
+**THE `3` SKIPPED NODE IDS, VERBATIM — `[P3]` MEMBERSHIP, NEVER COUNTS:**
+```
+src.engine.tests.test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_present_in_result
+src.engine.tests.test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_values_valid
+src.engine.tests.test_signal_vector.TestBacktesterSignalVectorIntegration::test_signal_vector_is_json_serializable
+REASON (all three, identical): "Data not available: S3 read for
+ 's3://trading-forge-data/futures/ES/consolidated/5min.parquet' aborted before DuckDB:
+ missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+```
+
+### `C0` vs the un-disabled baseline arm — a REPRODUCIBILITY control, joined by NODE ID
+```
+baseline nodes 2417   C0 nodes 2417
+only-in-baseline 0    only-in-C0 0    OUTCOME FLIPS 0
+POSITIVE CONTROL: 1 planted flip -> detector reports exactly 1  => DISCRIMINATES
+```
+⇒ ✅ **Actively disabling the chain changed NOTHING, which is itself the finding: it rules out a
+profile, a shared-config file, or instance metadata quietly supplying credentials — possibilities
+that mere env-var absence does NOT exclude.** ★★★ **`"NO ENV VAR" IS NOT "NO CREDENTIAL SOURCE".`**
+
+### `FIRED-IN-PRISTINE` — every `DID NOT FIRE` carries a POSITIVE WITNESS THAT THE TEST RAN
+| verdict | rows | witness |
+|---|---|---|
+| 🛑 **FIRED** | `13`, `15`, `17` | the 3 node IDs above, with the exact skip reason |
+| ✅ **SITE REMOVED** (converted `A1`/`A2`) | `2`, `3`, `4`, `5`, `12`, `14`, `16` | `[MEASURED]` `pytest.skip(` call sites across governed members = **25**; `32 − 7 = 25` **reconciles EXACTLY** against `1a639679` (`A1`, 3) + `c6362fc3` (`A2`, 4) |
+| **DID NOT FIRE** | `1`, `6`–`11`, `18`–`32` (22 rows) | each owning test observed **`passed`** in the run; for the 6 helper/broadcast sites the module executed **339 / 339 passed, 0 skipped**, and `[MEASURED]` every helper has live call sites (`_load_sample` 3 · `_load_battery` 2 · `_governed_split` 2 · `_corpus_wait_session_rows` 1 · `_load_module_at_ref` 6) |
+
+⚠️ **THE HONEST LIMIT ON ROWS `12`/`14`/`16`:** their witness node is the **SAME NODE** as `13`/`15`/`17`,
+which skipped through the DATA clause. **This run cannot independently re-prove the import clause is
+gone** — that was proven by the pre/post arms in `AR-964 §2`, and it is cited, not re-derived.
+⚠️ **STATIC CALL SITES ARE NOT EXECUTION TRACES.** *"Helper has callers + module had zero skips"* is
+strong, but a per-helper execution trace is `[UNENUMERATED — OPEN]`.
+
+### THE REMAINING `25`, GROUPED BY ROOT CAUSE (`R-814` acceptance — not site-by-site)
+| root cause | rows | status |
+|---|---|---|
+| **CREDENTIAL / S3** (the only cause that FIRES today) | `13`, `15`, `17` | 🛑 `ACCEPT5-SIGNAL-VECTOR-DATA-SUBSTRING-1` — **HIGH, REACHABLE.** Repair by typed/deterministic classification, **never a better substring** (`R-813 §6`) |
+| **MACHINE-LOCAL artifact paths** (`SAMPLES_DIR`, battery, corpora, git history, golden) | `18`–`25` | tracked-or-present ⇒ **dead-skip debt**: a tracked input's absence must be a HARD FAILURE, not a skip (`R-799 §5`) |
+| **SUBJECT SELF-EXCUSE** (`wrc.available is False`) | `26`–`29` | 🛑 `ACCEPT5-SUBJECT-SELF-EXCUSE-1`. **PASSED here ⇒ `available` was `True` ⇒ the clause is UNTESTED by this run**, and `STOP [30]` forbids converting it ahead of evidence |
+| **FIXTURE-OUTCOME skips** (own synthetic fixture / trade count) | `1`, `6`–`11` | form `[2]` fixtures that skip on their own output — conversion candidates, unconverted |
+| **OUT OF SCOPE** | `30`–`32` | `STOP [11]`, `R-814` forbidden list. **Named, not touched** |
+
+## 8. 🛑 WHAT `§6`–`§7` DO **NOT** ESTABLISH
+
+- 🛑 **`ARM C1` (CREDENTIALS ON) IS NOT RUN — BLOCKED ON THE OPERATOR, NOT ON EFFORT.** `[MEASURED]`
+  this box has **no** AWS credential source, and a worker **may not fabricate, mint, or source one**.
+  ⇒ **The claim *"these 3 skips are caused by the credential axis ALONE"* is `[UNPROVEN]`.** What is
+  proven is that they skip **with** the chain disabled and that the reason names the credential
+  variables. **`C1` requires the operator's word; the ask is filed in the `AR`.**
+- 🛑 **AND `C1` NEEDS A CONTROL BEFORE IT IS EVIDENCE (`R-814 §3`):** *"credentials present"* is not
+  *"the required read succeeds"*. Without a positive control proving the S3 object actually READS,
+  a green `C1` is unfalsifiable.
+- ⚠️ **`26`–`29` REMAIN UNTESTED IN BOTH ARMS** — they passed, so the self-excuse clause never
+  evaluated. `[UNPROVEN]`, and it is exactly what `C1` would probe.
+- ⚠️ **THE `31` FAILURES ARE NOT CHARACTERISED HERE.** This artifact is about SKIPS; the reds are the
+  standing baseline population and were neither analysed nor claimed.
+- ⚠️ **PORTABILITY IS NOT CLAIMED ANYWHERE IN `§6`/`§7`**, per `R-813 §8 [P2]` and `R-814 §7.3`.
