@@ -4,6 +4,68 @@
 
 ---
 
+## AR-999 · 2026-08-11 · 📌 **SEATING RECEIPT — FRESH WORKER SEAT `claude.exe 25076` TAKES THE SEAT `23968` VACATED AT `AR-998 §6`.** 👂 **EAR ARMED, BOTH ARMS RED-PROOFED, DELIVERY PROVEN, BACKFILL STATED.** ⚡ **AND I DID NOT STOP AT "THE DESK SAYS NOTHING IS AUTHORIZED": I TESTED `R-832 §6`'s ONE CONDITIONAL AUTHORIZATION AND MEASURED THAT ITS TRIGGER DID **NOT** FIRE.** 🛑 **RESULT: THE QUEUE IS GENUINELY DRY. `BLOCKED` IS THE HONEST RECOMMENDATION AND I CAN NAME WHY.**
+
+**SEAT `claude.exe 25076`. TREE `wt-h1-wave4-20260712`. `HEAD b4c9a275` · `origin 65d2ab1f`. RULING `R-832`. NEWEST AR BEFORE THIS ONE: `AR-998` (UNRULED, HELD FOR THE EXTERNAL READ).** 🛑 Nothing measured, nothing built, no production file opened, no arm run, no letter moved.
+
+### §1 — 📌 SEAT IDENTITY AND THE ROLL, BY IMAGE NAME + BIRTH TIME
+✅ **`[MEASURED HERE, parent walk from my own shell `$PID`, not assumed]`: `27556 powershell.exe` → **`25076 claude.exe` born `2026-08-11 12:06:34`** → `17540 powershell.exe` → `4900 explorer.exe`.** ⇒ **I am `25076`. I did not infer my own identity from the task list.**
+⚖️ **`[MEASURED HERE, `Win32_Process`]` seat `23968` is GONE from the census. `[seat-rolls-are-swaps]`: this is the PLANNED SWAP the operator holds the lever on, declared at `AR-998 §6` and named as his at `ADVISOR-STATE` `OPERATOR-FACING [2]`. I say SEAT ROLL, not "dead", and I hunt no lost work — `AR-998` is complete and self-describing.**
+✅ **AUTHORIZATION TRANSFER: `R-784 §3` — authorization transfers to the successor ON THE SUCCESSOR'S RECEIPT. This is that receipt.** ⚠️ **`[MEASURED HERE]` desk `claude.exe 28644` (born `10:53:52`) IS LIVE — I have a live sibling and I hold to `[two-operator-windows]`: no `checkout`, no `reset`, no index tidying, no push.**
+
+### §2 — 👂 THE EAR: ARMED, RED-PROOFED ON A THROWAWAY, DELIVERY PROVEN
+🛑 **CENSUS BY OWNERSHIP FIRST. NO ear under MY `claude.exe 25076` was watching `ADVISOR-RULINGS.md` ⇒ `worker-onboarding §2a[4]` says ARM ONE.**
+✅ **ARMED: `Monitor` `persistent: true` on `docs/designs/ADVISOR-RULINGS.md`, 20s poll. NOT a backgrounded `Bash` loop — `§2a` is explicit that such a loop notifies nobody because it only reaches the conversation when it EXITS.**
+✅ **DELIVERY PROVEN, NOT ASSUMED: the `EAR ARMED …` line arrived AS A CHAT NOTIFICATION.** ✅ **BACKFILL AT ARMING `[MEASURED HERE]`: `811` `^## R-` headings · newest `R-832` · `HEAD b4c9a275` · armed `~16:10Z`. I read `R-832` BY HAND, IN FULL, this session — an ear armed at `T` hears nothing before `T`.**
+✅ **RED-PROOFED BOTH ARMS ON A THROWAWAY BEFORE TRUSTING IT (`§2a`: a detector that has never gone off is not an instrument):** **NEGATIVE** — appended `## AR-555` and `### R-777` (wrong level) at `16:09:14Z` ⇒ **SILENT across ~15 poll cycles** · **POSITIVE** — appended `## R-999` at `16:09:47Z` ⇒ **FIRED `NEW RULING x1`.**
+⚠️ **AND THE HONEST LIMIT OF MY OWN RED-PROOF, WHICH I STATE RATHER THAN LET RIDE: my fixture appends at the BOTTOM while the real file is newest-at-TOP. The FIRING CONDITION (count increase) is order-independent and IS proven. The `newest:` LABEL is `[NOT PROVEN]` against a top-insertion file — on the throwaway it correctly reported the seed as "newest", which is right for that file and would be wrong for this one.** ★★★ **`A DETECTOR CAN BE PROVEN TO FIRE AND STILL CARRY AN UNPROVEN LABEL — AND THE LABEL IS THE PART A READER QUOTES.`** ⇒ **the desk hit this exact fixture/real-file polarity trap at `ADVISOR-STATE:72` and fixed the FIXTURE; I am declaring the residual instead of claiming it away.**
+⚠️ **THREE ORPHAN EARS — REPORTED, NOT KILLED (`§2a[3]`, and `[no-monitors-msg-advisor]`: never kill an ear you did not arm):** **`bash.exe 28368` `ruling_ear.sh` on the REAL `ADVISOR-RULINGS.md` — this was seat `23968`'s ear (`AR-998 §6` "EAR armed, delivery proven"), and its owning seat is GONE ⇒ it is now a live process delivering into a vacated seat** · `bash.exe 23812` on a THROWAWAY · `bash.exe 28188` on a THROWAWAY. ✅ **`bash.exe 14844/23560/18376` `report-ear.sh` on `AGENT-REPORTS.md` is the DESK's LIVE ear under `claude.exe 28644` — NOT MINE, NOT TOUCHED.** ★★★★ **`AR-998 §6` RECORDED "EAR ARMED" AND WAS TRUE WHEN WRITTEN; THE PROCESS OUTLIVED THE SEAT IT SPOKE TO. `A STATE FILE CLAIMING AN EAR IS ARMED IS A CLAIM ABOUT A PROCESS, AND PROCESSES OUTLIVE SEATS.`**
+
+### §3 — ⚡ I TESTED THE ONE CONDITIONAL AUTHORIZATION INSTEAD OF INHERITING "NOTHING IS AUTHORIZED"
+⚖️ **`ADVISOR-STATE`'s live block says `AUTHORIZED NOW: NOTHING NEW`, and predicts my arrival: *"A fresh worker seat arriving before that read WILL find itself with no authorized next task."*** 🛑 **`worker-execution §11a` forbids me from treating that as a stop until I have READ THE RULING MYSELF — a receipt is not a stop, and most campaign latency has been spent waiting for a YES already in the ledger. So I looked for live scope before reporting idle.**
+⚡ **`R-832 §6` contains the campaign's only conditional authorization not yet obviously discharged:** *"Run the direct `STOP B` controls, plus targeted `[F]`/`[J]` layer-2 controls **IF the shared discriminator is touched** — and `§4`(a)/(b) DO touch it, so those controls are OWED under (a) or (b)."* **`AR-998 §2` closed `M3` under seam (a) ⇒ on the ruling's face, targeted `[F]`/`[J]` controls are OWED and AUTHORIZED, and `AR-998` did not run them.**
+🛑 **SO I MEASURED THE TRIGGER RATHER THAN THE PROSE, AND IT DID NOT FIRE:**
+```
+[MEASURED HERE, git show --name-only over dd18db5c 099cf1d0 ff2105f1]
+  the 3 repairs touch EXACTLY 4 files, ALL src/engine/tests/*.py:
+    test_apply_trade_management_branching.py           (M3)
+    test_gate3_defect4_class_backtest_roll_cost_equity.py (M3)
+    test_wave1_track1a_2026_06_27.py                   (M2)
+    test_wave_b_intrabar_stops.py                      (M1)
+  seam (a) as BUILT is a pure deletion: 2 files, +2 / -84.
+[MEASURED HERE] git diff --name-only 738b1659..HEAD -- scripts/accept5_isolation_plugin.py
+  => EMPTY. The shared discriminator is UNTOUCHED since AR-997.
+```
+✅ **AND I CONTROL-PROBED THAT NULL, because an empty grep over a wrong path is not an absence (`worker-onboarding §3`):** **POSITIVE CONTROL 1** — the same command with no path filter returns `8` files ⇒ it CAN return non-empty · **POSITIVE CONTROL 2** — the same command over the WIDER range `7f38cb1c..HEAD` DOES return `scripts/accept5_isolation_plugin.py` ⇒ **the path filter resolves and can name this exact file** · **EXISTENCE** — the file is `15,625` bytes and `_is_genuine_import` is an EXECUTABLE `def` at `:123`, CALLED at `:254` (`:251` is a comment; I read the executable line).
+⇒ ⚡ **CONCLUSION: `R-832 §6`'s trigger condition is FALSE for the repairs AS IMPLEMENTED. The desk's parenthetical *"(a)/(b) DO touch it"* was written BEFORE the repair existed — it was a prediction about what seam (a) would require, and the seam that was actually built is a deletion INSIDE two governed test files that touches no instrument.** ⇒ **the targeted `[F]`/`[J]` controls are NOT owed. `AR-998 §6` reached the same place by a different route (citing `AR-997`'s re-run against the C-extension widening); I did not adopt that reasoning — I measured the file.**
+⚖️ **THIS IS A CONFIRMATION OF THE DESK, NOT A CORRECTION OF IT. `AUTHORIZED NOW: NOTHING NEW` is CORRECT — and it is now independently verified rather than relayed** (`[second-reader-anchoring]`: I measured the commits, not the desk's sentence about the commits).
+
+### §4 — 🛑 PRIOR-ART CHECK, RUN AND STATED (`worker-execution §0.-0.5`)
+✅ **Terms searched, and I name them because `AN UNSTATED SEARCH IS INDISTINGUISHABLE FROM NO SEARCH`:** `targeted` over `ADVISOR-RULINGS.md` (`19` hits; `:68` is the governing clause) · `` `[F]` `` over `AGENT-REPORTS.md` (`[F]` = the containment proof that layer 2 REMOVES a real governed contaminant — `AR-983 §2`, `AR-987`; delivered on a governed file in a disposable worktree at an explicit pin) · `RATIFY-1` over `ADVISOR-RULINGS.md` (`:694` — *"`[F]` IS CONDITIONAL: it is a containment proof about the CURRENT layer 2"*) · `_is_genuine_import` over `scripts/accept5_isolation_plugin.py`.
+⇒ **`[F]` and `[J]` are ESTABLISHED procedures with committed instruments (`ed7d501f`, `b1fed2e1`/`7f734c06`). Had the trigger fired I would have REUSED them, not authored anything** (`R-648`: adapt, do not author; do not build a second comparator or oracle).
+
+### §5 — 📌 STATE, AND WHAT I DID NOT MEASURE
+```
+POSITION   HEAD b4c9a275 (desk's ADVISOR-STATE commit, LOCAL-ONLY) . origin 65d2ab1f
+           (AR-998). The desk does not push this branch (STOP [58]); it has NOT
+           asked me to carry b4c9a275 to origin, so I have NOT pushed. Saying so
+           rather than tidying it: a push runs the pre-commit stash hook against a
+           LIVE sibling's tree ([precommit-stash]), and nothing needs it right now.
+BLOCKED ON the five certifying arms, blocked by R-832 §6. Lifting that block is a
+           RULING, and that ruling waits on the external read of AR-998.
+NOT OWED   targeted [F]/[J] layer-2 controls -- trigger measured FALSE (§3).
+           a full C1-C13 re-run -- precondition holds, re-verified in §3.
+IN FLIGHT  NOTHING. No sub-agent dispatched, none owed.
+EAR        armed under claude.exe 25076, red-proofed both arms, delivery proven.
+```
+🛑 **WHAT I DID NOT MEASURE, STATED AS A PARTIAL BECAUSE A PARTIAL THAT READS AS COMPLETE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE:** I did **NOT** re-run any of `AR-998`'s `PRE`/`POST`/positive controls — **I have RELAYED its file-scope order-stability result, not re-executed it** · I did not run the five arms · I did not measure whether any node OUTSIDE the `12` became order-dependent (`AR-998` flags this too; **the population arm is what would show it**) · I did not touch `RATIFY-1`, which stands **UNCERTIFIED at `6/10`** with `[F]` conditional · I did not open `ACCEPT5-DOCS-READ-AS-SOURCE-1` · I did not adjudicate the `1` pre-existing stable failure in `test_wave_b_intrabar_stops.py`.
+⚖️ **AND A GRADE IS OWED THAT IS NOT MINE TO TAKE OR TO ASK FOR TWICE: `AR-998`'s three repairs are doer-graded only. The second independent `accuracy-validator` grade is queued behind the five arms (`R-832 QUEUED NEXT`, `STOP [50]` re-arms) — the desk dispatches it, and I name it here so it is not later reported as an unowned prerequisite** (`[grader-agent]`).
+
+**RECOMMENDATION: `BLOCKED`** — and I name which of `worker-execution §11a[3]`'s reserved cases applies: **the queue has ACTUALLY run dry.** ⚡ **This is NOT `APPROVAL_REQUESTED` for scope I already hold: I checked for held scope in `§3`, found exactly one candidate, and measured it closed.** 🛑 **The single gate is the external read on `AR-998`; the operator is the courier, and that relay is the one action that moves this campaign.**
+**Next task the moment the block lifts, as `R-832 §6` defines it and needing no re-derivation:** the **FIVE-ARM CERTIFYING RUN** — `A`/`B`/`C`/`D`/`E` from ONE clean exclusive worktree at the then-current pin, `A == B == C == D` and `A == E` by **EXACT NODE → OUTCOME**, each arm `<= 10.0` min, **NO carve-out for the `12`**, acceptance = **ORDER-DEPENDENT MEMBERSHIP `0`** at population scope.
+
+---
+
 ## AR-998 · 2026-08-11 · ✅✅✅ **ALL THREE MECHANISMS REPAIRED. `M3` `M2` `M1` DONE, EACH WITH `PRE` / `POST` / A BITING POSITIVE CONTROL — AND ALL FOUR AFFECTED FILES ARE NOW ORDER-STABLE (`canonical == reversed`).** ⚡ **`STOP H` DID **NOT** FIRE: the deterministic import completes in `0.92s`, no hang.** 🛑 **NONE OF THE SIX FORBIDDEN FALSE CLOSURES WAS USED, AND `M1` REFUSED THE CHEAP ONE ON `R-832 §3`'s MONEY-PATH JOIN.** ⚖️ **I HAND OFF AFTER THIS — AT EXACTLY THE SEAM `R-832 §6` NAMED.**
 
 **SEAT `claude.exe 23968`. TREE `wt-h1-wave4-20260712`. `HEAD ff2105f1`. RULING `R-832 §7`, order `M3 → M2 → M1` as adopted.** 🛑 Five certifying arms NOT run · neither preserved worktree removed · `margin_expansion.py` NOT touched · no promotion · no seal · `CLUSTER-E` HELD · nothing from `R-828 §6[8]`.
