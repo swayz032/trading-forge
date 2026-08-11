@@ -4,6 +4,63 @@
 
 ---
 
+## AR-974 · 2026-08-11 · ✅ **CLUSTER `C` LANDED (`5b59b3a9`) AND THE `R-818 §4` LEAK REPAIR LANDED (`c2193868`), BOTH RED-PROOFED.** 🛑🛑🛑 **BUT `R-818 §4`'s POSTCONDITION HAS FOUR TERMS AND ONLY THREE HOLD — `CANONICAL COMPANY` STILL DISAGREES. RUN-COMPOSITION DEPENDENCE IS **NOT** CLOSED; AT LEAST A **THIRD** CONTAMINATOR EXISTS.** ⚖️ **AND I AM CORRECTING MY OWN COMMIT MESSAGE, WHICH SAYS "ZERO RUN-COMPOSITION FLIPS" AND IS TRUE ONLY OF THE THREE TERMS I TESTED.** ✅ **THE PINNED WORKTREE WORKED: FIRST VALID CANONICAL RUN AFTER THREE VOIDS.**
+
+**SEAT `claude.exe 6536`. `HEAD c2193868`, PUSHED (`ls-remote` MATCH).**
+
+### §1 — 🛑🛑🛑 THE HEADLINE: THE REPAIR IS CORRECT AND THE DEFECT IS STILL OPEN
+`[MEASURED HERE, pinned worktree at `c2193868`, BY EXACT NODE ID from the committed instrument's feeder]`:
+```
+R-818 §4 required:  PnL alone == culprit1+PnL == culprit2+PnL == CANONICAL COMPANY
+
+  PnL alone            51 nodes,  4 failures  (the commission nodes; no_trades PASSES)
+  culprit1 + PnL       51 nodes,  4 failures   flips 0  missing 0  extra 0   ✅
+  culprit2 + PnL       51 nodes,  4 failures   flips 0  missing 0  extra 0   ✅
+  both      + PnL      51 nodes,  4 failures   flips 0  missing 0  extra 0   ✅
+  CANONICAL COMPANY    51 nodes,  1 failure   (no_trades) — the 4 commission
+                                               nodes PASS                     ❌
+```
+⇒ 🛑 **THE TWO CONFIRMED LEAKERS NO LONGER CAUSE FLIPS. THE CANONICAL POPULATION STILL DOES.** ⇒ **at least one FURTHER contaminating predecessor exists among the other prefix files.**
+🛑 **MECHANISM OF MY OWN NEAR-MISS, NAMED: DELTA DEBUGGING RETURNS *A* CULPRIT, NOT *ALL* CULPRITS.** Each bisection halts at the first subset that reproduces; once that subset is repaired the remaining sources are simply invisible to it. ★★★★★ **`A BISECTION IS A SEARCH FOR ONE SUFFICIENT CAUSE, AND I READ ITS ANSWER AS THE COMPLETE SET. THE PROOF THAT WOULD HAVE CAUGHT ME WAS ALREADY WRITTEN INTO THE RULING — IT HAD A FOURTH TERM, AND I VERIFIED THREE.`** (`[instance-not-condition]`, FOURTH conviction of this shape.)
+⚖️ **SELF-CORRECTION, ON THE RECORD BECAUSE THE COMMIT IS PUSHED AND I WILL NOT REWRITE IT:** `c2193868`'s message says **`ZERO run-composition flips`**. **That is TRUE of arms `A`–`D` and FALSE as a statement about the defect.** The commit body does say the canonical arm was *"still owed"* — but the headline outruns the caveat, which is the exact shape `R-817 §1` convicted in the desk's own fan-in number. ⇒ **Read `c2193868` as scoped to the two confirmed leakers.**
+
+### §2 — ✅ WHAT THE REPAIR DID ACHIEVE, AND IT IS REAL
+✅ **Both culprit files now carry an autouse per-test `sys.modules` boundary** — snapshot before; on teardown **delete every key absent before** (`R-818 §4`'s named trap: a module IMPORTED while the fakes were live caches them in its own globals) and **restore every pre-existing key to the SAME OBJECT IDENTITY** — then **ASSERT both postconditions** rather than assume them. **Asserted inside the EXISTING node IDs; no new test identities minted, per `R-818 §4`.**
+✅ **POSITIVE WITNESS THAT THE BOUNDARY RAN AND HELD:** the fixture is autouse over every test in both files and **its two assertions never fired**, while the files' own tests continued to run.
+✅ **AND I JOINED THE ONE CULPRIT-FILE FAILURE BY NODE ID AND MESSAGE RATHER THAN ASSUMING IT WAS BASELINE:** `TestBEOnTP1::test_trail_stop_moves_to_be_on_tp1_hit`, message `AssertionError: Expected trail_stop >= BE (4000.0), got 3991.0` — **a trail-stop DOMAIN assertion, not my boundary assertion**, and one of the `31` known baseline reds. ★★★ **`MY OWN FIX ASSERTS ON TEARDOWN, SO A FAILURE IN THAT FILE IS A SUSPECT UNTIL ITS MESSAGE IS READ.`**
+
+### §3 — ✅ CLUSTER `C` (rows `26`–`29`), CONVICTED BY MUTATION, NOT OBSERVATION
+`test_walk_forward_wrc_spa_emission.py:177/:192/:305/:318` — `if wrc.get("available") is False: pytest.skip(...)` → `assert wrc.get("available") is not False, "... Engine reason: {reason!r}"`.
+🛑 **THE OLD PREMISE WAS FACTUALLY FALSE AND I CHECKED IT AT THE LINE:** the messages blamed *"the test environment (no S3 data, ...)"*, but the OHLCV is `_make_trending_data(n=800)`, generated **in-process** and passed as `data=`. **No environmental input reaches that path.** Same shape `AR-969` convicted on rows `8`–`11`.
+```
+MUTATION PLANTED ON THE REAL PATH (the statistics entry points walk_forward
+imports INSIDE its own try block), plant invocations witnessed = 17:
+  PRE-FIX  + mutation :  6 failed,  7 passed, 4 SKIPPED   <- the false green
+  POST-FIX + mutation : 10 failed,  7 passed, 0 skipped   <- 6+4=10, exactly the
+                                                             four skips became reds
+  UNMUTATED CONTROL   : 17 passed, 0 skips                <- no regression
+  pytest.skip in file : 0
+```
+✅ **BOTH ARMS RE-TAKEN after removing the now-unused `pytest` import** — a number carried across a repair is stale.
+🛑 **`test_wrc_spa_unavailable_on_short_data` and `..._plain` NOT TOUCHED** (`R-815 §7 C`); diff hunks are confined to the four sites, verified by `git diff -U0` hunk headers.
+⚠️ **MY OWN INSTRUMENT LIED FIRST AND MY GUARD CAUGHT IT:** the mutation initially refused to arm — `MUTATION TARGET ABSENT`. `[MEASURED]` `src.engine.statistics.whites_reality_check` resolves to a **FUNCTION**, not the module, because the package `__init__` exports a same-named function; plain attribute access never reaches the module. Fixed with `importlib.import_module`. ★★★★★ **`I WAS ABOUT TO PATCH THE NEIGHBOURING OBJECT (`[i-measured]`), AND A MUTATION THAT CANNOT BITE WOULD HAVE READ AS "NO FAILURES" — A PERFECT-LOOKING CONTROL. THE REFUSAL EXISTS BECAUSE I WROTE IT BEFORE I NEEDED IT.`**
+
+### §4 — ✅ `R-818 §6` OBEYED, AND IT IMMEDIATELY PAID
+🛑 **`[MEASURED]` THREE canonical runs were VOIDED tonight by `HEAD` moving mid-run:** `723c773d→604d4e6e` (my own `AR-971` commit, my error) · `5b59b3a9→2805582f` (the desk's `R-818` commit) · plus the earlier `AR-971` void. **A `~2.5` min run against a branch two seats commit to.**
+✅ **The pinned disposable worktree `wt-accept5-pin-20260811` at `c2193868` produced the FIRST VALID canonical run of this seat:** `collected/executed/failed/skip/xfail = 2419/2419/31/0/2`, **independent junitxml feeder AGREES on membership and size**, `feeder_corrupted False`, **`NEW failures 0`**, `UNAUTHORIZED GONE 0`.
+✅ **`ACCEPTANCE: REFUSED`, AND I JOIN THE REASON AS `STOP [34]` REQUIRES:** `SEALED DISPOSITION CHANGED — 3 sealed tests no longer SKIP` (the three `signal_vector` nodes from Cluster `A`). **`R-818 §2` HOLDS this refusal for the remainder of `R3-4`. NOT a regression. NOT cited as one. No disposition seal minted.**
+🛑 **DISPOSITION DELTA RECORDED FOR THE EVENTUAL SUCCESSOR SEAL (`R-818 §2`): `+0 / -3`, node IDs `test_signal_vector_is_json_serializable` · `test_signal_vector_present_in_result` · `test_signal_vector_values_valid`, receipt = the pinned run at `c2193868`.**
+
+### §5 — ⏭️ IN FLIGHT AND OWED
+⏳ **BISECTION 3 RUNNING on the repaired tree** — same gated method, same 5-node target, to name contaminator `3`. **Its positive control is the full prefix, which `§1` proves still reproduces, so the search is valid.**
+🛑 **NOT DONE:** contaminator `3` `[UNIDENTIFIED]` · the `20` nominations `[UNADJUDICATED]` (`R-818 §7[2]`, not started) · Clusters `D`, `F`, `E` UNSTARTED · `H` FORBIDDEN, untouched · the `31` baseline reds `[NOT ANALYSED]`.
+⚠️ **`R-816 §5`'s TWO OUTCOMES REMAIN UNDECIDED AND I STILL DO NOT PRE-DECIDE.** `[MEASURED]` in isolation the four commission tests FAIL; in canonical company they PASS. **Until composition is irrelevant, "which answer is correct" cannot be asked — `R-816 §5`'s own ordering: `FIRST MAKE RUN COMPOSITION IRRELEVANT; ONLY THEN ASK WHICH ANSWER IS CORRECT.`**
+🛑 **I do NOT claim `ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` closed, and I do NOT claim Cluster `C` closed** — `C`'s own canonical confirmation rode the `2805582f`-voided run and was RE-TAKEN inside the pinned run above (`NEW failures 0`), but the desk owns closure.
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **Continuing on contaminator `3`, then `R-818 §7[2]`'s adjudication, then `D` → `F` → `E`. No round-trip.**
+
+---
+
 ## AR-973 · 2026-08-11 · ✅✅ **`ACCEPT5-RUN-COMPOSITION-DEPENDENCE-1` TRACED TO **TWO** NAMED CULPRIT FILES BY ORDERED DELTA DEBUGGING, BOTH BISECTIONS GATED ON CONTROLS THAT DISCRIMINATED.** 🛑🛑🛑 **AND THEY SHARE ONE MECHANISM: AN UNRESTORED `sys.modules` INJECTION THAT REPLACES REAL ENGINE MODULES — INCLUDING `src.engine.prop_sim` — FOR EVERY TEST THAT RUNS AFTER THEM IN THE PROCESS.** ⚠️ **MECHANISM CONVICTED ONLY PARTIALLY, AND I SAY SO: MY PROBE MOVED `3` OF THE `5` AND INVENTED `2` NEW FAILURES. NO REPAIR MADE.**
 
 **SEAT `claude.exe 6536`. `HEAD 9aa360cb`. `R-817 §3 [2]` — TRACE ONLY; `[3]` REPAIR NOT ATTEMPTED.**
