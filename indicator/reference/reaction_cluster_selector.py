@@ -15,6 +15,7 @@ class ReactionInterval:
     lower: float
     upper: float
     source_id: str
+    reaction_strength: float = 1.0
 
     def __post_init__(self) -> None:
         if not self.source_id:
@@ -23,6 +24,8 @@ class ReactionInterval:
             raise ValueError("reaction interval prices must be finite")
         if self.lower <= 0 or self.upper <= 0 or self.lower >= self.upper:
             raise ValueError("reaction interval must have positive lower < upper")
+        if not isfinite(self.reaction_strength) or self.reaction_strength < 0:
+            raise ValueError("reaction_strength must be finite and non-negative")
 
 
 @dataclass(frozen=True)
@@ -146,24 +149,37 @@ def select_target_ladder(
     penetration_fraction: float,
     tick: float,
     max_targets: int = 3,
+    min_reaction_strength: float = 0.0,
 ) -> Tuple[TargetLevel, ...]:
     """Select ordered, structurally separate reaction-cluster targets.
+
+    Reaction quality is a hard precondition.  Observations below
+    ``min_reaction_strength`` are removed *before* clustering or distance ranking,
+    so a weak nearby shelf cannot outrank a farther but actually reactive shelf.
+    Distance may sequence already-qualified shelves; it may never create quality.
 
     Both swing-high and swing-low reaction intervals may be supplied. The selector
     groups them by the near edge for the requested side. A lone isolated pivot cannot
     qualify when ``min_touches >= 2``.
     """
-    rows = tuple(intervals)
     if side not in {"LONG", "SHORT"}:
         raise ValueError("side must be LONG or SHORT")
     if not isfinite(entry) or entry <= 0:
         raise ValueError("entry must be finite and positive")
     if entry_gap < 0 or zone_gap < 0 or tolerance < 0:
         raise ValueError("gaps/tolerance must be non-negative")
+    if not isfinite(min_reaction_strength) or min_reaction_strength < 0:
+        raise ValueError("min_reaction_strength must be finite and non-negative")
     if min_touches < 2:
         raise ValueError("min_touches must be >= 2")
     if max_targets < 1:
         raise ValueError("max_targets must be >= 1")
+
+    rows = tuple(
+        interval
+        for interval in intervals
+        if interval.reaction_strength + 1e-12 >= min_reaction_strength
+    )
 
     out = []
     boundary = entry
@@ -179,14 +195,19 @@ def select_target_ladder(
         )
         if cluster is None:
             break
-        out.append(
-            _target_from_cluster(
-                cluster,
-                side=side,
-                penetration_fraction=penetration_fraction,
-                tick=tick,
-            )
+        target = _target_from_cluster(
+            cluster,
+            side=side,
+            penetration_fraction=penetration_fraction,
+            tick=tick,
         )
+        # Defensive profit-side invariant.  The cluster geometry above already
+        # enforces this, but keep the invariant explicit at the semantic boundary.
+        if side == "LONG" and target.price <= entry:
+            raise AssertionError("LONG target must be above entry")
+        if side == "SHORT" and target.price >= entry:
+            raise AssertionError("SHORT target must be below entry")
+        out.append(target)
         boundary = cluster.upper if side == "LONG" else cluster.lower
         required_gap = zone_gap
     return tuple(out)
