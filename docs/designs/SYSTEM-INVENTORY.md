@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `299e64d14bf3e98153284a6d3b6b0e809a2e6b38`  (worktree DIRTY at generation time)
+> Generated at commit `a2a2ce7a8e3d8dc41f38ec1f12d8f58a21e00e16`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -42,10 +42,10 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
 | `src/` | 1831 | 753 |
-| `scripts/` | 216 | 215 |
+| `scripts/` | 219 | 217 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2082** | **968** |
+| **TOTAL** | **2085** | **970** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **618** of **2082** parsed files.
+Total entry points: **94**.  Modules reachable from them: **618** of **2085** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -200,7 +200,7 @@ table below it.**
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3245 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1542 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.1% of 4836 rows |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.1% of 4837 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=618 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
@@ -209,7 +209,7 @@ table below it.**
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=1876 ts=2917 |
-| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=36 (probe runs; 0 would be a legitimate reading) |
+| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=37 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6599/6599 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
@@ -247,9 +247,9 @@ table below it.**
 | `WIRED` | 3245 | 67.1% |
 | `FLAG-GATED` | 6 | 0.1% |
 | `BUILT-UNREACHABLE` | 1542 | 31.9% |
-| `DECLARED-ABSENT` | 36 | 0.7% |
+| `DECLARED-ABSENT` | 37 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4836** | |
+| **TOTAL** | **4837** | |
 
 ---
 
@@ -264,6 +264,7 @@ table below it.**
 | `scripts/h1-mini-phaseB-tryout.ts` | 0 | 0 | 0 | 1 | 0 | 1 |
 | `scripts/h1-reconcile-and-grant-burst.ts` | 0 | 0 | 0 | 1 | 0 | 1 |
 | `scripts/h1-seed-ledger.ts` | 0 | 0 | 0 | 1 | 0 | 1 |
+| `scripts/ratify1_controls/redproof_child_validity.py` | 0 | 0 | 0 | 1 | 0 | 1 |
 | `src/dashboard/components` | 0 | 0 | 1 | 1 | 0 | 2 |
 | `src/data/fetchers` | 2 | 0 | 1 | 1 | 1 | 5 |
 | `src/data/loaders` | 9 | 0 | 3 | 0 | 1 | 13 |
@@ -914,7 +915,7 @@ invisible for weeks.
 
 ## 6. DECLARED-ABSENT - referenced, but not on disk
 
-**36 rows.**  Two probes feed this: unresolvable internal import specifiers, and
+**37 rows.**  Two probes feed this: unresolvable internal import specifiers, and
 repo-relative path literals (`src/**.py`, `scripts/**`) naming a file that does not exist -
 the latter is the TS->Python subprocess seam, where a typo fails only at runtime.
 
@@ -927,6 +928,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 | `scripts/frontier-daily-ledger.json` | path-literal | `scripts/h1-mini-phaseB-tryout.ts:58` | repo-relative path literal with no file on disk |
 | `scripts/frontier-daily-ledger.json` | path-literal | `scripts/h1-reconcile-and-grant-burst.ts:3` | repo-relative path literal with no file on disk |
 | `scripts/frontier-daily-ledger.json` | path-literal | `scripts/h1-seed-ledger.ts:4` | repo-relative path literal with no file on disk |
+| `src/engine/tests/NO_SUCH_FILE.py` | path-literal | `scripts/ratify1_controls/redproof_child_validity.py:65` | repo-relative path literal with no file on disk |
 | `src/components/forge/ValidationCadencePanel.ts` | path-literal | `src/dashboard/components/ValidationCadencePanel.tsx:19` | repo-relative path literal with no file on disk |
 | `scripts/databento_download.py` | path-literal | `src/data/fetchers/databento.ts:19` | repo-relative path literal with no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/mc_multi_asset.py:304` | import specifier resolves to no file on disk |
@@ -1670,7 +1672,7 @@ _...481 more omitted from this table._
 | `support_verdict_from_stage2_response` | function | `src/engine/extraction/pilot_conveyor.py:1398` | defining module is not reachable from any measured entry point |
 | `diagnose_certificate` | function | `src/engine/extraction/pilot_conveyor.py:1439` | defining module is not reachable from any measured entry point |
 | `finalize_certificate` | function | `src/engine/extraction/pilot_conveyor.py:1502` | defining module is not reachable from any measured entry point |
-| `aggregate` | function | `src/engine/extraction/pilot_conveyor.py:1678` | no non-test reference outside its own definition; 3 test file(s) do reference it |
+| `aggregate` | function | `src/engine/extraction/pilot_conveyor.py:1678` | defining module is not reachable from any measured entry point |
 | `_synthetic_dry_run_propose_fn` | function | `src/engine/extraction/pilot_conveyor.py:1794` | defining module is not reachable from any measured entry point |
 | `run_dry_run_synthetic` | function | `src/engine/extraction/pilot_conveyor.py:1811` | defining module is not reachable from any measured entry point |
 | `write_dry_run_artifact` | function | `src/engine/extraction/pilot_conveyor.py:1869` | defining module is not reachable from any measured entry point |
@@ -3504,15 +3506,15 @@ This is the *we already have this* list.  Check it before writing anything.
 | `pull_definition` | function | `src/data/scripts/databento_definition_pull.py:92` | 0 | unique |
 | `check_against_expected` | function | `src/data/scripts/databento_definition_pull.py:179` | 0 | unique |
 | `save_to_cache` | function | `src/data/scripts/databento_definition_pull.py:213` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 186 | AMBIG |
+| `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 187 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_imbalance_pull.py:64` | 4 | AMBIG |
 | `et_to_utc_window` | function | `src/data/scripts/databento_imbalance_pull.py:72` | 0 | unique |
 | `pull_imbalance_for_date` | function | `src/data/scripts/databento_imbalance_pull.py:98` | 0 | unique |
 | `get_trading_dates` | function | `src/data/scripts/databento_imbalance_pull.py:185` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_imbalance_pull.py:197` | 186 | AMBIG |
+| `main` | function | `src/data/scripts/databento_imbalance_pull.py:197` | 187 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_statistics_pull.py:66` | 4 | AMBIG |
 | `pull_statistics` | function | `src/data/scripts/databento_statistics_pull.py:74` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 186 | AMBIG |
+| `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 187 | AMBIG |
 
 </details>
 
@@ -3641,7 +3643,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_get_archetype_class_map` | function | `src/engine/archetype_evaluator.py:100` | 0 | unique |
 | `_build_synthetic_df` | function | `src/engine/archetype_evaluator.py:191` | 0 | unique |
 | `evaluate_archetype` | function | `src/engine/archetype_evaluator.py:262` | 0 | unique |
-| `main` | function | `src/engine/archetype_evaluator.py:374` | 186 | AMBIG |
+| `main` | function | `src/engine/archetype_evaluator.py:374` | 187 | AMBIG |
 | `_emit_error` | function | `src/engine/archetype_evaluator.py:453` | 0 | unique |
 
 </details>
@@ -3716,7 +3718,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_strategy_class` | function | `src/engine/backtester.py:8106` | 1 | unique |
 | `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8125` | 0 | unique |
 | `_rescore_with_crisis` | function | `src/engine/backtester.py:8155` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:8219` | 186 | AMBIG |
+| `main` | function | `src/engine/backtester.py:8219` | 187 | AMBIG |
 
 </details>
 
@@ -3952,7 +3954,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_bars` | function | `src/engine/context_runner.py:25` | 1 | unique |
 | `run_bias` | function | `src/engine/context_runner.py:35` | 0 | unique |
 | `run_evaluate` | function | `src/engine/context_runner.py:141` | 0 | unique |
-| `main` | function | `src/engine/context_runner.py:317` | 186 | AMBIG |
+| `main` | function | `src/engine/context_runner.py:317` | 187 | AMBIG |
 
 </details>
 
@@ -4062,7 +4064,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_parquet_data` | function | `src/engine/deepar_forecaster.py:147` | 0 | unique |
 | `_prepare_series` | function | `src/engine/deepar_forecaster.py:195` | 0 | unique |
 | `DeepARForecaster` | class | `src/engine/deepar_forecaster.py:291` | 0 | unique |
-| `main` | function | `src/engine/deepar_forecaster.py:571` | 186 | AMBIG |
+| `main` | function | `src/engine/deepar_forecaster.py:571` | 187 | AMBIG |
 
 </details>
 
@@ -4305,7 +4307,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `cluster_graveyard` | function | `src/engine/graveyard/cluster.py:19` | 0 | unique |
 | `_aggregate_failure_modes` | function | `src/engine/graveyard/cluster.py:97` | 0 | unique |
 | `_aggregate_categories` | function | `src/engine/graveyard/cluster.py:106` | 0 | unique |
-| `main` | function | `src/engine/graveyard/cluster.py:119` | 186 | AMBIG |
+| `main` | function | `src/engine/graveyard/cluster.py:119` | 187 | AMBIG |
 | `embed_strategy` | function | `src/engine/graveyard/embedder.py:21` | 2 | unique |
 | `embed_text` | function | `src/engine/graveyard/embedder.py:71` | 0 | unique |
 | `FailureTag` | class | `src/engine/graveyard/failure_tagger.py:22` | 0 | unique |
@@ -4606,7 +4608,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_sample_paths` | function | `src/engine/monte_carlo.py:1426` | 0 | unique |
 | `_compute_risk_metrics` | function | `src/engine/monte_carlo.py:1448` | 0 | unique |
 | `run_monte_carlo` | function | `src/engine/monte_carlo.py:1467` | 4 | unique |
-| `main` | function | `src/engine/monte_carlo.py:2219` | 186 | AMBIG |
+| `main` | function | `src/engine/monte_carlo.py:2219` | 187 | AMBIG |
 
 </details>
 
@@ -4988,7 +4990,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `fit_hmm_regime` | function | `src/engine/regime.py:187` | 0 | unique |
 | `_compute_avg_duration` | function | `src/engine/regime.py:259` | 0 | unique |
 | `_compute_regime_persistence` | function | `src/engine/regime.py:275` | 0 | unique |
-| `main` | function | `src/engine/regime.py:293` | 186 | AMBIG |
+| `main` | function | `src/engine/regime.py:293` | 187 | AMBIG |
 
 </details>
 
@@ -5382,7 +5384,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_default_scenarios` | function | `src/engine/stress_test.py:26` | 0 | unique |
 | `_run_crisis_backtest` | function | `src/engine/stress_test.py:96` | 0 | unique |
 | `run_stress_test` | function | `src/engine/stress_test.py:142` | 1 | unique |
-| `main` | function | `src/engine/stress_test.py:191` | 186 | AMBIG |
+| `main` | function | `src/engine/stress_test.py:191` | 187 | AMBIG |
 
 </details>
 
@@ -5407,14 +5409,14 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_firm_profile` | function | `src/engine/survival/firm_profiles.py:65` | 2 | unique |
 | `list_firms` | function | `src/engine/survival/firm_profiles.py:73` | 1 | unique |
 | `compare_strategies` | function | `src/engine/survival/survival_comparator.py:12` | 0 | unique |
-| `main` | function | `src/engine/survival/survival_comparator.py:124` | 186 | AMBIG |
+| `main` | function | `src/engine/survival/survival_comparator.py:124` | 187 | AMBIG |
 | `_recovery_speed_score` | function | `src/engine/survival/survival_scorer.py:51` | 0 | unique |
 | `_worst_month_score` | function | `src/engine/survival/survival_scorer.py:109` | 0 | unique |
 | `_commission_drag_score` | function | `src/engine/survival/survival_scorer.py:160` | 0 | unique |
 | `_eval_speed_score` | function | `src/engine/survival/survival_scorer.py:205` | 0 | unique |
 | `_assign_grade` | function | `src/engine/survival/survival_scorer.py:246` | 0 | unique |
 | `survival_score` | function | `src/engine/survival/survival_scorer.py:260` | 6 | unique |
-| `main` | function | `src/engine/survival/survival_scorer.py:379` | 186 | AMBIG |
+| `main` | function | `src/engine/survival/survival_scorer.py:379` | 187 | AMBIG |
 
 </details>
 
@@ -5424,7 +5426,7 @@ This is the *we already have this* list.  Check it before writing anything.
 |---|---|---|---:|---|
 | `_make_result_record` | function | `src/engine/synthetic/populate_regime_bank.py:105` | 0 | unique |
 | `run_populate` | function | `src/engine/synthetic/populate_regime_bank.py:144` | 0 | unique |
-| `main` | function | `src/engine/synthetic/populate_regime_bank.py:382` | 186 | AMBIG |
+| `main` | function | `src/engine/synthetic/populate_regime_bank.py:382` | 187 | AMBIG |
 | `_emit_output` | function | `src/engine/synthetic/populate_regime_bank.py:467` | 0 | unique |
 | `ScenarioSpec` | class | `src/engine/synthetic/stochastic_regime_generator.py:126` | 1 | unique |
 | `_returns_to_ohlcv` | function | `src/engine/synthetic/stochastic_regime_generator.py:379` | 0 | unique |
@@ -5483,7 +5485,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `run_runtime` | function | `src/engine/validation_runner.py:46` | 0 | unique |
 | `run_cross` | function | `src/engine/validation_runner.py:71` | 0 | unique |
 | `run_list_specs` | function | `src/engine/validation_runner.py:91` | 0 | unique |
-| `main` | function | `src/engine/validation_runner.py:97` | 186 | AMBIG |
+| `main` | function | `src/engine/validation_runner.py:97` | 187 | AMBIG |
 
 </details>
 
