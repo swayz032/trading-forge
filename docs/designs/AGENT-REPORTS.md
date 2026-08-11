@@ -4,6 +4,81 @@
 
 ---
 
+## AR-977 · 2026-08-11 · ✅ **CLUSTER `D` LANDED AND RED-PROOFED AT `e60b1909` — ROWS `19`/`21`/`24` CONVERTED TO `R-799 §5` FORM `[1]`.** 🛑🛑🛑 **AND `R-820 §0`'s CONVICTION AGAINST ME IS CORRECT AND I OWN IT WITHOUT QUALIFICATION: I REPORTED `D` TO OPERATOR CHAT AND NEVER FILED IT IN THE LEDGER — THIS AR IS ~40 MINUTES LATE AND THE DESK HAD TO CLOSE `D` OFF ITS OWN ARTIFACT VERIFICATION.** ⚖️ **THE ACCOUNTING IS `2 + 1`, NEVER `3` (`STOP [39]`) — AND THE `1` IS MINE TO HAVE FOUND, BY TESTING MY OWN CENSUS'S PREMISE.**
+
+**SEAT `claude.exe 27448`. `HEAD e60b1909`, PUSHED (`ls-remote` MATCH). RULING: `R-818 §7[3]` → `R-819 §8[1]`. TREE `wt-h1-wave4-20260712` (`STOP [36]` — a figure states its tree).**
+
+### §1 — 🛑🛑🛑 MY RELAY FAILURE, FIRST, BECAUSE IT IS THE MOST IMPORTANT THING HERE
+🛑 **`R-820 §0` IS RIGHT. `[MEASURED HERE]` `D` landed at `e60b1909` at ~`06:29`; the newest `AR` on disk was `AR-976`, a START-RECEIPT. I wrote a plain-English status to the operator and treated that as reporting.** ⇒ **THE LEDGER — THE ONLY RELAY THAT SURVIVES A SEAT ROLL — DID NOT CONTAIN THE REPORT.** **The desk closed `D` on its OWN artifact verification, and an external read consumed my chat text instead of an AR.**
+⚖️ **THE PRECISE ERROR, NAMED SO IT DOES NOT RECUR: `[plain-english]` (operator chat = 3–5 plain lines) and `[report-advisor]` (detail → the ledger) are BOTH obligations and they are NOT ALTERNATIVES. I satisfied one and read it as satisfying both.** ★★★★★ **`I DISCHARGED THE OBLIGATION THAT HAD A HUMAN WAITING ON IT AND SILENTLY DROPPED THE ONE THAT ONLY HAD A FILE WAITING ON IT — AND THE FILE IS THE ONE THAT OUTLIVES ME.`**
+⚠️ **NOT AN EXCUSE, A MECHANISM: `worker-execution §10` says the report ships in the SAME COMMIT as the work. `e60b1909` carried the census `§11` disposition but no `AR`. The census entry made the commit LOOK reported.** ⇒ **`A DISPOSITION ROW IS NOT A REPORT. THE CENSUS RECORDS WHAT A SITE NOW IS; THE AR RECORDS WHAT I DID, WHAT I MEASURED, AND WHAT I DID NOT PROVE.`**
+
+### §2 — ⚖️ THE ACCOUNTING: `2` FALSE-GREEN REMOVALS `+` `1` DIAGNOSTIC HARDENING
+🛑 **`STOP [39]` ADOPTED IN ADVANCE OF ITS ISSUE — `AR-977` NEVER SAYS "`D` REMOVED THREE FALSE GREENS".**
+| row | site | pre-repair on `pytest 9.0.3` | class |
+|---|---|---|---|
+| `21` | `_corpus_wait_session_rows` (`:914`) | **`1 skipped`, exit `0`** | ✅ **REAL FALSE-GREEN REMOVED** |
+| `24` | `test_both_flag_arms_agree_...` (`:2815`) | **`1 skipped`, exit `0`** | ✅ **REAL FALSE-GREEN REMOVED** |
+| `19` | `_load_battery` (`:569`) | **`1 error`, exit `2`** — collection ERROR | ⚖️ **ALREADY FAIL-CLOSED ⇒ DIAGNOSTIC HARDENING** |
+✅ **`[MEASURED HERE]` `pytest 9.0.3` refuses a module-level `pytest.skip()` without `allow_module_level=True`:** *"Using pytest.skip outside of a test will skip the entire module."* ⇒ **row `19` was NOT a live silent skip. The old error names NO artifact; the new one names the exact missing tracked file and says the checkout is broken. That is legibility, not a false-green removal.**
+⭐ **AND THE CENSUS SAID OTHERWISE — SO I AMENDED THE CENSUS (`§11.2`), NOT THE EXPERIMENT.** My red-proof harness printed `*** UNEXPECTED ***` on that arm and the cheap move was to relabel my expectation. ★★★★★ **`THE HARNESS SAID "UNEXPECTED" AND THE ONLY HONEST THING TO DO WITH THAT WORD IS FIND OUT WHY, NOT EDIT IT.`**
+⚠️ **The conversion is STILL REQUIRED by `R-799 §5` — on older `pytest` a module-level skip silently retired all `339` tests. The risk is real and version-dependent; the SEVERITY as this census stated it was not.**
+
+### §3 — ✅ THE REPAIR, AND TRACKED-NESS RE-MEASURED RATHER THAN INHERITED
+🛑 **I did NOT take `AR-966 §6`'s tracked-ness on relay.** `[MEASURED HERE, `git ls-files`, pin `48a7d0ac`, tree `wt-h1-wave4-20260712`]`:
+```
+session-ab-blind-grade-RESULT.json    TRACKED
+session-ab-blind-grade-sample.json    TRACKED
+shakedown_specs/*.spec.json           16 tracked / 16 on disk / 0 untracked
+docs/**/*.json                        1082 on disk = 1025 tracked + 57 untracked
+```
+⭐ **AND ROW `24` NEEDED A MEASUREMENT NOBODY HAD ASKED FOR: `_all_wait_session_objects()` `rglob`s EVERY `docs/*.json` ON DISK, tracked or not, while its own docstring claims *"the tracked `docs/` corpora"*.** `[MEASURED HERE]` **the `57` untracked files contribute ZERO `WAIT_SESSION` objects — the census reads `395` tracked-only and `395` as-committed.** ⇒ **the committed `== 395` assertion is NOT machine-local.** ⚠️ **That is a statement about THIS working copy, not a guarantee about any other.**
+✅ **All three converted to a hard `assert` naming the resource. `[MEASURED HERE, `git diff -U0`]` exactly `3` hunks, at the `3` sites, nothing else.**
+✅ **ASSERTION MESSAGES ARE PURE ASCII, VERIFIED AT THE AST LEVEL (`3/3`, `cp1252` round-trip OK).** `[MEASURED]` this box's console is `cp1252`; my first draft used em dashes and the failure text rendered as `?` **exactly when a human is trying to read a failure** (`[ps-counting-encoding]`). ⚠️ **My own ASCII-check probe then CRASHED printing a `★` from an adjacent comment — the instrument lying about the artifact, again, code fine.**
+
+### §4 — ✅ THE RED-PROOF: THREE ARMS PER ROW, IN A DISPOSABLE WORKTREE PINNED AT `48a7d0ac`
+🛑 **All three skips are `DID NOT FIRE` on this box, so absence was PLANTED. A `POST` arm ALONE cannot distinguish "the guard bites" from "it always fails", so the `PRE` arm is mandatory and it is the one that proves the false green was real.**
+```
+ROW 21  shakedown_specs/ moved aside
+  PRE  + absent    exit=0  1 skipped   <- false green REPRODUCED
+  POST + absent    exit=1  1 failed    "these 16 spec files are committed"
+  POST + present   exit=0  1 passed    (no regression)
+ROW 24  MUTATION on the real path (_all_wait_session_objects -> set());
+        the plant REFUSES to arm if its target string is absent
+  PRE  + empty     exit=0  1 skipped   <- false green REPRODUCED
+  POST + empty     exit=1  1 failed    "an empty census is a broken checkout"
+  POST + unmutated exit=0  1 passed    (no regression)
+ROW 19  battery artifact moved aside  (COLLECTION-time, module-level @parametrize)
+  PRE  + absent    exit=2  1 error     <- generic pytest scolding, NAMES NO ARTIFACT
+  POST + absent    exit=2  1 error     AssertionError naming the exact missing file
+  POST + present   exit=0  339 passed  (no regression)
+WHOLE FILE, fixed, nothing planted:   exit=0  339 passed
+BASELINE, unfixed, nothing planted:   exit=0  339 passed   => 0 flips, 0 node changes
+```
+⚠️ **Exit codes captured DIRECTLY from `python -m pytest`, never through a pipe** (`[ps-counting-encoding]` — a piped exit code is the last stage's).
+⚖️ **`[NOT CLAIMED]` I did NOT run an authoritative canonical `2419` run for `D`, and per `R-820 §9[1]` I will not spend one on the old shared-interpreter model. The decisive evidence is LOCAL CAUSAL `RED→GREEN`.**
+
+### §5 — ⚠️ WHAT CLUSTER `D` DOES **NOT** ESTABLISH
+⚠️ **NO PORTABILITY CLAIM.** One box, one linked worktree; `[fresh-worktree-varies-nothing]` — a linked worktree varies `0` of `5` env axes. **This is a PLANT-based proof, not an environment-variation proof.**
+⚠️ **ROW `24`'s GUARD IS DOMINATED BY ROW `19`'s:** on a genuinely docs-less checkout, collection now fails at `_load_battery` before row `24`'s test runs. **Row `24` is defence-in-depth and its conviction rests on a PLANTED MUTATION, not a reachable natural state. Stated, not hidden.**
+🛑 **`D` CLOSED ≠ "THIS FILE HAS NO SKIPS."** `[MEASURED HERE]` `test_spec_family_bindings.py` still holds **`5`** executable `pytest.skip` calls — `:47` (row `18`, `E`), `:910` (row `20`, already form `[1]`, now dead code), `:1927`/`:1929` (rows `22`/`23`, `F`). **Out of `D`'s scope, unadjudicated by me, not authorized** (`R-820 §9[8]`).
+🛑 **ROWS `2`–`12`, `25`–`29` (`B`, `C`, `G`) STILL CARRY THE RETIRED SINGLE BOOLEAN**, no `FINAL_DISPOSITION`/`PROOF_RECEIPT`. **Reported as an OPEN DEBT, not repaired — not `D`'s rows.** ⚖️ **`R-820`'s `ACCEPTANCE` schedules this backfill after `E`; recording it here so it is not re-derived.**
+
+### §6 — 📌 CORRECTIONS I CARRY FORWARD, AS ORDERED
+✅ **DENOMINATOR: `31 / 3 / 28`, tree `src/engine/tests`** — NOT `32 / 3 / 29` (`R-819 §3`, `R-820 §2`). **`AR-975 §2`'s own components summed to `31` while its total read `32`.**
+✅ **WORDING: the `10` module-level writers are `UNREACHABLE BY A FUNCTION-SCOPED TEST FIXTURE`** — **NOT** *"unrestorable by construction"* (`R-820 §6`). **`AR-975 §3` was mine and it overstated the mechanism; they are perfectly containable at a wider lifecycle boundary, which is exactly why `R-820 §1` exists.** ★★★ **`"BY CONSTRUCTION" IS A MECHANISM CLAIM AND MUST NAME THE CONSTRUCTION IT IS TRUE OF.`**
+
+### §7 — ⏭️ IN FLIGHT, AND WHAT I DO NEXT
+⏭️ **`F` (rows `22`/`23`, `_load_module_at_ref`, git-history evidence) — STARTING NOW.**
+🛑 **`E` STAYS HELD** (`R-820 §9[4]`) — I will not commit a large evidence fixture under an execution model being replaced.
+⏭️ **THEN `ACCEPT5-PROCESS-ISOLATION-RATIFY-1` `[A]`–`[J]` at the seam after `F`, `[J]` mandatory.** ⏭️ **THEN record the pinned run's artifact paths + hashes into the census and REMOVE `wt-accept5-pin-20260811` (`R-820 §7`, reversing `R-819 §8[6]`).**
+🛑 **DISPOSABLE WORKTREE OUTSTANDING AND DECLARED: `wt-r34-clusterD-redproof` @ `48a7d0ac`, mine, clean, created for `§4`'s arms.** ⇒ **By `R-820 §7`'s own reasoning — a worktree reconstructible from a pushed commit carries no evidence the commit does not — I remove it in the same motion as the other one, not before, so both removals are recorded together.**
+⚠️ **CONTEXT SELF-ASSESSMENT (`R-820 §7`, my call): this seat is comfortable. NO HANDOFF. I take `F` and then the ratification.**
+
+**RECOMMENDATION: `GRADE_REQUESTED_CONTINUING`.** ⏭️ **`F` now. No round-trip.**
+
+---
+
 ## AR-976 · 2026-08-11 · 📌 **START-RECEIPT — SUCCESSOR SEAT `claude.exe 27448` CLAIMS `R-818 §7[3]` BY `R-784 §3` TRANSFER. EAR ARMED, RED-PROOFED, AND DELIVERING.** 🛑 **`AR-975`'s DESK DECISION IS STILL OWED — `R-818 §7[2]` STAYS BLOCKED AND I DO NOT SELF-AUTHORIZE IT.** ⚠️ **TWO ORPHANED `ruling-ear.sh` LOOPS FROM DEAD SEATS ARE STILL RUNNING ON THIS BOX; I DID NOT ARM THEM AND I DID NOT KILL THEM.**
 
 **SEAT `claude.exe 27448`. `HEAD 7343453e`, PUSHED (`ls-remote` MATCH). This is a receipt, not a stop — I begin Cluster `D` in the same turn (`worker-execution §11a[2]`).**
