@@ -433,24 +433,89 @@ def _condition_text(obj: dict) -> str:
     return ""
 
 
+#: Declared bounds for a concrete R-multiple target, taken from the extraction
+#: schema (`transcript-extractor-minimal-schema.json`:
+#: `targets.items.r_multiple` = number|null, minimum 0.1, maximum 50 --
+#: "R-multiple if speaker stated one"). NOT invented here.
+_R_MULTIPLE_MIN = 0.1
+_R_MULTIPLE_MAX = 50.0
+
+
+def _concrete_stop(stop: object) -> bool:
+    """True iff `stop` carries a CURRENTLY DECLARED concrete locator (AR-1054 §3).
+
+    Declared forms, in the extraction schema that actually runs
+    (`src/agents/kb/transcript-extractor-minimal-schema.json`):
+
+        stop.required = ["anchor"]
+        stop.anchor   = enum[sweep_wick_*, ob_*, fvg_*, swing_*,
+                             displacement_candle_*, swing_after_sfp,
+                             atr_multiple, null]
+                        "anchor=null falls back to framework default"
+
+    So the SCHEMA states the untaught semantics: a null anchor is the fallback
+    case. `level` is retained for backward compatibility with any older staging
+    form -- it is declared by NEITHER the minimal nor the legacy schema, so it
+    can only ever ADD taught-ness, never remove it.
+
+    `rationale`/`transcript_quote` text alone is NOT concrete: prose about where
+    a stop might go is not a locator (§3).
+    """
+    if not isinstance(stop, dict):
+        # A non-dict stop carries no declared concrete field. Upstream
+        # normalisation already lifts bare strings to {"anchor": <str>}.
+        return False
+    if bool(stop.get("gestural")):
+        return False
+    if stop.get("level") is not None:
+        return True
+    anchor = stop.get("anchor")
+    return isinstance(anchor, str) and bool(anchor.strip())
+
+
+def _concrete_target(target: object) -> bool:
+    """True iff `target` carries a CURRENTLY DECLARED concrete value (AR-1054 §3).
+
+    `type` alone is NOT concrete -- it is a required field on every target, so
+    accepting it would make every emitted target "taught" by construction. Only
+    an in-band numeric `r_multiple` (or a legacy `level`) is a stated value.
+    """
+    if not isinstance(target, dict):
+        return False
+    if bool(target.get("gestural")):
+        return False
+    if target.get("level") is not None:
+        return True
+    r = target.get("r_multiple")
+    # bool is a subclass of int in Python: True must never read as an R value.
+    if isinstance(r, bool) or not isinstance(r, (int, float)):
+        return False
+    return _R_MULTIPLE_MIN <= float(r) <= _R_MULTIPLE_MAX
+
+
 def _untaught_exit(strategy: dict) -> bool:
     """True iff the trader taught NO concrete exit (R-039 pin c trigger): a
     gestural/null stop, empty-or-all-gestural targets, or an explicit
-    gestural_exit marker."""
+    gestural_exit marker.
+
+    AR-1054 §3: this predicate previously recognised ONLY a `level` key, which
+    **no declared extraction schema emits**. The running extractor speaks
+    `stop.anchor` and `targets[].r_multiple`, so a teacher who explicitly taught
+    both a stop and a fixed R target was classified as having taught NEITHER,
+    and the producer stamped `framework_overlay.exit =
+    "house-default (trader taught none)"` over his own words.
+
+    `A PREDICATE THAT ASKS ITS QUESTION IN A VOCABULARY THE PRODUCER OF THE DATA
+     DOES NOT SPEAK CANNOT DISTINGUISH A MISSING KEY FROM AN UNTAUGHT RULE.`
+    """
     if bool(strategy.get("gestural_exit")):
         return True
-    stop = strategy.get("stop")
-    stop_untaught = (
-        stop is None
-        or (isinstance(stop, dict) and (stop.get("level") is None or bool(stop.get("gestural"))))
-    )
+    stop_untaught = not _concrete_stop(strategy.get("stop"))
     targets = strategy.get("targets") or []
     if not isinstance(targets, list) or len(targets) == 0:
         targets_untaught = True
     else:
-        targets_untaught = all(
-            isinstance(t, dict) and (t.get("level") is None or bool(t.get("gestural"))) for t in targets
-        )
+        targets_untaught = not any(_concrete_target(t) for t in targets)
     return bool(stop_untaught and targets_untaught)
 
 

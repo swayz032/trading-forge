@@ -379,7 +379,18 @@ def lower_opening_range_definition(
     """
     strategies = record.get("strategies") or ()
     strategy = strategies[0] if strategies else {}
-    classification = record.get("instrument_classification") or {}
+    # AR-1054 §4: the running extractor emits `instrument_classification` as a
+    # STRING (measured: "futures_primary"), while this boundary read it as a
+    # mapping and raised AttributeError before any artifact could be minted.
+    # A non-dict classification carries NO structured market-open anchor, so it
+    # contributes nothing and the opening range is derived from the strategy /
+    # variant / source spans exactly as before. It is NEVER parsed into a
+    # clock or session anchor: `"futures_primary"` names an instrument class,
+    # not a market open.
+    # `AN UNSTRUCTURED LABEL IS NOT A MISSING FIELD -- IT IS A FIELD THAT NAMES
+    #  SOMETHING ELSE, AND GUESSING A CLOCK FROM IT WOULD INVENT THE RANGE.`
+    _classification_raw = record.get("instrument_classification")
+    classification = _classification_raw if isinstance(_classification_raw, dict) else {}
     spans = _taught_spans(strategy)
 
     found: dict[str, tuple[str, str]] = {}
