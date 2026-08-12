@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `809d219251120b715b047d6fc5ccf7bcf9642099`  (worktree DIRTY at generation time)
+> Generated at commit `4f0d4bac8dbf6cd583ebaf7157b7f23100045de8`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 292 | 369 | 121242 | 1885 |
+| `src/` | Python | 293 | 370 | 121484 | 1890 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1845 | 754 |
+| `src/` | 1847 | 755 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2103** | **975** |
+| **TOTAL** | **2105** | **976** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -55,10 +55,10 @@ Published so that under-inclusion is visible instead of silent.
 
 | Not enumerated | Count | Why |
 |---|---:|---|
-| Python class methods | 422 | one row per method would swamp the map; a method is reached through its class |
+| Python class methods | 423 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1091 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1092 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **620** of **2103** parsed files.
+Total entry points: **94**.  Modules reachable from them: **620** of **2105** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -198,9 +198,9 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3262 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1545 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.1% of 4858 rows |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3263 |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1549 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.1% of 4863 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=620 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
@@ -208,7 +208,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1885 ts=2928 |
+| C12 | symbols enumerated in both languages | PASS | py=1890 ts=2928 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6609/6609 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -224,8 +224,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **217 of 4548 enumerated symbol names (4.8%) are defined in more than one file, covering
-  482 of 4813 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **217 of 4553 enumerated symbol names (4.8%) are defined in more than one file, covering
+  482 of 4818 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -244,12 +244,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3262 | 67.1% |
+| `WIRED` | 3263 | 67.1% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1545 | 31.8% |
+| `BUILT-UNREACHABLE` | 1549 | 31.9% |
 | `DECLARED-ABSENT` | 38 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4858** | |
+| **TOTAL** | **4863** | |
 
 ---
 
@@ -289,7 +289,7 @@ table below it.**
 | `src/engine/compiler` | 13 | 0 | 2 | 0 | 0 | 15 |
 | `src/engine/compliance` | 13 | 0 | 1 | 0 | 0 | 14 |
 | `src/engine/config.py` | 17 | 0 | 3 | 0 | 0 | 20 |
-| `src/engine/context` | 100 | 2 | 11 | 0 | 0 | 113 |
+| `src/engine/context` | 100 | 2 | 16 | 0 | 0 | 118 |
 | `src/engine/context_runner.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/critic_optimizer.py` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/engine/cross_validation.py` | 8 | 0 | 1 | 0 | 0 | 9 |
@@ -318,7 +318,7 @@ table below it.**
 | `src/engine/gpu_pipeline.py` | 3 | 0 | 3 | 0 | 0 | 6 |
 | `src/engine/graveyard` | 10 | 0 | 2 | 0 | 0 | 12 |
 | `src/engine/hardware_profile.py` | 11 | 0 | 0 | 0 | 0 | 11 |
-| `src/engine/indicators` | 116 | 0 | 19 | 0 | 0 | 135 |
+| `src/engine/indicators` | 117 | 0 | 18 | 0 | 0 | 135 |
 | `src/engine/invariant_harness` | 22 | 0 | 0 | 0 | 0 | 22 |
 | `src/engine/ising_decoder_wrapper.py` | 6 | 0 | 0 | 0 | 0 | 6 |
 | `src/engine/jsonb_contracts.py` | 6 | 0 | 2 | 0 | 0 | 8 |
@@ -970,7 +970,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1545** `BUILT-UNREACHABLE` symbols, **780 have test coverage but no production caller**.
+Of **1549** `BUILT-UNREACHABLE` symbols, **783 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1146,6 +1146,10 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `evaluate_hmm_agreement` | function | `src/engine/context/hmm_regime.py:298` | 1 | unique |
 | `fit_hmm_regimes` | function | `src/engine/context/hmm_regime.py:120` | 1 | unique |
 | `rule_label_to_hmm_key` | function | `src/engine/context/hmm_regime.py:283` | 1 | unique |
+| `SourceEntryEvent` | class | `src/engine/context/source_entry_events.py:77` | 1 | unique |
+| `find_breakout_events` | function | `src/engine/context/source_entry_events.py:114` | 1 | unique |
+| `select_source_entry_events` | function | `src/engine/context/source_entry_events.py:172` | 1 | unique |
+| `source_stop_price` | function | `src/engine/context/source_entry_events.py:234` | 1 | unique |
 | `compute_source_fixed_r_target` | function | `src/engine/context/structural_targets.py:360` | 1 | unique |
 | `build_s3_glob` | function | `src/engine/data_loader.py:320` | 1 | unique |
 | `resample_daily_to_weekly` | function | `src/engine/data_loader.py:1212` | 1 | unique |
@@ -1249,7 +1253,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `corpse_check` | function | `src/engine/graveyard/graveyard_gate.py:7` | 1 | unique |
 | `compute_multi_htf_indicators` | function | `src/engine/indicators/core.py:806` | 1 | unique |
 | `auto_swing_fib` | function | `src/engine/indicators/fibonacci.py:93` | 1 | unique |
-| `displacement_extreme` | function | `src/engine/indicators/fvg_native.py:195` | 1 | unique |
 | `detect_raid` | function | `src/engine/indicators/liquidity.py:293` | 1 | unique |
 | `compute_equilibrium` | function | `src/engine/indicators/market_structure.py:272` | 1 | unique |
 | `join_n_timeframes_to_exec` | function | `src/engine/indicators/mtf_join.py:139` | 1 | unique |
@@ -1281,11 +1284,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | 1 | unique |
 | `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | 1 | unique |
 | `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:629` | 1 | unique |
-| `check_ffn_express_consistency` | function | `src/engine/prop_compliance.py:172` | 1 | unique |
-| `compare_vs_optuna` | function | `src/engine/quantum_annealing_optimizer.py:311` | 1 | unique |
-| `decode_solution` | function | `src/engine/quantum_annealing_optimizer.py:306` | 1 | unique |
 
-_...480 more omitted from this table._
+_...483 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1500,7 +1500,7 @@ _...480 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/context</code> - 11 symbols</summary>
+<details><summary><code>src/engine/context</code> - 16 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1514,6 +1514,11 @@ _...480 more omitted from this table._
 | `rule_label_to_hmm_key` | function | `src/engine/context/hmm_regime.py:283` | defining module is not reachable from any measured entry point |
 | `evaluate_hmm_agreement` | function | `src/engine/context/hmm_regime.py:298` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `naive_leaky_slice` | function | `src/engine/context/htf_availability.py:73` | no non-test reference outside its own definition; 2 test file(s) do reference it |
+| `SourceEntryEvent` | class | `src/engine/context/source_entry_events.py:77` | defining module is not reachable from any measured entry point |
+| `find_breakout_events` | function | `src/engine/context/source_entry_events.py:114` | defining module is not reachable from any measured entry point |
+| `_zone_is_outside` | function | `src/engine/context/source_entry_events.py:157` | defining module is not reachable from any measured entry point |
+| `select_source_entry_events` | function | `src/engine/context/source_entry_events.py:172` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `source_stop_price` | function | `src/engine/context/source_entry_events.py:234` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `compute_source_fixed_r_target` | function | `src/engine/context/structural_targets.py:360` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
@@ -1974,13 +1979,12 @@ _...480 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/indicators</code> - 19 symbols</summary>
+<details><summary><code>src/engine/indicators</code> - 18 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `compute_multi_htf_indicators` | function | `src/engine/indicators/core.py:806` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `auto_swing_fib` | function | `src/engine/indicators/fibonacci.py:93` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `displacement_extreme` | function | `src/engine/indicators/fvg_native.py:195` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `detect_raid` | function | `src/engine/indicators/liquidity.py:293` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `compute_equilibrium` | function | `src/engine/indicators/market_structure.py:272` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `join_n_timeframes_to_exec` | function | `src/engine/indicators/mtf_join.py:139` | no non-test reference outside its own definition; 1 test file(s) do reference it |
@@ -4337,7 +4341,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/indicators</code> - 116 symbols</summary>
+<details><summary><code>src/engine/indicators</code> - 117 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -4366,12 +4370,13 @@ This is the *we already have this* list.  Check it before writing anything.
 | `fib_retracement` | function | `src/engine/indicators/fibonacci.py:34` | 0 | unique |
 | `ote_zone` | function | `src/engine/indicators/fibonacci.py:52` | 2 | unique |
 | `fib_extensions` | function | `src/engine/indicators/fibonacci.py:74` | 0 | unique |
-| `FVGZone` | class | `src/engine/indicators/fvg_native.py:47` | 0 | unique |
+| `FVGZone` | class | `src/engine/indicators/fvg_native.py:47` | 1 | unique |
 | `FVGResult` | class | `src/engine/indicators/fvg_native.py:65` | 0 | unique |
 | `detect_fvg_zones` | function | `src/engine/indicators/fvg_native.py:77` | 0 | unique |
 | `_fill_scan` | function | `src/engine/indicators/fvg_native.py:99` | 0 | unique |
 | `_active_signal` | function | `src/engine/indicators/fvg_native.py:138` | 0 | unique |
 | `compute_fvg_signal` | function | `src/engine/indicators/fvg_native.py:153` | 1 | unique |
+| `displacement_extreme` | function | `src/engine/indicators/fvg_native.py:195` | 1 | unique |
 | `InitialBalance` | class | `src/engine/indicators/initial_balance.py:42` | 0 | unique |
 | `_to_et_minute_of_day` | function | `src/engine/indicators/initial_balance.py:57` | 1 | AMBIG |
 | `compute_initial_balance` | function | `src/engine/indicators/initial_balance.py:70` | 1 | unique |
