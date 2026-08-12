@@ -90,7 +90,7 @@ therefore a statement about THIS BOX's state, not a portability claim** (`R-813 
 | 17 | `test_signal_vector.py:237` | `test_signal_vector_is_json_serializable` | `Data not available: {e}` | **S3 + AWS creds** | **VIOLATION** | 🛑 **FIRED** |
 | 18 | `test_spec_family_bindings.py:47` | `_load_sample` **(helper)** | `reference sample corpus unavailable at {path}` | **`SAMPLES_DIR`** — 141 files, **0 tracked**, absolute path into ANOTHER worktree | **VIOLATION** — input `[2]` of `R-803`'s four | **DID NOT FIRE** |
 | 19 | `test_spec_family_bindings.py:569` | `_load_battery` **(helper)** | `h1-battery fixture unavailable at {path}` | h1-battery fixture | ✅ **CLOSED** — Cluster `D`, converted to form `[1]` hard assert (now `:575`); see `§11` | **DID NOT FIRE** |
-| 20 | `test_spec_family_bindings.py:901` | `_governed_split` **(helper)** | `governed grade unavailable at {path}` | blind-readjudication `LOCKED.json` | ✅ **CLOSED** — converted to form `[1]` at `e55a9ef1`, sha `920557eb…`, 978 bytes | **DID NOT FIRE** |
+| 20 | `test_spec_family_bindings.py:901` | `_governed_split` **(helper)** | `governed grade unavailable at {path}` | blind-readjudication `LOCKED.json` | ~~✅ **CLOSED** — converted to form `[1]` at `e55a9ef1`, sha `920557eb…`, 978 bytes~~ 🛑 **STRUCK, NOT DELETED (`AR-1026` GPT `§4`): `e55a9ef1` committed the INPUT — form `[1]` genuinely satisfied — but NEVER removed the guard. `pytest.skip` remained executable, and `[MEASURED]` a missing grade made the two dependent `S6` nodes SKIP.** ✅ **NOW ACTUALLY CLOSED at `f5b9a89c`** — hard `assert`, RED/GREEN in `§14.2` | **DID NOT FIRE** |
 | 21 | `test_spec_family_bindings.py:914` | `_corpus_wait_session_rows` **(helper)** | `corpus unavailable at {d}` | corpus dir | ✅ **CLOSED** — Cluster `D`, converted to form `[1]` hard assert (now `:924`); see `§11` | **DID NOT FIRE** |
 | 22 | `test_spec_family_bindings.py:1914` | `_load_module_at_ref` **(helper)** | `git unavailable for parent-diff: {exc}` | **git history** | ✅ **CLOSED** — Cluster `F`, converted to form `[3]` pinned+identity-verified; see `§12` | **DID NOT FIRE** |
 | 23 | `test_spec_family_bindings.py:1916` | `_load_module_at_ref` **(helper)** | `revision {ref} unavailable` | **git history** | ✅ **CLOSED** — Cluster `F`, converted to form `[3]`; see `§12` | **DID NOT FIRE** |
@@ -742,7 +742,7 @@ once; `1+4+7+3+3+1+3+1+2+4+3 = 32`.**
 | **`13`,`15`,`17`** | 🛑 **YES** — all three skipped, chain actively disabled | **NO** — all three passed with credentials injected | 🛑 **CREDENTIAL — VARIED.** The only one of five varied | remote S3 OHLCV read converted to a skip by a `str(e)` substring test | ✅ **`R-799 §5` form `[2]`** — deterministic in-test fixture; broad `except → pytest.skip` **DELETED, not narrowed** | Cluster `A`, **`§10`** + `§10.1` four controls executed, `§10.2` population effect |
 | **`18`** | NO | NO | as row `1`; `SAMPLES_DIR` itself **NOT VARIED** (absolute path, `§6`) | `SAMPLES_DIR` — a hardcoded absolute path into another worktree, `141` files, `0` tracked | ✅ **`R-799 §5` form `[1]`** — the **exactly 2** consumed samples vendored beside the test, membership proven **by ablation**; a missing sample is now an ERROR | Cluster `E`, commit **`c187322f`**; fail-closed rationale at `:38`–`:52` @ `858506cf` |
 | **`19`,`21`,`24`** | NO | NO | as row `1` | h1-battery fixture · corpus dir · `docs/` corpora | ✅ **`R-799 §5` form `[1]`** — `pytest.skip` **DELETED**, replaced by a hard `assert` | Cluster `D`, commit **`e60b1909`**; **`§11`** + `§11.1` three arms per row, worktree `48a7d0ac` |
-| **`20`** | NO | NO | as row `1` | blind-readjudication `LOCKED.json` governed grade | 🛑 **SPLIT — SEE `§14.2`. The INPUT satisfies form `[1]`; the SKIP GUARD SURVIVES.** | input verified `[MEASURED HERE]`; guard at `:928` `[MEASURED HERE]` — **`§14.2`** |
+| **`20`** | NO | NO | as row `1` | blind-readjudication `LOCKED.json` governed grade | ✅ **`R-799 §5` form `[1]` — NOW COMPLETE ON BOTH HALVES.** INPUT = committed governed evidence (978 B, sha256 `920557eb…`, TRACKED). **MISSING EVIDENCE = HARD FAILURE, NEVER SKIP** — `pytest.skip` **DELETED**, replaced by a hard `assert os.path.isfile(path)` | **conversion commit `f5b9a89c`** (`AR-1026` GPT `§2`). **RED:** grade absent ⇒ the 2 dependent `S6` nodes `FAILED` (`AssertionError`), **no skip**. **GREEN:** grade restored byte-identical ⇒ `2 passed`. Full 2×2 in **`§14.2`** |
 | **`22`,`23`** | NO | NO | as row `1`; GIT HISTORY **NOT VARIED** (shared object store, `§6`) | `git show <ref>:<path>` history dependency | ✅ **`R-799 §5` form `[3]`** — explicitly pinned external input, **identity verified before execution** | Cluster `F`, **`§12`** + `§12.1` planted triggers pre/post, worktree `2d8b1da1` |
 | **`26`,`27`,`28`,`29`** | NO — `passed` here ⇒ `wrc.available` was `True` | NO | as row `1` | **SUBJECT SELF-EXCUSE** — the test skips on a value the subject under test computes (`wrc.available`) | ✅ **SKIP DELETED** — converted to hard failures, **convicted by TARGETED MUTATION, not observation** | Cluster `C`, commit **`5b59b3a9`** *("convert 4 wrc/spa environment-skips")* — **4 rows, 4 in the subject** |
 | **`30`,`31`,`32`** | NO | NO | as row `1` | backtester import skipped to avoid a vectorbt JIT hang | 🛑 **OUT OF SCOPE — `STOP [11]`, `R-814` forbidden list. NAMED, NOT TOUCHED.** One broadcast site survives at `test_wave_b_intrabar_stops.py:82` `[MEASURED HERE]` | `STOP [11]`; deliberately unconverted, and this backfill does **not** convert it |
@@ -805,6 +805,38 @@ one permitted seal on a census whose row `20` is either false-as-written or hone
 the one move here that cannot be taken back** (`[irreversible-gap]`: authorize and execute in separate
 motions). **The repair itself is out of my lane — `AR-1024 §3` calls this a receipt-backfill lane and
 forbids re-certification and skip-site cleanup — so I neither converted it nor sealed over it.**
+
+#### ✅ RESOLVED — `AR-1026` GPT RULING AUTHORIZED OPTION `A`; CONVERSION LANDED AT `f5b9a89c`
+
+**GPT `AR-1026 §1` REJECTED option `B` and REVOKED row `20`'s prior receipt by direct tree
+contradiction:** *"Do not spend the one successor seal while row 20 still says the conversion is
+complete when the executable guard proves otherwise."* **`§2` authorized exactly one semantic change.**
+
+**THE REPAIR:** `pytest.skip(...)` → `assert os.path.isfile(path)` in `_governed_split()`, matching the
+idiom its already-converted sibling `_corpus_wait_session_rows` uses twelve lines below. **No
+production/compiler/trading code touched; denominator unchanged at `32`; rows `30`–`32` untouched; no
+other skip site reopened.**
+
+**THE CONTROLS — the full 2×2, because the fix must move ONE cell and only one `[MEASURED HERE]`:**
+
+| | governed grade **PRESENT** | governed grade **ABSENT** |
+|---|---|---|
+| **pre-fix** (`c9df5099`) | `2 passed` | 🛑 **`2 SKIPPED`** at `:928`, verbatim reason `governed grade unavailable at …` — **the defect, witnessed by execution, not inferred** |
+| **post-fix** (`f5b9a89c`) | ✅ `2 passed` — **baseline preserved** | ✅ **`2 FAILED`, `AssertionError` at `:933` — RED, and NOT a skip** |
+
+⭐ **THE PRE-FIX / ABSENT CELL IS THE POSITIVE WITNESS THAT THE CONTROL DISCRIMINATES.** `AR-1026`
+GPT `§3` required only the post-fix RED and GREEN; **the pre-fix arm was run anyway, because a RED that
+was never shown to have been SKIP proves the assertion fires, not that the defect existed.**
+★★★★★ **`A FIX PROVEN ONLY IN ITS OWN DIRECTION IS A FIX FOR A DEFECT NOBODY MEASURED.`**
+
+✅ **`§3[3]` EVIDENCE INTEGRITY:** the governed grade was moved aside with a reversible `mv` and restored
+**byte-identical** — `sha256sum -c` → `OK`, full digest
+`920557eb3d32100ea0442bbc077d07479b8f9dd7e67a068b974ca17ca31e741b`, **978 bytes, still `TRACKED`.**
+✅ **`§3[4]` SCOPE:** `git diff` executable lines = **exactly** the two deleted skip lines and the
+replacement `assert`. **Nothing else.** `[MEASURED]` **zero executable `pytest.skip(` now remain in
+`test_spec_family_bindings.py`.**
+🛑 **NONE of `AR-1026` GPT `§8`'s six STOP conditions fired** — in particular `[2]` (*RED still produces
+SKIP or PASS*) is `[MEASURED]` **not** fired: the absent-evidence arm produces `FAILED`.
 
 ### 14.3 ⚠️ WHAT THIS BACKFILL DOES **NOT** ESTABLISH
 
