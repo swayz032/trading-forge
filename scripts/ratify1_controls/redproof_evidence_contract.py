@@ -114,6 +114,25 @@ def clone(src_agg, workdir, tag, *, inject_timing=True, wall_s=377.7):
     return str(agg)
 
 
+def _donor_with_outcomes(agg, skip=0):
+    """(index, receipt_path) of a child that actually owns nodes.
+
+    Index 0 is _a_packet_harness.py -- empty_by_design, zero outcomes. A
+    mutation applied there does not BITE, and a control that does not bite
+    reports coverage it does not have.
+    """
+    root = Path(agg).parent
+    man = _load(root / "manifest.json")
+    seen = 0
+    for i in range(len(man["entries"])):
+        rp = receipt_path(agg, i)
+        if rp.is_file() and _load(rp).get("outcomes"):
+            if seen == skip:
+                return i, rp
+            seen += 1
+    raise SystemExit("no child with outcomes in this arm")
+
+
 def receipt_path(agg, ordinal_index=0):
     root = Path(agg).parent
     man = _load(root / "manifest.json")
@@ -127,6 +146,8 @@ def main(argv=None):
     ap.add_argument("--workdir", required=True)
     ap.add_argument("--arm-a", required=True, help="canonical full-population arm")
     ap.add_argument("--arm-b", required=True, help="an independent REPEAT of it")
+    ap.add_argument("--arm-c", default=None,
+                    help="a NODE-REVERSED arm (needed for control O)")
     ap.add_argument("--skip-runner", action="store_true",
                     help="skip control E (which executes one real child)")
     args = ap.parse_args(argv)
@@ -242,10 +263,24 @@ def main(argv=None):
     # revalidates. Only a rebuild from the RAW lists can see it. A node is
     # added to `collected` that has no outcome -- outcomes, the oracle and the
     # node counts are all left untouched, so this isolates the new verdict.
+    # ⚠️ RETARGETED AFTER ROOT A. The first version added the ghost to the
+    # RECEIPT only; once the raw record became the authority that tripped
+    # RECEIPT_MATCHES_RAW instead, and this control silently stopped testing
+    # the cbu derivation it exists for. So the tamper now lands on the RAW
+    # record AND the receipt, consistently -- which is the harder attack.
     f_agg = clone(args.arm_a, W, "f_cbu")
-    rp = receipt_path(f_agg)
-    _r = _load(rp); _r["collected"] = list(_r["collected"]) + ["ghost.py::never_ran"]
-    _dump(rp, _r); reseal(f_agg)
+    f_i, f_rp = _donor_with_outcomes(f_agg)
+    f_cd = Path(f_agg).parent / RUNNER._slug(_load(Path(f_agg).parent /
+                                                  "manifest.json")["entries"][f_i]["target"])
+    _rec_p = f_cd / "acceptance-run.json"
+    _rec = _load(_rec_p)
+    _rec["collected"] = list(_rec["collected"]) + ["ghost.py::never_ran"]
+    _rec["n_collected"] = len(_rec["collected"])
+    _dump(_rec_p, _rec)
+    _r = _load(f_rp)
+    _r["collected"] = list(_r["collected"]) + ["ghost.py::never_ran"]
+    _r["artifact_sha256"]["acceptance-run.json"] = _sha(_rec_p)
+    _dump(f_rp, _r); reseal(f_agg)
     sat_f, V_f, _ = compare_and_report(f_agg, base_b)
     case("F  resealed collected-but-unexecuted (aggregate claims 0) => RED",
          sat_f is False
@@ -270,31 +305,40 @@ def main(argv=None):
     # One node ID owned by two children, with the SAME outcome value, so the
     # rebuilt map and the node count are unchanged and only the duplicate
     # derivation can see it.
+    # ⚠️ RETARGETED AFTER ROOT A, same reason as F: the duplicate must appear
+    # in the RAW record, or the raw-vs-receipt check absorbs it and the
+    # duplicate derivation is never exercised. The node is added to the raw
+    # buckets, the raw node-sequence (so it still ACCOUNTS for its outcomes),
+    # the receipt, both artifact digests and the manifest anchor -- a fully
+    # resealed chain whose only defect is that two children own one node.
     i_agg = clone(args.arm_a, W, "i_dup")
     root = Path(i_agg).parent
-    n_entries = len(_load(root / "manifest.json")["entries"])
-    # PICK TWO CHILDREN THAT ACTUALLY OWN NODES. Index 0 is
-    # _a_packet_harness.py -- an empty_by_design child with ZERO outcomes -- so
-    # the first version of this control stole nothing and silently tested
-    # nothing. A mutation that does not BITE is not evidence.
-    donors = []
-    for i in range(n_entries):
-        rp_i = receipt_path(i_agg, i)
-        if rp_i.is_file() and _load(rp_i).get("outcomes"):
-            donors.append((i, rp_i))
-        if len(donors) == 2:
-            break
+    man = _load(root / "manifest.json")
+    d0, r0 = _donor_with_outcomes(i_agg, skip=0)
+    d1, r1 = _donor_with_outcomes(i_agg, skip=1)
+    _r0, _r1 = _load(r0), _load(r1)
     stolen = None
-    if len(donors) == 2:
-        r0, r1 = donors[0][1], donors[1][1]
-        _r0, _r1 = _load(r0), _load(r1)
-        for nid, outcome in _r0["outcomes"].items():
-            if nid not in _r1["outcomes"]:
-                stolen, stolen_outcome = nid, outcome
-                break
+    for nid, outcome in _r0["outcomes"].items():
+        if nid not in _r1["outcomes"] and outcome == "passed":
+            stolen = nid
+            break
     if stolen is not None:
-        _r1["outcomes"][stolen] = stolen_outcome
+        cd1 = root / RUNNER._slug(man["entries"][d1]["target"])
+        rec_p, seq_p = cd1 / "acceptance-run.json", cd1 / "node-sequence.json"
+        rec, seq = _load(rec_p), _load(seq_p)
+        rec["passed"].append(stolen); rec["n_passed"] = len(rec["passed"])
+        rec["collected"].append(stolen); rec["n_collected"] = len(rec["collected"])
+        seq["node_sequence"].append(stolen); seq["n"] = len(seq["node_sequence"])
+        _dump(rec_p, rec); _dump(seq_p, seq)
+        _r1["outcomes"][stolen] = "passed"
+        _r1["collected"].append(stolen)
+        _r1["node_sequence"].append(stolen)
+        _r1["artifact_sha256"]["acceptance-run.json"] = _sha(rec_p)
+        _r1["artifact_sha256"]["node-sequence.json"] = _sha(seq_p)
         _dump(r1, _r1)
+        man["entries"][d1]["node_sequence_sha256"] = hashlib.sha256(
+            json.dumps(seq["node_sequence"]).encode("utf-8")).hexdigest()
+        _dump(root / "manifest.json", man)
         reseal(i_agg)
     sat_i, V_i, _ = compare_and_report(i_agg, base_b)
     case("I  duplicate node owned by two children, aggregate says 0 => RED",
@@ -322,6 +366,130 @@ def main(argv=None):
          sat_h is False and "forward/VERIFIED/NOT_LIMITED_SUBSET" in failing(V_h),
          f"dropped={dropped['target']} satisfied={sat_h} "
          f"caught_by={failing(V_h)[:4]}")
+
+    # ======================================================================
+    # K-O: the three roots the GPT ruling of 2026-08-11 ordered closed.
+    # Each hands the verifier a PERFECTLY RESEALED chain and forces it to
+    # catch a SEMANTIC contradiction the digests cannot see.
+    # ======================================================================
+
+    # ---- K: RESEALED RECEIPT vs untouched raw artifact => RED -------------
+    k_agg = clone(args.arm_a, W, "k_receipt")
+    # NOT index 0 -- that is _a_packet_harness.py, an empty_by_design child
+    # with zero outcomes, and a mutation that does not BITE is not evidence.
+    n_ent = len(_load(Path(k_agg).parent / "manifest.json")["entries"])
+    rp = next(p for p in (receipt_path(k_agg, i) for i in range(n_ent))
+              if _load(p).get("outcomes"))
+    _r = _load(rp)
+    _victim = next(iter(_r["outcomes"]))
+    _r["outcomes"][_victim] = "passed" if _r["outcomes"][_victim] != "passed" else "failed"
+    _dump(rp, _r); reseal(k_agg)
+    sat_k, V_k, _ = compare_and_report(k_agg, base_b)
+    case("K  receipt outcome flipped + resealed, raw untouched => RED",
+         sat_k is False and "forward/VERIFIED/RECEIPT_MATCHES_RAW" in failing(V_k),
+         f"satisfied={sat_k} caught_by={failing(V_k)} "
+         f"UNIQUE={failing(V_k) == ['forward/VERIFIED/RECEIPT_MATCHES_RAW']}")
+
+    # ---- L: RAW artifact contradicts the receipt, bytes rebound => RED ----
+    l_agg = clone(args.arm_a, W, "l_raw")
+    root = Path(l_agg).parent
+    man = _load(root / "manifest.json")
+    tgt = man["entries"][0]["target"]
+    for e in man["entries"]:
+        cdl = root / RUNNER._slug(e["target"])
+        rec_p = cdl / "acceptance-run.json"
+        rec = _load(rec_p)
+        if rec["failures"]:
+            moved = rec["failures"].pop()
+            rec["passed"].append(moved)
+            rec["n_failures"] = len(rec["failures"]); rec["n_passed"] = len(rec["passed"])
+            _dump(rec_p, rec)
+            rp = receipt_path(l_agg, man["entries"].index(e))
+            _r = _load(rp)
+            _r["artifact_sha256"]["acceptance-run.json"] = _sha(rec_p)
+            _dump(rp, _r)
+            tgt = e["target"]
+            break
+    reseal(l_agg)
+    sat_l, V_l, _ = compare_and_report(l_agg, base_b)
+    case("L  raw acceptance-run flipped + digest rebound => RED",
+         sat_l is False and "forward/VERIFIED/RECEIPT_MATCHES_RAW" in failing(V_l),
+         f"target={Path(tgt).name} satisfied={sat_l} caught_by={failing(V_l)[:4]}")
+
+    # ---- M: RAW node-sequence contradicts the receipt => RED --------------
+    m_agg = clone(args.arm_a, W, "m_seq")
+    root = Path(m_agg).parent
+    man = _load(root / "manifest.json")
+    for i, e in enumerate(man["entries"]):
+        seq_p = root / RUNNER._slug(e["target"]) / "node-sequence.json"
+        seq = _load(seq_p)
+        if len(seq["node_sequence"]) >= 2:
+            seq["node_sequence"] = list(reversed(seq["node_sequence"]))
+            _dump(seq_p, seq)
+            rp = receipt_path(m_agg, i)
+            _r = _load(rp)
+            _r["artifact_sha256"]["node-sequence.json"] = _sha(seq_p)
+            _dump(rp, _r)
+            break
+    reseal(m_agg)
+    sat_m, V_m, _ = compare_and_report(m_agg, base_b)
+    case("M  raw node-sequence != receipt node_sequence => RED",
+         sat_m is False
+         and "forward/VERIFIED/NODE_SEQUENCE_MATCHES_RAW" in failing(V_m),
+         f"satisfied={sat_m} caught_by={failing(V_m)[:4]}")
+
+    # ---- N: DEAD manifest sequence digest, outer layers resealed => RED ---
+    # This is the anchor the runner has always written and nothing ever read.
+    n_agg = clone(args.arm_a, W, "n_digest")
+    root = Path(n_agg).parent
+    man = _load(root / "manifest.json")
+    man["entries"][0]["node_sequence_sha256"] = "0" * 64
+    _dump(root / "manifest.json", man)
+    reseal(n_agg)
+    sat_n, V_n, _ = compare_and_report(n_agg, base_b)
+    case("N  manifest node_sequence_sha256 tampered + resealed => RED",
+         sat_n is False and "forward/CHAIN/NODE_SEQUENCE_DIGEST" in failing(V_n),
+         f"satisfied={sat_n} caught_by={failing(V_n)} "
+         f"UNIQUE={failing(V_n) == ['forward/CHAIN/NODE_SEQUENCE_DIGEST']}")
+
+    # ---- O: POPULATION node-axis vacuity => RED --------------------------
+    # The grader's novel attack: leave ONE good reversal witness and empty the
+    # rest, resealing every digest on the way out. The child SET stays
+    # complete and [] == reversed([]), so set-coverage and per-child variation
+    # both pass -- I measured that against my own first fix. What refuses it
+    # is the sequence having to ACCOUNT for the outcomes beside it.
+    if args.arm_c:
+        o_a = clone(args.arm_a, W, "o_vac_a")
+        o_b = clone(args.arm_c, W, "o_vac_b")
+        root = Path(o_a).parent
+        man = _load(root / "manifest.json")
+        kept, emptied = None, 0
+        for i, e in enumerate(man["entries"]):
+            seq_p = root / RUNNER._slug(e["target"]) / "node-sequence.json"
+            seq = _load(seq_p)
+            if len(seq["node_sequence"]) >= 2 and kept is None:
+                kept = e["target"]
+                continue
+            if not seq["node_sequence"]:
+                continue
+            seq["node_sequence"], seq["n"] = [], 0
+            _dump(seq_p, seq)
+            rp = receipt_path(o_a, i)
+            _r = _load(rp)
+            _r["node_sequence"] = []
+            _r["artifact_sha256"]["node-sequence.json"] = _sha(seq_p)
+            _dump(rp, _r)
+            e["node_sequence_sha256"] = hashlib.sha256(
+                json.dumps([]).encode("utf-8")).hexdigest()
+            emptied += 1
+        _dump(root / "manifest.json", man)
+        reseal(o_a)
+        sat_o, V_o, _ = compare_and_report(o_a, o_b, node_axis="reverse")
+        case("O  node-axis vacuity: 1 good witness, rest emptied+resealed => RED",
+             sat_o is False
+             and "forward/VERIFIED/NODE_SEQUENCE_ACCOUNTS" in failing(V_o),
+             f"kept={Path(kept).name if kept else None} emptied={emptied} "
+             f"satisfied={sat_o} caught_by={failing(V_o)[:4]}")
 
     # ---- E: injected clock > 600s => THE RUNNER REFUSES ------------------
     # END TO END against the REAL runner, with a fake monotonic clock. R-840

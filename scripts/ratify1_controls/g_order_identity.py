@@ -108,6 +108,7 @@ _PAIR_REQUIRED = frozenset({
     "PAIR/DISTINCT_EXECUTIONS",
     "PAIR/GNODE_RELATION",
     "PAIR/GNODE_AXIS_DECLARED",
+    "PAIR/GNODE_COVERAGE",
     "PAIR/ORACLE",
 })
 
@@ -141,6 +142,12 @@ _PER_ARM_REQUIRED = frozenset({
     "VERIFIED/TIMING_AUTHORITY",
     "VERIFIED/H_RECONCILES",
     "VERIFIED/H_CEILING",
+    # ---- ROOT A / ROOT B (GPT ruling 2026-08-11) ------------------------
+    "CHAIN/RAW_ARTIFACTS_PARSE",
+    "CHAIN/NODE_SEQUENCE_DIGEST",
+    "VERIFIED/RECEIPT_MATCHES_RAW",
+    "VERIFIED/NODE_SEQUENCE_MATCHES_RAW",
+    "VERIFIED/NODE_SEQUENCE_ACCOUNTS",
 })
 
 # Only a REVERSE node axis can be vacuously satisfied by singleton children,
@@ -200,7 +207,7 @@ class VerifiedArm:
     FIELDS = frozenset({
         "outcomes", "nodes", "duplicate_nodes", "collected_but_unexecuted",
         "invalid_children", "limited_subset", "derived_elapsed_s",
-        "receipts", "node_sequences", "run_ids",
+        "receipts", "node_sequences", "run_ids", "manifest_targets",
         "runner_wall_s", "timing_clock", "timing_within_ceiling",
     })
 
@@ -293,6 +300,100 @@ def authority_nodes():
 def _sha_bytes(p):
     import hashlib
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+
+_BUCKETS_CACHE = []
+
+
+def _runner_bucket_map():
+    """The runner's OWN outcome-bucket rule, READ FROM ITS SOURCE.
+
+    GPT ruling 2026-08-11 §4 requires the comparator to reconstruct the exact
+    node->outcome map from the RAW `acceptance-run.json`. That reconstruction
+    needs the bucket->record-field mapping the runner used.
+
+    Copying the mapping here would be a SECOND REGISTRY -- the exact thing
+    `_slug_like` exists to avoid: it agrees until the day it does not, and then
+    the verifier silently reconstructs the wrong map. The runner keeps it in a
+    function-local, so it cannot be imported; it is therefore READ from the
+    runner's source as a literal. Fail-closed: if it cannot be read, REFUSE
+    rather than fall back to a copy.
+    """
+    if _BUCKETS_CACHE:
+        return _BUCKETS_CACHE[0]
+    import ast
+    import re
+    import accept5_isolated_runner as _r
+    src = Path(_r.__file__).read_text(encoding="utf-8")
+    m = re.search(r"^\s*BUCKETS\s*=\s*(\{.*?\})\s*$", src, re.S | re.M)
+    if not m:
+        raise SystemExit(f"{REFUSED} - the runner's BUCKETS mapping could not "
+                         f"be read from {_r.__file__}; the raw-artifact "
+                         f"reconstruction has no authority to use and will not "
+                         f"substitute a local copy")
+    try:
+        d = ast.literal_eval(m.group(1))
+    except Exception as exc:                                   # noqa: BLE001
+        raise SystemExit(f"{REFUSED} - the runner's BUCKETS mapping is not a "
+                         f"literal this verifier can read: {exc!r}")
+    if not isinstance(d, dict) or not d:
+        raise SystemExit(f"{REFUSED} - the runner's BUCKETS mapping is empty "
+                         f"or not a dict")
+    _BUCKETS_CACHE.append(d)
+    return d
+
+
+def _raw_child_facts(cd):
+    """Reconstruct a child's execution facts from its RAW, digest-bound bytes.
+
+    ROOT A / CRITICAL-2. `[MEASURED BY GRADED INSTRUMENT]` the chain hashed
+    `acceptance-run.json` only to confirm it was the bytes the receipt NAMED --
+    it never read their CONTENT. So a node flipped failed->passed in both
+    arms' receipts and aggregates, with the raw artifacts untouched and every
+    digest resealed, certified GREEN.
+
+        A DIGEST PROVES WHICH BYTES ARE THERE. IT SAYS NOTHING ABOUT WHETHER
+        THE CLAIM ABOUT THEM IS TRUE.
+
+    Returns (facts, problems). Strict and fail-closed: no `.get(field, [])`,
+    because reading a key the artifact does not have is how an earlier defect
+    silently accused 39 healthy tests.
+    """
+    import json as _json
+    probs = []
+    raw_p, seq_p = cd / "acceptance-run.json", cd / "node-sequence.json"
+    if not raw_p.is_file():
+        return None, [f"no raw acceptance-run.json in {cd.name}"]
+    if not seq_p.is_file():
+        return None, [f"no raw node-sequence.json in {cd.name}"]
+    try:
+        rec = _json.loads(raw_p.read_text(encoding="utf-8"))
+        seq = _json.loads(seq_p.read_text(encoding="utf-8"))
+    except Exception as exc:                                   # noqa: BLE001
+        return None, [f"raw artifact in {cd.name} is unreadable: {exc!r}"]
+
+    buckets = _runner_bucket_map()
+    for field in (*buckets.values(), "collected"):
+        if field not in rec or not isinstance(rec[field], list):
+            probs.append(f"{cd.name}: raw record missing/mistyped {field!r}")
+    if "run_id" not in rec:
+        probs.append(f"{cd.name}: raw record has no run_id")
+    if "pytest_exitstatus" not in rec:
+        probs.append(f"{cd.name}: raw record has no pytest_exitstatus")
+    if not isinstance(seq, dict) or not isinstance(seq.get("node_sequence"), list):
+        probs.append(f"{cd.name}: raw node-sequence witness is malformed")
+    if probs:
+        return None, probs
+
+    outcomes = {}
+    for bucket, field in buckets.items():
+        for nid in rec[field]:
+            outcomes[nid] = bucket
+    return ({"run_id": rec["run_id"],
+             "exitstatus": rec["pytest_exitstatus"],
+             "collected": list(rec["collected"]),
+             "outcomes": outcomes,
+             "node_sequence": list(seq["node_sequence"])}, [])
 
 
 def _primitive_child_problems(r):
@@ -410,6 +511,9 @@ def verify_chain(tag, arm):
     # Every receipt recomputes from its own bytes, and every child artifact
     # recomputes from ITS bytes. This is the step that opens a child at all.
     bad_receipt, bad_artifact, missing, unbound = [], [], [], []
+    # ROOT A / node-sequence authority (GPT ruling 2026-08-11 §4/§5)
+    raw_unusable, raw_vs_receipt, seq_vs_receipt, seq_digest_bad = [], [], [], []
+    seq_unaccounted = []
     heads, rebuilt, seqs, run_ids = set(), {}, {}, set()
     # ---- R-836 §4: DERIVE, DO NOT BELIEVE ---------------------------------
     # `[MEASURED BY GRADED INSTRUMENT, F-RATIFY1-1]` five of the ten
@@ -437,33 +541,7 @@ def verify_chain(tag, arm):
             bad_receipt.append(e["target"]); continue
         heads.add(r.get("head_sha"))
         run_ids.add(r.get("run_id"))
-        seqs[e["target"]] = list(r.get("node_sequence") or [])
-        # Duplicate detection mirrors accept5_isolated_runner.aggregate()
-        # EXACTLY: a node ID reappearing in a second child is a duplicate, and
-        # last-write-wins so `rebuilt` stays byte-for-byte what .update() built.
-        # A dict .update() SILENTLY ABSORBS the collision it is meant to expose.
-        for _nid, _o in (r.get("outcomes") or {}).items():
-            if _nid in rebuilt:
-                d_dups.append((_nid, d_owner[_nid], e["target"]))
-            rebuilt[_nid] = _o
-            d_owner[_nid] = e["target"]
-        d_elapsed += float(r.get("elapsed_s") or 0.0)
-        # ---- ROW 5: EXACT IDS FROM THE RAW LISTS, NOT THE RECEIPT'S SUMMARY --
-        # `[MEASURED BY GRADED INSTRUMENT]` the previous version summed
-        # r["collected_but_unexecuted"] -- the receipt's OWN count of itself. A
-        # resealed receipt could set it to 0 and the "rebuild" agreed, because
-        # both sides came from the same tamperable layer. R-840 row 5 names the
-        # authority: set(collected) - set(outcomes), per child, EXACT IDS.
-        _collected, _outs = r.get("collected"), r.get("outcomes")
-        if isinstance(_collected, list) and isinstance(_outs, dict):
-            for _nid in sorted(set(_collected) - set(_outs)):
-                d_cbu_ids.append(f"{e['target']}::{_nid}")
-        # ---- ROW 6: CHILD VALIDITY FROM PRIMITIVES, NOT FROM `problems` ------
-        _why = _primitive_child_problems(r)
-        if _why:
-            d_invalid.append(r.get("file") or e["target"])
-            d_invalid_why.append(f"{e['target']}: {_why[0]}")
-        n_parsed += 1
+        # ---- RESOLVE + DIGEST-VERIFY THE CHILD ARTIFACTS FIRST --------------
         # RESOLVE CHILD ARTIFACTS RELATIVE TO *THIS* ARM, never via the absolute
         # child_dir the receipt recorded. `[MEASURED, C2]` following the recorded
         # path made the verifier read the ORIGINAL arm's untampered artifacts
@@ -479,14 +557,78 @@ def verify_chain(tag, arm):
                 bad_artifact.append(f"{e['target']}:{label}")
         # THE CLASS RULE (R-828 §4b): no file in a child directory may be
         # UNBOUND. Checking only the digests the receipt happens to list makes
-        # the receipt the authority on its own completeness -- which is how the
-        # empty_by_design children passed with an empty map and a tampered
-        # artifact. The DIRECTORY is the authority; the receipt must cover it.
+        # the receipt the authority on its own completeness.
         if cd.is_dir():
             present = {p.name for p in cd.iterdir() if p.is_file()}
             for orphan in sorted(present - set(digests)):
                 unbound.append(f"{e['target']}:{orphan}")
 
+        # ---- ROOT A: THE RAW ARTIFACT IS THE AUTHORITY ----------------------
+        raw, raw_probs = _raw_child_facts(cd)
+        if raw is None:
+            raw_unusable.extend(raw_probs)
+            continue
+        # The receipt is a COPY of these facts. Every field the runner derived
+        # from the raw record is re-derived here and required to agree.
+        if raw["run_id"] != r.get("run_id"):
+            raw_vs_receipt.append(f"{e['target']}: run_id")
+        if raw["exitstatus"] != r.get("returncode"):
+            raw_vs_receipt.append(f"{e['target']}: exitstatus")
+        if raw["outcomes"] != (r.get("outcomes") or {}):
+            raw_vs_receipt.append(f"{e['target']}: node->outcome map")
+        if raw["collected"] != list(r.get("collected") or []):
+            raw_vs_receipt.append(f"{e['target']}: collected set")
+        if raw["node_sequence"] != list(r.get("node_sequence") or []):
+            seq_vs_receipt.append(f"{e['target']}")
+        # The manifest's node-sequence anchor -- written by the runner and,
+        # until now, never read by anything. Recomputed with the runner's exact
+        # serialization over the RAW sequence, so the anchor binds raw bytes.
+        _want = hashlib.sha256(
+            _json.dumps(raw["node_sequence"]).encode("utf-8")).hexdigest()
+        if _want != e.get("node_sequence_sha256"):
+            seq_digest_bad.append(f"{e['target']}")
+        # ---- THE SEQUENCE MUST ACCOUNT FOR WHAT RAN ------------------------
+        # A digest and a child-set are both satisfiable by an EMPTY sequence:
+        # [] == reversed([]), and an emptied child is still a member of the
+        # set. So the witness is anchored to the SAME raw record's outcomes --
+        # every node that executed must appear exactly once in the order it
+        # executed in. Emptying the witness now contradicts the record it
+        # sits beside, and an attacker must also delete the outcomes, which
+        # the population and oracle checks then catch.
+        #
+        #   EVIDENCE THAT CAN BE SATISFIED BY BEING EMPTY IS NOT EVIDENCE.
+        if set(raw["node_sequence"]) != set(raw["outcomes"]):
+            seq_unaccounted.append(
+                f"{e['target']} (seq={len(set(raw['node_sequence']))} "
+                f"outcomes={len(raw['outcomes'])})")
+        elif len(raw["node_sequence"]) != len(set(raw["node_sequence"])):
+            seq_unaccounted.append(f"{e['target']} (duplicate node in sequence)")
+        seqs[e["target"]] = raw["node_sequence"]
+        # Duplicate detection mirrors accept5_isolated_runner.aggregate()
+        # EXACTLY: a node ID reappearing in a second child is a duplicate, and
+        # last-write-wins so `rebuilt` stays byte-for-byte what .update() built.
+        # A dict .update() SILENTLY ABSORBS the collision it is meant to expose.
+        for _nid, _o in raw["outcomes"].items():
+            if _nid in rebuilt:
+                d_dups.append((_nid, d_owner[_nid], e["target"]))
+            rebuilt[_nid] = _o
+            d_owner[_nid] = e["target"]
+        d_elapsed += float(r.get("elapsed_s") or 0.0)
+        # ---- ROW 5: EXACT IDS FROM THE RAW LISTS, NOT THE RECEIPT'S SUMMARY --
+        # `[MEASURED BY GRADED INSTRUMENT]` the previous version summed
+        # r["collected_but_unexecuted"] -- the receipt's OWN count of itself. A
+        # resealed receipt could set it to 0 and the "rebuild" agreed, because
+        # both sides came from the same tamperable layer. R-840 row 5 names the
+        # authority: set(collected) - set(outcomes), per child, EXACT IDS.
+        # ...and after ROOT A, the raw record is the authority for BOTH sides.
+        for _nid in sorted(set(raw["collected"]) - set(raw["outcomes"])):
+            d_cbu_ids.append(f"{e['target']}::{_nid}")
+        # ---- ROW 6: CHILD VALIDITY FROM PRIMITIVES, NOT FROM `problems` ------
+        _why = _primitive_child_problems(r)
+        if _why:
+            d_invalid.append(r.get("file") or e["target"])
+            d_invalid_why.append(f"{e['target']}: {_why[0]}")
+        n_parsed += 1
     add("CHAIN/RECEIPTS_PRESENT", "every receipt PRESENT", not missing,
         f"{len(missing)} missing {missing[:3]}")
     add("CHAIN/RECEIPT_DIGESTS", "every receipt digest RECOMPUTES", not bad_receipt,
@@ -495,6 +637,34 @@ def verify_chain(tag, arm):
         not bad_artifact, f"{len(bad_artifact)} mismatched {bad_artifact[:3]}")
     add("CHAIN/NO_UNBOUND_FILE", "NO UNBOUND FILE in any child directory",
         not unbound, f"{len(unbound)} unbound {unbound[:3]}")
+
+    # ---- ROOT A + NODE-SEQUENCE AUTHORITY (GPT ruling 2026-08-11 §4/§5) ----
+    #   A DIGEST PROVES WHICH BYTES ARE THERE. IT SAYS NOTHING ABOUT WHETHER
+    #   THE CLAIM ABOUT THEM IS TRUE.
+    add("CHAIN/RAW_ARTIFACTS_PARSE",
+        "every child's RAW acceptance-run + node-sequence PARSE",
+        not raw_unusable,
+        f"{len(raw_unusable)} unusable {raw_unusable[:2]}")
+    add("VERIFIED/RECEIPT_MATCHES_RAW",
+        "receipt claims AGREE with the raw artifact they were copied from",
+        not raw_vs_receipt,
+        f"{len(raw_vs_receipt)} disagreement(s) {raw_vs_receipt[:3]}"
+        + ("  <- a RESEALED receipt contradicting its own digest-bound artifact"
+           if raw_vs_receipt else ""))
+    add("VERIFIED/NODE_SEQUENCE_MATCHES_RAW",
+        "receipt node_sequence == the RAW node-sequence witness",
+        not seq_vs_receipt,
+        f"{len(seq_vs_receipt)} disagreement(s) {seq_vs_receipt[:3]}")
+    # The anchor the runner has always written and nothing has ever read.
+    add("CHAIN/NODE_SEQUENCE_DIGEST",
+        "manifest node_sequence_sha256 RECOMPUTES from the raw sequence",
+        not seq_digest_bad,
+        f"{len(seq_digest_bad)} mismatched {seq_digest_bad[:3]}")
+    add("VERIFIED/NODE_SEQUENCE_ACCOUNTS",
+        "every executed node appears EXACTLY ONCE in the order witness",
+        not seq_unaccounted,
+        f"{len(seq_unaccounted)} child(ren) whose sequence does not account "
+        f"for their own outcomes {seq_unaccounted[:2]}")
 
     # ---- C13 (R-828 §4a): the arm must not MUTATE the tree it measures -----
     # arm_start_head == arm_end_head binds COMMITS. A working-tree write moves
@@ -673,6 +843,7 @@ def verify_chain(tag, arm):
     va.set("derived_elapsed_s", d_elapsed)
     va.set("receipts", n_parsed)
     va.set("node_sequences", seqs)
+    va.set("manifest_targets", {e.get("target") for e in entries})
     va.set("run_ids", run_ids)
     va.set("runner_wall_s", _runner_wall)
     va.set("timing_clock", _t.get("clock") if isinstance(_t, dict) else None)
@@ -872,33 +1043,46 @@ def compare(fwd, rev, required, out_dir=None, mode="order", pin=None,
             # DIFFERENTLY-NAMED verdict when there was nothing to compare, so
             # the relation proof was simply absent -- and an absent proof is
             # what row 12 exists to refuse.
-            if not shared:
-                add("PAIR/GNODE_RELATION",
-                    f"[G-NODE] intra-file order is {node_axis.upper()} across the arms",
-                    False, "no shared child node sequences recorded")
+            # ---- POPULATION COVERAGE FIRST (GPT ruling 2026-08-11 §6) -------
+            # `[MEASURED BY GRADED INSTRUMENT]` the vacuity attack stripped 107
+            # of 108 children's sequences and still exited 0, because the only
+            # anti-vacuity witness was a single global bool. Evidence that
+            # DISAPPEARS must be as loud as evidence that DISAGREES.
+            #
+            #   ONE GOOD WITNESS DOES NOT REPRESENT THE POPULATION.
+            expected = fwd["_verified"].manifest_targets & rev["_verified"].manifest_targets
+            absent = sorted(expected - set(shared))
+            add("PAIR/GNODE_COVERAGE",
+                "[G-NODE] EVERY shared manifest child supplied sequence evidence",
+                not absent and bool(expected),
+                f"{len(expected)} expected, {len(shared)} witnessed, "
+                f"{len(absent)} MISSING {absent[:3]}")
+
+            # A 0- or 1-node child satisfies BOTH `a == b` and `a == reversed(b)`
+            # -- they are legitimate no-op reversals, so each case asserts its
+            # OWN relation directly rather than testing "is not the reverse".
+            if node_axis == "same":
+                bad = [t for t in shared if a[t] != b[t]]
             else:
-                # A 0- or 1-node child satisfies BOTH `a == b` and
-                # `a == reversed(b)`. Testing "is not the reverse" for the
-                # "same" case would therefore flag every singleton child as a
-                # violation, so each case asserts its OWN relation directly.
-                if node_axis == "same":
-                    bad = [t for t in shared if a[t] != b[t]]
-                else:
-                    bad = [t for t in shared if a[t] != list(reversed(b[t]))]
-                add("PAIR/GNODE_RELATION",
-                    f"[G-NODE] intra-file order is {node_axis.upper()} across the arms",
-                    not bad,
-                    f"{len(shared)} shared children, {len(bad)} violating {bad[:3]}")
-            # ...and for a REVERSE pair the axis must have ACTUALLY varied.
-            # Satisfying "a == reversed(b)" across nothing but singletons would
-            # be a vacuous pass: the arms would be identical. Emitted on BOTH
-            # branches so it can never go missing.
+                bad = [t for t in shared if a[t] != list(reversed(b[t]))]
+            add("PAIR/GNODE_RELATION",
+                f"[G-NODE] intra-file order is {node_axis.upper()} across the arms",
+                not bad and bool(shared),
+                f"{len(shared)} shared children, {len(bad)} violating {bad[:3]}"
+                + ("" if shared else "  <- NO shared sequences recorded at all"))
+
+            # PER-CHILD, NOT GLOBAL: every child with >=2 nodes must ITSELF
+            # show the reverse relation AND have actually moved.
             if node_axis == "reverse":
-                varied = [t for t in shared if len(a[t]) >= 2 and a[t] != b[t]]
-                add("PAIR/GNODE_VARIED", "[G-NODE] the node axis GENUINELY varied",
-                    bool(varied),
-                    f"{len(varied)} child(ren) with >=2 nodes actually reordered, "
-                    f"of {len(shared)} shared")
+                eligible = [t for t in shared if len(a[t]) >= 2]
+                bad_var = [t for t in eligible
+                           if not (a[t] == list(reversed(b[t])) and a[t] != b[t])]
+                add("PAIR/GNODE_VARIED",
+                    "[G-NODE] EVERY multi-node child genuinely reversed",
+                    not bad_var and bool(eligible),
+                    f"{len(eligible)} eligible (>=2 nodes), {len(bad_var)} failing "
+                    f"{bad_var[:3]}, {len(shared) - len(eligible)} legitimate "
+                    f"0/1-node no-ops")
             add("PAIR/GNODE_AXIS_DECLARED",
                 "[G-NODE] arms' declared node axis matches the request",
                 (fwd.get("reverse_nodes") is not rev.get("reverse_nodes"))
