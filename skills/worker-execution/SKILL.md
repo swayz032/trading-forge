@@ -124,6 +124,62 @@ root cause — it is a coincidence you stopped investigating.
 
 ---
 
+## 2a. 🛑🛑★★★★★ THE FIELD YOU READ **IS** THE CLAIM (operator-ordered 2026-08-12)
+
+**One seat made this error FOUR TIMES IN ONE SESSION.** Every time, the code was fine, the query
+ran, the number was real — **and it was a number about the thing NEXT TO the claim.** Three were
+caught by re-checking; **one was caught by the operator**, and the fourth was ~60 seconds from
+being published as a campaign-redirecting false finding.
+
+| # | what I measured | what the claim actually needed | caught by |
+|---|---|---|---|
+| 1 | `binding.role == "spine"` | *actually evaluated* — `executed` too; non-executed bindings are **skipped before dispatch** | self, on re-read |
+| 2 | parent key `instrument_classification` **present** | the **child** key — whose NAME VARIES per record (`instrument_class` · `asset_class` · `asset_classes_mentioned` · `instrument_type`) | self |
+| 3 | the **compiler's condition TYPE** (`spec` contains `OPENING_RANGE*`) → **"2 sources"** | the **teacher's WORDS** → **16 sources** | **THE OPERATOR** |
+| 4 | `condition.object` (a 2-5 word LABEL) → *"40/40 extractions are fragments; the library lost the teaching"* | `condition.evidence` — the verbatim prose (**1214 of 2150 inline, 0 empty**) | self, barely |
+
+**#4 is the one to study.** The measurement was correct, the metric was correct, the population was
+complete — and the conclusion was the *opposite of the truth*, because the field was a label and the
+prose lived one key over. **It would have condemned the extraction layer and triggered a re-run
+campaign against a defect that does not exist.**
+
+### The three questions that catch it, BEFORE you write the sentence
+
+1. **"Is this the field the claim depends on, or the one next to it?"** — then **dump ALL KEYS of
+   one record** rather than re-reading the key you already chose. That single act caught #2 and #4.
+2. **"Could the thing I want live somewhere else in this object?"** — before declaring anything
+   ABSENT, search the whole structure for it. `AN ABSENCE IS A CLAIM ABOUT WHERE YOU LOOKED.`
+3. **"Whose classification am I enumerating by?"** ⇒ see the law below.
+
+### ★★★★★ NEVER ENUMERATE A POPULATION BY THE CLASSIFICATION OF THE THING UNDER SUSPICION
+
+> **`ENUMERATING BY THE COMPILER'S OWN LABELS ASKS THE SUSPECT TO PICK THE LINEUP.`**
+
+Error #3 exactly: the campaign was investigating whether the compiler *mis-types* taught concepts —
+and the population of "ORB strategies" was built from **the compiler's own type tags**. Teachers it
+had failed to type were, by construction, invisible. **The count was 2. The truth was 16.**
+⇒ When auditing a layer, enumerate from a surface **that layer does not control** — raw source
+prose, the transcript, the filesystem — never its own output.
+
+### And the corollaries this session paid for
+
+- **A NAME IS NOT AN ENUMERATION.** Searching `name ILIKE '%orb%'` found 1 of 2 real ORB sources;
+  the second's generated name said `short_entry_…`. **Generated names describe what a namer noticed.**
+- **EVERY `LIKE`/filter query owes a POSITIVE **and** NEGATIVE control in the same run.**
+  `positive('the')=34/40` also exposed 6 near-empty payloads nobody had noticed.
+- **A SAMPLE THAT SHARES NO MEMBER WITH THE POPULATION IS NOT A SMALL SAMPLE — IT IS A DIFFERENT
+  POPULATION.** 13 local fixture records were reported on as "the library"; the production library
+  had **zero** of them. Before generalising from a corpus, **join it to the real population and
+  print the overlap count.**
+- **AUTHENTICATING SUCCESSFULLY IS NOT AUTHENTICATING TO THE RIGHT PLACE.** Two Railway projects
+  existed whose names differed by one space (`trading-forge` vs `Trading Forge`); a valid project
+  token opened the RETIRED one and `railway status` cheerfully confirmed it. **Confirm the tool
+  printed the target you MEANT, not merely that it printed.**
+- **A SURPRISING RESULT IS AN ACCUSATION AGAINST YOUR INSTRUMENT FIRST.** All three self-catches
+  came from re-checking a result that felt too strong. **That reflex is the whole defence.**
+
+---
+
 ## 3. Think in hypotheses — write them down BEFORE implementing
 
 ```
@@ -530,6 +586,16 @@ NEXT   : the exact next authorized action
    outcomes · altered denominator · new skip/xfail · changed pin · changed population · changed
    execution semantics · runner/plugin/schema touch · new production-code touch · evidence missing
    from origin.
+4a. 🛑★★★★★ **SCOPE THE TITLE, NOT ONLY THE BODY — THE HEADLINE IS A CLAIM AND IT IS THE ONE THAT
+   GETS QUOTED.** An AR whose body honestly said *"population: 13 committed tier-A records"* carried
+   the headline *"NO SOURCE IN THE LIBRARY MEETS §7"*. GPT rejected it as over-scoped — correctly,
+   and it was worse than that: the 13 records shared **zero** members with the real library.
+   ⚠️ **THEN THE SAME SEAT DID IT AGAIN ONE REPORT LATER**, publishing `ORB FAMILY = 2 SOURCES`
+   while §3b of that very file already said 16 — **one section below the paragraph accepting the
+   first correction.** ⇒ **Before publishing, re-read your own title against your own strongest
+   number and ask: does the title name the population the body measured?** A scope-honest body does
+   **not** rescue an over-scoped headline. **And when you correct one, strike-and-retain the old
+   claim (`preserve-and-strike`) rather than silently amending it.**
 5. **DURABILITY: the AR must reach the GPT BRANCH** — `origin/external-advisor/gpt-rulings`
    (`worker-onboarding 0-CTRL.3`). Chat, scrollback and an unpushed worktree are not delivery.
    Raw artifacts are referenced by path, never pasted wholesale.
