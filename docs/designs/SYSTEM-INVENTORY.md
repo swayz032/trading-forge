@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `27ef227a5409927e593edbfcea46988ebc3fce77`  (worktree DIRTY at generation time)
+> Generated at commit `c3355df47f37ea2cdbbb9ee00aea78dc0b363fa8`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 292 | 365 | 120909 | 1878 |
+| `src/` | Python | 292 | 365 | 120979 | 1879 |
 | `src/` | TypeScript | 461 | 719 | 209586 | 2919 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -199,8 +199,8 @@ table below it.**
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3260 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1531 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4842 rows |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1532 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4843 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=620 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
@@ -208,7 +208,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1878 ts=2919 |
+| C12 | symbols enumerated in both languages | PASS | py=1879 ts=2919 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6601/6601 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -224,8 +224,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **217 of 4532 enumerated symbol names (4.8%) are defined in more than one file, covering
-  482 of 4797 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **217 of 4533 enumerated symbol names (4.8%) are defined in more than one file, covering
+  482 of 4798 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -246,10 +246,10 @@ table below it.**
 |---|---:|---:|
 | `WIRED` | 3260 | 67.3% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1531 | 31.6% |
+| `BUILT-UNREACHABLE` | 1532 | 31.6% |
 | `DECLARED-ABSENT` | 38 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4842** | |
+| **TOTAL** | **4843** | |
 
 ---
 
@@ -279,7 +279,7 @@ table below it.**
 | `src/engine/anti_setups` | 25 | 0 | 6 | 0 | 0 | 31 |
 | `src/engine/archetype_evaluator.py` | 5 | 0 | 0 | 0 | 0 | 5 |
 | `src/engine/archetypes` | 9 | 0 | 3 | 0 | 0 | 12 |
-| `src/engine/backtester.py` | 53 | 0 | 1 | 0 | 0 | 54 |
+| `src/engine/backtester.py` | 53 | 0 | 2 | 0 | 0 | 55 |
 | `src/engine/battery` | 0 | 0 | 17 | 0 | 0 | 17 |
 | `src/engine/black_swan_evaluator.py` | 8 | 0 | 0 | 0 | 0 | 8 |
 | `src/engine/breakout_confirmation_ambiguity.py` | 2 | 0 | 0 | 0 | 0 | 2 |
@@ -970,7 +970,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1531** `BUILT-UNREACHABLE` symbols, **773 have test coverage but no production caller**.
+Of **1532** `BUILT-UNREACHABLE` symbols, **774 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1127,6 +1127,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `archetype_distribution` | function | `src/engine/archetypes/historical_labeler.py:19` | 1 | unique |
 | `label_history` | function | `src/engine/archetypes/historical_labeler.py:8` | 1 | unique |
 | `map_strategy_to_archetypes` | function | `src/engine/archetypes/strategy_mapper.py:10` | 1 | unique |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:8348` | 1 | unique |
 | `MappingSchemaError` | class | `src/engine/battery/mapping_guard.py:24` | 1 | unique |
 | `_print_boundary` | function | `src/engine/battery/selection_deflation.py:198` | 1 | unique |
 | `run_selection_deflation_check` | function | `src/engine/battery/selection_deflation.py:115` | 1 | unique |
@@ -1283,9 +1284,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
 | `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | 1 | unique |
 | `persist_benchmark` | function | `src/engine/quantum_bench.py:119` | 1 | unique |
-| `validate_tolerance` | function | `src/engine/quantum_bench.py:108` | 1 | unique |
 
-_...473 more omitted from this table._
+_...474 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1432,11 +1432,12 @@ _...473 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/backtester.py</code> - 1 symbols</summary>
+<details><summary><code>src/engine/backtester.py</code> - 2 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `shift_higher_tf_columns` | function | `src/engine/backtester.py:2197` | no non-test reference outside its own definition |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:8348` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -3703,8 +3704,8 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8125` | 0 | unique |
 | `_rescore_with_crisis` | function | `src/engine/backtester.py:8155` | 0 | unique |
 | `_candidate_refusal_envelope` | function | `src/engine/backtester.py:8226` | 0 | unique |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:8265` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:8346` | 189 | AMBIG |
+| `resolve_candidate_authority` | function | `src/engine/backtester.py:8265` | 0 | unique |
+| `main` | function | `src/engine/backtester.py:8382` | 189 | AMBIG |
 
 </details>
 
@@ -5257,7 +5258,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `candle_confirmation_check` | function | `src/engine/spec_condition_compiler.py:438` | 0 | unique |
 | `_bars_to_ts_list` | function | `src/engine/spec_condition_compiler.py:466` | 0 | unique |
 | `SpecConditionStrategy` | class | `src/engine/spec_condition_compiler.py:482` | 1 | unique |
-| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2364` | 8 | unique |
+| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2391` | 8 | unique |
 
 </details>
 
