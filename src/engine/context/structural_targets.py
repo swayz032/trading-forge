@@ -330,3 +330,81 @@ def select_exit_style(
     # All other playbooks (SWEEP_REVERSAL, ORB, MEAN_REVERSION, NO_TRADE) also
     # receive Style C — framework overlay applies Style C 33/33/33 universally.
     return "style_c"
+
+
+# --- SOURCE-RISK-HANDOFF-1 / UNIT D (AR-1059 section 4) -----------------------
+# A WHOLE-POSITION fixed-R source target, deliberately NOT part of TargetPlan.
+#
+# TargetPlan above is Trading Forge's DOL / Style-C ladder: tp1 = 1.0R,
+# tp2 = 2.5R, partial_sizes = (0.33, 0.33, 0.34). The sVkm teacher taught ONE
+# target -- close the whole position at 2R. Expressing that through the ladder
+# would silently become "33% at 1R + 33% at 2.5R + a runner", which is a
+# different strategy carrying the same number. AR-1059 section 4 UNIT D forbids
+# that reinterpretation, so this is a separate type with no ladder fields at all.
+#
+# It is intentionally NOT reachable from compute_structural_targets(): the
+# framework path and the source-faithful path must not converge on one shape.
+
+
+@dataclass(frozen=True)
+class SourceFixedRTarget:
+    """A single whole-position target taught by the source."""
+
+    target_price: float
+    r_multiple: float
+    risk_points: float
+    target_reason: str = "source_fixed_r"
+    position_fraction: float = 1.0  # the teacher closes ALL of it
+
+
+def compute_source_fixed_r_target(
+    direction: str,
+    entry_price: float,
+    stop_price: float,
+    r_multiple: float,
+) -> SourceFixedRTarget:
+    """Whole-position fixed-R target measured off the SOURCE stop.
+
+        LONG:  target = entry + R * abs(entry - stop)
+        SHORT: target = entry - R * abs(entry - stop)
+
+    The risk leg is deliberately the caller's stop -- for SOURCE_FAITHFUL that is
+    the source-exact FVG extreme, so a correction to the taught stop propagates
+    into the taught target instead of drifting apart from it.
+
+    Refuses rather than degrading: a zero-risk basis, a non-positive R, or a stop
+    on the wrong side of entry are all incoherent source contracts, and inventing
+    a target for them would fabricate a trade the teacher never described.
+    """
+    d = direction.strip().lower()
+    if d not in ("long", "short"):
+        raise ValueError(f"direction must be 'long' or 'short', got {direction!r}")
+    if r_multiple <= 0:
+        raise ValueError(f"r_multiple must be > 0, got {r_multiple!r}")
+
+    if d == "long" and stop_price >= entry_price:
+        raise ValueError(
+            f"LONG source stop {stop_price} must be BELOW entry {entry_price}; "
+            "refusing rather than inverting the target"
+        )
+    if d == "short" and stop_price <= entry_price:
+        raise ValueError(
+            f"SHORT source stop {stop_price} must be ABOVE entry {entry_price}; "
+            "refusing rather than inverting the target"
+        )
+
+    risk = abs(entry_price - stop_price)
+    if risk <= 0:
+        raise ValueError(
+            f"zero risk basis (entry {entry_price} == stop {stop_price}); "
+            "a fixed-R target would collapse onto entry"
+        )
+
+    offset = r_multiple * risk
+    target_price = entry_price + offset if d == "long" else entry_price - offset
+    return SourceFixedRTarget(
+        target_price=target_price,
+        r_multiple=float(r_multiple),
+        risk_points=risk,
+        target_reason="source_fixed_r",
+    )
