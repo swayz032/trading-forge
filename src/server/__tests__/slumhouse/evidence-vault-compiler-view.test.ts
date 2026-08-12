@@ -14,7 +14,7 @@ const emptyChambers = ["context", "setup", "entry", "stop", "exit", "sizing", "f
   rules: [],
 }));
 
-const sourceOnly = {
+const sourceOnly: any = {
   strategy: {
     id: "11111111-1111-4111-8111-111111111111",
     name: "Opening Heist Atlas",
@@ -73,8 +73,8 @@ describe("Media Vault compiler scene model", () => {
       transcriptChars: 28975,
       transcriptSha256: "a".repeat(64),
     });
-    expect(model.chambers.every((chamber) => chamber.state === "unbound")).toBe(true);
-    expect(model.chambers.every((chamber) => chamber.rules.length === 0)).toBe(true);
+    expect(model.chambers.every((chamber: any) => chamber.state === "unbound")).toBe(true);
+    expect(model.chambers.every((chamber: any) => chamber.rules.length === 0)).toBe(true);
     expect(JSON.stringify(model)).not.toMatch(/entry_long|stop_loss|profit_target/i);
   });
 
@@ -127,8 +127,8 @@ describe("Media Vault compiler scene model", () => {
     expect(model.status).toBe("compiled");
     expect(model.seal).toBe("COMPILED BLUEPRINT · RECEIPT SEALED");
     expect(model.receiptHash).toBe("spec-hash");
-    expect(model.chambers.find((chamber) => chamber.key === "entry")?.rules[0]?.evidence).toBe("Enter only after a closing breakout.");
-    expect(model.chambers.find((chamber) => chamber.key === "stop")?.state).toBe("inferred");
+    expect(model.chambers.find((chamber: any) => chamber.key === "entry")?.rules[0]?.evidence).toBe("Enter only after a closing breakout.");
+    expect(model.chambers.find((chamber: any) => chamber.key === "stop")?.state).toBe("inferred");
   });
 });
 
