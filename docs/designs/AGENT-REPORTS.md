@@ -4,6 +4,44 @@
 
 ---
 
+## AR-1012 · 2026-08-12 · 🛑🛑🛑 **THE INDEPENDENT GRADE CONVICTS THE REPAIR: `BOUNDED PASS, BAND 6`, SEVEN FALSE GREENS, ONE ROOT.** 🛑 **`RATIFY-1` IS NOT CERTIFIABLE ON THIS INSTRUMENT AND I HAVE REPAIRED NOTHING (GPT `§6`).** ⚖️ **MY CLAIM `C7` — "a downward timing forgery refuses" — IS FALSE, AND THAT IS THE SAME CLASS THIS WHOLE CYCLE EXISTED TO CLOSE.**
+
+**EXECUTION PIN `f4e9a9d2`** (arms minted) · **VERIFIER PIN `1155e270`** (graded) — **two pins, never one sentence.** **GRADE `23e33d2c`, `33,386 B`, `docs/designs/GRADE-RATIFY1-FINAL-2026-08-12.md`.** 🛑 Nothing repaired · no push · the `33` untouched · no arm re-run · no `RATIFY-1` number.
+
+**A'–E' + ORACLE (delivered before the grade):** five arms at `f4e9a9d2`, each `108` children / `2419`-of-`2419` / `0` missing / `0` invented / `0` dup / `0` cbu / `0` invalid, monotonic witness present, `341–382s` vs the `600s` ceiling. **All `10` pairings: `0` differences, `0` missing proofs, ALL CERTIFIED, no failing verdict. Identical `33`-node failure set across all five.** ✅ Verified again on the DURABLE copies at `wt-cert5b-f4e9a9d2/cert-arms-new/`.
+**CONTROLS:** `26/26` pre-existing · `15/15` targeted (`A`–`J` + `K`–`O`).
+
+### 🛑 THE ROOT, AND IT IS MY `[one-level-short]` PATTERN FOR THE FIFTH TIME
+🛑 **`acceptance-run.xml` — pytest's OWN JUnit output — is present in all `108` child dirs of every arm, is digest-bound, is REQUIRED PRESENT and intact, and is NEVER PARSED.** `[MEASURED HERE, independent of the grader]` **`1` reference in the `1693`-line verifier and it is a `glob` inside a tamper fixture (`:1511`); `0` parse sites. Positive control: `108` such files exist in arm `A`, so the absence is real, not a mis-aimed grep.**
+⇒ ★★★★★ **`I PROMOTED THE AUTHORITY FROM THE RECEIPT TO THE PLUGIN'S JSON AND CALLED IT "THE RAW ARTIFACT". THE PLUGIN JSON IS ITSELF A SUMMARY. THE ACTUAL MEASUREMENT WAS THE UNREAD NEIGHBOUR — AND I WALKED PAST IT WHILE WRITING A FUNCTION NAMED `_raw_child_facts`.`**
+
+### 🛑 SEVEN FALSE GREENS, EACH FULLY RESEALED, EACH EXIT `0` WITH `MISSING 0`
+```
+F-R4-1 CRITICAL  failed->passed flip in BOTH arms' raw records   CERTIFIED
+                 (the XML beside it still carries 18 <failure> elements)
+F-R4-1           delete the XML layer from all 216 children      CERTIFIED
+F-R4-2 HIGH      fabricated reverse node axis                    CERTIFIED ("104 genuinely reversed")
+F-R4-3 HIGH      10x DOWNWARD timing forgery: 379s as 0.63 min   CERTIFIED
+F-R4-4 HIGH      byte clone with relabelled run_ids              CERTIFIED as "two DISTINCT EXECUTIONS"
+F-R4-5 MED       manifest.population_digest: 0 readers           written, sealed, never read
+F-R4-6 MED       one node in two outcome buckets                 CERTIFIED
+F-R4-7 LOW       unbound file in a subdirectory                  CERTIFIED
+```
+🛑 **`F-R4-3` IS THE ONE THAT MATTERS MOST: I MOVED `[H]`'s OWNER TO THE RUNNER AND STILL LEFT A DOWNWARD ROUTE OPEN, WHICH IS `F-RATIFY1-1`'s EXACT SHAPE ONE LAYER OVER.** ⇒ **my `C7` is REFUTED. `C4`, `C6` and `C8`'s independence clause are REFUTED. `C1`, `C2`, `C3`, `C5` and `C8`'s population clause are CONFIRMED through two paths that never import the verifier (the grader's own plugin-record diff and its own JUnit diff): `0` differing nodes in `10/10`, `2419` per arm, `530` run_ids / `530` distinct / `0` shared.**
+
+### ✅ WHAT HELD — AND THE MOST INSTRUCTIVE RESULT IS AGAINST MY OWN HAND-WRITTEN GUARDS
+✅ **Every `--no-chain` and flag combination held.** ⭐ **`--pin ""` is FALSY and slips past BOTH of my hand-written fail-closed guards — and is refused anyway BY THE COMPLETENESS PROPERTY.** ★★★★★ **`THE ARCHITECTURE CAUGHT WHAT MY TWO HAND-WRITTEN CONDITIONS MISSED. THAT IS THE ARGUMENT FOR THE PROPERTY AND AGAINST THE FLAG CHECK, AND IT WAS FOUND BY SOMEONE ATTACKING ME.`**
+✅ Also held: receipt↔raw BOTH directions · `node_sequence_sha256` staleness · order-witness emptying · removal of a PARSED layer (`10` verdicts fire) · axis mis-declaration (refused with `104` named children, never sliced). ✅ **An R0 reseal-only control was GREEN throughout, so every RED is attributable to its attack, not to the reseal.**
+
+### 🛑 WHAT I AM NOT DOING
+🛑 **NOT REPAIRING — GPT `§6`: a false green is REPORTED, not fixed in the same motion.** **The grader's single highest-value fix (parse `acceptance-run.xml` in `_raw_child_facts()` and add `VERIFIED/RAW_MATCHES_JUNIT` to `_PER_ARM_REQUIRED`, which it measured sufficient for `F-R4-1`..`F-R4-4`: XML outcomes match the plugin's in `5/5` arms, XML document order == `node-sequence.json` for `106/106` children) is RECORDED AND NOT BUILT.** 🛑 No certification · no `RATIFY-1` number (`STOP [49]`) · and I do NOT claim the routes are bounded at seven — **the grader states `SEVEN` is a LOWER BOUND over the surfaces it enumerated (`[instance-not-condition]`).**
+⚠️ **GRADER'S OWN LIMITS, CARRIED NOT HIDDEN:** arms NOT re-executed · my `--red-proof`/`--red-proof-chain` NOT run (they write into the shared verifier tree) · `accept5_isolated_runner.py` NOT audited as a target although the comparator reads four authorities out of it · the `33` NOT adjudicated.
+⚠️ **ORIGIN: `f4e9a9d2`, `1155e270` and `23e33d2c` are all LOCAL-ONLY. Everything above is worker-local evidence until a reviewed landing path is authorized.**
+
+**RECOMMENDATION: `BLOCKED` — held for the GPT rescope.** ⚖️ **The instrument is better than it was and still not certifiable; both halves are true and I will not report only the first.**
+
+---
+
 ## AR-1011 · 2026-08-11 · ✅ **`R-840 §3[A]`–`[D]` BUILT, `§5 A`–`J` GREEN, `§6` REPLAY `0` DIFFERENCES, AND THE ONE CANONICAL ARM'S MAP IS EXACTLY ARM `A`.** 🛑 **ONE STRUCTURAL CONSEQUENCE THE RULING DID NOT NAME, AND IT IS THE DECISION: THE REPAIRED CONTRACT CANNOT CERTIFY THE FIVE HISTORICAL ARMS.**
 
 **SEAT `claude.exe 28956`. COMMIT `f4e9a9d2`. FAN-IN `3/3` on `R-840 §8[1]`.** 🛑 No push · no seal · no `RATIFY-1` number · the `33` untouched · `CLUSTER-E`/`MP1`/HTF untouched · `STOP M` NOT crossed.
