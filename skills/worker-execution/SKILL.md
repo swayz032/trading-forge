@@ -536,6 +536,17 @@ NEXT   : the exact next authorized action
    🛑 **AND SINCE 2026-08-12, DO NOT PRINT THE AR ON SCREEN AT ALL** — operator-ordered; it
    repeals `[ar-on-screen-for-gpt]`. GPT reads the branch itself. **On screen: the operator's
    3–5 plain lines and nothing else.**
+   🛑🛑 **REPORT AT EVERY MILESTONE, NOT ONLY AT THE END OF THE AUTHORIZED ROUTE.**
+   **CONVICTED 2026-08-12, the very next work unit after the rule landed:** a ruling authorized a
+   five-step route (`disposition → census → seal → canonical → close`) and said *"post the next
+   worker report"* at the end. The seat did a third of the disposition, told the OPERATOR in chat,
+   posted nothing to the branch — and **GPT reported that no report had arrived.** The seat had
+   *felt* it was reporting the whole time.
+   ⇒ **A report lands on the branch when: a cluster/lane closes · a stop fires · a measurement
+   changes the plan · you are about to end a turn with undelivered findings.** Never let "the
+   route isn't finished" defer delivery — an interim report costs one commit.
+   ★★★★★ **`A REPORT THAT EXISTS ONLY IN CHAT HAS NOT BEEN DELIVERED — AND THE SEAT THAT WROTE IT
+   IS THE LAST ONE WHO CAN TELL.` TELLING THE OPERATOR IS NOT TELLING THE ADVISOR.**
 6. **`11a` still governs the ending:** a receipt is not a stop. If the next item is already
    authorized, `NEXT` names it **and you start it in the same turn.**
 
