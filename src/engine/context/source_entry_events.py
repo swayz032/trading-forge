@@ -238,5 +238,39 @@ def source_stop_price(event: SourceEntryEvent, high: np.ndarray, low: np.ndarray
     nearest-FVG re-scan occurs at stop time. That property is structural here — this
     function receives no `zones` list, so there is nothing to re-scan. It cannot pick a
     different zone even if one is closer, because it never sees another zone.
+
+    ─── STEP G — SHORT STOP AUTHORITY IS REFUSED (AR-1074 §8, §10.G) ──────────────────
+    🛑 A CALCULABLE PRICE IS NOT SOURCE AUTHORITY.
+
+    The TypeScript source-risk contract deliberately maps `displacement_candle_low ->
+    fvg_displacement` and deliberately leaves `displacement_candle_high` UNMAPPED, because
+    the transcript does not authorize repairing the short-side wording by mirroring
+    (AR-1070's declared narrowing, accepted at AR-1074 §8).
+
+    That narrowing was NOT enforced on this side. `displacement_extreme()` is a generic
+    geometry helper and will happily return `high[start_idx - 1]` for a short — a
+    perfectly plausible number that no teacher ever taught. AR-1074 §8 measured exactly
+    that: "do not let this helper accidentally open the short stop path."
+
+    The guard lives HERE and not in `displacement_extreme()` on purpose. That helper is
+    generic geometry with its own direct tests and a second caller context; disarming it
+    would be a mechanism change where a source-authority check was ordered. THIS function
+    is the source-authority boundary — it is the only place that claims a returned price is
+    what the teacher taught.
+
+    Short SELECTION remains implemented and correct (`select_source_entry_events` still
+    emits short events): this module answers "which zone qualified", and only the STOP
+    claim is refused. Long is unaffected.
     """
+    if event.direction == SHORT:
+        raise ValueError(
+            "SHORT source stop authority is REFUSED (AR-1074 §8, §10.G). The transcript "
+            "resolves the LONG anchor only ('the bottom of the fair value candle'); "
+            "`displacement_candle_high` is deliberately UNMAPPED in the source-risk "
+            "contract and may not be inferred by mirroring the long rule. "
+            f"`displacement_extreme()` would mechanically return high[{int(event.zone.start_idx) - 1}] "
+            "here, but A CALCULABLE PRICE IS NOT SOURCE AUTHORITY. This refusal lifts only "
+            "when the bounded short-side visual evidence resolves the teacher's short "
+            "example — not by engineering common sense."
+        )
     return displacement_extreme(event.zone, high, low, event.direction)

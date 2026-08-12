@@ -373,3 +373,94 @@ class TestRefusals:
         zone = [z for z in zones_of(high, low, close, open_) if z.direction == BULLISH][0]
         with pytest.raises(ValueError, match="inverts the taught causal order"):
             SourceEntryEvent(bar_idx=10, direction=LONG, zone=zone, breakout_idx=11)
+
+
+# ── STEP G — SHORT STOP AUTHORITY (AR-1074 §8, §10.G, §11 discriminator 20) ───────────
+#
+# BEFORE this guard, `source_stop_price()` on a short event returned
+# `displacement_extreme(...)` = `high[start_idx - 1]` — a real, plausible, chartable price
+# that the transcript never authorized. The TypeScript contract's deliberate refusal to map
+# `displacement_candle_high` was NOT enforced on the Python side, so the narrowing existed
+# only in the layer that did not execute.
+#
+#     `A CALCULABLE PRICE IS NOT SOURCE AUTHORITY.`
+#
+# 🛑 THE POSITIVE WITNESS IS LOAD-BEARING HERE. Every assertion below is "it refuses". If
+# the short path were unreachable — no bearish zone, no downside crossing, a selector
+# hard-wired to LONG — a guard that never ran would satisfy all of them, and a deleted
+# guard would still look green. So the short EVENT is constructed and asserted first
+# (`[absence-claim]`: a negative assertion needs a positive witness that the path ran).
+
+
+def _short_event():
+    """The reachable SHORT event, from the SAME fixture the selector test above uses.
+
+    Not a hand-built `SourceEntryEvent`: it is produced by the real selector from real
+    detector zones, so this proves the production path can reach the refusal — a
+    hand-constructed event would only prove the dataclass accepts arguments.
+    """
+    high = np.array([100, 100, 100, 100, 100, 99, 95, 88, 84, 80], dtype=float)
+    low = np.array([90, 90, 90, 90, 90, 89, 85, 80, 76, 72], dtype=float)
+    close = np.array([95, 95, 95, 95, 95, 89, 88, 84, 80, 76], dtype=float)
+    open_ = close.copy()
+    events = select_source_entry_events(
+        close=close,
+        zones=zones_of(high, low, close, open_),
+        or_high=OR_HIGH,
+        or_low=OR_LOW,
+        lock_idx=LOCK_IDX,
+    )
+    return events, high, low
+
+
+class TestShortStopAuthorityIsRefused:
+    def test_positive_witness_the_short_path_is_actually_reachable(self):
+        """Without this, every refusal assertion below is unfalsifiable."""
+        events, _, _ = _short_event()
+        assert events, "the fixture must produce a SHORT event or the guard is never exercised"
+        assert all(e.direction == SHORT for e in events)
+
+    def test_source_stop_price_REFUSES_a_short_event(self):
+        """§11 discriminator 20: a short event with no visually certified stop authority
+        refuses instead of mechanically using `displacement_candle_high`.
+
+        ABLATION: delete the `if event.direction == SHORT` branch in `source_stop_price`
+        and this returns `high[start_idx-1]` as a float — RED.
+        """
+        events, high, low = _short_event()
+        with pytest.raises(ValueError, match="SHORT source stop authority is REFUSED"):
+            source_stop_price(events[0], high, low)
+
+    def test_the_refusal_is_about_AUTHORITY_not_an_incidental_geometry_error(self):
+        """A refusal that fired for the wrong reason would pin the wrong behaviour: it would
+        go green again the moment the geometry changed, silently reopening the short stop."""
+        events, high, low = _short_event()
+        with pytest.raises(ValueError) as err:
+            source_stop_price(events[0], high, low)
+        msg = str(err.value)
+        assert "displacement_candle_high" in msg, "must name the UNMAPPED anchor"
+        assert "A CALCULABLE PRICE IS NOT SOURCE AUTHORITY" in msg
+        # and it must NOT be one of displacement_extreme's own geometry refusals
+        assert "no displacement candle" not in msg
+        assert "outside the supplied series" not in msg
+
+    def test_LONG_is_UNAFFECTED_the_discriminating_control(self):
+        """The guard must refuse the short arm ONLY. A guard that refused everything would
+        pass the two tests above while destroying the long money path."""
+        open_, high, low, close = bars()
+        ev = events_of(high, low, close, open_)[0]
+        assert ev.direction == LONG
+        stop = source_stop_price(ev, high, low)
+        assert isinstance(stop, float)
+        assert stop == pytest.approx(low[ev.zone.start_idx - 1]), (
+            "the long taught stop must still be the wick-inclusive displacement low"
+        )
+
+    def test_short_SELECTION_still_works_only_the_STOP_claim_is_refused(self):
+        """AR-1074 §10.G refuses short STOP EXECUTION, not short event selection. Killing the
+        selector instead would lose the evidence needed to resolve the short side later."""
+        events, _, _ = _short_event()
+        ev = events[0]
+        assert ev.direction == SHORT
+        assert ev.bar_idx == ev.zone.start_idx, "the identity invariant still holds on shorts"
+        assert ev.breakout_idx <= ev.bar_idx
