@@ -530,9 +530,12 @@ NEXT   : the exact next authorized action
    outcomes · altered denominator · new skip/xfail · changed pin · changed population · changed
    execution semantics · runner/plugin/schema touch · new production-code touch · evidence missing
    from origin.
-5. **DURABILITY: the AR must reach the GPT-facing path** (`worker-onboarding 0-CTRL.3`) — chat,
-   scrollback and an unpushed worktree are not delivery. Raw artifacts go to LEVEL 3 (attach /
-   commit the file) and are referenced by path, never pasted wholesale.
+5. **DURABILITY: the AR must reach the GPT BRANCH** — `origin/external-advisor/gpt-rulings`
+   (`worker-onboarding 0-CTRL.3`). Chat, scrollback and an unpushed worktree are not delivery.
+   Raw artifacts are referenced by path, never pasted wholesale.
+   🛑 **AND SINCE 2026-08-12, DO NOT PRINT THE AR ON SCREEN AT ALL** — operator-ordered; it
+   repeals `[ar-on-screen-for-gpt]`. GPT reads the branch itself. **On screen: the operator's
+   3–5 plain lines and nothing else.**
 6. **`11a` still governs the ending:** a receipt is not a stop. If the next item is already
    authorized, `NEXT` names it **and you start it in the same turn.**
 

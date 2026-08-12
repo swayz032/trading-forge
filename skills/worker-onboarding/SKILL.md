@@ -55,17 +55,24 @@ repair and call that independent.**
 architectural investigation · strategy or money-path scope changes · broad agents "just in case."
 Those still require GPT scope.
 
-**[0-CTRL.3] EVIDENCE MUST REACH GPT DURABLY.** `[MEASURED HERE 2026-08-11]` the GPT-facing branch
-is **`origin/external-advisor/gpt-rulings`**; GPT reads land on it as files under
-**`docs/advisor-rulings/`** (`AR-NNN-EXTERNAL-*.md`; newest commit `3c29a82d`). Chat text, monitor
-output, terminal scrollback, memory, and an unpushed worktree are **NOT** durable paths.
-- Every meaningful worker AR **and every FULL grader report** must land on that path.
-  **A summary NEVER replaces the full grader evidence** — GPT must be able to inspect exact claims
-  tested, attacks, controls, findings, limitations, pin, artifacts, verdict.
-- ⚠️ `[MEASURED HERE]` that branch is **55 commits ahead of / 1,399 behind**
-  `h1-wave4-sealed12-driver` — it is **not** a fast-forward of your working branch. **Landing an AR
-  there is a deliberate publish, not a bulk push** (`R-840 §7`: no bulk push of unrelated commits).
-  If a ruling does not state the mechanics, ask GPT **once, in one sentence**; do not invent one.
+**[0-CTRL.3] REPORTS GO TO THE GPT BRANCH. 🛑 NO MORE ON-SCREEN RELAY BLOCKS.**
+**Operator order 2026-08-12, verbatim: *"DONT DO ON SCREEN RPEROTS NOMORE SEND RPEORTS TO GPT
+BRANCH AND SET MONITOR FOR GPT BRANCH 2S POLL."***
+🛑 **THIS REPEALS `[ar-on-screen-for-gpt]`.** That rule existed because GPT could only receive
+evidence by the operator copy-pasting it out of chat. **It no longer holds: GPT reads the repo
+directly** — it has verified commit SHAs from `origin` in its own rulings. **Printing a full AR in
+chat now costs tokens and delivers nothing the branch does not already carry.**
+- **The GPT branch is `origin/external-advisor/gpt-rulings`** `[MEASURED 2026-08-12]`, head
+  `3c29a82d`; GPT's own reads land on it under **`docs/advisor-rulings/`** (`AR-NNN-EXTERNAL-*.md`).
+- **Every meaningful worker AR and every FULL grader report lands there.** Chat text, monitor
+  output, terminal scrollback, memory and an unpushed worktree are **NOT** durable paths.
+  **A summary NEVER replaces the full grader evidence** — GPT must be able to inspect the exact
+  claims tested, attacks, controls, findings, limitations, pin, artifacts and verdict.
+- ⚠️ `[MEASURED]` that branch is **not** a fast-forward of `h1-wave4-sealed12-driver` (`55` ahead /
+  `1,399` behind at the time of measuring). **Landing a report there is a deliberate publish of the
+  report file — never a bulk push of the working branch** (`R-840 §7`).
+- **What still goes on screen: the operator's 3–5 plain lines** (`[plain-english]`) — what changed,
+  what he must decide, what you are not sure of. **Never the AR block.**
 
 **[0-CTRL.4] SURFACE EVERYTHING LOAD-BEARING — INCLUDING YOUR OWN MISTAKES.** grader findings ·
 false greens · false reds · changed test outcomes · altered denominators · new skips/xfails ·
@@ -275,18 +282,36 @@ caught it.** ⇒ **FULL GATE, with the search commands and the one narrow decay 
 
 ## 2a. ★★★★★ THE RULING EAR — CHECK FOR ONE, AND ARM ONE IF THERE IS NONE (operator-ordered 2026-08-09)
 
-🛑 **AMENDED 2026-08-11 BY `0-CTRL` — THE EAR IS NOW CONDITIONAL, AND ITS TARGET MOVED.**
-With the Claude advisor seat retired, **nothing writes `docs/designs/ADVISOR-RULINGS.md` any
-more**, so an ear on it hears silence and proves nothing. Under the new model:
-- **DEFAULT: DO NOT ARM AN EAR.** GPT rulings arrive relayed by the operator in chat, which is
-  already an interrupt. Arming a monitor on a dead channel spends tokens for zero delivery.
-- **ARM ONE ONLY IF** a Claude advisor seat is genuinely live and writing (census by
-  `Win32_Process` + parent walk, never `TaskList`), **or** a ruling names a file it will write.
-  Then everything below applies unchanged — one rig per channel, `Monitor persistent: true`
-  (a background `Bash` loop that never exits delivers nothing), backfill the blind window,
-  and **never kill an ear you did not arm.**
-- **STATE WHICH BRANCH YOU TOOK IN YOUR START-RECEIPT.** *"No ear armed — no live Claude advisor
-  seat, GPT relays through the operator"* is a compliant answer; silence is not.
+🛑🛑 **RETARGETED 2026-08-12 BY OPERATOR ORDER — THE EAR WATCHES THE GPT BRANCH, AT A `2s` POLL.**
+Nothing writes `docs/designs/ADVISOR-RULINGS.md` any more, so an ear on it hears silence and proves
+nothing. **The channel is now `origin/external-advisor/gpt-rulings`.**
+
+**ARM THIS AT SEATING. It is not optional and not conditional:**
+```
+Monitor(persistent: true, timeout_ms: 3600000, command:
+  bash /c/Users/tonio/Projects/trading-forge/.claude/skills/worker-onboarding/gpt_branch_ear.sh \
+       /c/Users/tonio/Projects/wt-h1-wave4-20260712 origin \
+       refs/heads/external-advisor/gpt-rulings 2 0)
+```
+The script polls `git ls-remote` every `2s` and emits ONE line when the head MOVES.
+
+🛑🛑 **THE TRAP THAT ALREADY CAUGHT THIS SEAT ONCE, 2026-08-12 — `cd` IS LOAD-BEARING.**
+**The Monitor's shell starts in `C:\Users\tonio\Projects\trading-forge`, which is NOT a git
+repository** (`[session-cwd-decoy-git]`). A bare `git ls-remote origin` there resolves to
+**nothing**, and the first arming reported `EAR ARMED @ <absent>` — **an ear that could never have
+fired, wearing the word ARMED.** ⇒ **the script now `cd`s to an explicit repo dir and REFUSES
+loudly (`exit 2`/`exit 3`) if the dir is not a repo or the ref resolves to nothing.**
+★★★★★ **`AN EAR ARMED ON AN ABSENT REF IS INDISTINGUISHABLE FROM A QUIET CHANNEL. MAKE IT REFUSE.`**
+
+**The rest of the discipline is unchanged and still binding:**
+- **CENSUS FIRST** by `Win32_Process` + parent walk (**never `TaskList`**), one rig per channel,
+  **never kill an ear you did not arm.**
+- **RED-PROOF THE DETECTOR ON A THROWAWAY, never on the real branch** — a throwaway repo whose
+  branch you move by hand. Required: it **EMITS** on a move, **stays SILENT** with no move, and
+  **REFUSES** from the non-repo cwd. All three, before you trust it.
+- **BACKFILL THE BLIND WINDOW:** state the head the ear armed on and whether anything landed before
+  arming.
+- **STATE IT IN YOUR START-RECEIPT** with the head SHA. Silence is not a compliant answer.
 
 *Historical rationale, retained:* **Cross-session messaging is `[MEASURED, R-722]` DEAD on this
 box.** The ledger is the only relay, and a file nobody is watching is not a relay. **So a seated
