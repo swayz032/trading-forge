@@ -287,11 +287,27 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
       };
     }
   } catch {
-    if (!providedStrategy) {
-      res.status(500).json({ error: "Failed to load strategy from DB" });
-      return;
-    }
-    // Non-fatal if we already have a provided strategy
+    // ── AR-1032 §4: FAIL CLOSED ON THE STRATEGY-AUTHORITY READ ───────────────
+    // This previously proceeded whenever the request had supplied `strategy`,
+    // treating an unreadable row as a legacy row with no candidate. That is a
+    // SILENT DOWNGRADE: the read that would have revealed candidate authority is
+    // precisely the one that failed, so the route cannot know whether this
+    // strategyId is legacy or candidate-aware. Accepting a request-body strategy
+    // in that state lets a caller execute while the sidecar is unknowable.
+    //
+    // 🛑 An unreadable authority is NOT an absent authority. This refuses before
+    // slot acquisition and before any Python spawn. No retries, no cache, no
+    // fallback store — the outage is reported, not worked around.
+    res.status(503).json({
+      error: "strategy_authority_unavailable",
+      message:
+        "The persisted strategy row could not be read, so execution-candidate " +
+        "authority for this strategyId is unknowable. Refusing rather than " +
+        "executing as though no candidate were persisted. A request-body " +
+        "`strategy` cannot substitute for unavailable persisted authority.",
+      strategyId,
+    });
+    return;
   }
 
   if (!resolvedStrategy) {

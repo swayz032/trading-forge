@@ -52,12 +52,18 @@ vi.mock("../../middleware/idempotency.js", () => ({
 
 // ── The strategy row the DB hands back ───────────────────────────────────────
 let strategyRow: Record<string, unknown> | undefined;
+// AR-1032 §4: the strategy-authority read FAILING is a distinct state from it
+// returning no row. A failure means candidate-awareness is UNKNOWABLE.
+let dbReadThrows = false;
 
 vi.mock("../../db/index.js", () => ({
   db: {
     select: () => ({
       from: () => ({
-        where: () => Promise.resolve(strategyRow ? [strategyRow] : []),
+        where: () =>
+          dbReadThrows
+            ? Promise.reject(new Error("ECONNRESET: strategy authority unreadable"))
+            : Promise.resolve(strategyRow ? [strategyRow] : []),
       }),
     }),
     insert: () => ({
@@ -151,6 +157,79 @@ function configHandedToRunBacktest(): Record<string, unknown> {
 beforeEach(() => {
   runBacktestSpy.mockClear();
   strategyRow = undefined;
+  dbReadThrows = false;
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AR-1032 §4/§5 — A FAILED STRATEGY-AUTHORITY READ MUST NOT DOWNGRADE AUTHORITY
+//
+// Pre-repair, `backtests.ts` caught the DB read failure and, when the request had
+// supplied `strategy`, PROCEEDED. That silently treats "authority unavailable" as
+// "legacy, no candidate" — and the route cannot know which, because the read that
+// would have told it is the one that failed.
+//
+// `AN OUTAGE IS NOT EVIDENCE OF ABSENCE. IT IS ABSENCE OF EVIDENCE.`
+// ══════════════════════════════════════════════════════════════════════════════
+describe("AR-1032 §4 — strategy-authority DB read fails CLOSED", () => {
+  const REQUEST_STRATEGY = {
+    name: "attacker-or-innocent",
+    symbol: "MES",
+    timeframe: "5m",
+    indicators: [],
+    entry_long: "true",
+    entry_short: "false",
+    exit: "true",
+    stop_loss: { type: "atr", multiplier: 2.0 },
+    position_size: { type: "fixed", fixed_contracts: 1 },
+  };
+
+  // §5 control 1 (RED witness) + control 2 (GREEN)
+  it("control 2 — DB read throws + request `strategy` supplied => refused, Python never launched", async () => {
+    dbReadThrows = true;
+
+    const res = await post({ strategyId: STRATEGY_ID, strategy: REQUEST_STRATEGY });
+
+    // This is the assertion that was RED pre-repair: the route used to return 202.
+    expect(res.status).not.toBe(202);
+    expect(res.body.error).toBe("strategy_authority_unavailable");
+    // Refused before the slot and before the spawn.
+    expect(runBacktestSpy).not.toHaveBeenCalled();
+  });
+
+  // §5 control 6 — the pre-existing no-strategy refusal is not weakened
+  it("control 6 — DB read throws with NO request strategy is still refused", async () => {
+    dbReadThrows = true;
+
+    const res = await post({ strategyId: STRATEGY_ID });
+
+    expect(res.status).not.toBe(202);
+    expect(res.body.error).toBe("strategy_authority_unavailable");
+    expect(runBacktestSpy).not.toHaveBeenCalled();
+  });
+
+  it("control 6b — a SUCCESSFUL read returning no row is NOT the same state as a failed read", async () => {
+    // Absence of a row is knowledge; a failed read is not. The two must not collapse
+    // into one response, or a future reader cannot tell an outage from a missing row.
+    dbReadThrows = false;
+    strategyRow = undefined;
+
+    const res = await post({ strategyId: STRATEGY_ID });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).not.toBe("strategy_authority_unavailable");
+    expect(runBacktestSpy).not.toHaveBeenCalled();
+  });
+
+  // §5 control 5 — legacy with a SUCCESSFUL read is untouched by the fail-closed rule
+  it("control 5c — a successful legacy read still proceeds normally", async () => {
+    dbReadThrows = false;
+    strategyRow = baseStrategyRow({});
+
+    const res = await post({ strategyId: STRATEGY_ID, strategy: REQUEST_STRATEGY });
+
+    expect(res.status).toBe(202);
+    expect(runBacktestSpy).toHaveBeenCalled();
+  });
 });
 
 describe("MP1-CANDIDATE-INGRESS-1 — /api/backtests carries DB-authoritative candidate identity", () => {
