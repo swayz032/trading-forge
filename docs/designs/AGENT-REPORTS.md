@@ -4,6 +4,35 @@
 
 ---
 
+## AR-1014 · 2026-08-12 · ✅ **DURABILITY GATE CLOSED — THE WHOLE `RATIFY-1` EVIDENCE CHAIN NOW RESOLVES FROM `origin`.** 🛑 **AND I AM HOLDING PROMOTION ON PRIOR ART, NOT ON DOUBT: `ACCEPT5-AGGREGATE-PROVENANCE-1` IS A NAMED `HIGH` PROMOTION BLOCKER THAT I CANNOT FIND DISCHARGED BY NAME.**
+
+**PUSHED `4257e3e8..6f6b0ec7`.** `[MEASURED HERE]` **`origin/h1-wave4-sealed12-driver` == local `HEAD` == `6f6b0ec7`.**
+
+### ✅ DURABILITY — EVERY EVIDENCE COMMIT, VERIFIED ON ORIGIN
+```
+fb71a3ef  historical execution pin      ON ORIGIN
+f4e9a9d2  execution pin (A'-E', GA-GE)  ON ORIGIN
+1155e270  DEMOTED verifier              ON ORIGIN
+23e33d2c  failed grade  (band 6)        ON ORIGIN
+cb2c5bb0  LIVE grade    (band 8)        ON ORIGIN
+e92cb9da  AR-1013 certification receipt ON ORIGIN
+```
+✅ **BYTES UNCHANGED, AND THE ARGUMENT IS STRUCTURAL RATHER THAN A PROMISE: git objects are CONTENT-ADDRESSED, so a commit SHA resolving on origin IS the proof its whole tree is byte-identical. Recorded anyway — comparator@`1155e270` blob `23f3a7f3…` · live grade@`cb2c5bb0` blob `5a6b8e6e…` · failed grade@`23e33d2c` blob `b4af300c…` · runner@`f4e9a9d2` blob `2eaea75e…`.**
+⚖️ **THE LANDING WAS REVIEWED, NOT BULK: `[MEASURED]` all `34` commits in `origin..HEAD` are campaign evidence (`R-834`..`R-840`, `AR-1002`..`AR-1013`, all four grade receipts, the repair commits). Non-doc files touched: EXACTLY `3` — the runner, the comparator, the new control harness. No unexpected deletion ⇒ the wrong-base diff-stat tripwire did not fire. Secret scan: `1` hit, a FALSE POSITIVE (the word "secretly" in prose).**
+✅ **A GUARD BLOCKED THE FIRST PUSH AND I OBEYED IT: the `SYSTEM-INVENTORY` freshness hook refused, regenerated the map, and named the remedy. `[MEASURED]` the regeneration is purely mechanical — generation pointer moved, `scripts/` `222→223` files (that is my new control harness), total `2088→2089`, `19`+/`19`- . Committed `6f6b0ec7` on its own explicit path; second push PASSED the same hook.** ★ **I did not route around it.**
+
+### 🛑 THE HOLD — PRIOR ART THE RULING DID NOT ADDRESS
+🛑 **`[MEASURED HERE]` `ACCEPT5-AGGREGATE-PROVENANCE-1` is banked at `R-826 §3` as *"BANKED, `HIGH`, PROMOTION BLOCKER"* and again in that ruling's fields as *"banked HIGH, promotion blocker"*. It has `4` mentions in the ledger, ALL at `R-826`, and I can find NO line discharging it BY NAME.**
+✅ **AND THE ONE PRECONDITION `R-826`-era prior art DID name is now SATISFIED: *"the FINAL `RATIFY-1` COMMIT MUST BE RESOLVABLE AND INSPECTABLE FROM `origin` BEFORE THE ISOLATED RUNNER IS PROMOTED TO AUTHORITY. NO LOCAL-ONLY AUTHORITY."* ⇒ closed by the push above.**
+⚖️ **MY ASSESSMENT, LABELLED AS ASSESSMENT AND NOT AS A CLOSURE:** the blocker's subject is *"THE COMPARATOR MAY BE ABLE TO CERTIFY A FORGED PAIR"* — and that comparator has since been **DEMOTED off the certification path entirely**, with certification now resting on a live independent grader that executed the arms itself. **So the blocker is plausibly MOOT for `RATIFY-1`.** 🛑 **BUT IT WAS BANKED AGAINST *PROMOTION*, NOT AGAINST CERTIFICATION, AND A BANKED BLOCKER IS DISCHARGED BY A RULING — NEVER BY A WORKER'S INFERENCE THAT IT NO LONGER MATTERS.** ★★★★ **`THE CONVENIENT READING OF A BLOCKER I FOUND MYSELF IS EXACTLY THE READING I MAY NOT TAKE.`**
+⚡ **WHAT I NEED IS ONE LINE: discharge `ACCEPT5-AGGREGATE-PROVENANCE-1` (moot under the demotion), or name what promotion must still satisfy.**
+
+🛑 **NOT DONE: no promotion · `CLUSTER-E` NOT started (it sits behind promotion in the authorized route) · the `33` untouched · `F-R4-1`..`F-R4-7` still OPEN against the demoted diagnostic and NOT repaired · no new checker built.**
+
+**RECOMMENDATION: `BLOCKED` — one-line disposition needed on the banked promotion blocker.** ⚖️ **Everything mechanical through durability is DONE and verified; I stopped at the first thing that is a decision rather than a step.**
+
+---
+
 ## AR-1013 · 2026-08-12 · ✅ **LIVE INDEPENDENT CERTIFICATION RETURNED `PASS — BOUNDED`, `VERIFIED BAND 8`.** ⚡ **THE TRUST BOUNDARY MOVED: THE GRADER EXECUTED THE FIVE ARMS ITSELF RATHER THAN AUDITING A CLAIM ABOUT THEM.** 🛑 **I DO NOT CERTIFY `RATIFY-1`. HELD FOR THE GPT DECISION.**
 
 **EXECUTION PIN `f4e9a9d2`** · **DEMOTED VERIFIER `1155e270`** · **FAILED GRADE `23e33d2c`** · **LIVE GRADE `cb2c5bb0`** → `docs/designs/GRADE-RATIFY1-LIVE-2026-08-12.md`. `[MEASURED HERE]` **`22,377 B`, one file in the commit, all mandatory sections present incl. `LIMITATIONS`.** 🛑 No code touched this cycle · no push · the `33` untouched · no `RATIFY-1` number.
