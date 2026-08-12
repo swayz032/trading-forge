@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `32d39f4d8ddc08fdd6a45c39ddb7cbaaa257a110`  (worktree DIRTY at generation time)
+> Generated at commit `cb30b3b54ebc49970cd9597dcc784bf98cf5c3e0`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 293 | 371 | 121605 | 1890 |
+| `src/` | Python | 293 | 371 | 121650 | 1891 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -198,9 +198,9 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3263 |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3264 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1549 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.1% of 4863 rows |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.1% of 4864 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=620 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
@@ -208,7 +208,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1890 ts=2928 |
+| C12 | symbols enumerated in both languages | PASS | py=1891 ts=2928 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6609/6609 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -224,8 +224,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **217 of 4553 enumerated symbol names (4.8%) are defined in more than one file, covering
-  482 of 4818 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **217 of 4554 enumerated symbol names (4.8%) are defined in more than one file, covering
+  482 of 4819 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -244,12 +244,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3263 | 67.1% |
+| `WIRED` | 3264 | 67.1% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1549 | 31.9% |
+| `BUILT-UNREACHABLE` | 1549 | 31.8% |
 | `DECLARED-ABSENT` | 38 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4863** | |
+| **TOTAL** | **4864** | |
 
 ---
 
@@ -279,7 +279,7 @@ table below it.**
 | `src/engine/anti_setups` | 25 | 0 | 6 | 0 | 0 | 31 |
 | `src/engine/archetype_evaluator.py` | 5 | 0 | 0 | 0 | 0 | 5 |
 | `src/engine/archetypes` | 9 | 0 | 3 | 0 | 0 | 12 |
-| `src/engine/backtester.py` | 53 | 0 | 2 | 0 | 0 | 55 |
+| `src/engine/backtester.py` | 54 | 0 | 2 | 0 | 0 | 56 |
 | `src/engine/battery` | 0 | 0 | 17 | 0 | 0 | 17 |
 | `src/engine/black_swan_evaluator.py` | 8 | 0 | 0 | 0 | 0 | 8 |
 | `src/engine/breakout_confirmation_ambiguity.py` | 2 | 0 | 0 | 0 | 0 | 2 |
@@ -1131,7 +1131,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `archetype_distribution` | function | `src/engine/archetypes/historical_labeler.py:19` | 1 | unique |
 | `label_history` | function | `src/engine/archetypes/historical_labeler.py:8` | 1 | unique |
 | `map_strategy_to_archetypes` | function | `src/engine/archetypes/strategy_mapper.py:10` | 1 | unique |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:8469` | 1 | unique |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:8500` | 1 | unique |
 | `MappingSchemaError` | class | `src/engine/battery/mapping_guard.py:24` | 1 | unique |
 | `_print_boundary` | function | `src/engine/battery/selection_deflation.py:198` | 1 | unique |
 | `run_selection_deflation_check` | function | `src/engine/battery/selection_deflation.py:115` | 1 | unique |
@@ -1437,7 +1437,7 @@ _...483 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `shift_higher_tf_columns` | function | `src/engine/backtester.py:2216` | no non-test reference outside its own definition |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:8469` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:8500` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -3666,7 +3666,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/backtester.py</code> - 53 symbols</summary>
+<details><summary><code>src/engine/backtester.py</code> - 54 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -3696,33 +3696,34 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_apply_max_trades_per_day` | function | `src/engine/backtester.py:2775` | 0 | unique |
 | `_symbol_of_spec` | function | `src/engine/backtester.py:2928` | 0 | unique |
 | `_get_stop_ceiling_for_symbol` | function | `src/engine/backtester.py:2940` | 1 | unique |
-| `_structural_stop_parity_enabled` | function | `src/engine/backtester.py:2988` | 0 | unique |
-| `_resolve_stop_risk_points` | function | `src/engine/backtester.py:3003` | 0 | unique |
-| `_get_stop_floor_for_symbol` | function | `src/engine/backtester.py:3098` | 0 | unique |
-| `_parse_slippage_survival_multiples` | function | `src/engine/backtester.py:3135` | 0 | unique |
-| `_parse_slippage_survival_min_pf` | function | `src/engine/backtester.py:3155` | 0 | unique |
-| `_parse_slippage_survival_min_trades` | function | `src/engine/backtester.py:3171` | 0 | unique |
-| `_compute_slippage_survival_block` | function | `src/engine/backtester.py:3186` | 1 | unique |
-| `_apply_dsl_stop_loss_and_time_stop` | function | `src/engine/backtester.py:3257` | 0 | unique |
-| `_apply_dll_halt_to_entries` | function | `src/engine/backtester.py:3538` | 0 | unique |
-| `run_backtest` | function | `src/engine/backtester.py:3676` | 10 | unique |
-| `_build_expected_signals_from_trades` | function | `src/engine/backtester.py:6235` | 0 | unique |
-| `_execution_was_refused` | function | `src/engine/backtester.py:6309` | 0 | unique |
-| `_emit_validated_result` | function | `src/engine/backtester.py:6347` | 0 | unique |
-| `_compute_recovery_days_from_max_dd` | function | `src/engine/backtester.py:6417` | 0 | unique |
-| `_compute_monthly_survival_stats` | function | `src/engine/backtester.py:6465` | 0 | unique |
-| `_compute_tier` | function | `src/engine/backtester.py:6502` | 0 | unique |
-| `_compute_forge_score` | function | `src/engine/backtester.py:6526` | 0 | unique |
-| `compute_recency_weighted_score` | function | `src/engine/backtester.py:6553` | 0 | unique |
-| `_empty_result` | function | `src/engine/backtester.py:6639` | 1 | AMBIG |
-| `run_class_backtest` | function | `src/engine/backtester.py:6670` | 7 | unique |
-| `_compute_decay_analysis` | function | `src/engine/backtester.py:8202` | 0 | unique |
-| `_load_strategy_class` | function | `src/engine/backtester.py:8227` | 1 | unique |
-| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8246` | 0 | unique |
-| `_rescore_with_crisis` | function | `src/engine/backtester.py:8276` | 0 | unique |
-| `_candidate_refusal_envelope` | function | `src/engine/backtester.py:8347` | 0 | unique |
-| `resolve_candidate_authority` | function | `src/engine/backtester.py:8386` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:8503` | 189 | AMBIG |
+| `_source_risk_mode_from_spec` | function | `src/engine/backtester.py:2988` | 0 | unique |
+| `_structural_stop_parity_enabled` | function | `src/engine/backtester.py:3019` | 0 | unique |
+| `_resolve_stop_risk_points` | function | `src/engine/backtester.py:3034` | 0 | unique |
+| `_get_stop_floor_for_symbol` | function | `src/engine/backtester.py:3129` | 0 | unique |
+| `_parse_slippage_survival_multiples` | function | `src/engine/backtester.py:3166` | 0 | unique |
+| `_parse_slippage_survival_min_pf` | function | `src/engine/backtester.py:3186` | 0 | unique |
+| `_parse_slippage_survival_min_trades` | function | `src/engine/backtester.py:3202` | 0 | unique |
+| `_compute_slippage_survival_block` | function | `src/engine/backtester.py:3217` | 1 | unique |
+| `_apply_dsl_stop_loss_and_time_stop` | function | `src/engine/backtester.py:3288` | 0 | unique |
+| `_apply_dll_halt_to_entries` | function | `src/engine/backtester.py:3569` | 0 | unique |
+| `run_backtest` | function | `src/engine/backtester.py:3707` | 10 | unique |
+| `_build_expected_signals_from_trades` | function | `src/engine/backtester.py:6266` | 0 | unique |
+| `_execution_was_refused` | function | `src/engine/backtester.py:6340` | 0 | unique |
+| `_emit_validated_result` | function | `src/engine/backtester.py:6378` | 0 | unique |
+| `_compute_recovery_days_from_max_dd` | function | `src/engine/backtester.py:6448` | 0 | unique |
+| `_compute_monthly_survival_stats` | function | `src/engine/backtester.py:6496` | 0 | unique |
+| `_compute_tier` | function | `src/engine/backtester.py:6533` | 0 | unique |
+| `_compute_forge_score` | function | `src/engine/backtester.py:6557` | 0 | unique |
+| `compute_recency_weighted_score` | function | `src/engine/backtester.py:6584` | 0 | unique |
+| `_empty_result` | function | `src/engine/backtester.py:6670` | 1 | AMBIG |
+| `run_class_backtest` | function | `src/engine/backtester.py:6701` | 7 | unique |
+| `_compute_decay_analysis` | function | `src/engine/backtester.py:8233` | 0 | unique |
+| `_load_strategy_class` | function | `src/engine/backtester.py:8258` | 1 | unique |
+| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8277` | 0 | unique |
+| `_rescore_with_crisis` | function | `src/engine/backtester.py:8307` | 0 | unique |
+| `_candidate_refusal_envelope` | function | `src/engine/backtester.py:8378` | 0 | unique |
+| `resolve_candidate_authority` | function | `src/engine/backtester.py:8417` | 0 | unique |
+| `main` | function | `src/engine/backtester.py:8534` | 189 | AMBIG |
 
 </details>
 
