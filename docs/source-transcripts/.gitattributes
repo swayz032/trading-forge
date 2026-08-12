@@ -1,0 +1,4 @@
+# Transcripts are byte-exact copies of transcript_text; sha256sum must reproduce
+# the transcript_sha256 DB column on EVERY platform. No EOL translation, ever.
+raw/** -text
+*.md text eol=lf
