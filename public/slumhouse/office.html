@@ -427,7 +427,7 @@
       }
       #imm-paper.on > .imm-head { flex: 0 0 auto; padding-bottom: clamp(8px, 1.4dvh, 16px); margin-bottom: clamp(8px, 1.5dvh, 18px); }
       #imm-paper.on > .imm-panel:has(.imm-agg) { flex: 0 0 auto; padding-block: clamp(9px, 1.3dvh, 16px); }
-      #imm-paper.on > .fight-night-empty { flex: 0 0 var(--fight-night-height); height: var(--fight-night-height); min-height: 0; margin-top: clamp(8px, 1.3dvh, 14px); }
+      #imm-paper.on > .fight-night-empty { flex: 1 1 0; height: auto; max-height: var(--fight-night-height); min-height: 0; margin-top: clamp(8px, 1.3dvh, 14px); }
       #imm-paper.on > .fight-night-empty .premium-scene { height: 100%; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; }
       #imm-paper.on > .fight-night-empty .premium-canvas,
       #imm-paper.on > .fight-night-empty .premium-svg,
@@ -443,7 +443,9 @@
       #imm-paper.on .imm-subline { margin-top: 3px; line-height: 1.3; }
       #imm-paper.on .premium-caption { padding: 10px 14px 12px; }
       #imm-paper.on .premium-name { margin-top: 5px; font-size: 17px; }
-      #imm-paper.on .premium-copy, #imm-paper.on > .empty-note, #imm-paper.on > .imm-src { display: none; }
+      #imm-paper.on .premium-copy { max-width: 560px; font-size: 9px; line-height: 1.32; }
+      #imm-paper.on > .empty-note { margin-top: 3px; font-size: 7px; line-height: 1.2; }
+      #imm-paper.on > .imm-src { margin-top: 2px; padding-top: 3px; font-size: 6.5px; line-height: 1.2; }
       #imm-paper.on .fight-night-empty .arena-photo-hud { top: 17px; }
     }
     @keyframes arena-breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.008); } }

@@ -339,7 +339,8 @@ describe("immersive Paper Floor — disconnected renders distinctly from genuine
     expect(officeSrc).toContain("--fight-night-height");
     expect(officeSrc).toContain("calc(100dvh - 62px)");
     expect(officeSrc).toMatch(/#imm-paper\.on[\s\S]*overflow:\s*hidden/);
-    expect(officeSrc).toMatch(/fight-night-empty[\s\S]*height:\s*var\(--fight-night-height\)/);
+    expect(officeSrc).toMatch(/#imm-paper\.on > \.fight-night-empty\s*\{[^}]*flex:\s*1 1 0/);
+    expect(officeSrc).toMatch(/#imm-paper\.on > \.fight-night-empty\s*\{[^}]*max-height:\s*var\(--fight-night-height\)/);
     expect(officeSrc).toMatch(/fight-night-empty \.arena-photo-stage[\s\S]*min-height:\s*0/);
     expect(officeSrc).toMatch(/@media \(max-width: 780px\)[\s\S]*#imm-paper\.on[\s\S]*overflow-y:\s*auto/);
   });
