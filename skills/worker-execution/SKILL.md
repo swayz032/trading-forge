@@ -177,6 +177,30 @@ prose, the transcript, the filesystem — never its own output.
   printed the target you MEANT, not merely that it printed.**
 - **A SURPRISING RESULT IS AN ACCUSATION AGAINST YOUR INSTRUMENT FIRST.** All three self-catches
   came from re-checking a result that felt too strong. **That reflex is the whole defence.**
+- **NEVER ANCHOR A REGEX YOU ARE CLASSIFYING A POPULATION WITH.** `^T-…-C\d+$` scored **936**
+  transcript references; *contains* scored **1239** — the other **303** were stored as
+  `"{start: T-…, end: T-…}"`, `"T-… to T-…"`, `"{T-…}"` and were silently counted as the OTHER
+  category. **Anchoring asserts the field contains the pattern ALONE, which is a claim about
+  FORMATTING you almost never mean to make.** ⇒ match *contains* first, then **enumerate the
+  encodings you actually observe** and print them.
+
+### 🛑🛑★★★★★ AND GREP **MEMORY**, NOT ONLY THE RULINGS AND REPORTS
+
+**`[prior-art-check]` (§0.-0.5) lists four surfaces. A seat that ran `system_inventory` and grepped
+the rulings — and skipped the memory directory — RE-DISCOVERED TWO BANKED CONVICTIONS THE EXPENSIVE
+WAY IN ONE SESSION, and reported one of them as a fresh insight.** Both were already written down,
+in a memory named after the very failure mode being repeated:
+
+- the anchored-regex miscount above — **the identical `936` figure, the identical field**;
+- *"printed a DB row's top-level keys, saw no X, and ruled the library ungradable — every condition
+  carried `evidence` + `span`"* — **the identical object-vs-evidence near-miss.**
+
+```bash
+grep -ril '<concept>' ~/.claude/projects/C--Users-tonio-Projects-trading-forge/memory/
+```
+
+★★★★★ **`A MEMORY YOU DO NOT CONSULT IS INDISTINGUISHABLE FROM ONE YOU NEVER WROTE — AND THE SECOND
+DISCOVERY OF A BANKED FACT COSTS FULL PRICE AND ARRIVES WEARING THE WORD "FINDING".`**
 
 ---
 
