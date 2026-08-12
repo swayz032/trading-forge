@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `0b1533fff1c8cbe96c95a052453f506bcdb50dde`  (worktree DIRTY at generation time)
+> Generated at commit `809d219251120b715b047d6fc5ccf7bcf9642099`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -31,7 +31,7 @@ first and its cost is made visible.
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
 | `src/` | Python | 292 | 369 | 121242 | 1885 |
-| `src/` | TypeScript | 462 | 721 | 209811 | 2928 |
+| `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
 TypeScript symbol rule: every line matching an **exported declaration** pattern
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1844 | 754 |
+| `src/` | 1845 | 754 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2102** | **975** |
+| **TOTAL** | **2103** | **975** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 422 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1090 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1091 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **620** of **2102** parsed files.
+Total entry points: **94**.  Modules reachable from them: **620** of **2103** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -210,7 +210,7 @@ table below it.**
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=1885 ts=2928 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
-| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6604/6604 TS import specifiers non-blank |
+| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6609/6609 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
@@ -1094,6 +1094,9 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `runDrainStallCheck` | function | `src/server/services/scout-watchdog-service.ts:158` | 2 | unique |
 | `runRejectDistributionCheck` | function | `src/server/services/scout-watchdog-service.ts:350` | 2 | unique |
 | `runRejectSpikeCheck` | function | `src/server/services/scout-watchdog-service.ts:442` | 2 | unique |
+| `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:79` | 2 | unique |
+| `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:121` | 2 | unique |
+| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | 2 | unique |
 | `runStrategyProductionCheck` | function | `src/server/services/strategy-production-check-service.ts:23` | 2 | unique |
 | `_resetActiveCount` | function | `src/server/services/trade-critique-service.ts:113` | 2 | unique |
 | `isUnconfiguredSlumdawgSecret` | function | `src/server/slumdawg-hmac.ts:45` | 2 | unique |
@@ -1281,9 +1284,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `check_ffn_express_consistency` | function | `src/engine/prop_compliance.py:172` | 1 | unique |
 | `compare_vs_optuna` | function | `src/engine/quantum_annealing_optimizer.py:311` | 1 | unique |
 | `decode_solution` | function | `src/engine/quantum_annealing_optimizer.py:306` | 1 | unique |
-| `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | 1 | unique |
-| `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
-| `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
 
 _...480 more omitted from this table._
 
@@ -3345,13 +3345,13 @@ _...480 more omitted from this table._
 | `_resetSmtCacheForTest` | function | `src/server/services/smt-live-service.ts:293` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `RiskOwnershipMode` | type | `src/server/services/source-risk-contract.ts:27` | defining module is not reachable from any measured entry point |
 | `SourceStopAnchor` | type | `src/server/services/source-risk-contract.ts:37` | defining module is not reachable from any measured entry point |
-| `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:60` | defining module is not reachable from any measured entry point |
-| `SourceSpan` | interface | `src/server/services/source-risk-contract.ts:80` | defining module is not reachable from any measured entry point |
-| `SourceStopContract` | interface | `src/server/services/source-risk-contract.ts:87` | defining module is not reachable from any measured entry point |
-| `SourceTargetContract` | interface | `src/server/services/source-risk-contract.ts:94` | defining module is not reachable from any measured entry point |
-| `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:101` | defining module is not reachable from any measured entry point |
-| `HasSourceRisk` | interface | `src/server/services/source-risk-contract.ts:112` | defining module is not reachable from any measured entry point |
-| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:138` | defining module is not reachable from any measured entry point |
+| `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:79` | defining module is not reachable from any measured entry point |
+| `SourceSpan` | interface | `src/server/services/source-risk-contract.ts:100` | defining module is not reachable from any measured entry point |
+| `SourceStopContract` | interface | `src/server/services/source-risk-contract.ts:107` | defining module is not reachable from any measured entry point |
+| `SourceTargetContract` | interface | `src/server/services/source-risk-contract.ts:114` | defining module is not reachable from any measured entry point |
+| `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:121` | defining module is not reachable from any measured entry point |
+| `HasSourceRisk` | interface | `src/server/services/source-risk-contract.ts:132` | defining module is not reachable from any measured entry point |
+| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | defining module is not reachable from any measured entry point |
 | `SpecEntryCondition` | interface | `src/server/services/spec-onboarding-service.ts:185` | defining module is not reachable from any measured entry point |
 | `SpecArtifactBody` | interface | `src/server/services/spec-onboarding-service.ts:194` | defining module is not reachable from any measured entry point |
 | `SpecArtifact` | interface | `src/server/services/spec-onboarding-service.ts:210` | defining module is not reachable from any measured entry point |
