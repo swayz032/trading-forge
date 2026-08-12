@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-28T17:58:09.781Z",
+  "generatedAt": "2026-08-12T02:38:59.336Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -286,7 +286,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 560h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 905h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -304,7 +304,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 562h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 907h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -322,7 +322,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 563h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 908h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -340,7 +340,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 546h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 891h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -358,7 +358,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 555h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 900h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -376,7 +376,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 561h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 906h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -394,7 +394,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 562h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 907h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -412,7 +412,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 658h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 1003h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -430,7 +430,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 604h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 949h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -448,7 +448,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 596h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 941h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -466,7 +466,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 546h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 891h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -484,7 +484,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 558h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 903h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -494,7 +494,7 @@
         ],
         "preferredName": "Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-01T10:00:01.398Z",
         "lastFailureAt": null,
@@ -503,7 +503,7 @@
         "liveSyncStatus": "live-aligned",
         "notes": [
           "Monthly cadence (~30-day cycle) — staleAfterHours overridden to 840h (35 days) so this workflow isn't misreported as \"stale\" for ~3 weeks out of every cycle under the global 192h default.",
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1000h old, exceeding the 840h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -521,7 +521,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 596h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 941h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -539,7 +539,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 604h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 949h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -557,7 +557,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 604h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 949h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -594,7 +594,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 543h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 888h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -612,7 +612,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 545h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 890h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       }
     ]
@@ -985,6 +985,7 @@
         "Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
         "Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
         "Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+        "Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
         "Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
         "Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
         "Pre_Session_Skip_Check_flOq70zNhT3Umemt",
@@ -1026,6 +1027,7 @@
         "workflow-stale:Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
         "workflow-stale:Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
         "workflow-stale:Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+        "workflow-stale:Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
         "workflow-stale:Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
         "workflow-stale:Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
         "workflow-stale:Pre_Session_Skip_Check_flOq70zNhT3Umemt",
@@ -1074,6 +1076,7 @@
         "workflow-stale:Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
         "workflow-stale:Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
         "workflow-stale:Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+        "workflow-stale:Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
         "workflow-stale:Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
         "workflow-stale:Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
         "workflow-stale:Pre_Session_Skip_Check_flOq70zNhT3Umemt",

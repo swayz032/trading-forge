@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-28T17:58:09.781Z",
+  "generatedAt": "2026-08-12T02:38:59.336Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -36,6 +36,7 @@
     "workflow-stale:Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
     "workflow-stale:Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
     "workflow-stale:Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+    "workflow-stale:Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
     "workflow-stale:Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
     "workflow-stale:Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
     "workflow-stale:Pre_Session_Skip_Check_flOq70zNhT3Umemt",

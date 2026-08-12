@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-28T17:58:09.781Z`.
+Updated automatically from the repo on `2026-08-12T02:38:59.336Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -95,7 +95,7 @@ Updated automatically from the repo on `2026-07-28T17:58:09.781Z`.
 - Failing workflow blockers: `0`
 - Source-missing workflow blockers: `0`
 - Awaiting redeploy workflow blockers: `0`
-- Stale workflow blockers: `17`
+- Stale workflow blockers: `18`
 - Runtime control blockers: `0`
 
 ### Readiness Summary
@@ -119,9 +119,9 @@ Updated automatically from the repo on `2026-07-28T17:58:09.781Z`.
 - `built-inactive`: `0`
 - `broken`: `0`
 - `external-non-core`: `0`
-- health `healthy`: `1`
+- health `healthy`: `0`
 - health `failing`: `0`
-- health `stale`: `17`
+- health `stale`: `18`
 - health `unknown`: `2`
 
 ### Subsystem Coverage Gaps
