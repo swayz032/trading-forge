@@ -311,6 +311,12 @@
     .imm-title { font-size: 27px; font-weight: 800; letter-spacing: -0.02em; color: #fff; margin: 6px 0 0; }
     .imm-subline { font-size: 12.5px; color: var(--dim); margin-top: 5px; max-width: 460px; line-height: 1.5; }
     .imm-head-right { display: flex; align-items: center; gap: 12px; }
+    .fight-head-hud { display: grid; grid-template-columns: repeat(3,minmax(72px,auto)) auto; align-items: center; gap: 0; min-width: 430px; overflow: hidden; border: 1px solid rgba(163,255,18,.16); border-radius: 12px; background: linear-gradient(145deg,rgba(7,10,7,.82),rgba(0,0,0,.62)); backdrop-filter: blur(14px); box-shadow: inset 0 1px rgba(255,255,255,.04); }
+    .fight-head-stat { min-width: 0; padding: 10px 13px; border-right: 1px solid rgba(255,255,255,.07); }
+    .fight-head-stat .k { color: var(--mute); font: 750 7px/1 var(--num-font); letter-spacing: .12em; text-transform: uppercase; }
+    .fight-head-stat .v { margin-top: 5px; color: #fff; font: 800 12px/1 var(--num-font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fight-head-stat .v.dash { color: var(--mute); }
+    .fight-head-hud .pillstat { margin: 0 10px; white-space: nowrap; }
     .imm-panel { position: relative; background: linear-gradient(180deg, rgba(10,12,10,0.55), rgba(0,0,0,0.4)); border: 1px solid #161616; border-radius: 16px; padding: 16px 18px; }
     .imm-panel::before { content: ""; position: absolute; top: 0; left: 22px; right: 22px; height: 1px; background: linear-gradient(90deg, transparent, rgba(163,255,18,0.18), transparent); }
     .imm-panel + .imm-panel, .imm-band, .imm-2col { margin-top: 14px; }
@@ -421,31 +427,28 @@
     .fight-night-empty .arena-card.red { animation-delay: -2.4s; }
     @media (min-width: 781px) {
       .rr-room.rr-imm-mode #imm-paper.on {
-        --fight-night-height: clamp(350px, calc(100dvh - 310px), 660px);
+        --fight-night-height: clamp(410px, calc(100dvh - 220px), 760px);
         display: flex; flex-direction: column; height: calc(100dvh - 62px); min-height: 0;
         padding: clamp(10px, 2dvh, 24px) 28px 8px; overflow: hidden;
       }
       #imm-paper.on > .imm-head { flex: 0 0 auto; padding-bottom: clamp(8px, 1.4dvh, 16px); margin-bottom: clamp(8px, 1.5dvh, 18px); }
-      #imm-paper.on > .imm-panel:has(.imm-agg) { flex: 0 0 auto; padding-block: clamp(9px, 1.3dvh, 16px); }
       #imm-paper.on > .fight-night-empty { flex: 1 1 0; height: auto; max-height: var(--fight-night-height); min-height: 0; margin-top: clamp(8px, 1.3dvh, 14px); }
       #imm-paper.on > .fight-night-empty .premium-scene { height: 100%; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; }
       #imm-paper.on > .fight-night-empty .premium-canvas,
       #imm-paper.on > .fight-night-empty .premium-svg,
       #imm-paper.on > .fight-night-empty .arena-photo-stage { height: 100%; min-height: 0; }
-      #imm-paper.on > .empty-note { flex: 0 0 auto; margin: 6px auto 0; font-size: 9px; line-height: 1.35; }
-      #imm-paper.on > .imm-src { flex: 0 0 auto; margin-top: 5px; padding-top: 5px; font-size: 8px; line-height: 1.35; }
       #imm-paper.on > .imm-panel:nth-of-type(2):not(.fight-night-empty) { min-height: 0; overflow: auto; }
     }
     @media (min-width: 781px) and (max-height: 850px) {
-      .rr-room.rr-imm-mode #imm-paper.on { --fight-night-height: clamp(350px, calc(100dvh - 250px), 540px); padding-top: 10px; }
+      .rr-room.rr-imm-mode #imm-paper.on { --fight-night-height: clamp(390px, calc(100dvh - 190px), 650px); padding-top: 10px; }
       #imm-paper.on .imm-head { padding-bottom: 8px; margin-bottom: 8px; }
       #imm-paper.on .imm-title { font-size: 23px; margin-top: 3px; }
       #imm-paper.on .imm-subline { margin-top: 3px; line-height: 1.3; }
       #imm-paper.on .premium-caption { padding: 10px 14px 12px; }
       #imm-paper.on .premium-name { margin-top: 5px; font-size: 17px; }
       #imm-paper.on .premium-copy { max-width: 560px; font-size: 9px; line-height: 1.32; }
-      #imm-paper.on > .empty-note { margin-top: 3px; font-size: 7px; line-height: 1.2; }
-      #imm-paper.on > .imm-src { margin-top: 2px; padding-top: 3px; font-size: 6.5px; line-height: 1.2; }
+      .fight-head-hud { min-width: 390px; }
+      .fight-head-stat { padding: 8px 10px; }
       #imm-paper.on .fight-night-empty .arena-photo-hud { top: 17px; }
     }
     @keyframes arena-breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.008); } }
@@ -1842,9 +1845,6 @@
       }
 
       // ── Immersive Paper Floor (real SSE tape; honest-dark until an event streams) ──
-      function rrPaperSrc() {
-        return '<div class="imm-src"><span class="lock">&#9673;</span><span><b>Live wiring (read-only):</b> the fight card reads <code>/slumhouse/api/reports?scope=paper-floor</code> from paper sessions, trades and open positions; each corner carries its real <b>Massive</b> stream state. <code>/slumhouse/api/sse/events</code> triggers score refreshes and supplies the round-by-round tape. The room only observes — it places no orders and moves no stops.</span></div>';
-      }
       function rrRenderPaper() {
         if (!document.getElementById('imm-paper')) return;
         rrSSEConnect();
@@ -1889,8 +1889,7 @@
           '<g class="arena-vs" transform="translate(600 347)"><circle r="49" fill="#050705" stroke="#a3ff12" stroke-opacity=".44" filter="url(#fn-glow)"/><circle r="38" fill="none" stroke="#fff" stroke-opacity=".11"/><text y="9" text-anchor="middle" fill="#f4ffe7" font-family="Arial" font-size="28" font-weight="900" font-style="italic">VS</text></g></g>' +
           '<g transform="translate(600 92)"><text text-anchor="middle" fill="#a3ff12" font-family="monospace" font-size="11" font-weight="700" letter-spacing="6">MASSIVE MARKET FEED</text><text y="35" text-anchor="middle" fill="#fff" font-family="Arial" font-size="30" font-weight="900" letter-spacing="2">FIGHTERS LOADING</text><path d="M453 53H747" stroke="#a3ff12" stroke-opacity=".24"/><circle cx="600" cy="53" r="4" fill="#a3ff12" class="pulse-node" filter="url(#fn-glow)"/></g>' +
           '<g fill="#829079" font-family="monospace" font-size="9" letter-spacing="2"><text x="73" y="492">NO SIMULATED SCORES</text><text x="1127" y="492" text-anchor="end">REAL SESSIONS ONLY</text></g></svg></div>' +
-          '<div class="premium-caption"><div><div class="premium-kicker">Paper Fight Night · pre-bell arena</div><div class="premium-name">The ring is ready. Real strategies take the corners.</div><div class="premium-copy"><span class="empty-eyebrow">Fighters loading</span> The first real Massive-backed paper sessions will replace these decorative corner silhouettes with ranked strategy cards, W–L records, positions and net paper P&amp;L. No preview score is fabricated.</div></div><div class="premium-state">Massive feed — waiting</div></div></div></div>' +
-          '<p class="empty-note">This is a decorative video-game arena, not a performance reading. Real sessions automatically replace it through <code>/slumhouse/api/reports?scope=paper-floor</code>.</p>';
+          '<div class="premium-caption"><div><div class="premium-kicker">Paper Fight Night · pre-bell arena</div><div class="premium-name">The ring is ready. Real strategies take the corners.</div><div class="premium-copy"><span class="empty-eyebrow">Fighters loading</span> The first real Massive-backed paper sessions will replace these decorative corner silhouettes with ranked strategy cards, W–L records, positions and net paper P&amp;L. No preview score is fabricated.</div></div><div class="premium-state">Massive feed — waiting</div></div></div></div>';
       }
       function rrPaperFightNightEmptyHTML() {
         return rrPaperFightNightVectorFallbackHTML().replace('<div class="premium-canvas">',
@@ -1975,11 +1974,10 @@
         var feedCol = hasEvents ? 'var(--lime)' : disconnected ? 'var(--red)' : 'var(--mute)';
         var head = '<div class="imm-head"><div><div class="imm-eyebrow">Paper Fight Night · Massive-fed · immersive</div><div class="imm-title">Which strategy is winning?</div>' +
           '<div class="imm-subline">Every active paper strategy in its own corner, ranked by real net paper P&amp;L. Massive supplies the bars; the engine keeps each strategy score independent.</div></div>' +
-          '<div class="imm-head-right"><span class="pillstat ' + pillCls + '"><span class="d"></span> ' + pillTxt + '</span></div></div>';
-        var agg = '<div class="imm-panel" style="margin-bottom:14px;"><div class="imm-agg">' +
-          '<div class="a"><span class="k">Strategies in the arena</span><span class="v' + (fighters.length ? '' : ' dash') + '">' + (fighters.length ? fighters.length : '—') + '</span></div><div class="sep"></div>' +
-          '<div class="a"><span class="k">Events seen · this screen</span><span class="v' + (hasEvents ? '' : ' dash') + '">' + (hasEvents ? rrPaperCounts.events : '—') + '</span></div><div class="sep"></div>' +
-          '<div class="a"><span class="k">Feed</span><span class="v" style="font-size:13px;color:' + feedCol + ';">' + feedTxt + '</span></div></div></div>';
+          '<div class="imm-head-right"><div class="fight-head-hud"><div class="fight-head-stat"><div class="k">Strategies</div><div class="v' + (fighters.length ? '' : ' dash') + '">' + (fighters.length ? fighters.length : '—') + '</div></div>' +
+          '<div class="fight-head-stat"><div class="k">Events</div><div class="v' + (hasEvents ? '' : ' dash') + '">' + (hasEvents ? rrPaperCounts.events : '—') + '</div></div>' +
+          '<div class="fight-head-stat"><div class="k">Feed</div><div class="v" style="color:' + feedCol + ';">' + feedTxt + '</div></div>' +
+          '<span class="pillstat ' + pillCls + '"><span class="d"></span> ' + pillTxt + '</span></div></div></div>';
         var body;
         if (degraded) {
           body = rrPaperEmptyHTML('disconnected');
@@ -1993,7 +1991,7 @@
         } else {
           body = rrPaperEmptyHTML(disconnected ? 'disconnected' : 'quiet');
         }
-        host.innerHTML = head + agg + body + rrPaperSrc();
+        host.innerHTML = head + body;
       }
       function exitReportingRoom() {
         var room = document.getElementById('reporting-room');

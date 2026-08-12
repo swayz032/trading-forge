@@ -6,6 +6,7 @@ import {
   deriveCompilerIdentity,
   phaseAt,
 } from "../../../../public/slumhouse/evidence-vault-compiler.js";
+import * as compilerViewModule from "../../../../public/slumhouse/evidence-vault-compiler.js";
 
 const emptyChambers = ["context", "setup", "entry", "stop", "exit", "sizing", "filters"].map((key) => ({
   key,
@@ -44,6 +45,45 @@ const sourceOnly: any = {
   },
 };
 
+function compiledInput() {
+  const compiled = structuredClone(sourceOnly);
+  compiled.strategy.compilerView = {
+    state: "compiled",
+    receiptHash: "spec-hash",
+    graphHash: "graph-hash",
+    direction: "long",
+    binding: {
+      compiled: true,
+      approximationUsed: false,
+      spineBound: 1,
+      spineTotal: 1,
+      triggerBound: true,
+      queueReasons: [],
+    },
+    chambers: emptyChambers.map((chamber) => ({
+      ...chamber,
+      state: "verified",
+      rules: chamber.key === "context" ? [
+        { id: "context-1", label: "New York morning session", type: "WAIT_SESSION", origin: "explicit" },
+        { id: "context-2", label: "Bullish market structure", type: "WAIT_STRUCTURE", origin: "explicit" },
+      ] : chamber.key === "setup" ? [
+        { id: "setup-1", label: "Price accepts above value", type: "WAIT_STRUCTURE", origin: "explicit" },
+      ] : chamber.key === "entry" ? [
+        { id: "entry-1", label: "Buy the first pullback", type: "ENABLE_ENTRY", origin: "explicit", evidence: "Enter only after a closing breakout.", span: { start: 24, end: 63 } },
+      ] : chamber.key === "stop" ? [
+        { id: "stop-1", label: "Managed stop", type: "CONFIG", origin: "compiler_generated", expression: '{"type":"atr","multiplier":1.5}' },
+      ] : chamber.key === "sizing" ? [
+        { id: "size-1", label: "Position sizing", type: "CONFIG", origin: "compiler_generated", expression: '{"max_risk_pct_per_trade":0.02}' },
+      ] : chamber.key === "exit" ? [
+        { id: "exit-1", label: "Exit parameters", type: "CONFIG", origin: "compiler_generated", expression: '{"style":"c"}' },
+      ] : chamber.key === "filters" ? [
+        { id: "filter-1", label: "Skip major news", type: "FILTER", origin: "explicit" },
+      ] : [],
+    })),
+  };
+  return compiled;
+}
+
 describe("Media Vault compiler scene model", () => {
   it("derives a stable per-video identity without changing semantic truth colors", () => {
     const first = deriveCompilerIdentity("dQw4w9WgXcQ");
@@ -66,7 +106,7 @@ describe("Media Vault compiler scene model", () => {
     const model = buildCompilerSceneModel(sourceOnly);
 
     expect(model.status).toBe("uncompiled");
-    expect(model.seal).toBe("SOURCE CAPTURED · BLUEPRINT NOT YET COMPILED");
+    expect(model.seal).toBe("SOURCE SECURED - TRADING RULES AWAITING COMPILATION");
     expect(model.source).toMatchObject({
       videoId: "dQw4w9WgXcQ",
       title: "Opening Range Model",
@@ -79,78 +119,76 @@ describe("Media Vault compiler scene model", () => {
   });
 
   it("preserves compiled receipt truth and labels inferred chambers distinctly", () => {
-    const compiled = structuredClone(sourceOnly);
-    compiled.strategy.compilerView = {
-      state: "compiled",
-      receiptHash: "spec-hash",
-      graphHash: "graph-hash",
-      direction: "both",
-      binding: {
-        compiled: true,
-        approximationUsed: false,
-        spineBound: 1,
-        spineTotal: 1,
-        triggerBound: true,
-        queueReasons: [],
-      },
-      chambers: emptyChambers.map((chamber) => chamber.key === "entry" ? {
-        ...chamber,
-        state: "verified",
-        rules: [{
-          id: "ENABLE_ENTRY:breakout#0",
-          label: "close breaks opening range",
-          type: "ENABLE_ENTRY",
-          role: "trigger",
-          origin: "explicit",
-          evidence: "Enter only after a closing breakout.",
-          span: { start: 24, end: 63 },
-          expression: null,
-        }],
-      } : chamber.key === "stop" ? {
-        ...chamber,
-        state: "inferred",
-        rules: [{
-          id: "config:stop_loss",
-          label: "Managed stop",
-          type: "CONFIG",
-          role: null,
-          origin: "compiler_generated",
-          evidence: null,
-          span: null,
-          expression: '{"type":"atr","multiplier":1.5}',
-        }],
-      } : chamber),
-    };
-
-    const model = buildCompilerSceneModel(compiled);
+    const model = buildCompilerSceneModel(compiledInput());
 
     expect(model.status).toBe("compiled");
-    expect(model.seal).toBe("COMPILED BLUEPRINT · RECEIPT SEALED");
     expect(model.receiptHash).toBe("spec-hash");
     expect(model.chambers.find((chamber: any) => chamber.key === "entry")?.rules[0]?.evidence).toBe("Enter only after a closing breakout.");
-    expect(model.chambers.find((chamber: any) => chamber.key === "stop")?.state).toBe("inferred");
+    expect(model.chambers.find((chamber: any) => chamber.key === "stop")?.state).toBe("verified");
+  });
+
+  it("maps persisted chambers into five simple trader-facing groups without inventing rules", () => {
+    const buildStrategyCardGroups = (compilerViewModule as any).buildStrategyCardGroups;
+    expect(typeof buildStrategyCardGroups).toBe("function");
+
+    const groups = buildStrategyCardGroups(buildCompilerSceneModel(compiledInput()));
+    expect(groups.map((group: any) => [group.key, group.label])).toEqual([
+      ["trade_when", "Trade When"],
+      ["enter", "Enter"],
+      ["protect", "Protect"],
+      ["manage", "Manage"],
+      ["avoid", "Avoid"],
+    ]);
+    expect(groups[0].rules.map((rule: any) => rule.label)).toEqual([
+      "New York morning session",
+      "Bullish market structure",
+    ]);
+    expect(groups[0].additionalCount).toBe(1);
+    expect(groups[1]).toMatchObject({ direction: "long", additionalCount: 0 });
+    expect(groups[2].rules.map((rule: any) => rule.label)).toEqual(["Managed stop", "Position sizing"]);
+    expect(groups[4].rules[0].label).toBe("Skip major news");
+
+    const dormant = buildStrategyCardGroups(buildCompilerSceneModel(sourceOnly));
+    expect(dormant.every((group: any) => group.rules.length === 0 && group.additionalCount === 0)).toBe(true);
+  });
+
+  it("renders the whole settled stage as the strategy card with technical evidence closed", () => {
+    const renderCompilerViewMarkup = (compilerViewModule as any).renderCompilerViewMarkup;
+    expect(typeof renderCompilerViewMarkup).toBe("function");
+
+    const html = renderCompilerViewMarkup(buildCompilerSceneModel(sourceOnly));
+    expect(html).toContain("compiler-strategy-environment-v1.webp");
+    expect(html).toContain("compiler-strategy-card");
+    expect(html).toContain("Trade When");
+    expect(html).toContain("Enter");
+    expect(html).toContain("Protect");
+    expect(html).toContain("Manage");
+    expect(html).toContain("Avoid");
+    expect(html).toContain("Technical Receipt");
+    expect(html).toContain("data-compiler-receipt hidden");
+    expect(html).not.toContain("compiler-machine");
   });
 });
 
 describe("compiler cinematic runtime policy", () => {
-  it("runs a complete seven-second transformation on the animated profile", () => {
+  it("runs a complete seven-second Category 5 transformation on the animated profile", () => {
     expect(CINEMATIC_DURATION_MS).toBe(7000);
     expect(phaseAt(0)).toBe("source");
-    expect(phaseAt(1600)).toBe("transcript");
-    expect(phaseAt(3200)).toBe("storm");
-    expect(phaseAt(5200)).toBe("assembly");
-    expect(phaseAt(6500)).toBe("seal");
+    expect(phaseAt(1200)).toBe("rupture");
+    expect(phaseAt(2500)).toBe("vortex");
+    expect(phaseAt(5200)).toBe("compression");
+    expect(phaseAt(6200)).toBe("shockwave");
     expect(phaseAt(7000)).toBe("settled");
   });
 
-  it("caps GPU pressure and keeps a truthful static view without WebGL or motion", () => {
+  it("adapts storm density while preserving a truthful static fallback", () => {
     expect(chooseRenderProfile({
       webgl2: true,
       reducedMotion: false,
       devicePixelRatio: 3,
       width: 1920,
       hardwareConcurrency: 16,
-    })).toEqual({ mode: "webgl", dpr: 1.75, particles: 4200, durationMs: 7000 });
+    })).toEqual({ mode: "webgl", dpr: 1.75, particles: 9200, durationMs: 7000 });
     expect(chooseRenderProfile({
       webgl2: false,
       reducedMotion: false,

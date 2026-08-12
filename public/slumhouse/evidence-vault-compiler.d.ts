@@ -18,7 +18,19 @@ export function deriveCompilerIdentity(seed: string): {
 
 export function buildCompilerSceneModel(input: unknown): any;
 
-export function phaseAt(elapsedMs: number): "source" | "transcript" | "storm" | "assembly" | "seal" | "settled";
+export type StrategyCardGroup = {
+  key: "trade_when" | "enter" | "protect" | "manage" | "avoid";
+  label: string;
+  direction: string | null;
+  rules: Array<Record<string, unknown>>;
+  additionalCount: number;
+};
+
+export function buildStrategyCardGroups(model: unknown): StrategyCardGroup[];
+
+export function phaseAt(elapsedMs: number): "source" | "rupture" | "vortex" | "compression" | "shockwave" | "settled";
+
+export function renderCompilerViewMarkup(model: unknown): string;
 
 export function chooseRenderProfile(input: {
   webgl2: boolean;

@@ -345,6 +345,21 @@ describe("immersive Paper Floor — disconnected renders distinctly from genuine
     expect(officeSrc).toMatch(/@media \(max-width: 780px\)[\s\S]*#imm-paper\.on[\s\S]*overflow-y:\s*auto/);
   });
 
+  it("moves Fight Night telemetry into the upper-right header and removes bottom disclaimers", () => {
+    const paint = stripComments(sliceBalanced(officeSrc, "function rrPaperPaint("));
+    const quietArena = stripComments(sliceBalanced(officeSrc, "function rrPaperFightNightVectorFallbackHTML("));
+
+    expect(paint).toContain('class="fight-head-hud"');
+    expect(paint).toContain("Strategies");
+    expect(paint).toContain("Events");
+    expect(paint).toContain("Feed");
+    expect(paint).not.toContain('var agg =');
+    expect(paint).not.toContain("rrPaperSrc()");
+    expect(quietArena).not.toContain('class="empty-note"');
+    expect(quietArena).not.toContain("decorative video-game arena");
+    expect(officeSrc).toMatch(/\.fight-head-hud\s*\{[^}]*display:\s*grid/);
+  });
+
   it("★ disconnected blames the connection, says nothing is lost, and invents no reading", () => {
     expect(disconnected).toMatch(/connection problem|not a quiet floor/i);
     expect(disconnected).toMatch(/nothing has been lost/i);

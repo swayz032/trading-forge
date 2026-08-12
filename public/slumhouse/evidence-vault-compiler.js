@@ -75,7 +75,7 @@ function sealFor(state) {
   if (state === "refused") return "COMPILER REFUSED · EVIDENCE PRESERVED";
   if (state === "stale") return "LAST RECEIPT STALE · RECOMPILE REQUIRED";
   if (state === "unavailable") return "COMPILER RECEIPT UNAVAILABLE";
-  return "SOURCE CAPTURED · BLUEPRINT NOT YET COMPILED";
+  return "SOURCE SECURED - TRADING RULES AWAITING COMPILATION";
 }
 
 export function buildCompilerSceneModel(input) {
@@ -143,13 +143,38 @@ export function buildCompilerSceneModel(input) {
   };
 }
 
+const STRATEGY_CARD_GROUPS = Object.freeze([
+  { key: "trade_when", label: "Trade When", chambers: ["context", "setup"] },
+  { key: "enter", label: "Enter", chambers: ["entry"] },
+  { key: "protect", label: "Protect", chambers: ["stop", "sizing"] },
+  { key: "manage", label: "Manage", chambers: ["exit"] },
+  { key: "avoid", label: "Avoid", chambers: ["filters"] },
+]);
+
+export function buildStrategyCardGroups(model) {
+  const chambers = Array.isArray(model && model.chambers) ? model.chambers : [];
+  return STRATEGY_CARD_GROUPS.map((group) => {
+    const rules = group.chambers.flatMap((key) => {
+      const chamber = chambers.find((item) => item && item.key === key);
+      return Array.isArray(chamber && chamber.rules) ? chamber.rules : [];
+    });
+    return {
+      key: group.key,
+      label: group.label,
+      direction: group.key === "enter" ? cleanText(model && model.direction) : null,
+      rules: rules.slice(0, 2).map(copyRule),
+      additionalCount: Math.max(0, rules.length - 2),
+    };
+  });
+}
+
 export function phaseAt(elapsedMs) {
   const elapsed = Math.max(0, Number(elapsedMs) || 0);
   if (elapsed >= CINEMATIC_DURATION_MS) return "settled";
-  if (elapsed >= 6100) return "seal";
-  if (elapsed >= 4800) return "assembly";
-  if (elapsed >= 2800) return "storm";
-  if (elapsed >= 1400) return "transcript";
+  if (elapsed >= 6000) return "shockwave";
+  if (elapsed >= 4900) return "compression";
+  if (elapsed >= 2100) return "vortex";
+  if (elapsed >= 900) return "rupture";
   return "source";
 }
 
@@ -159,7 +184,7 @@ export function chooseRenderProfile(input) {
   }
   const width = Math.max(0, Number(input.width) || 0);
   const cores = Math.max(1, Number(input.hardwareConcurrency) || 1);
-  const particles = width >= 1700 && cores >= 8 ? 4200 : width >= 1100 && cores >= 4 ? 2800 : 1600;
+  const particles = width >= 1700 && cores >= 8 ? 9200 : width >= 1100 && cores >= 4 ? 5600 : 2800;
   return {
     mode: "webgl",
     dpr: Math.min(1.75, Math.max(1, Number(input.devicePixelRatio) || 1)),
@@ -182,40 +207,68 @@ function thumbnailUrl(videoId) {
   return videoId ? `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/maxresdefault.jpg` : "";
 }
 
-function chamberMarkup(chamber, index) {
-  const angle = -90 + (360 / 7) * index;
-  const counterAngle = angle * -1;
-  const ruleCount = chamber.rules.length;
-  return `<button class="compiler-chamber is-${escapeHtml(chamber.state)}" type="button" data-compiler-chamber="${escapeHtml(chamber.key)}" style="--chamber-angle:${angle}deg;--chamber-counter-angle:${counterAngle}deg" aria-label="${escapeHtml(chamber.label)}, ${ruleCount ? `${ruleCount} persisted rules` : "unbound"}">
-    <span class="compiler-chamber-index">0${index + 1}</span>
-    <span class="compiler-chamber-name">${escapeHtml(chamber.label)}</span>
-    <span class="compiler-chamber-state">${ruleCount ? `${ruleCount} bound` : "UNBOUND"}</span>
-  </button>`;
+function plainRuleLabel(rule) {
+  const label = cleanText(rule && rule.label) || "Persisted rule";
+  const expression = cleanText(rule && rule.expression);
+  if (!expression) return label;
+  try {
+    const value = JSON.parse(expression);
+    if (label === "Managed stop" && Number.isFinite(Number(value && value.multiplier))) {
+      return `${Number(value.multiplier)}x ATR managed stop`;
+    }
+    if (label === "Position sizing" && Number.isFinite(Number(value && value.max_risk_pct_per_trade))) {
+      return `${Number(value.max_risk_pct_per_trade) * 100}% maximum risk per trade`;
+    }
+    if (label === "Exit parameters" && cleanText(value && value.style)) {
+      return `Style ${String(value.style).toUpperCase()} trade management`;
+    }
+  } catch {
+    return label;
+  }
+  return label;
 }
 
-function detailMarkup(model, chamber) {
-  const rules = chamber.rules.length ? chamber.rules.map((rule) => `<article class="compiler-rule">
+function strategyGroupMarkup(group, index, dormant) {
+  const rules = group.rules.map((rule) => `<li class="compiler-card-rule is-${escapeHtml(rule.origin)}"><i></i><span>${escapeHtml(plainRuleLabel(rule))}</span></li>`).join("");
+  const direction = group.direction ? `<span class="compiler-direction">${escapeHtml(group.direction)}</span>` : "";
+  const additional = group.additionalCount ? `<div class="compiler-more">+${group.additionalCount} persisted ${group.additionalCount === 1 ? "rule" : "rules"} in receipt</div>` : "";
+  return `<article class="compiler-strategy-group${dormant ? " is-dormant" : ""}" data-strategy-group="${escapeHtml(group.key)}">
+    <div class="compiler-group-head"><span>0${index + 1}</span><h3>${escapeHtml(group.label)}</h3>${direction}</div>
+    ${rules ? `<ul>${rules}</ul>${additional}` : `<div class="compiler-awaiting">Awaiting persisted rule</div>`}
+  </article>`;
+}
+
+function technicalRuleMarkup(rule) {
+  return `<article class="compiler-rule">
     <div class="compiler-rule-origin is-${escapeHtml(rule.origin)}">${escapeHtml(rule.origin.replaceAll("_", " "))}</div>
     <h4>${escapeHtml(rule.label)}</h4>
     ${rule.evidence ? `<blockquote>${escapeHtml(rule.evidence)}</blockquote>` : ""}
     ${rule.expression ? `<code>${escapeHtml(rule.expression)}</code>` : ""}
-    <div class="compiler-rule-meta">${escapeHtml(rule.type)}${rule.role ? ` · ${escapeHtml(rule.role)}` : ""}${rule.span ? ` · source ${rule.span.start}–${rule.span.end}` : ""}</div>
-  </article>`).join("") : `<div class="compiler-unbound-copy"><b>UNBOUND</b><span>No persisted compiler rule exists in this chamber.</span></div>`;
-  return `<div class="compiler-detail-head"><div><span>Rule chamber</span><h3>${escapeHtml(chamber.label)}</h3></div><button type="button" data-compiler-detail-close aria-label="Close rule chamber">×</button></div>
-    <div class="compiler-detail-truth">${escapeHtml(model.status === "uncompiled" ? "Source evidence only · no executable rule claimed" : "Persisted compiler receipt")}</div>
-    <div class="compiler-rule-list">${rules}</div>`;
+    <div class="compiler-rule-meta">${escapeHtml(rule.type)}${rule.role ? ` · ${escapeHtml(rule.role)}` : ""}${rule.span ? ` · source ${rule.span.start}-${rule.span.end}` : ""}</div>
+  </article>`;
 }
 
-function sceneMarkup(model) {
-  const meta = [model.strategy.symbol, model.strategy.timeframe, model.strategy.lifecycleState].filter(Boolean).join(" · ");
+function technicalReceiptMarkup(model) {
+  const chambers = model.chambers.map((chamber) => `<section class="compiler-receipt-chamber"><div class="compiler-receipt-chamber-head"><span>${escapeHtml(chamber.state)}</span><h4>${escapeHtml(chamber.label)}</h4></div>${chamber.rules.length ? chamber.rules.map(technicalRuleMarkup).join("") : `<div class="compiler-receipt-empty">No persisted rule in this chamber.</div>`}</section>`).join("");
+  return `<div class="compiler-receipt-head"><div><span>Persisted compiler evidence</span><h3>Technical Receipt</h3></div><button type="button" data-compiler-receipt-close aria-label="Close technical receipt">×</button></div>
+    <div class="compiler-receipt-truth">${escapeHtml(model.status === "uncompiled" ? "Source evidence only - no executable rule claimed" : model.seal)}</div>
+    <div class="compiler-receipt-grid">${chambers}</div>
+    <div class="compiler-receipt-hashes">${model.receiptHash ? `Receipt ${escapeHtml(model.receiptHash)}` : "No compiler receipt exists"}${model.graphHash ? ` · Graph ${escapeHtml(model.graphHash)}` : ""}</div>`;
+}
+
+export function renderCompilerViewMarkup(model) {
+  const meta = [model.strategy.symbol, model.strategy.timeframe, model.direction || model.strategy.lifecycleState].filter(Boolean).join(" · ");
   const sourceImage = thumbnailUrl(model.source.videoId);
   const fragments = model.source.fragments.map((fragment, index) => `<span class="compiler-fragment" style="--fragment-index:${index}">${escapeHtml(fragment)}</span>`).join("");
+  const groups = buildStrategyCardGroups(model);
+  const dormant = model.status === "uncompiled" || model.status === "unavailable";
   return `<section class="compiler-stage is-${escapeHtml(model.status)}" aria-label="Compiler View for ${escapeHtml(model.strategy.name)}" style="--source-primary:${model.identity.primary};--source-secondary:${model.identity.secondary}">
+    <div class="compiler-environment" aria-hidden="true"><img src="/slumhouse/images/compiler-strategy-environment-v1.webp" alt=""><i></i></div>
     <canvas class="compiler-webgl" aria-hidden="true"></canvas>
-    <div class="compiler-atmosphere" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="compiler-vortex-fx" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
     <header class="compiler-head">
-      <div><div class="compiler-kicker">Source-to-engine transformation</div><h2>${escapeHtml(model.strategy.name)}</h2><p>${escapeHtml(meta)}</p></div>
-      <button class="compiler-media-return" type="button" data-compiler-close>Media View</button>
+      <div class="compiler-identity"><div class="compiler-kicker">Source-to-strategy transformation</div><h2>${escapeHtml(model.strategy.name)}</h2><p>${escapeHtml(meta)}</p></div>
+      <div class="compiler-head-actions"><span class="compiler-state is-${escapeHtml(model.status)}">${escapeHtml(model.status)}</span><button class="compiler-receipt-open" type="button" data-compiler-receipt-open>Technical Receipt</button><button class="compiler-media-return" type="button" data-compiler-close>Media View</button></div>
     </header>
     <div class="compiler-cinematic" data-compiler-phase="source">
       <div class="compiler-source-plane">
@@ -224,15 +277,15 @@ function sceneMarkup(model) {
         <div class="compiler-source-label"><span>Evidence source</span><b>${escapeHtml(model.source.title)}</b><em>${model.source.transcriptChars.toLocaleString()} transcript characters</em></div>
       </div>
       <div class="compiler-fragments" aria-hidden="true">${fragments}</div>
-      <div class="compiler-machine">
-        <div class="compiler-orbit orbit-a" aria-hidden="true"></div><div class="compiler-orbit orbit-b" aria-hidden="true"></div>
-        <div class="compiler-core" aria-hidden="true"><span></span><i></i><b>TF</b></div>
-        <div class="compiler-chambers">${model.chambers.map(chamberMarkup).join("")}</div>
-      </div>
-      <div class="compiler-status-seal" role="status" aria-live="polite"><span>${escapeHtml(model.status)}</span><b>${escapeHtml(model.seal)}</b><em>${model.receiptHash ? `Receipt ${escapeHtml(model.receiptHash.slice(0, 18))}` : "No compiler receipt exists"}</em></div>
-      <div class="compiler-timeline" aria-hidden="true"><i></i><span>Source</span><span>Transcript</span><span>Storm</span><span>Assembly</span><span>Seal</span></div>
+      <div class="compiler-core" aria-hidden="true"><span></span><i></i><b>TF</b></div>
+      <div class="compiler-shockwave" aria-hidden="true"></div>
+      <main class="compiler-strategy-card${dormant ? " is-dormant" : ""}">
+        <div class="compiler-card-intro"><div><span>${dormant ? "Dormant blueprint" : "Executable blueprint"}</span><h3>${dormant ? "Source secured. Rules are next." : "The strategy, at a glance."}</h3></div><div class="compiler-seal"><b>${escapeHtml(model.seal)}</b><em>${model.receiptHash ? `Receipt ${escapeHtml(model.receiptHash.slice(0, 16))}` : "No compiler receipt exists"}</em></div></div>
+        <div class="compiler-strategy-grid">${groups.map((group, index) => strategyGroupMarkup(group, index, dormant)).join("")}</div>
+      </main>
+      <div class="compiler-timeline" aria-hidden="true"><i></i><span>Source</span><span>Rupture</span><span>Vortex</span><span>Compression</span><span>Reveal</span></div>
     </div>
-    <aside class="compiler-detail" data-compiler-detail hidden></aside>
+    <aside class="compiler-receipt" data-compiler-receipt hidden>${technicalReceiptMarkup(model)}</aside>
   </section>`;
 }
 
@@ -276,16 +329,24 @@ function createStormRenderer(canvas, identity, profile) {
     uniform float uAspect;
     out float vAlpha;
     void main(){
-      float angle=aParticle.x+uTime*(.34+aParticle.w*.22);
-      float storm=smoothstep(.14,.72,uProgress);
-      float radius=mix(aParticle.y*1.65,aParticle.y*(.28+.72*(1.0-uProgress)),storm);
-      float depth=mod(aParticle.z+uTime*(.18+aParticle.w*.12)+3.0,6.0)-3.0;
-      float perspective=1.0/(1.25+max(-.8,depth)*.13);
-      float x=cos(angle)*radius*perspective;
-      float y=(depth*.24+sin(angle*.7)*.22)*perspective;
+      float rupture=smoothstep(.10,.24,uProgress);
+      float vortex=smoothstep(.24,.38,uProgress)*(1.0-smoothstep(.70,.82,uProgress));
+      float compression=smoothstep(.70,.86,uProgress)*(1.0-smoothstep(.86,.94,uProgress));
+      float shock=smoothstep(.86,.96,uProgress);
+      float velocity=mix(.30,4.8,vortex)+compression*7.0;
+      float angle=aParticle.x+uTime*velocity*(.45+aParticle.w*.72)+sin(uTime*2.4+aParticle.z)*vortex*.42;
+      float baseRadius=aParticle.y*(1.2+rupture*.72);
+      float radius=mix(baseRadius,.035,compression);
+      radius=mix(radius,.14+aParticle.y*2.2,shock);
+      float depth=mod(aParticle.z+uTime*(.22+vortex*(1.35+aParticle.w))+3.0,6.0)-3.0;
+      depth=mix(depth,0.0,compression);
+      float perspective=1.0/(1.10+max(-.85,depth)*.15);
+      float turbulence=sin(angle*3.0+aParticle.z*2.2+uTime*5.0)*.09*vortex;
+      float x=(cos(angle)*radius+turbulence)*perspective;
+      float y=(sin(angle)*radius*.54+depth*.18+cos(angle*2.0)*.12*vortex)*perspective;
       gl_Position=vec4(x/uAspect,y,depth/8.0,1.0);
-      gl_PointSize=(1.4+aParticle.w*3.4)*perspective;
-      vAlpha=(.18+aParticle.w*.62)*(uProgress<.88?1.0:.58);
+      gl_PointSize=(1.6+aParticle.w*5.8)*(1.0+vortex*.55+compression*.85)*perspective;
+      vAlpha=(.16+aParticle.w*.78)*(1.0-smoothstep(.95,1.0,uProgress)*.82);
     }`);
   const fragment = compileShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
     precision highp float;
@@ -297,7 +358,7 @@ function createStormRenderer(canvas, identity, profile) {
       vec2 p=gl_PointCoord-vec2(.5);
       float d=length(p);
       if(d>.5)discard;
-      float glow=smoothstep(.5,0.0,d);
+      float glow=pow(smoothstep(.5,0.0,d),1.35);
       vec3 color=mix(uPrimary,uSecondary,gl_PointCoord.y);
       outColor=vec4(color,glow*vAlpha);
     }`);
@@ -367,11 +428,11 @@ function createStormRenderer(canvas, identity, profile) {
 export function mountCompilerView(host, input, options = {}) {
   if (!host || typeof host.replaceChildren !== "function") throw new TypeError("Compiler View requires a host element");
   const model = buildCompilerSceneModel(input);
-  host.innerHTML = sceneMarkup(model);
+  host.innerHTML = renderCompilerViewMarkup(model);
   const stage = host.querySelector(".compiler-stage");
   const canvas = host.querySelector(".compiler-webgl");
   const cinematic = host.querySelector(".compiler-cinematic");
-  const detail = host.querySelector("[data-compiler-detail]");
+  const receipt = host.querySelector("[data-compiler-receipt]");
   const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   const testContext = canvas.getContext("webgl2");
   const profile = chooseRenderProfile({
@@ -404,6 +465,7 @@ export function mountCompilerView(host, input, options = {}) {
   function replay() {
     window.cancelAnimationFrame(frame);
     stage.classList.remove("is-settled");
+    receipt.hidden = true;
     cinematic.dataset.compilerPhase = "source";
     if (profile.mode === "static") {
       settle();
@@ -419,21 +481,15 @@ export function mountCompilerView(host, input, options = {}) {
     frame = window.requestAnimationFrame(animate);
   }
 
-  function closeDetail() {
-    detail.hidden = true;
-    detail.innerHTML = "";
+  function closeReceipt() {
+    receipt.hidden = true;
   }
 
-  host.querySelectorAll("[data-compiler-chamber]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const chamber = model.chambers.find((item) => item.key === button.dataset.compilerChamber);
-      if (!chamber) return;
-      detail.innerHTML = detailMarkup(model, chamber);
-      detail.hidden = false;
-      detail.querySelector("[data-compiler-detail-close]")?.addEventListener("click", closeDetail, { once: true });
-      detail.querySelector("[data-compiler-detail-close]")?.focus();
-    });
+  host.querySelector("[data-compiler-receipt-open]")?.addEventListener("click", () => {
+    receipt.hidden = false;
+    receipt.querySelector("[data-compiler-receipt-close]")?.focus();
   });
+  receipt.querySelector("[data-compiler-receipt-close]")?.addEventListener("click", closeReceipt);
   host.querySelector("[data-compiler-close]")?.addEventListener("click", () => options.onClose?.());
   canvas.addEventListener("webglcontextlost", (event) => {
     event.preventDefault();
