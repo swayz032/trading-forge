@@ -117,6 +117,93 @@ const strategyConfigSchema = z.object({
   }),
 });
 
+// ══════════════════════════════════════════════════════════════════════════
+// MP1-CANDIDATE-INGRESS-1 — DB-authoritative execution-candidate identity
+// Ruling AR-1031 (gpt-rulings f98dc291) §4 REPAIR A / B / D.
+//
+// `spec-onboarding-service.ts:929-935` persists three candidate-identity siblings
+// into `strategies.config`, alongside `compiled_spec.spec_hash` (`:896-898`) which
+// is the parent anchor. They are SIBLINGS of `compiled_spec` and must stay there:
+// `spec_hash` is computed over the certified artifact, so moving a per-candidate
+// field inside it would silently change what the certification covers.
+//
+// 🛑 Authority is the PERSISTED ROW, never the request body. Nothing here mints,
+// infers or defaults a candidate: not from timeframe, duration, strategy name, nor
+// array position. A row that cannot prove its candidate is REFUSED, because `[0]`
+// is a choice the teacher declined to make (R-736).
+// ══════════════════════════════════════════════════════════════════════════
+const CANDIDATE_ID_KEY = "execution_candidate_id";
+const CANDIDATE_CACHE_KEY = "execution_candidate_cache_identity";
+const CANDIDATE_RECEIPT_KEY = "execution_candidate_receipt";
+const CANDIDATE_PARENT_KEY = "execution_candidate_parent_spec_hash";
+
+export type CandidateAuthoritySidecar = {
+  [CANDIDATE_ID_KEY]: string;
+  [CANDIDATE_CACHE_KEY]: string;
+  [CANDIDATE_RECEIPT_KEY]: unknown;
+  [CANDIDATE_PARENT_KEY]: string;
+};
+
+/** Non-empty string or null — the same shape as `readPersistedCandidateField`
+ *  in spec-onboarding-service.ts:528, so both ends agree on what "present" means. */
+function readPersistedString(config: unknown, key: string): string | null {
+  if (config === null || typeof config !== "object" || Array.isArray(config)) return null;
+  const v = (config as Record<string, unknown>)[key];
+  return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+/**
+ * Which taught bot is THIS persisted row, or is it legacy, or is it unprovable?
+ *
+ * THREE outcomes, and deliberately no fourth that returns a guess:
+ *   legacy     — none of the candidate keys present. Pre-existing behaviour, untouched.
+ *   candidate  — the complete authority set: id + cache identity + receipt + parent.
+ *   incomplete — ANY candidate key present without the rest. REFUSED, no defaults.
+ *
+ * The `incomplete` branch triggers on ANY of the three siblings rather than on
+ * `candidate_id` alone: a row carrying a receipt but no outer identity is exactly
+ * the state `resolve_row_for_execution` refuses, and it must not read as legacy here.
+ */
+export function resolveCandidateAuthority(
+  stratConfig: Record<string, unknown> | undefined,
+):
+  | { kind: "legacy" }
+  | { kind: "candidate"; sidecar: CandidateAuthoritySidecar }
+  | { kind: "incomplete"; missing: string[] } {
+  if (!stratConfig) return { kind: "legacy" };
+
+  const candidateId = readPersistedString(stratConfig, CANDIDATE_ID_KEY);
+  const cacheIdentity = readPersistedString(stratConfig, CANDIDATE_CACHE_KEY);
+  const receipt = stratConfig[CANDIDATE_RECEIPT_KEY];
+  const hasReceipt = receipt !== undefined && receipt !== null;
+
+  // A row with NO candidate fields is a legacy row (obligation N). Nothing is minted.
+  if (!candidateId && !cacheIdentity && !hasReceipt) return { kind: "legacy" };
+
+  const compiledSpec = stratConfig["compiled_spec"];
+  const parentSpecHash = readPersistedString(compiledSpec, "spec_hash");
+
+  const missing: string[] = [];
+  if (!candidateId) missing.push(CANDIDATE_ID_KEY);
+  if (!cacheIdentity) missing.push(CANDIDATE_CACHE_KEY);
+  if (!hasReceipt) missing.push(CANDIDATE_RECEIPT_KEY);
+  // The parent anchor is required: without it the receipt cannot be joined back to
+  // the spec that certified it, and inferring one would be the guess STOP[3] forbids.
+  if (!parentSpecHash) missing.push("compiled_spec.spec_hash");
+
+  if (missing.length > 0) return { kind: "incomplete", missing };
+
+  return {
+    kind: "candidate",
+    sidecar: {
+      [CANDIDATE_ID_KEY]: candidateId!,
+      [CANDIDATE_CACHE_KEY]: cacheIdentity!,
+      [CANDIDATE_RECEIPT_KEY]: receipt,
+      [CANDIDATE_PARENT_KEY]: parentSpecHash!,
+    },
+  };
+}
+
 // Accept both snake_case (canonical) and camelCase aliases for dates so
 // curl/JS callers don't silently fall through to the resolveDataRange()
 // sentinel range when they happen to send startDate / endDate.
@@ -161,6 +248,9 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
   // If no strategy config provided, load it from the DB
   let resolvedStrategy = providedStrategy;
   let strategyClass: string | undefined;
+  // Hoisted: MP1 candidate authority is resolved from the persisted row AFTER this
+  // block, so the refusal happens before a concurrency slot is taken.
+  let stratConfig: Record<string, unknown> | undefined;
 
   try {
     const [strat] = await db.select().from(strategies).where(eq(strategies.id, strategyId));
@@ -168,7 +258,7 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
       res.status(404).json({ error: "Strategy not found and no config provided" });
       return;
     }
-    const stratConfig = strat?.config as Record<string, unknown> | undefined;
+    stratConfig = strat?.config as Record<string, unknown> | undefined;
     if (stratConfig?.strategy_class) {
       strategyClass = String(stratConfig.strategy_class);
     }
@@ -209,6 +299,42 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     return;
   }
 
+  // ── MP1-CANDIDATE-INGRESS-1 (AR-1031 §4 REPAIR A / B / D) ──────────────────
+  // Resolved BEFORE _acquireBacktestSlot() so a refusal never leaks a slot, and
+  // before any Python spawn so a refusal is a refusal, not a post-hoc annotation.
+  const candidateAuthority = resolveCandidateAuthority(stratConfig);
+
+  if (candidateAuthority.kind === "incomplete") {
+    // REPAIR A, refusal half: a partial sidecar is unprovable. No defaults, no
+    // "best effort" — an unprovable candidate must not reach the engine at all.
+    res.status(409).json({
+      error: "candidate_authority_incomplete",
+      message:
+        "This strategy row claims an execution candidate but cannot prove it: the " +
+        "persisted candidate authority is incomplete. Refusing rather than defaulting " +
+        "to a taught variant nobody selected.",
+      strategyId,
+      missing: candidateAuthority.missing,
+    });
+    return;
+  }
+
+  if (candidateAuthority.kind === "candidate" && providedStrategy) {
+    // REPAIR B: a request may not run a different strategy payload while borrowing a
+    // persisted candidate's identity. Neither side is silently preferred — the
+    // conflict itself is the error.
+    res.status(409).json({
+      error: "candidate_authority_conflict",
+      message:
+        "This strategy row carries persisted execution-candidate authority, which a " +
+        "request-body `strategy` override cannot replace. Persisted candidate/config " +
+        "authority is authoritative; re-submit without `strategy`.",
+      strategyId,
+      execution_candidate_id: candidateAuthority.sidecar[CANDIDATE_ID_KEY],
+    });
+    return;
+  }
+
   // Phase 14: concurrent backtest cap — return 429 when cap is reached.
   // This prevents the pool-saturation → OOM → server-crash chain under batch firing.
   if (!_acquireBacktestSlot()) {
@@ -222,8 +348,15 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     return;
   }
 
-  // Reassemble config with the resolved strategy
-  const fullConfig = { ...config, strategy: resolvedStrategy };
+  // Reassemble config with the resolved strategy.
+  // MP1 REPAIR A: the candidate sidecar is spread LAST and comes only from the
+  // persisted row, so a same-named request-body key cannot colour it. REPAIR D:
+  // a legacy row spreads nothing, so its config is byte-for-byte what it was.
+  const fullConfig = {
+    ...config,
+    strategy: resolvedStrategy,
+    ...(candidateAuthority.kind === "candidate" ? candidateAuthority.sidecar : {}),
+  };
 
   // Generate the backtest ID upfront to avoid race condition
   const backtestId = randomUUID();

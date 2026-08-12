@@ -8195,6 +8195,133 @@ def _rescore_with_crisis(result: dict, crisis: dict | None, config: dict) -> dic
 
 # ─── CLI Entry Point ──────────────────────────────────────────────
 
+# ══════════════════════════════════════════════════════════════════════════════
+# MP1-CANDIDATE-INGRESS-1 — the Python end of the candidate-identity seam.
+# Ruling AR-1031 (gpt-rulings f98dc291) §4 REPAIR C.
+#
+# `/api/backtests` threads four DB-authoritative fields into the config JSON that
+# `python-runner.ts` hands us. This is where they stop being data and start being
+# an identity: the row is rebuilt and proven by the SAME authority the persistence
+# layer uses, before any market data is loaded or any bar is evaluated.
+#
+# 🛑 NO SECOND VALIDATOR. `resolve_row_for_execution` already owns all six anchors
+# (receipt exists · outer id · outer cache identity · parent match · id/cache
+# agreement · payload recomputes). Re-implementing any of them here would be
+# `TWO IMPLEMENTATIONS OF ONE CANONICAL FORM ARE A DISAGREEMENT WITH A COMMIT DATE`.
+# This function is an ADAPTER — config dict to `CandidatePersistenceRow` — and
+# nothing else. It canonicalises nothing and hashes nothing.
+# ══════════════════════════════════════════════════════════════════════════════
+_CANDIDATE_ID_KEY = "execution_candidate_id"
+_CANDIDATE_CACHE_KEY = "execution_candidate_cache_identity"
+_CANDIDATE_RECEIPT_KEY = "execution_candidate_receipt"
+_CANDIDATE_PARENT_KEY = "execution_candidate_parent_spec_hash"
+_CANDIDATE_KEYS = (
+    _CANDIDATE_ID_KEY,
+    _CANDIDATE_CACHE_KEY,
+    _CANDIDATE_RECEIPT_KEY,
+    _CANDIDATE_PARENT_KEY,
+)
+
+
+def _candidate_refusal_envelope(detail: str, config: dict) -> dict:
+    """The system's existing NAMED refusal envelope, not a new one.
+
+    Keyed on `execution_status == EXECUTION_STATUS_REFUSED`, which is what
+    `_execution_was_refused()` (:6258) and its TypeScript twin
+    (`backtest-service.ts:447`) already test. A traceback, a zero-trade "success",
+    or a fallback candidate would each present a refusal as a result.
+    """
+    from src.engine.spec_condition_compiler import EXECUTION_STATUS_REFUSED
+
+    refusal = {
+        "execution_status": EXECUTION_STATUS_REFUSED,
+        "reason": "candidate_authority_unproven",
+        "detail": detail,
+        _CANDIDATE_ID_KEY: config.get(_CANDIDATE_ID_KEY),
+        _CANDIDATE_PARENT_KEY: config.get(_CANDIDATE_PARENT_KEY),
+    }
+    return {
+        "execution_status": EXECUTION_STATUS_REFUSED,
+        "compiled": True,
+        "entry_eligible": False,
+        "refusal": refusal,
+        "metrics_omitted": [
+            "pnl", "total_return", "sharpe", "profit_factor", "win_rate",
+            "max_drawdown", "trades", "equity_curve",
+        ],
+        "metrics_omitted_reason": (
+            "execution was REFUSED before any backtest ran: the execution candidate "
+            "this row claims could not be proven from its own receipt. Publishing "
+            "zeroed performance metrics would present a refusal as a flat result"
+        ),
+        "governance_labels": {
+            "execution_refused": True,
+            "candidate_authority_proven": False,
+            "spec_hash": config.get(_CANDIDATE_PARENT_KEY),
+        },
+    }
+
+
+def validate_candidate_authority(config: dict) -> Optional[dict]:
+    """Prove the taught candidate this config claims, or return a REFUSED envelope.
+
+    Returns `None` when execution may proceed. Three outcomes, no fourth:
+
+      legacy     — none of the four keys present. Returns None, untouched. A row
+                   with no candidate is a row with no candidate FIELDS; nothing is
+                   minted here from timeframe, duration, name or array position.
+      proven     — `resolve_row_for_execution` accepted it. Returns None.
+      refused    — any anchor failed. Returns the named REFUSED envelope.
+    """
+    present = [k for k in _CANDIDATE_KEYS if config.get(k) is not None]
+    if not present:
+        return None  # legacy — REPAIR D, behaviour unchanged.
+
+    missing = [k for k in _CANDIDATE_KEYS if config.get(k) is None]
+    if missing:
+        # A partial sidecar cannot be proven, and must not be completed by guessing.
+        # The route refuses this too; this is the independent second anchor, because
+        # the engine must not trust that a caller ran the route's checks.
+        return _candidate_refusal_envelope(
+            "incomplete candidate authority reached the engine; missing: "
+            + ", ".join(missing),
+            config,
+        )
+
+    try:
+        from src.engine.opening_range_candidate_persistence import (
+            CandidatePersistenceError,
+            CandidatePersistenceRow,
+            resolve_row_for_execution,
+        )
+        from src.engine.opening_range_candidate_receipt import (
+            ExecutionCandidateReceiptError,
+        )
+    except Exception as import_err:  # pragma: no cover - import wiring
+        return _candidate_refusal_envelope(
+            f"candidate authority module unavailable: {import_err}", config
+        )
+
+    strategy_cfg = config.get("strategy") or {}
+    row = CandidatePersistenceRow(
+        parent_spec_hash=config[_CANDIDATE_PARENT_KEY],
+        symbol=str(strategy_cfg.get("symbol", "")),
+        candidate_id=config[_CANDIDATE_ID_KEY],
+        cache_identity=config[_CANDIDATE_CACHE_KEY],
+        receipt=config[_CANDIDATE_RECEIPT_KEY],
+    )
+
+    try:
+        resolve_row_for_execution(row)
+    except (CandidatePersistenceError, ExecutionCandidateReceiptError) as err:
+        # NAMED refusal, carrying the authority layer's own message so the reader
+        # learns WHICH anchor failed rather than that something did.
+        return _candidate_refusal_envelope(str(err), config)
+
+    return None
+
+
+
 @click.command()
 @click.option("--config", "config_input", required=True, help="JSON config string or file path")
 @click.option("--backtest-id", default=None, help="UUID for this backtest run")
@@ -8227,6 +8354,14 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
     except Exception as e:
         print(json.dumps({"error": f"Invalid JSON config: {e}"}))
         sys.exit(1)
+
+    # ── MP1-CANDIDATE-INGRESS-1 (AR-1031 §4 REPAIR C) ─────────────────────────
+    # The earliest trustworthy boundary: config is parsed, nothing else has run.
+    # An unprovable candidate never reaches data loading or bar evaluation.
+    _candidate_refusal = validate_candidate_authority(config)
+    if _candidate_refusal is not None:
+        print(json.dumps(_candidate_refusal))
+        return
 
     # W25.17: Inject --exit-engine flag into config dict so BacktestRequest.exit_engine
     # is populated correctly.  CLI flag takes precedence over anything in the JSON config,
