@@ -303,7 +303,7 @@
        Reporting Room movie and let the immersive surface own every pixel behind it. */
     .rr-room.rr-imm-mode { overflow: hidden; background: #000; }
     .rr-room.rr-imm-mode .rr-bg, .rr-room.rr-imm-mode .rr-veil, .rr-room.rr-imm-mode .rr-content { display: none; }
-    .rr-room.rr-imm-mode .rr-immersive { inset: 0; padding-top: 62px; border-top: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    .rr-room.rr-imm-mode .rr-immersive { inset: 0; padding-top: 62px; border-top: 0; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
     .rr-room.rr-imm-mode .rr-immersive::-webkit-scrollbar { width: 0; height: 0; display: none; }
     .rr-room.rr-imm-mode .imm-screen { width: 100%; min-height: 100vh; padding-top: 24px; }
     .imm-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 18px; border-bottom: 1px solid #161616; }
@@ -419,6 +419,33 @@
     .fight-night-empty .arena-vs { transform-box: fill-box; transform-origin: center; animation: versus-breathe 2.4s ease-in-out infinite; }
     .fight-night-empty .arena-card { animation: corner-flicker 4.8s ease-in-out infinite; }
     .fight-night-empty .arena-card.red { animation-delay: -2.4s; }
+    @media (min-width: 781px) {
+      .rr-room.rr-imm-mode #imm-paper.on {
+        --fight-night-height: clamp(350px, calc(100dvh - 310px), 660px);
+        display: flex; flex-direction: column; height: calc(100dvh - 62px); min-height: 0;
+        padding: clamp(10px, 2dvh, 24px) 28px 8px; overflow: hidden;
+      }
+      #imm-paper.on > .imm-head { flex: 0 0 auto; padding-bottom: clamp(8px, 1.4dvh, 16px); margin-bottom: clamp(8px, 1.5dvh, 18px); }
+      #imm-paper.on > .imm-panel:has(.imm-agg) { flex: 0 0 auto; padding-block: clamp(9px, 1.3dvh, 16px); }
+      #imm-paper.on > .fight-night-empty { flex: 0 0 var(--fight-night-height); height: var(--fight-night-height); min-height: 0; margin-top: clamp(8px, 1.3dvh, 14px); }
+      #imm-paper.on > .fight-night-empty .premium-scene { height: 100%; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; }
+      #imm-paper.on > .fight-night-empty .premium-canvas,
+      #imm-paper.on > .fight-night-empty .premium-svg,
+      #imm-paper.on > .fight-night-empty .arena-photo-stage { height: 100%; min-height: 0; }
+      #imm-paper.on > .empty-note { flex: 0 0 auto; margin: 6px auto 0; font-size: 9px; line-height: 1.35; }
+      #imm-paper.on > .imm-src { flex: 0 0 auto; margin-top: 5px; padding-top: 5px; font-size: 8px; line-height: 1.35; }
+      #imm-paper.on > .imm-panel:nth-of-type(2):not(.fight-night-empty) { min-height: 0; overflow: auto; }
+    }
+    @media (min-width: 781px) and (max-height: 850px) {
+      .rr-room.rr-imm-mode #imm-paper.on { --fight-night-height: clamp(350px, calc(100dvh - 250px), 540px); padding-top: 10px; }
+      #imm-paper.on .imm-head { padding-bottom: 8px; margin-bottom: 8px; }
+      #imm-paper.on .imm-title { font-size: 23px; margin-top: 3px; }
+      #imm-paper.on .imm-subline { margin-top: 3px; line-height: 1.3; }
+      #imm-paper.on .premium-caption { padding: 10px 14px 12px; }
+      #imm-paper.on .premium-name { margin-top: 5px; font-size: 17px; }
+      #imm-paper.on .premium-copy, #imm-paper.on > .empty-note, #imm-paper.on > .imm-src { display: none; }
+      #imm-paper.on .fight-night-empty .arena-photo-hud { top: 17px; }
+    }
     @keyframes arena-breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.008); } }
     @keyframes arena-sweep { 0%,100% { opacity:.28; transform: rotate(-5deg); } 50% { opacity:.72; transform: rotate(5deg); } }
     @keyframes crowd-breathe { 0%,100% { opacity:.22; } 50% { opacity:.48; } }
@@ -452,6 +479,8 @@
       .premium-empty, .premium-scene { min-height: 500px; }
       .premium-canvas, .premium-svg { min-height: 360px; }
       .premium-caption { align-items: flex-start; flex-direction: column; padding: 18px; }
+      .rr-room.rr-imm-mode .rr-immersive { padding-top: 104px; overflow: hidden; }
+      .rr-room.rr-imm-mode #imm-paper.on { display: block; height: calc(100dvh - 104px); min-height: 0; overflow-y: auto; padding: 20px 12px 54px; }
     }
 
     /* paper floor: aggregate strip + live tape (fed ONLY by real SSE events) */
