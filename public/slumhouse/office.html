@@ -1135,24 +1135,6 @@
       <div class="of-dots" id="of-dots"></div>
     </section>
 
-    <!-- Layer-4 Office P0 (2026-07-02): risk-truth card + go-live approval cards.
-         Rendered by /slumhouse/office-risk.js + /slumhouse/office-approvals.js
-         (plain scripts, no build step). They wake on the `office:unlocked`
-         document event and sleep on `office:locked`. -->
-    <section id="of-risk" class="of-hide"></section>
-    <!-- deep-scan #13 (2026-07-03): conveyor visibility — the Office gates the
-         strategy-finder via Bot Power but could not see it. Rendered by
-         /slumhouse/office-conveyor.js (polls /api/scout/health same-origin). -->
-    <section id="of-conveyor" class="of-hide"></section>
-    <section id="of-approvals" class="of-hide"></section>
-    <!-- charter item 12 (2026-07-21): payout reality — what a funded run actually
-         pays after the split, fees and withdrawal caps. Rendered by
-         /slumhouse/office-payout.js as a SCENARIO form over the existing
-         POST /api/prop-firm/payout; no backend change, no rule defined here.
-         Every number (incl. the cap context and its `simplifications`) is
-         server-computed. Scope declared in-panel: 50K accounts only; the
-         no-input variant awaits cross-lane CL-012. -->
-    <section id="of-payout" class="of-hide"></section>
     <!-- deep-scan #16 (H-7): transient feedback when tapping a not-yet-wired switch
          (e.g. Live Execution before broker setup) so the fail-closed state is legible
          instead of a silent no-op. Driven by ofToast() in the switch script below. -->
@@ -2374,12 +2356,6 @@
       });
     })();
   </script>
-
-  <!-- Layer-4 Office P0: risk-truth + go-live approvals (no build step) -->
-  <script src="/slumhouse/office-risk.js" defer></script>
-  <script src="/slumhouse/office-conveyor.js" defer></script>
-  <script src="/slumhouse/office-approvals.js" defer></script>
-  <script src="/slumhouse/office-payout.js" defer></script>
 
   <!-- ElevenLabs ConvAI browser SDK — pinned to @elevenlabs/client@1.14.0 -->
   <script type="importmap">
