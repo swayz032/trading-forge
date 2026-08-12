@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `e92cb9da52ac7da3c9ad61c1cfd02efc85981a99`  (worktree DIRTY at generation time)
+> Generated at commit `2d42c9e8442f96d98d6090dd49385b850bf367cd`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 292 | 360 | 120770 | 1876 |
+| `src/` | Python | 292 | 360 | 120774 | 1876 |
 | `src/` | TypeScript | 461 | 718 | 209423 | 2917 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -1280,7 +1280,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `build_execution_instances` | function | `src/engine/opening_range_execution_fanout.py:53` | 1 | unique |
 | `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | 1 | unique |
 | `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | 1 | unique |
-| `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:625` | 1 | unique |
+| `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:629` | 1 | unique |
 | `check_ffn_express_consistency` | function | `src/engine/prop_compliance.py:172` | 1 | unique |
 
 _...481 more omitted from this table._
@@ -2175,7 +2175,7 @@ _...481 more omitted from this table._
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
-| `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:625` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:629` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -4714,12 +4714,12 @@ This is the *we already have this* list.  Check it before writing anything.
 | `compute_sdr` | function | `src/engine/parameter_jitter_battery.py:206` | 0 | unique |
 | `compute_psi` | function | `src/engine/parameter_jitter_battery.py:282` | 0 | unique |
 | `compute_rws` | function | `src/engine/parameter_jitter_battery.py:367` | 0 | unique |
-| `_sharpe_from_monthly_returns` | function | `src/engine/parameter_jitter_battery.py:473` | 0 | unique |
-| `run_b15_battery` | function | `src/engine/parameter_jitter_battery.py:488` | 1 | unique |
-| `_extract_pf` | function | `src/engine/parameter_jitter_battery.py:580` | 0 | unique |
-| `_extract_sharpe` | function | `src/engine/parameter_jitter_battery.py:591` | 0 | unique |
-| `_extract_max_dd` | function | `src/engine/parameter_jitter_battery.py:602` | 0 | unique |
-| `_build_ablation_metrics` | function | `src/engine/parameter_jitter_battery.py:613` | 0 | unique |
+| `_sharpe_from_monthly_returns` | function | `src/engine/parameter_jitter_battery.py:477` | 0 | unique |
+| `run_b15_battery` | function | `src/engine/parameter_jitter_battery.py:492` | 1 | unique |
+| `_extract_pf` | function | `src/engine/parameter_jitter_battery.py:584` | 0 | unique |
+| `_extract_sharpe` | function | `src/engine/parameter_jitter_battery.py:595` | 0 | unique |
+| `_extract_max_dd` | function | `src/engine/parameter_jitter_battery.py:606` | 0 | unique |
+| `_build_ablation_metrics` | function | `src/engine/parameter_jitter_battery.py:617` | 0 | unique |
 
 </details>
 
