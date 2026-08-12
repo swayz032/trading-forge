@@ -23,10 +23,22 @@ WHAT IT CHECKS  (R-790 §6 contract, numbered as ordered)
     8. verifies NEW / GONE by member identity
     9. reads `ordered_6b_reds` FROM the baseline, never retyped
 
-    plus SELF-CHECK: an INDEPENDENT second feeder (pytest's own junitxml) must
-    agree with the plugin on failure membership and collection size. This is the
-    arm that catches a corrupted result feeder — the class that produced the
-    fake 49.
+    plus SELF-CHECK: a SECOND RECORDER (pytest's own junitxml) must agree with the
+    plugin on failure membership and collection size. This is the arm that catches
+    a corrupted result feeder — the class that produced the fake 49.
+
+    ⚠️ SCOPE OF THAT CROSS-CHECK, STATED HONESTLY (R3-5 item C). The two recorders
+    are NOT independent measurements. Both are pytest plugins in the SAME process,
+    both subscribe to the SAME `pytest_runtest_logreport` hook, and both write at
+    `pytest_sessionfinish`. They are two SINKS on ONE report stream, so they
+    cross-check SERIALIZATION AND AGGREGATION — not execution.
+
+    What it therefore CANNOT see is any failure UPSTREAM of both: the run never
+    happening (F-R2-1 — both artifacts go stale for the same reason), reports
+    suppressed before the hook fires, or the report stream itself being wrong.
+    Agreement between them is evidence about recording, and nothing else.
+
+      `BOTH SIDES OF A CHECK FROM THE SAME LAYER ⇒ AGREEMENT IS NOT EVIDENCE.`
 
 USAGE
     python scripts/acceptance_runner.py --from-run run.json --junit run.xml
@@ -575,7 +587,21 @@ def read_baseline(path: Path):
 
 
 # ---------------------------------------------------------------------------
-# SELF-CHECK: the independent second feeder
+# SELF-CHECK: the second RECORDER of the same report stream
+#
+# R3-5 item C — traced to the implementation boundary. `acceptance_pytest_plugin`
+# and pytest's builtin junitxml are separate implementations, but they are not
+# separate MEASUREMENTS: same process, same `pytest_runtest_logreport` hook, same
+# `pytest_sessionfinish` write point. Calling them "independent feeders" claimed a
+# property this architecture does not have, so the wording is corrected rather than
+# a second implementation invented to satisfy it (AR-1027 §4C forbids that).
+# ---------------------------------------------------------------------------
+FEEDER_CROSS_CHECK_SCOPE = (
+    "two recorders of ONE pytest report stream (same process, same "
+    "pytest_runtest_logreport hook): this cross-check covers SERIALIZATION and "
+    "AGGREGATION, NOT execution. A fault upstream of both — the run not happening, "
+    "reports suppressed before the hook fires — is invisible to it."
+)
 # ---------------------------------------------------------------------------
 def read_junit(path: Path):
     """pytest's own junitxml — produced by pytest, not by our plugin.
@@ -933,7 +959,7 @@ def main():
     print(f"NOTE: [4] collected/executed/failed/skip/xfail : "
           f"{len(collected)}/{len(executed)}/{len(plugin_failures)}/{len(skipped)}/{len(xfailed)}")
 
-    # --- SELF-CHECK against the independent feeder ---------------------------
+    # --- SELF-CHECK against the second RECORDER (see FEEDER_CROSS_CHECK_SCOPE) ---
     if run_xml and Path(run_xml).is_file():
         j_cases, j_failures = read_junit(Path(run_xml))
         n_junit_cases = len(j_cases)
@@ -952,8 +978,9 @@ def main():
         only_plugin_collection = sorted(collected - j_cases)
         only_junit_collection = sorted(j_cases - collected)
 
-        print(f"[SELF-CHECK] independent feeder (junitxml) cases={n_junit_cases} "
+        print(f"[SELF-CHECK] second recorder (junitxml) cases={n_junit_cases} "
               f"failures={len(j_failures)}")
+        print(f"[SELF-CHECK] scope: {FEEDER_CROSS_CHECK_SCOPE}")
         if only_plugin or only_junit:
             failures_of_the_gate.append(
                 "FEEDER DISAGREEMENT on failure membership — "
@@ -982,7 +1009,7 @@ def main():
             print("             feeders AGREE on failure membership, collection "
                   "membership and size")
     else:
-        failures_of_the_gate.append("SELF-CHECK IMPOSSIBLE: no junitxml second feeder supplied")
+        failures_of_the_gate.append("SELF-CHECK IMPOSSIBLE: no junitxml second recorder supplied")
 
     # --- (5) collection presence of every baseline-named test ---------------
     base_norm = set(base["failures"])
@@ -1252,7 +1279,7 @@ def main():
         print("=" * 72)
         return 0
     print("ACCEPTANCE: PASS — NEW=0; GONE matches the authorized set; "
-          "sealed collection intact; feeders agree.")
+          "sealed collection intact; both recorders of the report stream agree.")
     print("=" * 72)
     return 0
 
