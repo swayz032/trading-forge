@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `c8154b929074a452271cc163cd51589f4d28a550`  (worktree DIRTY at generation time)
+> Generated at commit `d5b9f029d3e478a22b460d83d042aa10776177d8`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 292 | 366 | 121055 | 1881 |
+| `src/` | Python | 292 | 368 | 121187 | 1884 |
 | `src/` | TypeScript | 461 | 719 | 209586 | 2919 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1838 | 753 |
+| `src/` | 1840 | 753 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2096** | **974** |
+| **TOTAL** | **2098** | **974** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 422 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1085 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1087 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **620** of **2096** parsed files.
+Total entry points: **94**.  Modules reachable from them: **620** of **2098** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -198,9 +198,9 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3260 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1534 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4845 rows |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3262 |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1535 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4848 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=620 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
@@ -208,7 +208,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1881 ts=2919 |
+| C12 | symbols enumerated in both languages | PASS | py=1884 ts=2919 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6601/6601 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -224,8 +224,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **217 of 4535 enumerated symbol names (4.8%) are defined in more than one file, covering
-  482 of 4800 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **217 of 4538 enumerated symbol names (4.8%) are defined in more than one file, covering
+  482 of 4803 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -244,12 +244,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3260 | 67.3% |
+| `WIRED` | 3262 | 67.3% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1534 | 31.7% |
+| `BUILT-UNREACHABLE` | 1535 | 31.7% |
 | `DECLARED-ABSENT` | 38 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4845** | |
+| **TOTAL** | **4848** | |
 
 ---
 
@@ -289,7 +289,7 @@ table below it.**
 | `src/engine/compiler` | 13 | 0 | 2 | 0 | 0 | 15 |
 | `src/engine/compliance` | 13 | 0 | 1 | 0 | 0 | 14 |
 | `src/engine/config.py` | 17 | 0 | 3 | 0 | 0 | 20 |
-| `src/engine/context` | 98 | 2 | 10 | 0 | 0 | 110 |
+| `src/engine/context` | 100 | 2 | 11 | 0 | 0 | 113 |
 | `src/engine/context_runner.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/critic_optimizer.py` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/engine/cross_validation.py` | 8 | 0 | 1 | 0 | 0 | 9 |
@@ -970,7 +970,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1534** `BUILT-UNREACHABLE` symbols, **774 have test coverage but no production caller**.
+Of **1535** `BUILT-UNREACHABLE` symbols, **775 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1143,6 +1143,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `evaluate_hmm_agreement` | function | `src/engine/context/hmm_regime.py:298` | 1 | unique |
 | `fit_hmm_regimes` | function | `src/engine/context/hmm_regime.py:120` | 1 | unique |
 | `rule_label_to_hmm_key` | function | `src/engine/context/hmm_regime.py:283` | 1 | unique |
+| `compute_source_fixed_r_target` | function | `src/engine/context/structural_targets.py:360` | 1 | unique |
 | `build_s3_glob` | function | `src/engine/data_loader.py:320` | 1 | unique |
 | `resample_daily_to_weekly` | function | `src/engine/data_loader.py:1212` | 1 | unique |
 | `evaluate_decay_gate` | function | `src/engine/decay/decay_gate.py:67` | 1 | unique |
@@ -1283,9 +1284,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
 | `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
 | `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | 1 | unique |
-| `persist_benchmark` | function | `src/engine/quantum_bench.py:119` | 1 | unique |
 
-_...474 more omitted from this table._
+_...475 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1500,7 +1500,7 @@ _...474 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/context</code> - 10 symbols</summary>
+<details><summary><code>src/engine/context</code> - 11 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1514,6 +1514,7 @@ _...474 more omitted from this table._
 | `rule_label_to_hmm_key` | function | `src/engine/context/hmm_regime.py:283` | defining module is not reachable from any measured entry point |
 | `evaluate_hmm_agreement` | function | `src/engine/context/hmm_regime.py:298` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `naive_leaky_slice` | function | `src/engine/context/htf_availability.py:73` | no non-test reference outside its own definition; 2 test file(s) do reference it |
+| `compute_source_fixed_r_target` | function | `src/engine/context/structural_targets.py:360` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -3831,7 +3832,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/context</code> - 98 symbols</summary>
+<details><summary><code>src/engine/context</code> - 100 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -3915,17 +3916,19 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_is_macro_time` | function | `src/engine/context/session_context.py:102` | 0 | unique |
 | `_trading_date_et` | function | `src/engine/context/session_context.py:107` | 0 | unique |
 | `compute_session_context` | function | `src/engine/context/session_context.py:124` | 3 | unique |
-| `_load_env_buffer_ticks` | function | `src/engine/context/structural_stops.py:74` | 0 | unique |
-| `_get_effective_ceiling` | function | `src/engine/context/structural_stops.py:125` | 0 | unique |
-| `get_sweep_buffer_ticks` | function | `src/engine/context/structural_stops.py:147` | 0 | unique |
-| `get_sweep_buffer_points` | function | `src/engine/context/structural_stops.py:152` | 0 | unique |
-| `_compute_buffer` | function | `src/engine/context/structural_stops.py:160` | 0 | unique |
-| `StopPlan` | class | `src/engine/context/structural_stops.py:181` | 1 | unique |
-| `compute_structural_stop` | function | `src/engine/context/structural_stops.py:194` | 4 | unique |
+| `_load_env_buffer_ticks` | function | `src/engine/context/structural_stops.py:72` | 0 | unique |
+| `_get_effective_ceiling` | function | `src/engine/context/structural_stops.py:123` | 0 | unique |
+| `get_sweep_buffer_ticks` | function | `src/engine/context/structural_stops.py:145` | 0 | unique |
+| `get_sweep_buffer_points` | function | `src/engine/context/structural_stops.py:150` | 0 | unique |
+| `_compute_buffer` | function | `src/engine/context/structural_stops.py:158` | 0 | unique |
+| `SourceAnchorUnresolved` | class | `src/engine/context/structural_stops.py:178` | 0 | unique |
+| `StopPlan` | class | `src/engine/context/structural_stops.py:190` | 1 | unique |
+| `compute_structural_stop` | function | `src/engine/context/structural_stops.py:203` | 4 | unique |
 | `TargetPlan` | class | `src/engine/context/structural_targets.py:20` | 1 | unique |
 | `compute_targets` | function | `src/engine/context/structural_targets.py:33` | 2 | unique |
 | `compute_single_tp` | function | `src/engine/context/structural_targets.py:167` | 2 | unique |
 | `select_exit_style` | function | `src/engine/context/structural_targets.py:287` | 1 | unique |
+| `SourceFixedRTarget` | class | `src/engine/context/structural_targets.py:350` | 0 | unique |
 | `StructureState` | class | `src/engine/context/structure_engine.py:94` | 3 | AMBIG |
 | `_derive_prior_bos_direction` | function | `src/engine/context/structure_engine.py:118` | 0 | unique |
 | `_last_swing_prices` | function | `src/engine/context/structure_engine.py:131` | 0 | unique |
