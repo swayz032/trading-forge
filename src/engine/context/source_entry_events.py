@@ -60,6 +60,7 @@ contract so a short stop still REFUSES. This module answers "which zone qualifie
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date, datetime
 
 import numpy as np
 
@@ -67,6 +68,15 @@ from src.engine.indicators.fvg_native import BEARISH, BULLISH, FVGZone, displace
 
 LONG = "long"
 SHORT = "short"
+
+# The declared execution-ownership mode whose entry population this module owns.
+#
+# ⚠️ IT IS A SECOND OCCURRENCE OF A STRING `backtester.run_class_backtest` ALREADY VALIDATES
+# AGAINST, AND THAT IS A JOIN, NOT A DUPLICATE DEFINITION. The backtester owns which modes it
+# will RUN; this owns which mode changes the ENTRY POPULATION. Two literals that must agree is
+# exactly the shape that rots silently, so the agreement is PINNED BY A TEST rather than
+# asserted here — and the Band C vertical proof exercises both in one execution.
+SOURCE_FAITHFUL_MODE = "SOURCE_FAITHFUL"
 
 # The zone direction each breakout side requires. AR-1068 §5 negative control:
 # "bullish breakout + bearish FVG -> NO ENTRY".
@@ -274,3 +284,157 @@ def source_stop_price(event: SourceEntryEvent, high: np.ndarray, low: np.ndarray
             "example — not by engineering common sense."
         )
     return displacement_extreme(event.zone, high, low, event.direction)
+
+
+# ══════════════════════════════════════════════════════════════════════════════════════
+# AR-1079 §3 / §5 — PER-SESSION OPENING RANGE, AND AN IDENTITY THAT SURVIVES A SLICE
+# ══════════════════════════════════════════════════════════════════════════════════════
+
+
+@dataclass(frozen=True)
+class SourceSessionRange:
+    """ONE trading session's completed opening-range state, as the adapter computed it.
+
+    AR-1079 §3: `_h_opening_range()` already calls the governed adapter EXACTLY ONCE per
+    `(candidate, session_date)` and already holds the exact `OpeningRangeState` — then
+    collapses it to a boolean availability array. This record is what that handler keeps
+    instead of discarding, so the source join reuses the SAME state.
+
+    🛑 IT IS NOT A SECOND OPENING-RANGE CALCULATOR. Every field here is READ OFF the state
+    the adapter returned (`opening_range_high` / `opening_range_low`) or off the adapter's
+    OWN `_window_bounds` lock. Nothing is re-derived. `THE SECOND COPY OF A CALCULATION IS
+    A DISAGREEMENT WAITING FOR A REASON.`
+
+    🛑 AND IT IS NOT A SCALAR ORH/ORL SMEARED ACROSS A MULTI-DAY FRAME, which is the exact
+    defect AR-1079 §3 ordered prevented. One record per session; a session whose range never
+    completed produces NO record and therefore no event, and may not borrow a neighbour's.
+
+    Indices are positions in the SAME frame the detector ran on, so a zone selected against
+    them is the detector's own object rather than a rebased copy.
+    """
+
+    session_date: date
+    or_high: float
+    or_low: float
+    lock_idx: int
+    first_idx: int
+    last_idx: int
+
+    def __post_init__(self) -> None:
+        if not (self.first_idx <= self.lock_idx <= self.last_idx):
+            raise ValueError(
+                f"session {self.session_date}: lock_idx={self.lock_idx} is outside its own "
+                f"session span [{self.first_idx}, {self.last_idx}]; a lock that is not IN the "
+                "session it belongs to is a cross-session read, not an opening range"
+            )
+        if not np.isfinite(self.or_high) or not np.isfinite(self.or_low):
+            raise ValueError(
+                f"session {self.session_date}: non-finite opening range "
+                f"({self.or_low!r}, {self.or_high!r}). A refused/forming range has no levels "
+                "and must produce NO record rather than a record with invented ones."
+            )
+        if self.or_high < self.or_low:
+            raise ValueError(
+                f"session {self.session_date}: inverted opening range "
+                f"or_high={self.or_high!r} < or_low={self.or_low!r}"
+            )
+
+
+@dataclass(frozen=True)
+class SourceEventRecord:
+    """One source entry event, carried with an identity that SURVIVES A FRAME SLICE.
+
+    ─── AR-1079 §5 — THE WARMUP-INDEX TRAP THIS EXISTS TO CLOSE ─────────────────────────
+    🛑 `strategy.compute()` runs on `warmup + OOS` rows; `run_class_backtest` then does
+    `df = df.slice(warmup_rows)`. An event recorded as a NAKED PRE-STRIP INTEGER therefore
+    points at a DIFFERENT CANDLE afterwards — and because the FVG `start_idx`, the
+    displacement wick, the entry bar and the trade manager would all shift TOGETHER, the
+    result stays internally consistent around the WRONG ROW. No exception, no mismatch, a
+    perfectly plausible trade on a candle the teacher never named.
+
+      `A CONSISTENT ANSWER AROUND THE WRONG ROW IS NOT DETECTABLE BY ANY CHECK THAT ONLY
+       TESTS CONSISTENCY.`
+
+    So `decision_ts` — not `event.bar_idx` — is the load-bearing identity across that
+    boundary. The integer indices are retained for auditing the pre-strip frame and MUST NOT
+    be used to address a post-strip one.
+
+    PRICES ARE RESOLVED PRE-STRIP ON PURPOSE. `entry_price` and `stop_price` are read off the
+    same frame the detector ran on, so slicing cannot move them either: a price is not an
+    index.
+
+    `stop_price` / `risk_points` are `None` exactly when `refused_reason` is set — today that
+    is the SHORT side, whose stop authority remains refused (AR-1079 §6). A refused record is
+    still EMITTED rather than dropped, because a short setup that silently vanishes is
+    indistinguishable from a short setup that never occurred.
+    """
+
+    event: SourceEntryEvent
+    session_date: date
+    decision_ts: datetime
+    breakout_ts: datetime
+    entry_price: float
+    stop_price: float | None
+    risk_points: float | None
+    refused_reason: str | None
+
+    def __post_init__(self) -> None:
+        if (self.stop_price is None) != (self.refused_reason is not None):
+            raise ValueError(
+                "a source event record must carry EITHER an executable stop OR a refusal "
+                f"reason, never both and never neither (stop_price={self.stop_price!r}, "
+                f"refused_reason={self.refused_reason!r})"
+            )
+        if self.risk_points is not None and self.risk_points <= 0:
+            raise ValueError(
+                f"risk_points={self.risk_points!r} is not positive; the taught stop must sit "
+                "on the losing side of the entry or the R unit is meaningless"
+            )
+
+
+def select_session_source_events(
+    *,
+    close: np.ndarray,
+    zones: list[FVGZone],
+    session: SourceSessionRange,
+) -> list[SourceEntryEvent]:
+    """The taught events for ONE session, in the frame's own index space.
+
+    AR-1079 §3: "For each session independently: that session's exact completed OR state ->
+    that session's close breakout -> that session's matching-direction FVG -> source entry
+    event." This is the per-session wrapper around `select_source_entry_events`; it adds NO
+    selection rule of its own.
+
+    HOW THE SESSION BOUND IS IMPOSED WITHOUT REBASING ANYTHING:
+      * the upper bound is a VIEW, `close[: last_idx + 1]` — a numpy slice shares the buffer
+        and preserves index identity, so nothing is copied and no index is translated;
+      * the lower bound is `lock_idx`, which lies inside this session, so
+        `find_breakout_events` cannot reach a previous session's bars;
+      * `zones` are filtered to those whose third candle lies inside this session, so a
+        neighbouring day's imbalance cannot qualify here.
+
+    🛑 THE ZONE OBJECTS ARE PASSED THROUGH BY IDENTITY. Filtering a list does not copy its
+    members, so the zone that reaches `source_stop_price` is the same object the detector
+    produced — which is the whole point of AR-1068 §5 item 6.
+
+    The transition test in `find_breakout_events` reads `close[i-1]`, so the scan starts at
+    `max(lock_idx, first_idx + 1)`: a breakout on the session's very first bar has no
+    in-session predecessor, and borrowing the previous session's last bar to decide "was it
+    inside the range" would be exactly the cross-session read §3 forbids.
+    """
+    lo = max(int(session.lock_idx), int(session.first_idx) + 1)
+    hi = int(session.last_idx)
+    if lo > hi:
+        return []
+
+    session_zones = [z for z in zones if lo <= int(z.start_idx) <= hi]
+    if not session_zones:
+        return []
+
+    return select_source_entry_events(
+        close=close[: hi + 1],
+        zones=session_zones,
+        or_high=session.or_high,
+        or_low=session.or_low,
+        lock_idx=lo,
+    )

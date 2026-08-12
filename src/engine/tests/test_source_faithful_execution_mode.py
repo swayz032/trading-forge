@@ -56,26 +56,78 @@ class _FakeStrategy:
 
 
 class TestTheModeGateExecutes:
-    def test_style_c_under_source_faithful_REFUSES_rather_than_mislabelling(self):
-        """AR-1068 §7: Style C would replace the teacher's whole-position fixed-R target and
-        the run would still be labelled SOURCE_FAITHFUL. That is the mislabel the ruling
-        names, so the OFF branch must REFUSE — never fall back."""
-        with pytest.raises(ValueError, match="REFUSING rather than mislabelling"):
+    # ─── AR-1079 §8 — THIS REFUSAL CHANGED ITS REASON, DECLARED LOUDLY ───────────────────
+    # 🛑 THESE TWO TESTS WERE REWRITTEN, NOT RELAXED, AND A READER MUST KNOW WHICH.
+    # They used to pin an UNCONDITIONAL refusal: SOURCE_FAITHFUL + static_styleC always raised
+    # "REFUSING rather than mislabelling", because the taught fixed-R target was not consumable
+    # on this path (AR-1072). AR-1079 §8 authorised consuming it — and authorised lifting the
+    # refusal EXACTLY that far: "Replace the refusal only when the full source fixed-R contract
+    # is present and valid. An unknown/malformed source target continues to refuse."
+    #
+    # So the refusal still exists and still fires BEFORE any bar is evaluated; what it now
+    # tests is the CONTRACT rather than the engine name. The old assertion string is gone
+    # because the old refusal is gone — keeping it green would have required keeping a refusal
+    # the ruling retired. ★ `A TEST THAT SURVIVES A RULING UNCHANGED WAS PINNING SOMETHING THE
+    # RULING DID NOT GOVERN — OR IT IS NOW PINNING A LIE.`
+    def test_source_faithful_with_NO_target_contract_REFUSES(self):
+        """AR-1079 §8. A SOURCE_FAITHFUL artifact carrying no `spec.source_risk.target` has no
+        taught target, and the engine may not supply one. It refuses before any data load."""
+        with pytest.raises(ValueError, match="carries no `spec.source_risk.target`"):
             run_class_backtest(
                 _FakeStrategy(), "2024-01-01", "2024-01-31",
                 source_risk_mode="SOURCE_FAITHFUL",     # exit_engine defaults to static_styleC
             )
 
-    def test_the_refusal_names_style_c_and_the_missing_wiring_not_a_generic_error(self):
+    def test_the_refusal_names_the_missing_contract_not_a_generic_error(self):
         with pytest.raises(ValueError) as exc:
             run_class_backtest(
                 _FakeStrategy(), "2024-01-01", "2024-01-31",
                 source_risk_mode="SOURCE_FAITHFUL", exit_engine="static_styleC",
             )
         msg = str(exc.value)
-        assert "static_styleC" in msg and "whole-position fixed-R" in msg, (
+        assert "source_risk.target" in msg and "may not be defaulted" in msg, (
             "a refusal nobody can act on is a crash with better manners"
         )
+
+    @pytest.mark.parametrize(
+        ("target", "fragment"),
+        [
+            ({"type": "TRAILING", "r_multiple": 2.0}, "is not FIXED_R"),
+            ({"type": "FIXED_R"}, "absent, non-numeric or non-positive"),
+            ({"type": "FIXED_R", "r_multiple": 0}, "absent, non-numeric or non-positive"),
+            ({"type": "FIXED_R", "r_multiple": -2.0}, "absent, non-numeric or non-positive"),
+            ({"type": "FIXED_R", "r_multiple": "2"}, "absent, non-numeric or non-positive"),
+        ],
+    )
+    def test_a_MALFORMED_target_contract_still_REFUSES(self, target, fragment):
+        """AR-1079 §8: "An unknown/malformed source target continues to refuse rather than
+        falling into Style C." Each row is a different way the contract can be wrong, and a
+        default of 2.0 — the number this source actually teaches — would silently rescue all
+        five. `A DEFAULT THAT HAPPENS TO BE RIGHT TODAY IS STILL A FABRICATED CONTRACT.`"""
+        strat = _FakeStrategy()
+        strat.spec = {"source_risk": {"mode": "SOURCE_FAITHFUL", "target": target}}
+        with pytest.raises(ValueError, match=fragment):
+            run_class_backtest(
+                strat, "2024-01-01", "2024-01-31", source_risk_mode="SOURCE_FAITHFUL",
+            )
+
+    def test_a_VALID_target_contract_PASSES_the_gate(self):
+        """🛑 THE POSITIVE WITNESS THE FIVE REFUSALS ABOVE ARE WORTHLESS WITHOUT. A resolver
+        that raised on EVERY input would satisfy all of them. This proves the authorised case
+        gets THROUGH — it must fail LATER (on market data), with a different error."""
+        strat = _FakeStrategy()
+        strat.spec = {
+            "source_risk": {
+                "mode": "SOURCE_FAITHFUL",
+                "target": {"type": "FIXED_R", "r_multiple": 2.0},
+            }
+        }
+        with pytest.raises(Exception) as exc:
+            run_class_backtest(
+                strat, "2024-01-01", "2024-01-31", source_risk_mode="SOURCE_FAITHFUL",
+            )
+        msg = str(exc.value)
+        assert "source_risk.target" not in msg and "is not FIXED_R" not in msg
 
     def test_an_unrecognised_mode_REFUSES_and_is_not_treated_as_legacy(self):
         """A typo must not silently buy back the entire Trading Forge overlay."""
@@ -105,15 +157,20 @@ class TestTheModeGateExecutes:
             )
         assert "not a declared ownership mode" not in str(exc.value)
 
-    def test_source_faithful_with_a_non_styleC_engine_passes_the_exit_gate(self):
-        """Discriminates the refusal: it must be caused by STYLE C specifically, not by
-        SOURCE_FAITHFUL being present at all. Otherwise the guard is untargeted."""
-        with pytest.raises(Exception) as exc:
+    def test_the_contract_gate_is_NOT_scoped_to_style_c(self):
+        """🛑 A DECAYED CONTROL, REPAIRED RATHER THAN LEFT GREEN. This test used to assert the
+        Style-C refusal string was ABSENT under `exit_engine="naked"` — and once AR-1079 §8
+        retired that string it would have passed on any behaviour whatsoever, a green with no
+        subject. `A NEGATIVE ASSERTION WHOSE SUBJECT WAS DELETED IS NOT A CONTROL.`
+
+        What matters now is the opposite property: the OLD gate fired only for `static_styleC`,
+        but the source arm routes to its own management function for EVERY engine, so the
+        contract must be validated on every source run — not only the default one."""
+        with pytest.raises(ValueError, match="carries no `spec.source_risk.target`"):
             run_class_backtest(
                 _FakeStrategy(), "2024-01-01", "2024-01-31",
                 source_risk_mode="SOURCE_FAITHFUL", exit_engine="naked",
             )
-        assert "REFUSING rather than mislabelling" not in str(exc.value)
 
 
 class TestTheStopCommandIsExact:
@@ -121,8 +178,37 @@ class TestTheStopCommandIsExact:
     backtest it can be executed directly with no market data. These are real behavioural
     proofs, not routing proofs."""
 
+    # ─── AR-1079 §7 — THE TWO ARMS NOW KEY THE MAP DIFFERENTLY, AND THAT IS THE POINT ────
+    # 🛑 UPDATED FIXTURE, DECLARED RATHER THAN QUIET. These maps used to be ONE dict keyed at
+    # bar 9 for both arms, because the source arm still inherited legacy's `np.roll(...,1)` and
+    # therefore legacy's `entry_idx - 1` lookup. AR-1079 §7 retired that for SOURCE_FAITHFUL:
+    # the entry IS the third FVG candle's close, nothing is rolled, and "the source map must
+    # resolve against the actual source entry bar."
+    #
+    # The ASSERTIONS below are unchanged — exact distance, no clamp, distinct basis. Only the
+    # key each arm looks under moved, and splitting the fixtures makes the suite DISCRIMINATE
+    # the two conventions instead of accidentally sharing one.
+    # ★ `A FIXTURE THAT SATISFIES BOTH CONVENTIONS CANNOT WITNESS EITHER.`
     MAP = {"long": {9: {"distance": 20.0}}, "short": {9: {"distance": 20.0}}}
+    SOURCE_MAP = {"long": {10: {"distance": 20.0}}, "short": {10: {"distance": 20.0}}}
     KW = dict(entry_idx=10, is_short=False, atr_fallback_points=7.0, stop_ceiling=10.0)
+
+    def test_the_two_arms_do_NOT_share_a_lookup_key(self, monkeypatch):
+        """🛑 THE DISCRIMINATOR FOR THE FIXTURE SPLIT ABOVE. If `signal_bar_idx` were still
+        `entry_idx - 1` on both arms, the source arm would happily read the LEGACY map — and
+        every source test below would pass while the source stop silently resolved against the
+        candle BEFORE the teacher's decision bar. A real price, a plausible R, the wrong trade.
+
+        So: the legacy-keyed map must be INVISIBLE to the source arm (it refuses, because bar
+        10 is absent from it), and the source-keyed map must be invisible to legacy."""
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+        with pytest.raises(ValueError, match="ATR fallback would substitute an untaught stop"):
+            _resolve_stop_risk_points(
+                **self.KW, structural_stop_map=self.MAP, source_faithful=True
+            )
+        assert _resolve_stop_risk_points(
+            **self.KW, structural_stop_map=self.SOURCE_MAP
+        ) == (7.0, "atr_fallback"), "legacy must NOT see a map keyed at the entry bar"
 
     def test_legacy_CLAMPS_the_stop_to_the_house_ceiling(self, monkeypatch):
         """POSITIVE CONTROL AND BASELINE: this is the behaviour §8 objects to, and it must
@@ -137,7 +223,7 @@ class TestTheStopCommandIsExact:
         multiple, the 2R target and the outcome, silently."""
         monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
         pts, basis = _resolve_stop_risk_points(
-            **self.KW, structural_stop_map=self.MAP, source_faithful=True
+            **self.KW, structural_stop_map=self.SOURCE_MAP, source_faithful=True
         )
         assert (pts, basis) == (20.0, "source_exact")
 
@@ -145,7 +231,7 @@ class TestTheStopCommandIsExact:
         monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
         _, legacy = _resolve_stop_risk_points(**self.KW, structural_stop_map=self.MAP)
         _, source = _resolve_stop_risk_points(
-            **self.KW, structural_stop_map=self.MAP, source_faithful=True
+            **self.KW, structural_stop_map=self.SOURCE_MAP, source_faithful=True
         )
         assert legacy != source, "an unlabelled source stop is indistinguishable from a house stop"
 
@@ -155,7 +241,7 @@ class TestTheStopCommandIsExact:
         """Discriminator: without this, `return 20.0` would pass every test above."""
         monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
         for d in (3.5, 20.0, 41.25):
-            m = {"long": {9: {"distance": d}}}
+            m = {"long": {10: {"distance": d}}}
             pts, _ = _resolve_stop_risk_points(
                 **self.KW, structural_stop_map=m, source_faithful=True
             )
@@ -185,7 +271,7 @@ class TestTheStopCommandIsExact:
         assert _structural_stop_parity_enabled() is False, "positive witness: the flag IS off"
 
         pts, basis = _resolve_stop_risk_points(
-            **self.KW, structural_stop_map=self.MAP, source_faithful=True
+            **self.KW, structural_stop_map=self.SOURCE_MAP, source_faithful=True
         )
         assert (pts, basis) == (20.0, "source_exact")
 

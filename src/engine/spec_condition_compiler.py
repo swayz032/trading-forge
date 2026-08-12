@@ -41,6 +41,16 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import polars as pl
 
+from src.engine.context.source_entry_events import (
+    SHORT as SOURCE_SHORT,
+)
+from src.engine.context.source_entry_events import (
+    SOURCE_FAITHFUL_MODE,
+    SourceEventRecord,
+    SourceSessionRange,
+    select_session_source_events,
+    source_stop_price,
+)
 from src.engine.context.structural_stops import compute_structural_stop
 from src.engine.entry_eligibility import (
     REASON_NO_TRIGGER_BINDING,
@@ -540,6 +550,16 @@ class SpecConditionStrategy(BaseStrategy):
         # name may change and the boundary still holds.
         self.opening_range_candidate = opening_range_candidate
 
+        # ─── AR-1079 §5 — THE SOURCE-EVENT CARRIER (declared here, RESET every compute()) ─
+        # Declared at construction so an instance that never reached `compute()` still
+        # answers these questions with an empty population rather than an AttributeError —
+        # `A MISSING ATTRIBUTE IS NOT A MEASUREMENT OF ZERO EVENTS`. The authoritative reset
+        # is in `compute()`, above its early return.
+        self._source_or_sessions: dict[date, SourceSessionRange] = {}
+        self._last_fvg_zones: list = []
+        self.last_source_entry_events: list[SourceEventRecord] = []
+        self.last_source_refusal: str | None = None
+
         # ─── Hard-Constraint Demotion Experiment (docs/designs/hard-constraint-demotion-
         # experiment-2026-07-05.md) ──────────────────────────────────────────────────
         # Resolve TF_ROLE_DEMOTION_MODE + the audited (video, condition_id) -> classification
@@ -1026,9 +1046,35 @@ class SpecConditionStrategy(BaseStrategy):
             _start, lock = _window_bounds(
                 candidate.definition, candidate.variant, session_date
             )
+            lock_idx: int | None = None
             for i in indices:
                 if ts_list[i] >= lock:
                     out[i] = True
+                    if lock_idx is None:
+                        lock_idx = i
+
+            # ── AR-1079 §3 — KEEP THE STATE, DO NOT ONLY COLLAPSE IT ────────────────────
+            # This handler has ALWAYS held the exact per-session `OpeningRangeState`; it
+            # simply threw the levels away and kept the availability boolean. AR-1079 §3
+            # ordered that changed, because the source join needs THAT session's ORH/ORL and
+            # THAT session's lock — and ordered it done by PRESERVATION, never by a second
+            # opening-range calculator.
+            #
+            # 🛑 THE RECORD IS WRITTEN ONLY INSIDE THE `opening_range_complete` PATH, BELOW
+            # the `continue` above. A refused or still-forming session therefore records
+            # NOTHING, so §10 discriminator 18 holds structurally: no record => no event =>
+            # no borrowed neighbour range. `FAIL CLOSED` survives the handler, per session.
+            #
+            # ⚠️ EVERY VALUE HERE IS READ OFF THE ADAPTER'S OWN OUTPUT. Nothing is recomputed.
+            if lock_idx is not None:
+                self._source_or_sessions[session_date] = SourceSessionRange(
+                    session_date=session_date,
+                    or_high=float(state.opening_range_high),
+                    or_low=float(state.opening_range_low),
+                    lock_idx=lock_idx,
+                    first_idx=min(indices),
+                    last_idx=max(indices),
+                )
         return out
 
     def _bar_interval_minutes(self) -> int:
@@ -1481,8 +1527,23 @@ class SpecConditionStrategy(BaseStrategy):
         `any_active` (bullish OR bearish) is the per-bar gating signal — directional FVG
         selection (long vs short) is out of scope for this experiment; direction is still
         decided the same way as every other spec (self.spec['direction'] + the EMA-slope
-        proxy for "both"), unchanged by this evaluator."""
+        proxy for "both"), unchanged by this evaluator.
+
+        ─── AR-1079 §4 — THE IDENTITY IS PRESERVED, NOT RE-DETECTED ────────────────────────
+        🛑 THE RETURN VALUE IS UNCHANGED, AND THAT IS THE POINT. `any_active` is still what
+        the condition ladder gates on, so every legacy spec is byte-identical here. What
+        changes is that `FVGResult.zones` is no longer DESTROYED at this return statement
+        (AR-1069 §2 measured exactly that loss). The source join needs to know WHICH zone
+        qualified, and the detector already knew — the knowledge died one line from its birth.
+
+        🛑 NO SECOND DETECTOR. AR-1079 §4: "Preserve the existing FVG result (or its exact
+        zones) from the same evaluation that serves the condition." The zones handed onward
+        are the SAME objects from the SAME `compute_fvg_signal` call that produced the array
+        this method returns, so the source stop cannot be built from a different evaluation
+        than the one that gated the entry.
+        """
         result = compute_fvg_signal(open_, high, low, close)
+        self._last_fvg_zones = result.zones
         return result.any_active
 
     @staticmethod
@@ -1925,6 +1986,162 @@ class SpecConditionStrategy(BaseStrategy):
                 )
 
     # ─── Core compute ───────────────────────────────────────────────────────
+    # ═══ AR-1079 §4/§5/§6 — THE SOURCE-EVENT ENTRY POPULATION ════════════════════════════
+    def _source_risk_mode(self) -> str | None:
+        """This artifact's OWN declared execution-ownership mode, or `None` for legacy.
+
+        Read off `self.spec`, which AR-1079 §8 names as the carrier the persisted source
+        contract already rides on — no new constructor parameter, no env switch, no second
+        channel. `AN ENV SWITCH IS A PROPERTY OF THE MACHINE; OWNERSHIP IS A PROPERTY OF THE
+        ARTIFACT` (AR-1072).
+
+        🛑 IT DOES NOT NORMALISE. A mode this method does not recognise is returned verbatim
+        and simply does not equal `SOURCE_FAITHFUL_MODE`, so it takes the legacy path — which
+        is safe HERE because `run_class_backtest` already REFUSES an unrecognised mode before
+        any bar is evaluated. Sanitising a typo to `None` in two places is how the two
+        authorities drift apart. `A SANITISER THAT TURNS A BAD VALUE INTO A PLAUSIBLE DEFAULT
+        IS NOT A GUARD.`
+        """
+        source_risk = self.spec.get("source_risk")
+        if not isinstance(source_risk, dict):
+            return None
+        mode = source_risk.get("mode")
+        return None if mode is None else str(mode)
+
+    def _build_source_entry_events(
+        self,
+        close: np.ndarray,
+        high: np.ndarray,
+        low: np.ndarray,
+        ts_list: list[datetime | None],
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """The SOURCE_FAITHFUL entry population, built per session from preserved state.
+
+        ─── WHAT THIS REPLACES, AND WHY IT IS A REPLACEMENT AND NOT A FILTER ──────────────
+        AR-1079 §4: "For SOURCE_FAITHFUL, retire the current semantic route: FVG any_active
+        boolean + EMA-slope proxy direction... EMA MAY NOT CHOOSE THE SIDE WHEN THE SOURCE
+        RULE SAYS BREAKOUT SIDE CHOOSES THE SIDE."
+
+        🛑 SO THE RESULT IS NOT `AND`ed WITH THE LADDER'S CONJUNCTION, AND THAT IS A DECLARED
+        SEMANTIC DECISION, NOT AN OVERSIGHT. `entry_signal` on this spec is the rising edge of
+        `any_active & <EMA lean> & …` — the very proxies this ruling retires. Intersecting the
+        taught population with them would leave the EMA proxy holding a VETO over the
+        breakout side, which is the same defect wearing a conjunction. The taught sequence
+        (locked OR -> close breakout -> matching-direction FVG outside the range -> third
+        candle) is the entry rule for this artifact, and it is expressed here in full.
+
+        🛑 WHAT IT DOES **NOT** BYPASS: the strategy-level refusal boundary below it. This
+        method returns a candidate population; `_derive_entry_eligibility` still zeroes it on
+        an unbound trigger, exactly as AR-1079 §4 requires ("the new source event does not get
+        to bypass the existing strategy execution-refusal / trigger-safety boundary").
+
+        ─── FAIL-CLOSED, AND VISIBLY SO ───────────────────────────────────────────────────
+        Every path that cannot produce a taught event produces NO entry AND a stated reason on
+        `last_source_refusal` / a refused `SourceEventRecord`. `AN EMPTY POPULATION AND A
+        REFUSED ONE ARE DIFFERENT FACTS AND MUST NOT LOOK ALIKE.`
+
+        The stop is resolved through `source_stop_price`, THE source-authority boundary, and
+        its `ValueError` is CAUGHT rather than propagated — because that refusal is a fact
+        about the teacher's evidence (the short anchor is unresolved, AR-1079 §6), not a
+        program error. Catching it here keeps the authority in one place: if the short refusal
+        is ever lifted THERE, a short event becomes executable HERE with no edit. A refused
+        event still lands in the carrier, so a short setup that cannot be traded is
+        distinguishable from a short setup that never occurred.
+        """
+        n = len(close)
+        entry_long = np.zeros(n, dtype=bool)
+        entry_short = np.zeros(n, dtype=bool)
+        records: list[SourceEventRecord] = []
+
+        if not self._source_or_sessions:
+            self.last_source_refusal = (
+                "no session produced a COMPLETE taught opening range, so there is no locked "
+                "level for a close breakout to cross. Either this spec carries no "
+                "OPENING_RANGE_DEFINITION condition (nothing called the adapter) or every "
+                "session refused. REFUSING rather than trading an unlocked range."
+            )
+            return entry_long, entry_short
+
+        if not self._last_fvg_zones:
+            self.last_source_refusal = (
+                "the FVG detector produced no zones on this frame, so no third candle can be "
+                "the taught decision bar. If this spec carries no FVG condition, nothing "
+                "called the detector at all — and inventing a detection here would be a "
+                "second detector, which AR-1079 §4 forbids."
+            )
+            return entry_long, entry_short
+
+        for session_date in sorted(self._source_or_sessions):
+            session = self._source_or_sessions[session_date]
+            for event in select_session_source_events(
+                close=close, zones=self._last_fvg_zones, session=session
+            ):
+                decision_ts = ts_list[event.bar_idx]
+                breakout_ts = ts_list[event.breakout_idx]
+                if decision_ts is None or breakout_ts is None:
+                    # AR-1079 §5 / STOP CONDITION: "warmup slicing cannot preserve a unique
+                    # decision-bar identity". A bar with no timestamp has no identity that
+                    # survives the strip, so it is refused rather than carried as an integer.
+                    self.last_source_refusal = (
+                        f"source event at bar {event.bar_idx} has no timestamp, so it has no "
+                        "identity that survives the warmup strip. REFUSING rather than "
+                        "carrying a naked pre-strip index."
+                    )
+                    continue
+
+                entry_price = float(close[event.bar_idx])
+                stop_price: float | None
+                risk_points: float | None
+                refused: str | None
+                try:
+                    taught_stop = float(source_stop_price(event, high, low))
+                except ValueError as exc:
+                    stop_price, risk_points, refused = None, None, str(exc)
+                else:
+                    # Signed so the SAME test covers both sides: the stop must sit on the
+                    # LOSING side of the entry, below it for a long and above it for a short.
+                    distance = (
+                        taught_stop - entry_price
+                        if event.direction == SOURCE_SHORT
+                        else entry_price - taught_stop
+                    )
+                    if distance > 0:
+                        stop_price, risk_points, refused = taught_stop, distance, None
+                    else:
+                        stop_price, risk_points = None, None
+                        refused = (
+                            f"the taught stop ({taught_stop}) does not sit on the losing side "
+                            f"of the {event.direction} entry ({entry_price}), so the R unit "
+                            "would be zero or inverted. REFUSING rather than manufacturing a "
+                            "risk distance."
+                        )
+
+                records.append(
+                    SourceEventRecord(
+                        event=event,
+                        session_date=session_date,
+                        decision_ts=decision_ts,
+                        breakout_ts=breakout_ts,
+                        entry_price=entry_price,
+                        stop_price=stop_price,
+                        risk_points=risk_points,
+                        refused_reason=refused,
+                    )
+                )
+                if refused is not None:
+                    continue
+                # 🛑 ONLY AN EVENT WITH AN EXECUTABLE TAUGHT STOP BECOMES AN ENTRY. An entry
+                # with no stop map entry would be refused downstream anyway (AR-1073's
+                # fail-closed resolver) — but it would be refused as a MISSING MAP rather than
+                # as UNRESOLVED SOURCE AUTHORITY, and those are different findings.
+                if event.direction == SOURCE_SHORT:  # pragma: no cover - refused today
+                    entry_short[event.bar_idx] = True
+                else:
+                    entry_long[event.bar_idx] = True
+
+        self.last_source_entry_events = records
+        return entry_long, entry_short
+
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
         n = len(df)
         false_col = pl.lit(False)
@@ -1934,6 +2151,16 @@ class SpecConditionStrategy(BaseStrategy):
         # parameter refusals for exactly this reason).
         self.last_entry_eligibility = None
         self.execution_status = EXECUTION_STATUS_EXECUTED
+        # ─── AR-1079 §5 — THE PER-COMPUTE SOURCE CARRIER IS RESET HERE, WITH THE OTHERS ──
+        # "initialize/reset it every `compute()` call; never let stale events survive into
+        # another run." It sits with `last_entry_eligibility` ABOVE the short-frame early
+        # return for this file's own reason: `A GUARD BELOW AN EARLY RETURN IS A GUARD THE
+        # SHORT PATH NEVER MEETS` — and a stale event surviving a short frame would be a
+        # previous frame's trade offered to this one.
+        self._source_or_sessions = {}
+        self._last_fvg_zones = []
+        self.last_source_entry_events = []
+        self.last_source_refusal = None
         self._acknowledge_parameters(n, enforced)
         if n < MIN_BARS_REQUIRED:
             # R-749 §4-1: even here the trace says WHY, rather than returning the empty list
@@ -2228,6 +2455,19 @@ class SpecConditionStrategy(BaseStrategy):
             wait_bias_bull = wait_bias_cache[False]
             entry_long = entry_signal & wait_bias_bull
             entry_short = entry_signal & ~wait_bias_bull
+
+        # ─── AR-1079 §4 — SOURCE_FAITHFUL REPLACES THE DIRECTION ROUTE ABOVE ─────────────
+        # 🛑 PLACED AFTER the legacy direction block and BEFORE the refusal boundary, both
+        # deliberately. AFTER, so this is a visible REPLACEMENT of `entry_long`/`entry_short`
+        # rather than a hidden fork in the ladder — a reader sees exactly which population was
+        # discarded. BEFORE, so `_derive_entry_eligibility` still owns the trigger-safety
+        # refusal: AR-1079 §4 keeps that boundary authoritative over the source path too.
+        #
+        # Legacy and TF_OVERLAY_VARIANT never enter this branch, so their entry population is
+        # byte-identical. `_source_risk_mode()` returns `None` for every artifact in the
+        # existing library (none carries `source_risk`).
+        if self._source_risk_mode() == SOURCE_FAITHFUL_MODE:
+            entry_long, entry_short = self._build_source_entry_events(close, high, low, ts_list)
 
         exit_long = np.zeros(n, dtype=bool)   # framework-owned — NEVER set here
         exit_short = np.zeros(n, dtype=bool)  # framework-owned — NEVER set here

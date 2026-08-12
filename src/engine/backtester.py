@@ -1048,6 +1048,143 @@ def _apply_naked_management(
     return managed_trades
 
 
+def _apply_source_fixed_r_management(
+    trades_records,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    df,
+    open_np: Optional[np.ndarray] = None,
+    structural_stop_map: dict | None = None,
+    r_multiple: float = 0.0,
+) -> list[dict]:
+    """AR-1079 §8 — the SOURCE_FAITHFUL exit: whole position, source stop or fixed-R target.
+
+    ─── WHAT THIS REPLACES ────────────────────────────────────────────────────────────────
+    The SOURCE_FAITHFUL arm previously REFUSED at the Style-C boundary because the taught
+    fixed-R target was not consumable on this path (AR-1072). This is that consumption, so the
+    refusal is now conditional on the contract rather than unconditional.
+
+    🛑 NO SECOND TARGET ENGINE. AR-1079 §8: "`compute_source_fixed_r_target(...)` already
+    exists and has the correct source-faithful semantics. Do not build another target engine."
+    The arithmetic below is entirely that primitive's; this function only decides WHEN price
+    reached the number it returned.
+
+    ─── WHAT IS DELIBERATELY ABSENT, EACH ONE NAMED ───────────────────────────────────────
+    no Style-C 33/33/34 ladder · no 1R partial · no 2.5R TP2 · no runner · no trailing stop ·
+    no break-even move · no house time-stop / 15:55 flatten substitution. Every one of those
+    would change the teacher's trade population under his own label. The position opens whole
+    and closes whole, once.
+
+    ─── THE NO-LOOKAHEAD BOUNDARY (AR-1079 §7) ────────────────────────────────────────────
+    🛑 THE SCAN STARTS AT `entry_idx + 1`. Entering at the third candle's CLOSE does not
+    authorise using that same candle's earlier intrabar high/low as though they occurred after
+    the entry: at the moment of entry those ticks are already in the past. A stop or target
+    "touched" earlier inside the decision candle therefore cannot retroactively exit a position
+    that did not exist until its close. This is discriminator 16 and it holds STRUCTURALLY —
+    the entry bar is not in the loop's range at all — rather than by a comparison that could be
+    edited away.
+
+    A trade that reaches neither level exits where vectorbt's own signal exit put it, unchanged.
+    """
+    from src.engine.context.structural_targets import (  # noqa: PLC0415 — lazy, sibling
+        compute_source_fixed_r_target,
+    )
+
+    managed_trades = []
+
+    for _, row in trades_records.iterrows():
+        entry_p = float(row["Avg Entry Price"])
+        original_exit_p = float(row["Avg Exit Price"])
+        size = float(row["Size"])
+        direction_str = str(row["Direction"])
+        entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+        original_exit_idx = (
+            int(row["Exit Idx"]) if "Exit Idx" in row.index
+            else min(entry_idx + 1, len(high_np) - 1)
+        )
+        is_short = "Short" in direction_str
+
+        # The stop is the SOURCE stop, resolved through the same fail-closed resolver every
+        # other engine uses. `source_faithful=True` makes it refuse rather than fall back to
+        # ATR when the taught anchor is missing (AR-1073), which is the behaviour that makes
+        # the number below trustworthy.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=0.0, stop_ceiling=float("inf"),
+            structural_stop_map=structural_stop_map,
+            source_faithful=True,
+        )
+        source_stop = entry_p + risk_points if is_short else entry_p - risk_points
+        target = compute_source_fixed_r_target(
+            direction="short" if is_short else "long",
+            entry_price=entry_p,
+            stop_price=source_stop,
+            r_multiple=r_multiple,
+        )
+
+        exit_price = original_exit_p
+        exit_idx = original_exit_idx
+        exit_reason = "signal"
+        gap_count = 0
+
+        for bar in range(entry_idx + 1, min(original_exit_idx + 1, len(high_np))):
+            bar_high = float(high_np[bar])
+            bar_low = float(low_np[bar])
+            bar_open = (
+                float(open_np[bar]) if open_np is not None and bar < len(open_np) else bar_low
+            )
+
+            # 🛑 STOP IS TESTED BEFORE TARGET. Within one OHLC bar the tick order is unknown,
+            # and resolving an ambiguous bar in the trade's FAVOUR would inflate every result
+            # that ever hits both. The conservative resolution is the honest one, and it is
+            # stated rather than left to the order of two `if`s.
+            if not is_short and bar_low <= source_stop:
+                exit_price = bar_open if bar_open < source_stop else source_stop
+                gap_count += 1 if bar_open < source_stop else 0
+                exit_reason, exit_idx = "source_stop", bar
+                break
+            if is_short and bar_high >= source_stop:
+                exit_price = bar_open if bar_open > source_stop else source_stop
+                gap_count += 1 if bar_open > source_stop else 0
+                exit_reason, exit_idx = "source_stop", bar
+                break
+            if not is_short and bar_high >= target.target_price:
+                exit_price = (
+                    bar_open if bar_open > target.target_price else target.target_price
+                )
+                exit_reason, exit_idx = "source_fixed_r_target", bar
+                break
+            if is_short and bar_low <= target.target_price:
+                exit_price = (
+                    bar_open if bar_open < target.target_price else target.target_price
+                )
+                exit_reason, exit_idx = "source_fixed_r_target", bar
+                break
+
+        managed_trades.append({
+            "entry_idx": entry_idx,
+            "entry_price": entry_p,
+            "original_exit_idx": original_exit_idx,
+            "original_exit_price": original_exit_p,
+            "size": size,
+            "direction": direction_str,
+            "risk_points": round(risk_points, 4),
+            "stop_basis": stop_basis,
+            "exit_price": exit_price,
+            "exit_idx": exit_idx,
+            "exit_reason": exit_reason,
+            "gap_through_stop_count": gap_count,
+            "initial_stop": round(source_stop, 4),
+            "source_target_price": round(target.target_price, 4),
+            "source_r_multiple": target.r_multiple,
+            "target_basis": target.target_reason,
+            "exit_policy": "source_fixed_r",
+        })
+
+    return managed_trades
+
+
 def _apply_stop_only_management(
     trades_records,
     high_np: np.ndarray,
@@ -1211,6 +1348,10 @@ def _apply_trade_management(
     # SOURCE-RISK-HANDOFF-1 / STEP 5+4 (AR-1068 §7/§8). Mirrors structural_stop_map's
     # own threading pattern. False (every existing caller) is byte-identical.
     source_faithful: bool = False,
+    # AR-1079 §8. The taught R multiple off `spec.source_risk.target`, resolved once by
+    # `_resolve_source_fixed_r()`. Only read on the source arm; 0.0 is unreachable there
+    # because that resolver refuses a non-positive value before this is ever called.
+    source_r_multiple: float = 0.0,
 ) -> list[dict]:
     """Bar-by-bar trade management dispatcher.
 
@@ -1247,6 +1388,22 @@ def _apply_trade_management(
 
     Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
     """
+    # ─── AR-1079 §8 — THE SOURCE ARM OWNS ITS EXITS, SO IT BRANCHES FIRST ────────────────
+    # 🛑 ABOVE the exit_policy ladder deliberately. SOURCE_FAITHFUL is not a counterfactual
+    # variant of the house overlay — it is the teacher's own whole-position fixed-R exit, and
+    # every branch below (naked's EOD flatten, stop_only's 15:55 time-stop, Style C's ladder,
+    # adaptive's trailing) would substitute a house exit rule for it. Placing this after any
+    # of them would make the substitution reachable by a caller passing an exit_policy.
+    #
+    # Legacy is untouched: `source_faithful` is False for every existing caller, so this
+    # branch is unreachable outside a SOURCE_FAITHFUL artifact.
+    if source_faithful:
+        return _apply_source_fixed_r_management(
+            trades_records, high_np, low_np, close_np, df, open_np=open_np,
+            structural_stop_map=structural_stop_map,
+            r_multiple=source_r_multiple,
+        )
+
     # layer4-replay: counterfactual exit policy dispatch (ADDITIVE — no restructure of existing paths)
     if exit_policy == "naked":
         return _apply_naked_management(
@@ -3016,6 +3173,145 @@ def _source_risk_mode_from_spec(compiled_spec) -> Optional[str]:
     return source_risk.get("mode")
 
 
+def _resolve_source_fixed_r(strategy) -> float:
+    """The taught `r_multiple` off the persisted source contract. REFUSES, never defaults.
+
+    AR-1079 §8: "The sVkm persisted source contract already rides on
+    `SpecConditionStrategy.spec`... Prefer consuming that existing contract through the
+    strategy instance rather than inventing an unrelated target configuration channel." So
+    this reads `spec.source_risk.target` and nothing else — no env var, no config key, no
+    house default.
+
+    🛑 EVERY FAILURE HERE IS A REFUSAL, INCLUDING THE BORING ONES. An absent target, a target
+    type that is not `FIXED_R`, a missing or non-numeric `r_multiple`, a non-positive one:
+    each raises. AR-1079 §8: "An unknown/malformed source target continues to refuse rather
+    than falling into Style C." A default of 2.0 here would be the single most plausible
+    invention in this whole unit — the source does teach 2R — and it would silently supply the
+    teacher's number to an artifact that had lost it. ★ `A DEFAULT THAT HAPPENS TO BE RIGHT
+    TODAY IS STILL A FABRICATED CONTRACT.`
+    """
+    spec = getattr(strategy, "spec", None)
+    source_risk = spec.get("source_risk") if isinstance(spec, dict) else None
+    target = source_risk.get("target") if isinstance(source_risk, dict) else None
+    if not isinstance(target, dict):
+        raise ValueError(
+            "source_risk_mode='SOURCE_FAITHFUL' but the persisted artifact carries no "
+            "`spec.source_risk.target`. The taught whole-position fixed-R target is REQUIRED "
+            "to execute this strategy and may not be defaulted. REFUSING."
+        )
+    target_type = str(target.get("type", "")).strip().upper()
+    if target_type != "FIXED_R":
+        raise ValueError(
+            f"source target type {target.get('type')!r} is not FIXED_R. AR-1079 §8 authorises "
+            "the whole-position fixed-R primitive for this source and nothing else; running "
+            "some other target engine under a SOURCE_FAITHFUL label would mislabel the trade. "
+            "REFUSING."
+        )
+    raw = target.get("r_multiple")
+    if not isinstance(raw, (int, float)) or isinstance(raw, bool) or not float(raw) > 0:
+        raise ValueError(
+            f"source target r_multiple={raw!r} is absent, non-numeric or non-positive. The R "
+            "multiple is the teacher's, not the engine's, and inventing one would fabricate "
+            "the target. REFUSING."
+        )
+    return float(raw)
+
+
+def _build_source_stop_map(strategy, df) -> tuple[dict, list[dict]]:
+    """The SOURCE_FAITHFUL structural-stop map, produced from the source EVENTS.
+
+    ─── AR-1079 §2 — THE PRODUCER CHANGES, THE TRANSPORT DOES NOT ──────────────────────────
+    On the source arm `apply_eligibility_gate()` is bypassed, and that same house gate is what
+    normally PRODUCES `structural_stop_map`. AR-1078 measured the consequence: the source arm
+    received `{}` and AR-1073's correctly fail-closed resolver refused every trade. Two locally
+    correct repairs, jointly non-functional.
+
+    🛑 THE REPAIR IS NOT TO CALL THE GATE. AR-1079 §2: "Do not repair this by calling
+    `apply_eligibility_gate` in SOURCE_FAITHFUL" — that would restore a stop map by
+    reintroducing the exact house overlay whose trade-population rewrite was deliberately
+    removed. The map is built from the source event itself, and only the PRODUCER changes:
+    the map shape, the merge point and the whole `_apply_trade_management` transport are the
+    existing ones, unchanged.
+
+    ─── THE WARMUP REBASE, WHICH IS THE POINT OF THIS FUNCTION ─────────────────────────────
+    🛑 `strategy.compute()` ran on `warmup + OOS` rows and this `df` has ALREADY been sliced.
+    A source event's `bar_idx` therefore addresses a row that is no longer at that position.
+    Every index in the returned map is REBASED BY TIMESTAMP, never carried:
+
+        record.decision_ts  ->  the post-strip row whose ts_event equals it
+
+    ⚠️ AND THE JOIN USES THE SAME INSTRUMENT ON BOTH SIDES. `_bars_to_ts_list` is the exact
+    function the compiler used to build the timestamps stored on the records, so the two sides
+    cannot disagree about tz-awareness or representation. `A JOIN BETWEEN TWO PARSERS IS A
+    JOIN BETWEEN THEIR BUGS.`
+
+    A record whose timestamp is NOT in the post-strip frame is DROPPED and disclosed in the
+    audit list — that is the normal, correct fate of an event detected inside the warmup
+    region, which must never become a trade. A duplicate timestamp REFUSES: two rows sharing a
+    decision timestamp means the identity is not unique, which is AR-1079 §12's explicit stop
+    condition ("warmup slicing cannot preserve a unique decision-bar identity").
+
+    Returns `({"long": {...}, "short": {...}}, audit_rows)`.
+    """
+    from src.engine.spec_condition_compiler import _bars_to_ts_list  # noqa: PLC0415 — lazy, sibling
+
+    records = list(getattr(strategy, "last_source_entry_events", None) or [])
+    stop_map: dict = {"long": {}, "short": {}}
+    audit: list[dict] = []
+    if not records:
+        return stop_map, audit
+
+    row_of_ts: dict = {}
+    duplicates: set = set()
+    for row_idx, ts in enumerate(_bars_to_ts_list(df)):
+        if ts is None:
+            continue
+        if ts in row_of_ts:
+            duplicates.add(ts)
+        else:
+            row_of_ts[ts] = row_idx
+
+    for rec in records:
+        row_idx = row_of_ts.get(rec.decision_ts)
+        base = {
+            "session_date": str(rec.session_date),
+            "direction": rec.event.direction,
+            "decision_ts": rec.decision_ts.isoformat(),
+            "breakout_ts": rec.breakout_ts.isoformat(),
+            "pre_strip_bar_idx": int(rec.event.bar_idx),
+            "zone_start_idx": int(rec.event.zone.start_idx),
+            "entry_price": rec.entry_price,
+            "source_stop_price": rec.stop_price,
+            "source_risk_points": rec.risk_points,
+        }
+        if rec.decision_ts in duplicates:
+            raise ValueError(
+                f"source decision timestamp {rec.decision_ts.isoformat()} appears on more than "
+                "one row of the executed frame, so the decision bar has NO unique identity "
+                "across the warmup strip. AR-1079 §12 names this an explicit STOP condition. "
+                "Refusing rather than rebasing onto an ambiguous row."
+            )
+        if rec.refused_reason is not None:
+            audit.append({**base, "disposition": "REFUSED", "reason": rec.refused_reason})
+            continue
+        if row_idx is None:
+            audit.append({
+                **base,
+                "disposition": "DROPPED_PRE_OOS",
+                "reason": "decision bar is not in the executed (post-warmup-strip) frame",
+            })
+            continue
+
+        stop_map[rec.event.direction][int(row_idx)] = {
+            "distance": float(rec.risk_points),
+            "stop_price": float(rec.stop_price),
+            "stop_reason": "source_exact",
+        }
+        audit.append({**base, "disposition": "EXECUTABLE", "executed_bar_idx": int(row_idx)})
+
+    return stop_map, audit
+
+
 def _structural_stop_parity_enabled() -> bool:
     """Feature flag for the H5 admission-stop-parity fix.
 
@@ -3080,7 +3376,20 @@ def _resolve_stop_risk_points(
             if isinstance(structural_stop_map, dict) else None
         )
         if sub_map:
-            signal_bar_idx = entry_idx - 1
+            # ─── AR-1079 §7 — THE LOOKUP KEY IS A CONSEQUENCE OF THE ENTRY CONVENTION ────
+            # `entry_idx - 1` is correct for LEGACY and WRONG for SOURCE_FAITHFUL, and the
+            # reason is one fact: legacy shifts signals +1 with `np.roll` so the fill bar is
+            # one past the signal bar, while the source convention enters ON the decision bar
+            # itself ("entry on the closure of that third candle") and therefore does NOT
+            # roll. AR-1079 §7: "source-at-close has no legacy `entry_idx - 1` relationship.
+            # The source map must resolve against the actual source entry bar."
+            #
+            # 🛑 THIS IS A JOIN AND IT IS LOAD-BEARING: this offset and the roll skip in
+            # `run_class_backtest` are the SAME decision expressed twice. If either changes
+            # alone, every source trade silently resolves its stop against the neighbouring
+            # candle — a real price, a plausible R, and the wrong trade. The vertical Band C
+            # proof exercises both in one execution so they cannot drift apart quietly.
+            signal_bar_idx = entry_idx if source_faithful else entry_idx - 1
             entry = sub_map.get(signal_bar_idx)
             distance = entry.get("distance") if isinstance(entry, dict) else entry
             if distance is not None and distance > 0:
@@ -6778,14 +7087,25 @@ def run_class_backtest(
     # honest behaviour is to REFUSE. Silently running Style C under a SOURCE_FAITHFUL label
     # is precisely the defect; silently substituting some other engine would be invention.
     # ★ THE OFF BRANCH IS WHERE THE DEFECT LIVES — OFF MUST REFUSE, NEVER FALL BACK.
-    if _source_faithful and exit_engine == "static_styleC":
-        raise ValueError(
-            "source_risk_mode='SOURCE_FAITHFUL' with exit_engine='static_styleC': Style C is "
-            "Trading Forge's 1R/2.5R/runner ladder and would replace the teacher's "
-            "whole-position fixed-R target, producing a different trade population under a "
-            "SOURCE_FAITHFUL label. The source fixed-R target is not yet wired into this "
-            "path (AR-1068 §10 NEXT UNIT 3, incomplete). REFUSING rather than mislabelling."
-        )
+    # ─── AR-1079 §8 — THE REFUSAL IS NOW CONDITIONAL ON THE CONTRACT, NOT UNCONDITIONAL ──
+    # AR-1072 refused here because the taught fixed-R target was not consumable on this path.
+    # It now is (`_apply_source_fixed_r_management`), and AR-1079 §8 authorises lifting the
+    # refusal EXACTLY THAT FAR: "Replace the refusal only when the full source fixed-R contract
+    # is present and valid. An unknown/malformed source target continues to refuse rather than
+    # falling into Style C."
+    #
+    # 🛑 SO THE REFUSAL DID NOT MOVE, IT MOVED ITS REASON. `_resolve_source_fixed_r` raises on
+    # an absent target, a non-FIXED_R type, or a missing/non-positive `r_multiple` — and it
+    # raises HERE, before any bar is evaluated, so a malformed artifact still cannot produce a
+    # performance number. What is no longer refused is the case the ruling authorised: a valid
+    # contract. ★ `THE OFF BRANCH IS WHERE THE DEFECT LIVES — OFF MUST REFUSE, NEVER FALL BACK.`
+    #
+    # ⚠️ NOT GATED ON `exit_engine`. The old check only fired for `static_styleC`; the source
+    # arm now routes to its own management function regardless of which house engine was
+    # requested, so the contract must be valid on EVERY source run, not only the default one.
+    _cls_source_r_multiple = 0.0
+    if _source_faithful:
+        _cls_source_r_multiple = _resolve_source_fixed_r(strategy)
 
     # ─── P1-A: Warmup data prepend (IS context for indicator initialization) ──
     # Mirror run_backtest warmup_data logic. Prepend IS rows so strategy.compute()
@@ -7116,6 +7436,22 @@ def run_class_backtest(
         "short": short_gate_stats.get("structural_stop_map", {}),
     }
 
+    # ─── AR-1079 §2/§6 — ON THE SOURCE ARM THE MAP COMES FROM THE SOURCE EVENT ───────────
+    # The two lines above read a key the source arm's `empty_stats` does not have, so this is
+    # where AR-1078's measured blocker is closed: the map is REPLACED, wholesale, by one built
+    # from `strategy.last_source_entry_events` — the same events whose zones qualified the
+    # entries — instead of by the house gate that no longer runs.
+    #
+    # 🛑 IT IS A REPLACEMENT, NEVER A MERGE. A union with the gate's map would let a house
+    # structural stop own a bar the teacher never taught, and the resulting trade would be
+    # indistinguishable from a source-faithful one.
+    #
+    # ⚠️ PLACED AFTER THE WARMUP STRIP ON PURPOSE — `df` here is the executed frame, and the
+    # rebase inside is only meaningful against that frame.
+    _cls_source_event_audit: list = []
+    if _source_faithful:
+        _cls_structural_stop_map, _cls_source_event_audit = _build_source_stop_map(strategy, df)
+
     # GATE3-DEFECT-6 fix (2026-07-06): mirror deep-scan #18c's C-3 fix
     # (`_build_eligibility_gate_mode_disclosure`), which surfaced
     # gate_stats["mode"] (+ "passthrough_reason") into run_backtest's
@@ -7188,7 +7524,33 @@ def run_class_backtest(
     #     np.inf before dividing), so volume==0 still routes to
     #     check_zero_volume_trade_critical() downstream, not to a ZeroDivision.
     _cls_partial_fill_audit: dict = {}
-    if fill_model:
+    if _source_faithful:
+        # ─── AR-1079 §7 — SOURCE_FAITHFUL DOES NOT INHERIT THE +1 NEXT-BAR ROLL ──────────
+        # The governed source authority puts the entry on COMPLETION of the third FVG candle
+        # ("my entry is going to be on the closure of that third candle"), so the decision bar
+        # and the entry bar are THE SAME BAR and its CLOSE is the entry price. Rolling it
+        # forward one bar would enter on the candle AFTER the one the teacher named, at a
+        # price he never quoted — plausibly, chartably, and wrongly.
+        #
+        # 🛑 THE ROLL IS NOT REMOVED, IT IS BRANCHED AROUND. AR-1079 §7: "Do not globally
+        # remove the roll. Legacy and TF overlay behavior stay unchanged." The `else` below is
+        # byte-identical to what every non-source caller has always executed.
+        #
+        # 🛑 AND A FILL MODEL REFUSES RATHER THAN SILENTLY RE-ROLLING. `apply_fill_model_and_
+        # roll_signals` performs the +1 roll internally as part of an atomic fill+roll+realign;
+        # taking that branch under SOURCE_FAITHFUL would reintroduce the exact convention this
+        # block exists to suppress, invisibly, one function call away.
+        # ★ `THE OFF BRANCH IS WHERE THE DEFECT LIVES — OFF MUST REFUSE, NEVER FALL BACK.`
+        if fill_model:
+            raise ValueError(
+                "source_risk_mode='SOURCE_FAITHFUL' with a fill_model: "
+                "apply_fill_model_and_roll_signals() rolls entry signals +1 bar internally, "
+                "which would move the entry off the third FVG candle the source teaches and "
+                "onto the following bar. No source-faithful fill-model path has been proven "
+                "(AR-1079 §7 authorises the at-close convention only). REFUSING rather than "
+                "running a next-bar fill under a SOURCE_FAITHFUL label."
+            )
+    elif fill_model:
         import src.engine.fill_model as _cls_fm  # noqa: PLC0415 — lazy import, sibling module
         long_entries_np, short_entries_np, sizes, _cls_partial_fill_audit = (
             _cls_fm.apply_fill_model_and_roll_signals(
@@ -7515,6 +7877,9 @@ def run_class_backtest(
             # AR-1068 §7/§8 — the mode reaches the stop command. This is what makes the
             # source stop EXACT: no ceiling clamp, no floor widening, no ATR substitution.
             source_faithful=_source_faithful,
+            # AR-1079 §8 — and the taught R multiple reaches the TARGET command, off the
+            # persisted artifact, validated above before any bar was evaluated.
+            source_r_multiple=_cls_source_r_multiple,
         )
         {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
