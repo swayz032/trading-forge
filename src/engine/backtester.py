@@ -6638,6 +6638,13 @@ def run_class_backtest(
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext] — Wave 25 Gap B
     exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
+    # SOURCE-RISK-HANDOFF-1 / STEP 5+4 (AR-1068 §7). The ONE narrow execution-ownership
+    # mode, carried from compiled_spec.spec.source_risk.mode. None = legacy, and legacy is
+    # BYTE-IDENTICAL: every existing caller passes nothing and every branch below is a
+    # no-op. AR-1068 §7 required a durable persisted contract rather than the existing
+    # env-only global TF_CONFLUENCE_OVERLAY_DISABLED, because an environment switch is a
+    # property of the machine, not of the artifact.
+    source_risk_mode: Optional[str] = None,
     event_calendar: Optional[EventCalendarConfig] = None,  # Defect-9: macro-blackout mask parity
     # D7 amendment (2026-07-09): partial-fill activation surface. Mirrors
     # run_backtest's `if request.fill_model:` gate (backtester.py:4524) — the fill
@@ -6666,6 +6673,37 @@ def run_class_backtest(
     symbol = strategy.symbol
     timeframe = strategy.timeframe
     spec = CONTRACT_SPECS[symbol]
+
+    # ─── SOURCE-RISK-HANDOFF-1 / STEP 5+4 — source-execution ownership ───────
+    # AR-1068 §7. One flag, derived once, consumed at exactly the points that would
+    # otherwise change the teacher's strategy. `None` (every existing caller) leaves all
+    # of them exactly as they were.
+    if source_risk_mode is not None and source_risk_mode not in (
+        "SOURCE_FAITHFUL", "TF_OVERLAY_VARIANT",
+    ):
+        raise ValueError(
+            f"source_risk_mode={source_risk_mode!r} is not a declared ownership mode. "
+            "Known: SOURCE_FAITHFUL, TF_OVERLAY_VARIANT (or None for legacy). Refusing "
+            "rather than running an unrecognised mode as if it were legacy — a typo must "
+            "not silently buy back the whole Trading Forge overlay."
+        )
+    _source_faithful = source_risk_mode == "SOURCE_FAITHFUL"
+
+    # 🛑 FAIL CLOSED ON THE EXIT ENGINE, DO NOT FALL BACK.
+    # AR-1068 §7: "A source-taught fixed-2R strategy can still be executed through Trading
+    # Forge's Style-C / time-stop machinery and then be MISLABELED SOURCE_FAITHFUL." The
+    # source's whole-position fixed-R target is NOT yet consumed by this path, so the only
+    # honest behaviour is to REFUSE. Silently running Style C under a SOURCE_FAITHFUL label
+    # is precisely the defect; silently substituting some other engine would be invention.
+    # ★ THE OFF BRANCH IS WHERE THE DEFECT LIVES — OFF MUST REFUSE, NEVER FALL BACK.
+    if _source_faithful and exit_engine == "static_styleC":
+        raise ValueError(
+            "source_risk_mode='SOURCE_FAITHFUL' with exit_engine='static_styleC': Style C is "
+            "Trading Forge's 1R/2.5R/runner ladder and would replace the teacher's "
+            "whole-position fixed-R target, producing a different trade population under a "
+            "SOURCE_FAITHFUL label. The source fixed-R target is not yet wired into this "
+            "path (AR-1068 §10 NEXT UNIT 3, incomplete). REFUSING rather than mislabelling."
+        )
 
     # ─── P1-A: Warmup data prepend (IS context for indicator initialization) ──
     # Mirror run_backtest warmup_data logic. Prepend IS rows so strategy.compute()
@@ -6955,7 +6993,12 @@ def run_class_backtest(
     diag_collision_long = int(np.sum(long_entries_np & long_exits_np))
     diag_collision_short = int(np.sum(short_entries_np & short_exits_np))
 
-    if skip_eligibility_gate:
+    # AR-1068 §7 ("Existing eligibility overlay leak"): `apply_eligibility_gate()` is the
+    # Trading Forge 7-layer A+ confluence overlay, and it DELETES ENTRIES before performance
+    # is measured. Under SOURCE_FAITHFUL that is not a filter, it is a rewrite of the
+    # teacher's trade population. This reuses the gate's OWN existing bypass branch rather
+    # than adding a second way to skip it.
+    if skip_eligibility_gate or _source_faithful:
         empty_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
         long_gate_stats = empty_stats
         short_gate_stats = empty_stats.copy()
@@ -7175,6 +7218,10 @@ def run_class_backtest(
         "guards_failed": False,
         "guards_failed_reason": None,
         "guards_failed_audit_action": None,
+        # AR-1068 §7 — DISCLOSURE, not decoration. Which house guards were bypassed because
+        # the artifact owns its own risk. Always present so a reader never has to infer the
+        # mode from a missing key; empty list on every legacy run.
+        "source_faithful_bypassed": [],
     }
     try:
         _guard_entry_long_cls = entries_pd.to_numpy().astype(bool)
@@ -7196,27 +7243,44 @@ def run_class_backtest(
         )
 
         # E.3 + E.5
-        (
-            _guard_entry_long_cls,
-            _guard_exit_long_cls,
-            _guard_entry_short_cls,
-            _guard_exit_short_cls,
-            _dsl_sl_meta_cls,
-        ) = _apply_dsl_stop_loss_and_time_stop(
-            _guard_entry_long_cls,
-            _guard_exit_long_cls,
-            _guard_entry_short_cls,
-            _guard_exit_short_cls,
-            high_np,
-            low_np,
-            _guard_atr_np_cls,
-            _guard_ts_cls,
-            stop_multiplier=_guard_stop_mult_cls,
-            symbol=symbol,
-            close_np=_guard_close_np_cls,
-            ts_et_timestamps=_guard_ts_et_cls,
-            vix_np=_guard_vix_np_cls,
-        )
+        if _source_faithful:
+            # AR-1068 §7 and §8. E.3 is the HOUSE STOP CEILING — it skips entries whose
+            # structural stop exceeds a per-symbol maximum — and E.5 is the 15:55 ET hard
+            # flatten. Neither is taught by the source, and both CHANGE THE TRADE POPULATION.
+            # §8 is explicit: a house-risk violation "may be emitted as metadata, but it may
+            # not silently delete or tighten the source trade. Deployment/risk qualification
+            # is downstream."
+            #
+            # ⚠️ E.4 (DLL halt, below) IS STILL APPLIED. AR-1068 §7's SOURCE_FAITHFUL list
+            # does not name it, and I am not widening an authorized bypass on my own
+            # judgement — but it DOES suppress entries, so the source trade population is
+            # still not fully preserved on this path. Reported, not silently fixed.
+            _dsl_sl_meta_cls = {}
+            _cls_dsl_guards_meta["source_faithful_bypassed"] = [
+                "E.3_house_stop_ceiling", "E.5_time_stop_1555_et",
+            ]
+        else:
+            (
+                _guard_entry_long_cls,
+                _guard_exit_long_cls,
+                _guard_entry_short_cls,
+                _guard_exit_short_cls,
+                _dsl_sl_meta_cls,
+            ) = _apply_dsl_stop_loss_and_time_stop(
+                _guard_entry_long_cls,
+                _guard_exit_long_cls,
+                _guard_entry_short_cls,
+                _guard_exit_short_cls,
+                high_np,
+                low_np,
+                _guard_atr_np_cls,
+                _guard_ts_cls,
+                stop_multiplier=_guard_stop_mult_cls,
+                symbol=symbol,
+                close_np=_guard_close_np_cls,
+                ts_et_timestamps=_guard_ts_et_cls,
+                vix_np=_guard_vix_np_cls,
+            )
         _cls_dsl_guards_meta["stop_ceiling_skips"] = len(_dsl_sl_meta_cls.get("skipped_trades", []))
         _cls_dsl_guards_meta["time_stop_exits"] = _dsl_sl_meta_cls.get("time_stop_exits", 0)
 
@@ -8021,6 +8085,9 @@ def run_class_backtest(
         "governor": governor_result,
         # W25.17: echo which exit engine was used so A/B harness can tag results correctly.
         "exit_engine": exit_engine,
+        # AR-1068 §7 — the mode reaches the RESULT, so a downstream consumer never has to
+        # guess whether a run was source-faithful. `None` on every legacy run.
+        "source_risk_mode": source_risk_mode,
         # layer4-replay (2026-07-02): echo exit policy for counterfactual tagging.
         "exit_policy": exit_policy,
         "run_receipt": _build_run_receipt(strategy._config if hasattr(strategy, '_config') else StrategyConfig(
