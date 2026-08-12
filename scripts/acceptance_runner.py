@@ -216,9 +216,69 @@ SEAL_APPROVED_MANIFEST_MEMBERS = 105
 #   `AN INSTRUMENT THAT VALIDATES EVERY INPUT EXCEPT ITS MOST AUTHORITATIVE ONE
 #    HAS AUDITED ITS WITNESSES AND TAKEN THE JUDGE'S WORD FOR IT.`
 # ---------------------------------------------------------------------------
-BASELINE_APPROVED_RAW_SHA256 = (
-    "a9f70e2ed7ecc534f970ddd6c070aa0436c8605a134560b4b877d38c7d10d8fc"
+# ---------------------------------------------------------------------------
+# F-ACCEPT5-8 (R-796 §4, lane K-2) — THE DUAL ANCHOR, REPLACING THE RAW-BYTE SHA.
+#
+# The previous anchor hashed the file EXACTLY AS IT SAT ON DISK. `.gitattributes`
+# declares this path `text eol=lf` and `core.autocrlf` is false, so a CONFORMING
+# checkout gets LF — yet the approved constant was computed over a working copy
+# carrying 66 CR bytes. It therefore PASSED IN EXACTLY ONE PLACE: the single
+# non-conforming worktree that minted it, and refused the artifact git committed.
+# `git status` cannot warn about this, because it compares NORMALIZED content,
+# which matched the blob perfectly.
+#
+#   `AN ANCHOR PINNED TO A MATERIALIZATION ACCIDENT OF ONE WORKING COPY IS NOT
+#    PINNING THE ARTIFACT — AND THE ONE TOOL THAT WOULD HAVE TOLD YOU IS BLIND
+#    TO IT BY DESIGN.`
+#
+# TWO anchors, because neither alone is sufficient:
+#   BLOB OID       — "is this the artifact git COMMITTED?" Normalized first, so it
+#                    answers identically on every checkout. Alone it would bless a
+#                    RE-COMMITTED mutation, whose new OID someone could paste here.
+#   CANONICAL JSON — "did any semantic CONTENT change?" Line-ending immune, and it
+#                    bites exactly the re-commit the OID would wave through.
+#
+# 🛑 NO `git` SUBPROCESS. The OID is computed in pure Python, so this still anchors
+# inside a container, a tarball, or any export carrying no `.git` at all.
+# 🛑 `git hash-object --no-filters` is FORBIDDEN (R-796 §9) and is not used here.
+# MEASURED: the UNQUALIFIED form is the filter-applying SAFE one and `--no-filters`
+# is the trap — the inverse of the caution that was circulating.
+#   `A CAUTION THAT NAMES THE WRONG FLAG IS OBEYED AT THE WRONG FLAG.`
+#
+# Both constants were RECOMPUTED at source from both materializations before
+# landing (R-796 §4 K-2 required a STOP had they disagreed; they agreed).
+# ---------------------------------------------------------------------------
+BASELINE_APPROVED_BLOB_OID = "b71c164147201f7a42dcd1899402a56ae19a6f32"
+BASELINE_APPROVED_CANONICAL_SHA256 = (
+    "1b97e38ae1e9c15a3653e0adf8533b0f73b7c7a5c092296dd00c5079dd1a02d4"
 )
+
+
+def _lf_normalized(raw):
+    """The content git stores for a `text eol=lf` path, however it checked out."""
+    return raw.replace(b"\r\n", b"\n")
+
+
+def _git_blob_oid(raw):
+    """git's own object id for this content, computed without invoking git.
+
+    The format is git's: the literal `blob`, a space, the byte length, a NUL, then
+    the normalized content. sha1 here is not a security choice — it is git's object
+    format, and reproducing the identity git already assigned is the entire point.
+    """
+    body = _lf_normalized(raw)
+    header = b"blob " + str(len(body)).encode("ascii") + b"\x00"
+    return hashlib.sha1(header + body).hexdigest()  # noqa: S324
+
+
+def _canonical_sha256(parsed):
+    """Content identity that survives any line-ending or key-order presentation."""
+    canonical = json.dumps(
+        parsed, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
 BASELINE_APPROVED_MEASURED_AT_SHA = "f8273f418558ad9552486dfee2dc37d9401dd360"
 BASELINE_APPROVED_FAILURE_COUNT = 33
 BASELINE_APPROVED_FAILURE_MEMBERSHIP_SHA256 = (
@@ -238,13 +298,17 @@ def validate_baseline_bytes(path: Path):
     """
     probs = []
 
-    # (1) raw bytes — the whole file, before any interpretation.
+    # (1) COMMITTED IDENTITY — the whole file, before any interpretation, compared
+    #     as git itself would identify it. Normalized, so this asks about the
+    #     ARTIFACT and not about how one worktree happened to materialize it.
     raw = path.read_bytes()
-    raw_sha = hashlib.sha256(raw).hexdigest()
-    if raw_sha != BASELINE_APPROVED_RAW_SHA256:
+    oid = _git_blob_oid(raw)
+    if oid != BASELINE_APPROVED_BLOB_OID:
         probs.append(
-            "BASELINE INTEGRITY FAILURE: raw-byte SHA-256 of the failure baseline is "
-            f"{raw_sha}, not the approved {BASELINE_APPROVED_RAW_SHA256}."
+            "BASELINE INTEGRITY FAILURE: the failure baseline's git blob OID is "
+            f"{oid}, not the approved {BASELINE_APPROVED_BLOB_OID}. This is compared "
+            "over LF-NORMALIZED content, so a CRLF checkout is NOT the cause — the "
+            "committed content itself differs."
         )
 
     # (2) it must parse at all.
@@ -253,6 +317,16 @@ def validate_baseline_bytes(path: Path):
     except Exception as exc:
         probs.append(f"BASELINE INTEGRITY FAILURE: the baseline does not parse: {exc}")
         return probs
+
+    # (2b) SEMANTIC IDENTITY — immune to line endings and key order, so it bites the
+    #      re-committed mutation whose freshly-computed OID would look approved.
+    canonical = _canonical_sha256(d)
+    if canonical != BASELINE_APPROVED_CANONICAL_SHA256:
+        probs.append(
+            "BASELINE INTEGRITY FAILURE: the baseline's canonical-JSON SHA-256 is "
+            f"{canonical}, not the approved {BASELINE_APPROVED_CANONICAL_SHA256}. "
+            "Presentation is excluded from this digest, so the CONTENT changed."
+        )
 
     # (3) measured_at_sha — read AND compared. It was previously read and discarded.
     if d.get("measured_at_sha") != BASELINE_APPROVED_MEASURED_AT_SHA:
