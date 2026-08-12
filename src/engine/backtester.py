@@ -9141,6 +9141,43 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
         elif mode == "walkforward":
             from src.engine.walk_forward import run_walk_forward_class
 
+            # ─── GRADE F-1 (HIGH) — THE OFF BRANCH WAS FALLING BACK, NOT REFUSING ────────
+            # 🛑 FOUND BY THE INDEPENDENT GRADER, NOT BY ME, on the unit I had just declared
+            # green. `run_walk_forward_class` is called here WITHOUT `source_risk_mode` — its
+            # single-run sibling forty lines below DOES pass it — and `walk_forward.py`
+            # contains ZERO occurrences of `source_risk` `[MEASURED]`. So a SOURCE_FAITHFUL
+            # artifact dispatched to walkforward was taking the FULL LEGACY EXECUTION PATH:
+            # the +1 entry roll, the house stop map at `entry_idx-1`, the ATR fallback, the
+            # ceiling clamp, Style C, the DLL halt and the 2/day cap — while the COMPILER,
+            # which reads the mode off the artifact itself, still built source events.
+            #
+            # ★ `THE OFF BRANCH IS WHERE THE DEFECT LIVES — OFF MUST REFUSE, NEVER FALL BACK.`
+            # There was no refusal and no red. The two halves disagreed silently, and the
+            # resulting numbers would have been plausible, well-formed and not the teacher's.
+            #
+            # 🛑 THIS IS A REFUSAL, NOT AN IMPLEMENTATION. AR-1079 §9 is explicit that
+            # "walk-forward source-risk transport is NOT certified by this ruling. Do not
+            # widen B/C/D/F into walk-forward work." Threading the mode through here would be
+            # exactly that widening — and worse, it would ENABLE an execution path nobody has
+            # proven. Refusing enforces the ruling's own boundary instead of leaving it
+            # uncertified-but-running. `AN UNCERTIFIED PATH THAT STILL EXECUTES IS NOT AN
+            # OPEN QUESTION, IT IS AN ANSWER NOBODY CHECKED.`
+            #
+            # Legacy and TF_OVERLAY_VARIANT walkforward runs are untouched: the mode is read
+            # from the artifact's own persisted `source_risk`, which no existing library
+            # artifact carries.
+            if _source_risk_mode_from_spec(config.get("compiled_spec")) == "SOURCE_FAITHFUL":
+                raise ValueError(
+                    "source_risk_mode='SOURCE_FAITHFUL' with mode='walkforward': this branch "
+                    "does not pass the artifact's execution-ownership mode to "
+                    "run_walk_forward_class(), and walk_forward.py does not read it, so the "
+                    "run would silently apply the full Trading Forge overlay (next-bar roll, "
+                    "house stop map, ATR fallback, ceiling clamp, Style C, DLL halt, daily "
+                    "cap) to a strategy labelled source-faithful. Walk-forward source-risk "
+                    "transport is NOT certified (AR-1079 §9). REFUSING rather than producing "
+                    "a plausible number the teacher never taught."
+                )
+
             result = run_walk_forward_class(
                 strategy=strategy,
                 start_date=config.get("start_date", "2010-01-01"),

@@ -165,6 +165,21 @@ def _run(config: dict | None = None, bars: pl.DataFrame | None = None) -> tuple[
     return json.loads(out.strip().splitlines()[-1]), out + err_buf.getvalue()
 
 
+def _run_mode(config: dict, mode: str):
+    """Same dispatch, arbitrary `mode` — the walkforward arm needs this and `_run` hardcodes
+    "single". Kept separate so the vertical proof's invocation stays byte-identical."""
+    df = _bars()
+
+    def _fake_load(*_a, **_k):
+        return df
+
+    out_buf, err_buf = io.StringIO(), io.StringIO()
+    with patch.object(bt, "load_ohlcv", _fake_load), patch.object(dl, "load_ohlcv", _fake_load):
+        with redirect_stdout(out_buf), redirect_stderr(err_buf):
+            bt.main.callback(json.dumps(config), None, mode, None, False, "static_styleC")
+    return out_buf.getvalue() + err_buf.getvalue()
+
+
 class TestTheVerticalTrade:
     """AR-1082 §5.5 — "Prove the load-bearing values from the returned trade/result, not
     spies alone." Every assertion below reads the returned record."""
@@ -302,3 +317,57 @@ class TestTheRouteRefusesWhenTheContractIsBroken:
                 and t.get("Avg Entry Price") == ENTRY_PRICE
                 and t.get("stop_basis") == "source_exact"
             ), "the legacy arm reproduced the source trade exactly — the mode changed nothing"
+
+
+class TestTheWalkforwardArmRefuses:
+    """GRADE F-1 (HIGH) — found by the independent grader on the unit I had declared green.
+
+    `main()`'s `mode="walkforward"` branch calls `run_walk_forward_class()` WITHOUT
+    `source_risk_mode`, and `walk_forward.py` contains zero occurrences of `source_risk`.
+    A SOURCE_FAITHFUL artifact therefore took the full legacy execution path — +1 roll,
+    house stop map at `entry_idx-1`, ATR fallback, ceiling clamp, Style C, DLL halt, daily
+    cap — while the compiler, which reads the mode off the artifact itself, still built
+    source events. **No refusal and no red.** The grader measured it two ways: the call
+    signature, and running both modes on one config (`single: mode='SOURCE_FAITHFUL'` vs
+    `walkforward: mode=None`).
+
+    ★ `THE OFF BRANCH IS WHERE THE DEFECT LIVES — OFF MUST REFUSE, NEVER FALL BACK.`
+
+    🛑 THE REPAIR IS A REFUSAL, NOT AN IMPLEMENTATION. AR-1079 §9: "Walk-forward source-risk
+    transport is NOT certified by this ruling. Do not widen B/C/D/F into walk-forward work."
+    Threading the mode through would be that widening AND would enable an unproven execution
+    path. `AN UNCERTIFIED PATH THAT STILL EXECUTES IS NOT AN OPEN QUESTION, IT IS AN ANSWER
+    NOBODY CHECKED.`
+    """
+
+    def test_a_SOURCE_FAITHFUL_artifact_REFUSES_walkforward(self):
+        with pytest.raises(ValueError, match="NOT certified"):
+            _run_mode(_config(), "walkforward")
+
+    def test_the_refusal_names_what_would_have_been_applied(self):
+        """A refusal nobody can act on is a crash with better manners."""
+        with pytest.raises(ValueError) as exc:
+            _run_mode(_config(), "walkforward")
+        msg = str(exc.value)
+        assert "walk_forward.py does not read it" in msg
+        assert "Style C" in msg and "ATR fallback" in msg
+
+    def test_LEGACY_still_reaches_walkforward_and_is_not_collaterally_blocked(self):
+        """🛑 THE POSITIVE WITNESS THE TWO REFUSALS ABOVE ARE WORTHLESS WITHOUT. A guard that
+        refused EVERY walkforward run would satisfy both of them while breaking every
+        existing artifact in the library. A legacy spec must get PAST this guard — it may
+        fail later, for some other reason, but never with this message."""
+        try:
+            _run_mode(_config(_compiled_spec(source_risk=None)), "walkforward")
+        except Exception as exc:  # noqa: BLE001 — any later failure is fine; this one is not
+            assert "NOT certified" not in str(exc), (
+                "the guard blocked a LEGACY walkforward run — it is not scoped to the mode"
+            )
+
+    def test_TF_OVERLAY_VARIANT_also_reaches_walkforward(self):
+        """The other declared mode is not source-owned and this guard must not catch it."""
+        try:
+            _run_mode(_config(_compiled_spec(source_risk={"mode": "TF_OVERLAY_VARIANT"})),
+                      "walkforward")
+        except Exception as exc:  # noqa: BLE001
+            assert "NOT certified" not in str(exc)
