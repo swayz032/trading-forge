@@ -15,28 +15,21 @@ Covers:
 """
 from __future__ import annotations
 
-import copy
 import json
 import math
-import os
-import random
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from src.engine.parameter_jitter_battery import (
     DEFAULT_PSI_THRESHOLD,
     DEFAULT_RWS_THRESHOLD,
     DEFAULT_SDR_THRESHOLD,
     _extract_numeric_params,
-    _run_backtest_for_dsl,
     _sharpe_from_monthly_returns,
     compute_psi,
     compute_rws,
     compute_sdr,
     run_b15_battery,
 )
-
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -162,6 +155,24 @@ class TestComputeRws:
         rws_out = compute_rws(result, window_months=6)
         assert rws_out["rws"] >= 0.0
         assert "window_sharpes" in rws_out
+
+    def test_equity_curve_fallback_window_boundary(self):
+        # Locks the interval-count boundary. Every monthly return needs BOTH
+        # endpoints to exist, so the count is (len - 1) // 21 -- NOT len // 21
+        # (which over-counts on exact multiples and raised IndexError) and NOT
+        # (len // 21) - 1 (which silently drops a real final interval on every
+        # non-multiple length, e.g. 253 -> 11 instead of 12).
+        for n_bars in (21 * 12, 21 * 12 + 1, 200, 21, 22, 42, 43):
+            result = {
+                "oos_metrics": {"sharpe_ratio": 1.5},
+                "equity_curve": [1000 + i * 2 for i in range(n_bars)],
+            }
+            rws_out = compute_rws(result, window_months=6)
+            expected = (n_bars - 1) // 21
+            assert len(rws_out["monthly_sharpes"]) == expected, (
+                f"len={n_bars}: expected {expected} monthly returns, "
+                f"got {len(rws_out['monthly_sharpes'])}"
+            )
 
     def test_empty_data_returns_zero(self):
         rws_out = compute_rws({}, window_months=6)

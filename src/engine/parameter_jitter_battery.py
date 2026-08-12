@@ -416,8 +416,12 @@ def compute_rws(
         if len(equity_vals) >= 2:
             # Approximate monthly returns: chunk into 21-bar "months" (trading days)
             bars_per_month = 21
-            n_months = len(equity_vals) // bars_per_month
-            for i in range(n_months):
+            # Each return needs BOTH endpoints to exist: interval i reads
+            # index i*bars_per_month and (i+1)*bars_per_month, so the last
+            # readable index is len-1. Using len // bars_per_month counts one
+            # interval too many whenever len is an exact multiple (IndexError).
+            n_intervals = (len(equity_vals) - 1) // bars_per_month
+            for i in range(n_intervals):
                 start_eq = equity_vals[i * bars_per_month]
                 end_eq = equity_vals[(i + 1) * bars_per_month]
                 if start_eq != 0:
