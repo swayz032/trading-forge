@@ -26,7 +26,30 @@ describe("evidence vault read model", () => {
         symbol: "MES",
         symbols: ["MES"],
         timeframe: "5m",
-        config: { entry_indicator: "session_open_breakout" },
+        config: {
+          entry_indicator: "session_open_breakout",
+          compiled_spec: {
+            spec_hash: "vault-compiled-receipt",
+            spec: {
+              direction: "both",
+              entry_conditions: [{
+                id: "ENABLE_ENTRY:orb#0",
+                type: "ENABLE_ENTRY",
+                object: "opening range breakout",
+                evidence: "Enter on the first close outside.",
+                span: { start: 10, end: 44 },
+              }],
+            },
+            binding_plan_summary: {
+              compiled: true,
+              approximation_used: false,
+              spine_bound: 1,
+              spine_total: 1,
+              trigger_bound: true,
+              queue_reasons: [],
+            },
+          },
+        },
         lifecycle_state: "CANDIDATE",
         source_video_id: "dQw4w9WgXcQ",
         source_title: "Opening Range Model",
@@ -53,7 +76,13 @@ describe("evidence vault read model", () => {
       sourceVideoId: "dQw4w9WgXcQ",
       sourceIsToday: true,
       transcriptStatus: "available",
+      compilerView: {
+        state: "compiled",
+        receiptHash: "vault-compiled-receipt",
+        direction: "both",
+      },
     });
+    expect(result.strategies[0]?.compilerView.chambers.find((chamber) => chamber.key === "entry")?.rules[0]?.label).toBe("opening range breakout");
     expect(result.strategies[0]?.name).not.toContain("Pressure Point");
     expect(result.workers[0]).toMatchObject({ model: "gemma4:e4b-it-qat" });
     expect(result.selected).toBeNull();
@@ -69,6 +98,36 @@ describe("evidence vault read model", () => {
     expect(result.workers).toEqual([]);
     expect(mocks.workers).not.toHaveBeenCalled();
     expect(mocks.execute).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns an honest source-only compiler model when a strategy has no compiled receipt", async () => {
+    mocks.execute
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ today: 0, available: 0, total: 0 }])
+      .mockResolvedValueOnce([{
+        id: "44444444-4444-4444-8444-444444444444",
+        name: "Uncompiled Source",
+        symbol: "MNQ",
+        symbols: ["MNQ"],
+        timeframe: "15m",
+        config: { metadata: { source_url: "https://youtube.com/watch?v=abcdefghijk" } },
+        lifecycle_state: "CANDIDATE",
+        source_video_id: "abcdefghijk",
+        source_title: "Source only",
+        source_discovered_at: new Date("2026-08-11T12:00:00Z"),
+        source_is_today: true,
+        transcript_status: "available",
+      }]);
+    mocks.workers.mockReturnValue([]);
+
+    const result = await assembleEvidenceVault({ includeOperator: true });
+
+    expect(result.strategies[0]?.compilerView).toMatchObject({
+      state: "uncompiled",
+      receiptHash: null,
+      direction: null,
+    });
+    expect(result.strategies[0]?.compilerView.chambers.every((chamber) => chamber.rules.length === 0)).toBe(true);
   });
 
   it("does not auto-select archive evidence when the room opens", async () => {

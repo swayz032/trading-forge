@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { getEvidenceVaultWorkers, type EvidenceVaultWorker } from "./worker-directory.js";
 import { resolvePremiumName, type NamedStrategyRow } from "./premium-names.js";
+import { buildCompilerViewReceipt, type CompilerViewReceipt } from "./compiler-view-data.js";
 
 export interface EvidenceVideoCard {
   id: string;
@@ -34,6 +35,7 @@ export interface EvidenceVaultPayload {
     sourceDiscoveredAt: string | null;
     sourceIsToday: boolean;
     transcriptStatus: string | null;
+    compilerView: CompilerViewReceipt;
   }>;
   workers: EvidenceVaultWorker[];
   selected: (EvidenceVideoCard & {
@@ -189,12 +191,15 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
     videos: rows.map(toCard),
     strategies: strategyRows.map((strategy) => {
       const presentation = strategyPresentation(strategy);
-      return {
+      const identity = {
         id: String(strategy.id),
         name: presentation.name,
         symbol: presentation.symbol,
         timeframe: String(strategy.timeframe),
         lifecycleState: String(strategy.lifecycle_state),
+      };
+      return {
+        ...identity,
         sourceVideoId: strategy.source_video_id == null ? null : String(strategy.source_video_id),
         sourceTitle: strategy.source_title == null ? null : String(strategy.source_title),
         sourceDiscoveredAt: strategy.source_discovered_at == null
@@ -202,6 +207,7 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
           : new Date(strategy.source_discovered_at).toISOString(),
         sourceIsToday: Boolean(strategy.source_is_today),
         transcriptStatus: strategy.transcript_status == null ? null : String(strategy.transcript_status),
+        compilerView: buildCompilerViewReceipt(identity, strategy.config),
       };
     }),
     workers,
