@@ -14262,6 +14262,31 @@ Also restored Anam.ai persona during this session:
 
 **Carry-forward:** None.
 
+### Session Log — 2026-08-11 Slumhouse Compiler cinema and Fight Night desktop hardening
+
+**Mission:** Harden the existing Media Vault Compiler View into an immersive, truthful full-stage presentation and recover Fight Night desktop space without disturbing the six-surface Reporting Room.
+
+**Work completed:**
+- Replaced the settled compiler visualization with a locally stored luxury mansion private cinema plate using burnt-orange ambient lighting. The giant theater screen is the single strategy card and advances through Trade When, Enter, Protect, Manage, and Avoid, showing at most two persisted rules per chapter.
+- Kept uncompiled strategies equally cinematic while rendering only `AWAITING COMPILED RULE`; no missing entry, stop, sizing, or filter rule is fabricated.
+- Rebuilt the replay sequence as a seven-second source/rupture/vortex/compression/shockwave reveal with adaptive particle density, reduced-motion behavior, context-loss fallback, and a static mansion fallback when WebGL initialization fails.
+- Corrected stale receipt semantics so both its status and seal are amber instead of verified lime.
+- Moved Fight Night strategies/events/feed/connection telemetry into the upper-right header HUD, removed the separate metrics strip and Paper Floor disclaimer/wiring footer, and expanded the arena to the recovered viewport height.
+- Preserved all six Reporting Room surfaces: Night Agent, Soak Test, Weekly A/B, Quantum RL, Paper Floor, and Evidence Vault.
+
+**Verification:**
+- Complete Slumhouse selection: 35 files, 281 tests passed.
+- Focused compiler/Fight Night selection after review fixes: 32/32 passed; TypeScript passed.
+- Production isolation, canonical 2026 prop-rule compliance, system-map drift, and `git diff --check` passed.
+- Chromium at 1366x768: Compiler stage measured exactly 1366x768 with five slides and receipt closed; Fight Night room measured exactly 768px high, body overflow hidden, arena 489.8px high, one header HUD, zero aggregate strips, and zero Paper Floor disclaimer/wiring blocks.
+- Tower runtime restarted through the HMAC-authenticated self-restart route (correlation `c27f243b-3fe6-456a-9a75-7b49f501ecd3`) and recovered healthy with database, Python, Ollama, and n8n healthy.
+- Public production probes returned HTTP 200 for Office, Compiler JS/CSS, Evidence Vault, and the 68,366-byte mansion WebP; Office retained all six Reporting Room tabs.
+- Independent architecture and autonomy reviews found and confirmed closure of stale-color and WebGL-initialization fallback defects.
+
+**Known-facts updates:** The mansion image is a checked-in static WebP with no runtime image-generation dependency. Compiler presentation remains read-only and derives rule text only from the persisted compiler receipt.
+
+**Carry-forward:** GitHub CI run `31558403939` was still completing its full Python lane at log time; fast-lane and metric-regression workflows for commit `1049e0dd` had passed.
+
 ### 2026-07-23 — Reporting Room premium empty-state hardening
 
 **Work completed:**
