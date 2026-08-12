@@ -273,7 +273,6 @@ export function renderCompilerViewMarkup(model) {
   return `<section class="compiler-stage is-${escapeHtml(model.status)}" aria-label="Compiler View for ${escapeHtml(model.strategy.name)}" style="--source-primary:${model.identity.primary};--source-secondary:${model.identity.secondary}">
     <div class="compiler-environment" aria-hidden="true"><img src="/slumhouse/images/compiler-luxury-cinema-v1.webp" alt=""><i></i></div>
     <canvas class="compiler-webgl" aria-hidden="true"></canvas>
-    <div class="compiler-vortex-fx" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
     <header class="compiler-head">
       <div class="compiler-head-actions"><span class="compiler-state is-${escapeHtml(model.status)}">${escapeHtml(model.status)}</span><button class="compiler-receipt-open" type="button" data-compiler-receipt-open>Technical Receipt</button><button class="compiler-media-return" type="button" data-compiler-close>Media View</button></div>
     </header>
@@ -284,7 +283,6 @@ export function renderCompilerViewMarkup(model) {
         <div class="compiler-source-label"><span>Evidence source</span><b>${escapeHtml(model.source.title)}</b><em>${model.source.transcriptChars.toLocaleString()} transcript characters</em></div>
       </div>
       <div class="compiler-fragments" aria-hidden="true">${fragments}</div>
-      <div class="compiler-core" aria-hidden="true"><span></span><i></i><b>TF</b></div>
       <div class="compiler-shockwave" aria-hidden="true"></div>
       <main class="compiler-strategy-card${dormant ? " is-dormant" : ""}">
         <div class="compiler-slide-deck">${groups.map((group, index) => strategySlideMarkup(group, index, dormant)).join("")}</div>
