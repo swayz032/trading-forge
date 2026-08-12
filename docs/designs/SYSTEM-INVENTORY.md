@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `b1251087d07f348f42a77ea68892e168c0723e0f`  (worktree DIRTY at generation time)
+> Generated at commit `32d39f4d8ddc08fdd6a45c39ddb7cbaaa257a110`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 293 | 371 | 121551 | 1890 |
+| `src/` | Python | 293 | 371 | 121605 | 1890 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -1131,7 +1131,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `archetype_distribution` | function | `src/engine/archetypes/historical_labeler.py:19` | 1 | unique |
 | `label_history` | function | `src/engine/archetypes/historical_labeler.py:8` | 1 | unique |
 | `map_strategy_to_archetypes` | function | `src/engine/archetypes/strategy_mapper.py:10` | 1 | unique |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:8415` | 1 | unique |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:8469` | 1 | unique |
 | `MappingSchemaError` | class | `src/engine/battery/mapping_guard.py:24` | 1 | unique |
 | `_print_boundary` | function | `src/engine/battery/selection_deflation.py:198` | 1 | unique |
 | `run_selection_deflation_check` | function | `src/engine/battery/selection_deflation.py:115` | 1 | unique |
@@ -1436,8 +1436,8 @@ _...483 more omitted from this table._
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
-| `shift_higher_tf_columns` | function | `src/engine/backtester.py:2197` | no non-test reference outside its own definition |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:8415` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `shift_higher_tf_columns` | function | `src/engine/backtester.py:2216` | no non-test reference outside its own definition |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:8469` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -3679,50 +3679,50 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_anti_setups_for_strategy` | function | `src/engine/backtester.py:635` | 0 | unique |
 | `_apply_backtest_parity_gates` | function | `src/engine/backtester.py:640` | 0 | unique |
 | `_apply_naked_management` | function | `src/engine/backtester.py:938` | 0 | unique |
-| `_apply_stop_only_management` | function | `src/engine/backtester.py:1047` | 0 | unique |
-| `_apply_trade_management` | function | `src/engine/backtester.py:1188` | 1 | unique |
-| `_apply_static_styleC_management` | function | `src/engine/backtester.py:1285` | 0 | unique |
-| `_apply_adaptive_management` | function | `src/engine/backtester.py:1796` | 0 | unique |
-| `_resolve_freq` | function | `src/engine/backtester.py:2248` | 0 | unique |
-| `_extract_atr_period` | function | `src/engine/backtester.py:2253` | 0 | unique |
-| `_compute_daily_pnls` | function | `src/engine/backtester.py:2261` | 0 | unique |
-| `_compute_monthly_returns` | function | `src/engine/backtester.py:2402` | 0 | unique |
-| `_aggregate_equity_daily` | function | `src/engine/backtester.py:2453` | 0 | unique |
-| `_detect_dst_transitions` | function | `src/engine/backtester.py:2531` | 0 | unique |
-| `_wilson_ci` | function | `src/engine/backtester.py:2567` | 0 | unique |
-| `_compute_long_short_split` | function | `src/engine/backtester.py:2578` | 0 | unique |
-| `_validate_bar_count` | function | `src/engine/backtester.py:2660` | 0 | unique |
-| `_build_run_receipt` | function | `src/engine/backtester.py:2691` | 0 | unique |
-| `_apply_max_trades_per_day` | function | `src/engine/backtester.py:2756` | 0 | unique |
-| `_symbol_of_spec` | function | `src/engine/backtester.py:2909` | 0 | unique |
-| `_get_stop_ceiling_for_symbol` | function | `src/engine/backtester.py:2921` | 1 | unique |
-| `_structural_stop_parity_enabled` | function | `src/engine/backtester.py:2969` | 0 | unique |
-| `_resolve_stop_risk_points` | function | `src/engine/backtester.py:2984` | 0 | unique |
-| `_get_stop_floor_for_symbol` | function | `src/engine/backtester.py:3047` | 0 | unique |
-| `_parse_slippage_survival_multiples` | function | `src/engine/backtester.py:3084` | 0 | unique |
-| `_parse_slippage_survival_min_pf` | function | `src/engine/backtester.py:3104` | 0 | unique |
-| `_parse_slippage_survival_min_trades` | function | `src/engine/backtester.py:3120` | 0 | unique |
-| `_compute_slippage_survival_block` | function | `src/engine/backtester.py:3135` | 1 | unique |
-| `_apply_dsl_stop_loss_and_time_stop` | function | `src/engine/backtester.py:3206` | 0 | unique |
-| `_apply_dll_halt_to_entries` | function | `src/engine/backtester.py:3487` | 0 | unique |
-| `run_backtest` | function | `src/engine/backtester.py:3625` | 10 | unique |
-| `_build_expected_signals_from_trades` | function | `src/engine/backtester.py:6184` | 0 | unique |
-| `_execution_was_refused` | function | `src/engine/backtester.py:6258` | 0 | unique |
-| `_emit_validated_result` | function | `src/engine/backtester.py:6296` | 0 | unique |
-| `_compute_recovery_days_from_max_dd` | function | `src/engine/backtester.py:6366` | 0 | unique |
-| `_compute_monthly_survival_stats` | function | `src/engine/backtester.py:6414` | 0 | unique |
-| `_compute_tier` | function | `src/engine/backtester.py:6451` | 0 | unique |
-| `_compute_forge_score` | function | `src/engine/backtester.py:6475` | 0 | unique |
-| `compute_recency_weighted_score` | function | `src/engine/backtester.py:6502` | 0 | unique |
-| `_empty_result` | function | `src/engine/backtester.py:6588` | 1 | AMBIG |
-| `run_class_backtest` | function | `src/engine/backtester.py:6619` | 7 | unique |
-| `_compute_decay_analysis` | function | `src/engine/backtester.py:8148` | 0 | unique |
-| `_load_strategy_class` | function | `src/engine/backtester.py:8173` | 1 | unique |
-| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8192` | 0 | unique |
-| `_rescore_with_crisis` | function | `src/engine/backtester.py:8222` | 0 | unique |
-| `_candidate_refusal_envelope` | function | `src/engine/backtester.py:8293` | 0 | unique |
-| `resolve_candidate_authority` | function | `src/engine/backtester.py:8332` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:8449` | 189 | AMBIG |
+| `_apply_stop_only_management` | function | `src/engine/backtester.py:1051` | 0 | unique |
+| `_apply_trade_management` | function | `src/engine/backtester.py:1196` | 1 | unique |
+| `_apply_static_styleC_management` | function | `src/engine/backtester.py:1300` | 0 | unique |
+| `_apply_adaptive_management` | function | `src/engine/backtester.py:1813` | 0 | unique |
+| `_resolve_freq` | function | `src/engine/backtester.py:2267` | 0 | unique |
+| `_extract_atr_period` | function | `src/engine/backtester.py:2272` | 0 | unique |
+| `_compute_daily_pnls` | function | `src/engine/backtester.py:2280` | 0 | unique |
+| `_compute_monthly_returns` | function | `src/engine/backtester.py:2421` | 0 | unique |
+| `_aggregate_equity_daily` | function | `src/engine/backtester.py:2472` | 0 | unique |
+| `_detect_dst_transitions` | function | `src/engine/backtester.py:2550` | 0 | unique |
+| `_wilson_ci` | function | `src/engine/backtester.py:2586` | 0 | unique |
+| `_compute_long_short_split` | function | `src/engine/backtester.py:2597` | 0 | unique |
+| `_validate_bar_count` | function | `src/engine/backtester.py:2679` | 0 | unique |
+| `_build_run_receipt` | function | `src/engine/backtester.py:2710` | 0 | unique |
+| `_apply_max_trades_per_day` | function | `src/engine/backtester.py:2775` | 0 | unique |
+| `_symbol_of_spec` | function | `src/engine/backtester.py:2928` | 0 | unique |
+| `_get_stop_ceiling_for_symbol` | function | `src/engine/backtester.py:2940` | 1 | unique |
+| `_structural_stop_parity_enabled` | function | `src/engine/backtester.py:2988` | 0 | unique |
+| `_resolve_stop_risk_points` | function | `src/engine/backtester.py:3003` | 0 | unique |
+| `_get_stop_floor_for_symbol` | function | `src/engine/backtester.py:3098` | 0 | unique |
+| `_parse_slippage_survival_multiples` | function | `src/engine/backtester.py:3135` | 0 | unique |
+| `_parse_slippage_survival_min_pf` | function | `src/engine/backtester.py:3155` | 0 | unique |
+| `_parse_slippage_survival_min_trades` | function | `src/engine/backtester.py:3171` | 0 | unique |
+| `_compute_slippage_survival_block` | function | `src/engine/backtester.py:3186` | 1 | unique |
+| `_apply_dsl_stop_loss_and_time_stop` | function | `src/engine/backtester.py:3257` | 0 | unique |
+| `_apply_dll_halt_to_entries` | function | `src/engine/backtester.py:3538` | 0 | unique |
+| `run_backtest` | function | `src/engine/backtester.py:3676` | 10 | unique |
+| `_build_expected_signals_from_trades` | function | `src/engine/backtester.py:6235` | 0 | unique |
+| `_execution_was_refused` | function | `src/engine/backtester.py:6309` | 0 | unique |
+| `_emit_validated_result` | function | `src/engine/backtester.py:6347` | 0 | unique |
+| `_compute_recovery_days_from_max_dd` | function | `src/engine/backtester.py:6417` | 0 | unique |
+| `_compute_monthly_survival_stats` | function | `src/engine/backtester.py:6465` | 0 | unique |
+| `_compute_tier` | function | `src/engine/backtester.py:6502` | 0 | unique |
+| `_compute_forge_score` | function | `src/engine/backtester.py:6526` | 0 | unique |
+| `compute_recency_weighted_score` | function | `src/engine/backtester.py:6553` | 0 | unique |
+| `_empty_result` | function | `src/engine/backtester.py:6639` | 1 | AMBIG |
+| `run_class_backtest` | function | `src/engine/backtester.py:6670` | 7 | unique |
+| `_compute_decay_analysis` | function | `src/engine/backtester.py:8202` | 0 | unique |
+| `_load_strategy_class` | function | `src/engine/backtester.py:8227` | 1 | unique |
+| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8246` | 0 | unique |
+| `_rescore_with_crisis` | function | `src/engine/backtester.py:8276` | 0 | unique |
+| `_candidate_refusal_envelope` | function | `src/engine/backtester.py:8347` | 0 | unique |
+| `resolve_candidate_authority` | function | `src/engine/backtester.py:8386` | 0 | unique |
+| `main` | function | `src/engine/backtester.py:8503` | 189 | AMBIG |
 
 </details>
 
