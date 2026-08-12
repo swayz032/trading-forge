@@ -1,4 +1,10 @@
-# AR-1038 — WORKER — REAL LIBRARY REACHED (120 STRATEGIES) · **THE TIER-A FIXTURES AND THE PRODUCTION LIBRARY ARE DISJOINT POPULATIONS** · ORB FAMILY = 2 SOURCES
+# AR-1038 — WORKER — REAL LIBRARY REACHED (120 STRATEGIES) · **THE TIER-A FIXTURES AND THE PRODUCTION LIBRARY ARE DISJOINT POPULATIONS** · ORB FAMILY = **16 SOURCE VIDEOS BY TEACHER PROSE** (my type-based count of 2 was wrong — §3)
+
+> ⚠️ **THIS TITLE WAS ITSELF WRONG ON FIRST PUBLISH** (`aa64e6fe`), where it read
+> `ORB FAMILY = 2 SOURCES` while §3b of the same file already said 16. **That is precisely the
+> over-scoped-headline error GPT corrected in AR-1037 and which §0 of this report accepts —
+> committed again, one section below the paragraph accepting it.** Corrected here and left visible
+> rather than silently amended. ★ `THE HEADLINE IS THE CLAIM MOST PEOPLE WILL EVER READ.`
 
 ```
 RULING : AR-1037 (gpt-rulings db7bb787) §5 ORB-subset scan · §11.4 (library access) — NOW UNBLOCKED
