@@ -34,17 +34,35 @@ from src.engine.spec_family_bindings import (
     resolve_session_keyword,
 )
 
-# READ-ONLY reference corpus lives in a SIBLING worktree tree (not nested
-# under this worktree) — see task brief. Absolute path per the fixed
-# reference location; tests skip gracefully if it's unavailable in some
-# other environment rather than hard-failing the whole suite.
-SAMPLES_DIR = r"C:\Users\tonio\Projects\trading-forge\trading-forge\.claude\worktrees\extraction-100\tmp\generalization"
+# R3-4 CLUSTER-E (2026-08-12): the reference samples are DURABLE AND IN-REPO.
+#
+# They used to be read from a machine-local absolute path in a sibling worktree
+# (.claude/worktrees/extraction-100/tmp/generalization, 141 untracked candidate
+# files), and a missing file called pytest.skip(). That made a governed
+# ACCEPT-5 row depend on one machine's scratch directory, and — worse — made a
+# MISSING GOVERNED INPUT INDISTINGUISHABLE FROM A HEALTHY RUN: the node went
+# SKIP, never RED, so the row could quietly stop testing anything.
+#
+# MEASURED: of the 141 candidates, this row consumes exactly TWO. Both are now
+# committed beside this file. Membership was proven by ablation, not by reading
+# the source: removing an unconsumed candidate left 339 passed unchanged;
+# removing a consumed one changed the result. The other 139 are not inputs to
+# this row and are deliberately NOT vendored.
+#
+# FAIL-CLOSED: a missing sample is now an ERROR, never a skip. If this fixture
+# is absent the row has lost an input it is supposed to be exercising, and that
+# is a defect to surface, not a condition to tolerate.
+SAMPLES_DIR = os.path.join(os.path.dirname(__file__), "fixtures", "spec_family_samples")
 
 
 def _load_sample(name: str) -> dict:
     path = os.path.join(SAMPLES_DIR, name)
     if not os.path.isfile(path):
-        pytest.skip(f"reference sample corpus unavailable at {path}")
+        raise AssertionError(
+            f"REQUIRED reference sample missing: {path}. This fixture is committed "
+            f"to the repo (R3-4 CLUSTER-E); its absence is a defect, not a reason "
+            f"to skip."
+        )
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
