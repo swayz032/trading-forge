@@ -15850,6 +15850,22 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 **Same-session CI hardening:** The first GitHub Fast Lane reached the end of the full Vitest run but Node 24/V8 crashed during WASM JIT teardown (`Check failed: jit_page_->allocations_.erase(addr) == 1`, exit 133) before the JSON reporter flushed `ci/out/vitest.json`. The tests were not the failure; the absent evidence made the baseline comparator correctly fail closed. Fast Lane now uses a one-worker `forks` pool so each test worker is process-isolated from that V8 thread teardown path. A workflow contract test prevents reintroducing the thread pool or dropping the JSON output path. The exact full forked command completed locally with 13,262 passed, 0 failed, wrote a valid 4.99 MB JSON report, and the frozen-baseline comparator returned GREEN.
 
 **Carry-forward:** Merge after the repaired GitHub Fast Lane and remaining required checks are green, verify Railway deployment, then synchronize the committed 14A model/cache settings to live n8n when live API access is available.
+### Session Log — 2026-08-11 Media Vault Compiler View design
+
+**Mission:** Design an evidence-honest, production-grade Compiler View for the deployed Media Evidence Vault and a no-scroll desktop fit correction for Paper Fight Night.
+
+**Work completed:**
+- Located the deployed runtime surfaces at `public/slumhouse/evidence-vault.html` and `public/slumhouse/office.html` on production-runtime commit `d41fc944`.
+- Captured the operator-approved interaction: right-rail Compiler View toggle, full seven-second replay on every click, per-video visual identity, source-only Ghost Compile placeholder, no generated background, and receipt-only compiler truth.
+- Wrote and self-reviewed `docs/superpowers/specs/2026-08-11-media-vault-compiler-view-and-fight-night-fit-design.md` in an explicit-SHA isolated worktree.
+
+**Verification:**
+- Design placeholder/ambiguity scan and `git diff --check` passed.
+- No runtime, trading, extraction, compiler, lifecycle, n8n, or prop-firm behavior was changed in this design checkpoint.
+
+**Known-facts updates:** The live Vault is an iframe-backed dedicated page, not inline Office markup. The current quiet Fight Night desktop overflow is caused by fixed arena minimum heights stacking with Office chrome, header, aggregate strip, captions, and padding.
+
+**Carry-forward:** Await operator review of the written spec, then write the implementation plan and execute with TDD in the same isolated worktree.
 
 ## Known-Facts Pin — Stop Misdiagnosing These
 
