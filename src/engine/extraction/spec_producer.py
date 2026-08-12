@@ -41,8 +41,21 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
+from src.engine.opening_range_candidate import (
+    OpeningRangeExecutionCandidate,
+    expand_execution_candidates,
+)
+from src.engine.opening_range_definition import (
+    CANONICAL_TYPE as OPENING_RANGE_DEFINITION,
+)
+from src.engine.opening_range_definition import classify_opening_range_definition
+from src.engine.opening_range_lowering import (
+    OpeningRangeLoweringResult,
+    lower_opening_range_definition,
+)
 from src.engine.spec_family_bindings import compile_binding_plan
 
 # --------------------------------------------------------------------------- #
@@ -359,6 +372,38 @@ def _classify_family(text: str, *, role_hint: Optional[str] = None) -> Tuple[str
     case, which is how 35 of tier-A's 50 WAIT_STRUCTURE rows -- 70% of that
     family -- were assigned with zero supporting evidence.
     """
+    # ── B1 STEP 3 (R-730 §4, widened R-732 §2): the taught OPENING RANGE gets its
+    # own explicit type BEFORE keyword scoring can collapse it into WAIT_STRUCTURE.
+    #
+    # WHY IT MUST RUN FIRST. `_FAMILY_KEYWORDS["WAIT_STRUCTURE"]` already contains
+    # "opening range", "range", "level", "high of the" and "low of the", so the
+    # scoring below reliably wins this sentence for the coarse family. That is the
+    # measured defect: an opening range is a TIME-BOUNDED STATEFUL AGGREGATION THAT
+    # PRODUCES LEVELS, and WAIT_STRUCTURE's evaluator emits market-structure EVENTS
+    # with no field a range can live in. `A CLASSIFIER THAT PRESERVES ONE OF TWO
+    # DIMENSIONS HAS NOT CLASSIFIED -- IT HAS PROJECTED.`
+    #
+    # WHY IT IS SAFE TO RUN FIRST. The rule is ORDERED and refuses before it
+    # accepts: reference/trigger evidence blocks outright, so "break above the
+    # opening-range high" -- which carries BOTH a clock and range language -- stays
+    # exactly where it is. Its breakout semantics remain UNRESOLVED_SOURCE_AMBIGUITY
+    # (R-725 §4) and this step may not settle them. `A CLEARER TEACHER DOES NOT
+    # RESOLVE A DIFFERENT TEACHER'S SILENCE.`
+    #
+    # MEASURED TIGHTNESS, not asserted: across the frozen census the rule fires on
+    # 2 of 99 conditions, and within the golden spec it captures 1 of the 9
+    # conditions currently sitting on the wrong evaluator. The six controls and the
+    # corpus blast-radius read live in
+    # docs/replay-results/h1-battery/opening_range_definition_discrimination.py,
+    # which imports THIS rule rather than copying it.
+    #
+    # CONFIDENCE IS `CONFIDENT` BY CONSTRUCTION: the rule requires two independent
+    # positive limbs and no blocking evidence, which is a stronger warrant than the
+    # single-family keyword hit that earns CONF_CONFIDENT below.
+    is_opening_range_definition, _reason, _evidence = classify_opening_range_definition(text)
+    if is_opening_range_definition:
+        return OPENING_RANGE_DEFINITION, CONF_CONFIDENT
+
     scores, _spans = _family_evidence(text)
     if not scores:
         return UNTYPED_FAMILY, CONF_UNMATCHED
@@ -773,3 +818,256 @@ def dispose_inventory(strategy_extraction: dict, instrument_classification: Opti
             spec_body, [c.get("type_confidence", CONF_CONFIDENT) for c in spec_body.get("entry_conditions", [])]
         ),
     }
+
+
+# ── B1 STEP 6 / lane S6-1 STEP 2 — THE FULL-RECORD PRODUCTION COMPILE BOUNDARY ──
+#
+# AUTHORITY: R-776 §4.
+#
+# WHY THIS EXISTS AT ALL (R-774 §4-4, measured):
+# `produce_spec_artifact()` receives ONE strategy — `record["strategies"][i]` — so every
+# RECORD-LEVEL fact is discarded before the compile. `instrument_classification` is one of
+# them, and `lower_opening_range_definition()` reads `market_scope` out of it. No amount of
+# work downstream of the old boundary could produce a source-complete opening-range
+# definition, because the evidence was already gone.
+#
+# WHY A WRAPPER RATHER THAN A NEW PARAMETER (R-776 §3 left the choice open):
+# adding a full-record parameter to `produce_spec_artifact()` would give one function two
+# input contracts — a strategy AND the record that contains it — and every existing caller
+# would have to be trusted to pass a consistent pair. A wrapper cannot be handed an
+# inconsistent pair: it derives the strategy FROM the record it was given.
+#
+# 🛑 WHAT THIS IS NOT (R-776 §4, verbatim scope):
+# not family registration · not resolver/dispatch · not the TS mirror · not candidate
+# transport · not backtesting · not breakout semantics. It carries the LOWERED DEFINITION
+# and stops. Expanding that definition into candidates is STEP 3 and is deliberately absent.
+#
+# 🛑 ONE LOWERER: this calls `lower_opening_range_definition()` and nothing else. There is no
+# second interpretation of the taught prose here — not a regex, not a fallback, not a
+# hand-built `OpeningRangeDefinition`. [MEASURED, R-776 prior-art check] this is the FIRST
+# production caller of that function; it does not compete with an existing one.
+# ── STEP 2.1 — THE SERIALIZATION FIREBREAK (R-777 §4) ─────────────────────────
+#
+# STEP 2 attached the typed lowering to the artifact under this key. R-777 §3
+# confirmed BY EXECUTION that this made the artifact unserialisable on BOTH arms,
+# including the refusal path, and promoted it to a firebreak before STEP 3.
+#
+# THE DISTINCTION, and it is the whole design:
+#   PORTABLE CONTRACT = SpecArtifact  -- plain JSON, crosses into TypeScript, durable
+#   IN-PROCESS STATE  = lowering, candidates, binding plan -- typed, Python-only
+#
+# 🛑 THE KEY IS NOW A FORBIDDEN NAME, NOT A STORAGE LOCATION. It survives only so
+# the envelope can REFUSE it. `dataclasses.asdict()`-ing the lowering under this
+# key is the specific repair R-777 §4-2 forbids: the TS `parseSpecArtifact()`
+# rebuilds only recognised fields, so Python would believe it sent the lowering
+# while TypeScript dropped it without a word.
+#
+#   `A HANDOFF WHERE THE SENDER BELIEVES IT SENT AND THE RECEIVER SILENTLY DROPS
+#    IS WORSE THAN ONE THAT FAILS LOUDLY.`
+SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY: str = "opening_range_lowering"
+
+
+@dataclass(frozen=True)
+class RecordCompileResult:
+    """What the full-record compile boundary returns: a portable artifact PLUS the
+    typed in-process state derived alongside it.
+
+    `artifact` is the SpecArtifact exactly as the existing onboarding back-half
+    expects it — plain JSON, no Python objects, unchanged in shape from what
+    `produce_spec_artifact()` produces.
+
+    `opening_range_lowering` is the authoritative lowering. It lives HERE, beside
+    the artifact rather than inside it, so that moving it out of the portable
+    contract does not mean losing it.
+
+    🛑 THE INVARIANT IS ENFORCED IN `__post_init__`, NOT DOCUMENTED IN A DOCSTRING.
+    An envelope carrying an artifact that still holds the typed lowering is
+    UNCONSTRUCTABLE — the same principle STEP 2 used for the strategy/record pair,
+    and the one R-777 §1 accepted:
+
+        `AN INCONSISTENT PAIR YOU CANNOT CONSTRUCT NEEDS NO VALIDATION.`
+    """
+
+    artifact: Dict[str, Any]
+    opening_range_lowering: OpeningRangeLoweringResult
+    opening_range_candidates: Tuple[OpeningRangeExecutionCandidate, ...] = ()
+
+    def __post_init__(self) -> None:
+        if SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY in self.artifact:
+            raise ValueError(
+                f"the SpecArtifact carries {SPEC_ARTIFACT_OPENING_RANGE_LOWERING_KEY!r}; "
+                "the typed lowering belongs on this envelope, never inside the portable "
+                "contract. Serialising it under an artifact key would be silently "
+                "discarded by the TypeScript parser (R-777 §4)"
+            )
+
+        # STEP 3 — the refusal must survive the fan-out. A record whose source was
+        # incomplete has NO definition to expand, so candidates here would be
+        # invented durations wearing a valid type.
+        definition = self.opening_range_lowering.definition
+        if definition is None and self.opening_range_candidates:
+            raise ValueError(
+                f"{len(self.opening_range_candidates)} execution candidates accompany a "
+                "lowering that REFUSED; a SOURCE_INCOMPLETE record cannot yield candidates, "
+                "and candidates built without a definition are invented"
+            )
+
+        # And the candidates must belong to THIS lowering, not merely be well-shaped.
+        # `A CORRECTLY SHAPED SIDECAR ATTACHED TO THE WRONG STRATEGY IS PLAUSIBLE, AND
+        #  PLAUSIBLE IS THIS CAMPAIGN'S FAILURE MODE.`
+        foreign = [c for c in self.opening_range_candidates if c.definition is not definition]
+        if foreign:
+            raise ValueError(
+                f"{len(foreign)} candidate(s) carry a definition that is not this envelope's "
+                "lowered definition; a candidate joined to the wrong source is plausible "
+                "enough to survive every shape check downstream"
+            )
+
+        # 🛑 AND THE IDENTITIES MUST AGREE TOO — R-778 §4.
+        # The definition check above compares the DEFINITION OBJECT and nothing else, so a
+        # candidate carrying the right definition, the right variant and the WRONG
+        # `source_spec_id` was constructible. That is not cosmetic: `candidate_id` and
+        # `cache_identity` are computed FROM these ids, so a disagreeing pair produces a
+        # STABLE, PLAUSIBLE hash for the wrong source — and a cache keyed on it would serve
+        # one lesson's opening range under another lesson's name.
+        #
+        #   `AN IDENTITY DERIVED FROM A FIELD NOTHING VALIDATES IS A CONFIDENT ANSWER TO AN
+        #    UNASKED QUESTION.`
+        mismatched = [
+            (c.candidate_id, c.source_spec_id, c.source_condition_id)
+            for c in self.opening_range_candidates
+            if c.source_spec_id != self.opening_range_lowering.source_spec_id
+            or c.source_condition_id != self.opening_range_lowering.source_condition_id
+        ]
+        if mismatched:
+            raise ValueError(
+                f"{len(mismatched)} candidate(s) name a source this envelope's lowering does "
+                f"not: lowering is "
+                f"({self.opening_range_lowering.source_spec_id!r}, "
+                f"{self.opening_range_lowering.source_condition_id!r}); "
+                f"offenders {mismatched}"
+            )
+
+
+_LOWERING_POSITIVE_CONTROL: str = (
+    "the same locators run over every certified record at this boundary, and the corpus "
+    "contains records in which each required field IS located — so a field missing here is "
+    "a property of THIS record, not of the reader"
+)
+
+
+def produce_spec_artifact_from_record(
+    record: dict,
+    *,
+    video: str,
+    certificate: Optional[dict] = None,
+    transcript_chars: int = 0,
+    strategy_index: int = 0,
+) -> "RecordCompileResult":
+    """The public production compile boundary that receives the FULL certified record.
+
+    Produces the spec artifact for one strategy and returns it BESIDE the
+    authoritative opening-range lowering, which needs record-level evidence the
+    per-strategy boundary cannot see.
+
+    Returns a `RecordCompileResult`, not the artifact: the artifact stays plain
+    JSON (the portable contract) and the typed lowering rides alongside it as
+    in-process state (R-777 §4).
+
+    The lowering is attempted for EVERY record, not only for records that carry an
+    `OPENING_RANGE_DEFINITION` condition. That is deliberate: `SOURCE_INCOMPLETE`
+    with named missing fields is a real, useful answer for a record that never
+    taught an opening range, whereas skipping the call would make "not taught" and
+    "not attempted" indistinguishable downstream.
+
+        `AN ABSENT RESULT AND A REFUSAL ARE DIFFERENT FACTS, AND ONLY ONE OF THEM
+         NAMES WHAT WAS MISSING.`
+
+    No stub id, no video id and no duration appears in this function's logic — it
+    reads the record it is handed (R-776 §4 stop conditions).
+    """
+    strategies = record.get("strategies") or []
+    if not strategies:
+        raise ValueError(
+            f"{video}: the certified record carries no strategies; there is nothing to "
+            "compile, and inventing one is not available here"
+        )
+    if not 0 <= strategy_index < len(strategies):
+        raise IndexError(
+            f"{video}: strategy_index {strategy_index} is outside the record's "
+            f"{len(strategies)} strategies"
+        )
+
+    artifact = produce_spec_artifact(
+        strategies[strategy_index],
+        video=video,
+        certificate=certificate,
+        transcript_chars=transcript_chars,
+    )
+
+    lowering = lower_opening_range_definition(
+        source_spec_id=video,
+        source_condition_id=_opening_range_condition_id(artifact),
+        record=record,
+        positive_control=_LOWERING_POSITIVE_CONTROL,
+    )
+
+    # ── STEP 3 (R-777 §5) — FAN OUT THE TAUGHT DEFINITION INTO EXECUTION CANDIDATES ──
+    #
+    # 🛑 NONE PRIMARY, NONE DEFAULT. `expand_execution_candidates()` takes no
+    # `default_variant` and returns one candidate per taught variant IN TAUGHT ORDER.
+    # Choosing among them is a decision the teacher declined to make (R-736: "the
+    # teacher gave three versions, so the factory makes three bots"), and
+    # `OpeningRangeDefinition.selected_duration_minutes` already RAISES to stop that
+    # happening three layers down.
+    #
+    # 🛑 ONE IDENTITY SYSTEM. The candidates' `candidate_id` / `cache_identity` come
+    # from the existing module; nothing here invents a second one. The existing hash
+    # covers the whole source-owned definition plus the selected variant, which is
+    # strictly stronger than keying on a duration.
+    #
+    # A refusal fans out to NOTHING, and the envelope enforces that rather than
+    # trusting this line.
+    candidates: Tuple[OpeningRangeExecutionCandidate, ...] = ()
+    if lowering.definition is not None:
+        candidates = expand_execution_candidates(
+            source_spec_id=video,
+            source_condition_id=lowering.source_condition_id,
+            definition=lowering.definition,
+        )
+
+    return RecordCompileResult(
+        artifact=artifact,
+        opening_range_lowering=lowering,
+        opening_range_candidates=candidates,
+    )
+
+
+def _opening_range_condition_id(artifact: dict) -> str:
+    """The produced condition that carries the taught opening range, selected BY TYPE.
+
+    Returns `""` when the record taught none — the lowering still runs and still
+    refuses by name, which is what keeps "not taught" legible downstream.
+    """
+    spec_body = artifact.get("spec") or {}
+    for condition in spec_body.get("entry_conditions") or ():
+        if str(condition.get("type", "")) == "OPENING_RANGE_DEFINITION":
+            return str(condition.get("id", ""))
+    return ""
+
+
+# 🛑 `opening_range_lowering_of(artifact)` WAS REMOVED HERE BY STEP 2.1, AND ITS
+# REMOVAL IS PART OF THE REPAIR RATHER THAN TIDYING.
+#
+# It read the lowering back OUT of the artifact. Once the lowering moved onto the
+# envelope, that accessor could only ever return `None` — and `None` was already
+# its way of saying "this artifact predates the boundary". It would have answered
+# "no lowering here" for every artifact ever produced, forever, and been right
+# about the storage location while being catastrophically misleading about the
+# fact. `[MEASURED, R-777 prior-art check]` it had no caller outside the S6 guard.
+#
+#   `A FUNCTION WHOSE ONLY REMAINING ANSWER IS ITS "NOT FOUND" ANSWER IS NOT DEAD
+#    CODE — IT IS A DETECTOR THAT HAS QUIETLY BECOME A LIAR.`
+#
+# The lowering is now reached as `RecordCompileResult.opening_range_lowering`,
+# which cannot be absent: it is a required field of the envelope.
