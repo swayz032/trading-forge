@@ -113,6 +113,30 @@ def _bars(sessions: int = 3) -> pl.DataFrame:
     return pl.DataFrame(rows)
 
 
+DECISION_BAR_LOCAL = 8
+
+
+def _bars_from(rows) -> pl.DataFrame:
+    """One 3-session frame built from an explicit bar table."""
+    out = []
+    for s in range(3):
+        start = datetime(2024, 1, 2 + s, 9, 30, tzinfo=ET)
+        for i, (o, h, low_, c) in enumerate(rows):
+            out.append({
+                "ts_event": (start + timedelta(minutes=5 * i)).astimezone(UTC),
+                "open": o, "high": h, "low": low_, "close": c, "volume": 100,
+            })
+    return pl.DataFrame(out)
+
+
+def _mutate_bar(bar: int, *, o=None, h=None, low=None, c=None):
+    rows = [list(r) for r in _SESSION]
+    for pos, val in ((0, o), (1, h), (2, low), (3, c)):
+        if val is not None:
+            rows[bar][pos] = val
+    return [tuple(r) for r in rows]
+
+
 def _config(compiled_spec: dict | None = None) -> dict:
     """A PERSISTED Band C configuration — including the real execution-candidate receipt.
 
@@ -371,3 +395,100 @@ class TestTheWalkforwardArmRefuses:
                       "walkforward")
         except Exception as exc:  # noqa: BLE001
             assert "NOT certified" not in str(exc)
+
+
+class TestTheRemainingDiscriminators:
+    """AR-1079 §10 items 13 and 16, at the Band C layer.
+
+    🛑 WHY ONLY THESE TWO. Items 11, 14 and 15 ("reintroduce the house buffer/ceiling",
+    "reintroduce Style-C partials", "reintroduce the +1 roll") are ABLATION-SHAPED: they ask
+    for production code to be mutated, which a committed test cannot do to itself. They are
+    covered by the ablation matrix in the commit record (V1, V3) and are honestly NOT
+    committed tests. Item 12 needs a frame where the taught anchor is absent, which this
+    fixture's geometry cannot produce without also destroying the event that needs it.
+
+    13 and 16 are different: both are driven entirely by the ARTIFACT or the PRICE, so both
+    can be real tests. `AN ABLATION IS EVIDENCE; IT IS NOT A GUARD.`
+    """
+
+    def test_13_changing_the_taught_r_multiple_moves_the_executable_target_EXACTLY(self):
+        """§10 discriminator 13: "Change `r_multiple` 2 -> 3 -> executable target moves from
+        exact 2R to exact 3R."
+
+        🛑 THE ARTIFACT IS THE ONLY THING THAT CHANGES. No production code, no env, no engine
+        argument — just the persisted `spec.source_risk.target.r_multiple`. That is what makes
+        this a proof that the TAUGHT number is consumed rather than a house constant that
+        happens to equal 2.
+
+        The 3R fixture needs headroom, so the frame is extended with bars that reach 141.5 and
+        create no new gap; the 2R arm is re-run on that SAME frame so the only difference
+        between the two arms is the artifact.
+        """
+        rows = list(_SESSION)
+        # Reaches 3R (119.0 + 3 x 7.5 = 141.5) without minting a gap: each added bar's low
+        # stays at or below the high two bars back.
+        rows = rows[:13] + [(133.5, 142.0, 120.5, 141.0)] + list(rows[13:])
+        frame = _bars_from(rows)
+
+        two_r, _ = _run(_config(_compiled_spec()), bars=frame)
+        spec3 = _compiled_spec()
+        spec3["spec"]["source_risk"]["target"]["r_multiple"] = 3.0
+        three_r, _ = _run(_config(spec3), bars=frame)
+
+        t2, t3 = two_r["trades"][0], three_r["trades"][0]
+        assert t2["Avg Entry Price"] == t3["Avg Entry Price"] == ENTRY_PRICE, (
+            "the entry moved between arms — then the target difference proves nothing"
+        )
+        assert t2["risk_points"] == t3["risk_points"] == pytest.approx(RISK_POINTS), (
+            "the STOP moved with the target — R must be measured off an unchanged stop"
+        )
+        assert t2["Avg Exit Price"] == pytest.approx(ENTRY_PRICE + 2.0 * RISK_POINTS)
+        assert t3["Avg Exit Price"] == pytest.approx(ENTRY_PRICE + 3.0 * RISK_POINTS)
+        assert t3["Avg Exit Price"] != t2["Avg Exit Price"], (
+            "a hard-coded 2R would satisfy every other assertion in this file"
+        )
+
+    def test_16_a_pre_entry_touch_INSIDE_the_decision_candle_cannot_exit_the_trade(self):
+        """§10 discriminator 16: "Same-candle pre-entry high/low cannot trigger a retroactive
+        source exit." Entering at the third candle's CLOSE does not authorise treating that
+        candle's own earlier ticks as if they happened after the entry.
+
+        🛑 MY FIRST FIXTURE WAS GEOMETRICALLY IMPOSSIBLE AND I AM LEAVING THE REASON HERE.
+        I simply pushed bar 8's low to 111.0, below the 111.5 stop — and got ZERO trades,
+        because a bullish FVG at bar 8 REQUIRES `low[8] > high[6]`, and `high[6]` was 113.0.
+        Lowering the decision candle's low destroys the very gap that makes it the decision
+        candle. `A MUTATION THAT DESTROYS ITS OWN SUBJECT IS NOT A DISCRIMINATOR.`
+
+        THE CONSTRAINT, SOLVED RATHER THAN GUESSED. For the entry bar's low to sit below the
+        stop while the event still exists, all three must hold:
+
+            high[6] < low[8] < low[7]      and      high[6] > ORH
+
+        so the gap survives, the zone stays outside the range, and the decision candle still
+        trades through the taught stop. Setting `high[6]=110.5`, `low[8]=111.0`,
+        `low[7]=111.5` satisfies all three — and keeps the stop and risk IDENTICAL to the
+        canonical fixture (111.5 and 7.5), so the two runs are directly comparable.
+
+        If the exit scan included the entry bar, this trade would stop out at 111.5 for a
+        loss. It must reach the 2R target instead.
+        """
+        rows = [list(r) for r in _SESSION]
+        rows[6] = [110.3, 110.5, 109.0, 110.2]   # gap's lower edge, still above ORH=110.0
+        rows[7] = [111.6, 119.0, 111.5, 118.5]   # displacement candle -> THE STOP, unchanged
+        rows[8] = [118.5, 120.0, 111.0, 119.0]   # decision candle trades BELOW the stop
+        result, _out = _run(_config(), bars=_bars_from([tuple(r) for r in rows]))
+        trades = result.get("trades") or []
+        assert len(trades) == 1, (
+            "POSITIVE WITNESS FAILED: the event did not survive the fixture, so nothing about "
+            "the entry-bar boundary was measured"
+        )
+        t = trades[0]
+        assert t["risk_points"] == pytest.approx(RISK_POINTS), (
+            "the stop moved with bar 8's low — it must come from bar 7, a different candle"
+        )
+        assert t["entry_idx"] == 8 and t["Avg Entry Price"] == ENTRY_PRICE
+        assert t["exit_reason"] == "source_fixed_r_target", (
+            f"the trade exited via {t['exit_reason']!r} — a touch inside the decision candle "
+            "reached back and closed a position that did not exist until its close"
+        )
+        assert t["Avg Exit Price"] == TARGET_2R
