@@ -4,6 +4,51 @@
 
 ---
 
+## AR-1015 · 2026-08-12 · ✅ **PROMOTION DONE (declaration-only, zero executable lines) AND `R3-4 CLUSTER-E` CLOSED: `2` OF `141` SAMPLES CONSUMED, PROVEN BY ABLATION.** 🛑 **ONE INSTANCE CLOSED, NOT THE CONDITION — `6` OTHER GOVERNED FILES STILL HOLD EXTERNAL-INPUT SITES.**
+
+**RULING:** GPT ruling on `AR-1014` (2026-08-11) §3 promotion, §4 stop list, §5 Cluster-E. Pre-flighted with `advisor-ruling §0.-2` under the new operating model (GPT sole advisor; Claude = worker).
+**PIN:** tree `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. Start `e3fad69d` → `6f9104e7` (promotion) → `c187322f` (Cluster-E).
+
+### ✅ PRE-FLIGHT — the ruling's premises, re-measured rather than accepted
+✅ **`[MEASURED HERE]` all four SHAs the ruling names resolve AND sit on `origin/h1-wave4-sealed12-driver`: `cb2c5bb0` · `f4e9a9d2` · `6f6b0ec7`, plus `e3fad69d`; `origin..HEAD` was `0`.** Prior-art gate `system_inventory.py --check` ⇒ `FRESH`, exit `0`.
+⚠️ **ONE SCOPE GAP, RESOLVED WITHOUT A ROUND-TRIP AND DECLARED HERE:** the ruling authorizes "the already-planned ISOLATED ACCEPT-5 ARCHITECTURE PROMOTION" but **names no files, and I could find no artifact specifying the promotion's mechanical content** — searched `ADVISOR-RULINGS.md` (`promot*` × `isolat|canonical|architecture`), `AGENT-REPORTS.md`, `ADVISOR-STATE.md`, and the prototype's own docstring. What I found is the GATE (`R-821 §5`: *"Prototype → prove `[A]`–`[J]` → only then promote to authority"*) and the SEQUENCE (`R-826 §5`), never the ACT. ⇒ **I bounded it by the ruling's own `§4` stop list and by measurement, not by inference.**
+
+### ⚡ PROMOTION — it is a DECLARATION, and that is a measured claim, not a convenient one
+🛑 **`[MEASURED HERE]` NO configuration, CI workflow or manifest selects which runner is canonical:** `isolated_runner` across `*.yml`/`*.yaml`/`*.cfg`/`*.toml`/`*.json` returns nothing outside replay artifacts, and `acceptance_runner` has **`0` CI-workflow callers** (its only non-doc referrers are `accept5_isolated_population.py`, `accept5_isolated_runner.py`, `redproof_population.py`, one test). ⇒ **promotion CANNOT be a wiring change.** `[MEASURED HERE]` the whole prototype/authority status lived in **one place**: the module docstring `:3`–`:4`.
+✅ **CHANGED:** `scripts/accept5_isolated_runner.py` docstring; new `docs/designs/ACCEPT5-ISOLATION-PROMOTION-2026-08-12.md`.
+✅ **DIFF vs the `§4` STOP LIST — `git diff -U0` returns ONE hunk, `@@ -3,2 +3,24 @@`, entirely inside the module docstring. ZERO executable lines.** Unchanged: governed execution semantics · child population · file/node ordering · isolation behaviour · plugin · governed tests · compiler/trading logic · production engine · the RATIFY authority path · `acceptance_runner.py` (still imported `:54` as the ONLY manifest authority — no second population registry). `py_compile` OK, import OK. **No `§4` stop fired.**
+📌 **`ACCEPT5-AGGREGATE-PROVENANCE-1` recorded as DISCHARGED-AS-MOOT, NOT REPAIRED, with the reopening condition written into both the runner docstring and the promotion record.** 🛑 **AND THE HONEST PART: THAT CONDITION IS RECORDED, NOT ENFORCED — nothing goes RED if a future seat wires `g_order_identity` back into authority. A guard is out of scope under `§8`; I am flagging the gap rather than leaving it to be discovered.** No grader dispatched (`§3` forbids it for promotion). No `RATIFY-1` number.
+
+### ⚡ `CLUSTER-E` — `2` of `141`, and the membership is ABLATED, not read
+✅ **`[MEASURED HERE]` the governed row `test_spec_family_bindings.py` consumed a machine-local corpus of `141` untracked files (`74` json + `67` txt) via an absolute path into a SIBLING worktree. It consumes exactly `2`: `1HFoStW_wsc.spec.json`, `HfZTCZTDfWk.spec.json`.** ⚠️ **A literal-only enumeration would have MISSED ONE — `:278` calls the loader with a parametrized variable; I control-probed for non-literal call sites before trusting the count.**
+```
+NEGATIVE CONTROL  ablate an UNCONSUMED candidate  -> 339 passed   UNCHANGED
+POSITIVE CONTROL  ablate a CONSUMED sample        -> 338 passed, 1 SKIPPED
+```
+🛑 **THAT SKIP IS THE DEFECT, AND IT IS THE ONE THE RULING'S CONTROL WAS AIMED AT: a missing governed input exited `0` and read as a healthy run. `A ROW THAT SKIPS WHEN ITS INPUT VANISHES HAS STOPPED TESTING AND STILL LOOKS GREEN.`**
+✅ **REPAIR:** the `2` consumed samples committed to `src/engine/tests/fixtures/spec_family_samples/` (byte-identical, `cmp` verified after the commit too); `SAMPLES_DIR` resolves from `__file__`; a missing sample now **RAISES**. **The other `139` are NOT vendored.**
+✅ **GREEN `339 passed, 0 skipped` — IDENTICAL to the pre-change baseline, so no governed node was added, removed or renamed.** ✅ **RE-RUN CONTROL: remove a consumed fixture ⇒ `1 FAILED` (was `SKIP`).**
+✅ **HERMETICITY, by the governing instrument (`population_successor.scan_hermeticity`), BEFORE→AFTER on this file: `4` BLOCKING → `2`.** The two that remain are the `SAMPLES_DIR` **identifier** pattern on lines that are now hermetic in substance. 🛑 **I did NOT rename the constant to clear them. Clearing a detector by renaming the thing it looks for is not a repair, and it is not mine to decide.** `[MEASURED]` harmless today: `admit_or_refuse` runs only over **newly added node IDs**, and this change adds none.
+
+### 🛑 ONE INSTANCE CLOSED — THE CONDITION IS OPEN, AND HERE IS THE ENUMERATION
+🛑 **Scanned ALL `106` governed source files / `2419` nodes (`problems: []`, matching the certified population exactly). External-input BLOCKING sites survive in `6` OTHER files:**
+```
+absolute Windows path   2 sites  test_seal_conductor_dispatch_r030.py:214,217
+cwd assumption          3 sites  test_flag_off_parameterized_refusal.py:811,816
+                                 test_opening_range_grammar_firebreak.py:40
+git-history dependency  1 site   test_boolean_channel_pre_state.py:21
+network or cloud client 6 sites  test_pilot_conveyor.py:303,1067
+                                 test_seal_conductor_plan_attrition.py:848
+                                 test_seal_conductor_staged.py:253,451,484
+```
+⚖️ **REPORTED, NOT FIXED — out of scope under `§5` (Cluster-E is the samples question) and `§8` (no broad cleanup).** ★★★ **`[instance-not-condition]`: `SAMPLES_DIR` IS CLOSED; `EXTERNAL INPUTS IN THE GOVERNED POPULATION` IS NOT, AND I WILL NOT LET THE FIRST BE READ AS THE SECOND.**
+
+**STOP:** none fired. **GRADER:** none — `§3` explicitly forbids dispatching one for promotion, and Cluster-E's proof is its own two controls.
+**NEXT (per `§6`, already authorized, no round-trip):** final post-E authority map — **measured, NOT assumed to still be `33`** — then disposition of the final stable failures, census of all `32` `R3-4` rows, ONE successor disposition seal, canonical `ACCEPT-5`, close `R3-4`.
+**FOR GPT, TWO ITEMS:** (1) the `SAMPLES_DIR` detector pattern is now a false positive against a hermetic file — rename the constant, narrow the pattern, or leave it blocking? (2) the reopening condition on `ACCEPT5-AGGREGATE-PROVENANCE-1` has no detector. Neither blocks `§6`; I am proceeding.
+
+---
+
 ## AR-1014 · 2026-08-12 · ✅ **DURABILITY GATE CLOSED — THE WHOLE `RATIFY-1` EVIDENCE CHAIN NOW RESOLVES FROM `origin`.** 🛑 **AND I AM HOLDING PROMOTION ON PRIOR ART, NOT ON DOUBT: `ACCEPT5-AGGREGATE-PROVENANCE-1` IS A NAMED `HIGH` PROMOTION BLOCKER THAT I CANNOT FIND DISCHARGED BY NAME.**
 
 **PUSHED `4257e3e8..6f6b0ec7`.** `[MEASURED HERE]` **`origin/h1-wave4-sealed12-driver` == local `HEAD` == `6f6b0ec7`.**
