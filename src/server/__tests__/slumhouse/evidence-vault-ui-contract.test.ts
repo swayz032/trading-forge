@@ -11,7 +11,9 @@ const scout = fs.readFileSync(path.resolve("src/server/services/autonomous-scout
 
 describe("Media Evidence Vault production contract", () => {
   it("is a full Reporting Room toggle backed by the shared authenticated page", () => {
-    expect(office).toContain('data-rr-type="vault"');
+    for (const type of ["night", "soak", "ab", "rl", "paper", "vault"]) {
+      expect(office).toContain(`data-rr-type="${type}"`);
+    }
     expect(office).toContain('/slumhouse/evidence-vault.html?embed=1');
     expect(office).toContain("type === 'vault'");
   });
