@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `cb30b3b54ebc49970cd9597dcc784bf98cf5c3e0`  (worktree DIRTY at generation time)
+> Generated at commit `010acc2fa04633ced15b9d9870afd445f7154534`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 293 | 371 | 121650 | 1891 |
+| `src/` | Python | 293 | 371 | 121669 | 1891 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -1131,7 +1131,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `archetype_distribution` | function | `src/engine/archetypes/historical_labeler.py:19` | 1 | unique |
 | `label_history` | function | `src/engine/archetypes/historical_labeler.py:8` | 1 | unique |
 | `map_strategy_to_archetypes` | function | `src/engine/archetypes/strategy_mapper.py:10` | 1 | unique |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:8500` | 1 | unique |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:8519` | 1 | unique |
 | `MappingSchemaError` | class | `src/engine/battery/mapping_guard.py:24` | 1 | unique |
 | `_print_boundary` | function | `src/engine/battery/selection_deflation.py:198` | 1 | unique |
 | `run_selection_deflation_check` | function | `src/engine/battery/selection_deflation.py:115` | 1 | unique |
@@ -1437,7 +1437,7 @@ _...483 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `shift_higher_tf_columns` | function | `src/engine/backtester.py:2216` | no non-test reference outside its own definition |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:8500` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:8519` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -3717,13 +3717,13 @@ This is the *we already have this* list.  Check it before writing anything.
 | `compute_recency_weighted_score` | function | `src/engine/backtester.py:6584` | 0 | unique |
 | `_empty_result` | function | `src/engine/backtester.py:6670` | 1 | AMBIG |
 | `run_class_backtest` | function | `src/engine/backtester.py:6701` | 7 | unique |
-| `_compute_decay_analysis` | function | `src/engine/backtester.py:8233` | 0 | unique |
-| `_load_strategy_class` | function | `src/engine/backtester.py:8258` | 1 | unique |
-| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8277` | 0 | unique |
-| `_rescore_with_crisis` | function | `src/engine/backtester.py:8307` | 0 | unique |
-| `_candidate_refusal_envelope` | function | `src/engine/backtester.py:8378` | 0 | unique |
-| `resolve_candidate_authority` | function | `src/engine/backtester.py:8417` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:8534` | 189 | AMBIG |
+| `_compute_decay_analysis` | function | `src/engine/backtester.py:8252` | 0 | unique |
+| `_load_strategy_class` | function | `src/engine/backtester.py:8277` | 1 | unique |
+| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:8296` | 0 | unique |
+| `_rescore_with_crisis` | function | `src/engine/backtester.py:8326` | 0 | unique |
+| `_candidate_refusal_envelope` | function | `src/engine/backtester.py:8397` | 0 | unique |
+| `resolve_candidate_authority` | function | `src/engine/backtester.py:8436` | 0 | unique |
+| `main` | function | `src/engine/backtester.py:8553` | 189 | AMBIG |
 
 </details>
 
