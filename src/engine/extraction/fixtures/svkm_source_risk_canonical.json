@@ -1,0 +1,65 @@
+{
+  "title": "sVkmZklJDHI - canonical SOURCE_FAITHFUL risk contract, Tier-A transcript authority",
+  "frozen": true,
+  "authority": {
+    "ruling": "AR-1068 (gpt-rulings 06d63e2b) SS4 and SS10 NEXT UNIT 1 = STEP 2A",
+    "prior": [
+      "AR-1063 - anchor=fvg_low is the WRONG PRICE; teacher anchors to the displacement candle",
+      "AR-1065 - complete case-insensitive sweep of this transcript; exactly TWO stop instructions",
+      "AR-1068 SS3.1 - LONG side ruled TEXT_SUFFICIENT",
+      "AR-1068 SS3.2 - SHORT side ruled TEXT_AMBIGUOUS_VISUAL_UNCHECKED"
+    ]
+  },
+  "evidence": {
+    "concept_id": "sVkmZklJDHI",
+    "transcript_path": "src/engine/extraction/fixtures/source-evidence/sVkmZklJDHI.transcript.txt",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "transcript_bytes": 25071,
+    "span_semantics": "transcript_text[span.start:span.end]. Character indices. This artifact is pure ASCII, so character index == byte index; do not assume that for other sources.",
+    "provenance_note": "Copied byte-identical from the primary tree at backups/h1-shadow-eval/transcripts-78fe8ea7/transcripts/sVkmZklJDHI.transcript.txt. Committed here because a span pointing at a file this branch does not carry is not preserved evidence."
+  },
+
+  "source_risk": {
+    "mode": "SOURCE_FAITHFUL",
+    "stop": {
+      "anchor": "displacement_candle_low",
+      "include_wick": true,
+      "span": { "start": 13912, "end": 14135 }
+    },
+    "target": {
+      "type": "FIXED_R",
+      "r_multiple": 2,
+      "span": { "start": 14448, "end": 14515 }
+    }
+  },
+
+  "pinned_quotes": {
+    "note": "Verbatim expected slices. A test re-slices the transcript and asserts equality, so the span and the quote cannot silently drift apart.",
+    "stop": "we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well",
+    "target": "the fixed target we're looking for is a risk-to-reward ratio of two"
+  },
+
+  "why_this_span_and_not_the_long_worked_example": {
+    "chosen_span": { "start": 13912, "end": 14135 },
+    "reasoning": "SourceStopContract carries ONE span, and that span has to justify all three fields it stamps: anchor, extreme, include_wick. This one does, verbatim - 'the fair value candle' (anchor is the CANDLE, not the gap band), 'the bottom of' (the extreme), 'include the wick of the candle as well' (include_wick=true).",
+    "the_honest_wrinkle": "This is the teacher's RULE STATEMENT, and he speaks it over the SHORT worked example (he says 'click the short tool here' at char ~13320). The LONG worked example at {18758,18852} says 'We would put our stop to the low of the fair value gap would be just there including the wick' - which resolves DIRECTION for the long side but names the GAP, not the candle.",
+    "why_that_does_not_weaken_the_long_side": "AR-1063 and AR-1068 SS2/SS3.1 already adjudicated this: a gap boundary (high[i-2] on the bullish side) is a price level with no wick to include, so 'including the wick' in BOTH phrasings can only refer to the candle. The long side is TEXT_SUFFICIENT per AR-1068 SS3.1 and is not being re-litigated here.",
+    "corroborating_span": { "start": 18758, "end": 18852 },
+    "what_is_NOT_claimed": "That this span resolves the SHORT side. It does not. The very same words say 'bottom' over a short setup, which is incoherent for a short, and that is exactly why the short side stays refused."
+  },
+
+  "short_side": {
+    "status": "UNRESOLVED_SOURCE_AMBIGUITY",
+    "governing": "AR-1068 SS3.2 and SS12 - keep short FAIL-CLOSED until the one bounded visual question resolves it or returns unresolved/conflict.",
+    "enforced_by": [
+      "no short anchor is emitted in source_risk.stop above",
+      "displacement_candle_high is deliberately absent from ANCHOR_TO_RESOLVER, so even an emitted short anchor would REFUSE rather than resolve"
+    ],
+    "do_not": "Do not add displacement_candle_high by inference from 'a short stop normally sits above entry'. AR-1068 SS3.2 forbids engineering common sense substituting for source authority."
+  },
+
+  "scope_limits": {
+    "this_artifact_is_not": "a complete-strategy fidelity claim. It carries RISK only - stop anchor and target. Entry causality (opening range lock, close outside ORH/ORL, matching-direction post-breakout FVG, third-candle completion) is AR-1068 SS10 NEXT UNIT 2, and is NOT represented here.",
+    "long_only": "A long-only fixture is not the complete educator strategy (AR-1068 SS12)."
+  }
+}

@@ -53,14 +53,34 @@ export type SourceStopAnchor =
  *
  * `atr_multiple` is DELIBERATELY ABSENT: it is not a structural anchor, and mapping it
  * to one would let a non-structural teaching command a structural stop.
- * `displacement_candle_*` and `swing_after_sfp` are also absent — the Python resolver
- * implements no candidate for them, and inventing a mapping would silently bind the
- * teacher's stop to a DIFFERENT structure than the one taught.
+ * `swing_after_sfp` is also absent — the Python resolver implements no candidate for it,
+ * and inventing a mapping would silently bind the teacher's stop to a DIFFERENT structure
+ * than the one taught.
+ *
+ * ⚡ AR-1068 §4 (STEP 2A) — THE `displacement_candle_*` EXCLUSION WENT STALE AT `64420de6`.
+ * The comment above used to say the Python resolver implements no candidate for
+ * `displacement_candle_*`. That became FALSE when STEP 1 landed: `structural_stops.py:267`
+ * now carries `"fvg_displacement": (fvg_displacement_low, fvg_displacement_high)`, fed by
+ * `fvg_native.displacement_extreme()`. So the mapping below is no longer an invention — it
+ * is the canonical graduation AR-1068 §4 ordered.
+ *
+ * 🛑 AND `fvg_low` / `fvg_high` ARE DELIBERATELY LEFT POINTING AT `"fvg"`. AR-1068 §4:
+ * "Do not globally remap `fvg_low -> fvg_displacement`." Those keep GENERIC GAP-BOUNDARY
+ * semantics (`high[i-2]` / `low[i-2]`) for every other teacher. The sVkm repair graduates
+ * to its OWN anchor instead of redefining a shared one.
+ *
+ * 🛑 `displacement_candle_high` IS STILL ABSENT, AND THAT IS A DELIBERATE NARROWING OF
+ * AR-1068 §4, STATED OUT LOUD RATHER THAN TAKEN SILENTLY. §4 conditions the short anchor on
+ * "ONLY if source authority resolves the short side", and §12 orders short kept FAIL-CLOSED
+ * until the bounded visual question answers it. Leaving the key unmapped makes the refusal
+ * structural at TWO layers (no source authority AND no resolver mapping) instead of one.
+ * ⇒ When the visual question resolves short with source evidence, this is a ONE-LINE open.
  */
 export const ANCHOR_TO_RESOLVER: Readonly<Partial<Record<SourceStopAnchor, string>>> =
   Object.freeze({
     fvg_low: "fvg",
     fvg_high: "fvg",
+    displacement_candle_low: "fvg_displacement",
     ob_low: "order_block",
     ob_high: "order_block",
     sweep_wick_below_entry: "sweep_wick",
