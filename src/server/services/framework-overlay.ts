@@ -34,7 +34,9 @@ export type StrategySource = "ollama" | "openclaw" | "manual" | "graduated_bucke
 
 interface CompiledConfig {
   strategy?: {
-    stop_loss?: { type?: string; multiplier?: number };
+    // `ownership` is the SOURCE-RISK-HANDOFF-1 key: "source" means the teacher taught
+    // this stop and the framework may not replace it. Absent on every legacy config.
+    stop_loss?: { type?: string; multiplier?: number; ownership?: string; [key: string]: unknown };
     position_size?: Record<string, unknown>;
     exit?: string;
     entry_long?: string;
@@ -324,8 +326,27 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
       warnings.push(`stop_loss.multiplier ${mult} > 5; schema will reject. Capping at 5.`);
       if (cfg.strategy) cfg.strategy.stop_loss = { type: "atr", multiplier: 5 };
     }
+  } else if (stop && stop.ownership === "source") {
+    // ─── SOURCE-RISK-HANDOFF-1 / UNIT E (AR-1059 §4) ────────────────────────────
+    // The teacher taught this stop. AR-1059 §3 supersedes the historical "risk is
+    // REPLACED" policy for SOURCE_FAITHFUL: framework defaults apply only to genuinely
+    // UNTAUGHT risk fields. Replacing a source-owned stop here would silently execute a
+    // Trading Forge stop under a source-faithful label — the exact semantic substitution
+    // this unit exists to prevent. TF_OVERLAY_VARIANT never reaches this branch: it is
+    // stamped `type:"atr"` at onboarding and takes the framework path above.
+    applied.push(`stop_loss PRESERVED (source-owned, anchor=${String(stop.anchor ?? "?")})`);
   } else if (stop && stop.type !== "atr") {
-    warnings.push(`stop_loss.type=${stop.type} is non-structural; CLAUDE.md §13 forbids fixed-point stops. Replacing with atr 1.5x.`);
+    // NOTE: this message previously read "is non-structural; CLAUDE.md §13 forbids
+    // fixed-point stops", which inverted the clause it cited — CLAUDE.md:255 is titled
+    // "Stop Loss — structural, NEVER fixed-point" and :704 forbids FIXED-POINT stops
+    // while REQUIRING structural ones. The real reason for the replacement is narrower
+    // and purely mechanical: "atr" is the only stop type the downstream engine
+    // implements for a framework-owned stop.
+    warnings.push(
+      `stop_loss.type=${stop.type} is not an implemented framework stop type ` +
+        `(only "atr" is) and carries no source ownership stamp. Replacing with atr ` +
+        `${FRAMEWORK.stopFloorAtrMultiple}x.`,
+    );
     if (cfg.strategy) cfg.strategy.stop_loss = { type: "atr", multiplier: FRAMEWORK.stopFloorAtrMultiple };
     applied.push("stop_loss <- atr 1.5x (framework override)");
   }

@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `56279f65d092807121f0dcab85a074eea092b53a`  (worktree DIRTY at generation time)
+> Generated at commit `93dfa18e12a741589ec5a999bea4711f51acbd8f`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -31,7 +31,7 @@ first and its cost is made visible.
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
 | `src/` | Python | 292 | 368 | 121187 | 1884 |
-| `src/` | TypeScript | 462 | 720 | 209790 | 2928 |
+| `src/` | TypeScript | 462 | 721 | 209811 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
 TypeScript symbol rule: every line matching an **exported declaration** pattern
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1842 | 754 |
+| `src/` | 1843 | 754 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2100** | **975** |
+| **TOTAL** | **2101** | **975** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 422 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1088 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1089 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **620** of **2100** parsed files.
+Total entry points: **94**.  Modules reachable from them: **620** of **2101** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -210,7 +210,7 @@ table below it.**
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=1884 ts=2928 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
-| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6602/6602 TS import specifiers non-blank |
+| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6604/6604 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
@@ -3249,7 +3249,7 @@ _...479 more omitted from this table._
 | `runFadeTheLosers` | function | `src/server/services/fade-the-losers-service.ts:725` | defining module is not reachable from any measured entry point |
 | `loadSeedPriorsIfEmpty` | function | `src/server/services/firm-adversarial-event-service.ts:366` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `listAllPriors` | function | `src/server/services/firm-adversarial-event-service.ts:437` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `__frameworkDefaults` | const | `src/server/services/framework-overlay.ts:533` | no non-test reference outside its own definition |
+| `__frameworkDefaults` | const | `src/server/services/framework-overlay.ts:554` | no non-test reference outside its own definition |
 | `DriftSummary` | interface | `src/server/services/graduated-strategy-drift-checker.ts:23` | defining module is not reachable from any measured entry point |
 | `runGraduatedStrategyDriftCheck` | function | `src/server/services/graduated-strategy-drift-checker.ts:31` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `getAvoidancePatterns` | function | `src/server/services/graveyard-intelligence-service.ts:154` | no non-test reference outside its own definition |
@@ -7020,7 +7020,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `upsertPrior` | function | `src/server/services/firm-adversarial-event-service.ts:234` | 1 | unique |
 | `refitPriorsForAllFirms` | function | `src/server/services/firm-priors-fitter.ts:62` | 1 | unique |
 | `StrategySource` | type | `src/server/services/framework-overlay.ts:33` | 2 | unique |
-| `applyFrameworkOverlay` | function | `src/server/services/framework-overlay.ts:220` | 6 | unique |
+| `applyFrameworkOverlay` | function | `src/server/services/framework-overlay.ts:222` | 6 | unique |
 | `FrankensteinPythonResult` | interface | `src/server/services/frankenstein-service.ts:38` | 0 | unique |
 | `FrankensteinRunOutput` | interface | `src/server/services/frankenstein-service.ts:52` | 0 | unique |
 | `runFrankensteinTest` | function | `src/server/services/frankenstein-service.ts:204` | 1 | unique |
