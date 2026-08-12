@@ -648,6 +648,27 @@ def _junit_nodeid(tc) -> str:
     return "::".join([module, *chain, name])
 
 
+def _disposition_drift_line(label, newly, no_longer, missing_authorized):
+    """The one line a reader scans to decide whether dispositions moved.
+
+    Three departures are computed at this site and any of them refuses the gate:
+    `newly`, `no_longer`, and `missing_authorized`. This line reported only the
+    first two, so an AUTHORIZED change that never actually happened rendered as
+    `+0 / -0` -- a clean-looking summary printed over a live refusal. Lane G hit
+    exactly that: MISSING AUTHORIZED DISPOSITION CHANGE as its sole refusal, with
+    `+0 / -0` displayed on both sibling arms.
+
+    All three are now shown SEPARATELY. They are not summed: they mean different
+    things, and a single total would restore the same ambiguity one level up.
+
+      `A SUMMARY THAT OMITS ONE OF THE THINGS IT SUMMARIZES IS WRONG IN THE
+       DIRECTION OF REASSURANCE.`
+    """
+    return (f"[DISP] sealed {label:<5} membership drift        : "
+            f"+{len(newly)} / -{len(no_longer)} / "
+            f"missing-authorized {len(missing_authorized)}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--from-run", type=Path, help="plugin JSON record")
@@ -1191,8 +1212,7 @@ def main():
             observed_removed = sealed_members - current_in_sealed
             no_longer = sorted(observed_removed - authorized)
             missing_authorized = sorted(authorized - observed_removed)
-            print(f"[DISP] sealed {label:<5} membership drift        : "
-                  f"+{len(newly)} / -{len(no_longer)}")
+            print(_disposition_drift_line(label, newly, no_longer, missing_authorized))
             # 🛑 THREE REFUSALS, BY MEMBERSHIP, NEVER COUNTS — and the caption now
             # matches the code. It previously said "BOTH DIRECTIONS" while the
             # authorized subset had exactly ONE, which is worse than no caption:
