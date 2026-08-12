@@ -7204,7 +7204,10 @@ def run_class_backtest(
     # ─── Max trades per day filter ──────────────────────────────
     # run_class_backtest doesn't have a BacktestRequest, so we accept max_trades_per_day
     # as a parameter defaulting to 2 (set below in function signature).
-    if max_trades_per_day > 0:
+    # AR-1074 §7.3 / §10.E: the house default is 2/day and sVkm teaches no daily cap.
+    # Silently capping source signals changes the teacher's trade population, so
+    # SOURCE_FAITHFUL is exempt. Legacy and TF_OVERLAY_VARIANT keep the cap unchanged.
+    if max_trades_per_day > 0 and not _source_faithful:
         ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
         if ts_col in df.columns:
             ts_arr = df[ts_col].to_numpy()
@@ -7238,7 +7241,10 @@ def run_class_backtest(
     # ─── Suppress entries on rollover days ────────────────────────
     if "is_rollover_day" not in df.columns:
         df = flag_rollover_days(df, symbol)
-    if "is_rollover_day" in df.columns:
+    # AR-1074 §7.4 / §10.E: rollover suppression is a useful EXECUTION/RISK policy, but it
+    # is not source strategy logic, and for the compiler-conformance path it may not
+    # silently change the source trade population. Preserved for legacy/overlay.
+    if "is_rollover_day" in df.columns and not _source_faithful:
         rollover_mask = df["is_rollover_day"].to_numpy()
         suppressed = int(np.sum(entries_pd.values[rollover_mask]) + np.sum(short_entries_pd.values[rollover_mask]))
         if suppressed > 0:
@@ -7339,7 +7345,12 @@ def run_class_backtest(
             # still not fully preserved on this path. Reported, not silently fixed.
             _dsl_sl_meta_cls = {}
             _cls_dsl_guards_meta["source_faithful_bypassed"] = [
-                "E.3_house_stop_ceiling", "E.5_time_stop_1555_et",
+                "E.3_house_stop_ceiling",      # AR-1068 §8
+                "E.5_time_stop_1555_et",       # AR-1068 §7
+                "E.4_dll_halt",                # AR-1074 §7.1
+                "max_trades_per_day",          # AR-1074 §7.3
+                "rollover_day_suppression",    # AR-1074 §7.4
+                "tf_eligibility_gate",         # AR-1068 §7
             ]
         else:
             (
@@ -7376,22 +7387,30 @@ def run_class_backtest(
             _guard_ts_cls if _guard_ts_cls is not None else [""] * len(_guard_entry_long_cls)
         )
 
-        _guard_entry_long_cls, _guard_entry_short_cls, _dll_meta_cls = _apply_dll_halt_to_entries(
-            _guard_entry_long_cls,
-            _guard_entry_short_cls,
-            _guard_exit_long_cls,
-            _guard_exit_short_cls,
-            high_np,
-            low_np,
-            _guard_close_np_cls,
-            _guard_atr_np_cls,
-            _guard_ts_arr_cls,
-            spec.point_value,
-            sizes_clean,
-            commission,
-            personal_dll_pct=_guard_dll_pct_cls,
-            firm_dll=_guard_firm_dll_cls,
-        )
+        # AR-1074 §7.1 / §10.E — E.4 IS NOW BYPASSED FOR SOURCE_FAITHFUL TOO.
+        # I asked whether it was in or out (AR-1072 §6a) rather than widening the bypass on
+        # my own judgement; §7.1 answered: DLL halt suppresses entries from house/firm P&L
+        # state, which is downstream prop-risk policy, not educator strategy semantics.
+        # Preserved unchanged for legacy and TF_OVERLAY_VARIANT.
+        if _source_faithful:
+            _dll_meta_cls = {}
+        else:
+            _guard_entry_long_cls, _guard_entry_short_cls, _dll_meta_cls = _apply_dll_halt_to_entries(
+                _guard_entry_long_cls,
+                _guard_entry_short_cls,
+                _guard_exit_long_cls,
+                _guard_exit_short_cls,
+                high_np,
+                low_np,
+                _guard_close_np_cls,
+                _guard_atr_np_cls,
+                _guard_ts_arr_cls,
+                spec.point_value,
+                sizes_clean,
+                commission,
+                personal_dll_pct=_guard_dll_pct_cls,
+                firm_dll=_guard_firm_dll_cls,
+            )
         _cls_dsl_guards_meta["dll_halt_blocks"] = _dll_meta_cls.get("entries_suppressed", 0)
 
         if (_cls_dsl_guards_meta["stop_ceiling_skips"] or _cls_dsl_guards_meta["time_stop_exits"]

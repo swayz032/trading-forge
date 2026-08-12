@@ -393,12 +393,20 @@ class TestTheBypassesAreWiredIntoTheRightBranches:
         trade'. E.5's 15:55 flatten is untaught. Both live in `_apply_dsl_stop_loss_and_time_stop`,
         which must therefore be UNREACHABLE when the mode is source-faithful."""
         fn = _class_backtest_ast()
+        # ⚠️ There is now MORE THAN ONE bare `if _source_faithful:` — AR-1074 §7.1 added the
+        # E.4 branch. Select by what the branch GUARDS, not by assuming there is only one;
+        # a count assertion here would go red every time a new house guard is exempted.
         branches = [
             n for n in ast.walk(fn)
             if isinstance(n, ast.If) and _source_of(n.test).strip() == "_source_faithful"
         ]
-        assert len(branches) == 1, f"expected one bare `if _source_faithful:`, got {len(branches)}"
-        br = branches[0]
+        assert branches, "no source-faithful branch found at all"
+        matching = [
+            b for b in branches
+            if "_apply_dsl_stop_loss_and_time_stop" in "\n".join(_source_of(s) for s in b.orelse)
+        ]
+        assert len(matching) == 1, f"expected one E.3/E.5 mode branch, got {len(matching)}"
+        br = matching[0]
 
         body_src = "\n".join(_source_of(s) for s in br.body)
         else_src = "\n".join(_source_of(s) for s in br.orelse)
@@ -411,22 +419,62 @@ class TestTheBypassesAreWiredIntoTheRightBranches:
             "disarmed E.3/E.5 for every existing strategy"
         )
 
-    def test_the_dll_halt_is_still_applied_and_is_NOT_inside_the_bypass(self):
-        """HONEST LIMIT, PINNED AS A TEST. AR-1068 §7's SOURCE_FAITHFUL list does not name
-        E.4 (DLL halt), so I did not widen the authorized bypass to include it. But E.4 DOES
-        suppress entries, so the source trade population is still not fully preserved. This
-        test exists so that limitation is a FACT ON THE RECORD rather than a footnote."""
+        # 🛑 AND THE ELSE MUST BE AN UNCONDITIONAL ELSE.
+        # THIS ASSERTION EXISTS BECAUSE THE TWO ABOVE WERE FALSELY GREEN. An ablation that
+        # rewrote `else:` to `elif False:` — which disarms E.3/E.5 for EVERY LEGACY STRATEGY,
+        # the worst outcome this file guards against — left all 31 tests passing, because the
+        # call's TEXT is still inside the (now conditional) orelse block.
+        # ★ `PRESENCE IN A BRANCH IS NOT REACHABILITY OF THAT BRANCH.`
+        assert not (len(br.orelse) == 1 and isinstance(br.orelse[0], ast.If)), (
+            "the legacy arm sits behind a SECOND condition (`elif ...`), so legacy no longer "
+            "unconditionally runs E.3/E.5 when the mode is off"
+        )
+
+    def test_the_dll_halt_is_now_bypassed_for_source_faithful(self):
+        """⚡ THIS TEST WAS INVERTED BY AR-1074 §7.1, AND THE HISTORY MATTERS.
+
+        Its previous form pinned E.4 as a KNOWN LIMIT: I had asked (AR-1072 §6a) whether the
+        DLL halt was in or out of the SOURCE_FAITHFUL bypass rather than widening an
+        authorized bypass on my own judgement, and pinned the gap so it could not be
+        forgotten. §7.1 ruled it OUT — "downstream prop/risk policy, not educator strategy
+        semantics" — so the same test now asserts the opposite behaviour.
+        ★ `A TEST THAT PINS AN OPEN QUESTION MUST BE REWRITTEN WHEN THE QUESTION IS
+           ANSWERED — LEAVING IT GREEN WOULD PIN THE OLD ANSWER.`"""
         fn = _class_backtest_ast()
-        br = [
+        branches = [
             n for n in ast.walk(fn)
             if isinstance(n, ast.If) and _source_of(n.test).strip() == "_source_faithful"
-        ][0]
-        assert "_apply_dll_halt_to_entries" not in "\n".join(_source_of(s) for s in br.body)
-        assert "_apply_dll_halt_to_entries" in _source_of(fn), "positive witness: E.4 still exists"
+        ]
+        dll = [
+            b for b in branches
+            if "_apply_dll_halt_to_entries" in "\n".join(_source_of(s) for s in b.orelse)
+        ]
+        assert len(dll) == 1, "E.4 must sit in the ELSE of a source-faithful branch"
+        assert "_apply_dll_halt_to_entries" not in "\n".join(_source_of(s) for s in dll[0].body), (
+            "E.4 must not run on the source arm"
+        )
+
+    def test_the_daily_cap_and_rollover_suppression_are_exempt_for_source_faithful(self):
+        """AR-1074 §7.3 and §7.4. Neither is taught; both delete source entries."""
+        src = _source_of(_class_backtest_ast())
+        assert "if max_trades_per_day > 0 and not _source_faithful:" in src
+        assert 'if "is_rollover_day" in df.columns and not _source_faithful:' in src
+
+    def test_every_bypassed_house_guard_is_DISCLOSED_by_name(self):
+        """A bypass nobody can see in the output is indistinguishable from a bug. The list
+        is the run's own account of what it switched off."""
+        src = _source_of(_class_backtest_ast())
+        for guard in (
+            "E.3_house_stop_ceiling", "E.5_time_stop_1555_et", "E.4_dll_halt",
+            "max_trades_per_day", "rollover_day_suppression", "tf_eligibility_gate",
+        ):
+            assert f'"{guard}"' in src, f"{guard} is bypassed but not disclosed"
 
     def test_the_run_discloses_which_guards_were_bypassed(self):
         """A bypass nobody can see in the output is indistinguishable from a bug."""
         src = _source_of(_class_backtest_ast())
         assert '"source_faithful_bypassed": []' in src, "the key must exist on every run"
-        assert '"E.3_house_stop_ceiling", "E.5_time_stop_1555_et",' in src
         assert '"source_risk_mode": source_risk_mode,' in src, "the mode must reach the result"
+        # The per-guard names are asserted by
+        # TestTheBypassesAreWiredIntoTheRightBranches.test_every_bypassed_house_guard_is_DISCLOSED_by_name,
+        # which checks each one individually rather than pinning one literal line's formatting.
