@@ -174,3 +174,49 @@ def compute_fvg_signal(
         bearish_active=bearish_active,
         any_active=bullish_active | bearish_active,
     )
+
+
+# --- SOURCE-RISK-HANDOFF-1 / STEP 1-2 (AR-1064 section 2) --------------------
+# The DISPLACEMENT CANDLE extreme, which is NOT the gap band.
+#
+# FVGZone.upper/lower are the imbalance BOUNDARIES (bullish: lower = high[i-2],
+# upper = low[i]). The sVkm teacher anchors his stop to the middle candle's
+# wick-inclusive extreme instead -- "put it at the bottom of the fair value
+# candle... Don't just go to the body" (transcript df72444f; AR-1063, AR-1065).
+# Those are different prices, and the gap boundary is the tighter of the two.
+#
+# AR-1064 section 2 forbids redefining fvg_low (it would repair one teacher by
+# corrupting the generic ontology) and rules that widening FVGZone is
+# unnecessary: the detector already guarantees start_idx == candle 3, so
+# candle 2 is deterministically start_idx - 1. Hence a free function over the
+# existing identity plus the raw OHLC arrays -- no dataclass change.
+
+
+def displacement_extreme(zone, high, low, direction: str) -> float:
+    """Wick-inclusive extreme of the displacement candle owning `zone`.
+
+        LONG  -> low[start_idx - 1]
+        SHORT -> high[start_idx - 1]
+
+    `low`/`high` are the raw series, so the value is the full candle extreme
+    including the wick -- never a body edge.
+
+    Raises ValueError when the zone has no displacement bar (start_idx < 1),
+    rather than silently indexing to -1 and returning the LAST bar of the array,
+    which would be a plausible-looking price from the wrong end of the session.
+    """
+    d = direction.strip().lower()
+    if d not in ("long", "short"):
+        raise ValueError(f"direction must be 'long' or 'short', got {direction!r}")
+
+    idx = int(zone.start_idx) - 1
+    if idx < 0:
+        raise ValueError(
+            f"zone.start_idx={zone.start_idx} has no displacement candle at "
+            f"start_idx-1={idx}; refusing rather than wrapping to the array end"
+        )
+
+    series = low if d == "long" else high
+    if idx >= len(series):
+        raise ValueError(f"displacement index {idx} is outside the supplied series (len {len(series)})")
+    return float(series[idx])

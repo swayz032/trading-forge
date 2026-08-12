@@ -212,6 +212,11 @@ def compute_structural_stop(
     nearest_ob_above: Optional[float] = None,  # For shorts: OB top above entry
     nearest_fvg_below: Optional[float] = None,
     nearest_fvg_above: Optional[float] = None,
+    # The DISPLACEMENT CANDLE extreme — deliberately NOT the same object as
+    # nearest_fvg_below/above, which are the imbalance BOUNDARIES. AR-1064 §2 requires a
+    # distinct anchor rather than redefining `fvg_low`. See fvg_native.displacement_extreme.
+    fvg_displacement_low: Optional[float] = None,
+    fvg_displacement_high: Optional[float] = None,
     nearest_swing_low: Optional[float] = None,
     nearest_swing_high: Optional[float] = None,
     sweep_wick_low: Optional[float] = None,    # Wick of a recent sweep candle
@@ -256,6 +261,10 @@ def compute_structural_stop(
         # hijack it, and an unresolvable anchor REFUSES rather than degrading to ATR.
         anchors: dict[str, tuple[Optional[float], Optional[float]]] = {
             "fvg": (nearest_fvg_below, nearest_fvg_above),
+            # Source-owned: the displacement candle's wick-inclusive extreme. Kept as its
+            # OWN anchor so "the gap" and "the candle" can never silently substitute for
+            # each other — that substitution was the AR-1063 defect.
+            "fvg_displacement": (fvg_displacement_low, fvg_displacement_high),
             "order_block": (nearest_ob_below, nearest_ob_above),
             "sweep_wick": (sweep_wick_low, sweep_wick_high),
             "swing_point": (nearest_swing_low, nearest_swing_high),
