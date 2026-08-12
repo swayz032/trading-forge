@@ -248,6 +248,12 @@ SEAL_APPROVED_MANIFEST_MEMBERS = 105
 # Both constants were RECOMPUTED at source from both materializations before
 # landing (R-796 §4 K-2 required a STOP had they disagreed; they agreed).
 # ---------------------------------------------------------------------------
+# R3-5 item B — DETERMINISTIC REFUSAL CODES. A caller must be able to branch on WHY
+# authority was refused without parsing English prose, and a refusal that arrives as
+# a traceback cannot be branched on at all.
+BASELINE_UNREADABLE = "BASELINE_UNREADABLE"
+BASELINE_UNPARSEABLE = "BASELINE_UNPARSEABLE"
+
 BASELINE_APPROVED_BLOB_OID = "b71c164147201f7a42dcd1899402a56ae19a6f32"
 BASELINE_APPROVED_CANONICAL_SHA256 = (
     "1b97e38ae1e9c15a3653e0adf8533b0f73b7c7a5c092296dd00c5079dd1a02d4"
@@ -298,10 +304,21 @@ def validate_baseline_bytes(path: Path):
     """
     probs = []
 
+    # (0) READABILITY — missing, unreadable, or permission-denied. Previously this
+    #     raised straight out of the preflight, so the gate died before printing a
+    #     single refusal and never reached its own verdict line.
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        probs.append(
+            f"{BASELINE_UNREADABLE}: the failure baseline could not be read at "
+            f"{path}: {exc.__class__.__name__}: {exc}"
+        )
+        return probs
+
     # (1) COMMITTED IDENTITY — the whole file, before any interpretation, compared
     #     as git itself would identify it. Normalized, so this asks about the
     #     ARTIFACT and not about how one worktree happened to materialize it.
-    raw = path.read_bytes()
     oid = _git_blob_oid(raw)
     if oid != BASELINE_APPROVED_BLOB_OID:
         probs.append(
@@ -315,7 +332,10 @@ def validate_baseline_bytes(path: Path):
     try:
         d = json.loads(raw)
     except Exception as exc:
-        probs.append(f"BASELINE INTEGRITY FAILURE: the baseline does not parse: {exc}")
+        probs.append(
+            f"{BASELINE_UNPARSEABLE}: the failure baseline does not parse: "
+            f"{exc.__class__.__name__}: {exc}"
+        )
         return probs
 
     # (2b) SEMANTIC IDENTITY — immune to line endings and key order, so it bites the
@@ -627,6 +647,27 @@ def main():
     for pr in baseline_problems:
         print(f"      {pr}")
     failures_of_the_gate.extend(baseline_problems)
+
+    # R3-5 item B — FAIL CLOSED ON THE AUTHORITY FILE ITSELF.
+    # Everything below this line PARSES the baseline and subscripts its keys. Running
+    # any of it against a baseline the preflight has just refused is how a refusal
+    # became a traceback: the verdict line was never reached, and a caller reading the
+    # exit code could not tell a refused baseline from a broken instrument.
+    #
+    #   `A GATE THAT CRASHES INSTEAD OF REFUSING HAS NOT FAILED CLOSED -- IT HAS
+    #    FAILED WITHOUT A VERDICT.`
+    #
+    # The verdict semantics are unchanged: these problems were already terminal, so
+    # this reaches the same REFUSED/exit-1 outcome the gate always owed. Downstream
+    # checks are skipped deliberately -- they can say nothing trustworthy about a
+    # baseline whose identity was just rejected.
+    if baseline_problems:
+        print("=" * 72)
+        print("ACCEPTANCE: REFUSED")
+        for f in failures_of_the_gate:
+            print(f"  - {f}")
+        print("=" * 72)
+        return 1
 
     base = read_baseline(args.baseline)
     seal = None
