@@ -700,3 +700,122 @@ copy it is fully reconstructible. **`--force` used ONLY after this record existe
 WAS ABOUT TO OVERRIDE WITH `--force` WAS THE ONLY THING THAT KNEW BETTER. THE REFUSAL WAS THE MEASUREMENT.`**
 ⚠️ **AND THE GENERAL FORM, WHICH IS THE PART WORTH KEEPING: `A CLEAN `git status` IS NOT AN EMPTY DIRECTORY.
 AN ABSENCE CLAIM OVER A WORKING TREE MUST NAME WHICH CLASSES IT ENUMERATED — TRACKED, UNTRACKED, IGNORED.`**
+
+
+## 14. ✅ THE 32-ROW SIX-FIELD BACKFILL (`AR-1024 §3`) — AND ONE ROW WHOSE RECORDED DISPOSITION IS REFUTED
+
+**Ruling:** GPT `AR-1024 §3` — *"backfill the final six-field disposition / proof-receipt contract for
+all 32 rows using durable existing evidence first"*, explicitly **a receipt-backfill lane, not a
+re-certification lane**. **Schema:** `R-815 §7`'s adopted six fields (`FIRED_C0` · `FIRED_C1` ·
+`AXIS_VARIED` · `ROOT_CAUSE` · `FINAL_DISPOSITION` · `PROOF_RECEIPT`).
+**Pin:** `858506cf` (`h1-wave4-sealed12-driver`), the durable map receipt `AR-1024` names.
+**Denominator:** `32`, unchanged. **`AR-1024 §4[4]` honoured: a converted row KEEPS its census seat.**
+
+🛑 **FIRST, THE THING THAT INVALIDATES A NAIVE READ OF `§3` AND `§7`: THOSE SECTIONS DESCRIBE THE TREE
+AS IT WAS ON 2026-08-11, AND SEVEN CLUSTERS HAVE LANDED SINCE.** `[MEASURED HERE @ 858506cf]`
+executable `pytest.skip(` sites across all nine census files — comment lines excluded, because
+`§3`'s own laws forbid counting a comment as code:
+
+```
+test_accuracy_fixes.py 0 · test_fvg_identity_dispatch.py 0 · test_levelzone_routing.py 0
+test_pnl_accuracy.py 0 · test_signal_vector.py 0 · test_spec_family_bindings.py 1
+test_static_c_partials_ab.py 0 · test_walk_forward_wrc_spa_emission.py 0
+test_wave_b_intrabar_stops.py 1
+```
+⇒ **`30` of the `32` census sites are GONE at `HEAD`; exactly `2` executable skip sites survive.**
+⚠️ **A FIRST COUNT OF MINE READ `1` SURVIVOR IN `test_signal_vector.py` AND IT WAS A COMMENT** —
+R-815's own note *describing* the deleted skip, at `:235`. **The count above excludes comment lines;
+the naive count does not.** ★★★ **`A GREP THAT MATCHES A COMMENT IS NOT A MEASUREMENT OF CODE.`**
+
+### 14.1 THE BACKFILL — ALL `32` ROWS, GROUPED BY THE EVIDENCE THAT PROVES THEM
+
+**Rows sharing a cluster share one receipt because they share one repair** — the grouping is
+`R-814`/`AR-1024 §3[3]`'s root-cause acceptance, not a convenience. **Every row number appears exactly
+once; `1+4+7+3+3+1+3+1+2+4+3 = 32`.**
+
+| rows | `FIRED_C0` | `FIRED_C1` | `AXIS_VARIED` | `ROOT_CAUSE` | `FINAL_DISPOSITION` | `PROOF_RECEIPT` |
+|---|---|---|---|---|---|---|
+| **`1`** | NO | NO | CREDENTIAL varied `C0→C1`, no effect; other 4 **NOT VARIED** (`§6`) | in-repo `FIRM_COMMISSIONS` config table — **never machine-local** | ✅ **SKIP DELETED** — replaced by a hard `assert firm_key in FIRM_COMMISSIONS`; a config regression is now RED | Cluster `G`, commit **`1b6257e4`**; executable lines `:465`–`:473` @ `858506cf` |
+| **`2`,`3`,`4`,`5`** | N/A — site already removed at the `C0` arm | N/A | N/A — no skip site remains to axis-test | importability of the in-repo `exits` module | ✅ **SKIP DELETED** — the `try/except` is gone and the import is **unguarded**, so an unimportable module raises `ImportError` | Cluster `A2`, commit **`c6362fc3`** *("convert the four exits-import skips")* — **4 rows, 4 in the subject** |
+| **`6`,`7`,`8`,`9`,`10`,`11`,`25`** | NO — each owning test observed `passed` (`§7` witness) | NO | as row `1` | fixture-outcome skips: a form-`[2]` fixture skipping on **its own output** (trade count / signal / golden fixture) | ✅ **SKIP DELETED** — converted to hard failures | Cluster `B`, commit **`936d7741`** *("convert 7 fixture-outcome skips")* — **7 rows, 7 in the subject** |
+| **`12`,`14`,`16`** | N/A — site already removed at the `C0` arm | N/A | N/A | importability of the backtester | ✅ **SKIP DELETED** — import unguarded ⇒ hard `ImportError` | Cluster `A1`, commit **`1a639679`** *("convert the three backtester import guards")* — **3 rows, 3 in the subject** |
+| **`13`,`15`,`17`** | 🛑 **YES** — all three skipped, chain actively disabled | **NO** — all three passed with credentials injected | 🛑 **CREDENTIAL — VARIED.** The only one of five varied | remote S3 OHLCV read converted to a skip by a `str(e)` substring test | ✅ **`R-799 §5` form `[2]`** — deterministic in-test fixture; broad `except → pytest.skip` **DELETED, not narrowed** | Cluster `A`, **`§10`** + `§10.1` four controls executed, `§10.2` population effect |
+| **`18`** | NO | NO | as row `1`; `SAMPLES_DIR` itself **NOT VARIED** (absolute path, `§6`) | `SAMPLES_DIR` — a hardcoded absolute path into another worktree, `141` files, `0` tracked | ✅ **`R-799 §5` form `[1]`** — the **exactly 2** consumed samples vendored beside the test, membership proven **by ablation**; a missing sample is now an ERROR | Cluster `E`, commit **`c187322f`**; fail-closed rationale at `:38`–`:52` @ `858506cf` |
+| **`19`,`21`,`24`** | NO | NO | as row `1` | h1-battery fixture · corpus dir · `docs/` corpora | ✅ **`R-799 §5` form `[1]`** — `pytest.skip` **DELETED**, replaced by a hard `assert` | Cluster `D`, commit **`e60b1909`**; **`§11`** + `§11.1` three arms per row, worktree `48a7d0ac` |
+| **`20`** | NO | NO | as row `1` | blind-readjudication `LOCKED.json` governed grade | 🛑 **SPLIT — SEE `§14.2`. The INPUT satisfies form `[1]`; the SKIP GUARD SURVIVES.** | input verified `[MEASURED HERE]`; guard at `:928` `[MEASURED HERE]` — **`§14.2`** |
+| **`22`,`23`** | NO | NO | as row `1`; GIT HISTORY **NOT VARIED** (shared object store, `§6`) | `git show <ref>:<path>` history dependency | ✅ **`R-799 §5` form `[3]`** — explicitly pinned external input, **identity verified before execution** | Cluster `F`, **`§12`** + `§12.1` planted triggers pre/post, worktree `2d8b1da1` |
+| **`26`,`27`,`28`,`29`** | NO — `passed` here ⇒ `wrc.available` was `True` | NO | as row `1` | **SUBJECT SELF-EXCUSE** — the test skips on a value the subject under test computes (`wrc.available`) | ✅ **SKIP DELETED** — converted to hard failures, **convicted by TARGETED MUTATION, not observation** | Cluster `C`, commit **`5b59b3a9`** *("convert 4 wrc/spa environment-skips")* — **4 rows, 4 in the subject** |
+| **`30`,`31`,`32`** | NO | NO | as row `1` | backtester import skipped to avoid a vectorbt JIT hang | 🛑 **OUT OF SCOPE — `STOP [11]`, `R-814` forbidden list. NAMED, NOT TOUCHED.** One broadcast site survives at `test_wave_b_intrabar_stops.py:82` `[MEASURED HERE]` | `STOP [11]`; deliberately unconverted, and this backfill does **not** convert it |
+
+✅ **RECONCILIATION, THE ONLY WAY A CLUSTER RECEIPT IS ALLOWED TO CARRY MULTIPLE ROWS:** each cluster's
+row count is stated **in its own commit subject** — `A1` three, `A2` four, `B` seven, `C` four — and
+each matches the row count assigned here. **A cluster whose subject count disagreed with its row count
+would be a join error, and that is exactly the check.**
+
+### 14.2 🛑🛑 ROW `20` — ITS RECORDED DISPOSITION IS REFUTED BY THE TREE, AND I AM NOT SEALING OVER IT
+
+**`§3`'s row `20` reads: *"✅ CLOSED — converted to form `[1]` at `e55a9ef1`, sha `920557eb…`, 978
+bytes"*. Two of those three claims verify. The word `converted` does not.**
+
+**WHAT VERIFIES `[MEASURED HERE @ 858506cf]`:**
+```
+docs/replay-results/blind-readjudication/blind-second-judge-LOCKED.json
+  size    978 bytes          <- matches the census exactly
+  sha256  920557eb3d32100e…  <- matches the census tail exactly
+  git ls-files              -> TRACKED  (= committed governed evidence, form [1])
+git cat-file -t e55a9ef1    -> commit,  touching exactly that JSON file
+```
+⚠️ **`920557eb` IS A CONTENT SHA256, NOT A GIT OBJECT** — `git cat-file -t 920557eb` returns
+`fatal: Not a valid object name`. **I checked that before trusting it** (`[external-sha-fabrication]`:
+external sha tails have been invented here before). **It is genuine; it is simply a different kind of
+hash than the neighbouring `e55a9ef1`.** ★★★ **`TWO HASHES IN ONE SENTENCE NEED NOT BE THE SAME KIND
+OF HASH.`**
+
+**WHAT REFUTES IT `[MEASURED HERE @ 858506cf]` — the executable line, not a comment:**
+```python
+925  def _governed_split() -> dict:
+926      path = os.path.join(os.path.dirname(__file__), _GOVERNED_GRADE_FILE)
+927      if not os.path.isfile(path):
+928          pytest.skip(f"governed grade unavailable at {path}")
+```
+**The `pytest.skip` is intact and executable.** Its sibling twelve lines below, `_corpus_wait_session_rows`
+at `:933`, carries the real Cluster-`D` conversion and cites *"`R-818 §7[3]` Cluster D / `R-799 §5`
+form `[1]`"* in its body. **Row `21` was converted. Row `20` was not.**
+
+⇒ **WHAT `e55a9ef1` ACTUALLY DID:** it committed the *evidence file*, which makes the **input** satisfy
+form `[1]`. **It never removed the *guard*.** Those are two different repairs and the census recorded
+the second one as done on the strength of the first.
+
+**SEVERITY — REACHABLE, NOT THEORETICAL. `[MEASURED HERE]` `_governed_split()` has two live callers,
+`:959` and `:995`**, both `S6` coverage assertions — **release-authority tests.** If that JSON ever goes
+missing or moves, those two nodes go **SKIP, not RED** — precisely the failure `R-799 §5` was minted to
+abolish: *"Missing required evidence ⇒ FAIL/REFUSE. NEVER `SKIP BECAUSE THIS LAPTOP DOES NOT HAVE
+IT`."* It does not fire **today** only because the file is tracked.
+★★★★★ **`SAFETY BY PRESENCE IS NOT SAFETY BY DESIGN — THIS ROW IS ONE `rm` FROM THE DEFECT THE WHOLE
+LANE EXISTS TO ELIMINATE, AND ITS CENSUS SEAT SAYS THE WORK IS DONE.`**
+
+**WHY I STOPPED HERE RATHER THAN REPAIRING IT OR SEALING PAST IT — and I checked all four STOPs first:**
+`AR-1024 §4`'s four STOP conditions are `[MEASURED]` **NOT** fired: the row **can** be dispositioned
+from durable evidence without guessing (`§14.1` does exactly that); the proof receipt is **present**;
+I changed **no** governed production/compiler/trading behaviour; the denominator is **still `32`**.
+**So the fast-path was not formally closed to me — I am holding on a different rule.**
+`AR-1024 §5` permits **exactly ONE successor disposition seal**, and `§2` says prior receipts stand
+*"unless a direct contradiction appears."* **A direct contradiction has appeared.** ⇒ **spending the
+one permitted seal on a census whose row `20` is either false-as-written or honest-but-unrepaired is
+the one move here that cannot be taken back** (`[irreversible-gap]`: authorize and execute in separate
+motions). **The repair itself is out of my lane — `AR-1024 §3` calls this a receipt-backfill lane and
+forbids re-certification and skip-site cleanup — so I neither converted it nor sealed over it.**
+
+### 14.3 ⚠️ WHAT THIS BACKFILL DOES **NOT** ESTABLISH
+
+- **It re-verifies no cluster's internal controls.** For `A`/`D`/`F` it **cites** `§10`/`§11`/`§12` per
+  `AR-1024 §3[1]`–`[2]`; for `B`/`C`/`E`/`G` it cites the converting commit and the executable line at
+  `HEAD`. **It does not re-run those arms**, and `AR-1024 §3[1]` forbids doing so to fill a field.
+- **`FIRED_C0`/`FIRED_C1` are inherited from `§7`/`§9`, not re-measured.** No new `C0`/`C1` arm was run.
+  For rows whose site was already gone at that arm the honest value is `N/A`, **not `NO`** — a removed
+  site cannot be observed not to fire. ★ **`N/A AND NO ARE DIFFERENT ANSWERS AND ONLY ONE OF THEM IS
+  AN OBSERVATION.`**
+- **`AXIS_VARIED` for the 4 non-credential axes is `NOT VARIED` on this box** (`§6`: a fresh linked
+  worktree varies `0/5`). That is a statement about **this box**, not a portability claim.
+- **No per-helper execution trace** — `§7`'s `[UNENUMERATED — OPEN]` limit is unchanged by this section.
+- **Rows `30`–`32` are named, not measured** beyond the surviving broadcast site's existence.
