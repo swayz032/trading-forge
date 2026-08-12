@@ -517,7 +517,16 @@ export function mountCompilerView(host, input, options = {}) {
       settle();
       return;
     }
-    if (!storm && !contextLost) storm = createStormRenderer(canvas, model.identity, profile);
+    if (!storm && !contextLost) {
+      try {
+        storm = createStormRenderer(canvas, model.identity, profile);
+      } catch (error) {
+        console.warn("[compiler-view] WebGL initialization failed; using static strategy stage.", error);
+        storm?.destroy();
+        storm = null;
+        contextLost = true;
+      }
+    }
     if (!storm) {
       stage.classList.add("is-webgl-fallback");
       settle();

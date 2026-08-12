@@ -129,6 +129,18 @@ describe("Media Vault compiler scene model", () => {
     expect(model.chambers.find((chamber: any) => chamber.key === "stop")?.state).toBe("verified");
   });
 
+  it("never presents a stale compiler receipt as verified green", () => {
+    const renderCompilerViewMarkup = (compilerViewModule as any).renderCompilerViewMarkup;
+    const stale = compiledInput();
+    stale.strategy.compilerView.state = "stale";
+    const html = renderCompilerViewMarkup(buildCompilerSceneModel(stale));
+
+    expect(html).toContain('class="compiler-stage is-stale"');
+    expect(html).toContain('class="compiler-state is-stale"');
+    expect(html).toContain("LAST RECEIPT STALE");
+    expect(html).toContain("compiler-seal");
+  });
+
   it("maps persisted chambers into five simple trader-facing groups without inventing rules", () => {
     const buildStrategyCardGroups = (compilerViewModule as any).buildStrategyCardGroups;
     expect(typeof buildStrategyCardGroups).toBe("function");
@@ -179,6 +191,14 @@ describe("Media Vault compiler scene model", () => {
 });
 
 describe("compiler cinematic runtime policy", () => {
+  it("keeps renderer initialization failures on the settled static fallback path", () => {
+    const source = String(compilerViewModule.mountCompilerView);
+    expect(source).toContain("catch (error)");
+    expect(source).toContain('stage.classList.add("is-webgl-fallback")');
+    expect(source).toContain("storm?.destroy()");
+    expect(source).toContain("settle()");
+  });
+
   it("runs a complete seven-second Category 5 transformation on the animated profile", () => {
     expect(CINEMATIC_DURATION_MS).toBe(7000);
     expect(phaseAt(0)).toBe("source");
