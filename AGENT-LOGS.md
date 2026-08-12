@@ -15867,6 +15867,26 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** Await operator review of the written spec, then write the implementation plan and execute with TDD in the same isolated worktree.
 
+### Session Log — 2026-08-11 Media Vault Compiler View and Fight Night production hardening
+
+**Mission:** Ship the approved evidence-honest Compiler View, fit Paper Fight Night inside desktop viewports, and recover the operator's current six-tab Reporting Room without touching trading authority.
+
+**Work completed:**
+- Added a right-rail Compiler View control for every strategy. Each activation rebuilds and replays a seven-second, per-video deterministic WebGL2/CSS compiler storm with bounded particles, reduced-motion/static fallback, context-loss fallback, and no generated background asset.
+- Bound the seven Context/Setup/Entry/Stop/Exit/Sizing/Filters chambers only to persisted `config.compiled_spec` data. Source-only strategies render zero rules and an explicit uncompiled seal; refused receipts remain refused; inferred/compiler-generated rules are visually distinct from explicit evidence.
+- Converted the quiet Fight Night arena to a flex-budgeted dynamic viewport. At compact desktop heights the full arena, caption, non-simulation note, and live-wiring line remain visible without page scrolling.
+- Added a regression fence requiring the complete six-tab Reporting Room suite (`night`, `soak`, `ab`, `rl`, `paper`, `vault`) to remain in the shipped Office.
+- Recovered the live Vault after diagnosing deployment drift: the service process had been serving the stale developer checkout through its working directory. Restarting `TradingForgeAPI` loaded the configured runtime worktree. The replacement Railway project token is stored only in ignored local `.env` files; no credential was committed.
+
+**Verification:**
+- TypeScript passed; the full Slumhouse lane passed 35 files / 275 tests; production isolation and 2026 prop-rule compliance passed; `git diff --check` passed.
+- Real Chromium geometry passed with zero internal Paper Floor overflow at 1920×1080, 1440×900, and 1366×768. Placeholder and compiled Compiler View captures completed at 1920×1080; the seven-second phase reached `settled`, and chamber details exposed persisted rules only.
+- Public Railway relay hashes match the runtime files for Office, authenticated Vault HTML, compiler JS, and compiler CSS. The live authenticated payload exposes 120 compiler views: 117 compiled and 3 refused. All six Reporting Room tabs are present publicly.
+
+**Known-facts updates:** An unauthenticated request for `evidence-vault.html` returns the login shell with HTTP 200, so byte-parity checks for the Vault page must use an authenticated Office session. Static Slumhouse files follow the service process working directory; a correct branch on disk is not deployed proof until the running service is restarted and public hashes are compared.
+
+**Carry-forward:** `npm run system-map:check` still reports the repository's pre-existing stale generated topology section. This UI/data-adapter change adds no API mount, scheduler job, table, or subsystem mapping and did not rewrite the unrelated generated map.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
