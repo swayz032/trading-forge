@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 
 const page = fs.readFileSync(path.resolve("public/slumhouse/evidence-vault.html"), "utf8");
 const office = fs.readFileSync(path.resolve("public/slumhouse/office.html"), "utf8");
@@ -65,5 +66,39 @@ describe("Media Evidence Vault production contract", () => {
     expect(page).toContain("Only extraction-system roles are shown");
     expect(page).toContain("legacy application-router roles are excluded");
     expect(page).not.toContain("canonical model router");
+  });
+
+  it("renders separate strategy-selection and Compiler View controls without nesting buttons", () => {
+    const escSource = page.match(/function esc\(v\)\{.*?\n/)?.[0];
+    const cardSource = page.match(/function strategyCard\(s\)\{.*?\n/)?.[0];
+    expect(escSource).toBeTruthy();
+    expect(cardSource).toBeTruthy();
+    const strategyCard = vm.runInNewContext(
+      `var selectedStrategyId='',activeCompilerStrategyId='';${escSource}${cardSource};strategyCard`,
+    ) as (strategy: Record<string, unknown>) => string;
+    const html = strategyCard({
+      id: "strategy-1",
+      name: "First Run Monarch",
+      symbol: "MCL",
+      timeframe: "5m",
+      lifecycleState: "CANDIDATE",
+      sourceVideoId: "dQw4w9WgXcQ",
+      sourceTitle: "Volume Profile Strategy",
+      transcriptStatus: "available",
+      compilerView: { state: "uncompiled" },
+    });
+
+    expect(html).toContain('data-strategy="strategy-1"');
+    expect(html).toContain('data-compiler-open="strategy-1"');
+    expect(html).toContain("Compiler View");
+    expect(html).not.toMatch(/<button[^>]*>(?:(?!<\/button>).)*<button/s);
+  });
+
+  it("loads the local renderer and restores Media View through an owned lifecycle", () => {
+    expect(page).toContain('/slumhouse/evidence-vault-compiler.css');
+    expect(page).toContain("import('/slumhouse/evidence-vault-compiler.js')");
+    expect(page).toContain("function openCompilerView(");
+    expect(page).toContain("function closeCompilerView(");
+    expect(page).toContain("compilerController.destroy()");
   });
 });
