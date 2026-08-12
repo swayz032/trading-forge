@@ -1,4 +1,5 @@
 export const CINEMATIC_DURATION_MS: number;
+export const STRATEGY_SLIDE_DURATION_MS: number;
 
 export type CompilerRenderProfile = {
   mode: "webgl" | "static";
@@ -31,6 +32,8 @@ export function buildStrategyCardGroups(model: unknown): StrategyCardGroup[];
 export function phaseAt(elapsedMs: number): "source" | "rupture" | "vortex" | "compression" | "shockwave" | "settled";
 
 export function renderCompilerViewMarkup(model: unknown): string;
+
+export function strategySlideAt(elapsedMs: number, slideCount?: number): number;
 
 export function chooseRenderProfile(input: {
   webgl2: boolean;

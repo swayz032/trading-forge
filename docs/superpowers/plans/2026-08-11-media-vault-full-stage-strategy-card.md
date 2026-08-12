@@ -4,7 +4,7 @@
 
 **Goal:** Harden the existing Compiler View into a full-stage Category 5 transformation that settles into a simple strategy card, and move Fight Night telemetry into its upper-right header.
 
-**Architecture:** Extend the existing pure browser view model with five trader-facing groups derived only from persisted chambers. Replace the settled orbit composition with an accessible full-stage DOM layout over a local cinematic plate and adaptive WebGL2 storm. Keep the Vault page as mode owner and move existing Paper Floor aggregate facts into the existing immersive header without changing either data route.
+**Architecture:** Extend the existing pure browser view model with five trader-facing groups derived only from persisted chambers. Replace the settled orbit composition with an accessible slideshow positioned on the giant screen of a local luxury-mansion cinema plate, following an adaptive WebGL2 storm. Keep the Vault page as mode owner and move existing Paper Floor aggregate facts into the existing immersive header without changing either data route.
 
 **Tech Stack:** TypeScript, Vitest, static HTML/CSS/ES modules, WebGL2, local WebP asset, Playwright CLI.
 
@@ -55,18 +55,18 @@ Commit the three explicit paths with message `refactor(slumhouse): shape compile
 ### Task 2: Category 5 renderer and generated environment
 
 **Files:**
-- Create: `public/slumhouse/images/compiler-strategy-environment-v1.webp`
+- Create: `public/slumhouse/images/compiler-luxury-cinema-v1.webp`
 - Modify: `public/slumhouse/evidence-vault-compiler.js`
 - Modify: `public/slumhouse/evidence-vault-compiler.css`
 - Test: `src/server/__tests__/slumhouse/evidence-vault-compiler-view.test.ts`
 
 **Interfaces:**
 - Consumes: existing deterministic identity and `buildStrategyCardGroups(model)`.
-- Produces: full-stage phase sequence `source -> rupture -> vortex -> compression -> shockwave -> settled`, adaptive render profiles, full-stage strategy-card markup, and closed-by-default technical receipt overlay.
+- Produces: full-stage phase sequence `source -> rupture -> vortex -> compression -> shockwave -> settled`, adaptive render profiles, a five-chapter cinema-screen slideshow, and closed-by-default technical receipt overlay.
 
 - [ ] **Step 1: Write failing renderer contract tests**
 
-Pin the six phase names, seven-second duration, high/mid/low density ordering, local environment URL, five settled groups, no default-open receipt, uncompiled dormant copy, and full-stage accessibility controls.
+Pin the six phase names, seven-second duration, high/mid/low density ordering, local mansion-cinema URL, five slideshow chapters, no default-open receipt, uncompiled dormant copy, and full-stage accessibility controls.
 
 - [ ] **Step 2: Run the focused test and verify RED**
 
@@ -74,7 +74,7 @@ Expected: FAIL on missing phase names and settled markup.
 
 - [ ] **Step 3: Generate and validate the neutral environment plate**
 
-Generate one wide, text-free cinematic 3D storm-forge chamber. Reject any output containing charts, numbers, text, people, logos, or recognizable trading claims. Save the selected optimized asset at the exact path above.
+Generate one wide, text-free luxury mansion private movie room with a giant blank center screen, dark stone and walnut materials, and burnt-orange ambient lighting. Reject any output containing charts, numbers, text, people, logos, or recognizable trading claims. Save the selected optimized asset at the exact path above.
 
 - [ ] **Step 4: Implement the Category 5 WebGL sequence**
 
@@ -82,7 +82,7 @@ Increase adaptive particle density, add turbulent radial velocity, stage-filling
 
 - [ ] **Step 5: Replace the settled orbit with the full-stage strategy card**
 
-Render the five groups directly across the available stage, keep the top rail narrow, hide storm-only layers after settlement, and move complete provenance into the `Technical Receipt` overlay.
+Render one of the five groups at a time as a slideshow on the giant theater screen, keep the top rail narrow, hide storm-only layers after settlement, and move complete provenance into the `Technical Receipt` overlay. Auto-advance every 4.2 seconds and preserve direct keyboard-accessible chapter controls.
 
 - [ ] **Step 6: Run the focused test and verify GREEN**
 

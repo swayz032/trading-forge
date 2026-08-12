@@ -1,4 +1,5 @@
 export const CINEMATIC_DURATION_MS = 7000;
+export const STRATEGY_SLIDE_DURATION_MS = 4200;
 
 const TRUTH_COLORS = Object.freeze({
   verified: "#a3ff12",
@@ -193,6 +194,12 @@ export function chooseRenderProfile(input) {
   };
 }
 
+export function strategySlideAt(elapsedMs, slideCount = 5) {
+  const count = Math.max(1, Math.floor(Number(slideCount) || 1));
+  const elapsed = Math.max(0, Number(elapsedMs) || 0);
+  return Math.floor(elapsed / STRATEGY_SLIDE_DURATION_MS) % count;
+}
+
 function escapeHtml(value) {
   return String(value == null ? "" : value).replace(/[&<>"']/g, (character) => ({
     "&": "&amp;",
@@ -228,13 +235,15 @@ function plainRuleLabel(rule) {
   return label;
 }
 
-function strategyGroupMarkup(group, index, dormant) {
-  const rules = group.rules.map((rule) => `<li class="compiler-card-rule is-${escapeHtml(rule.origin)}"><i></i><span>${escapeHtml(plainRuleLabel(rule))}</span></li>`).join("");
+function strategySlideMarkup(group, index, dormant) {
+  const rules = group.rules.map((rule) => `<span class="compiler-slide-rule is-${escapeHtml(rule.origin)}"><i></i>${escapeHtml(plainRuleLabel(rule))}</span>`).join("");
   const direction = group.direction ? `<span class="compiler-direction">${escapeHtml(group.direction)}</span>` : "";
-  const additional = group.additionalCount ? `<div class="compiler-more">+${group.additionalCount} persisted ${group.additionalCount === 1 ? "rule" : "rules"} in receipt</div>` : "";
-  return `<article class="compiler-strategy-group${dormant ? " is-dormant" : ""}" data-strategy-group="${escapeHtml(group.key)}">
-    <div class="compiler-group-head"><span>0${index + 1}</span><h3>${escapeHtml(group.label)}</h3>${direction}</div>
-    ${rules ? `<ul>${rules}</ul>${additional}` : `<div class="compiler-awaiting">Awaiting persisted rule</div>`}
+  const additional = group.additionalCount ? `<span class="compiler-more">+${group.additionalCount} persisted ${group.additionalCount === 1 ? "rule" : "rules"} in technical receipt</span>` : "";
+  return `<article class="compiler-rule-slide${index === 0 ? " is-active" : ""}${dormant ? " is-dormant" : ""}" data-compiler-rule-slide="${index}" aria-hidden="${index === 0 ? "false" : "true"}">
+    <div class="compiler-slide-chapter"><span>Chapter 0${index + 1}</span>${direction}</div>
+    <h3>${escapeHtml(group.label)}</h3>
+    <div class="compiler-slide-rules">${rules || `<span class="compiler-awaiting">Awaiting compiled rule</span>`}</div>
+    ${additional}
   </article>`;
 }
 
@@ -263,7 +272,7 @@ export function renderCompilerViewMarkup(model) {
   const groups = buildStrategyCardGroups(model);
   const dormant = model.status === "uncompiled" || model.status === "unavailable";
   return `<section class="compiler-stage is-${escapeHtml(model.status)}" aria-label="Compiler View for ${escapeHtml(model.strategy.name)}" style="--source-primary:${model.identity.primary};--source-secondary:${model.identity.secondary}">
-    <div class="compiler-environment" aria-hidden="true"><img src="/slumhouse/images/compiler-strategy-environment-v1.webp" alt=""><i></i></div>
+    <div class="compiler-environment" aria-hidden="true"><img src="/slumhouse/images/compiler-luxury-cinema-v1.webp" alt=""><i></i></div>
     <canvas class="compiler-webgl" aria-hidden="true"></canvas>
     <div class="compiler-vortex-fx" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
     <header class="compiler-head">
@@ -280,8 +289,9 @@ export function renderCompilerViewMarkup(model) {
       <div class="compiler-core" aria-hidden="true"><span></span><i></i><b>TF</b></div>
       <div class="compiler-shockwave" aria-hidden="true"></div>
       <main class="compiler-strategy-card${dormant ? " is-dormant" : ""}">
-        <div class="compiler-card-intro"><div><span>${dormant ? "Dormant blueprint" : "Executable blueprint"}</span><h3>${dormant ? "Source secured. Rules are next." : "The strategy, at a glance."}</h3></div><div class="compiler-seal"><b>${escapeHtml(model.seal)}</b><em>${model.receiptHash ? `Receipt ${escapeHtml(model.receiptHash.slice(0, 16))}` : "No compiler receipt exists"}</em></div></div>
-        <div class="compiler-strategy-grid">${groups.map((group, index) => strategyGroupMarkup(group, index, dormant)).join("")}</div>
+        <div class="compiler-slide-deck">${groups.map((group, index) => strategySlideMarkup(group, index, dormant)).join("")}</div>
+        <nav class="compiler-slide-nav" aria-label="Strategy rule chapters">${groups.map((group, index) => `<button type="button" data-compiler-slide="${index}" aria-label="Show ${escapeHtml(group.label)}"${index === 0 ? ` class="is-active" aria-current="step"` : ""}><i></i><span>${escapeHtml(group.label)}</span></button>`).join("")}</nav>
+        <div class="compiler-seal"><b>${escapeHtml(model.seal)}</b><em>${model.receiptHash ? `Receipt ${escapeHtml(model.receiptHash.slice(0, 16))}` : "No compiler receipt exists"}</em></div>
       </main>
       <div class="compiler-timeline" aria-hidden="true"><i></i><span>Source</span><span>Rupture</span><span>Vortex</span><span>Compression</span><span>Reveal</span></div>
     </div>
@@ -345,8 +355,8 @@ function createStormRenderer(canvas, identity, profile) {
       float x=(cos(angle)*radius+turbulence)*perspective;
       float y=(sin(angle)*radius*.54+depth*.18+cos(angle*2.0)*.12*vortex)*perspective;
       gl_Position=vec4(x/uAspect,y,depth/8.0,1.0);
-      gl_PointSize=(1.6+aParticle.w*5.8)*(1.0+vortex*.55+compression*.85)*perspective;
-      vAlpha=(.16+aParticle.w*.78)*(1.0-smoothstep(.95,1.0,uProgress)*.82);
+      gl_PointSize=(2.2+aParticle.w*8.6)*(1.0+vortex*.72+compression*1.1)*perspective;
+      vAlpha=(.28+aParticle.w*.92)*(1.0-smoothstep(.95,1.0,uProgress)*.82);
     }`);
   const fragment = compileShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
     precision highp float;
@@ -360,7 +370,7 @@ function createStormRenderer(canvas, identity, profile) {
       if(d>.5)discard;
       float glow=pow(smoothstep(.5,0.0,d),1.35);
       vec3 color=mix(uPrimary,uSecondary,gl_PointCoord.y);
-      outColor=vec4(color,glow*vAlpha);
+      outColor=vec4(color,glow*min(1.0,vAlpha*1.5));
     }`);
   const program = gl.createProgram();
   gl.attachShader(program, vertex);
@@ -447,10 +457,44 @@ export function mountCompilerView(host, input, options = {}) {
   let start = 0;
   let destroyed = false;
   let contextLost = false;
+  let slideTimer = 0;
+  let activeSlide = 0;
+
+  const slides = [...host.querySelectorAll("[data-compiler-rule-slide]")];
+  const slideButtons = [...host.querySelectorAll("[data-compiler-slide]")];
+
+  function showSlide(index) {
+    if (!slides.length) return;
+    activeSlide = ((Number(index) || 0) % slides.length + slides.length) % slides.length;
+    slides.forEach((slide, slideIndex) => {
+      const active = slideIndex === activeSlide;
+      slide.classList.toggle("is-active", active);
+      slide.setAttribute("aria-hidden", active ? "false" : "true");
+    });
+    slideButtons.forEach((button, buttonIndex) => {
+      const active = buttonIndex === activeSlide;
+      button.classList.toggle("is-active", active);
+      if (active) button.setAttribute("aria-current", "step");
+      else button.removeAttribute("aria-current");
+    });
+  }
+
+  function stopSlides() {
+    window.clearInterval(slideTimer);
+    slideTimer = 0;
+  }
+
+  function startSlides() {
+    stopSlides();
+    showSlide(0);
+    if (mediaQuery.matches || slides.length < 2) return;
+    slideTimer = window.setInterval(() => showSlide(activeSlide + 1), STRATEGY_SLIDE_DURATION_MS);
+  }
 
   function settle() {
     cinematic.dataset.compilerPhase = "settled";
     stage.classList.add("is-settled");
+    startSlides();
   }
 
   function animate(now) {
@@ -464,6 +508,8 @@ export function mountCompilerView(host, input, options = {}) {
 
   function replay() {
     window.cancelAnimationFrame(frame);
+    stopSlides();
+    showSlide(0);
     stage.classList.remove("is-settled");
     receipt.hidden = true;
     cinematic.dataset.compilerPhase = "source";
@@ -490,6 +536,13 @@ export function mountCompilerView(host, input, options = {}) {
     receipt.querySelector("[data-compiler-receipt-close]")?.focus();
   });
   receipt.querySelector("[data-compiler-receipt-close]")?.addEventListener("click", closeReceipt);
+  slideButtons.forEach((button) => button.addEventListener("click", () => {
+    showSlide(Number(button.dataset.compilerSlide));
+    if (!mediaQuery.matches) {
+      stopSlides();
+      slideTimer = window.setInterval(() => showSlide(activeSlide + 1), STRATEGY_SLIDE_DURATION_MS);
+    }
+  }));
   host.querySelector("[data-compiler-close]")?.addEventListener("click", () => options.onClose?.());
   canvas.addEventListener("webglcontextlost", (event) => {
     event.preventDefault();
@@ -505,6 +558,7 @@ export function mountCompilerView(host, input, options = {}) {
     destroy() {
       destroyed = true;
       window.cancelAnimationFrame(frame);
+      stopSlides();
       storm?.destroy();
       storm = null;
       host.replaceChildren();

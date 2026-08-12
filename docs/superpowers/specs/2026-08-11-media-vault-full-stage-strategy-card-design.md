@@ -17,7 +17,7 @@ Every `Compiler View` activation starts a fresh seven-second sequence and uses t
 3. `Category 5 vortex` fills the stage with dense particle walls, turbulent fog, lightning arcs, camera pressure, and rapidly increasing rotational velocity.
 4. `Core compression` pulls every visual layer into the compiler core.
 5. `Shockwave` clears the storm across the full stage.
-6. `Strategy reveal` exposes a calm generated environment and the full-stage strategy card.
+6. `Strategy reveal` opens a generated luxury mansion screening room with the strategy presented on its giant cinema screen.
 
 The storm must read as a violent transformation, not a calm data orbit. Motion remains silent by default. `prefers-reduced-motion`, WebGL loss, and low-power profiles preserve the same truthful sequence and settled information without aggressive motion.
 
@@ -25,9 +25,9 @@ The storm must read as a violent transformation, not a calm data orbit. Motion r
 
 The visual system uses a hybrid environment:
 
-- One locally stored, text-free cinematic background plate supplies production-grade scale, material detail, and depth.
+- One locally stored, text-free luxury mansion movie-room plate supplies production-grade scale, dark stone and walnut material detail, a giant blank cinema screen, and burnt-orange architectural lighting.
 - Dependency-free WebGL2 supplies the per-video vortex, lighting, fog, shockwave, market geometry, and settled movement.
-- The selected video identifier deterministically controls palette, storm paths, particle rhythm, lightning cadence, camera curve, and settled lighting.
+- The selected video identifier deterministically controls storm paths, particle rhythm, lightning cadence, camera curve, and restrained accent color. The settled room keeps its burnt-orange identity so it remains coherent and premium.
 - The local plate cannot contain charts, prices, rules, people, logos, status colors, or performance claims.
 - No runtime image-generation call, CDN, remote module, or hidden network dependency is allowed.
 
@@ -35,7 +35,7 @@ Truth colors remain fixed regardless of source identity: lime for verified, ambe
 
 ## Full-Stage Strategy Card
 
-After the shockwave, the main stage itself is the strategy card. There is no smaller card inside it, default technical drawer, orbit menu, dead border space, or internal scrollbar.
+After the shockwave, the main stage becomes one private cinema. The giant built-in screen is the strategy card. There is no smaller card inside it, default technical drawer, orbit menu, dead border space, or internal scrollbar.
 
 A narrow top rail contains:
 
@@ -45,7 +45,7 @@ A narrow top rail contains:
 - `Technical Receipt`;
 - `Media View`.
 
-The main body uses five large trader-facing rule zones:
+The cinema screen runs a five-chapter rule slideshow:
 
 1. `Trade When`: persisted Context and Setup rules.
 2. `Enter`: persisted Entry rules and direction.
@@ -53,15 +53,15 @@ The main body uses five large trader-facing rule zones:
 4. `Manage`: persisted Exit and trade-management rules.
 5. `Avoid`: persisted Filters and invalidations.
 
-Each zone displays at most two high-signal persisted rules in plain language and indicates when more persisted rules exist. Known persisted structures may be formatted for readability, but the browser cannot infer a value, invent a missing rule, summarize transcript prose, or alter compiler meaning.
+Only one chapter is visible at a time. It displays one large heading and at most two high-signal persisted rules in plain language. A five-step control on the screen permits direct navigation, and the slideshow advances automatically after settlement. Known persisted structures may be formatted for readability, but the browser cannot infer a value, invent a missing rule, summarize transcript prose, or alter compiler meaning.
 
 `Technical Receipt` opens the complete persisted evidence in a secondary overlay: provenance, source quotation or span, canonical expression, warnings, and receipt hashes. It is not open by default and does not compete with the strategy card.
 
 ## Uncompiled and Failure States
 
-An uncompiled strategy receives the same full Category 5 transformation and premium generated environment. The settled stage becomes a dormant blueprint with:
+An uncompiled strategy receives the same full Category 5 transformation and premium mansion cinema. Each slideshow chapter keeps the same high-quality composition and displays:
 
-`SOURCE SECURED - TRADING RULES AWAITING COMPILATION`
+`AWAITING COMPILED RULE`
 
 It can display only real source identity and transcript metadata. It cannot display an entry, stop, target, size, confidence, progress percentage, or example rule.
 
@@ -100,7 +100,7 @@ The title and explanatory copy remain on the left. The arena starts immediately 
 
 - The storm occupies the complete stage and feels materially more aggressive than the current orbit sequence.
 - The compression and shockwave provide a clear cinematic transition into the settled state.
-- The entire settled stage is a readable strategy card with five simple decision groups.
+- The entire settled stage is a luxury mansion cinema whose screen is a readable strategy card with one simple decision chapter at a time.
 - Technical receipt data remains available without default clutter.
 - Every video retains deterministic visual identity.
 - Uncompiled strategies receive equal visual quality with zero invented trading rules.

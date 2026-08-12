@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   CINEMATIC_DURATION_MS,
+  STRATEGY_SLIDE_DURATION_MS,
   buildCompilerSceneModel,
   chooseRenderProfile,
   deriveCompilerIdentity,
   phaseAt,
+  strategySlideAt,
 } from "../../../../public/slumhouse/evidence-vault-compiler.js";
 import * as compilerViewModule from "../../../../public/slumhouse/evidence-vault-compiler.js";
 
@@ -152,13 +154,17 @@ describe("Media Vault compiler scene model", () => {
     expect(dormant.every((group: any) => group.rules.length === 0 && group.additionalCount === 0)).toBe(true);
   });
 
-  it("renders the whole settled stage as the strategy card with technical evidence closed", () => {
+  it("renders one full-stage cinema with a single strategy-rules slideshow", () => {
     const renderCompilerViewMarkup = (compilerViewModule as any).renderCompilerViewMarkup;
     expect(typeof renderCompilerViewMarkup).toBe("function");
 
     const html = renderCompilerViewMarkup(buildCompilerSceneModel(sourceOnly));
-    expect(html).toContain("compiler-strategy-environment-v1.webp");
-    expect(html).toContain("compiler-strategy-card");
+    expect(html).toContain("compiler-luxury-cinema-v1.webp");
+    expect(html.match(/class="compiler-strategy-card/g)).toHaveLength(1);
+    expect(html.match(/class="compiler-slide-deck"/g)).toHaveLength(1);
+    expect(html.match(/class="compiler-rule-slide/g)).toHaveLength(5);
+    expect(html.match(/class="compiler-rule-slide is-active/g)).toHaveLength(1);
+    expect(html.match(/data-compiler-slide="/g)).toHaveLength(5);
     expect(html).toContain("Trade When");
     expect(html).toContain("Enter");
     expect(html).toContain("Protect");
@@ -167,6 +173,8 @@ describe("Media Vault compiler scene model", () => {
     expect(html).toContain("Technical Receipt");
     expect(html).toContain("data-compiler-receipt hidden");
     expect(html).not.toContain("compiler-machine");
+    expect(html).not.toContain("compiler-strategy-group");
+    expect(html).not.toContain("compiler-rule-plan");
   });
 });
 
@@ -203,5 +211,14 @@ describe("compiler cinematic runtime policy", () => {
       width: 1440,
       hardwareConcurrency: 8,
     })).toEqual({ mode: "static", dpr: 1, particles: 0, durationMs: 0 });
+  });
+
+  it("advances the five strategy chapters on a deterministic slideshow clock", () => {
+    expect(STRATEGY_SLIDE_DURATION_MS).toBe(4200);
+    expect(strategySlideAt(0)).toBe(0);
+    expect(strategySlideAt(4199)).toBe(0);
+    expect(strategySlideAt(4200)).toBe(1);
+    expect(strategySlideAt(16800)).toBe(4);
+    expect(strategySlideAt(21000)).toBe(0);
   });
 });
