@@ -1,7 +1,29 @@
 """ACCEPT-5 RATIFY-1 Layer 1 — one pytest subprocess per governed file.
 
-PROTOTYPE. The committed `acceptance_runner.py` is untouched and remains the
-authority until obligations [A]-[J] are proven (R-821 §5).
+PROMOTED TO AUTHORITY 2026-08-12 (GPT ruling on AR-1014, §3).
+Obligations [A]-[J] are proven; this isolated execution architecture is the
+ACCEPT-5 execution authority. It was a PROTOTYPE under R-821 §5 until then.
+
+    certification : live independent five-arm grade, PASS-BOUNDED, band 8
+                    docs/designs/GRADE-RATIFY1-LIVE-2026-08-12.md @ cb2c5bb0
+    execution pin : f4e9a9d2   (arms GA-GE executed by the grader's own processes)
+
+WHAT PROMOTION DID AND DID NOT CHANGE
+    It changed the AUTHORITY DECLARATION only. No execution semantics, no child
+    population, no ordering, no isolation behaviour, no plugin, no governed test.
+    `acceptance_runner.py` is UNCHANGED and remains the manifest/population
+    authority this module imports at :54 -- promotion did not fork or replace it,
+    and creates no second population registry.
+
+STANDING CONDITION (GPT ruling on AR-1014, §2) -- READ BEFORE WIRING ANYTHING
+    `ACCEPT5-AGGREGATE-PROVENANCE-1` is discharged as MOOT, NOT REPAIRED. The
+    discharge holds only while `scripts/ratify1_controls/g_order_identity.py`
+    stays NON-AUTHORITATIVE. Wiring that comparator into CI or ACCEPT-5
+    promotion, making its exit code a gate, treating its CERTIFIED output as
+    authoritative, or restoring its aggregate/provenance chain as RATIFY
+    authority REOPENS the blocker immediately. F-R4-1..F-R4-7 remain OPEN
+    against it as a diagnostic. This condition is recorded, NOT enforced by
+    code -- see docs/designs/ACCEPT5-ISOLATION-PROMOTION-2026-08-12.md.
 
 WHAT THIS BUYS, AND IT IS THE ONLY REASON IT EXISTS
     `[MEASURED, AR-973/AR-975]` governed files write fakes into `sys.modules` at
