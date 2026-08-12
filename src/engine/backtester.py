@@ -946,6 +946,9 @@ def _apply_naked_management(
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
     structural_stop_map: dict | None = None,
+    # SOURCE-RISK-HANDOFF-1 / STEP 5+4 (AR-1068 §7/§8). Mirrors structural_stop_map's
+    # own threading pattern. False (every existing caller) is byte-identical.
+    source_faithful: bool = False,
 ) -> list[dict]:
     """Exit Policy A — 'naked': session-EOD time exit ONLY.
 
@@ -994,6 +997,7 @@ def _apply_naked_management(
             entry_idx=entry_idx, is_short=is_short,
             atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
             structural_stop_map=structural_stop_map,
+            source_faithful=source_faithful,
         )
 
         exit_price = original_exit_p
@@ -1055,6 +1059,9 @@ def _apply_stop_only_management(
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
     structural_stop_map: dict | None = None,
+    # SOURCE-RISK-HANDOFF-1 / STEP 5+4 (AR-1068 §7/§8). Mirrors structural_stop_map's
+    # own threading pattern. False (every existing caller) is byte-identical.
+    source_faithful: bool = False,
 ) -> list[dict]:
     """Exit Policy B — 'stop_only': initial stop loss + 15:55 ET time-stop.
 
@@ -1098,6 +1105,7 @@ def _apply_stop_only_management(
             entry_idx=entry_idx, is_short=is_short,
             atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
             structural_stop_map=structural_stop_map,
+            source_faithful=source_faithful,
         )
 
         # Initial stop — FIXED for the whole trade (no trailing, no BE move)
@@ -1200,6 +1208,9 @@ def _apply_trade_management(
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext]
     exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
     structural_stop_map: dict | None = None,
+    # SOURCE-RISK-HANDOFF-1 / STEP 5+4 (AR-1068 §7/§8). Mirrors structural_stop_map's
+    # own threading pattern. False (every existing caller) is byte-identical.
+    source_faithful: bool = False,
 ) -> list[dict]:
     """Bar-by-bar trade management dispatcher.
 
@@ -1243,6 +1254,7 @@ def _apply_trade_management(
             spec, df, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
             structural_stop_map=structural_stop_map,
+            source_faithful=source_faithful,
         )
     if exit_policy == "stop_only":
         return _apply_stop_only_management(
@@ -1250,6 +1262,7 @@ def _apply_trade_management(
             spec, df, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
             structural_stop_map=structural_stop_map,
+            source_faithful=source_faithful,
         )
     # exit_policy="full_overlay" (default) — fall through to existing dispatch below
 
@@ -1260,6 +1273,7 @@ def _apply_trade_management(
             spec, df, adaptive_ctx, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
             structural_stop_map=structural_stop_map,
+            source_faithful=source_faithful,
         )
 
     # Wave 1 Track 1A: extract liquidity snapshot for static TP2 mapping.
@@ -1279,6 +1293,7 @@ def _apply_trade_management(
         atr_stop_multiplier=atr_stop_multiplier,
         liquidity_snapshot=_static_liq_snapshot,
         structural_stop_map=structural_stop_map,
+        source_faithful=source_faithful,
     )
 
 
@@ -1295,6 +1310,7 @@ def _apply_static_styleC_management(
     atr_stop_multiplier: float = 1.5,
     liquidity_snapshot: Optional[list] = None,  # Wave 1 Track 1A: intraday levels for TP2 mapping
     structural_stop_map: dict | None = None,  # H5 fix (deep-scan #15, 2026-07-03)
+    source_faithful: bool = False,  # SOURCE-RISK-HANDOFF-1 STEP 5+4 (AR-1068 §7/§8)
 ) -> list[dict]:
     """Style C static trade management.
 
@@ -1393,6 +1409,7 @@ def _apply_static_styleC_management(
             entry_idx=entry_idx, is_short=is_short,
             atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
             structural_stop_map=structural_stop_map,
+            source_faithful=source_faithful,
         )
         # Min breathing room: 2pt for MES/ES (tick_size=0.25), scaled for other instruments
         tick = spec.tick_size if spec else 0.25
@@ -1805,6 +1822,7 @@ def _apply_adaptive_management(
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
     structural_stop_map: dict | None = None,  # H5 fix (deep-scan #15, 2026-07-03)
+    source_faithful: bool = False,  # SOURCE-RISK-HANDOFF-1 STEP 5+4 (AR-1068 §7/§8)
 ) -> list[dict]:
     """Adaptive exit management — Wave 25 Gap B Python implementation.
 
@@ -1926,6 +1944,7 @@ def _apply_adaptive_management(
             entry_idx=entry_idx, is_short=is_short,
             atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
             structural_stop_map=structural_stop_map,
+            source_faithful=source_faithful,
         )
         tick = spec.tick_size if spec else 0.25
 
@@ -2987,6 +3006,7 @@ def _resolve_stop_risk_points(
     atr_fallback_points: float,
     stop_ceiling: float,
     structural_stop_map: dict | None,
+    source_faithful: bool = False,
 ) -> tuple:
     """Resolve the per-trade stop distance (risk_points) for trade management.
 
@@ -3013,7 +3033,16 @@ def _resolve_stop_risk_points(
     Returns (risk_points: float, stop_basis: str) with stop_basis in
     {"structural", "atr_fallback"}.
     """
-    if structural_stop_map and _structural_stop_parity_enabled():
+    # 🛑 SOURCE-RISK-HANDOFF-1 / STEP 5+4 — WHY `source_faithful` BYPASSES THE PARITY FLAG.
+    # `BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED` DEFAULTS FALSE, and its stated purpose is to
+    # avoid re-baselining EXISTING backtests: legacy runs keep the ATR ceiling-clamp until the
+    # operator opts in. That reason is sound for legacy and INAPPLICABLE to a SOURCE_FAITHFUL
+    # artifact, which has no legacy baseline to protect and whose taught stop is not an
+    # opt-in parity experiment — it IS the strategy. Leaving the flag in the way would mean
+    # the teacher's own stop is unreachable by default and every source-faithful run refuses.
+    # ★ `A CORRECTNESS PATH GATED BEHIND A COMPARABILITY FLAG IS OFF, AND OFF IS THE DEFECT.`
+    # Legacy behaviour is untouched: with source_faithful=False the flag still governs.
+    if structural_stop_map and (source_faithful or _structural_stop_parity_enabled()):
         direction_key = "short" if is_short else "long"
         sub_map = (
             structural_stop_map.get(direction_key)
@@ -3024,7 +3053,29 @@ def _resolve_stop_risk_points(
             entry = sub_map.get(signal_bar_idx)
             distance = entry.get("distance") if isinstance(entry, dict) else entry
             if distance is not None and distance > 0:
+                # SOURCE-RISK-HANDOFF-1 / STEP 5+4 (AR-1068 §8). THE CEILING CLAMP IS A
+                # TIGHTENING OF THE TAUGHT STOP. `min(distance, stop_ceiling)` is correct as
+                # a Trading Forge risk policy and WRONG as source-strategy research: it
+                # changes the trade's risk distance, and therefore its R multiple, its 2R
+                # target and its outcome — silently, under a SOURCE_FAITHFUL label.
+                # §8: "the exact source stop must remain the source stop. A house-risk
+                # violation may be emitted as metadata, but it may not silently delete or
+                # tighten the source trade."
+                if source_faithful:
+                    return float(distance), "source_exact"
                 return min(float(distance), stop_ceiling), "structural"
+
+    # AR-1068 §7: "no ATR fallback when a REQUIRED taught source anchor is missing."
+    # ★ REFUSING IS THE ONLY HONEST BRANCH HERE. Falling back would hand back a plausible
+    # ATR number that no teacher ever taught, wearing a SOURCE_FAITHFUL label — and a
+    # plausible wrong stop is worse than no stop, because nothing downstream can tell.
+    if source_faithful:
+        raise ValueError(
+            f"source_faithful stop resolution found no structural distance for entry_idx="
+            f"{entry_idx} ({'short' if is_short else 'long'}); the taught anchor is REQUIRED "
+            "and an ATR fallback would substitute an untaught stop under a SOURCE_FAITHFUL "
+            "label. Refusing."
+        )
     return atr_fallback_points, "atr_fallback"
 
 
@@ -7411,6 +7462,9 @@ def run_class_backtest(
             adaptive_ctx=adaptive_ctx,
             exit_policy=exit_policy,
             structural_stop_map=_cls_structural_stop_map,
+            # AR-1068 §7/§8 — the mode reaches the stop command. This is what makes the
+            # source stop EXACT: no ceiling clamp, no floor widening, no ATR substitution.
+            source_faithful=_source_faithful,
         )
         {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")

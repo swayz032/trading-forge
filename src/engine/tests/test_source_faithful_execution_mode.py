@@ -30,7 +30,16 @@ import textwrap
 
 import pytest
 
-from src.engine.backtester import run_class_backtest
+from src.engine.backtester import (
+    _apply_adaptive_management,
+    _apply_naked_management,
+    _apply_static_styleC_management,
+    _apply_stop_only_management,
+    _apply_trade_management,
+    _resolve_stop_risk_points,
+    _structural_stop_parity_enabled,
+    run_class_backtest,
+)
 
 
 class _FakeStrategy:
@@ -104,6 +113,133 @@ class TestTheModeGateExecutes:
                 source_risk_mode="SOURCE_FAITHFUL", exit_engine="naked",
             )
         assert "REFUSING rather than mislabelling" not in str(exc.value)
+
+
+class TestTheStopCommandIsExact:
+    """AR-1068 §8 — `_resolve_stop_risk_points` is a PURE function, so unlike the class
+    backtest it can be executed directly with no market data. These are real behavioural
+    proofs, not routing proofs."""
+
+    MAP = {"long": {9: {"distance": 20.0}}, "short": {9: {"distance": 20.0}}}
+    KW = dict(entry_idx=10, is_short=False, atr_fallback_points=7.0, stop_ceiling=10.0)
+
+    def test_legacy_CLAMPS_the_stop_to_the_house_ceiling(self, monkeypatch):
+        """POSITIVE CONTROL AND BASELINE: this is the behaviour §8 objects to, and it must
+        still be exactly what legacy does — otherwise the next test proves nothing."""
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+        pts, basis = _resolve_stop_risk_points(**self.KW, structural_stop_map=self.MAP)
+        assert (pts, basis) == (10.0, "structural"), "legacy must clamp 20.0 down to the 10.0 ceiling"
+
+    def test_source_faithful_does_NOT_tighten_the_taught_stop(self, monkeypatch):
+        """§8: 'the exact source stop must remain the source stop'. 20.0 exceeds the 10.0
+        ceiling and must survive intact — clamping it would change the risk distance, the R
+        multiple, the 2R target and the outcome, silently."""
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+        pts, basis = _resolve_stop_risk_points(
+            **self.KW, structural_stop_map=self.MAP, source_faithful=True
+        )
+        assert (pts, basis) == (20.0, "source_exact")
+
+    def test_the_stop_basis_distinguishes_the_two_so_a_receipt_can_tell(self, monkeypatch):
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+        _, legacy = _resolve_stop_risk_points(**self.KW, structural_stop_map=self.MAP)
+        _, source = _resolve_stop_risk_points(
+            **self.KW, structural_stop_map=self.MAP, source_faithful=True
+        )
+        assert legacy != source, "an unlabelled source stop is indistinguishable from a house stop"
+
+    def test_the_source_stop_TRACKS_the_taught_distance_rather_than_being_a_constant(
+        self, monkeypatch
+    ):
+        """Discriminator: without this, `return 20.0` would pass every test above."""
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+        for d in (3.5, 20.0, 41.25):
+            m = {"long": {9: {"distance": d}}}
+            pts, _ = _resolve_stop_risk_points(
+                **self.KW, structural_stop_map=m, source_faithful=True
+            )
+            assert pts == d
+
+    def test_source_faithful_REFUSES_instead_of_falling_back_to_ATR(self, monkeypatch):
+        """§7: 'no ATR fallback when a REQUIRED taught source anchor is missing.' A plausible
+        ATR number under a SOURCE_FAITHFUL label is worse than no number."""
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+        with pytest.raises(ValueError, match="ATR fallback would substitute an untaught stop"):
+            _resolve_stop_risk_points(**self.KW, structural_stop_map=None, source_faithful=True)
+
+    def test_legacy_STILL_falls_back_to_ATR(self, monkeypatch):
+        """The refusal above must be scoped to the source arm, not a new global failure."""
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+        assert _resolve_stop_risk_points(**self.KW, structural_stop_map=None) == (
+            7.0, "atr_fallback",
+        )
+
+    def test_the_taught_stop_is_reachable_with_the_parity_flag_OFF(self, monkeypatch):
+        """🛑 THE FINDING THIS TEST EXISTS FOR. BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED
+        DEFAULTS FALSE. Its purpose is to keep LEGACY backtests comparable — a reason that
+        does not apply to a source-faithful artifact, which has no legacy baseline. If the
+        flag still gated this path, the teacher's own stop would be unreachable by default
+        and every source-faithful run would refuse."""
+        monkeypatch.delenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", raising=False)
+        assert _structural_stop_parity_enabled() is False, "positive witness: the flag IS off"
+
+        pts, basis = _resolve_stop_risk_points(
+            **self.KW, structural_stop_map=self.MAP, source_faithful=True
+        )
+        assert (pts, basis) == (20.0, "source_exact")
+
+    def test_and_LEGACY_is_still_governed_by_that_flag_with_it_OFF(self, monkeypatch):
+        """The bypass must not leak into legacy — with the flag off, legacy still takes the
+        ATR fallback exactly as before."""
+        monkeypatch.delenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", raising=False)
+        assert _resolve_stop_risk_points(**self.KW, structural_stop_map=self.MAP) == (
+            7.0, "atr_fallback",
+        )
+
+
+class TestTheModeReachesTheStopCommand:
+    def test_every_link_in_the_chain_carries_source_faithful_defaulting_False(self):
+        """A mode that stops halfway down the chain is a mode that does nothing. Each default
+        must be False, or threading it would change every existing caller."""
+        for fn in (
+            _resolve_stop_risk_points, _apply_trade_management, _apply_naked_management,
+            _apply_stop_only_management, _apply_static_styleC_management,
+            _apply_adaptive_management,
+        ):
+            p = inspect.signature(fn).parameters
+            assert "source_faithful" in p, f"{fn.__name__} breaks the chain"
+            assert p["source_faithful"].default is False, f"{fn.__name__} default is not False"
+
+    def test_run_class_backtest_passes_its_mode_into_trade_management(self):
+        src = _source_of(_class_backtest_ast())
+        assert "source_faithful=_source_faithful," in src, (
+            "the mode never reaches the stop command, so nothing above it matters"
+        )
+
+    def test_the_MES_stop_floor_is_unreachable_on_the_source_arm(self):
+        """§7 'no MES 6-point stop floor'. The floor is applied inside
+        `_apply_dsl_stop_loss_and_time_stop`, which the E.3/E.5 bypass already makes
+        unreachable — so this is closed by that branch, not by a second mechanism. Pinned
+        because the reasoning is a JOIN between two facts and joins rot silently."""
+        whole = io.open("src/engine/backtester.py", encoding="utf-8").read()
+        floor_calls = [
+            ln for ln in whole.splitlines() if "_get_stop_floor_for_symbol(" in ln and "def " not in ln
+        ]
+        assert len(floor_calls) == 1, f"the floor gained a second call site: {floor_calls}"
+
+        tree = ast.parse(whole)
+        owner = None
+        floor_line = next(
+            i + 1 for i, ln in enumerate(whole.splitlines())
+            if "_get_stop_floor_for_symbol(" in ln and "def " not in ln
+        )
+        for n in ast.walk(tree):
+            if isinstance(n, ast.FunctionDef) and n.lineno <= floor_line <= (n.end_lineno or 0):
+                if owner is None or (n.end_lineno - n.lineno) < (owner.end_lineno - owner.lineno):
+                    owner = n
+        assert owner.name == "_apply_dsl_stop_loss_and_time_stop", (
+            f"the floor moved to {owner.name}; the E.3/E.5 bypass no longer covers it"
+        )
 
 
 class TestTheSignatureContract:
