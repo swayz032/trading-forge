@@ -187,6 +187,10 @@ this repo. It is not a remote service and it is not hypothetical.** The only
 thing standing between you and a grade is an authorization, because this harness
 does not launch subagents unless the operator asks for one.
 
+⚡ **AMENDED 2026-08-11 (operator order, GPT-advisor model): WHEN THE GPT RULING ALREADY REQUIRES
+A GRADE, YOU DO NOT ASK AT ALL — YOU DISPATCH.** See `11c`. The sentence below is now reserved
+for the case where **no ruling has required the grade** and you believe one is owed.
+
 ★★★★★ **SO THE CORRECT MOVE WHEN A GRADE IS OWED AND YOU CANNOT DISPATCH IT IS
 ONE SENTENCE TO THE OPERATOR: *"the independent grade is owed on X — say the word
 and I'll run the `accuracy-validator` against it."* IT IS NOT A STATUS REPORT
@@ -206,9 +210,9 @@ LIKE ANY OTHER — ENUMERATE THE ACTORS BEFORE YOU MAKE IT.` Check the agent lis
 before you write that something cannot be done. A capability you forgot you had
 reads exactly like a capability that does not exist.**
 ★★★ **AND THE PART THAT DOES NOT CHANGE: you still never grade your own work, and
-you never interpret the grade you asked for. Dispatch on the operator's word,
-hand over a working access recipe rather than prohibitions, ask explicitly for a
-NOVEL false-green hunt, and report the verdict as it came back — including when
+you never interpret the grade you asked for. Dispatch on the ruling's standing authorization
+(`11c`) or the operator's word, hand over a working access recipe rather than prohibitions, ask
+explicitly for a NOVEL false-green hunt, and report the verdict as it came back — including when
 it convicts you.**
 
 ### 5b. The grader is v2 — and what your ask must contain (2026-07-30)
@@ -422,6 +426,11 @@ batch**, not one lane. **You do not hand off at a lane boundary.**
 
 ## 11. The report format
 
+🛑 **SUPERSEDED FOR ROUTINE WORK BY `11b` (operator order 2026-08-11).** The long form below is
+now the **EXCEPTION** — use it only when a complex finding genuinely needs it, or when a ruling
+asks for it by name. **Default to the compact `11b` receipt.** Every field in the long form still
+names a real obligation; `11b` keeps the load-bearing ones and drops the rhetoric.
+
 ```
 WORKER REPORT
 Task ID / Ruling ID / Branch / Commit
@@ -485,6 +494,70 @@ commits, no new AR, nothing uncommitted. **It waited for permission it already h
 does not widen your scope by one line — it stops you re-asking for scope you were already
 given. ★★★★ **`THE WORKER'S IDLE TIME IS THE CAMPAIGN'S LATENCY, AND MOST OF IT HAS BEEN
 SPENT WAITING FOR A YES THAT WAS ALREADY IN THE LEDGER.`**
+
+---
+
+### 11b. ⚡ THE COMPACT AR — THE DEFAULT FORM SINCE 2026-08-11 (operator order, GPT-advisor model)
+
+**`ENGINEERING RECEIPT, NOT NOVEL.`** Claude tokens buy code, execution and evidence; GPT does the
+high-level reasoning. **Do not restate the ruling back. Do not lesson-mine. Do not write the same
+finding into five documents.**
+
+```
+AR-XXXX
+RULING : GPT ruling followed (id / date / the clause you executed)
+PIN    : exact SHA + exact working tree
+CHANGED: exact files
+RED    : exact command + exact result (the failing measurement, before)
+REPAIR : 1-5 sentences
+GREEN  : exact command + exact result (after)
+CONTROL: mutation / adversarial negative control + its result
+GRADER : dispatched (agent + pin) | not required | verdict
+FINDINGS: real findings only
+STOP   : none | the exact stop condition that fired
+NEXT   : the exact next authorized action
+```
+
+**RULES THAT DO NOT RELAX BECAUSE THE FORM GOT SHORTER:**
+1. **`RED` and `GREEN` are COMMANDS AND THEIR OUTPUT**, not adjectives. A summary of a run is not
+   a run (`[gate-verdict]`, `[completion-signal]`).
+2. **A negative assertion still owes a POSITIVE WITNESS** that the path executed.
+3. **`FINDINGS` includes findings AGAINST YOURSELF.** Wrong first harness · corrected invocation ·
+   a control that lied · an assumption you could not close. **Do not present the clean second
+   attempt as the only attempt — that history is how GPT judges whether the control is
+   trustworthy.**
+4. **Surface every load-bearing change even if it feels small:** false green/red · changed test
+   outcomes · altered denominator · new skip/xfail · changed pin · changed population · changed
+   execution semantics · runner/plugin/schema touch · new production-code touch · evidence missing
+   from origin.
+5. **DURABILITY: the AR must reach the GPT-facing path** (`worker-onboarding 0-CTRL.3`) — chat,
+   scrollback and an unpushed worktree are not delivery. Raw artifacts go to LEVEL 3 (attach /
+   commit the file) and are referenced by path, never pasted wholesale.
+6. **`11a` still governs the ending:** a receipt is not a stop. If the next item is already
+   authorized, `NEXT` names it **and you start it in the same turn.**
+
+### 11c. ⚡ SELF-DISPATCHING THE INDEPENDENT GRADER (operator order 2026-08-11)
+
+**If the GPT ruling already requires a grade, the dispatch is PRE-AUTHORIZED. Do not ask.**
+Sequence: **finish the authorized implementation → FREEZE it (commit; record the SHA) → dispatch
+`accuracy-validator` → record the FULL result → GPT rules.**
+
+- 🛑 **DOER ≠ GRADER is untouched.** You may dispatch it; **you may never grade your own repair
+  and call that independent** (`[grading-integrity]`). You do not issue the band.
+- **The mandate is `DISPROVE`, not confirm**, and the brief must demand **≥1 NOVEL attack not
+  copied from your own control set.**
+- **Brief it with:** the frozen SHA · the evidence pins · the exact claims to attack · the blob
+  hashes of the instrument (so drift is detectable) · what you did NOT prove.
+- **The grader must return, and you must preserve in full:**
+  `GRADE TARGET` (repair SHA) · `EXECUTION EVIDENCE` (pins) · `ATTACKS` · `PASS` (independently
+  corroborated claims) · `FINDINGS` (severity + reproducible evidence) · `NOVEL ATTACK` ·
+  `LIMITATIONS` (what it did NOT prove) · `VERDICT` (pass/fail/bounded) · `DURABLE PATH`.
+- 🛑 **NEVER reduce a grade to "grader passed" or "one HIGH found."** The **FULL** grader report
+  goes to the GPT-facing durable path. **A summary never replaces the full grader evidence.**
+  An executive summary may sit beside it, never instead of it.
+- **Then you STOP and GPT rules** — unless the ruling already authorized the next item.
+- **NOT auto-authorized by this section:** a new audit campaign · another multi-arm certification
+  suite · a new architectural investigation · several broad agents for one narrow question.
 
 ---
 

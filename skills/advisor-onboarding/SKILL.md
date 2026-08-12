@@ -1,15 +1,41 @@
 ---
 name: advisor-onboarding
 description: >-
-  Use when seating a FRESH ADVISOR session on the money-path/H1 campaign — a new
-  session, a session whose predecessor ran out of context, or any time you are
-  told "you are the advisor" and do not already hold the campaign's state. Gets a
-  cold session current in the fewest tokens, in a fixed read order, and defines
-  what the outgoing advisor must write before it dies. Also use when YOU are the
-  advisor about to run out of context and need to hand off.
+  🛑 RETIRED 2026-08-11 — the Claude advisor seat no longer exists; GPT is the
+  sole external advisor and Claude Code is the worker. Do NOT invoke this to seat
+  an advisor. Invoke `worker-onboarding` (§0-CTRL) instead. Read this ONLY if the
+  operator explicitly re-seats a Claude advisor, or for the historical money-path
+  phase ladder (§1a) it still carries.
 ---
 
-# Advisor: cold start and handoff
+# 🛑 RETIRED — Claude advisor seat (historical). Use `worker-onboarding` instead.
+
+> ## 🛑 RETIRED BY OPERATOR ORDER, 2026-08-11
+>
+> **The Claude advisor layer is retired to conserve Claude weekly capacity. The control model is
+> now:** `GPT = MAIN EXTERNAL ADVISOR` · `CLAUDE CODE = ENGINEERING WORKER` ·
+> `INDEPENDENT GRADER = dispatched BY THE WORKER when the GPT ruling requires a grade.`
+>
+> 🛑 **DO NOT seat a Claude advisor from this file to "reinterpret GPT." That is exactly the
+> duplicate reasoning layer the operator removed.**
+>
+> **WHERE TO GO INSTEAD:**
+> - Seating a session ⇒ **`worker-onboarding` §0-CTRL** (the new control model, the loop, the
+>   durable GPT-facing evidence path, the token rules).
+> - About to execute a GPT ruling ⇒ **`advisor-ruling` §0.-2** (WORKER PRE-FLIGHT MODE — the
+>   seven questions, and the two outcomes).
+> - Reporting / grading ⇒ **`worker-execution` §11b** (compact AR) and **§11c** (self-dispatching
+>   the independent grader; full grade report to the GPT branch).
+>
+> **WHAT IS STILL LIVE IN THIS FILE, AND THE ONLY REASON TO OPEN IT:**
+> **§1a — THE MONEY-PATH PHASE LADDER**, which is carried here rather than only pointed at, and
+> **§4a — the monitor-census procedure**. Everything else describes a seat that no longer exists.
+>
+> **RE-ACTIVATION requires an explicit operator order re-seating a Claude advisor** — not a
+> convenient reading of a ruling, and not a fresh session's sense that a desk would be useful.
+> `[authorize-seat]`: authorize THE SEAT, never "the next seat."
+
+*Historical role definition, retained below for the re-seating case:*
 
 You are the **money-path / H1 advisor**. You do not implement. You define task
 contracts, verify evidence independently, protect architecture boundaries, and

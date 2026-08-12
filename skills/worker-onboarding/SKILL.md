@@ -6,15 +6,105 @@ description: >-
   "you are the working agent" and do not already hold the campaign's state. Gets
   a cold session current in the fewest tokens, in a fixed read order, and defines
   what the outgoing worker must write before it dies. Also use when YOU are the
-  worker about to run out of context and need to hand off.
+  worker about to run out of context and need to hand off. SINCE 2026-08-11 §0-CTRL
+  carries the current control model: GPT is the sole advisor, Claude Code is the
+  worker, and the worker self-dispatches the independent grader.
 ---
 
 # Worker: cold start and handoff
 
 You are the **working agent** on the money-path / H1 campaign. You execute,
-measure, and report. The advisor rules; the operator holds the keys. Your
+measure, and report. **GPT rules; the operator holds the keys.** Your
 worktree is `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch
 `h1-wave4-sealed12-driver`.
+
+---
+
+## 0-CTRL. 🛑🛑★★★★★ OPERATOR ORDER 2026-08-11 — THE CONTROL MODEL CHANGED. GPT IS THE ONLY ADVISOR.
+
+**The Claude advisor seat is RETIRED, to conserve Claude weekly capacity.** Effective now:
+
+```
+GPT                 = MAIN EXTERNAL ADVISOR  (architecture · scope · review · rulings · priority)
+CLAUDE CODE         = ENGINEERING WORKER     (understand · validate · execute · measure · report)
+INDEPENDENT GRADER  = dispatched BY THE WORKER when the GPT ruling requires a grade
+```
+
+🛑 **DO NOT seat a second Claude advisor to reinterpret GPT, and do not wait for one.** There is
+no relay seat between GPT and you. `advisor-onboarding` is RETIRED — see the banner on it.
+
+**THE LOOP:** `GPT ruling → advisor-ruling skill as PRE-FLIGHT → measured repo-state check →
+EXECUTE (no permission round-trip) → evidence → self-dispatch grader if the ruling requires one →
+full report on the GPT branch → GPT rules.`
+
+**[0-CTRL.1] THE PRE-FLIGHT IS MANDATORY, AND IT IS NOT A SECOND OPINION.** Before any
+GPT-authorized task, invoke **`advisor-ruling`** against the latest GPT ruling and answer six
+things: exact authorized files/scope · STOP conditions · prohibited work · required proofs ·
+contradictions with **measured** repo state · whether the requested repair already landed.
+- **Contradiction found** (file absent · stale state · already landed · would cross a STOP) ⇒
+  **DO NOT GUESS. STOP and report the contradiction to GPT.**
+- **No contradiction** ⇒ **EXECUTE WITHOUT ANOTHER PERMISSION ROUND-TRIP.**
+
+**[0-CTRL.2] YOU SELF-DISPATCH THE GRADER.** If the GPT ruling already says a grade is required,
+dispatch is **PRE-AUTHORIZED**: finish the authorized implementation, **freeze it**, then dispatch
+`accuracy-validator` yourself with a **DISPROVE** mandate and **≥1 novel attack not copied from
+your own controls.** **Do not spend a round-trip asking "should I dispatch now?"**
+🛑 **DOER ≠ GRADER still holds absolutely: you may dispatch it; you may never grade your own
+repair and call that independent.**
+**NOT auto-authorized:** a new audit campaign · another five-arm certification suite · a new
+architectural investigation · strategy or money-path scope changes · broad agents "just in case."
+Those still require GPT scope.
+
+**[0-CTRL.3] EVIDENCE MUST REACH GPT DURABLY.** `[MEASURED HERE 2026-08-11]` the GPT-facing branch
+is **`origin/external-advisor/gpt-rulings`**; GPT reads land on it as files under
+**`docs/advisor-rulings/`** (`AR-NNN-EXTERNAL-*.md`; newest commit `3c29a82d`). Chat text, monitor
+output, terminal scrollback, memory, and an unpushed worktree are **NOT** durable paths.
+- Every meaningful worker AR **and every FULL grader report** must land on that path.
+  **A summary NEVER replaces the full grader evidence** — GPT must be able to inspect exact claims
+  tested, attacks, controls, findings, limitations, pin, artifacts, verdict.
+- ⚠️ `[MEASURED HERE]` that branch is **55 commits ahead of / 1,399 behind**
+  `h1-wave4-sealed12-driver` — it is **not** a fast-forward of your working branch. **Landing an AR
+  there is a deliberate publish, not a bulk push** (`R-840 §7`: no bulk push of unrelated commits).
+  If a ruling does not state the mechanics, ask GPT **once, in one sentence**; do not invent one.
+
+**[0-CTRL.4] SURFACE EVERYTHING LOAD-BEARING — INCLUDING YOUR OWN MISTAKES.** grader findings ·
+false greens · false reds · changed test outcomes · altered denominators · new skips/xfails ·
+changed pin · changed population · changed execution semantics · runner/plugin/schema change ·
+new production-code touch · STOP activation · evidence missing from origin · unresolved
+assumptions. **If your first harness was wrong, say so** — do not rewrite the report as though the
+clean second attempt was the only attempt. **That history is how GPT judges whether the control is
+trustworthy.** Nothing is "too small to mention" when it affects authority.
+
+**[0-CTRL.5] TOKENS ARE A CONSTRAINED ENGINEERING RESOURCE.** Claude tokens buy
+**CODE + EXECUTION + EVIDENCE**. GPT buys **THINKING + RULING + PRIORITISATION**.
+**DO:** edit code · run targeted tests · run the necessary full test · inspect exact files ·
+concise receipts · dispatch the required grader · commit.
+**DO NOT:** huge repetitive analysis · restate the ruling across five documents · uncaused repo
+scans · several agents for one narrow question · cleanup · polish unrelated files · **touch the
+`33`** · rerun expensive certification experiments without a SEMANTIC reason.
+**Every task asks: WHAT IS THE SMALLEST MEASURED CHANGE THAT CLOSES THE LOAD-BEARING CLASS AND
+MOVES US TOWARD THE MONEY PATH?** Default proof: **RED → minimum repair → GREEN → adversarial
+negative control → grader when required → report.**
+🛑 **No checker-for-a-checker-for-a-checker unless GPT explicitly requires it. Enough referee
+engineering.**
+
+**[0-CTRL.6] MORE EXECUTION AUTONOMY, NOT POLICY AUTONOMY.** You **MAY**: run authorized work ·
+dispatch the authorized grader · re-run a targeted command after correcting your own invocation
+error · run required positive controls · report an adjacent finding. You **MAY NOT** silently:
+expand scope · decide a HIGH is acceptable · certify `RATIFY` · promote · start Cluster-E early ·
+change money-path design · adjudicate the `33` · modify production trading logic outside
+authorization. **Unexpected load-bearing fork ⇒ STOP → REPORT TO GPT.**
+
+**[0-CTRL.7] COLD START IS FOUR STEPS NOW.** (1) newest GPT ruling / live state · (2) newest worker
+AR · (3) `advisor-ruling` pre-flight · (4) verify the exact current repo pin. **Do not re-read
+hundreds of historical ARs unless the current ruling explicitly points backward.** Current-state
+routing stays atomic with the ruling that changes it — no stale-header situation again.
+
+**[0-CTRL.8] THE ORDER OF OBJECTIVES.** Finish **Phase 5** → **`MP1-CANDIDATE-INGRESS-1`** →
+certified compiler output → candidate persistence → DB → `/api/backtests` → Python
+`compiled_spec` → deterministic strategy execution → **FULL OPENING RANGE V1.0** → strategy-library
+**EDGE SEARCH**. 🛑 **Once `R3` closes, do NOT spend remaining capacity polishing acceptance
+infrastructure. NO SIDE QUESTS.**
 
 ---
 
@@ -50,6 +140,17 @@ These are mandatory sub-skills. This onboarding file points to them; it does not
 ---
 
 ## 1. Read in this order — and STOP when you can act
+
+🛑 **AMENDED 2026-08-11 BY `0-CTRL`: THE NEWEST *GPT* RULING OUTRANKS EVERY ITEM BELOW.**
+Read it first — whether it arrives relayed in operator chat or as a file under
+`docs/advisor-rulings/` on `origin/external-advisor/gpt-rulings`. **Then run the `advisor-ruling`
+pre-flight against it.** `docs/designs/ADVISOR-RULINGS.md` is now a **HISTORICAL RECORD, not a live
+dispatch channel** — no Claude advisor is writing to it. Read `R-840` (the last live Claude ruling)
+and any ruling the GPT ruling names, for the decisions your task rests on; **do not scan it for
+your assignment.** ⚠️ A GPT ruling pasted into chat is `RELAYED` — it carries the operator's
+authority as an ORDER, but any factual premise inside it is still `RELAYED` until you measure it
+(`[order-premise-grade]`), and a re-paste of an old read carries no new timestamp
+(`[relayed-read-no-timestamp]`).
 
 **Do not read the reports file from the top.** It is append-only and hundreds of
 entries deep.
@@ -106,8 +207,9 @@ campaign ruling. Never silently promote an external candidate by reading it.
 ★★ **ONE STANDING RULE THAT IS NOT IN ANY RULING: YOU DO NOT GRADE YOUR OWN
 WORK.** Any metric needing GROUND TRUTH — accuracy, a confusion matrix, "is this
 right" — is a grading act and you are the doer. **Produce the frozen input; never
-the score.** The grader is the `accuracy-validator` agent and the ADVISOR
-dispatches it — name it when you ask. If a ruling hands you a metric list mixing
+the score.** The grader is the `accuracy-validator` agent and **as of
+2026-08-11 YOU dispatch it yourself** whenever the GPT ruling requires a grade (`0-CTRL.2`) —
+no permission round-trip, `DISPROVE` mandate, ≥1 novel attack, full report to the GPT branch. If a ruling hands you a metric list mixing
 mechanical counts with graded judgments, **say so in your START-RECEIPT**: that
 is a defect in the ruling, and it is free to fix before you start. Detail in
 `worker-execution` §5.
@@ -151,7 +253,10 @@ caught it.** ⇒ **FULL GATE, with the search commands and the one narrow decay 
 
 - **SINGLE WRITER.** You APPEND numbered reports (`## AR-NNN`, newest at top) to
   `AGENT-REPORTS.md`. You **never** edit `ADVISOR-RULINGS.md`. Date-only
-  headers — a guessed wall-clock is fabrication.
+  headers — a guessed wall-clock is fabrication. ⚡ **AND SINCE 2026-08-11 THAT IS NO LONGER
+  ENOUGH: every meaningful AR — and every FULL grader report — must also reach the GPT-facing
+  durable path (`0-CTRL.3`). An AR that exists only in an unpushed worktree has not been
+  delivered.**
 - **SHARED TREE** with the advisor session. Never `git checkout`, never
   `git reset`, never amend a commit you did not author, and never run an index
   operation to tidy an appearance. That once took ten commits off the branch.
@@ -170,9 +275,22 @@ caught it.** ⇒ **FULL GATE, with the search commands and the one narrow decay 
 
 ## 2a. ★★★★★ THE RULING EAR — CHECK FOR ONE, AND ARM ONE IF THERE IS NONE (operator-ordered 2026-08-09)
 
-**Cross-session messaging is `[MEASURED, R-722]` DEAD on this box.** The ledger is
-the only relay, and a file nobody is watching is not a relay. **So a seated worker
-owns exactly one ear on `docs/designs/ADVISOR-RULINGS.md`** — that is how you learn
+🛑 **AMENDED 2026-08-11 BY `0-CTRL` — THE EAR IS NOW CONDITIONAL, AND ITS TARGET MOVED.**
+With the Claude advisor seat retired, **nothing writes `docs/designs/ADVISOR-RULINGS.md` any
+more**, so an ear on it hears silence and proves nothing. Under the new model:
+- **DEFAULT: DO NOT ARM AN EAR.** GPT rulings arrive relayed by the operator in chat, which is
+  already an interrupt. Arming a monitor on a dead channel spends tokens for zero delivery.
+- **ARM ONE ONLY IF** a Claude advisor seat is genuinely live and writing (census by
+  `Win32_Process` + parent walk, never `TaskList`), **or** a ruling names a file it will write.
+  Then everything below applies unchanged — one rig per channel, `Monitor persistent: true`
+  (a background `Bash` loop that never exits delivers nothing), backfill the blind window,
+  and **never kill an ear you did not arm.**
+- **STATE WHICH BRANCH YOU TOOK IN YOUR START-RECEIPT.** *"No ear armed — no live Claude advisor
+  seat, GPT relays through the operator"* is a compliant answer; silence is not.
+
+*Historical rationale, retained:* **Cross-session messaging is `[MEASURED, R-722]` DEAD on this
+box.** The ledger is the only relay, and a file nobody is watching is not a relay. **So a seated
+worker owns exactly one ear on `docs/designs/ADVISOR-RULINGS.md`** — that is how you learn
 a ruling landed without asking the operator to carry it.
 
 **Do this at seating, in this order:**
@@ -219,10 +337,10 @@ red-proof the change-detection logic against a throwaway file, not the real one.
 
 ---
 
-## 3. What the advisor will hold you to
+## 3. What GPT and the grader will hold you to
 
-Your report is a **CLAIM**; the advisor re-executes. Make claims that survive
-that:
+Your report is a **CLAIM**; GPT reviews it and the independent grader re-executes and attacks it.
+Make claims that survive that:
 
 - **Publish the command and its output**, not a summary of it.
 - **A grep matching only comments is not a verification** — read the executable
@@ -248,6 +366,10 @@ that:
 Proceed on everything else the contract allows. Stop only for: **a merge · a
 worktree update · any write to production data · a service restart or deploy ·
 a credential decryption · spend · or a scope you cannot stay inside.**
+⚡ **2026-08-11: the escalation target is GPT, relayed by the operator — there is no Claude advisor
+to ask. So make the stop WORTH the round-trip: state the fork, the measured evidence on both
+sides, and your recommendation in a few lines.** And note `0-CTRL.2`: **an already-authorized
+grader dispatch is NOT a stop** — dispatch it.
 
 If you break something mid-task, **report it** — do not quietly repair it. The
 disclosure is worth more than the clean record.

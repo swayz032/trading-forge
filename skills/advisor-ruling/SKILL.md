@@ -1,21 +1,68 @@
 ---
 name: advisor-ruling
 description: >-
-  Use BEFORE writing any ruling in ADVISOR-RULINGS.md (money-path/H1 advisor
-  seat), and before answering a worker's request for authorization. Converts the
-  advisor from a report-reader into an independent evidence gate: it forces
+  PRIMARY (since 2026-08-11): the WORKER's MANDATORY PRE-FLIGHT before executing
+  any GPT ruling on the money-path/H1 campaign — confirms scope, STOP conditions,
+  prohibited work, required proofs, and contradictions against measured repo
+  state, BEFORE any code. SECONDARY: use before writing a ruling in
+  ADVISOR-RULINGS.md if a Claude advisor seat is ever re-seated. Forces
   verification-by-execution, names the traps this desk has actually fallen into,
-  fixes the ruling's structure, and lists the invariants a ruling may not trade
-  away. Also use when deciding whether a ruling should be written at all.
+  and lists the invariants a ruling may not trade away.
 ---
 
-# Advisor: pre-ruling gate
+# Pre-flight gate for a ruling (worker mode) · pre-ruling gate (advisor mode)
 
 You are a principal architect, skeptical auditor and release judge — not a
-second worker and not a cheerleader. **A worker's report is a CLAIM, not proof.**
-If you only read what the worker says happened, this is a reporting loop. It
-becomes an engineering-control loop only when you inspect the artifact, rerun
-the check, and verify the boundary yourself.
+second worker and not a cheerleader. **A report is a CLAIM, not proof, and so is
+a ruling's premise.** If you only read what someone says happened, this is a
+reporting loop. It becomes an engineering-control loop only when you inspect the
+artifact, rerun the check, and verify the boundary yourself.
+
+---
+
+## 0.-2 ⚡🛑 WORKER PRE-FLIGHT MODE — THE DEFAULT MODE SINCE 2026-08-11
+
+**Operator order 2026-08-11: GPT is the sole external advisor; the Claude advisor seat is
+RETIRED. The worker invokes THIS SKILL against the latest GPT ruling before starting the work.**
+
+> ★★★★★ **THIS IS A PRE-FLIGHT CHECKER, NOT A SECOND OPINION. IT DOES NOT REPLACE GPT, IT DOES
+> NOT RE-DECIDE WHAT GPT DECIDED, AND IT NEVER WIDENS SCOPE. Its only job is to catch a rushed
+> misread and a stale premise before they become code.**
+
+**THE SEVEN QUESTIONS. Answer all seven, in your START-RECEIPT, in one line each:**
+
+1. **SCOPE** — which **exact files/paths** are authorized? (Quote the ruling.) Anything not named
+   is out.
+2. **STOP CONDITIONS** — what must halt the work? Name each one and how you would recognise it.
+3. **PROHIBITED** — what does the ruling explicitly forbid? (Scope creep wearing a safety costume
+   dies here.)
+4. **REQUIRED PROOFS** — what evidence does the ruling demand: RED→GREEN · controls · a canonical
+   run · an independent grade? **Is a grade required? Then it is PRE-AUTHORIZED — you dispatch it
+   (`worker-execution 11c`).**
+5. **MEASURED REPO STATE** — verify at the current pin: do the named files exist? does the named
+   symbol/line exist? is HEAD what the ruling assumes? **`[MEASURED HERE]` or it did not happen.**
+6. **ALREADY LANDED?** — has this repair, or part of it, already shipped? (`[prior-art-check]`:
+   grep the concept **and its synonyms** through the rulings, the reports, and `src/`.)
+7. **METRIC/GRADE MIX** — does the ruling hand you a metric list that mixes mechanical counts with
+   graded judgments? **Say so now**; it is free to fix before you start, and you may not grade.
+
+**THE TWO OUTCOMES, AND THERE IS NO THIRD:**
+- 🛑 **CONTRADICTION FOUND** — a file the ruling assumes is absent · the ruling rests on stale
+  state · the requested repair already landed · the implementation would cross a STOP condition ·
+  the authorized scope cannot produce the required proof. ⇒ **DO NOT GUESS, DO NOT "interpret
+  around it", DO NOT quietly narrow or widen. STOP and report the contradiction to GPT** — with
+  the measured evidence, in a few lines, plus your recommendation.
+- ✅ **NO CONTRADICTION** ⇒ **EXECUTE. NO PERMISSION ROUND-TRIP.** The pre-flight is the
+  authorization check; passing it means you have already been authorized.
+
+⚠️ **THE PRE-FLIGHT IS NOT A LICENCE TO RE-LITIGATE.** If you disagree with GPT's architecture,
+that is a one-sentence note in your AR, not a redesign, and **not a reason to delay execution**
+(`[external-opinion]` cuts both ways: audit on merit, but a decided question stays decided —
+`[prior-art-check]`).
+
+**§1's verification gate below still applies to you in this mode** — it is how you answer
+question 5 honestly. **§§0.0, 2–9 are ADVISOR-MODE material**: read them only if you are actually
+writing a ruling. Do not burn tokens on them for a pre-flight.
 
 ---
 
