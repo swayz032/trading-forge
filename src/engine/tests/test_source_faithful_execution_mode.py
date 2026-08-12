@@ -37,6 +37,7 @@ from src.engine.backtester import (
     _apply_stop_only_management,
     _apply_trade_management,
     _resolve_stop_risk_points,
+    _source_risk_mode_from_spec,
     _structural_stop_parity_enabled,
     run_class_backtest,
 )
@@ -240,6 +241,98 @@ class TestTheModeReachesTheStopCommand:
         assert owner.name == "_apply_dsl_stop_loss_and_time_stop", (
             f"the floor moved to {owner.name}; the E.3/E.5 bypass no longer covers it"
         )
+
+
+class TestProductionIngressStepA:
+    """SOURCE_FAITHFUL_EXECUTION_JOIN-1 / STEP A — AR-1074 §3 and §10.A.
+
+    🛑 AR-1074 §3 CORRECTED ME. AR-1073 said the mode reached the stop "through the whole
+    chain". It did not: it reached it only when a TEST supplied it by hand. The real Band C
+    `compiled_spec` dispatch called `run_class_backtest()` without `source_risk_mode=`, so
+    the persisted authority sat in the artifact and never moved. This class covers the join.
+    """
+
+    def test_the_helper_reads_the_persisted_mode(self):
+        assert _source_risk_mode_from_spec(
+            {"spec": {"source_risk": {"mode": "SOURCE_FAITHFUL"}}}
+        ) == "SOURCE_FAITHFUL"
+
+    def test_an_artifact_with_no_source_risk_stays_LEGACY(self):
+        """AR-1074 §11 discriminator 2. Every artifact in the existing library is this case."""
+        for spec in (None, {}, {"spec": {}}, {"spec": {"source_risk": {}}}, {"spec": "notadict"}):
+            assert _source_risk_mode_from_spec(spec) is None, spec
+
+    def test_a_TYPO_is_passed_through_and_NOT_normalised_to_legacy(self):
+        """★ A SANITISER THAT TURNS A BAD VALUE INTO A PLAUSIBLE DEFAULT IS NOT A GUARD.
+        Returning None for 'SOURCE-FAITHFUL' would silently run the FULL Trading Forge
+        overlay on an artifact that asked for none. It must reach the validator and refuse."""
+        assert _source_risk_mode_from_spec(
+            {"spec": {"source_risk": {"mode": "SOURCE-FAITHFUL"}}}
+        ) == "SOURCE-FAITHFUL"
+
+        with pytest.raises(ValueError, match="not a declared ownership mode"):
+            run_class_backtest(
+                _FakeStrategy(), "2024-01-01", "2024-01-31",
+                source_risk_mode=_source_risk_mode_from_spec(
+                    {"spec": {"source_risk": {"mode": "SOURCE-FAITHFUL"}}}
+                ),
+            )
+
+    def test_a_malformed_artifact_does_not_CRASH_the_band_c_dispatch(self):
+        for junk in (42, "string", [], {"spec": []}, {"spec": {"source_risk": 7}}):
+            assert _source_risk_mode_from_spec(junk) is None, junk
+
+    def test_the_BAND_C_call_actually_passes_the_mode(self):
+        """AR-1074 §11 discriminator 1: removing this pass must go RED. ⚠️ STRUCTURAL —
+        the Band C branch needs market data to execute, which this box does not have."""
+        whole = io.open("src/engine/backtester.py", encoding="utf-8").read()
+        anchor = "source_risk_mode=_source_risk_mode_from_spec(config.get(\"compiled_spec\"))"
+        assert whole.count(anchor) == 1, (
+            "the Band C production ingress is missing or duplicated; AR-1074 §3 named this "
+            "the FIRST PRODUCTION BLOCKER"
+        )
+
+        # …and it must be inside the compiled_spec (Band C) branch, not some other caller.
+        band_c = whole.split('config.get("compiled_spec")', 1)
+        assert len(band_c) > 1
+        assert anchor in whole[whole.index("Band C: compiled-spec condition-family dispatch"):], (
+            "the ingress exists but not on the Band C path"
+        )
+
+    def test_the_walkforward_call_is_deliberately_NOT_joined_yet(self):
+        """AR-1074 §10.A: 'Single-mode backtest first. Walk-forward propagation may wait
+        until the deterministic single-path GREEN.' Pinned so the omission reads as a
+        DECISION rather than an oversight — and so joining it later is a deliberate act.
+
+        ⚠️ THIS TEST'S FIRST VERSION WAS THE WRONG INSTRUMENT. It counted the raw string
+        `source_risk_mode=` and asserted 2, a number I GUESSED. The real count is 3, and two
+        of those are inside ERROR-MESSAGE STRING LITERALS, not calls. A text count over
+        source cannot tell a call keyword from a word in a message.
+        ★ `COUNT THE CONSTRUCT, NOT THE CHARACTERS THAT SPELL IT.`
+        """
+        tree = ast.parse(io.open("src/engine/backtester.py", encoding="utf-8").read())
+        passes = [
+            n for n in ast.walk(tree)
+            if isinstance(n, ast.Call)
+            and any(k.arg == "source_risk_mode" for k in n.keywords)
+        ]
+        assert len(passes) == 1, f"expected exactly ONE call passing the mode, found {len(passes)}"
+
+        callee = passes[0].func
+        name = callee.id if isinstance(callee, ast.Name) else getattr(callee, "attr", None)
+        assert name == "run_class_backtest", f"the mode is being passed to {name!r}"
+
+        # And no walk-forward call may carry it yet.
+        wf = [
+            n for n in ast.walk(tree)
+            if isinstance(n, ast.Call)
+            and getattr(n.func, "id", getattr(n.func, "attr", None)) == "run_walk_forward_class"
+        ]
+        assert wf, "positive witness: there IS a walk-forward call to check"
+        for n in wf:
+            assert not any(k.arg == "source_risk_mode" for k in n.keywords), (
+                "walk-forward was joined without a ruling (AR-1074 §10.A defers it)"
+            )
 
 
 class TestTheSignatureContract:

@@ -2985,6 +2985,37 @@ def _get_stop_ceiling_for_symbol(symbol: str) -> float:
 # risk_points via _resolve_stop_risk_points() below instead of the raw ATR
 # clamp. Byte-identical fallback preserved when the flag is off or no
 # structural entry exists for the trade's admission bar.
+def _source_risk_mode_from_spec(compiled_spec) -> Optional[str]:
+    """Read `compiled_spec.spec.source_risk.mode` — the persisted execution-ownership
+    authority — for the Band C production dispatch (AR-1074 §10.A).
+
+    ABSENT ⇒ `None` ⇒ LEGACY, BYTE-IDENTICAL. Every artifact in the existing strategy
+    library has no `source_risk`, so every one of them keeps its current behaviour.
+
+    🛑 IT DOES NOT VALIDATE, AND THAT IS DELIBERATE — TWICE OVER.
+    1. `run_class_backtest` already refuses an undeclared mode. A second validator here
+       would be a second authority that can drift from the first, and the owner of a fact
+       is the one that should enforce it.
+    2. So this returns whatever the artifact actually says, **including a typo**, rather
+       than normalising it to `None`. Returning `None` for `"SOURCE-FAITHFUL"` would
+       silently run the full Trading Forge overlay on an artifact that asked for none —
+       the exact silent-downgrade shape the mode gate exists to stop.
+       ★ `A SANITISER THAT TURNS A BAD VALUE INTO A PLAUSIBLE DEFAULT IS NOT A GUARD.`
+
+    Total by construction: any shape that is not a dict-of-dicts yields `None` rather than
+    raising, because a malformed artifact must not crash the whole Band C dispatch.
+    """
+    if not isinstance(compiled_spec, dict):
+        return None
+    spec = compiled_spec.get("spec")
+    if not isinstance(spec, dict):
+        return None
+    source_risk = spec.get("source_risk")
+    if not isinstance(source_risk, dict):
+        return None
+    return source_risk.get("mode")
+
+
 def _structural_stop_parity_enabled() -> bool:
     """Feature flag for the H5 admission-stop-parity fix.
 
@@ -8759,6 +8790,20 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 skip_eligibility_gate=False,
                 exit_engine=exit_engine,
                 adaptive_ctx=None,
+                # ─── SOURCE_FAITHFUL_EXECUTION_JOIN-1 / STEP A (AR-1074 §3, §10.A) ──
+                # THE PRODUCTION INGRESS. AR-1074 §3 measured the gap precisely:
+                #   persisted source_risk.mode     OK
+                #   run_class_backtest can consume OK
+                #   Band C joins the two           MISSING
+                # AR-1073 claimed the mode "reaches the stop through the whole chain".
+                # It did not — it reached it only when a TEST supplied it by hand. This
+                # line is the join, and AR-1074 §11 discriminator 1 makes removing it RED.
+                #
+                # NO VALIDATION HERE ON PURPOSE. `run_class_backtest` already refuses an
+                # undeclared mode; re-checking it at the call site would be a second
+                # authority that can drift from the first. Pass the artifact's own word
+                # through and let the one owner enforce it.
+                source_risk_mode=_source_risk_mode_from_spec(config.get("compiled_spec")),
             )
         # Governance propagation (C1 mandate): honest approximation flag on
         # every result produced by an approximation=True evaluator binding.
