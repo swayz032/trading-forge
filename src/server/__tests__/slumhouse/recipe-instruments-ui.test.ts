@@ -52,6 +52,8 @@ describe("Recipe premium instruments", () => {
     expect(html).toContain("/slumhouse/recipe-instruments.js");
     expect(html).toContain("/slumhouse/recipe-instruments.css");
     expect(html).toContain('aria-pressed');
+    expect(html).toContain('"data-view": "backtest"');
+    expect(html).toContain('class: "r-feed-list"');
     expect(html).toContain("r.identity.displayName || cleanName(r.identity.name)");
     expect(kitchen).not.toContain("&name=" + "' + encodeURIComponent(fam.title) + '");
     expect(html).toContain("resolveMenuDisplayName(id)");
@@ -64,6 +66,7 @@ describe("Recipe premium instruments", () => {
     expect(html).not.toContain("left.appendChild(instrument)");
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderBacktest(r))");
     expect(css).toContain("appearance: none");
+    expect(css).toContain("scrollbar-width:none");
     expect(css).toContain("instrument-ghost");
     expect(css).toContain("instrument-ghost--backtest");
     expect(css).toContain(".instrument-ghost--backtest span { animation:none; }");

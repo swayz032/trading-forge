@@ -1230,6 +1230,18 @@
           ? "This play hasn't been cooked yet. Tap a gate to see its number in the panel on the left."
           : "Every gate this play had to clear. Tap one to see its number in the panel on the left."),
       );
+      const list = el("div", { class: "r-feed-list" });
+      var backtestTrades = Number(r.backtest && r.backtest.tradesCount) || 0;
+      var backtestRow = el("button", { class: "r-feed-row r-feed-click", type: "button", "aria-pressed": "true", "data-view": "backtest" },
+        el("div", { class: "r-feed-light " + (backtestTrades > 0 ? "pass" : "wait") }),
+        el("div", {},
+          el("div", { class: "r-feed-name" }, "Backtest"),
+          el("div", { class: "r-feed-sub" }, "historical market replay"),
+          el("div", { class: "r-feed-desc" }, backtestTrades > 0 ? backtestTrades + " recorded plays." : "Awaiting first backtest."),
+        ),
+      );
+      backtestRow.addEventListener("click", function () { switchLeftToBacktest(r, backtestRow); });
+      list.appendChild(backtestRow);
       for (const t of (r.otherTests || [])) {
         var status = untested ? "wait" : t.status;
         var desc = untested ? "Not run yet." : t.sentence;
@@ -1242,8 +1254,9 @@
           ),
         );
         (function (name, control) { control.addEventListener("click", function () { switchLeftToGate(r, name, control); }); })(t.name, row);
-        panel.appendChild(row);
+        list.appendChild(row);
       }
+      panel.appendChild(list);
       return panel;
     }
 
@@ -1257,12 +1270,13 @@
       panel.focus({ preventScroll: true });
       left.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-    function switchLeftToBacktest(r) {
+    function switchLeftToBacktest(r, control) {
       const left = document.getElementById("r-left");
       if (!left) return;
       left.innerHTML = "";
       left.appendChild(renderBacktest(r));
-      document.querySelectorAll(".r-feed-click").forEach(function (row) { row.setAttribute("aria-pressed", "false"); });
+      var backtestControl = control || document.querySelector('[data-view="backtest"]');
+      document.querySelectorAll(".r-feed-click").forEach(function (row) { row.setAttribute("aria-pressed", row === backtestControl ? "true" : "false"); });
     }
     function renderGateMetric(r, name) {
       const { el } = SH;

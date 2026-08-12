@@ -30,6 +30,8 @@
 .recipe-instrument--jitter-dials,.recipe-instrument--crash,.recipe-instrument--regimes,.recipe-instrument--shuffle,.recipe-instrument--paper,.recipe-instrument--drift,.recipe-instrument--compliance { background:radial-gradient(circle at 50% -20%,rgba(163,255,18,.12),transparent 48%),linear-gradient(145deg,#151a12,#030503 72%); }
 .r-feed-click { appearance: none; -webkit-appearance:none; width:100%; color:inherit; font:inherit; text-align:left; background:transparent; border:0; }
 .r-feed-click[aria-pressed="true"] { border:1px solid #a3ff12; background: rgba(163,255,18,.08); }
+.r-feed-list { max-height:480px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; -ms-overflow-style:none; }
+.r-feed-list::-webkit-scrollbar { display:none; width:0; height:0; }
 .r-feed-click:focus-visible,.r-gate-back:focus-visible { outline: 2px solid #a3ff12; outline-offset: 3px; }
 @media (max-width:640px) { .recipe-instrument { min-height:220px; padding:14px; transform:none; } }
 @media (prefers-reduced-motion: reduce) { .recipe-instrument { transition:none; transform:none; } .instrument-ghost--backtest span { animation:none; } }
