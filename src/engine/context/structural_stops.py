@@ -52,8 +52,6 @@ import warnings
 from dataclasses import dataclass
 from typing import Optional
 
-import numpy as np
-
 logger = logging.getLogger(__name__)
 
 
@@ -177,6 +175,17 @@ def _compute_buffer(symbol: str, tick_size: float, atr: float, session_adj: floa
     return max(tick_size, atr * 0.10) * session_adj, False
 
 
+class SourceAnchorUnresolved(RuntimeError):
+    """A commanded source-faithful anchor could not be resolved.
+
+    SOURCE-RISK-HANDOFF-1 / AR-1059 §4 UNIT C: when the teacher commanded a specific
+    structural anchor, an unresolvable anchor must REFUSE. It may never fall through
+    to `atr_fallback` — that would silently execute a Trading Forge stop under a
+    SOURCE_FAITHFUL label, which is the exact semantic substitution this unit exists
+    to prevent.
+    """
+
+
 @dataclass
 class StopPlan:
     stop_price: float
@@ -209,6 +218,10 @@ def compute_structural_stop(
     sweep_wick_high: Optional[float] = None,
     session_transition: bool = False,
     max_stop_points: float = 0.0,  # 0 = resolve per-symbol from INSTRUMENT_STOP_CONFIG
+    # ── SOURCE_FAITHFUL additions (AR-1059 §4 UNIT B/C) ───────────────────────
+    # Both default to the legacy behaviour; a call that omits them is unchanged.
+    required_anchor: Optional[str] = None,  # UNIT C: bind the stop to THIS structure
+    source_exact: bool = False,             # UNIT B: no unstated framework buffer
 ) -> StopPlan:
     """Compute structural stop placement with sweep-aware buffer (W24-P2 Item 20).
 
@@ -227,10 +240,51 @@ def compute_structural_stop(
     buffer, sweep_aware = _compute_buffer(symbol, tick_size, atr, session_adj)
     buffer_ticks = get_sweep_buffer_ticks(symbol) or 0
 
+    # UNIT B — SOURCE_FAITHFUL carries the taught extreme VERBATIM. The framework
+    # buffer is a Trading Forge risk decision the teacher never taught, so inside a
+    # source-exact stop it is not merely reduced, it is absent.
+    if source_exact:
+        buffer = 0.0
+        sweep_aware = False
+        buffer_ticks = 0
+
     stop_price = None
     stop_reason = "atr_fallback"
 
-    if direction == "long":
+    if required_anchor is not None:
+        # UNIT C — the teacher named the structure. A nearer sweep/OB/swing may not
+        # hijack it, and an unresolvable anchor REFUSES rather than degrading to ATR.
+        anchors: dict[str, tuple[Optional[float], Optional[float]]] = {
+            "fvg": (nearest_fvg_below, nearest_fvg_above),
+            "order_block": (nearest_ob_below, nearest_ob_above),
+            "sweep_wick": (sweep_wick_low, sweep_wick_high),
+            "swing_point": (nearest_swing_low, nearest_swing_high),
+        }
+        key = required_anchor.strip().lower()
+        if key not in anchors:
+            raise SourceAnchorUnresolved(
+                f"required_anchor={required_anchor!r} is not a known structural anchor; "
+                f"known anchors: {sorted(anchors)}"
+            )
+        below, above = anchors[key]
+        level = below if direction == "long" else above
+        if level is None:
+            raise SourceAnchorUnresolved(
+                f"required_anchor={key!r} commanded for direction={direction!r}, but no "
+                f"{'below' if direction == 'long' else 'above'}-entry level was supplied. "
+                "Refusing — a commanded source anchor may not fall back to ATR."
+            )
+        on_correct_side = level < entry_price if direction == "long" else level > entry_price
+        if not on_correct_side:
+            raise SourceAnchorUnresolved(
+                f"required_anchor={key!r} at {level} is on the wrong side of entry "
+                f"{entry_price} for direction={direction!r}. Refusing — a commanded "
+                "source anchor may not fall back to ATR."
+            )
+        stop_price = level - buffer if direction == "long" else level + buffer
+        stop_reason = key
+
+    elif direction == "long":
         # Priority: sweep_wick > OB > FVG > swing_low > ATR fallback
         candidates = []
         if sweep_wick_low is not None and sweep_wick_low < entry_price:
