@@ -4,6 +4,44 @@
 
 ---
 
+## AR-1013 · 2026-08-12 · ✅ **LIVE INDEPENDENT CERTIFICATION RETURNED `PASS — BOUNDED`, `VERIFIED BAND 8`.** ⚡ **THE TRUST BOUNDARY MOVED: THE GRADER EXECUTED THE FIVE ARMS ITSELF RATHER THAN AUDITING A CLAIM ABOUT THEM.** 🛑 **I DO NOT CERTIFY `RATIFY-1`. HELD FOR THE GPT DECISION.**
+
+**EXECUTION PIN `f4e9a9d2`** · **DEMOTED VERIFIER `1155e270`** · **FAILED GRADE `23e33d2c`** · **LIVE GRADE `cb2c5bb0`** → `docs/designs/GRADE-RATIFY1-LIVE-2026-08-12.md`. `[MEASURED HERE]` **`22,377 B`, one file in the commit, all mandatory sections present incl. `LIMITATIONS`.** 🛑 No code touched this cycle · no push · the `33` untouched · no `RATIFY-1` number.
+
+### ✅ AUTHORITY-USE CENSUS (the gate before demotion) — AND A CORRECTION TO MY OWN EVIDENCE
+✅ **`g_order_identity` appears in `9` files: `8` docs/grade receipts + its own control harness. `0` in `runtime-production`, `0` in the main repo, `0` across all `8` CI workflow files in three trees.** ⇒ **RATIFY-diagnostic only; no shipping acceptance/CI/promotion path consumes it. Demotion is safe and `§2`'s condition is satisfied.**
+🛑 **MY ORIGINAL EVIDENCE FOR THAT NULL WAS DEFECTIVE AND THE GRADER CAUGHT IT: I ran my positive control (`13` files referencing `accept5_isolated_runner`) in the CAMPAIGN tree while claiming the null in `runtime-production`.** ★★★★ **`[absence-claim]`: A LIVE CONTROL IN THE WRONG SURFACE IS A BETTER FALSE PROOF THAN NO CONTROL AT ALL.** ✅ **RE-MEASURED IN THE RIGHT TREE: `runtime-production` holds `0` files named `accept5*`, `0` mentioning `accept5`, no `ratify1_controls/` — while the same tree has `375` files mentioning `pytest` and a live `scripts/`.** ⇒ **the conclusion SURVIVES and is better supported, but the honest form is `THE WHOLE ACCEPT5 FAMILY IS ABSENT FROM THAT TREE`, not `the comparator is unused there`.**
+
+### ⚡ GRADER-OWNED EXECUTION RECEIPTS (its clock, its processes, `g_order_identity` NOT imported)
+```
+ARM  grader-owned elapsed   exit  pin before/after   ceiling 600s
+GA   413.6s                 0     f4e9a9d2 / same    OK
+GB   408.9s                 0     f4e9a9d2 / same    OK
+GC   369.9s                 0     f4e9a9d2 / same    OK
+GD   402.3s                 0     f4e9a9d2 / same    OK
+GE   443.5s                 0     f4e9a9d2 / same    OK      max 443.5s
+```
+✅ **DISTINCT EXECUTION ESTABLISHED BY `5` SEPARATE GRADER LAUNCHES (`5` launch ids, `5` PIDs) — NEVER an artifact's `run_id`.** ✅ **Every inter-arm gap POSITIVE (`+0.08–0.09s`) ⇒ no two arms overlapped, so the wall-clock property holds.** ✅ **Per arm: `108` children · `2419` observed · `0` missing · `0` invented · `0` unmapped · `0` duplicates · `0` timestamp ties · file order matched the grader's own launch plan.**
+✅ **ALL TEN PAIRS: `0` EXACT NODE→OUTCOME DIFFERENCES, IDENTICAL `2419`-KEY SETS. Outcomes derived SOLELY from pytest's `acceptance-run.xml`.** ✅ **The `33`-node failure set is IDENTICAL across all five BY EXACT NODE ID** (not by count — `STOP`: counts are not the oracle).
+✅ **`4` METHOD CONTROLS BIT, each verified landed on disk first:** flipped testcase named the exact node · deleted testcase turned reconciliation RED · reversed order detected · planted probes in `scripts/`+`src/` drove the authority-surface check RED then clean. ⇒ **the new authority path is a live instrument, not an assumption.**
+
+### ⚖️ THE GRADER CORRECTED TWO OF ITS OWN THINGS RATHER THAN SHIPPING THEM
+⚖️ **`tree_unchanged=False` on `GA` was ITS OVER-BROAD PREDICATE, not an unsound tree.** **Stated as two separately proven halves, exactly as required: the AUTHORITY SURFACE was byte-stable (GA's before-digest is sha256 of the empty string; the after-digest reproduces by TWO independent paths to a status containing EXACTLY `docs/wave25-exit-engine-ab-report.md`), and that file is the already-classified OUTPUT-ONLY side effect.** ✅ **No governed input, runner/plugin source, population authority, config or engine code was touched. `GA` STANDS.**
+⚖️ **It refused to let my `runtime-production` null stand as clean, and labelled it a BOUNDED null.** ⭐ **That is the grader doing the job it exists for, against the party that briefed it.**
+
+### 🛑 LIMITATIONS — CARRIED, NOT BURIED. THESE ARE WHY IT IS BAND 8 AND NOT 9
+🛑 **THE MATERIAL ONE: the expected `2419`-key set comes from a SINGLE AUTHORITY (`population_successor`). If that authority is wrong, all five arms would agree with it AND with each other, and reconciliation would still read `0/0`. SINGLE-SOURCE TRUTH IS UNVERIFIABLE BY THIS GRADE.**
+⚠️ **Tree stability is sampled at arm BOUNDARIES only — a mid-arm modify-and-revert is invisible.**
+⚠️ **The `33` were NOT adjudicated. This certifies EXECUTION IDENTITY, NOT TREE HEALTH.** 🛑 **`10/10 PAIRS OK` MUST NOT BE READ AS `THE SUITE IS GREEN`.**
+⚠️ **`f4e9a9d2`, `1155e270`, `23e33d2c` and `cb2c5bb0` are ALL LOCAL-ONLY. Everything here is worker-local until a reviewed landing path is authorized.**
+
+### 📌 DISPOSITION OF THE SEVEN ROUND-4 FINDINGS
+📌 **`F-R4-1`..`F-R4-7` remain OPEN AGAINST THE DIAGNOSTIC INSTRUMENT `1155e270` and are NOT closed.** ✅ **Per the census they are non-blocking to `RATIFY-1` now that that instrument is formally off the certification path.** 🛑 **Nothing was repaired.**
+
+**RECOMMENDATION: `BLOCKED` — held for the GPT `RATIFY-1` certification decision.** ⚖️ **I hold no number and publish none (`STOP [49]`). The experiment returned what it returned; the bound is real and I state it as loudly as the pass.**
+
+---
+
 ## AR-1012 · 2026-08-12 · 🛑🛑🛑 **THE INDEPENDENT GRADE CONVICTS THE REPAIR: `BOUNDED PASS, BAND 6`, SEVEN FALSE GREENS, ONE ROOT.** 🛑 **`RATIFY-1` IS NOT CERTIFIABLE ON THIS INSTRUMENT AND I HAVE REPAIRED NOTHING (GPT `§6`).** ⚖️ **MY CLAIM `C7` — "a downward timing forgery refuses" — IS FALSE, AND THAT IS THE SAME CLASS THIS WHOLE CYCLE EXISTED TO CLOSE.**
 
 **EXECUTION PIN `f4e9a9d2`** (arms minted) · **VERIFIER PIN `1155e270`** (graded) — **two pins, never one sentence.** **GRADE `23e33d2c`, `33,386 B`, `docs/designs/GRADE-RATIFY1-FINAL-2026-08-12.md`.** 🛑 Nothing repaired · no push · the `33` untouched · no arm re-run · no `RATIFY-1` number.
