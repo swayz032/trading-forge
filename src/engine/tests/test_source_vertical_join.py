@@ -10,10 +10,13 @@ WHAT IS PROVEN HERE, AND WHAT IS NOT — READ THIS BEFORE TRUSTING A GREEN
      at the strategy layer.
   ✅ PROVEN BY EXECUTION of the real `backtester._build_source_stop_map()` — the
      warmup-strip timestamp rebase (§10 discriminator 17).
+  ✅ RUN AT THE PRODUCTION DEFAULT since AR-1082 — `TF_FVG_IDENTITY_ENABLED` is DELETED by
+     an autouse fixture, not set, so these greens describe the shipped configuration. The
+     routing that makes that possible is proven separately in
+     `test_source_faithful_fvg_routing.py`.
   🛑 NOT PROVEN HERE — the full `main()` -> Band C -> persisted-config route producing one
-     auditable trade end to end (AR-1079 §10's load-bearing GREEN). That harness is
-     `test_source_band_c_vertical.py` and is NOT in this file; a reader must not read this
-     file's green as that claim.
+     auditable trade end to end (AR-1079 §10's load-bearing GREEN). No file in the tree
+     carries that yet; a reader must not read this file's green as that claim.
 
 ★ `A COMPONENT PROOF IS NOT A VERTICAL PROOF, AND SAYING SO IS THE ONLY THING THAT KEEPS
    IT USEFUL.`
@@ -56,36 +59,31 @@ from src.engine.spec_condition_compiler import SpecConditionStrategy
 
 
 @pytest.fixture(autouse=True)
-def _fvg_identity_routing(monkeypatch):
-    """🛑🛑 THE PRECONDITION THIS WHOLE UNIT SITS ON, AND IT IS A REPORTED FINDING — NOT A
-    TEST CONVENIENCE. READ THIS BEFORE READING ANY GREEN BELOW.
+def _production_default_flag_state(monkeypatch):
+    """🛑 THIS FIXTURE ASSERTS THE PRODUCTION DEFAULT — IT NO LONGER BUYS ONE.
 
-    `[MEASURED]` `compile_binding_plan` routes an FVG-family WAIT_STRUCTURE/FILTER condition
-    to `fvg_native.compute_fvg_signal` ONLY when `TF_FVG_IDENTITY_ENABLED=true`. That flag
-    DEFAULTS FALSE, and at the default the same condition binds to the generic
-    `structure_engine.compute_structure_state` instead — so `_eval_fvg()` never executes,
-    `FVGResult.zones` is never produced, and the SOURCE_FAITHFUL event population is
-    STRUCTURALLY EMPTY on the production default.
+    ─── WHAT THIS USED TO BE, AND WHY THAT MATTERS ────────────────────────────────────────
+    Until AR-1082 this fixture SET `TF_FVG_IDENTITY_ENABLED=true`, because `compile_binding_plan`
+    routed an FVG-family condition to `fvg_native.compute_fvg_signal` only under that flag, and
+    the flag DEFAULTS OFF. At the default the condition bound to the generic
+    `structure_engine.compute_structure_state`, `_eval_fvg()` never ran, `FVGResult.zones` were
+    never produced, and the SOURCE_FAITHFUL event population was STRUCTURALLY EMPTY. Every green
+    below was therefore conditional on a flag the product does not set — stated at the time
+    rather than hidden, because `A GREEN UNDER A FLAG THE PRODUCT DOES NOT SET IS A CLAIM ABOUT
+    A CONFIGURATION NOBODY RUNS.`
 
-        TF_FVG_IDENTITY_ENABLED=false -> primitive='structure_engine.compute_structure_state'
-        TF_FVG_IDENTITY_ENABLED=true  -> primitive='fvg_native.compute_fvg_signal'
+    AR-1082 §3 confirmed the diagnosis and authorised the narrow bypass: a SOURCE_FAITHFUL
+    artifact reaches the exact FVG primitive from its own persisted `source_risk.mode`, while
+    legacy stays governed by the flag. The four-cell proof of that routing is
+    `test_source_faithful_fvg_routing.py`.
 
-    AR-1079 §4 says to preserve "the existing FVG result from the same evaluation that serves
-    the condition" — which presumes that evaluation is the FVG detector. At the production
-    default it is not. AR-1078's join map did not contain this either.
-
-    ⚠️ SO THIS FIXTURE IS AN HONEST SCOPE LIMIT WEARING AN `autouse`: every green in this file
-    is conditional on the flag, and NONE of them is evidence that the source path runs at the
-    production default. It measurably does NOT. `A GREEN UNDER A FLAG THE PRODUCT DOES NOT SET
-    IS A CLAIM ABOUT A CONFIGURATION NOBODY RUNS.`
-
-    The resolution is a ruling, not a test edit — the closest prior art is AR-1073/AR-1074,
-    where `BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED` presented the identical shape and was
-    resolved by making SOURCE_FAITHFUL bypass the flag while legacy stayed governed by it.
-    That is one line here too, and it is NOT taken unilaterally: it changes which PRIMITIVE a
-    condition binds to, which is a binding-plan decision this unit was not authorized to make.
+    ⚠️ SO THE FIXTURE INVERTED. It now DELETES the variable, which means this entire file runs
+    at the production default and its greens are evidence about the configuration the product
+    actually ships. Deleting rather than merely not-setting matters: an ambient value inherited
+    from the developer's shell would silently restore the old crutch and nobody would see it.
+    ★ `A TEST THAT SETS THE FLAG IT DEPENDS ON CANNOT TELL YOU THE PRODUCT WORKS.`
     """
-    monkeypatch.setenv("TF_FVG_IDENTITY_ENABLED", "true")
+    monkeypatch.delenv("TF_FVG_IDENTITY_ENABLED", raising=False)
 
 
 ET = ZoneInfo("America/New_York")

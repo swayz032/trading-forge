@@ -2598,7 +2598,9 @@ def _session_keyword_fidelity_approximation(object_text: str, zone: str, base_ap
     return derived != (span,)
 
 
-def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> ConditionBinding:
+def _bind_condition_dispatch(
+    condition: dict, restore: bool, role: str, source_faithful: bool = False,
+) -> ConditionBinding:
     """Bind a single spec condition {id, type, object, role, span, evidence} to
     a primitive descriptor. Never raises; unknown condition types are honestly
     unbindable rather than defaulted to some guessed family. `role` is passed
@@ -2671,7 +2673,32 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
     # scope per the locked spec's Part B item 1; every other condition type,
     # and every WAIT_STRUCTURE/FILTER whose object is NOT in the FVG family,
     # falls through unchanged to the generic dispatch below.
-    if cond_type in ("WAIT_STRUCTURE", "FILTER") and fvg_identity_enabled() and resolve_fvg_object(obj):
+    # ─── AR-1082 §3 — EXACT SOURCE OWNERSHIP OUTRANKS AN EXPERIMENT-OFF SWITCH ──────
+    # 🛑 THE DEFECT THIS CLOSES, MEASURED AT AR-1081: `TF_FVG_IDENTITY_ENABLED` DEFAULTS
+    # OFF, so at the production default a SOURCE_FAITHFUL artifact's FVG condition bound to
+    # the generic structure engine, `_eval_fvg()` never ran, `FVGResult.zones` were never
+    # produced, and the exact source-event lane was STRUCTURALLY UNAVAILABLE. A strategy
+    # whose source-owned execution IS an FVG rule cannot depend on an experiment switch.
+    # ★ `A CORRECTNESS PATH GATED BEHIND A COMPARABILITY FLAG IS OFF, AND OFF IS THE
+    #    DEFECT.` — the same shape AR-1073/AR-1074 settled for the structural-stop parity
+    # flag, and AR-1082 §3 authorises mirroring it here in principle.
+    #
+    # 🛑 WHAT IS **NOT** WIDENED, EACH FORBIDDEN BY AR-1082 §3 BY NAME:
+    #   · the env default is NOT flipped — legacy still reads `fvg_identity_enabled()`;
+    #   · `resolve_fvg_object(obj)` REMAINS REQUIRED, so an object is never reinterpreted
+    #     as an FVG merely because SOURCE_FAITHFUL is active;
+    #   · the condition-type restriction is unchanged;
+    #   · nothing mutates `os.environ`. A process-global override would make source
+    #     semantics depend on ambient mutable state and could leak into an adjacent
+    #     compilation — `AMBIENT STATE IS NOT AN AUTHORITY, IT IS A RACE WITH A DEFAULT.`
+    #
+    # `source_faithful` is derived ONCE in `compile_binding_plan` from the already-persisted
+    # `spec.source_risk.mode` and threaded explicitly. It is a property of THE ARTIFACT.
+    if (
+        cond_type in ("WAIT_STRUCTURE", "FILTER")
+        and (fvg_identity_enabled() or source_faithful)
+        and resolve_fvg_object(obj)
+    ):
         return ConditionBinding(
             condition_id=cond_id,
             type=cond_type,
@@ -2997,6 +3024,7 @@ def bind_condition(
     restore: bool = False,
     demoted_role: str | None = None,
     force_unexecuted: bool = False,
+    source_faithful: bool = False,
 ) -> ConditionBinding:
     """Public entry point — resolves the graph's own `role` field (or a Hard-
     Constraint Demotion Experiment override) and dispatches to
@@ -3018,7 +3046,9 @@ def bind_condition(
     not via a role/executed override, so this function is a no-op for them (role/executed pass
     through exactly as the base FAMILY_META dispatch would produce)."""
     role = demoted_role if demoted_role is not None else str(condition.get("role", "") or "")
-    binding = _bind_condition_dispatch(condition, restore=restore, role=role)
+    binding = _bind_condition_dispatch(
+        condition, restore=restore, role=role, source_faithful=source_faithful,
+    )
     if force_unexecuted and binding.executed:
         binding = replace(binding, executed=False, reason=binding.reason or "role_demotion_contextual_removed")
     return binding
@@ -3187,12 +3217,31 @@ def compile_binding_plan(
         cls = demotion_classifications.get(str(c.get("id", "")))
         return cls == "CONTEXTUAL" and struct_demotes(mode, cls)
 
+    # ─── AR-1082 §3 — THE ARTIFACT'S OWN EXECUTION-OWNERSHIP, DERIVED ONCE ───────────────
+    # Read straight off the spec this function was ALREADY handed, because the fact is
+    # already at this boundary: `source_risk` is persisted on the compiled artifact. That
+    # makes this the narrowest possible channel — no new public parameter, no environment
+    # read, no caller obligation. It is threaded DOWN explicitly from here so the binding
+    # decision is a pure function of its inputs.
+    #
+    # 🛑 EXACT EQUALITY, NOT A TRUTHY `source_risk` CHECK. A TF_OVERLAY_VARIANT artifact also
+    # carries `source_risk`, and it is NOT source-owned; giving it the native FVG route would
+    # silently change an overlay lane the ruling explicitly leaves governed by the flag. A
+    # typo'd mode likewise takes the legacy route here and is refused later by
+    # `run_class_backtest`, which owns mode validation.
+    _sr = spec.get("source_risk")
+    _source_faithful = (
+        isinstance(_sr, dict) and _sr.get("mode") == "SOURCE_FAITHFUL"
+    )
+
     bindings = [
-        bind_condition(c, restore=_restore(c), demoted_role=_demoted_role(c), force_unexecuted=_force_unexecuted(c))
+        bind_condition(c, restore=_restore(c), demoted_role=_demoted_role(c),
+                       force_unexecuted=_force_unexecuted(c), source_faithful=_source_faithful)
         for c in entry_conditions
     ]
     invalidation_bindings = [
-        bind_condition(c, restore=_restore(c), demoted_role=_demoted_role(c), force_unexecuted=_force_unexecuted(c))
+        bind_condition(c, restore=_restore(c), demoted_role=_demoted_role(c),
+                       force_unexecuted=_force_unexecuted(c), source_faithful=_source_faithful)
         for c in invalidations
     ]
 
