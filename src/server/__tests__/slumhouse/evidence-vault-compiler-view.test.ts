@@ -184,6 +184,9 @@ describe("Media Vault compiler scene model", () => {
     expect(html).toContain("Avoid");
     expect(html).toContain("Technical Receipt");
     expect(html).toContain("data-compiler-receipt hidden");
+    expect(html).not.toContain("compiler-identity");
+    expect(html).not.toContain("compiler-timeline");
+    expect(html).not.toContain("<span>Rupture</span>");
     expect(html).not.toContain("compiler-machine");
     expect(html).not.toContain("compiler-strategy-group");
     expect(html).not.toContain("compiler-rule-plan");

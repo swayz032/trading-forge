@@ -266,7 +266,6 @@ function technicalReceiptMarkup(model) {
 }
 
 export function renderCompilerViewMarkup(model) {
-  const meta = [model.strategy.symbol, model.strategy.timeframe, model.direction || model.strategy.lifecycleState].filter(Boolean).join(" · ");
   const sourceImage = thumbnailUrl(model.source.videoId);
   const fragments = model.source.fragments.map((fragment, index) => `<span class="compiler-fragment" style="--fragment-index:${index}">${escapeHtml(fragment)}</span>`).join("");
   const groups = buildStrategyCardGroups(model);
@@ -276,7 +275,6 @@ export function renderCompilerViewMarkup(model) {
     <canvas class="compiler-webgl" aria-hidden="true"></canvas>
     <div class="compiler-vortex-fx" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
     <header class="compiler-head">
-      <div class="compiler-identity"><div class="compiler-kicker">Source-to-strategy transformation</div><h2>${escapeHtml(model.strategy.name)}</h2><p>${escapeHtml(meta)}</p></div>
       <div class="compiler-head-actions"><span class="compiler-state is-${escapeHtml(model.status)}">${escapeHtml(model.status)}</span><button class="compiler-receipt-open" type="button" data-compiler-receipt-open>Technical Receipt</button><button class="compiler-media-return" type="button" data-compiler-close>Media View</button></div>
     </header>
     <div class="compiler-cinematic" data-compiler-phase="source">
@@ -293,7 +291,6 @@ export function renderCompilerViewMarkup(model) {
         <nav class="compiler-slide-nav" aria-label="Strategy rule chapters">${groups.map((group, index) => `<button type="button" data-compiler-slide="${index}" aria-label="Show ${escapeHtml(group.label)}"${index === 0 ? ` class="is-active" aria-current="step"` : ""}><i></i><span>${escapeHtml(group.label)}</span></button>`).join("")}</nav>
         <div class="compiler-seal"><b>${escapeHtml(model.seal)}</b><em>${model.receiptHash ? `Receipt ${escapeHtml(model.receiptHash.slice(0, 16))}` : "No compiler receipt exists"}</em></div>
       </main>
-      <div class="compiler-timeline" aria-hidden="true"><i></i><span>Source</span><span>Rupture</span><span>Vortex</span><span>Compression</span><span>Reveal</span></div>
     </div>
     <aside class="compiler-receipt" data-compiler-receipt hidden>${technicalReceiptMarkup(model)}</aside>
   </section>`;
