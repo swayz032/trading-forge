@@ -146,7 +146,23 @@ class TestTheModeGateExecutes:
             run_class_backtest(_FakeStrategy(), "2024-01-01", "2024-01-31")
         msg = str(exc.value)
         assert "not a declared ownership mode" not in msg
-        assert "REFUSING rather than mislabelling" not in msg
+        # ─── GRADE F-5 (LOW) — THE SECOND DECAYED CONTROL IN THIS FILE ──────────────────
+        # 🛑 THIS LINE USED TO READ `assert "REFUSING rather than mislabelling" not in msg`.
+        # AR-1082 §8 retired that refusal string, so the assertion became VACUOUS — true of
+        # every possible message, including one where the legacy arm had started refusing
+        # for the very reason this test exists to exclude.
+        #
+        # I repaired the OTHER decayed control in this file and did not go looking for its
+        # siblings. The grader enumerated the class — 8 negative string assertions across
+        # four files, 1 still decayed — and found this one.
+        # ★ `I CLOSED THE INSTANCE AND CALLED THE CONDITION CLOSED.`
+        #
+        # The live subject is the CONTRACT refusal that replaced it, so that is what a
+        # legacy run must not hit.
+        assert "source_risk.target" not in msg, (
+            "the LEGACY arm hit the source-contract refusal; that gate is not scoped to "
+            "SOURCE_FAITHFUL"
+        )
 
     def test_TF_OVERLAY_VARIANT_also_passes_the_mode_gate(self):
         """The other declared mode is accepted; only SOURCE_FAITHFUL takes the bypasses."""
