@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `001c17585af366a7d68b784fa6f9f6c71c36ee8a`  (worktree DIRTY at generation time)
+> Generated at commit `162e6fa1b49d9ad1934c36afed27beee9761c945`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 293 | 373 | 122521 | 1897 |
+| `src/` | Python | 293 | 374 | 122521 | 1897 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1850 | 755 |
+| `src/` | 1851 | 755 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2108** | **976** |
+| **TOTAL** | **2109** | **976** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 427 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1095 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1096 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **621** of **2108** parsed files.
+Total entry points: **94**.  Modules reachable from them: **621** of **2109** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -1007,6 +1007,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | 4 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
+| `_result` | function | `src/engine/anti_setups/regime_filter.py:156` | 3 | unique |
 | `TrialCounter` | class | `src/engine/battery/trial_counter.py:70` | 3 | unique |
 | `assemble_certificate` | function | `src/engine/extraction/cert_assembler.py:299` | 3 | unique |
 | `terminal_read_grade` | function | `src/engine/extraction/cert_assembler.py:186` | 3 | unique |
@@ -1037,7 +1038,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `__resetInternalsForTests` | function | `src/server/services/market-internals-service.ts:274` | 3 | unique |
 | `__getOllamaHealthyForTests` | function | `src/server/services/model-router.ts:418` | 3 | unique |
 | `__resetEnabledFirmsCache` | function | `src/server/services/strategy-assignment-service.ts:197` | 3 | unique |
-| `_result` | function | `src/engine/anti_setups/regime_filter.py:156` | 2 | unique |
 | `PassageLedger` | class | `src/engine/battery/passage_ledger.py:137` | 2 | unique |
 | `list_patterns` | function | `src/engine/compiler/pattern_library.py:233` | 2 | unique |
 | `naive_leaky_slice` | function | `src/engine/context/htf_availability.py:73` | 2 | unique |
