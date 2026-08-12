@@ -67,6 +67,8 @@ describe("Recipe premium instruments", () => {
     expect(html).toContain("panel.appendChild(window.RecipeInstruments.renderBacktest(r))");
     expect(css).toContain("appearance: none");
     expect(css).toContain("scrollbar-width:none");
+    expect(css).toContain("padding-inline:8px");
+    expect(css).toContain("box-sizing:border-box");
     expect(css).toContain("instrument-ghost");
     expect(css).toContain("instrument-ghost--backtest");
     expect(css).toContain(".instrument-ghost--backtest span { animation:none; }");
