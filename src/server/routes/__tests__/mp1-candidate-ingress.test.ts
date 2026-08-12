@@ -82,6 +82,21 @@ const RECEIPT = { schema: "execution_candidate_receipt/v1", candidate_id: CANDID
 
 const STRATEGY_ID = "11111111-2222-4333-8444-555555555555";
 
+// The persisted compiler artifact, shaped as `spec-onboarding-service.ts:896-902`
+// writes it. MP2 must carry THIS OBJECT, exactly — not a reconstruction of it.
+const COMPILED_SPEC = {
+  video: "st5e-YJRfKc__s0",
+  spec_hash: PARENT_SPEC_HASH,
+  graph_canonical_hash: "graph-canon-dddd4444",
+  ledger_d: { d: 7, notes: "frozen" },
+  spec: {
+    entry_conditions: [{ id: "c1", kind: "opening_range_breakout" }],
+    invalidation: [{ id: "i1", kind: "range_reclaim" }],
+  },
+  exit_provenance: { source: "house_default" },
+  binding_plan_summary: { compiled: true, spine_bound: 3, spine_total: 3 },
+};
+
 function baseStrategyRow(configExtra: Record<string, unknown>) {
   return {
     id: STRATEGY_ID,
@@ -91,7 +106,7 @@ function baseStrategyRow(configExtra: Record<string, unknown>) {
     tags: [`spec_hash:${PARENT_SPEC_HASH}`],
     config: {
       strategy_class: undefined,
-      compiled_spec: { spec_hash: PARENT_SPEC_HASH },
+      compiled_spec: COMPILED_SPEC,
       strategy: {
         indicators: [],
         entry_long: "close > open",
@@ -358,5 +373,108 @@ describe("MP1-CANDIDATE-INGRESS-1 — /api/backtests carries DB-authoritative ca
     expect(res.status).toBe(202);
     const cfg = configHandedToRunBacktest();
     expect((cfg.strategy as Record<string, unknown>).entry_long).toBe("override_entry");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MP2-COMPILED-SPEC-INGRESS-1 — ruling AR-1033 (gpt-rulings 2f072e5b) §4/§5.
+//
+// The compiler artifact already has BOTH a storage home and an engine consumer:
+// `spec-onboarding-service.ts:896-902` persists `compiled_spec` into
+// `strategies.config`, and `backtester.py:8490` dispatches on
+// `config.get("compiled_spec")` into `from_compiled_spec(...)` (`:8511`).
+// The route between them never carried it, so that engine branch was unreachable
+// through `/api/backtests`.
+//
+// 🛑 THE ROUTE MUST MOVE THE OBJECT, NOT UNDERSTAND IT. No rebuild, translate,
+// sanitize, recompile or summarize — it is already the certified artifact.
+// `TWO IMPLEMENTATIONS OF ONE CANONICAL FORM ARE A DISAGREEMENT WITH A COMMIT DATE.`
+// ══════════════════════════════════════════════════════════════════════════════
+describe("MP2-COMPILED-SPEC-INGRESS-1 — persisted compiled_spec reaches runBacktest", () => {
+  // §5[1] RED + §5[2] GREEN exact transport
+  it("control 1 — the EXACT persisted compiled_spec object reaches runBacktest", async () => {
+    strategyRow = baseStrategyRow(CANDIDATE_AWARE_EXTRA);
+
+    const res = await post({ strategyId: STRATEGY_ID });
+    expect(res.status).toBe(202);
+
+    const cfg = configHandedToRunBacktest();
+
+    // POSITIVE CONTROLS FIRST (§5[1] requires them): a known strategy field and
+    // the MP1 candidate sidecar DO reach the call, so a bare absence of
+    // compiled_spec would be a real finding rather than a dead harness.
+    expect((cfg.strategy as Record<string, unknown>).entry_long).toBe("close > open");
+    expect(cfg.execution_candidate_id).toBe(CANDIDATE_ID);
+
+    // The unit itself: deep equality against the persisted artifact.
+    expect(cfg.compiled_spec).toEqual(COMPILED_SPEC);
+    // And a stable serialization witness — deep equality alone would tolerate a
+    // key-reordered rebuild; this pins that nothing re-serialised it.
+    expect(JSON.stringify(cfg.compiled_spec)).toBe(JSON.stringify(COMPILED_SPEC));
+    // Nested identity must survive intact, not be flattened to spec_hash.
+    expect((cfg.compiled_spec as Record<string, unknown>).spec).toEqual(COMPILED_SPEC.spec);
+  });
+
+  // §5[3] request cannot colour authority
+  it("control 3 — a request-body compiled_spec cannot supply or replace the persisted one", async () => {
+    strategyRow = baseStrategyRow(CANDIDATE_AWARE_EXTRA);
+
+    const res = await post({
+      strategyId: STRATEGY_ID,
+      compiled_spec: { spec_hash: "attacker-spec", spec: { entry_conditions: [] } },
+    });
+    expect(res.status).toBe(202);
+
+    const cfg = configHandedToRunBacktest();
+    expect(cfg.compiled_spec).toEqual(COMPILED_SPEC);
+  });
+
+  it("control 3b — a request-body compiled_spec cannot CREATE one on a legacy row", async () => {
+    // The dangerous half of §5[3]: not overriding, but conjuring. A legacy row
+    // must not acquire a compiler artifact from the request.
+    const row = baseStrategyRow({});
+    delete (row.config as Record<string, unknown>).compiled_spec;
+    strategyRow = row;
+
+    const res = await post({
+      strategyId: STRATEGY_ID,
+      compiled_spec: { spec_hash: "attacker-spec", spec: { entry_conditions: [] } },
+    });
+    expect(res.status).toBe(202);
+
+    const cfg = configHandedToRunBacktest();
+    expect(cfg).not.toHaveProperty("compiled_spec");
+  });
+
+  // §5[4] MP2 may not weaken MP1
+  it("control 4 — a tampered candidate sidecar still REFUSES before compiled_spec can travel", async () => {
+    // Candidate authority is the outer gate; a compiled_spec must never ride out
+    // on a request whose candidate identity could not be proven.
+    strategyRow = baseStrategyRow({
+      execution_candidate_id: CANDIDATE_ID,
+      execution_candidate_cache_identity: CACHE_IDENTITY,
+      // receipt withheld => incomplete authority
+    });
+
+    const res = await post({ strategyId: STRATEGY_ID });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("candidate_authority_incomplete");
+    expect(runBacktestSpy).not.toHaveBeenCalled();
+  });
+
+  // §5[6] legacy negative control
+  it("control 6 — a legacy row with no persisted compiled_spec does not grow one", async () => {
+    const row = baseStrategyRow({});
+    delete (row.config as Record<string, unknown>).compiled_spec;
+    strategyRow = row;
+
+    const res = await post({ strategyId: STRATEGY_ID });
+    expect(res.status).toBe(202);
+
+    const cfg = configHandedToRunBacktest();
+    expect(cfg).not.toHaveProperty("compiled_spec");
+    // POSITIVE CONTROL: the legacy path really ran and really built a config.
+    expect((cfg.strategy as Record<string, unknown>).entry_long).toBe("close > open");
   });
 });

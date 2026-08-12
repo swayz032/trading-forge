@@ -297,3 +297,119 @@ def test_control_6_transport_witness_one_mutated_field_is_visible_at_python_vali
         "a gate that refuses both arms is not a gate.\n"
         f"  arm B stdout (truncated): {out_b[:400]}"
     )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MP2-COMPILED-SPEC-INGRESS-1 — §5[5] PYTHON DISPATCH WITNESS
+# Ruling AR-1033 (gpt-rulings 2f072e5b).
+#
+# `backtester.py:8490` dispatches on `config.get("compiled_spec")` into
+# `from_compiled_spec(...)` (`:8511`) — the Band C condition-family path. Before
+# MP2 the route never carried the artifact, so that branch was unreachable through
+# `/api/backtests`. This proves the artifact now arrives AND selects that branch
+# rather than the legacy DSL `BacktestRequest` branch.
+#
+# 🛑 `from_compiled_spec` is imported INSIDE the branch at call time, so it is
+# patched on its DEFINING module (`spec_condition_compiler`), not on `bt`.
+# Patching `bt.from_compiled_spec` would silently no-op and the witness would
+# read "never dispatched" on both arms — a false green of exactly the shape
+# `[main-spy-both-arms]` describes.
+# ══════════════════════════════════════════════════════════════════════════════
+class _ReachedCompiledSpec(BaseException):
+    """Sentinel: execution selected the Band C compiled-spec branch."""
+
+
+def _real_compiled_spec() -> dict:
+    """The persisted artifact shape, built from the REAL golden compile."""
+    art = produce_spec_artifact_from_record(_record(GOLDEN_STUB), video=GOLDEN_STUB).artifact
+    return {
+        "video": art["video"],
+        "spec_hash": art["spec_hash"],
+        "graph_canonical_hash": art["graph_canonical_hash"],
+        "ledger_d": art["ledger_d"],
+        "spec": art["spec"],
+    }
+
+
+def _run_main_watching_dispatch(cfg: dict, tmp_path: pathlib.Path, monkeypatch):
+    """Drive the real `main()` and record whether Band C dispatch was reached.
+
+    Returns `(stdout, seen)` where `seen` holds the object actually handed to
+    `from_compiled_spec`, or None if that branch never ran.
+    """
+    import src.engine.spec_condition_compiler as scc
+
+    seen: dict = {"artifact": None, "reached": False}
+
+    def _stub_from_compiled_spec(artifact, **_kw):
+        seen["artifact"] = artifact
+        seen["reached"] = True
+        raise _ReachedCompiledSpec()
+
+    monkeypatch.setattr(scc, "from_compiled_spec", _stub_from_compiled_spec)
+    # Keep the run offline regardless of which branch is taken.
+    monkeypatch.setattr(bt, "load_ohlcv", lambda *a, **k: (_ for _ in ()).throw(_ReachedMarketData()))
+
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps(cfg), encoding="utf-8")
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            bt.main.callback(
+                config_input=str(path),
+                backtest_id=None,
+                mode="single",
+                strategy_class=None,
+                run_b15_battery_flag=False,
+                exit_engine="static_styleC",
+            )
+    except BaseException:
+        pass
+    return buf.getvalue(), seen
+
+
+def test_mp2_control_5_persisted_compiled_spec_reaches_the_band_c_dispatch(tmp_path, monkeypatch):
+    compiled = _real_compiled_spec()
+    cfg = _config({})           # legacy w.r.t. candidates; MP2 is a separate axis
+    cfg["compiled_spec"] = compiled
+
+    _out, seen = _run_main_watching_dispatch(cfg, tmp_path / "a", monkeypatch)
+
+    assert seen["reached"] is True, (
+        "a persisted compiled_spec did NOT select the Band C branch; the engine "
+        "consumer is still unreachable through the route transport"
+    )
+    # EXACT artifact, not a reconstruction.
+    assert seen["artifact"] == compiled
+    assert seen["artifact"]["spec_hash"] == compiled["spec_hash"]
+
+
+def test_mp2_control_6_no_compiled_spec_does_not_reach_band_c(tmp_path, monkeypatch):
+    # DISCRIMINATING ARM. Without it, a stub that "reached" on every run — or one
+    # patched onto the wrong module and therefore never reached — would look
+    # identical to a working dispatch.
+    cfg = _config({})           # no compiled_spec at all
+    _out, seen = _run_main_watching_dispatch(cfg, tmp_path / "b", monkeypatch)
+
+    assert seen["reached"] is False, (
+        "the Band C branch ran for a legacy row with no persisted compiled_spec; "
+        "a compiler artifact was fabricated or defaulted somewhere"
+    )
+
+
+def test_mp2_control_4_candidate_authority_still_refuses_before_band_c(tmp_path, monkeypatch):
+    # MP2 may not weaken MP1: an unprovable candidate must stop execution BEFORE
+    # the compiled-spec branch can run.
+    row = _real_rows()[0]
+    sidecar = _sidecar(row)
+    sidecar["execution_candidate_cache_identity"] = "tampered-in-transit"
+    cfg = _config(sidecar)
+    cfg["compiled_spec"] = _real_compiled_spec()
+
+    out, seen = _run_main_watching_dispatch(cfg, tmp_path / "c", monkeypatch)
+
+    assert CANDIDATE_REFUSAL_REASON in out
+    assert seen["reached"] is False, (
+        "the compiled-spec branch ran despite an unprovable candidate identity"
+    )

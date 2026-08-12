@@ -364,6 +364,18 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     return;
   }
 
+  // ── MP2-COMPILED-SPEC-INGRESS-1 (AR-1033 §4) ──────────────────────────────
+  // The certified compiler artifact, carried VERBATIM from the persisted row.
+  // `spec-onboarding-service.ts:896-902` wrote it; `backtester.py:8490` dispatches
+  // on it into `from_compiled_spec(...)`. Both ends existed; only this hop did not,
+  // so the engine's Band C branch was unreachable through this route.
+  //
+  // 🛑 MOVED, NEVER UNDERSTOOD. No rebuild, translate, sanitize, recompile or
+  // summarize — `spec_hash` is computed over this object, so any re-serialisation
+  // here would silently redefine what the certification covers. A row without one
+  // gets nothing: no artifact is minted, inferred or defaulted.
+  const persistedCompiledSpec = stratConfig?.["compiled_spec"];
+
   // Reassemble config with the resolved strategy.
   // MP1 REPAIR A: the candidate sidecar is spread LAST and comes only from the
   // persisted row, so a same-named request-body key cannot colour it. REPAIR D:
@@ -372,6 +384,8 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     ...config,
     strategy: resolvedStrategy,
     ...(candidateAuthority.kind === "candidate" ? candidateAuthority.sidecar : {}),
+    // Spread after `...config` so a request-body `compiled_spec` can never win.
+    ...(persistedCompiledSpec !== undefined ? { compiled_spec: persistedCompiledSpec } : {}),
   };
 
   // Generate the backtest ID upfront to avoid race condition
