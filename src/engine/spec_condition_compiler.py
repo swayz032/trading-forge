@@ -922,6 +922,33 @@ class SpecConditionStrategy(BaseStrategy):
                 f"look reasonable. Construct the strategy with its taught candidate."
             )
 
+        # ── THE CANDIDATE MUST OWN *THIS* CONDITION ──────────────────────────────────────
+        # AR-1034 §5 ordered this relation measured before it was pinned. `[MEASURED]` on the
+        # frozen golden artifact: all three taught candidates carry
+        # `source_condition_id == 'OPENING_RANGE_DEFINITION:once-you-take-the-price-that-s-
+        # establish#0'`, which is EXACTLY the one OR binding's `condition_id`, and
+        # `definition.provenance.condition_id` agrees with both. So exact equality is the
+        # real identity join here — not a normalization, not a prefix strip, not "the only
+        # OR condition by count".
+        #
+        # 🛑 WITHOUT THIS, A PARENT SPEC WITH TWO OPENING-RANGE CONDITIONS WOULD LET ONE
+        # CANDIDATE SILENTLY DRIVE THE OTHER'S WINDOW. Today's golden spec has exactly one,
+        # so this cannot fire on it — which is precisely why it must be written now rather
+        # than after a second OR condition exists to discover it the expensive way.
+        # `SAFETY BY STARVATION IS NOT SAFETY BY DESIGN.`
+        if candidate.source_condition_id != b.condition_id:
+            raise FamilyMetaEnforcementError(
+                f"condition {b.condition_id!r} ({b.type}) routes to the opening-range adapter, "
+                f"but this execution instance's candidate was minted for a DIFFERENT source "
+                f"condition ({candidate.source_condition_id!r}). Refused rather than applied: a "
+                f"window taught for one condition is not evidence about another, and executing "
+                f"it here would trade a lesson the teacher attached somewhere else.\n"
+                f"  binding condition_id   : {b.condition_id!r}\n"
+                f"  candidate source_cond  : {candidate.source_condition_id!r}\n"
+                f"  candidate variant      : {candidate.variant.variant_label!r} "
+                f"({candidate.variant.duration_minutes}m)"
+            )
+
         ts_list = ctx["ts_list"]
         if n == 0 or not ts_list:
             return out

@@ -62,7 +62,11 @@ from src.engine.extraction.spec_producer import (
     produce_spec_artifact,
     produce_spec_artifact_from_record,
 )
-from src.engine.family_meta_enforcement import FLAG_ENV, PRIMITIVE_RESOLVERS
+from src.engine.family_meta_enforcement import (
+    FLAG_ENV,
+    PRIMITIVE_RESOLVERS,
+    FamilyMetaEnforcementError,
+)
 from src.engine.opening_range_adapter import OpeningRangeBar, compute_opening_range_state
 from src.engine.opening_range_candidate import OpeningRangeExecutionCandidate
 from src.engine.opening_range_lowering import (
@@ -1554,4 +1558,112 @@ def test_a_day_with_an_incomplete_window_fails_closed_WITHOUT_poisoning_its_neig
     assert all(by_day[DAY_3][duration:]), (
         "day 3 has complete observations of its own, but never produced a range — day 2's "
         "refusal spread forward, which is as wrong as carrying a range forward"
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# OR-STATE-HANDOFF-1 — AR-1034 (gpt-rulings 514b7f10) §6C / §6D
+#
+# §6C is the DECISIVE SEMANTIC WITNESS the whole handoff exists for: the taught
+# duration must move the real gate boundary through the EXISTING adapter. Same
+# compiled spec, same bar stream, ONLY THE CANDIDATE CHANGES.
+#
+# 🛑 WHY THIS IS NOT REDUNDANT WITH THE FIXTURES ABOVE. Those construct the
+# instance with a candidate directly and prove the handler honours it. They are
+# blind to whether anything upstream ever SUPPLIES one — and until this unit the
+# answer was "nothing did", so every candidate-aware run through the route
+# hard-refused. `A HANDLER PROVEN CORRECT ON A CANDIDATE NOBODY DELIVERS IS A
+# CORRECT ANSWER TO A QUESTION THE SYSTEM NEVER ASKS.`
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def _gate_array(result, candidate):
+    """The real per-bar gate for ONE candidate, over the shared bar stream."""
+    definition = result.opening_range_lowering.definition
+    bars = _taught_session_bars(definition)
+    strategy, binding = _instance_for(result, candidate)
+    return np.asarray(strategy._dispatch_enforced(binding, _dispatch_ctx(bars))), bars
+
+
+def test_or_state_handoff_the_taught_duration_moves_the_real_gate_boundary():
+    """§6C — 5m and 15m disagree in the window between their two locks.
+
+    The claim is STATE-WINDOW SELECTION, not profitability and not breakout
+    direction: no prices or entry rules are invented here.
+    """
+    result = _golden_result()
+    c5 = _candidate_of(result, 5)
+    c15 = _candidate_of(result, 15)
+
+    # Same spec, same bars, only the candidate differs.
+    a5, bars = _gate_array(result, c5)
+    a15, bars15 = _gate_array(result, c15)
+    assert len(bars) == len(bars15) == SESSION_MINUTES
+    assert a5.shape == a15.shape == (SESSION_MINUTES,)
+
+    # ── POSITIVE WITNESSES: both arms actually reached a COMPLETED range. Without
+    # these, two all-False arrays would satisfy every "not active" claim below by
+    # doing nothing at all.
+    assert a5[5:].all(), "the 5m arm never gated True; this frame never completed a range"
+    assert a15[15:].all(), "the 15m arm never gated True; this frame never completed a range"
+
+    # ── BOTH ARE FALSE BEFORE THEIR OWN LOCK ─────────────────────────────────
+    assert not a5[:5].any(), "5m gated True before its own window locked"
+    assert not a15[:15].any(), "15m gated True before its own window locked"
+
+    # ── THE DISCRIMINATING WINDOW — the whole point of the unit ──────────────
+    # After the 5m lock and BEFORE the 15m lock the two taught bots must disagree.
+    between = slice(5, 15)
+    assert a5[between].all(), (
+        "the 5m candidate's opening range is not active after its taught lock"
+    )
+    assert not a15[between].any(), (
+        "the 15m candidate is active before its taught window has formed — the "
+        "handed candidate is NOT controlling the state boundary, so the duration "
+        "is riding along as metadata rather than selecting the window"
+    )
+    assert not np.array_equal(a5, a15), (
+        "the 5m and 15m taught candidates produced IDENTICAL gates over the same "
+        "bars; nothing downstream is reading the candidate"
+    )
+
+    # And after the later lock both are complete, per the existing adapter contract.
+    assert a5[15:].all() and a15[15:].all()
+
+
+def test_or_state_handoff_a_candidate_for_another_condition_is_refused():
+    """§6D — the condition-ownership join, pinned fail-closed.
+
+    §5 measured the real relation on the frozen artifact: every taught candidate's
+    `source_condition_id` is EXACTLY the OR binding's `condition_id`, and
+    `definition.provenance.condition_id` agrees. This proves a candidate minted for
+    a DIFFERENT condition cannot drive this binding's state.
+    """
+    result = _golden_result()
+    genuine = _candidate_of(result, 15)
+    _strategy, binding = _instance_for(result, genuine)
+
+    # POSITIVE CONTROL: the genuine candidate really does own this binding, so a
+    # refusal below is about ownership and not about a broken fixture.
+    assert genuine.source_condition_id == binding.condition_id
+
+    foreign = OpeningRangeExecutionCandidate(
+        source_spec_id=genuine.source_spec_id,
+        source_condition_id=genuine.source_condition_id + "::A_DIFFERENT_CONDITION",
+        definition=genuine.definition,
+        variant=genuine.variant,
+    )
+
+    definition = result.opening_range_lowering.definition
+    bars = _taught_session_bars(definition)
+    strategy_foreign, binding_foreign = _instance_for(result, foreign)
+
+    with pytest.raises(FamilyMetaEnforcementError) as excinfo:
+        strategy_foreign._dispatch_enforced(binding_foreign, _dispatch_ctx(bars))
+
+    message = str(excinfo.value)
+    assert binding_foreign.condition_id in message
+    assert "A_DIFFERENT_CONDITION" in message, (
+        "the refusal must NAME the candidate's own condition id, so the reader "
+        "learns WHICH mismatch fired rather than that something did"
     )

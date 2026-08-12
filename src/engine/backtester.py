@@ -28,7 +28,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import click
 import numpy as np
@@ -8262,30 +8262,51 @@ def _candidate_refusal_envelope(detail: str, config: dict) -> dict:
     }
 
 
-def validate_candidate_authority(config: dict) -> Optional[dict]:
-    """Prove the taught candidate this config claims, or return a REFUSED envelope.
+def resolve_candidate_authority(config: dict) -> tuple[Optional[dict], Optional[Any]]:
+    # `Any` rather than `OpeningRangeExecutionCandidate`: the authority modules are
+    # imported LAZILY inside this function (they were before this change too), and a
+    # module-level `TYPE_CHECKING` import would add an AST import edge that shifts the
+    # canonical regression population — a denominator change this unit is not
+    # authorized to make. The concrete type is named in the docstring below.
+    """Prove the taught candidate this config claims, and KEEP what was proven.
 
-    Returns `None` when execution may proceed. Three outcomes, no fourth:
+    Returns `(refusal, candidate)`. Three outcomes, no fourth:
 
-      legacy     — none of the four keys present. Returns None, untouched. A row
-                   with no candidate is a row with no candidate FIELDS; nothing is
-                   minted here from timeframe, duration, name or array position.
-      proven     — `resolve_row_for_execution` accepted it. Returns None.
-      refused    — any anchor failed. Returns the named REFUSED envelope.
+      legacy     — none of the four keys present. `(None, None)`, config untouched.
+                   A row with no candidate is a row with no candidate FIELDS;
+                   nothing is minted here from timeframe, duration, name or array
+                   position.
+      proven     — `resolve_row_for_execution` accepted it. `(None, candidate)`,
+                   where `candidate` is THAT CALL'S RETURN VALUE, unmodified.
+      refused    — any anchor failed. `(envelope, None)`.
+
+    ─── OR-STATE-HANDOFF-1 (AR-1034 §4) — WHY THIS RETURNS THE OBJECT ──────────
+    This function used to call `resolve_row_for_execution(row)` and throw the
+    result away, so MP1 proved exactly which taught window this bot runs and then
+    lost the only object that said so. `_h_opening_range` then hard-refused on
+    every candidate-aware run, because nothing downstream had been told.
+
+    🛑 THE PROVEN OBJECT IS RETURNED, NEVER RE-DERIVED. Rebuilding an equivalent
+    candidate after validation would be a SECOND identity derivation that the
+    receipt never covered — two constructions that agree today and are free to
+    disagree later. `ONE PROOF, ONE OBJECT, ONE HANDOFF.`
     """
     present = [k for k in _CANDIDATE_KEYS if config.get(k) is not None]
     if not present:
-        return None  # legacy — REPAIR D, behaviour unchanged.
+        return None, None  # legacy — REPAIR D, behaviour unchanged.
 
     missing = [k for k in _CANDIDATE_KEYS if config.get(k) is None]
     if missing:
         # A partial sidecar cannot be proven, and must not be completed by guessing.
         # The route refuses this too; this is the independent second anchor, because
         # the engine must not trust that a caller ran the route's checks.
-        return _candidate_refusal_envelope(
-            "incomplete candidate authority reached the engine; missing: "
-            + ", ".join(missing),
-            config,
+        return (
+            _candidate_refusal_envelope(
+                "incomplete candidate authority reached the engine; missing: "
+                + ", ".join(missing),
+                config,
+            ),
+            None,
         )
 
     try:
@@ -8298,8 +8319,11 @@ def validate_candidate_authority(config: dict) -> Optional[dict]:
             ExecutionCandidateReceiptError,
         )
     except Exception as import_err:  # pragma: no cover - import wiring
-        return _candidate_refusal_envelope(
-            f"candidate authority module unavailable: {import_err}", config
+        return (
+            _candidate_refusal_envelope(
+                f"candidate authority module unavailable: {import_err}", config
+            ),
+            None,
         )
 
     strategy_cfg = config.get("strategy") or {}
@@ -8312,13 +8336,25 @@ def validate_candidate_authority(config: dict) -> Optional[dict]:
     )
 
     try:
-        resolve_row_for_execution(row)
+        candidate = resolve_row_for_execution(row)
     except (CandidatePersistenceError, ExecutionCandidateReceiptError) as err:
         # NAMED refusal, carrying the authority layer's own message so the reader
         # learns WHICH anchor failed rather than that something did.
-        return _candidate_refusal_envelope(str(err), config)
+        return _candidate_refusal_envelope(str(err), config), None
 
-    return None
+    return None, candidate
+
+
+def validate_candidate_authority(config: dict) -> Optional[dict]:
+    """The refusal-only view of `resolve_candidate_authority`.
+
+    Kept as-is so MP1's committed controls keep exercising the same entry point
+    they were written against. It DELEGATES — there is no second proof here, and
+    callers that need the proven candidate must use `resolve_candidate_authority`
+    rather than resolving a second time.
+    """
+    refusal, _candidate = resolve_candidate_authority(config)
+    return refusal
 
 
 
@@ -8358,7 +8394,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
     # ── MP1-CANDIDATE-INGRESS-1 (AR-1031 §4 REPAIR C) ─────────────────────────
     # The earliest trustworthy boundary: config is parsed, nothing else has run.
     # An unprovable candidate never reaches data loading or bar evaluation.
-    _candidate_refusal = validate_candidate_authority(config)
+    _candidate_refusal, _proven_candidate = resolve_candidate_authority(config)
     if _candidate_refusal is not None:
         print(json.dumps(_candidate_refusal))
         return
@@ -8514,6 +8550,13 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             timeframe=_strategy_cfg_for_spec.get("timeframe", "5m"),
             trace=_spec_trace_enabled,
             strategy_name=_strategy_cfg_for_spec.get("name"),
+            # ─── OR-STATE-HANDOFF-1 (AR-1034 §4) ─────────────────────────────
+            # The EXACT object `resolve_row_for_execution` returned above, not a
+            # rebuild and not a lookup. `None` for a legacy row stays legal and
+            # still hard-refuses inside `_h_opening_range` — the refusal belongs
+            # where the condition is evaluated, and defaulting here would be the
+            # silent window-selection R-736/R-743 settled against.
+            opening_range_candidate=_proven_candidate,
         )
         # ═══ TRIGGER-SAFETY REFUSAL GATE (R-747 §4) ═══════════════════════
         # THE BACKTESTER MUST CONSUME ELIGIBILITY, NOT MERELY BE TOLD ABOUT IT.

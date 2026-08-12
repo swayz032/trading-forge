@@ -339,11 +339,16 @@ def _run_main_watching_dispatch(cfg: dict, tmp_path: pathlib.Path, monkeypatch):
     """
     import src.engine.spec_condition_compiler as scc
 
-    seen: dict = {"artifact": None, "reached": False}
+    seen: dict = {"artifact": None, "reached": False, "kwargs": {}, "candidate": None}
 
     def _stub_from_compiled_spec(artifact, **_kw):
         seen["artifact"] = artifact
         seen["reached"] = True
+        # OR-STATE-HANDOFF-1 (AR-1034 §6A/§6B): the handoff is a KEYWORD on this
+        # same call, so the witness must record kwargs rather than discard them.
+        # `**_kw` silently swallowing it is why the omission was invisible.
+        seen["kwargs"] = _kw
+        seen["candidate"] = _kw.get("opening_range_candidate")
         raise _ReachedCompiledSpec()
 
     monkeypatch.setattr(scc, "from_compiled_spec", _stub_from_compiled_spec)
@@ -413,3 +418,145 @@ def test_mp2_control_4_candidate_authority_still_refuses_before_band_c(tmp_path,
     assert seen["reached"] is False, (
         "the compiled-spec branch ran despite an unprovable candidate identity"
     )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# OR-STATE-HANDOFF-1 — AR-1034 (gpt-rulings 514b7f10) §6A / §6B
+#
+# MP1 PROVES the taught candidate and then DROPS it: `resolve_row_for_execution`
+# returns the exact `OpeningRangeExecutionCandidate`, and the validator discards
+# the return value (backtester.py:8315 pre-repair). `from_compiled_spec` has
+# accepted `opening_range_candidate` all along ("SURFACE 12A — TRANSPORT ONLY"),
+# and Band C never passed it — so `_h_opening_range` hard-refuses on every
+# candidate-aware run.
+#
+#   ONE PROOF, ONE OBJECT, ONE HANDOFF. The object that was proven is the object
+#   that executes — no second rehydration, no reconstruction from duration.
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+def _or_config_with_candidate(row) -> dict:
+    """A candidate-aware config that ALSO carries the real persisted artifact."""
+    cfg = _config(_sidecar(row))
+    cfg["compiled_spec"] = _real_compiled_spec()
+    return cfg
+
+
+def _spy_resolver(monkeypatch):
+    """Record every object the REAL resolver returns, without replacing it.
+
+    This is what makes "the same object" checkable: a second rehydration
+    downstream would produce an equal-but-not-identical candidate, and `==`
+    alone could not tell the two apart.
+    """
+    import src.engine.opening_range_candidate_persistence as persistence
+
+    real = persistence.resolve_row_for_execution
+    produced: list = []
+
+    def _recording(row):
+        obj = real(row)
+        produced.append(obj)
+        return obj
+
+    monkeypatch.setattr(persistence, "resolve_row_for_execution", _recording)
+    return produced
+
+
+def test_or_handoff_A_proven_candidate_reaches_from_compiled_spec(tmp_path, monkeypatch):
+    """§6A RED / §6B GREEN — the proven candidate arrives at the Band C factory."""
+    row = _real_rows()[0]
+    cfg = _or_config_with_candidate(row)
+
+    _out, seen = _run_main_watching_dispatch(cfg, tmp_path / "or_a", monkeypatch)
+
+    # ── POSITIVE CONTROLS FIRST: prove the harness reaches the call at all, and
+    # that the OTHER payload on the same call arrives. Without these, a `None`
+    # candidate is indistinguishable from a spy that never ran.
+    assert seen["reached"] is True, (
+        "POSITIVE CONTROL FAILED: Band C dispatch never ran, so this test says "
+        "nothing about the candidate handoff"
+    )
+    assert seen["artifact"]["spec_hash"] == cfg["compiled_spec"]["spec_hash"], (
+        "POSITIVE CONTROL FAILED: the compiled_spec did not reach the same call"
+    )
+
+    # ── THE CLAIM ────────────────────────────────────────────────────────────
+    assert seen["candidate"] is not None, (
+        "the proven OpeningRangeExecutionCandidate did NOT reach "
+        "from_compiled_spec(opening_range_candidate=...); MP1 proves the taught "
+        "window and the engine still executes with no candidate, so "
+        "_h_opening_range can only hard-refuse"
+    )
+    assert seen["candidate"].source_spec_id == GOLDEN_STUB
+    assert seen["candidate"].variant.duration_minutes == 5
+
+
+def test_or_handoff_B_is_the_exact_resolver_object_not_a_rebuild(tmp_path, monkeypatch):
+    """§6B — object IDENTITY within the process, not mere equality."""
+    row = _real_rows()[0]
+    produced = _spy_resolver(monkeypatch)
+    cfg = _or_config_with_candidate(row)
+
+    _out, seen = _run_main_watching_dispatch(cfg, tmp_path / "or_b", monkeypatch)
+
+    assert len(produced) == 1, (
+        f"expected EXACTLY ONE authority resolution, saw {len(produced)}; more "
+        "than one means the candidate was proven and then re-derived"
+    )
+    handed = seen["candidate"]
+    assert handed is produced[0], (
+        "the object handed to from_compiled_spec is not the object the resolver "
+        "returned — it was rebuilt after validation, which is a SECOND identity "
+        "derivation the receipt never covered"
+    )
+    # The fields the ruling names, read off the handed object.
+    assert handed.source_spec_id == produced[0].source_spec_id
+    assert handed.source_condition_id == produced[0].source_condition_id
+    assert handed.variant.variant_label == produced[0].variant.variant_label
+    assert handed.variant.duration_minutes == produced[0].variant.duration_minutes
+
+
+def test_or_handoff_F_legacy_row_carries_no_candidate(tmp_path, monkeypatch):
+    """§6F — a legacy row must stay candidate-free and must not infer one."""
+    cfg = _config({})                       # no candidate sidecar at all
+    cfg["compiled_spec"] = _real_compiled_spec()
+
+    _out, seen = _run_main_watching_dispatch(cfg, tmp_path / "or_f", monkeypatch)
+
+    assert seen["reached"] is True, "POSITIVE CONTROL FAILED: Band C never ran"
+    assert seen["candidate"] is None, (
+        "a legacy row acquired an opening-range candidate; a duration was "
+        "inferred from timeframe, variant order, the compiled spec or a default"
+    )
+
+
+def test_or_handoff_E_refusal_still_fires_before_any_handoff(tmp_path, monkeypatch):
+    """§6E — MP1's refusal ordering is not weakened by carrying the object.
+
+    A tampered sidecar must stop execution BEFORE Band C, so no candidate can
+    reach `from_compiled_spec` at all. The positive witness that this arm is not
+    vacuous is control 5 above, where the SAME harness does reach dispatch.
+    """
+    row = _real_rows()[0]
+    sidecar = _sidecar(row)
+    sidecar["execution_candidate_cache_identity"] = "tampered-in-transit"
+    cfg = _config(sidecar)
+    cfg["compiled_spec"] = _real_compiled_spec()
+
+    out, seen = _run_main_watching_dispatch(cfg, tmp_path / "or_e", monkeypatch)
+
+    assert CANDIDATE_REFUSAL_REASON in out
+    assert seen["reached"] is False, "Band C ran despite an unprovable candidate"
+    assert seen["candidate"] is None, (
+        "an UNPROVEN candidate object reached the execution factory"
+    )
+
+
+def test_or_handoff_the_validator_wrapper_still_answers_refusal_only():
+    """The back-compat wrapper delegates; it does not prove anything twice."""
+    row = _real_rows()[0]
+    assert bt.validate_candidate_authority(_config(_sidecar(row))) is None
+    refusal, candidate = bt.resolve_candidate_authority(_config(_sidecar(row)))
+    assert refusal is None
+    assert candidate is not None and candidate.source_spec_id == GOLDEN_STUB
