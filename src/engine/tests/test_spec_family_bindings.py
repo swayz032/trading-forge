@@ -924,8 +924,17 @@ _GOVERNED_GRADE_FILE = "../../../docs/replay-results/blind-readjudication/blind-
 
 def _governed_split() -> dict:
     path = os.path.join(os.path.dirname(__file__), _GOVERNED_GRADE_FILE)
-    if not os.path.isfile(path):
-        pytest.skip(f"governed grade unavailable at {path}")
+    # AR-1026 §2 / R-799 §5 form [1]: the blind-readjudication LOCKED.json is
+    # COMMITTED GOVERNED EVIDENCE — 1 tracked, 978 bytes, sha256 920557eb…
+    # (MEASURED at 858506cf). e55a9ef1 committed the file but left this guard a
+    # pytest.skip(), so a missing governed grade made two S6 release-authority
+    # nodes go SKIP instead of RED — the exact defect R-799 §5 abolished.
+    # Its absence is a broken checkout, never an environment gap.
+    assert os.path.isfile(path), (
+        f"tracked governed grade missing at {path} -- this file is committed "
+        "governed evidence, so its absence is a broken checkout, not an "
+        "environment gap"
+    )
     with open(path, encoding="utf-8") as f:
         return json.load(f)["counts"]
 
