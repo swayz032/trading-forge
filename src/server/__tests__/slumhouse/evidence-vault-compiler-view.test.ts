@@ -219,7 +219,7 @@ describe("compiler cinematic runtime policy", () => {
       devicePixelRatio: 3,
       width: 1920,
       hardwareConcurrency: 16,
-    })).toEqual({ mode: "webgl", dpr: 1.75, particles: 9200, durationMs: 7000 });
+    })).toEqual({ mode: "webgl", dpr: 1.75, particles: 14000, durationMs: 7000 });
     expect(chooseRenderProfile({
       webgl2: false,
       reducedMotion: false,

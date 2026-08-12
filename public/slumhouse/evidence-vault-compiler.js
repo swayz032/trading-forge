@@ -185,7 +185,7 @@ export function chooseRenderProfile(input) {
   }
   const width = Math.max(0, Number(input.width) || 0);
   const cores = Math.max(1, Number(input.hardwareConcurrency) || 1);
-  const particles = width >= 1700 && cores >= 8 ? 9200 : width >= 1100 && cores >= 4 ? 5600 : 2800;
+  const particles = width >= 1700 && cores >= 8 ? 14000 : width >= 1100 && cores >= 4 ? 8200 : 3600;
   return {
     mode: "webgl",
     dpr: Math.min(1.75, Math.max(1, Number(input.devicePixelRatio) || 1)),
@@ -338,7 +338,8 @@ function createStormRenderer(canvas, identity, profile) {
       float vortex=smoothstep(.24,.38,uProgress)*(1.0-smoothstep(.70,.82,uProgress));
       float compression=smoothstep(.70,.86,uProgress)*(1.0-smoothstep(.86,.94,uProgress));
       float shock=smoothstep(.86,.96,uProgress);
-      float velocity=mix(.30,4.8,vortex)+compression*7.0;
+      float pulse=.78+.35*sin(uTime*7.0+aParticle.z*3.0);
+      float velocity=mix(.30,6.4*pulse,vortex)+compression*8.5;
       float angle=aParticle.x+uTime*velocity*(.45+aParticle.w*.72)+sin(uTime*2.4+aParticle.z)*vortex*.42;
       float baseRadius=aParticle.y*(1.2+rupture*.72);
       float radius=mix(baseRadius,.035,compression);
@@ -350,7 +351,7 @@ function createStormRenderer(canvas, identity, profile) {
       float x=(cos(angle)*radius+turbulence)*perspective;
       float y=(sin(angle)*radius*.54+depth*.18+cos(angle*2.0)*.12*vortex)*perspective;
       gl_Position=vec4(x/uAspect,y,depth/8.0,1.0);
-      gl_PointSize=(2.2+aParticle.w*8.6)*(1.0+vortex*.72+compression*1.1)*perspective;
+      gl_PointSize=(2.6+aParticle.w*13.5)*(1.0+vortex*1.05+compression*1.2)*perspective;
       vAlpha=(.28+aParticle.w*.92)*(1.0-smoothstep(.95,1.0,uProgress)*.82);
     }`);
   const fragment = compileShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
@@ -363,9 +364,11 @@ function createStormRenderer(canvas, identity, profile) {
       vec2 p=gl_PointCoord-vec2(.5);
       float d=length(p);
       if(d>.5)discard;
-      float glow=pow(smoothstep(.5,0.0,d),1.35);
+      float glow=pow(smoothstep(.5,0.0,d),1.08);
+      float hot=pow(smoothstep(.20,0.0,d),2.0);
       vec3 color=mix(uPrimary,uSecondary,gl_PointCoord.y);
-      outColor=vec4(color,glow*min(1.0,vAlpha*1.5));
+      color=mix(color,vec3(1.0),hot*.82);
+      outColor=vec4(color,glow*min(1.0,vAlpha*1.8));
     }`);
   const program = gl.createProgram();
   gl.attachShader(program, vertex);
