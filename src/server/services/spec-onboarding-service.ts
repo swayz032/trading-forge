@@ -161,6 +161,25 @@ function assertCrossValidatedSourceLocal(source: string, tags: string[]): void {
 // convention direct-bucket-graduator.ts itself calls a "sentinel").
 const BIDIR_SENTINEL = "high < low";
 
+// ─── Source-risk contract (SOURCE-RISK-HANDOFF-1 / UNIT A) ──────────────────
+// Lives in its own DB-free module so the compiler, the overlay and tests can import
+// the contract without inheriting this file's import-time DATABASE_URL requirement.
+// Re-exported here so existing call sites keep a single import surface.
+import {
+  resolveSpecStopLoss,
+  type SourceRiskContract,
+} from "./source-risk-contract";
+
+export {
+  ANCHOR_TO_RESOLVER,
+  resolveSpecStopLoss,
+  type RiskOwnershipMode,
+  type SourceRiskContract,
+  type SourceStopAnchor,
+  type SourceStopContract,
+  type SourceTargetContract,
+} from "./source-risk-contract";
+
 // ─── Spec artifact contract (mirrors the 25-sample generalization corpus) ───
 
 export interface SpecEntryCondition {
@@ -180,6 +199,12 @@ export interface SpecArtifactBody {
   invalidations: SpecEntryCondition[];
   entry_trigger_id: string;
   framework_overlay?: Record<string, unknown>;
+  /**
+   * SOURCE-RISK-HANDOFF-1 / UNIT A (AR-1059 §4). OPTIONAL — absent on every existing
+   * artifact, which is why the entire current library keeps byte-identical behaviour.
+   * Present only when the teacher explicitly taught risk. See source-risk-contract.ts.
+   */
+  source_risk?: SourceRiskContract;
 }
 
 export interface SpecArtifact {
@@ -846,7 +871,13 @@ export async function onboardSpecArtifact(
         timeframe,
         trigger_tf: timeframe,
         ...(higherTimeframe ? { htf_tf: higherTimeframe } : {}),
-        stop_loss: { type: "atr", multiplier: 1.5 },
+        // SOURCE-RISK-HANDOFF-1 / UNIT A+E. Was an unconditional
+        // `{ type: "atr", multiplier: 1.5 }`, which destroyed a taught stop at this
+        // exact boundary (AR-1056 §2.4). resolveSpecStopLoss returns that SAME object
+        // for every spec without an explicit SOURCE_FAITHFUL contract — i.e. the whole
+        // existing library is unchanged — and preserves the taught anchor only when the
+        // teacher actually taught one.
+        stop_loss: resolveSpecStopLoss(spec),
         position_size: { type: "risk_derived_pyramid" },
       },
       metadata: {
