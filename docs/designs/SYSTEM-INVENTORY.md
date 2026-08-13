@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `4727dbaacb7d7267fb4c8cb61ba3e4bc43c1b941`  (worktree DIRTY at generation time)
+> Generated at commit `83c6fa411e31dce1244a30d103c563117592362e`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -31,7 +31,7 @@ first and its cost is made visible.
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
 | `src/` | Python | 297 | 387 | 124548 | 1918 |
-| `src/` | TypeScript | 462 | 723 | 209939 | 2933 |
+| `src/` | TypeScript | 462 | 724 | 209939 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
 TypeScript symbol rule: every line matching an **exported declaration** pattern
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1869 | 759 |
+| `src/` | 1870 | 759 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2127** | **980** |
+| **TOTAL** | **2128** | **980** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 438 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 84 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1110 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1111 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **174**.  Modules reachable from them: **714** of **2127** parsed files.
+Total entry points: **174**.  Modules reachable from them: **714** of **2128** parsed files.
 
 <details><summary>All 174 entry points and why each was counted</summary>
 
@@ -290,7 +290,7 @@ table below it.**
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=1918 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=43 (probe runs; 0 would be a legitimate reading) |
-| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6612/6612 TS import specifiers non-blank |
+| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6622/6622 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
@@ -1079,6 +1079,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `flushNotifications` | function | `src/server/services/notification-service.ts:356` | 8 | unique |
 | `ExpressionStrategy` | class | `src/engine/strategy_base.py:72` | 6 | unique |
 | `__setOllamaHealthyForTests` | function | `src/server/services/model-router.ts:411` | 6 | unique |
+| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:696` | 6 | unique |
 | `DEFAULT_ACCOUNT_TYPE` | const | `src/shared/firm-config.ts:366` | 6 | unique |
 | `_resetForTest` | function | `src/server/lib/carter/carter-issues-store.ts:231` | 5 | unique |
 | `_testOnly` | const | `src/server/scheduler.ts:746` | 5 | unique |
@@ -1087,9 +1088,9 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `getNotificationServiceStatus` | function | `src/server/services/notification-service.ts:368` | 5 | unique |
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
-| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:696` | 5 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
+| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | 4 | unique |
 | `_result` | function | `src/engine/anti_setups/regime_filter.py:156` | 3 | unique |
 | `produce_topology` | function | `src/engine/extraction/topology_producer.py:146` | 3 | unique |
 | `run_prop_compliance` | function | `src/engine/prop_compliance.py:232` | 3 | unique |
@@ -1110,7 +1111,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `__resetEquityWindowsForTests` | function | `src/server/services/dd-velocity-gate.ts:292` | 3 | unique |
 | `__resetInternalsForTests` | function | `src/server/services/market-internals-service.ts:274` | 3 | unique |
 | `__getOllamaHealthyForTests` | function | `src/server/services/model-router.ts:418` | 3 | unique |
-| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | 3 | unique |
+| `parseSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:306` | 3 | unique |
 | `__resetEnabledFirmsCache` | function | `src/server/services/strategy-assignment-service.ts:197` | 3 | unique |
 | `PassageLedger` | class | `src/engine/battery/passage_ledger.py:137` | 2 | unique |
 | `list_patterns` | function | `src/engine/compiler/pattern_library.py:233` | 2 | unique |
@@ -1158,7 +1159,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `runRejectSpikeCheck` | function | `src/server/services/scout-watchdog-service.ts:442` | 2 | unique |
 | `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:79` | 2 | unique |
 | `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:121` | 2 | unique |
-| `parseSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:306` | 2 | unique |
 | `runStrategyProductionCheck` | function | `src/server/services/strategy-production-check-service.ts:23` | 2 | unique |
 | `_resetActiveCount` | function | `src/server/services/trade-critique-service.ts:113` | 2 | unique |
 | `isUnconfiguredSlumdawgSecret` | function | `src/server/slumdawg-hmac.ts:45` | 2 | unique |
