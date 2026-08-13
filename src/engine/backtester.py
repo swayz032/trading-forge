@@ -3250,6 +3250,54 @@ def _source_risk_mode_from_spec(compiled_spec) -> Optional[str]:
     return source_risk.get("mode")
 
 
+def _resolve_source_timeframe_roles(strategy):
+    """The taught timeframe ROLES off the persisted source contract. REFUSES, never recovers.
+
+    AR-1110 §4/§5. Sibling of `_resolve_source_fixed_r` below, and deliberately built to
+    the same rule: read the persisted source contract, refuse everything else.
+
+    🛑 THE FALLBACK THIS FUNCTION EXISTS TO REFUSE IS NOT AN ERROR PATH — IT IS THE
+    BEHAVIOUR THAT SHIPPED. `[MEASURED, AR-1109 §1.Q4]` the persisted sVkm rows carry
+    `timeframe='1m'` produced by `backfill_recovered_from_spec` at `confidence: 0.4`,
+    evidence *"all stated TFs [1m, 5m]; exec = lowest execution-grade TF across roles"*,
+    with `higher_timeframe: null`. The number is RIGHT and the mechanism is a guess:
+    "lowest stated timeframe" would answer `1m` whether or not the teacher ever said it,
+    and it discarded the 5-minute opening-range window entirely.
+
+    AR-1110 §4 forbids exactly that shape "even when the selected number happens to be
+    correct", and §5 forbids inferring roles from `strategy.timeframe` or `trigger_tf`.
+    So on SOURCE_FAITHFUL there is no recovery branch here at all.
+
+    ★ `A CORRECT VALUE FROM A HEURISTIC IS STILL A GUESS THAT HAPPENED TO WIN.`
+    """
+    from src.engine.source_timeframe_roles import (
+        SourceTimeframeRoleError,
+        SourceTimeframeRoles,
+    )
+
+    spec = getattr(strategy, "spec", None)
+    raw = spec.get("source_timeframe_roles") if isinstance(spec, dict) else None
+    if raw is None:
+        raise ValueError(
+            "source_risk_mode='SOURCE_FAITHFUL' but the persisted artifact carries no "
+            "`spec.source_timeframe_roles`. Which timeframe owns the opening-range window, "
+            "the breakout close, the FVG and the entry are FOUR source facts; a single "
+            "`strategy.timeframe` scalar is not one of them and may not stand in for them "
+            "(AR-1110 §5). REFUSING."
+        )
+    try:
+        return SourceTimeframeRoles.from_payload(raw)
+    except SourceTimeframeRoleError as err:
+        # Re-raised as the refusal this layer speaks, with the authority layer's own
+        # message kept intact so the reader learns WHICH role failed, not merely that
+        # one did.
+        raise ValueError(
+            f"persisted `spec.source_timeframe_roles` is not a valid source-owned role "
+            f"set, so SOURCE_FAITHFUL cannot prove which timeframe owns which decision: "
+            f"{err} REFUSING."
+        ) from err
+
+
 def _resolve_source_fixed_r(strategy) -> float:
     """The taught `r_multiple` off the persisted source contract. REFUSES, never defaults.
 
@@ -7473,9 +7521,20 @@ def run_class_backtest(
     # ⚠️ NOT GATED ON `exit_engine`. The old check only fired for `static_styleC`; the source
     # arm now routes to its own management function regardless of which house engine was
     # requested, so the contract must be valid on EVERY source run, not only the default one.
+    #
+    # ─── AR-1110 §4/§5 — THE SAME REFUSAL, FOR THE TIMEFRAME ROLES ──────────────
+    # The taught R multiple is not the only source fact this artifact can silently
+    # lose. `[MEASURED, AR-1109]` the persisted sVkm rows reached this path carrying
+    # ONE scalar `timeframe='1m'` chosen by a `confidence: 0.4` lowest-timeframe
+    # backfill, with the teacher's 5-minute opening-range window recorded nowhere.
+    # A performance number produced from that is a clean measurement of a strategy
+    # nobody taught. So the roles are resolved HERE, beside the R multiple, before
+    # any bar is evaluated — and their absence refuses rather than recovering.
     _cls_source_r_multiple = 0.0
+    _cls_source_timeframe_roles = None
     if _source_faithful:
         _cls_source_r_multiple = _resolve_source_fixed_r(strategy)
+        _cls_source_timeframe_roles = _resolve_source_timeframe_roles(strategy)
 
     # ─── P1-A: Warmup data prepend (IS context for indicator initialization) ──
     # Mirror run_backtest warmup_data logic. Prepend IS rows so strategy.compute()

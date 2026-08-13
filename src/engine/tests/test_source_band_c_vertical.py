@@ -447,6 +447,73 @@ class TestTheRouteRefusesWhenTheContractIsBroken:
             ), "the legacy arm reproduced the source trade exactly — the mode changed nothing"
 
 
+class TestTheTimeframeRolesAreCONSUMED:
+    """AR-1110 §7 mutations C and D, driven through the REAL Band C route.
+
+    A carrier nobody consumes is `BUILT-UNREACHABLE` — this campaign's most-repeated
+    species. These tests exist so the step-B type cannot quietly become decoration.
+    """
+
+    def test_MUTATION_D_dropping_ONE_role_during_persistence_REFUSES(self):
+        """§7.D — 'the SOURCE_FAITHFUL load/runtime must refuse; it may not recover the
+        missing role from another scalar.'
+
+        Parameterised by hand over all four roles rather than one, because a guard that
+        only notices the absence of ONE role is satisfied by dropping a different one.
+        """
+        from src.engine.source_timeframe_roles import REQUIRED_ROLES
+
+        for dropped in REQUIRED_ROLES:
+            spec = _compiled_spec()
+            payload = spec["spec"]["source_timeframe_roles"]
+            payload["bindings"] = [b for b in payload["bindings"] if b["role"] != dropped]
+            with pytest.raises(ValueError, match="not a valid source-owned role set"):
+                _run(_config(spec))
+
+    def test_MUTATION_D2_dropping_the_WHOLE_carrier_REFUSES(self):
+        spec = _compiled_spec()
+        del spec["spec"]["source_timeframe_roles"]
+        with pytest.raises(ValueError, match="carries no `spec.source_timeframe_roles`"):
+            _run(_config(spec))
+
+    def test_MUTATION_C_the_old_scalar_CANNOT_satisfy_the_requirement(self):
+        """§7.C — 'replacing explicit role consumption with the old scalar/minimum-timeframe
+        path must turn the proof red.'
+
+        The config already carries `strategy.timeframe='5m'` and `timeframe='5m'`, which is
+        exactly what the `confidence: 0.4` backfill would have produced for this artifact.
+        With the role carrier removed, those scalars are still present and still say '5m' —
+        and the route REFUSES anyway. That is the mutation: the old authority is available
+        and is no longer accepted as one.
+        """
+        spec = _compiled_spec()
+        del spec["spec"]["source_timeframe_roles"]
+        config = _config(spec)
+        assert config["strategy"]["timeframe"] == "5m", "the scalar fallback must be PRESENT"
+        assert config["timeframe"] == "5m"
+        with pytest.raises(ValueError, match="may not stand in for them"):
+            _run(config)
+
+    def test_an_UNGRADEABLE_role_REFUSES_even_with_the_right_number(self):
+        """The `0.4`-confidence backfill string is not an evidence grade. A payload that
+        carries the CORRECT timeframe under that provenance must still refuse — AR-1110 §4:
+        forbidden 'even when the selected number happens to be correct'."""
+        spec = _compiled_spec()
+        for b in spec["spec"]["source_timeframe_roles"]["bindings"]:
+            b["evidence_grade"] = "backfill_recovered_from_spec"
+        with pytest.raises(ValueError, match="not a valid source-owned role set"):
+            _run(_config(spec))
+
+    def test_THE_POSITIVE_WITNESS_the_unmutated_route_still_produces_the_trade(self):
+        """🛑 Without this, a resolver that refused EVERY source run would pass all four
+        mutations above and look like a success."""
+        result, _out = _run()
+        assert result.get("source_risk_mode") == "SOURCE_FAITHFUL"
+        trades = result.get("trades") or []
+        assert trades, "the honest route stopped producing its trade"
+        assert trades[0].get("stop_basis") == "source_exact"
+
+
 class TestTheWalkforwardArmRefuses:
     """GRADE F-1 (HIGH) — found by the independent grader on the unit I had declared green.
 

@@ -128,6 +128,38 @@ FVG_CONDITION_ID = "WAIT_STRUCTURE:the-fair-value-gap#0"
 # forbids guessing the owning lesson, so this fixture claims none.
 SYNTHETIC_QUOTE = "SYNTHETIC FIXTURE QUOTE — no source video; see module docstring"
 
+# AR-1110 §4 — this fixture's timeframe roles, DECLARED rather than assumed.
+# All four are "5m" because that is what this fixture's bars actually are. That is a
+# property of THIS FIXTURE, not a house default and not a teacher's rule: sVkm's real
+# roles are 5m window + 1m execution (AR-1109 §1), which is why this file may not be
+# cited as sVkm evidence. Every quote is the synthetic marker.
+_SYNTHETIC_ROLE_TIMEFRAME = "5m"
+
+
+def _synthetic_roles():
+    from src.engine.source_timeframe_roles import (
+        EXPLICIT,
+        REQUIRED_ROLES,
+        SourceTimeframeRoles,
+        TimeframeRoleBinding,
+    )
+
+    return SourceTimeframeRoles(
+        bindings=tuple(
+            TimeframeRoleBinding(
+                role=role,
+                timeframe=_SYNTHETIC_ROLE_TIMEFRAME,
+                evidence_grade=EXPLICIT,
+                source_quote=SYNTHETIC_QUOTE,
+                condition_id=f"SYNTHETIC:{role}#0",
+            )
+            for role in REQUIRED_ROLES
+        )
+    )
+
+
+SYNTHETIC_ROLES = _synthetic_roles()
+
 
 # ── the taught window ────────────────────────────────────────────────────────
 
@@ -191,6 +223,13 @@ def _compiled_spec(*, source_risk: dict | None = "default", direction: str = "bo
     }
     if source_risk is not None:
         spec["source_risk"] = source_risk
+        # AR-1110 §5 — a SOURCE_FAITHFUL artifact must declare WHICH timeframe owns
+        # which decision. This fixture runs every leg on 5-minute bars, which used to
+        # be an UNWRITTEN assumption a reader had to infer from the bar generator.
+        # Now it is a typed, visible claim. `[NOT A TEACHER'S WORDS]` — the quote is
+        # the synthetic marker, so this declares the fixture's own stipulation and
+        # cannot be mistaken for evidence about a human being.
+        spec["source_timeframe_roles"] = SYNTHETIC_ROLES.to_payload()
     return {"spec": spec, "spec_hash": SPEC_HASH}
 
 
