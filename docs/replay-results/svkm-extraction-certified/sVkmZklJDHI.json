@@ -1,0 +1,189 @@
+{
+  "video_id": "sVkmZklJDHI",
+  "extracted_at": 1786614955.7989178,
+  "seed_params": {
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "provenance_class": "EXTRACTION_CERTIFIED_PENDING_GRADING"
+  },
+  "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+  "extraction": {
+    "video_id": "sVkmZklJDHI",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "fvg_breakout_range_1m_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "1m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "This strategy needs to be traded at 9:30 a.m. Eastern time, New York time.",
+            "step": 1,
+            "action": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
+            "rationale": "This establishes the initial volatility range for the trading session."
+          },
+          {
+            "transcript_quote": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range.",
+            "step": 2,
+            "action": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
+            "rationale": "The breakout confirms the market direction (up or down) for the trade."
+          },
+          {
+            "transcript_quote": "What we're looking for is a fair value gap sequence that is printing outside of the range.",
+            "step": 3,
+            "action": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
+            "rationale": "The FVG provides a high-probability entry point after the initial directional breakout."
+          },
+          {
+            "transcript_quote": "My entry is going to be on the closure of that third candle.",
+            "step": 4,
+            "action": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
+            "rationale": "Entering on the closure confirms the FVG structure and minimizes entry risk."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "And then what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick.",
+          "anchor": "fvg_low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed at the bottom of the FVG candle, including the wick, to allow room for breathing."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The strategy uses a fixed mechanical target based on a 2R risk-to-reward ratio."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "This strategy needs to be traded at 9:30 a.m. Eastern time, New York time.",
+            "name": "killzone_active",
+            "description": "The trade must be initiated during the 9:30 AM ET New York session.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range.",
+            "name": "range_breakout",
+            "description": "The 1m candle must close outside of the initial 5m range.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "one candle setup",
+            "role": "model",
+            "verbatim_description": "It's an extremely simple trading strategy that even a complete beginner can execute this very, very quickly.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5minute range",
+            "role": "zone",
+            "verbatim_description": "That now gives me a range on the five minute. That's how high the price went within the first 5 minutes and that's how low it went.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "horizontal raid tool / trend tool",
+            "role": "indicator",
+            "verbatim_description": "I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap sequence",
+            "role": "entry_step",
+            "verbatim_description": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "three candle pattern where the low of candle one does not overlap the high of candle three",
+            "role": "zone",
+            "verbatim_description": "A fair value gap is when you get a three candle pattern where the low of candle one does not overlap the high of candle three.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap",
+            "role": "zone",
+            "verbatim_description": "This box here represents the fair value gap that has been formed. The fair value gap is just ensuring that the high of candle one in this instance does not overlap the low of candle 3.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Third Candle of the Sequence",
+            "role": "entry_step",
+            "verbatim_description": "The fair value gap has to actually be formed... when the third candle of the sequence has been printed because for example, let's say this candle actually ends up trading all the way back to here somewhere or up here somewhere.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Entry on Closure",
+            "role": "entry_step",
+            "verbatim_description": "My entry is going to be on the closure of that third candle. The actual entry would be around about here because this is a little dogey candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop Loss at FVG Wick",
+            "role": "stop_anchor",
+            "verbatim_description": "We're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fixed Target",
+            "role": "target",
+            "verbatim_description": "All we're going to do for the target is we're going to have a fixed target. The fixed target we're looking for is a risk-to-reward ratio of two.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "2R Target",
+            "role": "target",
+            "verbatim_description": "The fixed target we're looking for is a risk-to-reward ratio of two. All you're going to do is you're going to target it down until you get to two.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 16\u00c3\u2014 in transcript)",
+            "transcript_quote": "What we are looking for is a fair value gap sequence that is printing outside of the range. Now what is a fair value gap sequence? We",
+            "occurrences": 16,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 8\u00c3\u2014 in transcript)",
+            "transcript_quote": "d what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes an",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "2 to 3",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"2 to 3\"",
+            "transcript_quote": "2 to 3 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "60 to 90",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"60 to 90\"",
+            "transcript_quote": "60 to 90 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}
