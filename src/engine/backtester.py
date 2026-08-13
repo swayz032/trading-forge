@@ -7556,6 +7556,30 @@ def run_class_backtest(
         size_config = PositionSizeConfig(type="fixed", fixed_contracts=fixed_contracts)
     else:
         size_config = PositionSizeConfig(type="dynamic_atr", target_risk_dollars=500.0)
+    # ─── BAND-C-SIZING-INGRESS-1 (AR-1095 §3) — WHO OWNED THE SIZE, ON THE ARTIFACT ──────
+    # AR-1095 §3 requires it to be answerable which sizing authority actually ran, because
+    # "the default ran because it was chosen" and "the default ran because the instruction was
+    # dropped" produce the SAME sizes and are not the same fact.
+    # ★ `A DEFAULT THAT RUNS BECAUSE AN INSTRUCTION WAS DROPPED IS INDISTINGUISHABLE, AT THE
+    #    RESULT, FROM A DEFAULT THAT RUNS BECAUSE IT WAS CHOSEN — UNLESS THE ARTIFACT SAYS SO.`
+    # `sizing_owner` is the axis AR-1095 §3 separates from strategy semantics: FIXED_RESEARCH
+    # is the normalized benchmark size (Surface 1); TRADING_FORGE is capital allocation
+    # (Surface 2). NOTE: `TRADING_FORGE` here names the DEFAULT ATR fallback, not a persisted
+    # scaling plan — `firm_config.SCALING_PLANS` is deliberately EMPTY (R-059, size-upgrade
+    # ladders are fiction at Topstep), so no plan id can honestly be claimed.
+    _cls_sizing_meta: dict = {
+        "sizing_owner": "FIXED_RESEARCH" if fixed_contracts is not None else "TRADING_FORGE",
+        "sizing_mode": size_config.type,
+        "sizing_plan_id": None,
+        "requested_contracts": fixed_contracts,
+        "target_risk_dollars": (
+            None if fixed_contracts is not None else 500.0
+        ),
+        "sizing_source": (
+            "persisted_strategy.fixed_contracts" if fixed_contracts is not None
+            else "engine_default_no_sizing_command_supplied"
+        ),
+    }
     sizes, over_risk = compute_position_sizes(df, size_config, spec, 14, max_contracts=max_contracts)
     # Defense-in-depth: replace any inf/nan sizes with 1 contract
     sizes = np.where(np.isfinite(sizes), sizes, 1.0)
@@ -8958,6 +8982,15 @@ def run_class_backtest(
         #    A CONSUMER CAN CHECK.`
         # Empty dict on every non-source run, so a reader never infers the mode from a missing key.
         "source_occupancy": _cls_source_occupancy_meta,
+        # ─── BAND-C-SIZING-INGRESS-1 (AR-1095 §3, §5.6) ──────────────────────────────────
+        # "the returned result exposes which sizing owner/mode actually ran". `executed_contracts`
+        # is read back off the TRADE RECORDS, not off the plan — the same lesson GRADE finding
+        # F-2 taught about `trades_opened`: a requested size is an instruction, an executed size
+        # is an outcome, and only the second one is evidence.
+        "sizing": {
+            **_cls_sizing_meta,
+            "executed_contracts": sorted({float(t.get("Size", 0)) for t in trades_list}),
+        },
         # GATE3-DEFECT-6 fix (2026-07-06) — mirrors run_backtest's
         # "eligibility_gate_mode" key (deep-scan #18c C-3 fix); see note above.
         "eligibility_gate_mode": _cls_eligibility_gate_mode,
@@ -9586,6 +9619,23 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 skip_eligibility_gate=False,
                 exit_engine=exit_engine,
                 adaptive_ctx=None,
+                # ─── BAND-C-SIZING-INGRESS-1 (AR-1095 §2, §5) ────────────────────────
+                # 🛑 THE SECOND INSTANCE OF THE DEFECT DESCRIBED TWELVE LINES BELOW. The
+                # artifact persists `strategy.fixed_contracts`, `run_class_backtest` can
+                # consume it — and Band C did not join the two, so the explicit instruction
+                # was dropped and `PositionSizeConfig(type="dynamic_atr",
+                # target_risk_dollars=500.0)` ran in its place. That is how three trades with
+                # IDENTICAL taught entry/stop/target came back sized 1, 15, 15.
+                #
+                # ⚠️ AND IT SILENCED ITS OWN GUARD. `config.py`'s H7 validator exists to
+                # fail-fast on a silent `fixed_contracts=1` — but it lives on the `type="fixed"`
+                # branch, which is unreachable while the value is dropped here. The fixture even
+                # sets `TF_ALLOW_FIXED_1=true` to permit a mode that never ran.
+                # ★ `A GUARD ON THE BRANCH NOT TAKEN IS NOT A GUARD.`
+                #
+                # `.get()` with no default: absent stays None, which is the documented
+                # "caller supplied no sizing command" sentinel, NOT a silent 1.
+                fixed_contracts=(config.get("strategy") or {}).get("fixed_contracts"),
                 # ─── SOURCE_FAITHFUL_EXECUTION_JOIN-1 / STEP A (AR-1074 §3, §10.A) ──
                 # THE PRODUCTION INGRESS. AR-1074 §3 measured the gap precisely:
                 #   persisted source_risk.mode     OK

@@ -341,7 +341,7 @@ class TestWhatThisRunDOESNOTProve:
         assert "overlap_suppressed=0" in out
         assert "policy=reject_while_occupied" in out
 
-    def test_the_HOUSE_POSITION_SIZER_still_ramps_and_that_DOMINATES_any_pnl(self):
+    def test_the_PERSISTED_FIXED_SIZE_reaches_every_trade_SIZING_INGRESS(self):
         """🛑 A LIMITATION F-4 MADE VISIBLE, PINNED IMMEDIATELY RATHER THAN DISCOVERED LATER.
 
         `[MEASURED]` the three trades are IDENTICAL in every source-owned value — entry 119.0,
@@ -368,9 +368,26 @@ class TestWhatThisRunDOESNOTProve:
         """
         result, _out = _run()
         sizes = [t["Size"] for t in result["trades"]]
-        assert sizes == [1.0, 15.0, 15.0], (
-            f"the house sizing ramp changed ({sizes}) — re-derive any P&L claim before editing "
-            "this expectation, and say so"
+        # 🛑 THIS ASSERTION USED TO READ `sizes == [1.0, 15.0, 15.0]` AND I AM NOT DELETING
+        # THAT QUIETLY. I pinned the ramp believing it was legitimate framework-owned sizing.
+        # GPT inspected the persisted config and found the real cause: `strategy.fixed_contracts
+        # = 1` was DROPPED at the Band C ingress, so the ATR default ran in its place
+        # (BAND-C-SIZING-INGRESS-1, AR-1095 §2). The ramp was never a policy — it was an
+        # instruction going missing.
+        # ★ `I ASKED WHETHER THE LAYER WAS ALLOWED TO OWN THE SIZE, AND NEVER WHETHER THE SIZE
+        #    THAT RAN WAS THE SIZE THAT WAS ASKED FOR.`
+        assert sizes == [1.0, 1.0, 1.0], (
+            f"the persisted fixed size is not reaching every trade ({sizes})"
+        )
+        assert result["sizing"]["sizing_owner"] == "FIXED_RESEARCH"
+        assert result["sizing"]["requested_contracts"] == 1
+        assert result["sizing"]["executed_contracts"] == [1.0]
+        # With one explicit size across the population, the three trades are finally
+        # COMPARABLE — which is the whole point of AR-1095 §4's Surface 1.
+        gross = {t["GrossPnL"] for t in result["trades"]}
+        assert gross == {75.0}, (
+            f"identical taught geometry produced different gross P&L {gross} — the population "
+            "is not size-normalised, so no expectancy claim can be read off it"
         )
         for t in result["trades"]:
             assert t["risk_points"] == pytest.approx(RISK_POINTS)
