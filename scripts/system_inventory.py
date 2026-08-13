@@ -347,7 +347,7 @@ class FileInfo(object):
         "raw_import_specs", "env_reads", "gates", "parse_error",
         "unmatched_export_lines", "exported_names", "has_star_reexport",
         "reexport_names", "method_count", "nested_def_count", "path_literals",
-        "module_literals",
+        "module_literals", "has_main_guard",
     )
 
     def __init__(self, path, lang):
@@ -369,6 +369,7 @@ class FileInfo(object):
         self.nested_def_count = 0
         self.path_literals = []    # [(literal, line)]
         self.module_literals = []  # [(dotted_module_spec, line)]
+        self.has_main_guard = False  # py only; set by py_has_main_guard (AR-1123 §3)
 
 
 PATH_LITERAL_RE = re.compile(r"(?:src|scripts)/[A-Za-z0-9_./-]+\.(?:py|ts|mjs|cjs|sql|json)")
@@ -467,7 +468,55 @@ def parse_python(abs_path):
 
     info.env_reads = py_env_reads(tree)
     info.gates = py_flag_gates(tree)
+    info.has_main_guard = py_has_main_guard(tree)
     return info
+
+
+def py_has_main_guard(tree):
+    """True iff the module has a REAL top-level `if __name__ == "__main__":` guard.
+
+    ─── WHY THIS FUNCTION EXISTS (AR-1122 §3 / AR-1123 §3) ──────────────────────────
+    `discover_entry_points` rule (c) used to test `f.refs.get("__main__")`. `refs` is
+    built from `ast.Name` and `ast.Attribute` nodes only, but `"__main__"` is an
+    `ast.Constant` — so the test could never be true and the rule fired ZERO times
+    across the whole repository while advertising that it discovered runnable modules.
+    A real module whose only entry-point evidence is a `__main__` guard was therefore
+    silently mislabeled BUILT-UNREACHABLE.
+
+        `A DISCOVERY RULE THAT HAS NEVER DISCOVERED ANYTHING IS INDISTINGUISHABLE FROM
+         ONE THAT WORKS, UNTIL YOU ASK IT TO FIND SOMETHING YOU KNOW IS THERE.`
+
+    🛑 THE REPAIR IS DELIBERATELY NARROW. It does NOT put string constants into the
+    generic `refs` map — doing that would make every incidental `"__main__"` mention
+    look like a reference and would corrupt caller counting far beyond this rule.
+    It matches the STRUCTURE instead:
+
+      * `if __name__ == "__main__":`  and the reversed `if "__main__" == __name__:`
+      * top-level only — a guard nested inside a function does not make a module
+        runnable by `python -m`
+      * comparison operator `==` only
+      * the string must be a real `ast.Constant`, so prose, comments and docstrings
+        mentioning `__main__` are NOT counted (that is the negative fixture)
+    """
+    for node in tree.body:                      # top-level statements ONLY
+        if not isinstance(node, ast.If):
+            continue
+        test = node.test
+        if not isinstance(test, ast.Compare):
+            continue
+        if len(test.ops) != 1 or not isinstance(test.ops[0], ast.Eq):
+            continue
+        left, right = test.left, test.comparators[0]
+        pairs = ((left, right), (right, left))  # accept either operand order
+        for name_node, const_node in pairs:
+            if (
+                isinstance(name_node, ast.Name)
+                and name_node.id == "__name__"
+                and isinstance(const_node, ast.Constant)
+                and const_node.value == "__main__"
+            ):
+                return True
+    return False
 
 
 def py_flag_gates(tree):
@@ -804,9 +853,14 @@ def discover_entry_points(by_path, files):
             if target:
                 prov[target].append("`python -m %s` module spec in %s" % (spec, f.path))
 
-    # (c) Python modules with an `if __name__ == "__main__"` block
+    # (c) Python modules with a real top-level `if __name__ == "__main__"` block.
+    #
+    # REPAIRED AR-1123 §3. This previously read `f.refs.get("__main__")`, which is
+    # UNSATISFIABLE: `refs` holds ast.Name/ast.Attribute identifiers and "__main__" is
+    # an ast.Constant, so the rule fired 0 times repo-wide while claiming to discover
+    # runnable modules. Detection is now structural — see `py_has_main_guard`.
     for f in files:
-        if f.lang == "py" and not f.is_test and f.refs.get("__main__"):
+        if f.lang == "py" and not f.is_test and f.has_main_guard:
             prov[f.path].append("has `__main__` guard (runnable module)")
 
     # (d) the long-running services themselves

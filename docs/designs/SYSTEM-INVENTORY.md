@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `3882ffa26c8f131550d495f2916d2b8318087411`  (worktree DIRTY at generation time)
+> Generated at commit `398a6aa01e734f38e8e2dbffe8604c766c67352f`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 297 | 384 | 124309 | 1914 |
+| `src/` | Python | 297 | 385 | 124401 | 1916 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1865 | 759 |
+| `src/` | 1866 | 759 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2123** | **980** |
+| **TOTAL** | **2124** | **980** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 438 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 84 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1106 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1107 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,12 +86,16 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **95**.  Modules reachable from them: **627** of **2123** parsed files.
+Total entry points: **174**.  Modules reachable from them: **714** of **2124** parsed files.
 
-<details><summary>All 95 entry points and why each was counted</summary>
+<details><summary>All 174 entry points and why each was counted</summary>
 
 | Entry point | Discovered because |
 |---|---|
+| `scripts/accept5_isolated_population.py` | has `__main__` guard (runnable module) |
+| `scripts/accept5_isolated_runner.py` | has `__main__` guard (runnable module) |
+| `scripts/acceptance_runner.py` | has `__main__` guard (runnable module) |
+| `scripts/batch_backtest.py` | has `__main__` guard (runnable module) |
 | `scripts/check-archetype-lockstep.ts` | package.json script `check:archetype-lockstep` |
 | `scripts/check-family-grade-postscript.ts` | package.json script `check:family-grade-postscript` |
 | `scripts/check-gate-contract-keys.ts` | package.json script `check:gate-contract-keys` |
@@ -101,90 +105,165 @@ Total entry points: **95**.  Modules reachable from them: **627** of **2123** pa
 | `scripts/check-ts-python-firm-rules-version.ts` | package.json script `check:ts-python-firm-rules-version` |
 | `scripts/check-ts-python-pm-factor-parity.ts` | package.json script `check:ts-python-pm-factor-parity` |
 | `scripts/check-ts-python-tier1-parity.ts` | package.json script `check:ts-python-tier1-parity` |
+| `scripts/check_line_ending_rewrite.py` | has `__main__` guard (runnable module) |
 | `scripts/cli.ts` | package.json script `forge` |
+| `scripts/composition-experiment-controlled-run.py` | has `__main__` guard (runnable module) |
+| `scripts/composition-gating-diagnostic.py` | has `__main__` guard (runnable module) |
+| `scripts/composition-gating-fidelity.py` | has `__main__` guard (runnable module) |
+| `scripts/composition-paired-delta.py` | has `__main__` guard (runnable module) |
+| `scripts/confluence-overlay-ablation.py` | has `__main__` guard (runnable module) |
+| `scripts/corpus-approximation-inventory.py` | has `__main__` guard (runnable module) |
+| `scripts/corpus-fdr-report.py` | has `__main__` guard (runnable module) |
+| `scripts/corpus-fidelity-score.py` | has `__main__` guard (runnable module) |
+| `scripts/corpus-v3-reference-rederivation.py` | has `__main__` guard (runnable module) |
+| `scripts/corpus-v3-shadow-gate3.py` | has `__main__` guard (runnable module) |
 | `scripts/deep-scan.ts` | package.json script `deep-scan` |
+| `scripts/exit-policy-replay.py` | has `__main__` guard (runnable module) |
+| `scripts/filter-ablation-cpcv.py` | has `__main__` guard (runnable module) |
+| `scripts/full-battery-mode-ab.py` | has `__main__` guard (runnable module) |
+| `scripts/fvg-experiment-controlled-run.py` | has `__main__` guard (runnable module) |
+| `scripts/generate_collection_seal.py` | has `__main__` guard (runnable module) |
+| `scripts/generate_disposition_seal.py` | has `__main__` guard (runnable module) |
+| `scripts/generate_null_strategies.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_designpool_miss_anatomy.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_designpool_support.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_mini_judge_locator.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_optionR_R5L890_wiring_verify.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_optionR_locator_support.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_pilot_phase1.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_pilot_phase2_build.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_pilot_phase3_finalize.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_seal_conductor_cli.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_wave6_pass1_design_pool.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_wave6_pass2_birth_fixtures.py` | has `__main__` guard (runnable module) |
+| `scripts/h1_wave6_pass2_design_pool.py` | has `__main__` guard (runnable module) |
+| `scripts/h5_structural_stop_parity_ab_report.py` | has `__main__` guard (runnable module) |
+| `scripts/invariant_absence_sweep.py` | has `__main__` guard (runnable module) |
+| `scripts/inventory_freshness_gate.py` | has `__main__` guard (runnable module) |
+| `scripts/null_gate_calibration.py` | has `__main__` guard (runnable module) |
+| `scripts/or-branches-ccr.py` | has `__main__` guard (runnable module) |
+| `scripts/or-branches-experiment-controlled-run.py` | has `__main__` guard (runnable module) |
+| `scripts/overlay-attribution.py` | has `__main__` guard (runnable module) |
+| `scripts/overlay-delta-corpus.py` | has `__main__` guard (runnable module) |
+| `scripts/population_successor.py` | has `__main__` guard (runnable module) |
 | `scripts/pre-vacation-preflight.ts` | package.json script `preflight:vacation` |
+| `scripts/ratify1_controls/g_order_identity.py` | has `__main__` guard (runnable module) |
+| `scripts/ratify1_controls/redproof_evidence_contract.py` | has `__main__` guard (runnable module) |
+| `scripts/residual-probe-2concepts.py` | has `__main__` guard (runnable module) |
+| `scripts/signature-divergence.py` | has `__main__` guard (runnable module) |
+| `scripts/sync_naked_pocs_to_liquidity_map.py` | has `__main__` guard (runnable module) |
 | `scripts/system-map.ts` | package.json script `system-map:check` (+1 more) |
+| `scripts/system_inventory.py` | has `__main__` guard (runnable module) |
+| `scripts/validate-scaling-schedule.py` | has `__main__` guard (runnable module) |
+| `scripts/verify-firm-sync.py` | has `__main__` guard (runnable module) |
+| `scripts/warm-numba-cache.py` | has `__main__` guard (runnable module) |
+| `scripts/wave25_exit_engine_ab_report.py` | has `__main__` guard (runnable module) |
 | `scripts/wave26-ts-python-exit-parity.ts` | package.json script `check:ts-python-exit-parity` |
-| `src/data/scripts/databento_definition_pull.py` | `python -m src.data.scripts.databento_definition_pull` module spec in src/server/services/contract-specs-service.ts |
-| `src/data/scripts/databento_imbalance_pull.py` | `python -m src.data.scripts.databento_imbalance_pull` module spec in src/server/services/opening-auction-service.ts |
-| `src/data/scripts/databento_statistics_pull.py` | `python -m src.data.scripts.databento_statistics_pull` module spec in src/server/services/settlement-reconciliation-service.ts |
+| `src/data/scripts/adjust_continuous.py` | has `__main__` guard (runnable module) |
+| `src/data/scripts/crisis_data_download.py` | has `__main__` guard (runnable module) |
+| `src/data/scripts/crisis_pipeline.py` | has `__main__` guard (runnable module) |
+| `src/data/scripts/databento_definition_pull.py` | `python -m src.data.scripts.databento_definition_pull` module spec in src/server/services/contract-specs-service.ts (+1 more) |
+| `src/data/scripts/databento_download.py` | has `__main__` guard (runnable module) |
+| `src/data/scripts/databento_imbalance_pull.py` | `python -m src.data.scripts.databento_imbalance_pull` module spec in src/server/services/opening-auction-service.ts (+1 more) |
+| `src/data/scripts/databento_statistics_pull.py` | `python -m src.data.scripts.databento_statistics_pull` module spec in src/server/services/settlement-reconciliation-service.ts (+1 more) |
+| `src/data/scripts/refresh_local_cache.py` | has `__main__` guard (runnable module) |
+| `src/data/scripts/resample_timeframes.py` | has `__main__` guard (runnable module) |
+| `src/data/scripts/run_pipeline.py` | has `__main__` guard (runnable module) |
+| `src/data/scripts/upload_to_s3.py` | has `__main__` guard (runnable module) |
 | `src/discord/bot.ts` | package.json script `discord:dev` (+2 more) |
-| `src/engine/a_plus_market_auditor.py` | `python -m src.engine.a_plus_market_auditor` module spec in src/server/services/a-plus-auditor-service.ts |
+| `src/engine/a_plus_market_auditor.py` | `python -m src.engine.a_plus_market_auditor` module spec in src/server/services/a-plus-auditor-service.ts (+1 more) |
 | `src/engine/anti_setups/anti_setup_backtest.py` | `python -m src.engine.anti_setups.anti_setup_backtest` module spec in src/server/routes/anti-setups.ts |
 | `src/engine/anti_setups/filter_gate.py` | `python -m src.engine.anti_setups.filter_gate` module spec in src/server/routes/anti-setups.ts |
-| `src/engine/anti_setups/miner.py` | `python -m src.engine.anti_setups.miner` module spec in src/server/routes/anti-setups.ts (+1 more) |
-| `src/engine/archetype_evaluator.py` | `python -m src.engine.archetype_evaluator` module spec in src/server/routes/live-order.ts (+1 more) |
+| `src/engine/anti_setups/miner.py` | `python -m src.engine.anti_setups.miner` module spec in src/server/routes/anti-setups.ts (+2 more) |
+| `src/engine/archetype_evaluator.py` | `python -m src.engine.archetype_evaluator` module spec in src/server/routes/live-order.ts (+2 more) |
 | `src/engine/archetypes/classifier.py` | `python -m src.engine.archetypes.classifier` module spec in src/server/routes/archetypes.ts |
-| `src/engine/archetypes/predictor.py` | `python -m src.engine.archetypes.predictor` module spec in src/server/scheduler.ts |
+| `src/engine/archetypes/predictor.py` | `python -m src.engine.archetypes.predictor` module spec in src/server/scheduler.ts (+1 more) |
 | `src/engine/archetypes/strategy_mapper.py` | `python -m src.engine.archetypes.strategy_mapper` module spec in src/server/routes/archetypes.ts |
-| `src/engine/backtester.py` | `python -m src.engine.backtester` module spec in scripts/cli.ts (+5 more) |
-| `src/engine/black_swan_evaluator.py` | `python -m src.engine.black_swan_evaluator` module spec in src/server/services/synthetic-black-swan-service.ts |
-| `src/engine/changepoint.py` | `python -m src.engine.changepoint` module spec in src/server/services/drift-detection-service.ts |
-| `src/engine/cloud_backend.py` | `python -m src.engine.cloud_backend` module spec in src/server/services/cloud-qmc-service.ts |
-| `src/engine/compiler/compiler.py` | `python -m src.engine.compiler.compiler` module spec in src/server/routes/compiler.ts (+2 more) |
+| `src/engine/backtester.py` | `python -m src.engine.backtester` module spec in scripts/cli.ts (+6 more) |
+| `src/engine/battery/selection_deflation.py` | has `__main__` guard (runnable module) |
+| `src/engine/black_swan_evaluator.py` | `python -m src.engine.black_swan_evaluator` module spec in src/server/services/synthetic-black-swan-service.ts (+1 more) |
+| `src/engine/cache_prewarm.py` | has `__main__` guard (runnable module) |
+| `src/engine/changepoint.py` | `python -m src.engine.changepoint` module spec in src/server/services/drift-detection-service.ts (+1 more) |
+| `src/engine/cloud_backend.py` | `python -m src.engine.cloud_backend` module spec in src/server/services/cloud-qmc-service.ts (+1 more) |
+| `src/engine/compiler/compiler.py` | `python -m src.engine.compiler.compiler` module spec in src/server/routes/compiler.ts (+3 more) |
 | `src/engine/compiler/strategy_schema.py` | subprocess path literal in src/server/routes/strategies.ts |
-| `src/engine/compliance/compliance_gate.py` | `python -m src.engine.compliance.compliance_gate` module spec in src/server/services/broker-router.ts (+2 more) |
+| `src/engine/compliance/compliance_gate.py` | `python -m src.engine.compliance.compliance_gate` module spec in src/server/services/broker-router.ts (+3 more) |
 | `src/engine/context/bias_engine.py` | subprocess path literal in scripts/wave25-pass2-smoke.ts |
 | `src/engine/context/htf_narrative.py` | subprocess path literal in scripts/wave25-pass2-smoke.ts |
 | `src/engine/context/playbook_router.py` | subprocess path literal in scripts/backfill-playbook-registration.ts (+2 more) |
-| `src/engine/context_runner.py` | `python -m src.engine.context_runner` module spec in src/server/routes/context.ts (+1 more) |
-| `src/engine/critic_optimizer.py` | `python -m src.engine.critic_optimizer` module spec in src/server/services/critic-optimizer-service.ts |
+| `src/engine/context_runner.py` | `python -m src.engine.context_runner` module spec in src/server/routes/context.ts (+2 more) |
+| `src/engine/critic_optimizer.py` | `python -m src.engine.critic_optimizer` module spec in src/server/services/critic-optimizer-service.ts (+1 more) |
 | `src/engine/decay/decay_gate.py` | `python -m src.engine.decay.decay_gate` module spec in src/server/scheduler.ts |
-| `src/engine/decay/half_life.py` | `python -m src.engine.decay.half_life` module spec in src/server/routes/decay.ts (+1 more) |
-| `src/engine/decay/quarantine.py` | `python -m src.engine.decay.quarantine` module spec in src/server/routes/decay.ts |
-| `src/engine/decay/sub_signals.py` | `python -m src.engine.decay.sub_signals` module spec in src/server/routes/decay.ts |
-| `src/engine/deepar_forecaster.py` | `python -m src.engine.deepar_forecaster` module spec in src/server/services/deepar-service.ts |
+| `src/engine/decay/half_life.py` | `python -m src.engine.decay.half_life` module spec in src/server/routes/decay.ts (+2 more) |
+| `src/engine/decay/quarantine.py` | `python -m src.engine.decay.quarantine` module spec in src/server/routes/decay.ts (+1 more) |
+| `src/engine/decay/sub_signals.py` | `python -m src.engine.decay.sub_signals` module spec in src/server/routes/decay.ts (+1 more) |
+| `src/engine/deepar_forecaster.py` | `python -m src.engine.deepar_forecaster` module spec in src/server/services/deepar-service.ts (+1 more) |
+| `src/engine/deepar_regime_classifier.py` | has `__main__` guard (runnable module) |
 | `src/engine/economic_calendar.py` | subprocess path literal in scripts/check-ts-python-event-product-scope-parity.ts (+1 more) |
 | `src/engine/exits/style_c_handler.py` | `python -m src.engine.exits.style_c_handler` module spec in src/server/services/paper-execution-service.ts |
 | `src/engine/exits/style_d_handler.py` | `python -m src.engine.exits.style_d_handler` module spec in src/server/services/paper-execution-service.ts |
-| `src/engine/extraction/compile_certified_record.py` | package.json script `compile:certified-record` (python -m) |
+| `src/engine/exportability.py` | has `__main__` guard (runnable module) |
+| `src/engine/extraction/compile_certified_record.py` | has `__main__` guard (runnable module) (+1 more) |
+| `src/engine/extraction/extractor_bridge.py` | has `__main__` guard (runnable module) |
+| `src/engine/extraction/pilot_conveyor.py` | has `__main__` guard (runnable module) |
+| `src/engine/extraction/tier1_coverage_report.py` | has `__main__` guard (runnable module) |
+| `src/engine/extraction/tier2_design_report.py` | has `__main__` guard (runnable module) |
 | `src/engine/firm_config.py` | subprocess path literal in scripts/check-ts-python-firm-rules-version.ts |
-| `src/engine/frankenstein_test.py` | `python -m src.engine.frankenstein_test` module spec in src/server/services/frankenstein-service.ts |
-| `src/engine/gate_block_analyzer.py` | subprocess path literal in src/server/lib/carter/carter-recommend.ts |
+| `src/engine/forensics/compile_fidelity.py` | has `__main__` guard (runnable module) |
+| `src/engine/frankenstein_test.py` | `python -m src.engine.frankenstein_test` module spec in src/server/services/frankenstein-service.ts (+1 more) |
+| `src/engine/gate_block_analyzer.py` | has `__main__` guard (runnable module) (+1 more) |
 | `src/engine/governor/governor_backtest.py` | `python -m src.engine.governor.governor_backtest` module spec in src/server/routes/governor.ts |
 | `src/engine/governor/governor_config.py` | `python -m src.engine.governor.governor_config` module spec in src/server/routes/governor.ts |
 | `src/engine/governor/state_machine.py` | `python -m src.engine.governor.state_machine` module spec in src/server/routes/governor.ts |
-| `src/engine/graveyard/cluster.py` | `python -m src.engine.graveyard.cluster` module spec in src/server/services/graveyard-intelligence-service.ts |
+| `src/engine/graveyard/cluster.py` | `python -m src.engine.graveyard.cluster` module spec in src/server/services/graveyard-intelligence-service.ts (+1 more) |
 | `src/engine/graveyard/embedder.py` | `python -m src.engine.graveyard.embedder` module spec in src/server/routes/graveyard.ts |
 | `src/engine/graveyard/failure_tagger.py` | `python -m src.engine.graveyard.failure_tagger` module spec in src/server/routes/graveyard.ts |
 | `src/engine/graveyard/graveyard_gate.py` | `python -m src.engine.graveyard.graveyard_gate` module spec in src/server/routes/graveyard.ts |
 | `src/engine/graveyard/similarity.py` | `python -m src.engine.graveyard.similarity` module spec in src/server/routes/graveyard.ts |
-| `src/engine/indicators/paper_bridge.py` | `python -m src.engine.indicators.paper_bridge` module spec in src/server/services/paper-signal-service.ts |
-| `src/engine/indicators/smt_divergence.py` | `python -m src.engine.indicators.smt_divergence` module spec in src/server/services/smt-live-service.ts |
-| `src/engine/indicators/volume_profile.py` | `python -m src.engine.indicators.volume_profile` module spec in src/server/services/volume-profile-service.ts |
+| `src/engine/hardware_profile.py` | has `__main__` guard (runnable module) |
+| `src/engine/indicators/paper_bridge.py` | `python -m src.engine.indicators.paper_bridge` module spec in src/server/services/paper-signal-service.ts (+1 more) |
+| `src/engine/indicators/smt_divergence.py` | `python -m src.engine.indicators.smt_divergence` module spec in src/server/services/smt-live-service.ts (+1 more) |
+| `src/engine/indicators/volume_profile.py` | `python -m src.engine.indicators.volume_profile` module spec in src/server/services/volume-profile-service.ts (+1 more) |
 | `src/engine/mc_confidence.py` | subprocess path literal in scripts/check-gate-contract-keys.ts |
-| `src/engine/monte_carlo.py` | `python -m src.engine.monte_carlo` module spec in src/server/services/monte-carlo-service.ts |
-| `src/engine/nemo_scenario_designer.py` | `python -m src.engine.nemo_scenario_designer` module spec in src/server/services/nemo-scenario-service.ts |
-| `src/engine/optimizer.py` | `python -m src.engine.optimizer` module spec in src/server/services/robustness-service.ts |
-| `src/engine/paper_analytics.py` | `python -m src.engine.paper_analytics` module spec in src/server/routes/paper.ts (+1 more) |
-| `src/engine/parameter_evolver.py` | `python -m src.engine.parameter_evolver` module spec in src/server/services/evolution-service.ts |
-| `src/engine/pine_compiler.py` | `python -m src.engine.pine_compiler` module spec in src/server/services/pine-export-service.ts |
-| `src/engine/pm_size_factor.py` | `python -m src.engine.pm_size_factor` module spec in scripts/check-ts-python-pm-factor-parity.ts |
+| `src/engine/monte_carlo.py` | `python -m src.engine.monte_carlo` module spec in src/server/services/monte-carlo-service.ts (+1 more) |
+| `src/engine/nemo_scenario_designer.py` | `python -m src.engine.nemo_scenario_designer` module spec in src/server/services/nemo-scenario-service.ts (+1 more) |
+| `src/engine/optimizer.py` | `python -m src.engine.optimizer` module spec in src/server/services/robustness-service.ts (+1 more) |
+| `src/engine/paper_analytics.py` | `python -m src.engine.paper_analytics` module spec in src/server/routes/paper.ts (+2 more) |
+| `src/engine/parameter_evolver.py` | `python -m src.engine.parameter_evolver` module spec in src/server/services/evolution-service.ts (+1 more) |
+| `src/engine/pine_compiler.py` | `python -m src.engine.pine_compiler` module spec in src/server/services/pine-export-service.ts (+1 more) |
+| `src/engine/pm_size_factor.py` | `python -m src.engine.pm_size_factor` module spec in scripts/check-ts-python-pm-factor-parity.ts (+1 more) |
 | `src/engine/prop_compliance.py` | subprocess path literal in scripts/check-ts-python-firm-rules-version.ts |
-| `src/engine/quantum_adversarial_stress.py` | `python -m src.engine.quantum_adversarial_stress` module spec in src/server/services/adversarial-stress-service.ts |
-| `src/engine/quantum_annealing_optimizer.py` | `python -m src.engine.quantum_annealing_optimizer` module spec in src/server/routes/quantum-mc.ts (+1 more) |
-| `src/engine/quantum_mc.py` | `python -m src.engine.quantum_mc` module spec in src/server/services/quantum-mc-service.ts |
-| `src/engine/quantum_rl_agent.py` | `python -m src.engine.quantum_rl_agent` module spec in src/server/lib/quantum-rl-training-runner.ts (+2 more) |
-| `src/engine/qubo_trade_timing.py` | `python -m src.engine.qubo_trade_timing` module spec in src/server/routes/quantum-mc.ts (+1 more) |
-| `src/engine/regime.py` | `python -m src.engine.regime` module spec in src/server/services/regime-service.ts |
-| `src/engine/replay/quantum_replay.py` | `python -m src.engine.replay.quantum_replay` module spec in src/server/lib/quantum-replay-runner.ts |
-| `src/engine/roll_calendar.py` | `python -m src.engine.roll_calendar` module spec in src/server/services/paper-execution-service.ts |
-| `src/engine/skip_engine/calendar_filter.py` | `python -m src.engine.skip_engine.calendar_filter` module spec in src/server/services/paper-execution-service.ts (+1 more) |
+| `src/engine/prop_survival_model.py` | has `__main__` guard (runnable module) |
+| `src/engine/quantum_adversarial_stress.py` | `python -m src.engine.quantum_adversarial_stress` module spec in src/server/services/adversarial-stress-service.ts (+1 more) |
+| `src/engine/quantum_annealing_optimizer.py` | `python -m src.engine.quantum_annealing_optimizer` module spec in src/server/routes/quantum-mc.ts (+2 more) |
+| `src/engine/quantum_bench.py` | has `__main__` guard (runnable module) |
+| `src/engine/quantum_mc.py` | `python -m src.engine.quantum_mc` module spec in src/server/services/quantum-mc-service.ts (+1 more) |
+| `src/engine/quantum_models.py` | has `__main__` guard (runnable module) |
+| `src/engine/quantum_rl_agent.py` | `python -m src.engine.quantum_rl_agent` module spec in src/server/lib/quantum-rl-training-runner.ts (+3 more) |
+| `src/engine/qubo_trade_timing.py` | `python -m src.engine.qubo_trade_timing` module spec in src/server/routes/quantum-mc.ts (+2 more) |
+| `src/engine/regime.py` | `python -m src.engine.regime` module spec in src/server/services/regime-service.ts (+1 more) |
+| `src/engine/regime_survival.py` | has `__main__` guard (runnable module) |
+| `src/engine/replay/quantum_replay.py` | `python -m src.engine.replay.quantum_replay` module spec in src/server/lib/quantum-replay-runner.ts (+1 more) |
+| `src/engine/replay/survival_twin_replay.py` | has `__main__` guard (runnable module) |
+| `src/engine/roll_calendar.py` | `python -m src.engine.roll_calendar` module spec in src/server/services/paper-execution-service.ts (+1 more) |
+| `src/engine/skip_engine/calendar_filter.py` | `python -m src.engine.skip_engine.calendar_filter` module spec in src/server/services/paper-execution-service.ts (+2 more) |
 | `src/engine/skip_engine/historical_skip_stats.py` | `python -m src.engine.skip_engine.historical_skip_stats` module spec in src/server/routes/skip.ts |
-| `src/engine/skip_engine/skip_classifier.py` | `python -m src.engine.skip_engine.skip_classifier` module spec in src/server/routes/skip.ts (+1 more) |
+| `src/engine/skip_engine/skip_classifier.py` | `python -m src.engine.skip_engine.skip_classifier` module spec in src/server/routes/skip.ts (+2 more) |
+| `src/engine/skip_engine/weight_trainer.py` | has `__main__` guard (runnable module) |
 | `src/engine/statistics/backtest_inflation_factor.py` | subprocess path literal in scripts/check-gate-contract-keys.ts |
+| `src/engine/stress_test.py` | has `__main__` guard (runnable module) |
 | `src/engine/survival/drawdown_simulator.py` | `python -m src.engine.survival.drawdown_simulator` module spec in src/server/routes/survival.ts |
 | `src/engine/survival/firm_profiles.py` | `python -m src.engine.survival.firm_profiles` module spec in src/server/routes/survival.ts |
-| `src/engine/survival/survival_comparator.py` | `python -m src.engine.survival.survival_comparator` module spec in src/server/routes/survival.ts |
-| `src/engine/survival/survival_scorer.py` | `python -m src.engine.survival.survival_scorer` module spec in src/server/routes/survival.ts |
-| `src/engine/synthetic/populate_regime_bank.py` | `python -m src.engine.synthetic.populate_regime_bank` module spec in src/server/services/synthetic-regime-bank-service.ts |
-| `src/engine/tensor_signal_model.py` | `python -m src.engine.tensor_signal_model` module spec in src/server/routes/quantum-mc.ts (+2 more) |
+| `src/engine/survival/survival_comparator.py` | `python -m src.engine.survival.survival_comparator` module spec in src/server/routes/survival.ts (+1 more) |
+| `src/engine/survival/survival_scorer.py` | `python -m src.engine.survival.survival_scorer` module spec in src/server/routes/survival.ts (+1 more) |
+| `src/engine/synthetic/populate_regime_bank.py` | `python -m src.engine.synthetic.populate_regime_bank` module spec in src/server/services/synthetic-regime-bank-service.ts (+1 more) |
+| `src/engine/synthetic_market_simulator.py` | has `__main__` guard (runnable module) |
+| `src/engine/tensor_signal_model.py` | `python -m src.engine.tensor_signal_model` module spec in src/server/routes/quantum-mc.ts (+3 more) |
 | `src/engine/tests/test_cross_engine_parity.py` | package.json script `test:metrics` |
 | `src/engine/tests/test_frankenstein.py` | package.json script `test:metrics` |
 | `src/engine/tests/test_golden_fixtures.py` | package.json script `test:metrics` |
 | `src/engine/tests/test_metric_snapshot.py` | package.json script `test:metrics:fast` (+2 more) |
-| `src/engine/validation_runner.py` | `python -m src.engine.validation_runner` module spec in src/server/routes/validation.ts |
+| `src/engine/validation_runner.py` | `python -m src.engine.validation_runner` module spec in src/server/routes/validation.ts (+1 more) |
 | `src/engine/walk_forward.py` | subprocess path literal in scripts/check-gate-contract-keys.ts |
 | `src/server/index.ts` | package.json script `dev` (+1 more) |
 
@@ -199,23 +278,23 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3323 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1513 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 68.0% of 4888 rows |
-| C5 | server entry point discovered | PASS | entry points discovered=95 |
-| C6 | a registered route module is reachable | PASS | modules reachable=627 |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3679 |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1159 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.2% of 4893 rows |
+| C5 | server entry point discovered | PASS | entry points discovered=174 |
+| C6 | a registered route module is reachable | PASS | modules reachable=714 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1914 ts=2928 |
-| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=39 (probe runs; 0 would be a legitimate reading) |
+| C12 | symbols enumerated in both languages | PASS | py=1916 ts=2928 |
+| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=42 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6609/6609 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
-| C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=95 |
+| C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=174 |
 | C18 | `export { X as Y }` binding form is enumerated | PASS | alertRoutes enumerated=True |
 
 **19 / 19 controls pass.**
@@ -225,8 +304,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **218 of 4575 enumerated symbol names (4.8%) are defined in more than one file, covering
-  485 of 4842 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **218 of 4577 enumerated symbol names (4.8%) are defined in more than one file, covering
+  485 of 4844 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -245,12 +324,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3323 | 68.0% |
+| `WIRED` | 3679 | 75.2% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1513 | 31.0% |
-| `DECLARED-ABSENT` | 39 | 0.8% |
+| `BUILT-UNREACHABLE` | 1159 | 23.7% |
+| `DECLARED-ABSENT` | 42 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4888** | |
+| **TOTAL** | **4893** | |
 
 ---
 
@@ -270,7 +349,7 @@ table below it.**
 | `src/data/fetchers` | 2 | 0 | 1 | 1 | 1 | 5 |
 | `src/data/loaders` | 9 | 0 | 3 | 0 | 1 | 13 |
 | `src/data/macro` | 0 | 0 | 26 | 0 | 0 | 26 |
-| `src/data/scripts` | 14 | 0 | 38 | 0 | 0 | 52 |
+| `src/data/scripts` | 48 | 0 | 4 | 0 | 0 | 52 |
 | `src/discord/bot.ts` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/discord/commands.ts` | 2 | 0 | 0 | 0 | 0 | 2 |
 | `src/discord/utils.ts` | 5 | 0 | 0 | 0 | 0 | 5 |
@@ -281,10 +360,10 @@ table below it.**
 | `src/engine/archetype_evaluator.py` | 5 | 0 | 0 | 0 | 0 | 5 |
 | `src/engine/archetypes` | 9 | 0 | 3 | 0 | 0 | 12 |
 | `src/engine/backtester.py` | 61 | 0 | 2 | 0 | 0 | 63 |
-| `src/engine/battery` | 0 | 0 | 17 | 0 | 0 | 17 |
+| `src/engine/battery` | 10 | 0 | 7 | 0 | 0 | 17 |
 | `src/engine/black_swan_evaluator.py` | 8 | 0 | 0 | 0 | 0 | 8 |
 | `src/engine/breakout_confirmation_ambiguity.py` | 2 | 0 | 0 | 0 | 0 | 2 |
-| `src/engine/cache_prewarm.py` | 0 | 0 | 1 | 0 | 0 | 1 |
+| `src/engine/cache_prewarm.py` | 1 | 0 | 0 | 0 | 0 | 1 |
 | `src/engine/changepoint.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/cloud_backend.py` | 14 | 0 | 0 | 0 | 0 | 14 |
 | `src/engine/compiler` | 13 | 0 | 2 | 0 | 0 | 15 |
@@ -298,7 +377,7 @@ table below it.**
 | `src/engine/data_loader.py` | 25 | 0 | 4 | 0 | 0 | 29 |
 | `src/engine/decay` | 19 | 0 | 1 | 0 | 0 | 20 |
 | `src/engine/deepar_forecaster.py` | 8 | 0 | 0 | 0 | 0 | 8 |
-| `src/engine/deepar_regime_classifier.py` | 0 | 0 | 9 | 0 | 0 | 9 |
+| `src/engine/deepar_regime_classifier.py` | 9 | 0 | 0 | 0 | 0 | 9 |
 | `src/engine/determinism.py` | 5 | 0 | 1 | 0 | 0 | 6 |
 | `src/engine/economic_calendar.py` | 15 | 0 | 2 | 0 | 0 | 17 |
 | `src/engine/entry_eligibility.py` | 2 | 0 | 0 | 0 | 0 | 2 |
@@ -306,12 +385,12 @@ table below it.**
 | `src/engine/evt_tail.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/exits` | 20 | 0 | 2 | 0 | 0 | 22 |
 | `src/engine/exportability.py` | 3 | 0 | 0 | 0 | 0 | 3 |
-| `src/engine/extraction` | 24 | 0 | 248 | 0 | 0 | 272 |
+| `src/engine/extraction` | 241 | 0 | 33 | 0 | 0 | 274 |
 | `src/engine/family_meta_enforcement.py` | 10 | 0 | 2 | 0 | 0 | 12 |
 | `src/engine/fill_model.py` | 9 | 0 | 1 | 0 | 0 | 10 |
 | `src/engine/firm_config.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/firm_rules_version.py` | 2 | 0 | 1 | 0 | 0 | 3 |
-| `src/engine/forensics` | 0 | 0 | 35 | 0 | 0 | 35 |
+| `src/engine/forensics` | 27 | 0 | 8 | 0 | 0 | 35 |
 | `src/engine/frankenstein_test.py` | 11 | 0 | 0 | 0 | 0 | 11 |
 | `src/engine/gap_risk.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/gate_block_analyzer.py` | 19 | 0 | 0 | 0 | 0 | 19 |
@@ -335,7 +414,7 @@ table below it.**
 | `src/engine/monte_carlo.py` | 26 | 0 | 0 | 5 | 0 | 31 |
 | `src/engine/nemo_a14_bridge.py` | 0 | 0 | 3 | 0 | 0 | 3 |
 | `src/engine/nemo_scenario_designer.py` | 5 | 0 | 1 | 0 | 0 | 6 |
-| `src/engine/null_calibration_guard.py` | 0 | 0 | 3 | 0 | 0 | 3 |
+| `src/engine/null_calibration_guard.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/nvtx_markers.py` | 3 | 0 | 1 | 0 | 0 | 4 |
 | `src/engine/opening_range_adapter.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/opening_range_candidate.py` | 2 | 0 | 0 | 0 | 0 | 2 |
@@ -355,11 +434,11 @@ table below it.**
 | `src/engine/pm_size_factor.py` | 6 | 0 | 0 | 0 | 0 | 6 |
 | `src/engine/prop_compliance.py` | 4 | 0 | 3 | 0 | 0 | 7 |
 | `src/engine/prop_sim.py` | 3 | 0 | 0 | 0 | 0 | 3 |
-| `src/engine/prop_survival_model.py` | 0 | 0 | 7 | 0 | 0 | 7 |
+| `src/engine/prop_survival_model.py` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/engine/qmc_sampler.py` | 1 | 0 | 0 | 0 | 0 | 1 |
 | `src/engine/quantum_adversarial_stress.py` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/engine/quantum_annealing_optimizer.py` | 8 | 0 | 2 | 0 | 0 | 10 |
-| `src/engine/quantum_bench.py` | 0 | 0 | 6 | 0 | 0 | 6 |
+| `src/engine/quantum_bench.py` | 3 | 0 | 3 | 0 | 0 | 6 |
 | `src/engine/quantum_device_selector.py` | 2 | 0 | 0 | 0 | 0 | 2 |
 | `src/engine/quantum_entropy_filter.py` | 5 | 1 | 0 | 0 | 0 | 6 |
 | `src/engine/quantum_mc.py` | 8 | 0 | 4 | 0 | 0 | 12 |
@@ -367,8 +446,8 @@ table below it.**
 | `src/engine/quantum_rl_agent.py` | 21 | 0 | 4 | 0 | 0 | 25 |
 | `src/engine/qubo_trade_timing.py` | 9 | 0 | 1 | 0 | 0 | 10 |
 | `src/engine/regime.py` | 5 | 0 | 1 | 0 | 0 | 6 |
-| `src/engine/regime_survival.py` | 0 | 0 | 3 | 0 | 0 | 3 |
-| `src/engine/replay` | 31 | 0 | 10 | 0 | 0 | 41 |
+| `src/engine/regime_survival.py` | 3 | 0 | 0 | 0 | 0 | 3 |
+| `src/engine/replay` | 41 | 0 | 0 | 0 | 0 | 41 |
 | `src/engine/risk_metrics.py` | 18 | 0 | 0 | 0 | 0 | 18 |
 | `src/engine/risk_parity.py` | 0 | 0 | 2 | 0 | 0 | 2 |
 | `src/engine/robust_covariance.py` | 1 | 0 | 1 | 0 | 0 | 2 |
@@ -380,12 +459,12 @@ table below it.**
 | `src/engine/session_windows.py` | 11 | 0 | 2 | 0 | 0 | 13 |
 | `src/engine/signals.py` | 8 | 0 | 0 | 0 | 0 | 8 |
 | `src/engine/sizing.py` | 8 | 0 | 1 | 0 | 0 | 9 |
-| `src/engine/skip_engine` | 38 | 0 | 10 | 0 | 0 | 48 |
+| `src/engine/skip_engine` | 42 | 0 | 6 | 0 | 0 | 48 |
 | `src/engine/slippage.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/source_timeframe_roles.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/spec_condition_compiler.py` | 8 | 0 | 0 | 0 | 0 | 8 |
 | `src/engine/spec_family_bindings.py` | 46 | 0 | 0 | 0 | 0 | 46 |
-| `src/engine/statistics` | 15 | 0 | 19 | 0 | 0 | 34 |
+| `src/engine/statistics` | 33 | 0 | 1 | 0 | 0 | 34 |
 | `src/engine/strategies` | 29 | 0 | 0 | 0 | 0 | 29 |
 | `src/engine/strategy_base.py` | 1 | 0 | 1 | 0 | 0 | 2 |
 | `src/engine/strategy_memory.py` | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -394,9 +473,9 @@ table below it.**
 | `src/engine/survival` | 15 | 0 | 0 | 0 | 0 | 15 |
 | `src/engine/svkm_role_execution.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/synthetic` | 8 | 0 | 1 | 0 | 0 | 9 |
-| `src/engine/synthetic_market_simulator.py` | 0 | 0 | 13 | 0 | 0 | 13 |
+| `src/engine/synthetic_market_simulator.py` | 11 | 0 | 2 | 0 | 0 | 13 |
 | `src/engine/tensor_signal_model.py` | 12 | 0 | 1 | 0 | 0 | 13 |
-| `src/engine/tests` | 0 | 0 | 0 | 2 | 0 | 2 |
+| `src/engine/tests` | 0 | 0 | 0 | 5 | 0 | 5 |
 | `src/engine/trade_status.py` | 1 | 0 | 1 | 0 | 0 | 2 |
 | `src/engine/validation` | 16 | 0 | 1 | 0 | 0 | 17 |
 | `src/engine/validation_runner.py` | 5 | 0 | 0 | 0 | 0 | 5 |
@@ -920,7 +999,7 @@ invisible for weeks.
 
 ## 6. DECLARED-ABSENT - referenced, but not on disk
 
-**39 rows.**  Two probes feed this: unresolvable internal import specifiers, and
+**42 rows.**  Two probes feed this: unresolvable internal import specifiers, and
 repo-relative path literals (`src/**.py`, `scripts/**`) naming a file that does not exist -
 the latter is the TS->Python subprocess seam, where a typo fails only at runtime.
 
@@ -944,6 +1023,9 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:1668` | import specifier resolves to no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:2194` | import specifier resolves to no file on disk |
 | `src/engine/tests/test_x.py` | path-literal | `src/engine/tests/test_accept5_disposition_display_truth.py:52` | repo-relative path literal with no file on disk |
+| `src/engine/_probe_runnable.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:120` | repo-relative path literal with no file on disk |
+| `src/engine/_probe_prose.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:123` | repo-relative path literal with no file on disk |
+| `src/engine/tests/test_probe.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:127` | repo-relative path literal with no file on disk |
 | `scripts/claude-rung-v32/shakedown_specs/-igpOZs8LsM__s0.spec.json` | path-literal | `src/engine/tests/test_spine_c_factory_role_arrow.py:48` | repo-relative path literal with no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/walk_forward.py:1198` | import specifier resolves to no file on disk |
 | `src/server/db/migrations/0058_audit_log_append_only.down.sql` | path-literal | `src/server/__tests__/audit-log-append-only.test.ts:56` | repo-relative path literal with no file on disk |
@@ -975,7 +1057,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1513** `BUILT-UNREACHABLE` symbols, **765 have test coverage but no production caller**.
+Of **1159** `BUILT-UNREACHABLE` symbols, **613 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -997,8 +1079,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `ExpressionStrategy` | class | `src/engine/strategy_base.py:72` | 6 | unique |
 | `__setOllamaHealthyForTests` | function | `src/server/services/model-router.ts:411` | 6 | unique |
 | `DEFAULT_ACCOUNT_TYPE` | const | `src/shared/firm-config.ts:366` | 6 | unique |
-| `_synthetic_dry_run_propose_fn` | function | `src/engine/extraction/pilot_conveyor.py:1794` | 5 | unique |
-| `certified_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:288` | 5 | unique |
 | `_resetForTest` | function | `src/server/lib/carter/carter-issues-store.ts:231` | 5 | unique |
 | `_testOnly` | const | `src/server/scheduler.ts:746` | 5 | unique |
 | `__clearPromptCacheForTests` | function | `src/server/services/model-router.ts:933` | 5 | unique |
@@ -1007,19 +1087,10 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
 | `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:588` | 5 | unique |
-| `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | 4 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
 | `_result` | function | `src/engine/anti_setups/regime_filter.py:156` | 3 | unique |
-| `TrialCounter` | class | `src/engine/battery/trial_counter.py:70` | 3 | unique |
-| `assemble_certificate` | function | `src/engine/extraction/cert_assembler.py:299` | 3 | unique |
-| `terminal_read_grade` | function | `src/engine/extraction/cert_assembler.py:186` | 3 | unique |
-| `LintResult` | class | `src/engine/extraction/compile_lints.py:165` | 3 | unique |
-| `aggregate` | function | `src/engine/extraction/pilot_conveyor.py:1678` | 3 | unique |
-| `Tier1Detection` | class | `src/engine/extraction/tier1_detectors.py:54` | 3 | unique |
 | `produce_topology` | function | `src/engine/extraction/topology_producer.py:146` | 3 | unique |
-| `CheckResult` | class | `src/engine/forensics/compile_fidelity.py:98` | 3 | unique |
-| `run_leg_a` | function | `src/engine/forensics/compile_fidelity.py:859` | 3 | unique |
 | `run_prop_compliance` | function | `src/engine/prop_compliance.py:232` | 3 | unique |
 | `compute_rl_kill_switch_state` | function | `src/engine/quantum_rl_agent.py:2098` | 3 | unique |
 | `emitArchetypeEvaluatorFailed` | function | `src/server/lib/archetype-routing-observability.ts:266` | 3 | unique |
@@ -1042,17 +1113,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `PassageLedger` | class | `src/engine/battery/passage_ledger.py:137` | 2 | unique |
 | `list_patterns` | function | `src/engine/compiler/pattern_library.py:233` | 2 | unique |
 | `naive_leaky_slice` | function | `src/engine/context/htf_availability.py:73` | 2 | unique |
-| `Tier3Verdict` | class | `src/engine/extraction/cert_assembler.py:72` | 2 | unique |
-| `RealExtractorError` | class | `src/engine/extraction/extractor_bridge.py:75` | 2 | unique |
-| `_build_tier3_packet` | function | `src/engine/extraction/pilot_conveyor.py:961` | 2 | unique |
-| `blinding_leak_scan` | function | `src/engine/extraction/pilot_conveyor.py:670` | 2 | unique |
-| `finalize_certificate` | function | `src/engine/extraction/pilot_conveyor.py:1502` | 2 | unique |
-| `prepare_strategy` | function | `src/engine/extraction/pilot_conveyor.py:1133` | 2 | unique |
-| `_rater_output_contract` | function | `src/engine/extraction/sealed_read_driver.py:2662` | 2 | unique |
-| `run_verdict_stage` | function | `src/engine/extraction/sealed_read_driver.py:3225` | 2 | unique |
-| `verify_sealed_manifest` | function | `src/engine/extraction/sealed_read_gate.py:94` | 2 | unique |
-| `coverage` | function | `src/engine/extraction/tier1_coverage_report.py:86` | 2 | unique |
-| `run_tier1` | function | `src/engine/extraction/tier1_detectors.py:586` | 2 | unique |
 | `LegAInputs` | class | `src/engine/forensics/calibration_battery.py:57` | 2 | unique |
 | `MutationCase` | class | `src/engine/forensics/calibration_battery.py:73` | 2 | unique |
 | `A14ConditioningVector` | class | `src/engine/nemo_a14_bridge.py:24` | 2 | unique |
@@ -1118,13 +1178,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `complete_sync_job` | function | `src/data/scripts/_data_sync_tracking.py:113` | 1 | unique |
 | `fail_sync_job` | function | `src/data/scripts/_data_sync_tracking.py:176` | 1 | unique |
 | `start_sync_job` | function | `src/data/scripts/_data_sync_tracking.py:63` | 1 | unique |
-| `detect_roll_dates` | function | `src/data/scripts/adjust_continuous.py:22` | 1 | unique |
-| `panama_adjust` | function | `src/data/scripts/adjust_continuous.py:96` | 1 | unique |
-| `ratio_adjust` | function | `src/data/scripts/adjust_continuous.py:62` | 1 | unique |
-| `_migrate_legacy_flat_cache` | function | `src/data/scripts/refresh_local_cache.py:106` | 1 | unique |
-| `_write_refresh_sidecar` | function | `src/data/scripts/refresh_local_cache.py:291` | 1 | unique |
-| `get_parquet_path` | function | `src/data/scripts/refresh_local_cache.py:98` | 1 | unique |
-| `resample_1m_to_tf` | function | `src/data/scripts/refresh_local_cache.py:147` | 1 | unique |
 | `is_layer_disabled` | function | `src/engine/ablation_layers.py:53` | 1 | unique |
 | `backtest_with_filters` | function | `src/engine/anti_setups/anti_setup_backtest.py:12` | 1 | unique |
 | `cluster_losing_conditions` | function | `src/engine/anti_setups/condition_analyzer.py:9` | 1 | unique |
@@ -1133,8 +1186,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `map_strategy_to_archetypes` | function | `src/engine/archetypes/strategy_mapper.py:10` | 1 | unique |
 | `validate_candidate_authority` | function | `src/engine/backtester.py:9600` | 1 | unique |
 | `MappingSchemaError` | class | `src/engine/battery/mapping_guard.py:24` | 1 | unique |
-| `_print_boundary` | function | `src/engine/battery/selection_deflation.py:198` | 1 | unique |
-| `run_selection_deflation_check` | function | `src/engine/battery/selection_deflation.py:115` | 1 | unique |
 | `undispositioned_gaps` | function | `src/engine/battery/tooth2.py:25` | 1 | unique |
 | `get_pattern` | function | `src/engine/compiler/pattern_library.py:190` | 1 | unique |
 | `check_correlated_position_guard` | function | `src/engine/compliance/compliance_gate.py:777` | 1 | unique |
@@ -1157,86 +1208,17 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `_resolves_as_anchor` | function | `src/engine/extraction/anchor_locator.py:211` | 1 | unique |
 | `_verify_and_locate` | function | `src/engine/extraction/anchor_locator.py:225` | 1 | unique |
 | `locate_anchor` | function | `src/engine/extraction/anchor_locator.py:259` | 1 | unique |
-| `ConditionTopology` | class | `src/engine/extraction/cert_assembler.py:89` | 1 | unique |
-| `_condition_entry` | function | `src/engine/extraction/cert_assembler.py:119` | 1 | unique |
-| `CompiledSpine` | class | `src/engine/extraction/compile_lints.py:135` | 1 | unique |
-| `SpineCondition` | class | `src/engine/extraction/compile_lints.py:117` | 1 | unique |
-| `causality_lint` | function | `src/engine/extraction/compile_lints.py:371` | 1 | unique |
-| `direction_conflation_lint` | function | `src/engine/extraction/compile_lints.py:202` | 1 | unique |
-| `f2_coverage_gate` | function | `src/engine/extraction/compile_lints.py:333` | 1 | unique |
-| `or_alternatives_honored` | function | `src/engine/extraction/compile_lints.py:292` | 1 | unique |
-| `unsat_sat_check` | function | `src/engine/extraction/compile_lints.py:253` | 1 | unique |
 | `enumeration_consistency_check` | function | `src/engine/extraction/enumeration_consistency.py:109` | 1 | unique |
 | `ScreenResult` | class | `src/engine/extraction/enumeration_guard.py:58` | 1 | unique |
 | `evaluate_guard1` | function | `src/engine/extraction/enumeration_guard.py:91` | 1 | unique |
 | `screen_enumeration_count` | function | `src/engine/extraction/enumeration_guard.py:64` | 1 | unique |
-| `EnumeratorError` | class | `src/engine/extraction/extractor_bridge.py:83` | 1 | unique |
-| `build_phase_b_scope` | function | `src/engine/extraction/extractor_bridge.py:215` | 1 | unique |
-| `get_or_extract` | function | `src/engine/extraction/extractor_bridge.py:368` | 1 | unique |
-| `invoke_real_extractor` | function | `src/engine/extraction/extractor_bridge.py:89` | 1 | unique |
-| `load_cached_extraction` | function | `src/engine/extraction/extractor_bridge.py:333` | 1 | unique |
-| `run_two_phase_extraction` | function | `src/engine/extraction/extractor_bridge.py:227` | 1 | unique |
-| `save_extraction` | function | `src/engine/extraction/extractor_bridge.py:343` | 1 | unique |
-| `LeakScanFailure` | class | `src/engine/extraction/pilot_conveyor.py:663` | 1 | unique |
-| `SpineConditionText` | class | `src/engine/extraction/pilot_conveyor.py:292` | 1 | unique |
-| `content_tokens` | function | `src/engine/extraction/pilot_conveyor.py:417` | 1 | unique |
-| `extract_spine_condition_texts` | function | `src/engine/extraction/pilot_conveyor.py:303` | 1 | unique |
-| `extractor_anchor_availability_report` | function | `src/engine/extraction/pilot_conveyor.py:496` | 1 | unique |
-| `extractor_version_pin` | function | `src/engine/extraction/pilot_conveyor.py:538` | 1 | unique |
-| `fetch_transcript` | function | `src/engine/extraction/pilot_conveyor.py:1104` | 1 | unique |
-| `locate_condition_anchors` | function | `src/engine/extraction/pilot_conveyor.py:459` | 1 | unique |
-| `prepare_video` | function | `src/engine/extraction/pilot_conveyor.py:1315` | 1 | unique |
-| `run_dry_run_synthetic` | function | `src/engine/extraction/pilot_conveyor.py:1811` | 1 | unique |
-| `support_verdict_from_stage2_response` | function | `src/engine/extraction/pilot_conveyor.py:1398` | 1 | unique |
-| `verdict_from_rater_response` | function | `src/engine/extraction/pilot_conveyor.py:1354` | 1 | unique |
-| `write_dry_run_artifact` | function | `src/engine/extraction/pilot_conveyor.py:1869` | 1 | unique |
-| `ArtifactsMissingError` | class | `src/engine/extraction/sealed_read_driver.py:166` | 1 | unique |
-| `ExtractionNotReady` | class | `src/engine/extraction/sealed_read_driver.py:1255` | 1 | unique |
-| `ExtractionSourceMissing` | class | `src/engine/extraction/sealed_read_driver.py:176` | 1 | unique |
-| `RaterLayerNotReady` | class | `src/engine/extraction/sealed_read_driver.py:1987` | 1 | unique |
-| `ReaderIdentityMismatch` | class | `src/engine/extraction/sealed_read_driver.py:182` | 1 | unique |
-| `RehearsalManifestMismatch` | class | `src/engine/extraction/sealed_read_driver.py:3455` | 1 | unique |
-| `SealedReadDriver` | class | `src/engine/extraction/sealed_read_driver.py:1610` | 1 | unique |
-| `VerdictNotReady` | class | `src/engine/extraction/sealed_read_driver.py:2950` | 1 | unique |
-| `_collect_phase_a_draws` | function | `src/engine/extraction/sealed_read_driver.py:815` | 1 | unique |
-| `_dispatch_phase_b` | function | `src/engine/extraction/sealed_read_driver.py:904` | 1 | unique |
-| `_dispatch_two_stage_packet` | function | `src/engine/extraction/sealed_read_driver.py:2104` | 1 | unique |
-| `_draw_refs` | function | `src/engine/extraction/sealed_read_driver.py:805` | 1 | unique |
-| `_enum_stability` | function | `src/engine/extraction/sealed_read_driver.py:519` | 1 | unique |
-| `_stage1_view` | function | `src/engine/extraction/sealed_read_driver.py:2034` | 1 | unique |
-| `_stage_receipts` | function | `src/engine/extraction/sealed_read_driver.py:3539` | 1 | unique |
-| `_write_spent_rehearsal_manifest` | function | `src/engine/extraction/sealed_read_driver.py:3466` | 1 | unique |
-| `assert_dispatch_identity` | function | `src/engine/extraction/sealed_read_driver.py:396` | 1 | unique |
-| `assert_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:347` | 1 | unique |
-| `classify_source_attrition` | function | `src/engine/extraction/sealed_read_driver.py:2807` | 1 | unique |
-| `rehearsal_drift_guard` | function | `src/engine/extraction/sealed_read_driver.py:3624` | 1 | unique |
-| `rehearsal_instrument_shas` | function | `src/engine/extraction/sealed_read_driver.py:3605` | 1 | unique |
-| `require_artifacts_on_disk` | function | `src/engine/extraction/sealed_read_driver.py:610` | 1 | unique |
-| `run_extraction_stage` | function | `src/engine/extraction/sealed_read_driver.py:1029` | 1 | unique |
-| `run_full_dress_rehearsal` | function | `src/engine/extraction/sealed_read_driver.py:3781` | 1 | unique |
-| `run_panels_and_certify_stage` | function | `src/engine/extraction/sealed_read_driver.py:1500` | 1 | unique |
-| `run_rater_layer_stage` | function | `src/engine/extraction/sealed_read_driver.py:2227` | 1 | unique |
-| `SpentManifestRejected` | class | `src/engine/extraction/sealed_read_gate.py:66` | 1 | unique |
-| `gate_sealed_read` | function | `src/engine/extraction/sealed_read_gate.py:249` | 1 | unique |
-| `operator_gate` | function | `src/engine/extraction/sealed_read_gate.py:213` | 1 | unique |
-| `reject_if_spent16` | function | `src/engine/extraction/sealed_read_gate.py:181` | 1 | unique |
-| `verify_transcripts_present` | function | `src/engine/extraction/sealed_read_gate.py:155` | 1 | unique |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:848` | 1 | unique |
-| `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | 1 | unique |
-| `run_layer_reliability` | function | `src/engine/extraction/tier1_coverage_report.py:142` | 1 | unique |
-| `Tier1FallThrough` | class | `src/engine/extraction/tier1_detectors.py:76` | 1 | unique |
-| `ConditionEntry` | class | `src/engine/extraction/topology_producer.py:87` | 1 | unique |
 | `enforcement_status` | function | `src/engine/family_meta_enforcement.py:536` | 1 | unique |
 | `reset_enforcement_cache` | function | `src/engine/family_meta_enforcement.py:613` | 1 | unique |
 | `compute_fill_probabilities` | function | `src/engine/fill_model.py:70` | 1 | unique |
 | `get_payout_cap` | function | `src/engine/firm_config.py:275` | 1 | unique |
 | `compute_firm_rules_version_from_dicts` | function | `src/engine/firm_rules_version.py:73` | 1 | unique |
 | `run_calibration` | function | `src/engine/forensics/calibration_battery.py:215` | 1 | unique |
-| `Phase1Seal` | class | `src/engine/forensics/compile_fidelity.py:133` | 1 | unique |
-| `_cert_key_invalid` | function | `src/engine/forensics/compile_fidelity.py:570` | 1 | unique |
-| `_has_visible_content` | function | `src/engine/forensics/compile_fidelity.py:255` | 1 | unique |
-| `_is_default_ignorable` | function | `src/engine/forensics/compile_fidelity.py:245` | 1 | unique |
-| `countersign_phase2` | function | `src/engine/forensics/compile_fidelity.py:809` | 1 | unique |
 | `get_config` | function | `src/engine/governor/governor_config.py:50` | 1 | unique |
 | `SessionTracker` | class | `src/engine/governor/session_tracker.py:8` | 1 | unique |
 | `tag_failure` | function | `src/engine/graveyard/failure_tagger.py:103` | 1 | unique |
@@ -1266,18 +1248,13 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `multi_asset_correlation_enabled` | function | `src/engine/mc_multi_asset.py:47` | 1 | unique |
 | `regime_aware_bootstrap_enabled` | function | `src/engine/mc_regime_resampling.py:54` | 1 | unique |
 | `batch_nemo_to_a14` | function | `src/engine/nemo_a14_bridge.py:110` | 1 | unique |
-| `build_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:34` | 1 | unique |
 | `is_null_calibration_row` | function | `src/engine/null_calibration_guard.py:101` | 1 | unique |
-| `validate_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:63` | 1 | unique |
 | `would_collide` | function | `src/engine/opening_range_candidate_persistence.py:150` | 1 | unique |
 | `build_execution_instances` | function | `src/engine/opening_range_execution_fanout.py:53` | 1 | unique |
 | `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:629` | 1 | unique |
 | `check_ffn_express_consistency` | function | `src/engine/prop_compliance.py:172` | 1 | unique |
 | `compare_vs_optuna` | function | `src/engine/quantum_annealing_optimizer.py:311` | 1 | unique |
 | `decode_solution` | function | `src/engine/quantum_annealing_optimizer.py:306` | 1 | unique |
-| `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | 1 | unique |
-| `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
-| `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
 | `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | 1 | unique |
 | `persist_benchmark` | function | `src/engine/quantum_bench.py:119` | 1 | unique |
 | `validate_tolerance` | function | `src/engine/quantum_bench.py:108` | 1 | unique |
@@ -1289,8 +1266,113 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `serialize_uncertainty_model` | function | `src/engine/quantum_models.py:191` | 1 | unique |
 | `_load_production_state_at` | function | `src/engine/quantum_rl_agent.py:159` | 1 | unique |
 | `should_use_static_router_epsilon_greedy` | function | `src/engine/quantum_rl_agent.py:1513` | 1 | unique |
+| `allocate_risk_parity` | function | `src/engine/risk_parity.py:34` | 1 | unique |
+| `compute_portfolio_risk_parity` | function | `src/engine/risk_parity.py:127` | 1 | unique |
+| `portfolio_risk_decomposition` | function | `src/engine/robust_covariance.py:74` | 1 | unique |
+| `get_classification` | function | `src/engine/role_demotion_audit.py:80` | 1 | unique |
+| `is_demotable` | function | `src/engine/role_demotion_audit.py:115` | 1 | unique |
+| `is_in_any_killzone` | function | `src/engine/session_windows.py:172` | 1 | unique |
+| `compute_profit_tier_mes` | function | `src/engine/sizing.py:794` | 1 | unique |
+| `backtest_skip_engine` | function | `src/engine/skip_engine/historical_skip_stats.py:10` | 1 | unique |
+| `SessionMonitor` | class | `src/engine/skip_engine/session_monitor.py:8` | 1 | unique |
+| `check_mode_collapse` | function | `src/engine/synthetic_market_simulator.py:412` | 1 | unique |
+| `AgentJob` | type | `src/server/db/schema.ts:3402` | 1 | unique |
+| `buildPineAlertTemplate` | function | `src/server/integrations/traderspost/webhook-builder.ts:179` | 1 | unique |
+| `APPROVED_BACKTEST_CALLERS` | const | `src/server/lib/backtest-caller-registry.ts:48` | 1 | unique |
+| `CallerIdentity` | interface | `src/server/lib/backtest-caller-scan.ts:37` | 1 | unique |
+| `auditBacktestCallers` | function | `src/server/lib/backtest-caller-scan.ts:171` | 1 | unique |
+| `identityKey` | function | `src/server/lib/backtest-caller-scan.ts:43` | 1 | unique |
+| `scanBacktestCallers` | function | `src/server/lib/backtest-caller-scan.ts:121` | 1 | unique |
+| `buildElevenLabsSignature` | function | `src/server/lib/carter/carter-auth.ts:127` | 1 | unique |
+| `__test` | const | `src/server/lib/carter/carter-introspect.ts:597` | 1 | unique |
+| `getCmeHolidayTable` | function | `src/server/lib/cme-holidays.ts:118` | 1 | unique |
+| `getDefaultComplianceMode` | function | `src/server/lib/compliance-mode.ts:47` | 1 | unique |
+| `_resetRateLimitForTest` | function | `src/server/lib/composite-shadow-discord-router.ts:76` | 1 | unique |
+| `submitToCloud` | function | `src/server/lib/compute-failover.ts:298` | 1 | unique |
+| `obDecay` | function | `src/server/lib/confluence-decay.ts:182` | 1 | unique |
+| `FactorQuality` | type | `src/server/lib/confluence-quality-audit.ts:77` | 1 | unique |
+| `classifyFactorQuality` | function | `src/server/lib/confluence-quality-audit.ts:90` | 1 | unique |
+| `_setVaultModeForTests` | function | `src/server/lib/credential-loader.ts:557` | 1 | unique |
+| `getActiveVaultMode` | function | `src/server/lib/credential-loader.ts:460` | 1 | unique |
+| `getVaultHealth` | function | `src/server/lib/credential-loader.ts:468` | 1 | unique |
+| `getVaultLoadResult` | function | `src/server/lib/credential-loader.ts:453` | 1 | unique |
+| `__resetEconomicCalendarCacheForTests` | function | `src/server/lib/economic-calendar-loader.ts:63` | 1 | unique |
+| `classifyRegistrationExposure` | function | `src/server/lib/eligibility-registration.ts:69` | 1 | unique |
+| `isStrategyRegistered` | function | `src/server/lib/eligibility-registration.ts:30` | 1 | unique |
+| `loadAllStratsNormalized` | function | `src/server/lib/eligibility-registration.ts:40` | 1 | unique |
+| `normalizeStrategyName` | function | `src/server/lib/eligibility-registration.ts:20` | 1 | unique |
+| `cacheKey` | function | `src/server/lib/extraction-result-cache.ts:33` | 1 | unique |
+| `FADE_SOURCE` | const | `src/server/lib/fade-inverter.ts:47` | 1 | unique |
+| `FadeInverterInput` | interface | `src/server/lib/fade-inverter.ts:51` | 1 | unique |
+| `invertStrategyConfig` | function | `src/server/lib/fade-inverter.ts:155` | 1 | unique |
+| `assertFirmBrokerTopology` | function | `src/server/lib/firm-broker-topology.ts:102` | 1 | unique |
+| `expectedBrokerTypeForFirm` | function | `src/server/lib/firm-broker-topology.ts:35` | 1 | unique |
+| `isInKillzone` | function | `src/server/lib/killzone.ts:157` | 1 | unique |
+| `classifyFractionSeverity` | function | `src/server/lib/leak-metrics.ts:184` | 1 | unique |
+| `classifyZScoreSeverity` | function | `src/server/lib/leak-metrics.ts:101` | 1 | unique |
+| `computeB14CiHighDrift` | function | `src/server/lib/leak-metrics.ts:151` | 1 | unique |
+| `computeMaxDrawdownFromPnls` | function | `src/server/lib/leak-metrics.ts:208` | 1 | unique |
+| `computeMcDistributionBreach` | function | `src/server/lib/leak-metrics.ts:311` | 1 | unique |
+| `computeRegimeSurvivalFailureRate` | function | `src/server/lib/leak-metrics.ts:124` | 1 | unique |
+| `computeSharpeFromPnls` | function | `src/server/lib/leak-metrics.ts:63` | 1 | unique |
+| `computeWinRate` | function | `src/server/lib/leak-metrics.ts:83` | 1 | unique |
+| `computeZScore` | function | `src/server/lib/leak-metrics.ts:34` | 1 | unique |
+| `splitWindows` | function | `src/server/lib/leak-metrics.ts:169` | 1 | unique |
+| `KNOWN_OUT_OF_BAND_APPLIED_WHENS` | const | `src/server/lib/migration-journal-utils.ts:44` | 1 | unique |
+| `ModeAbValidationError` | class | `src/server/lib/mode-ab-guard.ts:141` | 1 | unique |
+| `OVERLAY_APLUS_RETENTION_FLOOR_DEFAULT` | const | `src/server/lib/mode-ab-guard.ts:50` | 1 | unique |
+| `OVERLAY_CONFIG_HASH_OMITS_MODE_TOGGLE` | const | `src/server/lib/mode-ab-guard.ts:61` | 1 | unique |
+| `assertModeAbLabels` | function | `src/server/lib/mode-ab-guard.ts:151` | 1 | unique |
+| `buildModeAbLabels` | function | `src/server/lib/mode-ab-guard.ts:88` | 1 | unique |
+| `getOverlayAplusRetentionFloor` | function | `src/server/lib/mode-ab-guard.ts:42` | 1 | unique |
+| `validateModeAbLabels` | function | `src/server/lib/mode-ab-guard.ts:114` | 1 | unique |
+| `_resetNetworkFailoverForTests` | function | `src/server/lib/network-failover.ts:452` | 1 | unique |
+| `clearTetherConfirmation` | function | `src/server/lib/network-failover.ts:129` | 1 | unique |
+| `confirmTethering` | function | `src/server/lib/network-failover.ts:111` | 1 | unique |
+| `startNetworkFailoverMonitor` | function | `src/server/lib/network-failover.ts:347` | 1 | unique |
+| `isEiaWindow` | function | `src/server/lib/news-policy.ts:47` | 1 | unique |
+| `generatePayoutAuditPacket` | function | `src/server/lib/payout-audit-packet.ts:550` | 1 | unique |
+| `BrokerTrade` | interface | `src/server/lib/pine-broker-reconcile.ts:37` | 1 | unique |
+| `MatchResult` | interface | `src/server/lib/pine-broker-reconcile.ts:54` | 1 | unique |
+| `TesterTrade` | interface | `src/server/lib/pine-broker-reconcile.ts:24` | 1 | unique |
+| `getTickSpec` | function | `src/server/lib/pine-broker-reconcile.ts:131` | 1 | unique |
+| `matchTrades` | function | `src/server/lib/pine-broker-reconcile.ts:369` | 1 | unique |
+| `parseStrategyTesterCsv` | function | `src/server/lib/pine-broker-reconcile.ts:224` | 1 | unique |
+| `reconcile` | function | `src/server/lib/pine-broker-reconcile.ts:438` | 1 | unique |
+| `normalizeRegistryEntry` | function | `src/server/lib/playbook-registration-backfill.ts:37` | 1 | unique |
+| `normalizeStrategyNamePy` | function | `src/server/lib/playbook-registration-backfill.ts:25` | 1 | unique |
+| `PLAYBOOK_CATEGORIES` | const | `src/server/lib/playbook-registration.ts:34` | 1 | unique |
+| `PlaybookRegistryReadError` | class | `src/server/lib/playbook-registration.ts:150` | 1 | unique |
+| `deriveCategoryFromArchetype` | function | `src/server/lib/playbook-registration.ts:53` | 1 | unique |
+| `deriveCategoryFromConditionSpec` | function | `src/server/lib/playbook-registration.ts:92` | 1 | unique |
+| `parseRegistry` | function | `src/server/lib/playbook-registration.ts:170` | 1 | unique |
+| `ENGINE_VERSION` | const | `src/server/lib/provenance-stamp.ts:50` | 1 | unique |
+| `GATE_BATTERY_VERSION` | const | `src/server/lib/provenance-stamp.ts:68` | 1 | unique |
+| `ProvenanceStampError` | class | `src/server/lib/provenance-stamp.ts:394` | 1 | unique |
+| `ProvenanceStampOptions` | interface | `src/server/lib/provenance-stamp.ts:234` | 1 | unique |
+| `assertProvenanceStamp` | function | `src/server/lib/provenance-stamp.ts:420` | 1 | unique |
+| `buildDataSnapshotId` | function | `src/server/lib/provenance-stamp.ts:198` | 1 | unique |
+| `computeOverlayConfigHash` | function | `src/server/lib/provenance-stamp.ts:184` | 1 | unique |
+| `deriveSpecProvenanceRef` | function | `src/server/lib/provenance-stamp.ts:455` | 1 | unique |
+| `isLegacyBackfillAllowed` | function | `src/server/lib/provenance-stamp.ts:353` | 1 | unique |
+| `isProvenanceEnforced` | function | `src/server/lib/provenance-stamp.ts:341` | 1 | unique |
+| `validateProvenanceStamp` | function | `src/server/lib/provenance-stamp.ts:311` | 1 | unique |
+| `CANONICAL_FACTOR_WEIGHTS` | const | `src/server/lib/replay/confluence-disagreement.ts:202` | 1 | unique |
+| `CONFLUENCE_THRESHOLD_CANDIDATES` | const | `src/server/lib/replay/confluence-disagreement.ts:58` | 1 | unique |
+| `CURVE_FIT_SDR_WARN_THRESHOLD` | const | `src/server/lib/replay/confluence-disagreement.ts:84` | 1 | unique |
+| `ConfluenceAnalysisResult` | interface | `src/server/lib/replay/confluence-disagreement.ts:163` | 1 | unique |
+| `ConfluenceFoldMetrics` | interface | `src/server/lib/replay/confluence-disagreement.ts:118` | 1 | unique |
+| `DEFAULT_CONFLUENCE_THRESHOLD_UNDER_TEST` | const | `src/server/lib/replay/confluence-disagreement.ts:65` | 1 | unique |
+| `buildConfluenceMarkdownReport` | function | `src/server/lib/replay/confluence-disagreement.ts:615` | 1 | unique |
+| `computeCurveFitCheck` | function | `src/server/lib/replay/confluence-disagreement.ts:291` | 1 | unique |
+| `selectConfluenceThresholdFromIS` | function | `src/server/lib/replay/confluence-disagreement.ts:227` | 1 | unique |
+| `computeCorrelationBase` | function | `src/server/lib/replay/correlation-base.ts:38` | 1 | unique |
+| `MIN_CRITIQUES_FOR_FULL_ANALYSIS` | const | `src/server/lib/replay/critique-disagreement.ts:30` | 1 | unique |
+| `PaperPositionRow` | interface | `src/server/lib/replay/critique-disagreement.ts:38` | 1 | unique |
+| `TradeCritiqueRow` | interface | `src/server/lib/replay/critique-disagreement.ts:46` | 1 | unique |
+| `aggregateByGrade` | function | `src/server/lib/replay/critique-disagreement.ts:146` | 1 | unique |
 
-_...465 more omitted from this table._
+_...313 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1353,7 +1435,7 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/data/scripts</code> - 38 symbols</summary>
+<details><summary><code>src/data/scripts</code> - 4 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1361,40 +1443,6 @@ _...465 more omitted from this table._
 | `start_sync_job` | function | `src/data/scripts/_data_sync_tracking.py:63` | defining module is not reachable from any measured entry point |
 | `complete_sync_job` | function | `src/data/scripts/_data_sync_tracking.py:113` | defining module is not reachable from any measured entry point |
 | `fail_sync_job` | function | `src/data/scripts/_data_sync_tracking.py:176` | defining module is not reachable from any measured entry point |
-| `detect_roll_dates` | function | `src/data/scripts/adjust_continuous.py:22` | defining module is not reachable from any measured entry point |
-| `ratio_adjust` | function | `src/data/scripts/adjust_continuous.py:62` | defining module is not reachable from any measured entry point |
-| `panama_adjust` | function | `src/data/scripts/adjust_continuous.py:96` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/data/scripts/adjust_continuous.py:128` | defining module is not reachable from any measured entry point |
-| `get_client` | function | `src/data/scripts/crisis_data_download.py:53` | defining module is not reachable from any measured entry point |
-| `check_cost` | function | `src/data/scripts/crisis_data_download.py:62` | defining module is not reachable from any measured entry point |
-| `download_period` | function | `src/data/scripts/crisis_data_download.py:78` | defining module is not reachable from any measured entry point |
-| `run_pipeline_step` | function | `src/data/scripts/crisis_data_download.py:108` | defining module is not reachable from any measured entry point |
-| `process_file` | function | `src/data/scripts/crisis_data_download.py:128` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/data/scripts/crisis_data_download.py:188` | defining module is not reachable from any measured entry point |
-| `run_step` | function | `src/data/scripts/crisis_pipeline.py:27` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/data/scripts/crisis_pipeline.py:40` | defining module is not reachable from any measured entry point |
-| `get_client` | function | `src/data/scripts/databento_download.py:48` | defining module is not reachable from any measured entry point |
-| `check_cost` | function | `src/data/scripts/databento_download.py:56` | defining module is not reachable from any measured entry point |
-| `download` | function | `src/data/scripts/databento_download.py:72` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/data/scripts/databento_download.py:115` | defining module is not reachable from any measured entry point |
-| `get_cache_dir` | function | `src/data/scripts/refresh_local_cache.py:93` | defining module is not reachable from any measured entry point |
-| `get_parquet_path` | function | `src/data/scripts/refresh_local_cache.py:98` | defining module is not reachable from any measured entry point |
-| `_migrate_legacy_flat_cache` | function | `src/data/scripts/refresh_local_cache.py:106` | defining module is not reachable from any measured entry point |
-| `get_latest_ts` | function | `src/data/scripts/refresh_local_cache.py:125` | defining module is not reachable from any measured entry point |
-| `resample_1m_to_tf` | function | `src/data/scripts/refresh_local_cache.py:147` | defining module is not reachable from any measured entry point |
-| `fetch_1m_bars` | function | `src/data/scripts/refresh_local_cache.py:212` | defining module is not reachable from any measured entry point |
-| `atomic_write_parquet` | function | `src/data/scripts/refresh_local_cache.py:283` | defining module is not reachable from any measured entry point |
-| `_write_refresh_sidecar` | function | `src/data/scripts/refresh_local_cache.py:291` | defining module is not reachable from any measured entry point |
-| `refresh_symbol_timeframe` | function | `src/data/scripts/refresh_local_cache.py:319` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/data/scripts/refresh_local_cache.py:608` | defining module is not reachable from any measured entry point |
-| `resample` | function | `src/data/scripts/resample_timeframes.py:30` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/data/scripts/resample_timeframes.py:46` | defining module is not reachable from any measured entry point |
-| `run_script` | function | `src/data/scripts/run_pipeline.py:22` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/data/scripts/run_pipeline.py:46` | defining module is not reachable from any measured entry point |
-| `get_s3_client` | function | `src/data/scripts/upload_to_s3.py:23` | defining module is not reachable from any measured entry point |
-| `upload_partitioned` | function | `src/data/scripts/upload_to_s3.py:32` | defining module is not reachable from any measured entry point |
-| `upload_json` | function | `src/data/scripts/upload_to_s3.py:81` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/data/scripts/upload_to_s3.py:89` | defining module is not reachable from any measured entry point |
 
 </details>
 
@@ -1446,7 +1494,7 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/battery</code> - 17 symbols</summary>
+<details><summary><code>src/engine/battery</code> - 7 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1456,25 +1504,7 @@ _...465 more omitted from this table._
 | `_now_iso` | function | `src/engine/battery/passage_ledger.py:119` | defining module is not reachable from any measured entry point |
 | `_atomic_write` | function | `src/engine/battery/passage_ledger.py:123` | defining module is not reachable from any measured entry point |
 | `PassageLedger` | class | `src/engine/battery/passage_ledger.py:137` | no non-test reference outside its own definition; 2 test file(s) do reference it |
-| `_now_iso` | function | `src/engine/battery/selection_deflation.py:59` | defining module is not reachable from any measured entry point |
-| `_sha256_file` | function | `src/engine/battery/selection_deflation.py:63` | defining module is not reachable from any measured entry point |
-| `_atomic_append_check` | function | `src/engine/battery/selection_deflation.py:76` | defining module is not reachable from any measured entry point |
-| `_prior_latched` | function | `src/engine/battery/selection_deflation.py:105` | defining module is not reachable from any measured entry point |
-| `run_selection_deflation_check` | function | `src/engine/battery/selection_deflation.py:115` | defining module is not reachable from any measured entry point |
-| `_print_boundary` | function | `src/engine/battery/selection_deflation.py:198` | defining module is not reachable from any measured entry point |
-| `_main` | function | `src/engine/battery/selection_deflation.py:213` | defining module is not reachable from any measured entry point |
 | `undispositioned_gaps` | function | `src/engine/battery/tooth2.py:25` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `_now_iso` | function | `src/engine/battery/trial_counter.py:51` | defining module is not reachable from any measured entry point |
-| `_atomic_write` | function | `src/engine/battery/trial_counter.py:55` | defining module is not reachable from any measured entry point |
-| `TrialCounter` | class | `src/engine/battery/trial_counter.py:70` | defining module is not reachable from any measured entry point |
-
-</details>
-
-<details><summary><code>src/engine/cache_prewarm.py</code> - 1 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `prewarm_cache` | function | `src/engine/cache_prewarm.py:45` | defining module is not reachable from any measured entry point |
 
 </details>
 
@@ -1549,22 +1579,6 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/deepar_regime_classifier.py</code> - 9 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `RegimeClassification` | class | `src/engine/deepar_regime_classifier.py:41` | defining module is not reachable from any measured entry point |
-| `ClassificationResult` | class | `src/engine/deepar_regime_classifier.py:65` | defining module is not reachable from any measured entry point |
-| `classify_regime` | function | `src/engine/deepar_regime_classifier.py:102` | defining module is not reachable from any measured entry point |
-| `compute_correlation_stress` | function | `src/engine/deepar_regime_classifier.py:180` | defining module is not reachable from any measured entry point |
-| `_vol_regime_label` | function | `src/engine/deepar_regime_classifier.py:240` | defining module is not reachable from any measured entry point |
-| `_vol_regime_from_prob` | function | `src/engine/deepar_regime_classifier.py:252` | defining module is not reachable from any measured entry point |
-| `_trend_label` | function | `src/engine/deepar_regime_classifier.py:264` | defining module is not reachable from any measured entry point |
-| `_stress_label` | function | `src/engine/deepar_regime_classifier.py:274` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/engine/deepar_regime_classifier.py:286` | defining module is not reachable from any measured entry point |
-
-</details>
-
 <details><summary><code>src/engine/determinism.py</code> - 1 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
@@ -1599,7 +1613,7 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/extraction</code> - 248 symbols</summary>
+<details><summary><code>src/engine/extraction</code> - 33 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1612,23 +1626,6 @@ _...465 more omitted from this table._
 | `_resolves_as_anchor` | function | `src/engine/extraction/anchor_locator.py:211` | defining module is not reachable from any measured entry point |
 | `_verify_and_locate` | function | `src/engine/extraction/anchor_locator.py:225` | defining module is not reachable from any measured entry point |
 | `locate_anchor` | function | `src/engine/extraction/anchor_locator.py:259` | defining module is not reachable from any measured entry point |
-| `Tier3Verdict` | class | `src/engine/extraction/cert_assembler.py:72` | defining module is not reachable from any measured entry point |
-| `ConditionTopology` | class | `src/engine/extraction/cert_assembler.py:89` | defining module is not reachable from any measured entry point |
-| `Provenance` | class | `src/engine/extraction/cert_assembler.py:104` | defining module is not reachable from any measured entry point |
-| `_condition_entry` | function | `src/engine/extraction/cert_assembler.py:119` | defining module is not reachable from any measured entry point |
-| `_spine_condition` | function | `src/engine/extraction/cert_assembler.py:138` | defining module is not reachable from any measured entry point |
-| `terminal_read_grade` | function | `src/engine/extraction/cert_assembler.py:186` | defining module is not reachable from any measured entry point |
-| `assemble_certificate` | function | `src/engine/extraction/cert_assembler.py:299` | defining module is not reachable from any measured entry point |
-| `SpineCondition` | class | `src/engine/extraction/compile_lints.py:117` | defining module is not reachable from any measured entry point |
-| `CompiledSpine` | class | `src/engine/extraction/compile_lints.py:135` | defining module is not reachable from any measured entry point |
-| `LintResult` | class | `src/engine/extraction/compile_lints.py:165` | defining module is not reachable from any measured entry point |
-| `direction_conflation_lint` | function | `src/engine/extraction/compile_lints.py:202` | defining module is not reachable from any measured entry point |
-| `_parse_comparator` | function | `src/engine/extraction/compile_lints.py:244` | defining module is not reachable from any measured entry point |
-| `unsat_sat_check` | function | `src/engine/extraction/compile_lints.py:253` | defining module is not reachable from any measured entry point |
-| `or_alternatives_honored` | function | `src/engine/extraction/compile_lints.py:292` | defining module is not reachable from any measured entry point |
-| `f2_coverage_gate` | function | `src/engine/extraction/compile_lints.py:333` | defining module is not reachable from any measured entry point |
-| `causality_lint` | function | `src/engine/extraction/compile_lints.py:371` | defining module is not reachable from any measured entry point |
-| `run_all_lints` | function | `src/engine/extraction/compile_lints.py:449` | defining module is not reachable from any measured entry point |
 | `EnumConsistencyResult` | class | `src/engine/extraction/enumeration_consistency.py:59` | defining module is not reachable from any measured entry point |
 | `_norm_dir` | function | `src/engine/extraction/enumeration_consistency.py:83` | defining module is not reachable from any measured entry point |
 | `_variant_name` | function | `src/engine/extraction/enumeration_consistency.py:90` | defining module is not reachable from any measured entry point |
@@ -1638,194 +1635,9 @@ _...465 more omitted from this table._
 | `screen_enumeration_count` | function | `src/engine/extraction/enumeration_guard.py:64` | defining module is not reachable from any measured entry point |
 | `Guard1Verdict` | class | `src/engine/extraction/enumeration_guard.py:75` | defining module is not reachable from any measured entry point |
 | `evaluate_guard1` | function | `src/engine/extraction/enumeration_guard.py:91` | defining module is not reachable from any measured entry point |
-| `RealExtractorError` | class | `src/engine/extraction/extractor_bridge.py:75` | defining module is not reachable from any measured entry point |
-| `EnumeratorError` | class | `src/engine/extraction/extractor_bridge.py:83` | defining module is not reachable from any measured entry point |
-| `invoke_real_extractor` | function | `src/engine/extraction/extractor_bridge.py:89` | defining module is not reachable from any measured entry point |
-| `_run_node_cli_json` | function | `src/engine/extraction/extractor_bridge.py:160` | defining module is not reachable from any measured entry point |
-| `build_phase_b_scope` | function | `src/engine/extraction/extractor_bridge.py:215` | defining module is not reachable from any measured entry point |
-| `run_two_phase_extraction` | function | `src/engine/extraction/extractor_bridge.py:227` | defining module is not reachable from any measured entry point |
-| `invoke_strategy_enumerator` | function | `src/engine/extraction/extractor_bridge.py:300` | defining module is not reachable from any measured entry point |
 | `VaultRecord` | class | `src/engine/extraction/extractor_bridge.py:320` | no non-test reference outside its own definition |
-| `_vault_path` | function | `src/engine/extraction/extractor_bridge.py:328` | defining module is not reachable from any measured entry point |
-| `load_cached_extraction` | function | `src/engine/extraction/extractor_bridge.py:333` | defining module is not reachable from any measured entry point |
-| `save_extraction` | function | `src/engine/extraction/extractor_bridge.py:343` | defining module is not reachable from any measured entry point |
-| `get_or_extract` | function | `src/engine/extraction/extractor_bridge.py:368` | defining module is not reachable from any measured entry point |
-| `run_dry_run_real_extractor` | function | `src/engine/extraction/extractor_bridge.py:414` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/engine/extraction/extractor_bridge.py:490` | defining module is not reachable from any measured entry point |
-| `SpineConditionText` | class | `src/engine/extraction/pilot_conveyor.py:292` | defining module is not reachable from any measured entry point |
-| `extract_spine_condition_texts` | function | `src/engine/extraction/pilot_conveyor.py:303` | defining module is not reachable from any measured entry point |
-| `_tier1_surface_signature` | function | `src/engine/extraction/pilot_conveyor.py:355` | defining module is not reachable from any measured entry point |
-| `_ts_f2_normalize` | function | `src/engine/extraction/pilot_conveyor.py:400` | defining module is not reachable from any measured entry point |
-| `content_tokens` | function | `src/engine/extraction/pilot_conveyor.py:417` | defining module is not reachable from any measured entry point |
-| `UnanchoredCondition` | class | `src/engine/extraction/pilot_conveyor.py:441` | defining module is not reachable from any measured entry point |
-| `locate_condition_anchors` | function | `src/engine/extraction/pilot_conveyor.py:459` | defining module is not reachable from any measured entry point |
-| `extractor_anchor_availability_report` | function | `src/engine/extraction/pilot_conveyor.py:496` | defining module is not reachable from any measured entry point |
-| `extractor_version_pin` | function | `src/engine/extraction/pilot_conveyor.py:538` | defining module is not reachable from any measured entry point |
-| `LeakScanResult` | class | `src/engine/extraction/pilot_conveyor.py:658` | defining module is not reachable from any measured entry point |
-| `LeakScanFailure` | class | `src/engine/extraction/pilot_conveyor.py:663` | defining module is not reachable from any measured entry point |
-| `blinding_leak_scan` | function | `src/engine/extraction/pilot_conveyor.py:670` | defining module is not reachable from any measured entry point |
-| `_item_json_excluding_quote` | function | `src/engine/extraction/pilot_conveyor.py:822` | defining module is not reachable from any measured entry point |
-| `_sections_json_excluding_quotes` | function | `src/engine/extraction/pilot_conveyor.py:836` | defining module is not reachable from any measured entry point |
-| `_normalize_ws` | function | `src/engine/extraction/pilot_conveyor.py:854` | defining module is not reachable from any measured entry point |
-| `_load_wave1_control_section` | function | `src/engine/extraction/pilot_conveyor.py:870` | defining module is not reachable from any measured entry point |
-| `axis3_adjudication_ceiling` | function | `src/engine/extraction/pilot_conveyor.py:892` | defining module is not reachable from any measured entry point |
-| `_axis3_seed` | function | `src/engine/extraction/pilot_conveyor.py:910` | defining module is not reachable from any measured entry point |
-| `_select_axis3_audit_fire` | function | `src/engine/extraction/pilot_conveyor.py:923` | defining module is not reachable from any measured entry point |
-| `_build_tier3_packet` | function | `src/engine/extraction/pilot_conveyor.py:961` | defining module is not reachable from any measured entry point |
-| `fetch_transcript` | function | `src/engine/extraction/pilot_conveyor.py:1104` | defining module is not reachable from any measured entry point |
-| `prepare_strategy` | function | `src/engine/extraction/pilot_conveyor.py:1133` | defining module is not reachable from any measured entry point |
-| `prepare_video` | function | `src/engine/extraction/pilot_conveyor.py:1315` | defining module is not reachable from any measured entry point |
-| `verdict_from_rater_response` | function | `src/engine/extraction/pilot_conveyor.py:1354` | defining module is not reachable from any measured entry point |
-| `Tier3SupportVerdict` | class | `src/engine/extraction/pilot_conveyor.py:1386` | defining module is not reachable from any measured entry point |
-| `support_verdict_from_stage2_response` | function | `src/engine/extraction/pilot_conveyor.py:1398` | defining module is not reachable from any measured entry point |
-| `diagnose_certificate` | function | `src/engine/extraction/pilot_conveyor.py:1439` | defining module is not reachable from any measured entry point |
-| `finalize_certificate` | function | `src/engine/extraction/pilot_conveyor.py:1502` | defining module is not reachable from any measured entry point |
-| `aggregate` | function | `src/engine/extraction/pilot_conveyor.py:1678` | defining module is not reachable from any measured entry point |
-| `_synthetic_dry_run_propose_fn` | function | `src/engine/extraction/pilot_conveyor.py:1794` | defining module is not reachable from any measured entry point |
-| `run_dry_run_synthetic` | function | `src/engine/extraction/pilot_conveyor.py:1811` | defining module is not reachable from any measured entry point |
-| `write_dry_run_artifact` | function | `src/engine/extraction/pilot_conveyor.py:1869` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/engine/extraction/pilot_conveyor.py:1882` | defining module is not reachable from any measured entry point |
-| `ArtifactsMissingError` | class | `src/engine/extraction/sealed_read_driver.py:166` | defining module is not reachable from any measured entry point |
-| `ExtractionSourceMissing` | class | `src/engine/extraction/sealed_read_driver.py:176` | defining module is not reachable from any measured entry point |
-| `ReaderIdentityMismatch` | class | `src/engine/extraction/sealed_read_driver.py:182` | defining module is not reachable from any measured entry point |
-| `_sha256_file` | function | `src/engine/extraction/sealed_read_driver.py:198` | defining module is not reachable from any measured entry point |
-| `_read_frozen_text` | function | `src/engine/extraction/sealed_read_driver.py:210` | defining module is not reachable from any measured entry point |
-| `_read_frozen_model_id` | function | `src/engine/extraction/sealed_read_driver.py:220` | defining module is not reachable from any measured entry point |
-| `_read_frozen_k` | function | `src/engine/extraction/sealed_read_driver.py:234` | defining module is not reachable from any measured entry point |
-| `_read_frozen_params` | function | `src/engine/extraction/sealed_read_driver.py:246` | defining module is not reachable from any measured entry point |
-| `_read_frozen_channel_class` | function | `src/engine/extraction/sealed_read_driver.py:267` | defining module is not reachable from any measured entry point |
-| `certified_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:288` | defining module is not reachable from any measured entry point |
-| `assert_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:347` | defining module is not reachable from any measured entry point |
-| `_claimed_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:370` | defining module is not reachable from any measured entry point |
-| `assert_dispatch_identity` | function | `src/engine/extraction/sealed_read_driver.py:396` | defining module is not reachable from any measured entry point |
-| `_mode_of` | function | `src/engine/extraction/sealed_read_driver.py:503` | defining module is not reachable from any measured entry point |
-| `_enum_stability` | function | `src/engine/extraction/sealed_read_driver.py:519` | defining module is not reachable from any measured entry point |
-| `_default_adjudicate` | function | `src/engine/extraction/sealed_read_driver.py:582` | defining module is not reachable from any measured entry point |
-| `require_artifacts_on_disk` | function | `src/engine/extraction/sealed_read_driver.py:610` | defining module is not reachable from any measured entry point |
-| `_atomic_write` | function | `src/engine/extraction/sealed_read_driver.py:622` | defining module is not reachable from any measured entry point |
-| `_load_phase_a` | function | `src/engine/extraction/sealed_read_driver.py:645` | defining module is not reachable from any measured entry point |
-| `_load_staging_strategies` | function | `src/engine/extraction/sealed_read_driver.py:658` | defining module is not reachable from any measured entry point |
-| `_build_rehearsal_artifact` | function | `src/engine/extraction/sealed_read_driver.py:681` | defining module is not reachable from any measured entry point |
-| `_parse_payload` | function | `src/engine/extraction/sealed_read_driver.py:760` | defining module is not reachable from any measured entry point |
-| `_assert_one_dispatch` | function | `src/engine/extraction/sealed_read_driver.py:773` | defining module is not reachable from any measured entry point |
-| `_draw_count` | function | `src/engine/extraction/sealed_read_driver.py:794` | defining module is not reachable from any measured entry point |
-| `_draw_refs` | function | `src/engine/extraction/sealed_read_driver.py:805` | defining module is not reachable from any measured entry point |
-| `_collect_phase_a_draws` | function | `src/engine/extraction/sealed_read_driver.py:815` | defining module is not reachable from any measured entry point |
-| `_consensus_strategy_refs` | function | `src/engine/extraction/sealed_read_driver.py:840` | defining module is not reachable from any measured entry point |
-| `_consensus_strategy_objects` | function | `src/engine/extraction/sealed_read_driver.py:876` | defining module is not reachable from any measured entry point |
-| `_project_consensus_scopes` | function | `src/engine/extraction/sealed_read_driver.py:896` | defining module is not reachable from any measured entry point |
-| `_dispatch_phase_b` | function | `src/engine/extraction/sealed_read_driver.py:904` | defining module is not reachable from any measured entry point |
-| `_build_sealed_artifact` | function | `src/engine/extraction/sealed_read_driver.py:942` | defining module is not reachable from any measured entry point |
-| `_video_ids_from_verified` | function | `src/engine/extraction/sealed_read_driver.py:1010` | defining module is not reachable from any measured entry point |
-| `run_extraction_stage` | function | `src/engine/extraction/sealed_read_driver.py:1029` | defining module is not reachable from any measured entry point |
-| `ExtractionNotReady` | class | `src/engine/extraction/sealed_read_driver.py:1255` | defining module is not reachable from any measured entry point |
-| `_load_conflation_verdict` | function | `src/engine/extraction/sealed_read_driver.py:1269` | defining module is not reachable from any measured entry point |
-| `_load_enum_verdict` | function | `src/engine/extraction/sealed_read_driver.py:1285` | defining module is not reachable from any measured entry point |
-| `_load_completeness_verdict` | function | `src/engine/extraction/sealed_read_driver.py:1310` | defining module is not reachable from any measured entry point |
-| `_coerce_conflation` | function | `src/engine/extraction/sealed_read_driver.py:1333` | defining module is not reachable from any measured entry point |
-| `_coerce_enum` | function | `src/engine/extraction/sealed_read_driver.py:1340` | defining module is not reachable from any measured entry point |
-| `_coerce_completeness` | function | `src/engine/extraction/sealed_read_driver.py:1354` | defining module is not reachable from any measured entry point |
-| `_obtain_panels` | function | `src/engine/extraction/sealed_read_driver.py:1368` | defining module is not reachable from any measured entry point |
-| `_panel_prepare_output` | function | `src/engine/extraction/sealed_read_driver.py:1414` | defining module is not reachable from any measured entry point |
-| `_certify_one_strategy` | function | `src/engine/extraction/sealed_read_driver.py:1443` | defining module is not reachable from any measured entry point |
-| `_mechanical_floor_record` | function | `src/engine/extraction/sealed_read_driver.py:1461` | defining module is not reachable from any measured entry point |
-| `_strategy_pairs` | function | `src/engine/extraction/sealed_read_driver.py:1478` | defining module is not reachable from any measured entry point |
-| `run_panels_and_certify_stage` | function | `src/engine/extraction/sealed_read_driver.py:1500` | defining module is not reachable from any measured entry point |
-| `SealedReadDriver` | class | `src/engine/extraction/sealed_read_driver.py:1610` | defining module is not reachable from any measured entry point |
-| `RaterLayerNotReady` | class | `src/engine/extraction/sealed_read_driver.py:1987` | defining module is not reachable from any measured entry point |
-| `_control_gate` | function | `src/engine/extraction/sealed_read_driver.py:1994` | defining module is not reachable from any measured entry point |
-| `_agreed_role` | function | `src/engine/extraction/sealed_read_driver.py:2009` | defining module is not reachable from any measured entry point |
-| `_agreed_support` | function | `src/engine/extraction/sealed_read_driver.py:2019` | defining module is not reachable from any measured entry point |
-| `_stage1_view` | function | `src/engine/extraction/sealed_read_driver.py:2034` | defining module is not reachable from any measured entry point |
-| `_stage2_view` | function | `src/engine/extraction/sealed_read_driver.py:2044` | defining module is not reachable from any measured entry point |
-| `_deterministic_rehearsal_rater` | function | `src/engine/extraction/sealed_read_driver.py:2056` | defining module is not reachable from any measured entry point |
-| `_load_cached_rater` | function | `src/engine/extraction/sealed_read_driver.py:2085` | defining module is not reachable from any measured entry point |
-| `_dispatch_two_stage_packet` | function | `src/engine/extraction/sealed_read_driver.py:2104` | defining module is not reachable from any measured entry point |
-| `_normalize_rater_input` | function | `src/engine/extraction/sealed_read_driver.py:2211` | defining module is not reachable from any measured entry point |
-| `run_rater_layer_stage` | function | `src/engine/extraction/sealed_read_driver.py:2227` | defining module is not reachable from any measured entry point |
-| `_hash_phase_a_draws` | function | `src/engine/extraction/sealed_read_driver.py:2473` | defining module is not reachable from any measured entry point |
-| `compute_phase_a_consensus` | function | `src/engine/extraction/sealed_read_driver.py:2487` | defining module is not reachable from any measured entry point |
-| `build_panel_requests` | function | `src/engine/extraction/sealed_read_driver.py:2547` | defining module is not reachable from any measured entry point |
-| `build_rater_packets` | function | `src/engine/extraction/sealed_read_driver.py:2577` | defining module is not reachable from any measured entry point |
-| `_rater_output_contract` | function | `src/engine/extraction/sealed_read_driver.py:2662` | defining module is not reachable from any measured entry point |
-| `classify_source_attrition` | function | `src/engine/extraction/sealed_read_driver.py:2807` | defining module is not reachable from any measured entry point |
-| `_source_attrition_block` | function | `src/engine/extraction/sealed_read_driver.py:2879` | defining module is not reachable from any measured entry point |
-| `_source_attrition_scope_lines` | function | `src/engine/extraction/sealed_read_driver.py:2921` | defining module is not reachable from any measured entry point |
-| `VerdictNotReady` | class | `src/engine/extraction/sealed_read_driver.py:2950` | defining module is not reachable from any measured entry point |
-| `_normalize_verdict_input` | function | `src/engine/extraction/sealed_read_driver.py:2963` | defining module is not reachable from any measured entry point |
-| `_row_is_clean` | function | `src/engine/extraction/sealed_read_driver.py:2976` | defining module is not reachable from any measured entry point |
-| `_row_adjudications` | function | `src/engine/extraction/sealed_read_driver.py:2986` | defining module is not reachable from any measured entry point |
-| `_row_content_clean` | function | `src/engine/extraction/sealed_read_driver.py:3002` | defining module is not reachable from any measured entry point |
-| `_cert_to_video_rollup` | function | `src/engine/extraction/sealed_read_driver.py:3023` | defining module is not reachable from any measured entry point |
-| `_economics_rider` | function | `src/engine/extraction/sealed_read_driver.py:3058` | defining module is not reachable from any measured entry point |
-| `_content_axis_record` | function | `src/engine/extraction/sealed_read_driver.py:3088` | defining module is not reachable from any measured entry point |
-| `_instrument_sha_stamps_verified` | function | `src/engine/extraction/sealed_read_driver.py:3123` | defining module is not reachable from any measured entry point |
-| `_element_verified` | function | `src/engine/extraction/sealed_read_driver.py:3144` | defining module is not reachable from any measured entry point |
-| `_validity_block` | function | `src/engine/extraction/sealed_read_driver.py:3162` | defining module is not reachable from any measured entry point |
-| `_assemble_instrument_stamps` | function | `src/engine/extraction/sealed_read_driver.py:3186` | defining module is not reachable from any measured entry point |
-| `run_verdict_stage` | function | `src/engine/extraction/sealed_read_driver.py:3225` | defining module is not reachable from any measured entry point |
-| `RehearsalManifestMismatch` | class | `src/engine/extraction/sealed_read_driver.py:3455` | defining module is not reachable from any measured entry point |
-| `_write_spent_rehearsal_manifest` | function | `src/engine/extraction/sealed_read_driver.py:3466` | defining module is not reachable from any measured entry point |
-| `_write_witness_extraction_artifact` | function | `src/engine/extraction/sealed_read_driver.py:3484` | defining module is not reachable from any measured entry point |
-| `_module_d_stage` | function | `src/engine/extraction/sealed_read_driver.py:3501` | defining module is not reachable from any measured entry point |
-| `_make_live_call_spies` | function | `src/engine/extraction/sealed_read_driver.py:3518` | defining module is not reachable from any measured entry point |
-| `_stage_receipts` | function | `src/engine/extraction/sealed_read_driver.py:3539` | defining module is not reachable from any measured entry point |
-| `_per_video_clean_map` | function | `src/engine/extraction/sealed_read_driver.py:3598` | defining module is not reachable from any measured entry point |
-| `rehearsal_instrument_shas` | function | `src/engine/extraction/sealed_read_driver.py:3605` | defining module is not reachable from any measured entry point |
-| `rehearsal_drift_guard` | function | `src/engine/extraction/sealed_read_driver.py:3624` | defining module is not reachable from any measured entry point |
-| `_thread_iyf_witness` | function | `src/engine/extraction/sealed_read_driver.py:3666` | defining module is not reachable from any measured entry point |
-| `_thread_fused_witness` | function | `src/engine/extraction/sealed_read_driver.py:3721` | defining module is not reachable from any measured entry point |
-| `run_full_dress_rehearsal` | function | `src/engine/extraction/sealed_read_driver.py:3781` | defining module is not reachable from any measured entry point |
-| `_iyf_rejected_rows` | function | `src/engine/extraction/sealed_read_driver.py:4049` | defining module is not reachable from any measured entry point |
-| `SpentManifestRejected` | class | `src/engine/extraction/sealed_read_gate.py:66` | defining module is not reachable from any measured entry point |
-| `_video_ids_sorted` | function | `src/engine/extraction/sealed_read_gate.py:71` | defining module is not reachable from any measured entry point |
-| `_recompute_seal_sha` | function | `src/engine/extraction/sealed_read_gate.py:88` | defining module is not reachable from any measured entry point |
-| `verify_sealed_manifest` | function | `src/engine/extraction/sealed_read_gate.py:94` | defining module is not reachable from any measured entry point |
-| `verify_transcripts_present` | function | `src/engine/extraction/sealed_read_gate.py:155` | defining module is not reachable from any measured entry point |
-| `reject_if_spent16` | function | `src/engine/extraction/sealed_read_gate.py:181` | defining module is not reachable from any measured entry point |
-| `_token_present` | function | `src/engine/extraction/sealed_read_gate.py:204` | defining module is not reachable from any measured entry point |
-| `operator_gate` | function | `src/engine/extraction/sealed_read_gate.py:213` | defining module is not reachable from any measured entry point |
-| `gate_sealed_read` | function | `src/engine/extraction/sealed_read_gate.py:249` | defining module is not reachable from any measured entry point |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:848` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | defining module is not reachable from any measured entry point |
-| `_fires_by_family` | function | `src/engine/extraction/tier1_coverage_report.py:75` | defining module is not reachable from any measured entry point |
-| `coverage` | function | `src/engine/extraction/tier1_coverage_report.py:86` | defining module is not reachable from any measured entry point |
-| `run_birth_gate` | function | `src/engine/extraction/tier1_coverage_report.py:105` | defining module is not reachable from any measured entry point |
-| `run_layer_reliability` | function | `src/engine/extraction/tier1_coverage_report.py:142` | defining module is not reachable from any measured entry point |
-| `precision_spotcheck` | function | `src/engine/extraction/tier1_coverage_report.py:169` | defining module is not reachable from any measured entry point |
-| `build_report` | function | `src/engine/extraction/tier1_coverage_report.py:192` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/engine/extraction/tier1_coverage_report.py:237` | defining module is not reachable from any measured entry point |
-| `Tier1Detection` | class | `src/engine/extraction/tier1_detectors.py:54` | defining module is not reachable from any measured entry point |
-| `Tier1FallThrough` | class | `src/engine/extraction/tier1_detectors.py:76` | defining module is not reachable from any measured entry point |
-| `Tier1Result` | class | `src/engine/extraction/tier1_detectors.py:87` | defining module is not reachable from any measured entry point |
-| `_ActionMatch` | class | `src/engine/extraction/tier1_detectors.py:178` | defining module is not reachable from any measured entry point |
-| `_ActionRe` | class | `src/engine/extraction/tier1_detectors.py:194` | defining module is not reachable from any measured entry point |
-| `_clause_bounds` | function | `src/engine/extraction/tier1_detectors.py:252` | defining module is not reachable from any measured entry point |
-| `_intent_governs_action` | function | `src/engine/extraction/tier1_detectors.py:268` | defining module is not reachable from any measured entry point |
-| `_forecast_trigger` | function | `src/engine/extraction/tier1_detectors.py:287` | defining module is not reachable from any measured entry point |
-| `_detect_exclusion_contrast` | function | `src/engine/extraction/tier1_detectors.py:298` | defining module is not reachable from any measured entry point |
-| `_pole_anchor_start` | function | `src/engine/extraction/tier1_detectors.py:351` | defining module is not reachable from any measured entry point |
-| `_pole_anchor_end` | function | `src/engine/extraction/tier1_detectors.py:364` | defining module is not reachable from any measured entry point |
-| `_detect_conditional_action` | function | `src/engine/extraction/tier1_detectors.py:379` | defining module is not reachable from any measured entry point |
-| `_detect_imperative` | function | `src/engine/extraction/tier1_detectors.py:464` | defining module is not reachable from any measured entry point |
-| `detect_tier1` | function | `src/engine/extraction/tier1_detectors.py:510` | defining module is not reachable from any measured entry point |
-| `run_tier1` | function | `src/engine/extraction/tier1_detectors.py:586` | defining module is not reachable from any measured entry point |
-| `_load_quote_index` | function | `src/engine/extraction/tier2_design_report.py:60` | defining module is not reachable from any measured entry point |
-| `materialize_design` | function | `src/engine/extraction/tier2_design_report.py:74` | defining module is not reachable from any measured entry point |
 | `materialize_ambiguous_reference` | function | `src/engine/extraction/tier2_design_report.py:93` | no non-test reference outside its own definition |
-| `_CachedGemma` | class | `src/engine/extraction/tier2_design_report.py:113` | defining module is not reachable from any measured entry point |
-| `_siblings_for` | function | `src/engine/extraction/tier2_design_report.py:137` | defining module is not reachable from any measured entry point |
-| `run_birth_gate` | function | `src/engine/extraction/tier2_design_report.py:142` | defining module is not reachable from any measured entry point |
-| `classify_design_pool` | function | `src/engine/extraction/tier2_design_report.py:185` | defining module is not reachable from any measured entry point |
-| `tabulate_per_class` | function | `src/engine/extraction/tier2_design_report.py:209` | defining module is not reachable from any measured entry point |
-| `_empty` | function | `src/engine/extraction/tier2_design_report.py:237` | defining module is not reachable from any measured entry point |
-| `economics` | function | `src/engine/extraction/tier2_design_report.py:242` | defining module is not reachable from any measured entry point |
-| `two_path_check` | function | `src/engine/extraction/tier2_design_report.py:260` | defining module is not reachable from any measured entry point |
-| `segmentation_is_exact` | function | `src/engine/extraction/tier2_design_report.py:278` | defining module is not reachable from any measured entry point |
-| `llm_margin_agreement` | function | `src/engine/extraction/tier2_design_report.py:285` | defining module is not reachable from any measured entry point |
-| `build_report` | function | `src/engine/extraction/tier2_design_report.py:322` | defining module is not reachable from any measured entry point |
-| `_print_summary` | function | `src/engine/extraction/tier2_design_report.py:357` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/engine/extraction/tier2_design_report.py:394` | defining module is not reachable from any measured entry point |
 | `class_of` | function | `src/engine/extraction/tier2_discourse.BROKEN-a52-checkpoint.py:77` | defining module is not reachable from any measured entry point |
 | `Tier2Decision` | class | `src/engine/extraction/tier2_discourse.BROKEN-a52-checkpoint.py:82` | defining module is not reachable from any measured entry point |
 | `segment_frame` | function | `src/engine/extraction/tier2_discourse.BROKEN-a52-checkpoint.py:231` | defining module is not reachable from any measured entry point |
@@ -1836,20 +1648,7 @@ _...465 more omitted from this table._
 | `classify_item` | function | `src/engine/extraction/tier2_discourse.BROKEN-a52-checkpoint.py:449` | defining module is not reachable from any measured entry point |
 | `ConceptPass` | class | `src/engine/extraction/tier2_discourse.BROKEN-a52-checkpoint.py:512` | defining module is not reachable from any measured entry point |
 | `classify_concept` | function | `src/engine/extraction/tier2_discourse.BROKEN-a52-checkpoint.py:517` | no non-test reference outside its own definition |
-| `class_of` | function | `src/engine/extraction/tier2_discourse.py:84` | defining module is not reachable from any measured entry point |
-| `Tier2Decision` | class | `src/engine/extraction/tier2_discourse.py:89` | defining module is not reachable from any measured entry point |
-| `segment_frame` | function | `src/engine/extraction/tier2_discourse.py:238` | defining module is not reachable from any measured entry point |
-| `is_rule_or_exclusion_frame` | function | `src/engine/extraction/tier2_discourse.py:269` | defining module is not reachable from any measured entry point |
-| `_build_user_message` | function | `src/engine/extraction/tier2_discourse.py:389` | defining module is not reachable from any measured entry point |
-| `_derive_label` | function | `src/engine/extraction/tier2_discourse.py:405` | defining module is not reachable from any measured entry point |
-| `gemma_classify_call` | function | `src/engine/extraction/tier2_discourse.py:438` | defining module is not reachable from any measured entry point |
-| `classify_item` | function | `src/engine/extraction/tier2_discourse.py:481` | defining module is not reachable from any measured entry point |
-| `ConceptPass` | class | `src/engine/extraction/tier2_discourse.py:566` | defining module is not reachable from any measured entry point |
 | `classify_concept` | function | `src/engine/extraction/tier2_discourse.py:571` | no non-test reference outside its own definition |
-| `ConditionEntry` | class | `src/engine/extraction/topology_producer.py:87` | defining module is not reachable from any measured entry point |
-| `_role_for` | function | `src/engine/extraction/topology_producer.py:116` | defining module is not reachable from any measured entry point |
-| `_extract_comparator` | function | `src/engine/extraction/topology_producer.py:120` | defining module is not reachable from any measured entry point |
-| `_direction_for` | function | `src/engine/extraction/topology_producer.py:136` | defining module is not reachable from any measured entry point |
 | `produce_topology` | function | `src/engine/extraction/topology_producer.py:146` | no non-test reference outside its own definition; 3 test file(s) do reference it |
 
 </details>
@@ -1887,7 +1686,7 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/forensics</code> - 35 symbols</summary>
+<details><summary><code>src/engine/forensics</code> - 8 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1899,33 +1698,6 @@ _...465 more omitted from this table._
 | `_normalize_slot` | function | `src/engine/forensics/calibration_battery.py:175` | defining module is not reachable from any measured entry point |
 | `_evaluate_case` | function | `src/engine/forensics/calibration_battery.py:185` | defining module is not reachable from any measured entry point |
 | `run_calibration` | function | `src/engine/forensics/calibration_battery.py:215` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `CheckResult` | class | `src/engine/forensics/compile_fidelity.py:98` | defining module is not reachable from any measured entry point |
-| `ConditionVerdict` | class | `src/engine/forensics/compile_fidelity.py:107` | defining module is not reachable from any measured entry point |
-| `Phase1Seal` | class | `src/engine/forensics/compile_fidelity.py:133` | defining module is not reachable from any measured entry point |
-| `Phase2Result` | class | `src/engine/forensics/compile_fidelity.py:157` | defining module is not reachable from any measured entry point |
-| `LegAResult` | class | `src/engine/forensics/compile_fidelity.py:165` | defining module is not reachable from any measured entry point |
-| `_norm` | function | `src/engine/forensics/compile_fidelity.py:194` | defining module is not reachable from any measured entry point |
-| `_is_default_ignorable` | function | `src/engine/forensics/compile_fidelity.py:245` | defining module is not reachable from any measured entry point |
-| `_has_visible_content` | function | `src/engine/forensics/compile_fidelity.py:255` | defining module is not reachable from any measured entry point |
-| `_spec_body` | function | `src/engine/forensics/compile_fidelity.py:301` | defining module is not reachable from any measured entry point |
-| `_taught_conditions` | function | `src/engine/forensics/compile_fidelity.py:308` | defining module is not reachable from any measured entry point |
-| `_binding_index` | function | `src/engine/forensics/compile_fidelity.py:322` | defining module is not reachable from any measured entry point |
-| `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | defining module is not reachable from any measured entry point |
-| `_finish_phase1` | function | `src/engine/forensics/compile_fidelity.py:380` | defining module is not reachable from any measured entry point |
-| `_verdict_for_condition` | function | `src/engine/forensics/compile_fidelity.py:409` | defining module is not reachable from any measured entry point |
-| `_is_provenance_only` | function | `src/engine/forensics/compile_fidelity.py:492` | defining module is not reachable from any measured entry point |
-| `_honest_approximation` | function | `src/engine/forensics/compile_fidelity.py:503` | defining module is not reachable from any measured entry point |
-| `_check_concretely_bound` | function | `src/engine/forensics/compile_fidelity.py:535` | defining module is not reachable from any measured entry point |
-| `_session_scope_path` | function | `src/engine/forensics/compile_fidelity.py:557` | defining module is not reachable from any measured entry point |
-| `_cert_key_invalid` | function | `src/engine/forensics/compile_fidelity.py:570` | defining module is not reachable from any measured entry point |
-| `_check_provenance_chain` | function | `src/engine/forensics/compile_fidelity.py:609` | defining module is not reachable from any measured entry point |
-| `_token_boundary_contains` | function | `src/engine/forensics/compile_fidelity.py:667` | defining module is not reachable from any measured entry point |
-| `_max_bipartite_matching` | function | `src/engine/forensics/compile_fidelity.py:677` | defining module is not reachable from any measured entry point |
-| `_check_no_certificate_drops` | function | `src/engine/forensics/compile_fidelity.py:700` | defining module is not reachable from any measured entry point |
-| `_check_house_exit_stamp` | function | `src/engine/forensics/compile_fidelity.py:784` | defining module is not reachable from any measured entry point |
-| `countersign_phase2` | function | `src/engine/forensics/compile_fidelity.py:809` | defining module is not reachable from any measured entry point |
-| `run_leg_a` | function | `src/engine/forensics/compile_fidelity.py:859` | defining module is not reachable from any measured entry point |
-| `_cli` | function | `src/engine/forensics/compile_fidelity.py:900` | defining module is not reachable from any measured entry point |
 
 </details>
 
@@ -2082,12 +1854,10 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/null_calibration_guard.py</code> - 3 symbols</summary>
+<details><summary><code>src/engine/null_calibration_guard.py</code> - 1 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
-| `build_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:34` | defining module is not reachable from any measured entry point |
-| `validate_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:63` | defining module is not reachable from any measured entry point |
 | `is_null_calibration_row` | function | `src/engine/null_calibration_guard.py:101` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
@@ -2153,20 +1923,6 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/prop_survival_model.py</code> - 7 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `RiskEvent` | class | `src/engine/prop_survival_model.py:22` | defining module is not reachable from any measured entry point |
-| `PropSurvivalResult` | class | `src/engine/prop_survival_model.py:32` | defining module is not reachable from any measured entry point |
-| `build_breach_event` | function | `src/engine/prop_survival_model.py:40` | defining module is not reachable from any measured entry point |
-| `build_target_event` | function | `src/engine/prop_survival_model.py:61` | defining module is not reachable from any measured entry point |
-| `build_tail_loss_event` | function | `src/engine/prop_survival_model.py:81` | defining module is not reachable from any measured entry point |
-| `build_risk_band_scenarios` | function | `src/engine/prop_survival_model.py:94` | defining module is not reachable from any measured entry point |
-| `estimate_classical_survival` | function | `src/engine/prop_survival_model.py:147` | defining module is not reachable from any measured entry point |
-
-</details>
-
 <details><summary><code>src/engine/quantum_annealing_optimizer.py</code> - 2 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
@@ -2176,13 +1932,10 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/quantum_bench.py</code> - 6 symbols</summary>
+<details><summary><code>src/engine/quantum_bench.py</code> - 3 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
-| `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | defining module is not reachable from any measured entry point |
-| `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | defining module is not reachable from any measured entry point |
-| `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | defining module is not reachable from any measured entry point |
 | `validate_tolerance` | function | `src/engine/quantum_bench.py:108` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `persist_benchmark` | function | `src/engine/quantum_bench.py:119` | no non-test reference outside its own definition; 1 test file(s) do reference it |
@@ -2233,33 +1986,6 @@ _...465 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `should_strategy_trade` | function | `src/engine/regime.py:138` | no non-test reference outside its own definition; 2 test file(s) do reference it |
-
-</details>
-
-<details><summary><code>src/engine/regime_survival.py</code> - 3 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `_compute_regime_stats` | function | `src/engine/regime_survival.py:53` | defining module is not reachable from any measured entry point |
-| `run_harsh_regime_survival` | function | `src/engine/regime_survival.py:139` | defining module is not reachable from any measured entry point |
-| `_error_result` | function | `src/engine/regime_survival.py:273` | defining module is not reachable from any measured entry point |
-
-</details>
-
-<details><summary><code>src/engine/replay</code> - 10 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `_get_survival_scorer_git_sha` | function | `src/engine/replay/survival_twin_replay.py:108` | defining module is not reachable from any measured entry point |
-| `compute_reproducibility_hash` | function | `src/engine/replay/survival_twin_replay.py:130` | defining module is not reachable from any measured entry point |
-| `_load_pass_a_ruin_ci_high` | function | `src/engine/replay/survival_twin_replay.py:149` | defining module is not reachable from any measured entry point |
-| `_compute_disagreement` | function | `src/engine/replay/survival_twin_replay.py:216` | defining module is not reachable from any measured entry point |
-| `SurvivalReplayResult` | class | `src/engine/replay/survival_twin_replay.py:235` | defining module is not reachable from any measured entry point |
-| `_run_single_survival_replay` | function | `src/engine/replay/survival_twin_replay.py:286` | defining module is not reachable from any measured entry point |
-| `_result_to_db_row` | function | `src/engine/replay/survival_twin_replay.py:427` | defining module is not reachable from any measured entry point |
-| `replay_survival_on_backtest` | function | `src/engine/replay/survival_twin_replay.py:496` | defining module is not reachable from any measured entry point |
-| `replay_survival_on_all_backtests` | function | `src/engine/replay/survival_twin_replay.py:583` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/engine/replay/survival_twin_replay.py:640` | defining module is not reachable from any measured entry point |
 
 </details>
 
@@ -2315,7 +2041,7 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/skip_engine</code> - 10 symbols</summary>
+<details><summary><code>src/engine/skip_engine</code> - 6 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -2325,36 +2051,14 @@ _...465 more omitted from this table._
 | `_calculate_monthly_dd_usage` | function | `src/engine/skip_engine/premarket_analyzer.py:60` | defining module is not reachable from any measured entry point |
 | `collect_premarket_signals` | function | `src/engine/skip_engine/premarket_analyzer.py:77` | no non-test reference outside its own definition; 2 test file(s) do reference it |
 | `SessionMonitor` | class | `src/engine/skip_engine/session_monitor.py:8` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `_build_feature_vector` | function | `src/engine/skip_engine/weight_trainer.py:95` | defining module is not reachable from any measured entry point |
-| `_coeff_to_multiplier` | function | `src/engine/skip_engine/weight_trainer.py:120` | defining module is not reachable from any measured entry point |
-| `train_weights` | function | `src/engine/skip_engine/weight_trainer.py:145` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/engine/skip_engine/weight_trainer.py:268` | defining module is not reachable from any measured entry point |
 
 </details>
 
-<details><summary><code>src/engine/statistics</code> - 19 symbols</summary>
+<details><summary><code>src/engine/statistics</code> - 1 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
-| `_get_default_q_research` | function | `src/engine/statistics/corpus_fdr.py:83` | defining module is not reachable from any measured entry point |
-| `_get_default_q_promotion` | function | `src/engine/statistics/corpus_fdr.py:92` | defining module is not reachable from any measured entry point |
 | `_get_default_population` | function | `src/engine/statistics/corpus_fdr.py:101` | no non-test reference outside its own definition |
-| `_std_normal_cdf` | function | `src/engine/statistics/corpus_fdr.py:115` | defining module is not reachable from any measured entry point |
-| `_std_normal_sf` | function | `src/engine/statistics/corpus_fdr.py:120` | defining module is not reachable from any measured entry point |
-| `_probit` | function | `src/engine/statistics/corpus_fdr.py:125` | defining module is not reachable from any measured entry point |
-| `_expected_max_sharpe` | function | `src/engine/statistics/corpus_fdr.py:150` | defining module is not reachable from any measured entry point |
-| `PValueDerivation` | class | `src/engine/statistics/corpus_fdr.py:168` | defining module is not reachable from any measured entry point |
-| `derive_pvalue_for_strategy` | function | `src/engine/statistics/corpus_fdr.py:183` | defining module is not reachable from any measured entry point |
-| `BHResult` | class | `src/engine/statistics/corpus_fdr.py:242` | defining module is not reachable from any measured entry point |
-| `benjamini_hochberg` | function | `src/engine/statistics/corpus_fdr.py:251` | defining module is not reachable from any measured entry point |
-| `compute_sharpe_haircut` | function | `src/engine/statistics/corpus_fdr.py:321` | defining module is not reachable from any measured entry point |
-| `FamilyFDRResult` | class | `src/engine/statistics/corpus_fdr.py:394` | defining module is not reachable from any measured entry point |
-| `compute_family_grouped_fdr` | function | `src/engine/statistics/corpus_fdr.py:402` | defining module is not reachable from any measured entry point |
-| `_bh_to_dict` | function | `src/engine/statistics/corpus_fdr.py:462` | defining module is not reachable from any measured entry point |
-| `_family_result_to_dict` | function | `src/engine/statistics/corpus_fdr.py:473` | defining module is not reachable from any measured entry point |
-| `expected_false_discoveries` | function | `src/engine/statistics/corpus_fdr.py:485` | defining module is not reachable from any measured entry point |
-| `attach_regime_breakdown` | function | `src/engine/statistics/corpus_fdr.py:564` | defining module is not reachable from any measured entry point |
-| `build_corpus_report` | function | `src/engine/statistics/corpus_fdr.py:624` | defining module is not reachable from any measured entry point |
 
 </details>
 
@@ -2382,23 +2086,12 @@ _...465 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/synthetic_market_simulator.py</code> - 13 symbols</summary>
+<details><summary><code>src/engine/synthetic_market_simulator.py</code> - 2 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
-| `SyntheticSimulatorConfig` | class | `src/engine/synthetic_market_simulator.py:148` | defining module is not reachable from any measured entry point |
-| `compute_stylized_facts` | function | `src/engine/synthetic_market_simulator.py:177` | defining module is not reachable from any measured entry point |
-| `run_stylized_fact_tests` | function | `src/engine/synthetic_market_simulator.py:245` | defining module is not reachable from any measured entry point |
 | `check_tail_scenario_severity` | function | `src/engine/synthetic_market_simulator.py:293` | no non-test reference outside its own definition |
-| `compute_kl_divergence` | function | `src/engine/synthetic_market_simulator.py:370` | defining module is not reachable from any measured entry point |
 | `check_mode_collapse` | function | `src/engine/synthetic_market_simulator.py:412` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `calibrate_batch` | function | `src/engine/synthetic_market_simulator.py:439` | defining module is not reachable from any measured entry point |
-| `vae_loss` | function | `src/engine/synthetic_market_simulator.py:582` | defining module is not reachable from any measured entry point |
-| `_prepare_sequences` | function | `src/engine/synthetic_market_simulator.py:598` | defining module is not reachable from any measured entry point |
-| `_condition_latent` | function | `src/engine/synthetic_market_simulator.py:682` | defining module is not reachable from any measured entry point |
-| `_tensor_to_bars` | function | `src/engine/synthetic_market_simulator.py:715` | defining module is not reachable from any measured entry point |
-| `SyntheticMarketSimulator` | class | `src/engine/synthetic_market_simulator.py:782` | defining module is not reachable from any measured entry point |
-| `main` | function | `src/engine/synthetic_market_simulator.py:1057` | defining module is not reachable from any measured entry point |
 
 </details>
 
@@ -3468,16 +3161,32 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/data/scripts</code> - 14 symbols</summary>
+<details><summary><code>src/data/scripts</code> - 48 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
+| `detect_roll_dates` | function | `src/data/scripts/adjust_continuous.py:22` | 0 | unique |
+| `ratio_adjust` | function | `src/data/scripts/adjust_continuous.py:62` | 0 | unique |
+| `panama_adjust` | function | `src/data/scripts/adjust_continuous.py:96` | 0 | unique |
+| `main` | function | `src/data/scripts/adjust_continuous.py:128` | 190 | AMBIG |
+| `get_client` | function | `src/data/scripts/crisis_data_download.py:53` | 4 | AMBIG |
+| `check_cost` | function | `src/data/scripts/crisis_data_download.py:62` | 1 | AMBIG |
+| `download_period` | function | `src/data/scripts/crisis_data_download.py:78` | 0 | unique |
+| `run_pipeline_step` | function | `src/data/scripts/crisis_data_download.py:108` | 0 | unique |
+| `process_file` | function | `src/data/scripts/crisis_data_download.py:128` | 0 | unique |
+| `main` | function | `src/data/scripts/crisis_data_download.py:188` | 190 | AMBIG |
+| `run_step` | function | `src/data/scripts/crisis_pipeline.py:27` | 0 | unique |
+| `main` | function | `src/data/scripts/crisis_pipeline.py:40` | 190 | AMBIG |
 | `get_cache_dir` | function | `src/data/scripts/databento_definition_pull.py:80` | 1 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_definition_pull.py:85` | 4 | AMBIG |
 | `pull_definition` | function | `src/data/scripts/databento_definition_pull.py:92` | 0 | unique |
 | `check_against_expected` | function | `src/data/scripts/databento_definition_pull.py:179` | 0 | unique |
 | `save_to_cache` | function | `src/data/scripts/databento_definition_pull.py:213` | 0 | unique |
 | `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 190 | AMBIG |
+| `get_client` | function | `src/data/scripts/databento_download.py:48` | 4 | AMBIG |
+| `check_cost` | function | `src/data/scripts/databento_download.py:56` | 1 | AMBIG |
+| `download` | function | `src/data/scripts/databento_download.py:72` | 1 | unique |
+| `main` | function | `src/data/scripts/databento_download.py:115` | 190 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_imbalance_pull.py:64` | 4 | AMBIG |
 | `et_to_utc_window` | function | `src/data/scripts/databento_imbalance_pull.py:72` | 0 | unique |
 | `pull_imbalance_for_date` | function | `src/data/scripts/databento_imbalance_pull.py:98` | 0 | unique |
@@ -3486,6 +3195,24 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_client` | function | `src/data/scripts/databento_statistics_pull.py:66` | 4 | AMBIG |
 | `pull_statistics` | function | `src/data/scripts/databento_statistics_pull.py:74` | 0 | unique |
 | `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 190 | AMBIG |
+| `get_cache_dir` | function | `src/data/scripts/refresh_local_cache.py:93` | 1 | AMBIG |
+| `get_parquet_path` | function | `src/data/scripts/refresh_local_cache.py:98` | 0 | unique |
+| `_migrate_legacy_flat_cache` | function | `src/data/scripts/refresh_local_cache.py:106` | 0 | unique |
+| `get_latest_ts` | function | `src/data/scripts/refresh_local_cache.py:125` | 0 | unique |
+| `resample_1m_to_tf` | function | `src/data/scripts/refresh_local_cache.py:147` | 0 | unique |
+| `fetch_1m_bars` | function | `src/data/scripts/refresh_local_cache.py:212` | 0 | unique |
+| `atomic_write_parquet` | function | `src/data/scripts/refresh_local_cache.py:283` | 0 | unique |
+| `_write_refresh_sidecar` | function | `src/data/scripts/refresh_local_cache.py:291` | 0 | unique |
+| `refresh_symbol_timeframe` | function | `src/data/scripts/refresh_local_cache.py:319` | 0 | unique |
+| `main` | function | `src/data/scripts/refresh_local_cache.py:608` | 190 | AMBIG |
+| `resample` | function | `src/data/scripts/resample_timeframes.py:30` | 3 | unique |
+| `main` | function | `src/data/scripts/resample_timeframes.py:46` | 190 | AMBIG |
+| `run_script` | function | `src/data/scripts/run_pipeline.py:22` | 0 | unique |
+| `main` | function | `src/data/scripts/run_pipeline.py:46` | 190 | AMBIG |
+| `get_s3_client` | function | `src/data/scripts/upload_to_s3.py:23` | 1 | unique |
+| `upload_partitioned` | function | `src/data/scripts/upload_to_s3.py:32` | 1 | unique |
+| `upload_json` | function | `src/data/scripts/upload_to_s3.py:81` | 0 | unique |
+| `main` | function | `src/data/scripts/upload_to_s3.py:89` | 190 | AMBIG |
 
 </details>
 
@@ -3703,6 +3430,23 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
+<details><summary><code>src/engine/battery</code> - 10 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `_now_iso` | function | `src/engine/battery/selection_deflation.py:59` | 2 | AMBIG |
+| `_sha256_file` | function | `src/engine/battery/selection_deflation.py:63` | 2 | AMBIG |
+| `_atomic_append_check` | function | `src/engine/battery/selection_deflation.py:76` | 0 | unique |
+| `_prior_latched` | function | `src/engine/battery/selection_deflation.py:105` | 0 | unique |
+| `run_selection_deflation_check` | function | `src/engine/battery/selection_deflation.py:115` | 0 | unique |
+| `_print_boundary` | function | `src/engine/battery/selection_deflation.py:198` | 0 | unique |
+| `_main` | function | `src/engine/battery/selection_deflation.py:213` | 1 | AMBIG |
+| `_now_iso` | function | `src/engine/battery/trial_counter.py:51` | 2 | AMBIG |
+| `_atomic_write` | function | `src/engine/battery/trial_counter.py:55` | 2 | AMBIG |
+| `TrialCounter` | class | `src/engine/battery/trial_counter.py:70` | 1 | unique |
+
+</details>
+
 <details><summary><code>src/engine/black_swan_evaluator.py</code> - 8 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
@@ -3724,6 +3468,14 @@ This is the *we already have this* list.  Check it before writing anything.
 |---|---|---|---:|---|
 | `BreakoutAmbiguityVerdict` | class | `src/engine/breakout_confirmation_ambiguity.py:123` | 0 | unique |
 | `classify_breakout_confirmation_ambiguity` | function | `src/engine/breakout_confirmation_ambiguity.py:159` | 1 | unique |
+
+</details>
+
+<details><summary><code>src/engine/cache_prewarm.py</code> - 1 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `prewarm_cache` | function | `src/engine/cache_prewarm.py:45` | 0 | unique |
 
 </details>
 
@@ -4060,6 +3812,22 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
+<details><summary><code>src/engine/deepar_regime_classifier.py</code> - 9 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `RegimeClassification` | class | `src/engine/deepar_regime_classifier.py:41` | 0 | unique |
+| `ClassificationResult` | class | `src/engine/deepar_regime_classifier.py:65` | 0 | unique |
+| `classify_regime` | function | `src/engine/deepar_regime_classifier.py:102` | 1 | AMBIG |
+| `compute_correlation_stress` | function | `src/engine/deepar_regime_classifier.py:180` | 0 | unique |
+| `_vol_regime_label` | function | `src/engine/deepar_regime_classifier.py:240` | 0 | unique |
+| `_vol_regime_from_prob` | function | `src/engine/deepar_regime_classifier.py:252` | 0 | unique |
+| `_trend_label` | function | `src/engine/deepar_regime_classifier.py:264` | 0 | unique |
+| `_stress_label` | function | `src/engine/deepar_regime_classifier.py:274` | 0 | unique |
+| `main` | function | `src/engine/deepar_regime_classifier.py:286` | 190 | AMBIG |
+
+</details>
+
 <details><summary><code>src/engine/determinism.py</code> - 5 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
@@ -4164,13 +3932,179 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/extraction</code> - 24 symbols</summary>
+<details><summary><code>src/engine/extraction</code> - 241 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `_load_record` | function | `src/engine/extraction/compile_certified_record.py:83` | 0 | unique |
-| `compile_record_to_artifact` | function | `src/engine/extraction/compile_certified_record.py:100` | 0 | unique |
-| `main` | function | `src/engine/extraction/compile_certified_record.py:148` | 190 | AMBIG |
+| `Tier3Verdict` | class | `src/engine/extraction/cert_assembler.py:72` | 1 | unique |
+| `ConditionTopology` | class | `src/engine/extraction/cert_assembler.py:89` | 3 | unique |
+| `Provenance` | class | `src/engine/extraction/cert_assembler.py:104` | 0 | unique |
+| `_condition_entry` | function | `src/engine/extraction/cert_assembler.py:119` | 0 | unique |
+| `_spine_condition` | function | `src/engine/extraction/cert_assembler.py:138` | 0 | unique |
+| `terminal_read_grade` | function | `src/engine/extraction/cert_assembler.py:186` | 0 | unique |
+| `assemble_certificate` | function | `src/engine/extraction/cert_assembler.py:299` | 2 | unique |
+| `SpecIdentityError` | class | `src/engine/extraction/compile_certified_record.py:120` | 0 | unique |
+| `parse_spec_id` | function | `src/engine/extraction/compile_certified_record.py:128` | 0 | unique |
+| `_load_record` | function | `src/engine/extraction/compile_certified_record.py:162` | 0 | unique |
+| `compile_record_to_artifact` | function | `src/engine/extraction/compile_certified_record.py:179` | 0 | unique |
+| `main` | function | `src/engine/extraction/compile_certified_record.py:236` | 190 | AMBIG |
+| `SpineCondition` | class | `src/engine/extraction/compile_lints.py:117` | 2 | unique |
+| `CompiledSpine` | class | `src/engine/extraction/compile_lints.py:135` | 2 | unique |
+| `LintResult` | class | `src/engine/extraction/compile_lints.py:165` | 0 | unique |
+| `direction_conflation_lint` | function | `src/engine/extraction/compile_lints.py:202` | 0 | unique |
+| `_parse_comparator` | function | `src/engine/extraction/compile_lints.py:244` | 0 | unique |
+| `unsat_sat_check` | function | `src/engine/extraction/compile_lints.py:253` | 0 | unique |
+| `or_alternatives_honored` | function | `src/engine/extraction/compile_lints.py:292` | 0 | unique |
+| `f2_coverage_gate` | function | `src/engine/extraction/compile_lints.py:333` | 1 | unique |
+| `causality_lint` | function | `src/engine/extraction/compile_lints.py:371` | 0 | unique |
+| `run_all_lints` | function | `src/engine/extraction/compile_lints.py:449` | 1 | unique |
+| `RealExtractorError` | class | `src/engine/extraction/extractor_bridge.py:75` | 3 | unique |
+| `EnumeratorError` | class | `src/engine/extraction/extractor_bridge.py:83` | 2 | unique |
+| `invoke_real_extractor` | function | `src/engine/extraction/extractor_bridge.py:89` | 1 | unique |
+| `_run_node_cli_json` | function | `src/engine/extraction/extractor_bridge.py:160` | 0 | unique |
+| `build_phase_b_scope` | function | `src/engine/extraction/extractor_bridge.py:215` | 0 | unique |
+| `run_two_phase_extraction` | function | `src/engine/extraction/extractor_bridge.py:227` | 2 | unique |
+| `invoke_strategy_enumerator` | function | `src/engine/extraction/extractor_bridge.py:300` | 0 | unique |
+| `_vault_path` | function | `src/engine/extraction/extractor_bridge.py:328` | 0 | unique |
+| `load_cached_extraction` | function | `src/engine/extraction/extractor_bridge.py:333` | 0 | unique |
+| `save_extraction` | function | `src/engine/extraction/extractor_bridge.py:343` | 3 | unique |
+| `get_or_extract` | function | `src/engine/extraction/extractor_bridge.py:368` | 1 | unique |
+| `run_dry_run_real_extractor` | function | `src/engine/extraction/extractor_bridge.py:414` | 0 | unique |
+| `main` | function | `src/engine/extraction/extractor_bridge.py:490` | 190 | AMBIG |
+| `SpineConditionText` | class | `src/engine/extraction/pilot_conveyor.py:292` | 0 | unique |
+| `extract_spine_condition_texts` | function | `src/engine/extraction/pilot_conveyor.py:303` | 2 | unique |
+| `_tier1_surface_signature` | function | `src/engine/extraction/pilot_conveyor.py:355` | 0 | unique |
+| `_ts_f2_normalize` | function | `src/engine/extraction/pilot_conveyor.py:400` | 0 | unique |
+| `content_tokens` | function | `src/engine/extraction/pilot_conveyor.py:417` | 0 | unique |
+| `UnanchoredCondition` | class | `src/engine/extraction/pilot_conveyor.py:441` | 0 | unique |
+| `locate_condition_anchors` | function | `src/engine/extraction/pilot_conveyor.py:459` | 0 | unique |
+| `extractor_anchor_availability_report` | function | `src/engine/extraction/pilot_conveyor.py:496` | 0 | unique |
+| `extractor_version_pin` | function | `src/engine/extraction/pilot_conveyor.py:538` | 2 | unique |
+| `LeakScanResult` | class | `src/engine/extraction/pilot_conveyor.py:658` | 0 | unique |
+| `LeakScanFailure` | class | `src/engine/extraction/pilot_conveyor.py:663` | 2 | unique |
+| `blinding_leak_scan` | function | `src/engine/extraction/pilot_conveyor.py:670` | 2 | unique |
+| `_item_json_excluding_quote` | function | `src/engine/extraction/pilot_conveyor.py:822` | 0 | unique |
+| `_sections_json_excluding_quotes` | function | `src/engine/extraction/pilot_conveyor.py:836` | 0 | unique |
+| `_normalize_ws` | function | `src/engine/extraction/pilot_conveyor.py:854` | 0 | unique |
+| `_load_wave1_control_section` | function | `src/engine/extraction/pilot_conveyor.py:870` | 0 | unique |
+| `axis3_adjudication_ceiling` | function | `src/engine/extraction/pilot_conveyor.py:892` | 0 | unique |
+| `_axis3_seed` | function | `src/engine/extraction/pilot_conveyor.py:910` | 0 | unique |
+| `_select_axis3_audit_fire` | function | `src/engine/extraction/pilot_conveyor.py:923` | 0 | unique |
+| `_build_tier3_packet` | function | `src/engine/extraction/pilot_conveyor.py:961` | 0 | unique |
+| `fetch_transcript` | function | `src/engine/extraction/pilot_conveyor.py:1104` | 1 | unique |
+| `prepare_strategy` | function | `src/engine/extraction/pilot_conveyor.py:1133` | 2 | unique |
+| `prepare_video` | function | `src/engine/extraction/pilot_conveyor.py:1315` | 1 | unique |
+| `verdict_from_rater_response` | function | `src/engine/extraction/pilot_conveyor.py:1354` | 3 | unique |
+| `Tier3SupportVerdict` | class | `src/engine/extraction/pilot_conveyor.py:1386` | 0 | unique |
+| `support_verdict_from_stage2_response` | function | `src/engine/extraction/pilot_conveyor.py:1398` | 2 | unique |
+| `diagnose_certificate` | function | `src/engine/extraction/pilot_conveyor.py:1439` | 0 | unique |
+| `finalize_certificate` | function | `src/engine/extraction/pilot_conveyor.py:1502` | 3 | unique |
+| `aggregate` | function | `src/engine/extraction/pilot_conveyor.py:1678` | 1 | unique |
+| `_synthetic_dry_run_propose_fn` | function | `src/engine/extraction/pilot_conveyor.py:1794` | 1 | unique |
+| `run_dry_run_synthetic` | function | `src/engine/extraction/pilot_conveyor.py:1811` | 0 | unique |
+| `write_dry_run_artifact` | function | `src/engine/extraction/pilot_conveyor.py:1869` | 0 | unique |
+| `main` | function | `src/engine/extraction/pilot_conveyor.py:1882` | 190 | AMBIG |
+| `ArtifactsMissingError` | class | `src/engine/extraction/sealed_read_driver.py:166` | 0 | unique |
+| `ExtractionSourceMissing` | class | `src/engine/extraction/sealed_read_driver.py:176` | 0 | unique |
+| `ReaderIdentityMismatch` | class | `src/engine/extraction/sealed_read_driver.py:182` | 1 | unique |
+| `_sha256_file` | function | `src/engine/extraction/sealed_read_driver.py:198` | 2 | AMBIG |
+| `_read_frozen_text` | function | `src/engine/extraction/sealed_read_driver.py:210` | 0 | unique |
+| `_read_frozen_model_id` | function | `src/engine/extraction/sealed_read_driver.py:220` | 0 | unique |
+| `_read_frozen_k` | function | `src/engine/extraction/sealed_read_driver.py:234` | 0 | unique |
+| `_read_frozen_params` | function | `src/engine/extraction/sealed_read_driver.py:246` | 0 | unique |
+| `_read_frozen_channel_class` | function | `src/engine/extraction/sealed_read_driver.py:267` | 0 | unique |
+| `certified_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:288` | 1 | unique |
+| `assert_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:347` | 0 | unique |
+| `_claimed_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:370` | 0 | unique |
+| `assert_dispatch_identity` | function | `src/engine/extraction/sealed_read_driver.py:396` | 0 | unique |
+| `_mode_of` | function | `src/engine/extraction/sealed_read_driver.py:503` | 0 | unique |
+| `_enum_stability` | function | `src/engine/extraction/sealed_read_driver.py:519` | 0 | unique |
+| `_default_adjudicate` | function | `src/engine/extraction/sealed_read_driver.py:582` | 0 | unique |
+| `require_artifacts_on_disk` | function | `src/engine/extraction/sealed_read_driver.py:610` | 0 | unique |
+| `_atomic_write` | function | `src/engine/extraction/sealed_read_driver.py:622` | 2 | AMBIG |
+| `_load_phase_a` | function | `src/engine/extraction/sealed_read_driver.py:645` | 0 | unique |
+| `_load_staging_strategies` | function | `src/engine/extraction/sealed_read_driver.py:658` | 0 | unique |
+| `_build_rehearsal_artifact` | function | `src/engine/extraction/sealed_read_driver.py:681` | 0 | unique |
+| `_parse_payload` | function | `src/engine/extraction/sealed_read_driver.py:760` | 0 | unique |
+| `_assert_one_dispatch` | function | `src/engine/extraction/sealed_read_driver.py:773` | 0 | unique |
+| `_draw_count` | function | `src/engine/extraction/sealed_read_driver.py:794` | 0 | unique |
+| `_draw_refs` | function | `src/engine/extraction/sealed_read_driver.py:805` | 0 | unique |
+| `_collect_phase_a_draws` | function | `src/engine/extraction/sealed_read_driver.py:815` | 0 | unique |
+| `_consensus_strategy_refs` | function | `src/engine/extraction/sealed_read_driver.py:840` | 0 | unique |
+| `_consensus_strategy_objects` | function | `src/engine/extraction/sealed_read_driver.py:876` | 0 | unique |
+| `_project_consensus_scopes` | function | `src/engine/extraction/sealed_read_driver.py:896` | 0 | unique |
+| `_dispatch_phase_b` | function | `src/engine/extraction/sealed_read_driver.py:904` | 0 | unique |
+| `_build_sealed_artifact` | function | `src/engine/extraction/sealed_read_driver.py:942` | 0 | unique |
+| `_video_ids_from_verified` | function | `src/engine/extraction/sealed_read_driver.py:1010` | 0 | unique |
+| `run_extraction_stage` | function | `src/engine/extraction/sealed_read_driver.py:1029` | 1 | unique |
+| `ExtractionNotReady` | class | `src/engine/extraction/sealed_read_driver.py:1255` | 0 | unique |
+| `_load_conflation_verdict` | function | `src/engine/extraction/sealed_read_driver.py:1269` | 0 | unique |
+| `_load_enum_verdict` | function | `src/engine/extraction/sealed_read_driver.py:1285` | 0 | unique |
+| `_load_completeness_verdict` | function | `src/engine/extraction/sealed_read_driver.py:1310` | 0 | unique |
+| `_coerce_conflation` | function | `src/engine/extraction/sealed_read_driver.py:1333` | 0 | unique |
+| `_coerce_enum` | function | `src/engine/extraction/sealed_read_driver.py:1340` | 0 | unique |
+| `_coerce_completeness` | function | `src/engine/extraction/sealed_read_driver.py:1354` | 0 | unique |
+| `_obtain_panels` | function | `src/engine/extraction/sealed_read_driver.py:1368` | 0 | unique |
+| `_panel_prepare_output` | function | `src/engine/extraction/sealed_read_driver.py:1414` | 0 | unique |
+| `_certify_one_strategy` | function | `src/engine/extraction/sealed_read_driver.py:1443` | 0 | unique |
+| `_mechanical_floor_record` | function | `src/engine/extraction/sealed_read_driver.py:1461` | 0 | unique |
+| `_strategy_pairs` | function | `src/engine/extraction/sealed_read_driver.py:1478` | 0 | unique |
+| `run_panels_and_certify_stage` | function | `src/engine/extraction/sealed_read_driver.py:1500` | 0 | unique |
+| `SealedReadDriver` | class | `src/engine/extraction/sealed_read_driver.py:1610` | 1 | unique |
+| `RaterLayerNotReady` | class | `src/engine/extraction/sealed_read_driver.py:1987` | 0 | unique |
+| `_control_gate` | function | `src/engine/extraction/sealed_read_driver.py:1994` | 0 | unique |
+| `_agreed_role` | function | `src/engine/extraction/sealed_read_driver.py:2009` | 0 | unique |
+| `_agreed_support` | function | `src/engine/extraction/sealed_read_driver.py:2019` | 0 | unique |
+| `_stage1_view` | function | `src/engine/extraction/sealed_read_driver.py:2034` | 0 | unique |
+| `_stage2_view` | function | `src/engine/extraction/sealed_read_driver.py:2044` | 0 | unique |
+| `_deterministic_rehearsal_rater` | function | `src/engine/extraction/sealed_read_driver.py:2056` | 0 | unique |
+| `_load_cached_rater` | function | `src/engine/extraction/sealed_read_driver.py:2085` | 0 | unique |
+| `_dispatch_two_stage_packet` | function | `src/engine/extraction/sealed_read_driver.py:2104` | 0 | unique |
+| `_normalize_rater_input` | function | `src/engine/extraction/sealed_read_driver.py:2211` | 0 | unique |
+| `run_rater_layer_stage` | function | `src/engine/extraction/sealed_read_driver.py:2227` | 0 | unique |
+| `_hash_phase_a_draws` | function | `src/engine/extraction/sealed_read_driver.py:2473` | 0 | unique |
+| `compute_phase_a_consensus` | function | `src/engine/extraction/sealed_read_driver.py:2487` | 1 | unique |
+| `build_panel_requests` | function | `src/engine/extraction/sealed_read_driver.py:2547` | 1 | unique |
+| `build_rater_packets` | function | `src/engine/extraction/sealed_read_driver.py:2577` | 1 | unique |
+| `_rater_output_contract` | function | `src/engine/extraction/sealed_read_driver.py:2662` | 0 | unique |
+| `classify_source_attrition` | function | `src/engine/extraction/sealed_read_driver.py:2807` | 1 | unique |
+| `_source_attrition_block` | function | `src/engine/extraction/sealed_read_driver.py:2879` | 0 | unique |
+| `_source_attrition_scope_lines` | function | `src/engine/extraction/sealed_read_driver.py:2921` | 0 | unique |
+| `VerdictNotReady` | class | `src/engine/extraction/sealed_read_driver.py:2950` | 0 | unique |
+| `_normalize_verdict_input` | function | `src/engine/extraction/sealed_read_driver.py:2963` | 0 | unique |
+| `_row_is_clean` | function | `src/engine/extraction/sealed_read_driver.py:2976` | 0 | unique |
+| `_row_adjudications` | function | `src/engine/extraction/sealed_read_driver.py:2986` | 0 | unique |
+| `_row_content_clean` | function | `src/engine/extraction/sealed_read_driver.py:3002` | 0 | unique |
+| `_cert_to_video_rollup` | function | `src/engine/extraction/sealed_read_driver.py:3023` | 0 | unique |
+| `_economics_rider` | function | `src/engine/extraction/sealed_read_driver.py:3058` | 0 | unique |
+| `_content_axis_record` | function | `src/engine/extraction/sealed_read_driver.py:3088` | 0 | unique |
+| `_instrument_sha_stamps_verified` | function | `src/engine/extraction/sealed_read_driver.py:3123` | 0 | unique |
+| `_element_verified` | function | `src/engine/extraction/sealed_read_driver.py:3144` | 0 | unique |
+| `_validity_block` | function | `src/engine/extraction/sealed_read_driver.py:3162` | 0 | unique |
+| `_assemble_instrument_stamps` | function | `src/engine/extraction/sealed_read_driver.py:3186` | 0 | unique |
+| `run_verdict_stage` | function | `src/engine/extraction/sealed_read_driver.py:3225` | 0 | unique |
+| `RehearsalManifestMismatch` | class | `src/engine/extraction/sealed_read_driver.py:3455` | 0 | unique |
+| `_write_spent_rehearsal_manifest` | function | `src/engine/extraction/sealed_read_driver.py:3466` | 1 | unique |
+| `_write_witness_extraction_artifact` | function | `src/engine/extraction/sealed_read_driver.py:3484` | 0 | unique |
+| `_module_d_stage` | function | `src/engine/extraction/sealed_read_driver.py:3501` | 0 | unique |
+| `_make_live_call_spies` | function | `src/engine/extraction/sealed_read_driver.py:3518` | 0 | unique |
+| `_stage_receipts` | function | `src/engine/extraction/sealed_read_driver.py:3539` | 0 | unique |
+| `_per_video_clean_map` | function | `src/engine/extraction/sealed_read_driver.py:3598` | 0 | unique |
+| `rehearsal_instrument_shas` | function | `src/engine/extraction/sealed_read_driver.py:3605` | 0 | unique |
+| `rehearsal_drift_guard` | function | `src/engine/extraction/sealed_read_driver.py:3624` | 0 | unique |
+| `_thread_iyf_witness` | function | `src/engine/extraction/sealed_read_driver.py:3666` | 0 | unique |
+| `_thread_fused_witness` | function | `src/engine/extraction/sealed_read_driver.py:3721` | 0 | unique |
+| `run_full_dress_rehearsal` | function | `src/engine/extraction/sealed_read_driver.py:3781` | 1 | unique |
+| `_iyf_rejected_rows` | function | `src/engine/extraction/sealed_read_driver.py:4049` | 0 | unique |
+| `SpentManifestRejected` | class | `src/engine/extraction/sealed_read_gate.py:66` | 1 | unique |
+| `_video_ids_sorted` | function | `src/engine/extraction/sealed_read_gate.py:71` | 0 | unique |
+| `_recompute_seal_sha` | function | `src/engine/extraction/sealed_read_gate.py:88` | 0 | unique |
+| `verify_sealed_manifest` | function | `src/engine/extraction/sealed_read_gate.py:94` | 0 | unique |
+| `verify_transcripts_present` | function | `src/engine/extraction/sealed_read_gate.py:155` | 0 | unique |
+| `reject_if_spent16` | function | `src/engine/extraction/sealed_read_gate.py:181` | 0 | unique |
+| `_token_present` | function | `src/engine/extraction/sealed_read_gate.py:204` | 1 | unique |
+| `operator_gate` | function | `src/engine/extraction/sealed_read_gate.py:213` | 0 | unique |
+| `gate_sealed_read` | function | `src/engine/extraction/sealed_read_gate.py:249` | 2 | unique |
 | `_stem_pattern` | function | `src/engine/extraction/spec_producer.py:235` | 0 | unique |
 | `_norm` | function | `src/engine/extraction/spec_producer.py:255` | 1 | AMBIG |
 | `_slug` | function | `src/engine/extraction/spec_producer.py:259` | 3 | unique |
@@ -4192,6 +4126,57 @@ This is the *we already have this* list.  Check it before writing anything.
 | `RecordCompileResult` | class | `src/engine/extraction/spec_producer.py:936` | 1 | unique |
 | `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:1024` | 1 | unique |
 | `_opening_range_condition_id` | function | `src/engine/extraction/spec_producer.py:1111` | 0 | unique |
+| `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | 0 | unique |
+| `_fires_by_family` | function | `src/engine/extraction/tier1_coverage_report.py:75` | 0 | unique |
+| `coverage` | function | `src/engine/extraction/tier1_coverage_report.py:86` | 1 | unique |
+| `run_birth_gate` | function | `src/engine/extraction/tier1_coverage_report.py:105` | 1 | AMBIG |
+| `run_layer_reliability` | function | `src/engine/extraction/tier1_coverage_report.py:142` | 0 | unique |
+| `precision_spotcheck` | function | `src/engine/extraction/tier1_coverage_report.py:169` | 0 | unique |
+| `build_report` | function | `src/engine/extraction/tier1_coverage_report.py:192` | 2 | AMBIG |
+| `main` | function | `src/engine/extraction/tier1_coverage_report.py:237` | 190 | AMBIG |
+| `Tier1Detection` | class | `src/engine/extraction/tier1_detectors.py:54` | 4 | unique |
+| `Tier1FallThrough` | class | `src/engine/extraction/tier1_detectors.py:76` | 3 | unique |
+| `Tier1Result` | class | `src/engine/extraction/tier1_detectors.py:87` | 1 | unique |
+| `_ActionMatch` | class | `src/engine/extraction/tier1_detectors.py:178` | 0 | unique |
+| `_ActionRe` | class | `src/engine/extraction/tier1_detectors.py:194` | 0 | unique |
+| `_clause_bounds` | function | `src/engine/extraction/tier1_detectors.py:252` | 0 | unique |
+| `_intent_governs_action` | function | `src/engine/extraction/tier1_detectors.py:268` | 0 | unique |
+| `_forecast_trigger` | function | `src/engine/extraction/tier1_detectors.py:287` | 0 | unique |
+| `_detect_exclusion_contrast` | function | `src/engine/extraction/tier1_detectors.py:298` | 0 | unique |
+| `_pole_anchor_start` | function | `src/engine/extraction/tier1_detectors.py:351` | 0 | unique |
+| `_pole_anchor_end` | function | `src/engine/extraction/tier1_detectors.py:364` | 0 | unique |
+| `_detect_conditional_action` | function | `src/engine/extraction/tier1_detectors.py:379` | 0 | unique |
+| `_detect_imperative` | function | `src/engine/extraction/tier1_detectors.py:464` | 0 | unique |
+| `detect_tier1` | function | `src/engine/extraction/tier1_detectors.py:510` | 1 | unique |
+| `run_tier1` | function | `src/engine/extraction/tier1_detectors.py:586` | 3 | unique |
+| `_load_quote_index` | function | `src/engine/extraction/tier2_design_report.py:60` | 0 | unique |
+| `materialize_design` | function | `src/engine/extraction/tier2_design_report.py:74` | 0 | unique |
+| `_CachedGemma` | class | `src/engine/extraction/tier2_design_report.py:113` | 0 | unique |
+| `_siblings_for` | function | `src/engine/extraction/tier2_design_report.py:137` | 0 | unique |
+| `run_birth_gate` | function | `src/engine/extraction/tier2_design_report.py:142` | 1 | AMBIG |
+| `classify_design_pool` | function | `src/engine/extraction/tier2_design_report.py:185` | 0 | unique |
+| `tabulate_per_class` | function | `src/engine/extraction/tier2_design_report.py:209` | 0 | unique |
+| `_empty` | function | `src/engine/extraction/tier2_design_report.py:237` | 1 | unique |
+| `economics` | function | `src/engine/extraction/tier2_design_report.py:242` | 1 | unique |
+| `two_path_check` | function | `src/engine/extraction/tier2_design_report.py:260` | 0 | unique |
+| `segmentation_is_exact` | function | `src/engine/extraction/tier2_design_report.py:278` | 0 | unique |
+| `llm_margin_agreement` | function | `src/engine/extraction/tier2_design_report.py:285` | 0 | unique |
+| `build_report` | function | `src/engine/extraction/tier2_design_report.py:322` | 2 | AMBIG |
+| `_print_summary` | function | `src/engine/extraction/tier2_design_report.py:357` | 1 | AMBIG |
+| `main` | function | `src/engine/extraction/tier2_design_report.py:394` | 190 | AMBIG |
+| `class_of` | function | `src/engine/extraction/tier2_discourse.py:84` | 2 | AMBIG |
+| `Tier2Decision` | class | `src/engine/extraction/tier2_discourse.py:89` | 1 | AMBIG |
+| `segment_frame` | function | `src/engine/extraction/tier2_discourse.py:238` | 2 | AMBIG |
+| `is_rule_or_exclusion_frame` | function | `src/engine/extraction/tier2_discourse.py:269` | 2 | AMBIG |
+| `_build_user_message` | function | `src/engine/extraction/tier2_discourse.py:389` | 2 | AMBIG |
+| `_derive_label` | function | `src/engine/extraction/tier2_discourse.py:405` | 1 | AMBIG |
+| `gemma_classify_call` | function | `src/engine/extraction/tier2_discourse.py:438` | 2 | AMBIG |
+| `classify_item` | function | `src/engine/extraction/tier2_discourse.py:481` | 2 | AMBIG |
+| `ConceptPass` | class | `src/engine/extraction/tier2_discourse.py:566` | 1 | AMBIG |
+| `ConditionEntry` | class | `src/engine/extraction/topology_producer.py:87` | 0 | unique |
+| `_role_for` | function | `src/engine/extraction/topology_producer.py:116` | 0 | unique |
+| `_extract_comparator` | function | `src/engine/extraction/topology_producer.py:120` | 0 | unique |
+| `_direction_for` | function | `src/engine/extraction/topology_producer.py:136` | 0 | unique |
 
 </details>
 
@@ -4243,6 +4228,40 @@ This is the *we already have this* list.  Check it before writing anything.
 |---|---|---|---:|---|
 | `_canonical_json` | function | `src/engine/firm_rules_version.py:34` | 0 | unique |
 | `compute_firm_rules_version` | function | `src/engine/firm_rules_version.py:44` | 1 | unique |
+
+</details>
+
+<details><summary><code>src/engine/forensics</code> - 27 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `CheckResult` | class | `src/engine/forensics/compile_fidelity.py:98` | 6 | unique |
+| `ConditionVerdict` | class | `src/engine/forensics/compile_fidelity.py:107` | 0 | unique |
+| `Phase1Seal` | class | `src/engine/forensics/compile_fidelity.py:133` | 0 | unique |
+| `Phase2Result` | class | `src/engine/forensics/compile_fidelity.py:157` | 0 | unique |
+| `LegAResult` | class | `src/engine/forensics/compile_fidelity.py:165` | 1 | unique |
+| `_norm` | function | `src/engine/forensics/compile_fidelity.py:194` | 1 | AMBIG |
+| `_is_default_ignorable` | function | `src/engine/forensics/compile_fidelity.py:245` | 0 | unique |
+| `_has_visible_content` | function | `src/engine/forensics/compile_fidelity.py:255` | 0 | unique |
+| `_spec_body` | function | `src/engine/forensics/compile_fidelity.py:301` | 0 | unique |
+| `_taught_conditions` | function | `src/engine/forensics/compile_fidelity.py:308` | 0 | unique |
+| `_binding_index` | function | `src/engine/forensics/compile_fidelity.py:322` | 0 | unique |
+| `run_leg_a_phase1` | function | `src/engine/forensics/compile_fidelity.py:332` | 0 | unique |
+| `_finish_phase1` | function | `src/engine/forensics/compile_fidelity.py:380` | 0 | unique |
+| `_verdict_for_condition` | function | `src/engine/forensics/compile_fidelity.py:409` | 0 | unique |
+| `_is_provenance_only` | function | `src/engine/forensics/compile_fidelity.py:492` | 0 | unique |
+| `_honest_approximation` | function | `src/engine/forensics/compile_fidelity.py:503` | 0 | unique |
+| `_check_concretely_bound` | function | `src/engine/forensics/compile_fidelity.py:535` | 0 | unique |
+| `_session_scope_path` | function | `src/engine/forensics/compile_fidelity.py:557` | 0 | unique |
+| `_cert_key_invalid` | function | `src/engine/forensics/compile_fidelity.py:570` | 0 | unique |
+| `_check_provenance_chain` | function | `src/engine/forensics/compile_fidelity.py:609` | 0 | unique |
+| `_token_boundary_contains` | function | `src/engine/forensics/compile_fidelity.py:667` | 0 | unique |
+| `_max_bipartite_matching` | function | `src/engine/forensics/compile_fidelity.py:677` | 0 | unique |
+| `_check_no_certificate_drops` | function | `src/engine/forensics/compile_fidelity.py:700` | 0 | unique |
+| `_check_house_exit_stamp` | function | `src/engine/forensics/compile_fidelity.py:784` | 0 | unique |
+| `countersign_phase2` | function | `src/engine/forensics/compile_fidelity.py:809` | 0 | unique |
+| `run_leg_a` | function | `src/engine/forensics/compile_fidelity.py:859` | 1 | unique |
+| `_cli` | function | `src/engine/forensics/compile_fidelity.py:900` | 0 | unique |
 
 </details>
 
@@ -4648,6 +4667,15 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
+<details><summary><code>src/engine/null_calibration_guard.py</code> - 2 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `build_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:34` | 1 | unique |
+| `validate_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:63` | 1 | unique |
+
+</details>
+
 <details><summary><code>src/engine/nvtx_markers.py</code> - 3 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
@@ -4919,6 +4947,20 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
+<details><summary><code>src/engine/prop_survival_model.py</code> - 7 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `RiskEvent` | class | `src/engine/prop_survival_model.py:22` | 0 | unique |
+| `PropSurvivalResult` | class | `src/engine/prop_survival_model.py:32` | 0 | unique |
+| `build_breach_event` | function | `src/engine/prop_survival_model.py:40` | 0 | unique |
+| `build_target_event` | function | `src/engine/prop_survival_model.py:61` | 0 | unique |
+| `build_tail_loss_event` | function | `src/engine/prop_survival_model.py:81` | 0 | unique |
+| `build_risk_band_scenarios` | function | `src/engine/prop_survival_model.py:94` | 0 | unique |
+| `estimate_classical_survival` | function | `src/engine/prop_survival_model.py:147` | 0 | unique |
+
+</details>
+
 <details><summary><code>src/engine/qmc_sampler.py</code> - 1 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
@@ -4953,6 +4995,16 @@ This is the *we already have this* list.  Check it before writing anything.
 | `build_parameter_qubo` | function | `src/engine/quantum_annealing_optimizer.py:125` | 0 | unique |
 | `run_sqa_optimization` | function | `src/engine/quantum_annealing_optimizer.py:184` | 0 | unique |
 | `find_robust_plateau` | function | `src/engine/quantum_annealing_optimizer.py:345` | 0 | unique |
+
+</details>
+
+<details><summary><code>src/engine/quantum_bench.py</code> - 3 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 0 | unique |
+| `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | 0 | unique |
+| `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 0 | unique |
 
 </details>
 
@@ -5060,7 +5112,17 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/replay</code> - 31 symbols</summary>
+<details><summary><code>src/engine/regime_survival.py</code> - 3 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `_compute_regime_stats` | function | `src/engine/regime_survival.py:53` | 0 | unique |
+| `run_harsh_regime_survival` | function | `src/engine/regime_survival.py:139` | 0 | unique |
+| `_error_result` | function | `src/engine/regime_survival.py:273` | 0 | unique |
+
+</details>
+
+<details><summary><code>src/engine/replay</code> - 41 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -5095,6 +5157,16 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_print_result` | function | `src/engine/replay/quantum_replay.py:623` | 0 | unique |
 | `_print_summary` | function | `src/engine/replay/quantum_replay.py:637` | 1 | AMBIG |
 | `_build_parser` | function | `src/engine/replay/quantum_replay.py:666` | 0 | unique |
+| `_get_survival_scorer_git_sha` | function | `src/engine/replay/survival_twin_replay.py:108` | 0 | unique |
+| `compute_reproducibility_hash` | function | `src/engine/replay/survival_twin_replay.py:130` | 1 | AMBIG |
+| `_load_pass_a_ruin_ci_high` | function | `src/engine/replay/survival_twin_replay.py:149` | 0 | unique |
+| `_compute_disagreement` | function | `src/engine/replay/survival_twin_replay.py:216` | 0 | unique |
+| `SurvivalReplayResult` | class | `src/engine/replay/survival_twin_replay.py:235` | 0 | unique |
+| `_run_single_survival_replay` | function | `src/engine/replay/survival_twin_replay.py:286` | 0 | unique |
+| `_result_to_db_row` | function | `src/engine/replay/survival_twin_replay.py:427` | 1 | AMBIG |
+| `replay_survival_on_backtest` | function | `src/engine/replay/survival_twin_replay.py:496` | 0 | unique |
+| `replay_survival_on_all_backtests` | function | `src/engine/replay/survival_twin_replay.py:583` | 0 | unique |
+| `main` | function | `src/engine/replay/survival_twin_replay.py:640` | 190 | AMBIG |
 
 </details>
 
@@ -5245,7 +5317,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/skip_engine</code> - 38 symbols</summary>
+<details><summary><code>src/engine/skip_engine</code> - 42 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -5287,6 +5359,10 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_score_quantum_entropy` | function | `src/engine/skip_engine/skip_classifier.py:257` | 0 | unique |
 | `_scale_signal_score` | function | `src/engine/skip_engine/skip_classifier.py:285` | 0 | unique |
 | `classify_session` | function | `src/engine/skip_engine/skip_classifier.py:309` | 2 | AMBIG |
+| `_build_feature_vector` | function | `src/engine/skip_engine/weight_trainer.py:95` | 0 | unique |
+| `_coeff_to_multiplier` | function | `src/engine/skip_engine/weight_trainer.py:120` | 0 | unique |
+| `train_weights` | function | `src/engine/skip_engine/weight_trainer.py:145` | 0 | unique |
+| `main` | function | `src/engine/skip_engine/weight_trainer.py:268` | 190 | AMBIG |
 
 </details>
 
@@ -5380,13 +5456,31 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/statistics</code> - 15 symbols</summary>
+<details><summary><code>src/engine/statistics</code> - 33 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
 | `_get_warn_threshold` | function | `src/engine/statistics/backtest_inflation_factor.py:69` | 0 | unique |
 | `_get_block_threshold` | function | `src/engine/statistics/backtest_inflation_factor.py:77` | 0 | unique |
 | `compute_bif` | function | `src/engine/statistics/backtest_inflation_factor.py:87` | 2 | unique |
+| `_get_default_q_research` | function | `src/engine/statistics/corpus_fdr.py:83` | 0 | unique |
+| `_get_default_q_promotion` | function | `src/engine/statistics/corpus_fdr.py:92` | 0 | unique |
+| `_std_normal_cdf` | function | `src/engine/statistics/corpus_fdr.py:115` | 0 | unique |
+| `_std_normal_sf` | function | `src/engine/statistics/corpus_fdr.py:120` | 0 | unique |
+| `_probit` | function | `src/engine/statistics/corpus_fdr.py:125` | 0 | unique |
+| `_expected_max_sharpe` | function | `src/engine/statistics/corpus_fdr.py:150` | 0 | unique |
+| `PValueDerivation` | class | `src/engine/statistics/corpus_fdr.py:168` | 0 | unique |
+| `derive_pvalue_for_strategy` | function | `src/engine/statistics/corpus_fdr.py:183` | 0 | unique |
+| `BHResult` | class | `src/engine/statistics/corpus_fdr.py:242` | 0 | unique |
+| `benjamini_hochberg` | function | `src/engine/statistics/corpus_fdr.py:251` | 0 | unique |
+| `compute_sharpe_haircut` | function | `src/engine/statistics/corpus_fdr.py:321` | 0 | unique |
+| `FamilyFDRResult` | class | `src/engine/statistics/corpus_fdr.py:394` | 0 | unique |
+| `compute_family_grouped_fdr` | function | `src/engine/statistics/corpus_fdr.py:402` | 0 | unique |
+| `_bh_to_dict` | function | `src/engine/statistics/corpus_fdr.py:462` | 0 | unique |
+| `_family_result_to_dict` | function | `src/engine/statistics/corpus_fdr.py:473` | 0 | unique |
+| `expected_false_discoveries` | function | `src/engine/statistics/corpus_fdr.py:485` | 1 | unique |
+| `attach_regime_breakdown` | function | `src/engine/statistics/corpus_fdr.py:564` | 0 | unique |
+| `build_corpus_report` | function | `src/engine/statistics/corpus_fdr.py:624` | 1 | unique |
 | `get_spa_p_threshold` | function | `src/engine/statistics/hansens_spa.py:46` | 0 | unique |
 | `hansens_spa` | function | `src/engine/statistics/hansens_spa.py:54` | 2 | unique |
 | `hansens_spa_multi` | function | `src/engine/statistics/hansens_spa.py:184` | 1 | unique |
@@ -5520,6 +5614,24 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_returns_to_ohlcv` | function | `src/engine/synthetic/stochastic_regime_generator.py:379` | 0 | unique |
 | `_simulate_garch_vol_path` | function | `src/engine/synthetic/stochastic_regime_generator.py:524` | 0 | unique |
 | `StochasticRegimeGenerator` | class | `src/engine/synthetic/stochastic_regime_generator.py:572` | 1 | unique |
+
+</details>
+
+<details><summary><code>src/engine/synthetic_market_simulator.py</code> - 11 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `SyntheticSimulatorConfig` | class | `src/engine/synthetic_market_simulator.py:148` | 0 | unique |
+| `compute_stylized_facts` | function | `src/engine/synthetic_market_simulator.py:177` | 0 | unique |
+| `run_stylized_fact_tests` | function | `src/engine/synthetic_market_simulator.py:245` | 0 | unique |
+| `compute_kl_divergence` | function | `src/engine/synthetic_market_simulator.py:370` | 0 | unique |
+| `calibrate_batch` | function | `src/engine/synthetic_market_simulator.py:439` | 0 | unique |
+| `vae_loss` | function | `src/engine/synthetic_market_simulator.py:582` | 0 | unique |
+| `_prepare_sequences` | function | `src/engine/synthetic_market_simulator.py:598` | 0 | unique |
+| `_condition_latent` | function | `src/engine/synthetic_market_simulator.py:682` | 0 | unique |
+| `_tensor_to_bars` | function | `src/engine/synthetic_market_simulator.py:715` | 0 | unique |
+| `SyntheticMarketSimulator` | class | `src/engine/synthetic_market_simulator.py:782` | 0 | unique |
+| `main` | function | `src/engine/synthetic_market_simulator.py:1057` | 190 | AMBIG |
 
 </details>
 

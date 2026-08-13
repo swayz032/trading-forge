@@ -44,9 +44,9 @@ evidence logic. Concretely, this file contains:
     `THE ONLY WAY A WRAPPER STAYS A WRAPPER IS IF IT CANNOT ANSWER ANY QUESTION THE
      THING IT WRAPS IS THERE TO ANSWER.`
 
-🛑 IDENTITY IS SUPPLIED, NEVER DERIVED
---------------------------------------
-`--video` and `--strategy-index` are REQUIRED and are never parsed out of the record
+🛑 IDENTITY IS SUPPLIED AND VALIDATED, NEVER DERIVED (AR-1123 ORDER A2)
+-----------------------------------------------------------------------
+`--spec-id` and `--strategy-index` are REQUIRED and are never parsed out of the record
 filename, even though the corpus convention is `<video>__s<index>.json` and doing so
 would be convenient. The producer's own docstring pins the reason (R-776 §4): *"No
 stub id, no video id and no duration appears in this function's logic — it reads the
@@ -55,13 +55,55 @@ precisely the inference the producer refuses, one layer up, where nothing audits
 
     `AN IDENTITY PARSED OUT OF A FILENAME IS A GUESS WEARING A PRIMARY KEY.`
 
-WHAT MAKES THIS AN ENTRY POINT (the mechanism, not a hope)
-----------------------------------------------------------
-`[MEASURED]` `scripts/system_inventory.py::discover_entry_points` rule **(c)**:
-a non-test `.py` file whose refs include `__main__` is recorded as
-*"has `__main__` guard (runnable module)"*. The `if __name__ == "__main__"` block at
-the foot of this file is therefore the load-bearing line for the §4.A reachability
-proof — **it is not boilerplate, and deleting it silently reverts the repair.**
+**THE ARGUMENT IS THE CANONICAL SPEC STUB, NOT THE BARE SOURCE-VIDEO ID.** This was a
+real defect in the first version of this file and GPT caught it before any real compile
+(AR-1123 §2). The parameter was called `--video` and its help said *"the source video
+id"* — but the canonical producer copies that argument straight into
+`artifact["video"]`, and `[MEASURED]` every committed artifact carries the STRATEGY
+STUB there (`-igpOZs8LsM__s0`), not a bare video id. Following the old help for sVkm
+would have emitted `sVkmZklJDHI.spec.json` with `artifact.video == "sVkmZklJDHI"`,
+silently minting a second identity convention at the exact boundary the portable
+contract is keyed on. So this entry point now **REFUSES** a bare source-video id, and
+**REFUSES** a stub whose `__sN` suffix disagrees with `--strategy-index`.
+
+    ★★★★★ `AN ARGUMENT WHOSE NAME DESCRIBES A DIFFERENT OBJECT THAN ITS VALUE IS A
+       DEFECT THAT ONLY FIRES ON THE FIRST REAL RUN — WHICH IS THE RUN THAT MATTERS.`
+
+WHAT MAKES THIS AN ENTRY POINT — AND WHAT DOES **NOT**
+-------------------------------------------------------
+🛑 **NOT the `__main__` guard, whatever `system_inventory.py` advertises.** Rule **(c)**
+of `discover_entry_points` claims to find *"Python modules with an
+`if __name__ == \"__main__\"` block"*, but `[MEASURED, AR-1122 §3]` `refs` is built only
+from `ast.Name` / `ast.Attribute` nodes and `"__main__"` is an `ast.Constant`, so the
+rule has **never fired anywhere in this repo** (its reason string appears 0 times in the
+generated inventory, while the other rules fire freely). Building this module on that
+rule made the reachability proof FAIL: the module was added as three MORE unreachable
+symbols while advertising itself as an entry point. GPT has since authorized a narrow
+repair of rule (c) (AR-1123 §3).
+
+✅ **The `package.json` declaration is the explicit operator command for this lane** —
+rule **(a)**:
+
+    "compile:certified-record": "python -m src.engine.extraction.compile_certified_record"
+
+⚠️ **AND A CORRECTION I OWE, BECAUSE I PUBLISHED THE WRONG REASON ONCE ALREADY.** While
+rule (c) was dead I measured that deleting this one line returned `src/engine/extraction`
+to `0 WIRED / 272` and put the producer back in the unreachable table, and I reported
+that flip as this module's achievement. **Once rule (c) was repaired (AR-1123 §3), I
+re-ran the same ablation and it changes NOTHING** — the module stays `241 WIRED / 33`
+and the producer stays reachable, because 81 other runnable modules became visible and
+reach it too. **That flip was an artifact of a defective instrument, not a property of
+this file.** Both the `__main__` guard and the package.json line are kept — GPT's §3
+directs the package script stay as the explicit operator command for this lane — but
+**neither is now the sole thing making the producer reachable.**
+
+**WHAT IS STILL TRUE, MEASURED BY GREP AND NOT BY THE INVENTORY:** before this module,
+`produce_spec_artifact_from_record` had **ZERO non-test callers** — every reference lived
+under `src/engine/tests/`. This module is its **only** non-test caller. That is the real
+defect this file closes, and it never depended on the broken rule.
+
+    ★★★★★ `RE-RUN THE MEASUREMENT AFTER REPAIRING THE INSTRUMENT THAT PRODUCED IT.
+       A NUMBER CARRIED ACROSS A FIX IS STALE EVEN WHEN THE WORDS AROUND IT ARE FRESH.`
 """
 
 from __future__ import annotations
@@ -69,6 +111,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from typing import Any, Dict
 
@@ -78,6 +121,55 @@ from typing import Any, Dict
 from src.engine.extraction.spec_producer import produce_spec_artifact_from_record
 
 SPEC_ARTIFACT_SUFFIX = ".spec.json"
+
+#: The canonical spec-stub shape: `<source_video_id>__s<strategy_index>`.
+#: `[MEASURED]` this is what `artifact["video"]` holds in every committed artifact and
+#: what every loader recovers by stripping `.spec.json`. The video-id half is
+#: deliberately permissive (real ids contain `-` and `_`, e.g. `st5e-YJRfKc`); the
+#: STRUCTURE is what is enforced, because the structure is what carries the identity.
+SPEC_ID_RE = re.compile(r"^(?P<video>.+?)__s(?P<index>\d+)$")
+
+
+class SpecIdentityError(ValueError):
+    """The supplied `--spec-id` is not a canonical stub, or contradicts the index.
+
+    A distinct type because this refusal is an IDENTITY refusal, not an I/O failure,
+    and a caller that catches it must not confuse the two.
+    """
+
+
+def parse_spec_id(spec_id: str, strategy_index: int) -> str:
+    """Validate the canonical spec stub against the strategy index. Never repair it.
+
+    Refuses (AR-1123 §2 required red proofs 1 and 2):
+      * a bare source-video id with no `__sN` suffix — that is the defect that would
+        have minted `sVkmZklJDHI.spec.json`;
+      * a stub whose `__sN` disagrees with `--strategy-index` — two answers to one
+        question, and picking one silently is how the wrong strategy gets certified
+        under the right name.
+
+    Returns the spec id UNCHANGED on success. It does not normalise, pad or rewrite:
+    the caller supplies the identity, the wrapper only agrees or refuses.
+    """
+    match = SPEC_ID_RE.match(spec_id or "")
+    if match is None:
+        raise SpecIdentityError(
+            f"--spec-id {spec_id!r} is not a canonical spec stub. This entry point "
+            "requires `<video_id>__s<strategy_index>` (e.g. 'sVkmZklJDHI__s0'), NOT a "
+            "bare source-video id: the producer copies this value straight into "
+            "artifact['video'], and every committed artifact carries the strategy stub "
+            "there. Accepting a bare video id would mint a second identity convention "
+            "at the portable contract's key."
+        )
+    declared = int(match.group("index"))
+    if declared != strategy_index:
+        raise SpecIdentityError(
+            f"--spec-id {spec_id!r} declares strategy index {declared} but "
+            f"--strategy-index is {strategy_index}. Refusing rather than choosing: a "
+            "stub that disagrees with the index it is compiled at would publish one "
+            "strategy's output under another strategy's identity."
+        )
+    return spec_id
 
 
 def _load_record(path: str) -> Dict[str, Any]:
@@ -100,7 +192,7 @@ def _load_record(path: str) -> Dict[str, Any]:
 def compile_record_to_artifact(
     record_path: str,
     *,
-    video: str,
+    spec_id: str,
     strategy_index: int = 0,
     out_dir: str,
 ) -> str:
@@ -109,15 +201,21 @@ def compile_record_to_artifact(
     Returns the written artifact path.
 
     Every semantic decision in this function belongs to
-    `produce_spec_artifact_from_record`. This function chooses the filename and
-    nothing else.
+    `produce_spec_artifact_from_record`. This function validates the supplied identity
+    and chooses the filename, and nothing else.
     """
+    # IDENTITY FIRST, BEFORE ANY WORK. A refusal must cost nothing and must happen
+    # before an artifact exists on disk under a name we would then have to retract.
+    spec_id = parse_spec_id(spec_id, strategy_index)
+
     record = _load_record(record_path)
 
     # ── THE CANONICAL PRODUCER. NOT A COPY, NOT A REIMPLEMENTATION. ──────────────
+    # `video=` is the producer's parameter name; the value is the canonical SPEC STUB,
+    # which is what it copies into artifact["video"].
     result = produce_spec_artifact_from_record(
         record,
-        video=video,
+        video=spec_id,
         strategy_index=strategy_index,
     )
 
@@ -136,8 +234,11 @@ def compile_record_to_artifact(
     # So the stub is the whole name: appending `__s{strategy_index}` here would
     # emit `..._s0__s0.spec.json` and silently break every loader that recovers
     # the stub by stripping `.spec.json` (e.g. run_shakedown_wave1.py:96).
+    #
+    # AR-1123 §2 invariant, held by construction rather than by comment:
+    #     filename stem == artifact["video"] == the validated canonical spec id.
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, f"{video}{SPEC_ARTIFACT_SUFFIX}")
+    out_path = os.path.join(out_dir, f"{spec_id}{SPEC_ARTIFACT_SUFFIX}")
     with open(out_path, "w", encoding="utf-8") as handle:
         json.dump(artifact, handle, indent=2, sort_keys=True, ensure_ascii=False)
         handle.write("\n")
@@ -160,11 +261,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Path to the certified extraction record JSON.",
     )
     parser.add_argument(
-        "--video",
+        "--spec-id",
         required=True,
         help=(
-            "The source video id. REQUIRED and never derived from the filename — "
-            "see the module docstring: identity is supplied, never inferred."
+            "The CANONICAL SPEC STUB `<video_id>__s<strategy_index>` "
+            "(e.g. 'sVkmZklJDHI__s0') — NOT a bare source-video id. This value becomes "
+            "artifact['video'] and the filename stem. A bare video id, or a stub whose "
+            "__sN disagrees with --strategy-index, is REFUSED. Never derived from the "
+            "record filename: identity is supplied, then validated."
         ),
     )
     parser.add_argument(
@@ -183,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         out_path = compile_record_to_artifact(
             args.record,
-            video=args.video,
+            spec_id=args.spec_id,
             strategy_index=args.strategy_index,
             out_dir=args.out_dir,
         )
@@ -195,8 +299,9 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-# 🛑 LOAD-BEARING: `discover_entry_points` rule (c) keys on this guard. Removing it
-# reverts `src/engine/extraction` to BUILT-UNREACHABLE without changing a single
-# line of compiler logic.
+# REQUIRED for `python -m` to execute this module — but NOT what makes it reachable to
+# SYSTEM-INVENTORY. Rule (c) (`__main__` discovery) is dead code at the time of writing
+# (AR-1122 §3, repair authorized in AR-1123 §3); the reachability edge is the
+# `compile:certified-record` declaration in package.json. See the module docstring.
 if __name__ == "__main__":
     raise SystemExit(main())

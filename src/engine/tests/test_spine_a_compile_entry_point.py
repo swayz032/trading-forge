@@ -6,36 +6,41 @@ Each test here is red-proofable and was red-proofed at birth (AR-1122 §3):
     reimplements any part of the compile (a copy drifts from the canonical
     `spec_hash` immediately).
   * `test_package_json_declares_the_entry_point` — RED if the `package.json`
-    declaration is deleted. **This is the load-bearing reachability carrier**, and
-    an ablation MEASURED it: removing that one line returns
-    `src/engine/extraction` to `0 WIRED / 272 BUILT-UNREACHABLE` and puts
-    `produce_spec_artifact_from_record` back in the "defining module is not
-    reachable from any measured entry point" table.
+    declaration is deleted. It is the explicit operator command for this compile
+    lane (AR-1123 §3 directs it stay). ⚠️ **It is NOT the reachability carrier, and I
+    reported that it was.** While inventory rule (c) was dead, ablating it returned
+    `src/engine/extraction` to `0 WIRED / 272`; after rule (c) was repaired the SAME
+    ablation changes nothing (`241 WIRED / 33`, producer still reachable), because 81
+    other runnable modules became visible. The flip was an instrument artifact.
+    **What survives, measured by grep and not by the inventory: this module is the
+    producer's ONLY non-test caller, where before there were zero.**
   * `test_wrapper_holds_no_semantic_authority` — RED if the wrapper grows a second
     authority for hashing / lowering / timeframe selection.
 
-🛑 WHY THE `__main__` GUARD IS **NOT** WHAT MAKES THIS REACHABLE — MEASURED, AND IT
-COST A FAILED PROOF FIRST (AR-1122 §2)
---------------------------------------------------------------------------------
-`scripts/system_inventory.py::discover_entry_points` rule (c) advertises
-*"Python modules with an `if __name__ == \"__main__\"` block"*. **That rule is DEAD.**
-`refs` is built only from `ast.Name` and `ast.Attribute` nodes (system_inventory.py:441-444),
-and `"__main__"` is a string CONSTANT — so `f.refs.get("__main__")` is never truthy and
-the reason string *"has `__main__` guard (runnable module)"* appears **0 times** across
-the whole generated inventory.
+🛑 THE INSTRUMENT WAS BROKEN, AND IT COST A FAILED PROOF AND A WRONG CLAIM (AR-1122 §3)
+----------------------------------------------------------------------------------------
+`scripts/system_inventory.py::discover_entry_points` rule (c) advertised
+*"Python modules with an `if __name__ == \"__main__\"` block"* and tested
+`f.refs.get("__main__")`. `refs` is built only from `ast.Name`/`ast.Attribute` nodes and
+`"__main__"` is an `ast.Constant`, so the rule fired **0 times repo-wide**.
 
-I built the entry point on that rule first and the reachability proof FAILED: the
-module was added as 3 MORE unreachable symbols (269 -> 272) while advertising itself
-as an entry point. The live routes are rule (a) `package.json` script and rule (b) a
-TS subprocess literal; rule (b) is forbidden for this unit (AR-1119 §3.1: no TS
-spawning Python during onboarding), which leaves (a).
+I built this entry point on that rule and the reachability proof FAILED — the module was
+added as 3 MORE unreachable symbols (269 -> 272) while advertising itself as an entry
+point. I then declared it via rule (a) and reported a `0 -> 24 WIRED` flip.
+
+**AR-1123 §3 authorized repairing rule (c), and the repair invalidated that report:** it
+revealed **81** runnable modules and moved **~354** symbols out of BUILT-UNREACHABLE, and
+re-running my own ablation against the corrected instrument changes **nothing**. The flip
+was a property of the defect, not of this file.
 
     ★★★★★ `A DISCOVERY RULE THAT HAS NEVER DISCOVERED ANYTHING IS INDISTINGUISHABLE
        FROM ONE THAT WORKS, UNTIL YOU ASK IT TO FIND SOMETHING YOU KNOW IS THERE.`
+    ★★★★★ `AND WHEN YOU REPAIR THE INSTRUMENT, RE-RUN EVERY MEASUREMENT IT PRODUCED —
+       INCLUDING THE ONES THAT FLATTERED YOU.`
 
-The `__main__` guard in the module is still required — it is what makes `python -m`
-execute — but it proves nothing to the inventory. Do not delete the package.json line
-believing the guard covers it.
+The `__main__` guard is still required for `python -m` to execute the module. The
+package.json line stays as the explicit operator command for this lane (AR-1123 §3).
+Neither is now the sole reason the producer is reachable.
 """
 
 from __future__ import annotations
@@ -45,7 +50,11 @@ import pathlib
 
 import pytest
 
-from src.engine.extraction.compile_certified_record import compile_record_to_artifact
+from src.engine.extraction.compile_certified_record import (
+    SpecIdentityError,
+    compile_record_to_artifact,
+    parse_spec_id,
+)
 from src.engine.extraction.spec_producer import produce_spec_artifact_from_record
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
@@ -73,7 +82,7 @@ def test_entry_point_output_equals_canonical_producer(tmp_path):
     canonical = produce_spec_artifact_from_record(record, video=GOLDEN_STUB, strategy_index=0).artifact
 
     written_path = compile_record_to_artifact(
-        str(RECORD), video=GOLDEN_STUB, strategy_index=0, out_dir=str(tmp_path)
+        str(RECORD), spec_id=GOLDEN_STUB, strategy_index=0, out_dir=str(tmp_path)
     )
     written = json.loads(pathlib.Path(written_path).read_text(encoding="utf-8"))
 
@@ -91,12 +100,80 @@ def test_entry_point_filename_is_the_stub(tmp_path):
     stripping `.spec.json` (e.g. run_shakedown_wave1.py:96). An extra `__s{index}`
     here silently breaks them."""
     written_path = compile_record_to_artifact(
-        str(RECORD), video=GOLDEN_STUB, strategy_index=0, out_dir=str(tmp_path)
+        str(RECORD), spec_id=GOLDEN_STUB, strategy_index=0, out_dir=str(tmp_path)
     )
     stem = pathlib.Path(written_path).name[: -len(".spec.json")]
     written = json.loads(pathlib.Path(written_path).read_text(encoding="utf-8"))
     assert stem == GOLDEN_STUB
     assert stem == written["video"]
+
+
+# ─── AR-1123 §2 ORDER A2 — THE IDENTITY CONTRACT, RED PROOFS 1-4 ────────────────────
+#
+# GPT caught this before any real sVkm compile: the parameter was `--video`, its help
+# said "the source video id", and the producer copies it straight into
+# `artifact["video"]` — which every committed artifact holds as the STRATEGY STUB.
+# Following the old help for sVkm would have emitted `sVkmZklJDHI.spec.json` with
+# `artifact.video == "sVkmZklJDHI"`, minting a second identity convention at the exact
+# key the portable contract is keyed on. These use GPT's own named strings.
+
+SVKM = "sVkmZklJDHI"
+
+
+def test_red_proof_1_bare_source_video_id_is_refused():
+    """AR-1123 §2 red proof 1: bare `sVkmZklJDHI` + index 0 => REFUSE."""
+    with pytest.raises(SpecIdentityError) as excinfo:
+        parse_spec_id(SVKM, 0)
+    assert "canonical spec stub" in str(excinfo.value)
+
+
+def test_red_proof_2_index_disagreement_is_refused():
+    """AR-1123 §2 red proof 2: `sVkmZklJDHI__s1` + index 0 => REFUSE.
+
+    Refusing rather than picking: a stub that disagrees with the index it is compiled
+    at would publish one strategy's output under another strategy's identity.
+    """
+    with pytest.raises(SpecIdentityError) as excinfo:
+        parse_spec_id(f"{SVKM}__s1", 0)
+    assert "declares strategy index 1" in str(excinfo.value)
+
+
+def test_red_proof_3_canonical_stub_is_accepted_unchanged():
+    """AR-1123 §2 red proof 3 (identity half): the canonical stub passes and is
+    returned UNCHANGED — not normalised, padded or rewritten."""
+    assert parse_spec_id(f"{SVKM}__s0", 0) == f"{SVKM}__s0"
+    assert parse_spec_id(f"{SVKM}__s2", 2) == f"{SVKM}__s2"
+    # A real video id containing '-' and '_' must survive (control: the golden stub).
+    assert parse_spec_id(GOLDEN_STUB, 0) == GOLDEN_STUB
+
+
+def test_red_proof_3_artifact_identity_invariant(tmp_path):
+    """AR-1123 §2 red proof 3 (artifact half), on a record that exists:
+
+        filename stem == artifact["video"] == the validated canonical spec id.
+    """
+    written_path = compile_record_to_artifact(
+        str(RECORD), spec_id=GOLDEN_STUB, strategy_index=0, out_dir=str(tmp_path)
+    )
+    stem = pathlib.Path(written_path).name[: -len(".spec.json")]
+    written = json.loads(pathlib.Path(written_path).read_text(encoding="utf-8"))
+    assert stem == GOLDEN_STUB == written["video"]
+
+
+def test_identity_is_refused_before_any_artifact_is_written(tmp_path):
+    """A refusal must leave NO file behind under a name we would have to retract."""
+    with pytest.raises(SpecIdentityError):
+        compile_record_to_artifact(
+            str(RECORD), spec_id=SVKM, strategy_index=0, out_dir=str(tmp_path)
+        )
+    assert list(tmp_path.glob("*.spec.json")) == []
+
+
+def test_cli_exposes_spec_id_and_not_video():
+    """The old `--video` name is GONE, so no caller can follow the false help text."""
+    source = ENTRY_MODULE.read_text(encoding="utf-8")
+    assert '"--spec-id"' in source
+    assert '"--video"' not in source
 
 
 def test_package_json_declares_the_entry_point():
@@ -105,9 +182,9 @@ def test_package_json_declares_the_entry_point():
     pkg = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
     scripts = pkg.get("scripts") or {}
     assert ENTRY_SCRIPT_NAME in scripts, (
-        f"package.json no longer declares `{ENTRY_SCRIPT_NAME}`. This is the ONLY live "
-        "entry-point route for this module: inventory rule (c) (`__main__` guard) is "
-        "dead code and rule (b) (TS subprocess) is forbidden for this unit."
+        f"package.json no longer declares `{ENTRY_SCRIPT_NAME}`. AR-1123 §3 directs that "
+        "this stay as the explicit operator command for the compile lane, even now that "
+        "the repaired inventory can also see the `__main__` guard."
     )
     assert f"python -m {ENTRY_MODULE_SPEC}" in scripts[ENTRY_SCRIPT_NAME]
 
