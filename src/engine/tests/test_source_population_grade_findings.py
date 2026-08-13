@@ -207,26 +207,62 @@ class TestGradeF3AnUnresolvedSourceTradeContaminatesTheMetrics:
             "the unresolved trade is no longer named as such in the plan"
         )
 
-    def test_the_unresolved_trade_still_COUNTS_toward_the_reported_metrics(self):
-        """The contamination itself, pinned. If a later ruling excludes open trades from
-        performance metrics, THIS test goes red — which is the correct signal, not a
-        regression."""
+    def test_the_unresolved_trade_is_EXCLUDED_from_the_realized_metrics(self):
+        """AR-1113 §7 — the repair this test used to pin AGAINST, now asserted FOR.
+
+        THE OLD TEST FIRED EXACTLY AS DESIGNED, AND THAT IS WHY IT IS GONE.
+        `test_the_unresolved_trade_still_COUNTS_toward_the_reported_metrics` asserted
+        `win_rate == 0.6667` and carried its own instruction: *"if open trades are now
+        excluded from metrics, delete this test and say so in the report"*. AR-1108
+        accepted the realized/open separation, `[MEASURED HERE]` the win rate is now
+        `1.0`, and the old expectation had become a permanent suite member demanding the
+        contaminated behaviour back.
+
+            ★ `A TEST THAT PINS A DEFECT MUST BE RETIRED BY THE RULING THAT ACCEPTS THE
+               REPAIR — OTHERWISE THE SUITE OUTRANKS THE RULING.`
+
+        🛑 SCOPE (AR-1113 §7): the expectation is updated and NOTHING ELSE. No F-3
+        architecture is reopened, and no synthetic source close is invented — the open
+        trade stays open, visible, and unclosed.
+
+        ⚠️ DISCLOSED: this method's ID changed, so the acceptance population gains
+        `..._is_EXCLUDED_from_the_realized_metrics` and loses `..._still_COUNTS_toward_
+        the_reported_metrics`. The enclosing CLASS name is deliberately NOT renamed — it
+        names the finding this class recorded, and renaming it would churn two unrelated
+        passing test IDs for cosmetics.
+        """
         result, _out = _run_bars(
             _bars_sessions([_normal(), _normal(), self._truncated_last_session()])
         )
         trades = result["trades"]
+
+        # ── 1. THE OPEN TRADE IS STILL THERE, STILL OPEN, STILL UNCLOSED ─────
+        # The repair is an exclusion from the DENOMINATOR, not a deletion from the
+        # record and not a fabricated exit.
         assert len(trades) == 3
         open_trade = trades[-1]
         assert open_trade["Status"] == "Open"
         assert open_trade["exit_reason"] == "signal", (
-            "the open trade carries a SOURCE exit reason — it must not, because the source "
-            "never closed it"
+            "the open trade carries a SOURCE exit reason — it must not, because the "
+            "source never closed it, and inventing one would fabricate a result"
         )
-        assert open_trade["PnL"] < 0, "the open trade is no longer booked as a loss"
-        assert result["total_trades"] == 3
-        assert result["win_rate"] == pytest.approx(0.6667, abs=1e-4), (
-            "the win rate changed — if open trades are now excluded from metrics, delete this "
-            "test and say so in the report"
+        assert result["total_trades"] == 3, (
+            "the EXECUTED population changed; the repair may only change which trades "
+            "are REALIZED, never how many were taken"
+        )
+
+        # ── 2. THE REALIZED/OPEN PARTITION IS EXPLICIT, NOT IMPLIED ──────────
+        assert result["closed_trade_count"] == 2
+        assert result["open_trade_count"] == 1
+        assert result["realized_metrics_status"] == "OK"
+
+        # ── 3. THE DENOMINATOR EXCLUDES IT — THE POINT OF THE WHOLE REPAIR ───
+        # POSITIVE WITNESS that this fixture still discriminates: the two resolved
+        # trades both WON, so a contaminated win rate is 0.6667 and a correct one is
+        # 1.0. If the fixture ever stopped producing an unresolved trade, this would
+        # read 1.0 for the wrong reason — which is why the partition is asserted above.
+        assert result["win_rate"] == pytest.approx(1.0, abs=1e-4), (
+            "the open trade is contaminating the realized win rate again"
         )
 
     def test_the_two_RESOLVED_trades_are_untouched_by_the_open_one(self):

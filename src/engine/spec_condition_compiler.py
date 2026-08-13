@@ -74,6 +74,7 @@ from src.engine.indicators.sweep_native import compute_sweep_signal
 from src.engine.opening_range_candidate import OpeningRangeExecutionCandidate
 from src.engine.role_demotion_audit import get_classifications_for_video
 from src.engine.session_windows import is_in_killzone
+from src.engine.source_timeframe_roles import SourceTimeframeRoles
 from src.engine.spec_family_bindings import (
     BindingPlan,
     ConditionBinding,
@@ -83,6 +84,7 @@ from src.engine.spec_family_bindings import (
     role_demotion_mode,
 )
 from src.engine.strategy_base import BaseStrategy
+from src.engine.svkm_role_execution import RoleFrame
 
 # ─── TRIGGER SAFETY: strategy-level execution status (R-747 §4) ──────────────────────────
 # A THIRD STATE, and it is the one this campaign was missing. "no entries" previously meant
@@ -516,6 +518,8 @@ class SpecConditionStrategy(BaseStrategy):
         strategy_name: str | None = None,
         restore_condition_ids: frozenset[str] | None = None,
         opening_range_candidate: OpeningRangeExecutionCandidate | None = None,
+        source_timeframe_roles: SourceTimeframeRoles | None = None,
+        opening_range_source_frame: RoleFrame | None = None,
     ) -> None:
         # ─── THE LOAD GATE (pin (b)/(b2)/(a), docs/designs/packet-family-meta-enforced-
         # 2026-07-20.md). No-op with TF_FAMILY_META_ENFORCED OFF (default). With it ON, a
@@ -549,6 +553,28 @@ class SpecConditionStrategy(BaseStrategy):
         # — the conformance suite discovers this parameter BY TYPE and never by name, so the
         # name may change and the boundary still holds.
         self.opening_range_candidate = opening_range_candidate
+
+        # ─── SVKM-ROLE-EXEC-1 (AR-1113 §3) — WHICH CHART OWNS THE OPENING RANGE ─────────
+        # Same typed-constructor-input discipline as the candidate above, and for the same
+        # reason: the alternative channels (stuffing it into the plain-JSON SpecArtifact, or
+        # into `ConditionBinding.parameters`, or re-reading the source at runtime) are the
+        # smuggling routes R-779 §7-1 already rejected.
+        #
+        # 🛑 WHY THIS EXISTS AT ALL. `[MEASURED, AR-1113 §2.4]` the role carrier reached the
+        # runtime, was validated, and was then never read — so the engine could PROVE a
+        # strategy declared "5-minute opening range, 1-minute execution" and still compute
+        # that range off the 1-minute execution frame. For sVkm the resulting number can even
+        # be RIGHT, which is precisely what makes it dangerous.
+        #
+        #   ★★★★★ `A SOURCE FACT THAT IS VALIDATED BUT CANNOT CHANGE EXECUTION IS NOT YET A
+        #      COMPILED MONEY-PATH FACT.` (AR-1113 §1)
+        #
+        # `None` on both is the LEGACY path and is byte-identical to the previous behaviour:
+        # no roles declared => the execution frame owns the range, exactly as before. A role
+        # set that DISAGREES with the execution timeframe and arrives without its source
+        # frame REFUSES in `_h_opening_range` rather than falling back (AR-1113 §3.2).
+        self.source_timeframe_roles = source_timeframe_roles
+        self.opening_range_source_frame = opening_range_source_frame
 
         # ─── AR-1079 §5 — THE SOURCE-EVENT CARRIER (declared here, RESET every compute()) ─
         # Declared at construction so an instance that never reached `compute()` still
@@ -920,7 +946,7 @@ class SpecConditionStrategy(BaseStrategy):
         call target are ONE module attribute.
         """
         from src.engine import opening_range_adapter
-        from src.engine.opening_range_adapter import OpeningRangeBar, _window_bounds
+        from src.engine.opening_range_adapter import _window_bounds
 
         n = ctx["n"]
         out = np.zeros(n, dtype=bool)
@@ -1010,14 +1036,30 @@ class SpecConditionStrategy(BaseStrategy):
                 continue
             indices_by_session.setdefault(ts.astimezone(zone).date(), []).append(i)
 
+        # ── SVKM-ROLE-EXEC-1 (AR-1113 §3) — WHICH FRAME OWNS THE RANGE? ─────────────────
+        # This is the ONE line of this handler the role carrier changes, and it is the whole
+        # unit: the range is aggregated from the frame the OPENING_RANGE_WINDOW role names,
+        # while the GATING below stays on the execution frame. Separating "which bars make
+        # the range" from "which bars may see it" is what lets a 5-minute window drive a
+        # 1-minute execution without a generic multi-timeframe engine (AR-1113 §3 forbids
+        # one) — the two halves were already separate here; nothing before now chose the
+        # first one by anything but the execution timeframe.
+        or_bars_by_session, or_interval_minutes = self._resolve_opening_range_source(
+            candidate=candidate,
+            zone=zone,
+            ts_list=ts_list,
+            high=high,
+            low=low,
+            indices_by_session=indices_by_session,
+            execution_interval_minutes=interval_minutes,
+        )
+
         for session_date, indices in indices_by_session.items():
-            session_bars = [
-                OpeningRangeBar(
-                    timestamp=ts_list[i], high=float(high[i]), low=float(low[i])
-                )
-                for i in indices
-            ]
+            session_bars = or_bars_by_session.get(session_date, [])
             if not session_bars:
+                # A session the SOURCE frame does not cover records nothing and gates
+                # nothing — the same fail-closed, per-session shape as a refused window.
+                # It must not borrow a neighbouring session's range.
                 continue
 
             # EXACTLY ONE ADAPTER CALL PER (candidate, session_date), and it is handed ONLY
@@ -1028,7 +1070,7 @@ class SpecConditionStrategy(BaseStrategy):
                 candidate.variant,
                 session_bars,
                 session_date=session_date,
-                bar_interval_minutes=interval_minutes,
+                bar_interval_minutes=or_interval_minutes,
                 as_of=max(bar.timestamp for bar in session_bars),
             )
 
@@ -1076,6 +1118,117 @@ class SpecConditionStrategy(BaseStrategy):
                     last_idx=max(indices),
                 )
         return out
+
+    def _resolve_opening_range_source(
+        self,
+        *,
+        candidate,
+        zone,
+        ts_list,
+        high,
+        low,
+        indices_by_session: dict[date, list[int]],
+        execution_interval_minutes: int,
+    ) -> tuple[dict[date, list], int]:
+        """WHICH bars the opening range is aggregated from, and at what interval.
+
+        AR-1113 §3/§3.2. Three outcomes, no fourth:
+
+          legacy    — no role carrier on this instance. The execution frame owns the range,
+                      byte-identical to the pre-AR-1113 behaviour.
+          same-tf   — the declared window chart IS the execution chart. Same bars, but now
+                      by DECLARATION rather than by assumption.
+          divergent — the declared window chart is a different chart. The supplied source
+                      frame owns the range, or this REFUSES.
+
+        🛑 THERE IS NO FOURTH OUTCOME, AND THAT IS THE POINT. AR-1113 §3.2 forbids falling
+        back to `strategy.timeframe`, `trigger_tf`, a lowest-timeframe rule, or any other
+        inferred scalar when the declared frame is unavailable. The way to forbid a fallback
+        is not to write one, so a divergent role with no source frame raises here rather
+        than quietly computing the range off the execution bars — which is exactly the
+        behaviour that shipped, and exactly the one whose ANSWER can still be right.
+
+            ★ `NO "BEST EFFORT" SUBSTITUTION IS AUTHORISED ON SOURCE_FAITHFUL.`
+        """
+        from src.engine.opening_range_adapter import OpeningRangeBar
+
+        def _from_execution_frame() -> tuple[dict[date, list], int]:
+            grouped: dict[date, list] = {}
+            for session_date, indices in indices_by_session.items():
+                bars = [
+                    OpeningRangeBar(
+                        timestamp=ts_list[i], high=float(high[i]), low=float(low[i])
+                    )
+                    for i in indices
+                ]
+                if bars:
+                    grouped[session_date] = bars
+            return grouped, execution_interval_minutes
+
+        roles = self.source_timeframe_roles
+        if roles is None:
+            return _from_execution_frame()
+
+        from src.engine.source_timeframe_roles import OPENING_RANGE_WINDOW
+        from src.engine.svkm_role_execution import (
+            SourceRoleExecutionError,
+            assert_svkm_role_combination,
+            parse_minutes,
+        )
+
+        # The narrow adapter is authorised for sVkm's combination ONLY (AR-1113 §3). An
+        # unrecognised combination refuses rather than being handled generically — that
+        # refusal is what stops this seam growing into the framework §3 forbids.
+        try:
+            assert_svkm_role_combination(roles)
+            or_timeframe = roles.timeframe_for(OPENING_RANGE_WINDOW)
+            or_interval = parse_minutes(or_timeframe)
+        except SourceRoleExecutionError as err:
+            raise FamilyMetaEnforcementError(
+                f"the opening-range condition carries source timeframe roles this narrow "
+                f"adapter is not authorised for: {err}"
+            ) from err
+
+        if or_interval == execution_interval_minutes:
+            # Declared and execution charts agree. Nothing changes about which bars are
+            # aggregated — but it is now CHECKED rather than assumed, which is the whole
+            # difference between a validated fact and a consumed one.
+            return _from_execution_frame()
+
+        frame = self.opening_range_source_frame
+        if frame is None:
+            raise FamilyMetaEnforcementError(
+                f"the source declares its opening-range window on the {or_timeframe} chart "
+                f"while this instance executes on {self.timeframe!r}, and NO "
+                f"{or_timeframe} source frame was supplied. Refusing rather than computing "
+                f"the taught range off the execution frame: for this source that "
+                f"substitution can even produce the RIGHT number, which is precisely why it "
+                f"may not be made silently (AR-1113 §3.2)."
+            )
+
+        try:
+            if frame.timeframe.strip() != or_timeframe.strip():
+                raise SourceRoleExecutionError(
+                    f"OPENING_RANGE_WINDOW declares {or_timeframe!r} but the supplied "
+                    f"opening-range frame is {frame.timeframe!r}"
+                )
+            # Declared-vs-ACTUAL. A label check cannot catch a 1m series wearing a 5m label,
+            # and that mislabel is what would silently re-introduce the execution-frame range.
+            frame.verify_spacing()
+        except SourceRoleExecutionError as err:
+            raise FamilyMetaEnforcementError(
+                f"the supplied opening-range source frame does not match the persisted role "
+                f"carrier: {err}"
+            ) from err
+
+        grouped: dict[date, list] = {}
+        for ts, bar_high, bar_low in zip(
+            frame.timestamps, frame.highs, frame.lows, strict=True
+        ):
+            grouped.setdefault(ts.astimezone(zone).date(), []).append(
+                OpeningRangeBar(timestamp=ts, high=float(bar_high), low=float(bar_low))
+            )
+        return grouped, or_interval
 
     def _bar_interval_minutes(self) -> int:
         """This instance's bar interval in whole minutes, from its `timeframe`.
