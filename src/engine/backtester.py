@@ -4003,6 +4003,23 @@ def _apply_source_faithful_occupancy(
     Returns the 5-tuple shape its sibling uses: (entry_long, exit_long, entry_short,
     exit_short, metadata).
     """
+    # ─── GRADE F-4 FINDING F-6 — JOIN THE GUARANTEE TO THE DEPENDENCY ───────────────────
+    # This pass WRITES source exits into arrays it assumes are empty, and the assumption is
+    # load-bearing: if a source strategy ever emitted its own `exit_long`, this loop's
+    # occupancy release and that exit would be two authorities over one position. The
+    # guarantee ("`exit_long` is framework-owned; no source strategy sets it") lived in the
+    # producer, the dependency lived here, and NOTHING JOINED THEM — so the day the producer
+    # changed, this would have silently mis-paired exits with entries.
+    # ★ `AN INVARIANT NOBODY ASSERTS IS A COMMENT, AND A COMMENT CANNOT GO RED.`
+    if bool(np.any(exit_long)) or bool(np.any(exit_short)):
+        raise ValueError(
+            "SOURCE_FAITHFUL occupancy: the incoming exit arrays are NOT empty "
+            f"(long={int(np.sum(exit_long))}, short={int(np.sum(exit_short))}). This pass owns "
+            "source exit placement and assumes the strategy emitted none; honouring both would "
+            "create two authorities over one position. Refusing rather than silently merging "
+            "(GRADE F-4 finding F-6)."
+        )
+
     entry_long_out = entry_long.copy()
     exit_long_out = exit_long.copy()
     entry_short_out = entry_short.copy()
@@ -8063,6 +8080,10 @@ def run_class_backtest(
         exits_pd = pd.Series(_occ_exit_long, index=exits_pd.index)
         short_entries_pd = pd.Series(_occ_entry_short, index=short_entries_pd.index)
         short_exits_pd = pd.Series(_occ_exit_short, index=short_exits_pd.index)
+    # An EMPTY metadata dict means the pass did not run. Do not print a disclosure line
+    # claiming a policy was applied when none was — the same reason the reconciliation below
+    # is skipped in that case. This is the state an ablation reproduces.
+    if _source_faithful and _cls_source_occupancy_meta:
         print(
             "[Source occupancy] "
             f"events={_cls_source_occupancy_meta['source_events_long'] + _cls_source_occupancy_meta['source_events_short']} "
@@ -8107,6 +8128,41 @@ def run_class_backtest(
         f"(vectorbt drop: {100 - (total_trades / max(diag_post_rollover_long + diag_post_rollover_short, 1)) * 100:.0f}%)",
         file=sys.stderr,
     )
+
+    # ─── GRADE F-2 (HIGH, NOVEL) — A PLAN COUNT IS NOT AN OUTCOME ───────────────────────
+    # 🛑 THE DEFECT THE INDEPENDENT GRADER FOUND, AND I DID NOT NAME. `source_trades_opened`
+    # is incremented in `_apply_source_faithful_occupancy` BEFORE `from_signals` runs — it
+    # counts trades the occupancy pass INTENDED to open. Nothing reconciled it against
+    # `pf.trades.count()`, and the two numbers sat ~55 lines apart in this one function with
+    # no join between them.
+    #
+    # ⚠️ THE GRADER PROVED IT IS NOT THEORETICAL: forcing `compute_position_sizes` to return
+    # 0.0 at the first planned entry bar dropped the executed population 3 -> 2 while the
+    # disclosure line still read `trades_opened=3 ... unresolved_open=0`, with no exception
+    # and no `guards_failed`. SIX assertions across two test files string-match that line, so
+    # the entire disclosure limb — and its green — was compatible with a population that
+    # never executed. It was found by mutating the EXECUTOR and reading the REPORTER.
+    #
+    # ★ `A COUNT WRITTEN BY THE THING BEING MEASURED IS A CLAIM, NOT A MEASUREMENT. IT NEEDS
+    #    A JOIN TO THE ARTIFACT, OR IT REPORTS INTENT WHILE READING LIKE OUTCOME.`
+    #
+    # 🛑 FAIL-CLOSED, NOT FAIL-SAFE. A divergence means exits were planned for trades that do
+    # not exist, so the executed population is not the source-managed one — which invalidates
+    # every downstream number F-4 exists to make trustworthy. Refusing is the only honest
+    # option; degrading would reproduce the silent-wrong-answer this repair was written to end.
+    if _source_faithful and _cls_source_occupancy_meta:
+        _planned = int(_cls_source_occupancy_meta["source_trades_opened"])
+        _cls_source_occupancy_meta["source_trades_executed"] = total_trades
+        _cls_source_occupancy_meta["source_population_reconciled"] = (_planned == total_trades)
+        if _planned != total_trades:
+            raise ValueError(
+                f"SOURCE_FAITHFUL population mismatch: the occupancy pass planned {_planned} "
+                f"source trade(s) but the portfolio executed {total_trades}. Source-owned exits "
+                "were written for entries that did not become trades, so the executed population "
+                "is NOT the source-managed population and no trade, count or metric from this run "
+                "may be trusted. Refusing rather than reporting a plan as an outcome "
+                "(GRADE F-4 finding F-2)."
+            )
 
     # ─── Add Entry/Exit Idx columns (VBT v2 uses timestamps, not indices) ──
     if trades_records is not None and "Entry Idx" not in trades_records.columns:
@@ -8888,6 +8944,20 @@ def run_class_backtest(
         # signal/trade-count), out of scope for this class-(a) audit pass, and
         # carried forward as a documented gap (see audit classification table).
         "dsl_guards": _cls_dsl_guards_meta,
+        # ─── GRADE F-4 FINDING F-1 (HIGH) — "DISCLOSED" MEANT "PRINTED TO STDERR" ──────────
+        # 🛑 AR-1092 §8 P2 required the overlapping-signal policy to be "visible in audit/result
+        # metadata". I built the metadata, printed it, and never put it in the envelope: the
+        # grader's repo-wide sweep of all eight keys found ZERO consumers, so the only way to
+        # read the policy was to scrape a stderr string. My own tests did exactly that, which is
+        # how six assertions came to depend on a log line instead of on the result.
+        #
+        # ⚠️ THE CONTRAST IS WHAT CONVICTS: the sibling `dsl_guards` immediately above — the same
+        # shape, carrying `source_faithful_bypassed` — IS in the envelope. The precedent was one
+        # line away and I did not follow it.
+        # ★ `A LOG LINE IS EVIDENCE THAT SOMETHING RAN; ONLY THE RETURNED ARTIFACT IS SOMETHING
+        #    A CONSUMER CAN CHECK.`
+        # Empty dict on every non-source run, so a reader never infers the mode from a missing key.
+        "source_occupancy": _cls_source_occupancy_meta,
         # GATE3-DEFECT-6 fix (2026-07-06) — mirrors run_backtest's
         # "eligibility_gate_mode" key (deep-scan #18c C-3 fix); see note above.
         "eligibility_gate_mode": _cls_eligibility_gate_mode,

@@ -285,14 +285,16 @@ class TestP5TheOldCollapseMutationGoesRed:
 
     def test_disabling_the_occupancy_pass_collapses_the_population_to_one(self, monkeypatch):
         def _old_shape(entry_long, exit_long, entry_short, exit_short, **_kw):
-            """The pre-F-4 behaviour: no exit is ever written, so vectorbt stays open."""
-            return entry_long, exit_long, entry_short, exit_short, {
-                "source_events_long": 0, "source_events_short": 0,
-                "source_trades_opened": 0, "source_overlap_suppressed": 0,
-                "source_same_bar_conflicts": 0, "source_unresolved_open": 0,
-                "source_trade_plan": [], "source_overlap_suppressed_bars": [],
-                "overlap_policy": "ABLATED",
-            }
+            """The pre-F-4 behaviour: no exit is ever written, so vectorbt stays open.
+
+            🛑 IT RETURNS AN EMPTY METADATA DICT ON PURPOSE. My first ablation returned a
+            zeroed-but-populated dict, and the new F-2 reconciliation correctly REFUSED it —
+            planned 0 vs executed 1. That refusal was right: a populated dict asserts "the
+            pass ran and opened 0 trades", which is a different (and false) statement from
+            "the pass did not run". The honest ablation removes the pass, so it removes its
+            metadata too. `AN ABLATION MUST REPRODUCE THE ABSENCE, NOT A ZEROED PRESENCE.`
+            """
+            return entry_long, exit_long, entry_short, exit_short, {}
 
         monkeypatch.setattr(bt, "_apply_source_faithful_occupancy", _old_shape)
         result, out = _run_bars(_bars_sessions([_normal(), _normal(), _normal()]))
