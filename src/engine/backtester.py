@@ -69,6 +69,7 @@ from src.engine.signals import generate_signals
 from src.engine.sizing import compute_position_sizes
 from src.engine.slippage import compute_slippage
 from src.engine.strategy_base import BaseStrategy
+from src.engine.trade_status import is_open_at_frame_end
 
 # ─── Signal Fill Convention ──────────────────────────────────────────
 # PRODUCTION STANDARD: "next-bar fill" — signal on bar N, fill on bar N+1.
@@ -4259,6 +4260,63 @@ def _apply_dll_halt_to_entries(
     return long_out, short_out, metadata
 
 
+def partition_realized_open(
+    trades_list: list[dict],
+    trade_pnls_list: list[float],
+) -> tuple[np.ndarray, int, int]:
+    """F-3 (AR-1101 §4) — split an EXECUTED population into REALIZED and OPEN.
+
+    ─── THE DEFECT THIS CLOSES ──────────────────────────────────────────────────────────
+    A position still open when the measurement frame ends is OPEN RISK / MARK-TO-MARKET
+    STATE — not a realized win and not a realized loss. Before this, `trade_pnls_list`
+    fed every executed record, the open one included, straight into `win_rate`,
+    `profit_factor`, `avg_trade_pnl` and `winner_loser_ratio`, with `total_trades` as the
+    realized denominator. So an unresolved position was reported as a COMPLETED trade on
+    every backtest that ended holding one — legacy and source alike.
+
+    ★ `THE OPEN TRADE WAS NOT MISCLASSIFIED — IT WAS NEVER CLASSIFIED AT ALL.`
+
+    ─── THE DISCRIMINATOR, AND WHY IT IS A CONJUNCTION ──────────────────────────────────
+    A trade is OPEN only when BOTH hold:
+
+      * vectorbt never closed it            -> `Status == "Open"`, and
+      * no exit layer ever closed it        -> `exit_reason == "signal"`
+
+    `"signal"` is the INITIAL value of `exit_reason` in the managed pass (`:1918`) and is
+    overwritten the moment a stop, trailing stop, target, time stop or source-owned exit
+    fires (`:1977`-`:1999`, `:4098`). So the pair means "no authority produced an exit".
+
+    🛑 EITHER LEG ALONE IS WRONG, AND ONE OF THEM IS DANGEROUS. `Status` alone would
+    classify as OPEN a legacy trade that vectorbt left open but the MANAGED STOP DID
+    CLOSE — silently deleting real realized losses from the denominator and inflating
+    every legacy win rate. That would be a worse defect than the one being repaired.
+    The conjunction can only exclude a trade that genuinely has no exit event.
+
+    Callers keep `total_trades` (= EXECUTED count) unchanged; this only decides which of
+    those trades are allowed into REALIZED statistics. `AR-1101 §4`: do not fabricate a
+    source exit at the final bar — the open record and its MTM state stay visible.
+    """
+    # `trade_pnls_list` is appended once per trade in the same iteration and the same
+    # order as `trades_list` (both paths), so index i addresses one trade in both.
+    if len(trades_list) != len(trade_pnls_list):
+        raise ValueError(
+            f"F-3 realized/open partition: trades_list ({len(trades_list)}) and "
+            f"trade_pnls_list ({len(trade_pnls_list)}) are not index-aligned, so no "
+            "trade can be joined to its P&L. Refusing rather than partitioning on a "
+            "broken join (AR-1101 §4)."
+        )
+
+    closed_pnls: list[float] = []
+    open_count = 0
+    for trade, pnl in zip(trades_list, trade_pnls_list):
+        if is_open_at_frame_end(trade):
+            open_count += 1
+        else:
+            closed_pnls.append(float(pnl))
+
+    return np.array(closed_pnls), len(closed_pnls), open_count
+
+
 def run_backtest(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
@@ -5711,6 +5769,13 @@ def run_backtest(
     winner_loser_ratio = 0.0
     trades_list: list[dict] = []
     trade_pnls_arr = np.array([])
+    # F-3 (AR-1101 §4): realized/open split. Defaulted here for the same reason the
+    # arrays below are — a zero-trade run skips the block that computes them, and both
+    # are emitted unconditionally in the result envelope.
+    closed_trade_count = 0
+    open_trade_count = 0
+    realized_pnl_total = 0.0
+    open_pnl_total = 0.0
     # Default arrays for winners/losers/avg values — used in expectancy_per_trade calculation.
     # These are overwritten inside `if trades_records is not None:` when trades exist.
     winners = np.array([])
@@ -5981,17 +6046,36 @@ def run_backtest(
             trades_list.append(trade)
 
         trade_pnls_arr = np.array(trade_pnls_list)
-        winners = trade_pnls_arr[trade_pnls_arr > 0]
-        losers = trade_pnls_arr[trade_pnls_arr < 0]
 
-        win_rate = float(len(winners) / total_trades)
-        avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
-        avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 0.0
-        gross_profit = float(np.sum(winners))
-        gross_loss = float(np.abs(np.sum(losers)))
-        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
-        avg_trade_pnl = float(np.mean(trade_pnls_arr))
-        winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
+        # ─── F-3 (AR-1101 §4) — REALIZED STATISTICS USE CLOSED TRADES ONLY ──────────
+        # `trade_pnls_arr` deliberately stays the EXECUTED population: the equity curve
+        # below marks every executed trade to market, and the reconciliation sanity
+        # check joins equity against `np.sum(trade_pnls_arr)`. Narrowing it here would
+        # break that join and relabel MTM state as realized P&L. Only the REALIZED
+        # statistics below are narrowed to closed trades.
+        realized_pnls, closed_trade_count, open_trade_count = partition_realized_open(
+            trades_list, trade_pnls_list
+        )
+        winners = realized_pnls[realized_pnls > 0]
+        losers = realized_pnls[realized_pnls < 0]
+
+        # Realized P&L and open MTM P&L reported SEPARATELY (AR-1101 §4). `total_return`
+        # remains the executed total, so a consumer that needs a like-for-like realized
+        # join has one without re-deriving the closed/open split for itself.
+        realized_pnl_total = float(np.sum(realized_pnls))
+        open_pnl_total = float(np.sum(trade_pnls_arr)) - realized_pnl_total
+
+        # A population of nothing but open positions has NO realized statistics; the
+        # defaults hoisted above stand rather than a fabricated 0/0.
+        if closed_trade_count > 0:
+            win_rate = float(len(winners) / closed_trade_count)
+            avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
+            avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 0.0
+            gross_profit = float(np.sum(winners))
+            gross_loss = float(np.abs(np.sum(losers)))
+            profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
+            avg_trade_pnl = float(np.mean(realized_pnls))
+            winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
 
     # ─── Build equity curve from per-trade data ─────────────────
     # Uses per-trade entry/exit data so equity matches per-trade P&L exactly.
@@ -6285,6 +6369,13 @@ def run_backtest(
         "total_return": round(total_return, 6), "sharpe_ratio": round(sharpe, 4),
         "max_drawdown": round(max_dd, 6), "win_rate": round(win_rate, 4),
         "profit_factor": round(profit_factor, 4), "total_trades": total_trades,
+        # F-3 (AR-1101 §4). These MUST be here and not only in the final envelope: this
+        # prelim dict is what `run_sanity_checks` and `run_cross_validation` receive, and
+        # the independent recomputation needs the split to verify a realized metric
+        # against the realized population rather than the executed one.
+        "closed_trade_count": closed_trade_count, "open_trade_count": open_trade_count,
+        "realized_pnl_total": round(realized_pnl_total, 2),
+        "open_pnl_total": round(open_pnl_total, 2),
         "avg_trade_pnl": round(avg_trade_pnl, 2), "total_trading_days": total_trading_days,
         "trades": trades_list, "daily_pnls": daily_pnl_values,
         "equity_curve": _aggregate_equity_daily(equity, equity_index, ts_et_index=_ts_et_list_eq),
@@ -6303,7 +6394,11 @@ def run_backtest(
     analytics = compute_full_analytics(daily_pnl_records, trades_list)
 
     # ─── Task 3.5: Win rate per-trade AND per-day ────────────
-    win_rate_per_trade = len([t for t in trades_list if float(t.get("PnL", t.get("pnl", 0))) > 0]) / max(total_trades, 1)
+    # F-3 (AR-1101 §4): a realized win rate counts CLOSED trades in BOTH the numerator
+    # and the denominator. This site is independent of the `win_rate` computed above and
+    # carried the same defect separately — it is fixed through the same one predicate.
+    _wrpt_closed = [t for t in trades_list if not is_open_at_frame_end(t)]
+    win_rate_per_trade = len([t for t in _wrpt_closed if float(t.get("PnL", t.get("pnl", 0))) > 0]) / max(len(_wrpt_closed), 1)
     win_rate_per_day = winning_days / max(total_trading_days, 1)
 
     # ─── Task 3.6: Long/short split metrics ──────────────────
@@ -6364,7 +6459,15 @@ def run_backtest(
         "win_rate_per_trade": round(win_rate_per_trade, 4),
         "win_rate_per_day": round(win_rate_per_day, 4),
         "profit_factor": round(profit_factor, 4),
+        # F-3 (AR-1101 §4). `total_trades` remains the EXECUTED count; the two fields
+        # below say how that population splits, so a reader can no longer mistake an
+        # unresolved position for a completed trade. Realized statistics above
+        # (win_rate, profit_factor, avg_trade_pnl) are computed over the closed subset.
         "total_trades": total_trades,
+        "closed_trade_count": closed_trade_count,
+        "open_trade_count": open_trade_count,
+        "realized_pnl_total": round(realized_pnl_total, 2),
+        "open_pnl_total": round(open_pnl_total, 2),
         "avg_trade_pnl": round(avg_trade_pnl, 2),
         "avg_daily_pnl": round(avg_daily_pnl, 2),
         "winning_days": winning_days,
@@ -8267,6 +8370,13 @@ def run_class_backtest(
     winner_loser_ratio = 0.0
     trades_list: list[dict] = []
     trade_pnls_arr = np.array([])
+    # F-3 (AR-1101 §4): realized/open split. Defaulted here for the same reason the
+    # arrays below are — a zero-signal run skips the block that computes them, and both
+    # are emitted unconditionally in the result envelope.
+    closed_trade_count = 0
+    open_trade_count = 0
+    realized_pnl_total = 0.0
+    open_pnl_total = 0.0
     # Default arrays for winners/losers/avg values — used in expectancy_per_trade
     # calculation below. Overwritten inside `if trades_records is not None:` when
     # trades exist. GATE3-DEFECT-1 FIX (corpus-v3 gate3 re-run protocol, 2026-07-06):
@@ -8503,17 +8613,36 @@ def run_class_backtest(
             trades_list.append(trade)
 
         trade_pnls_arr = np.array(trade_pnls_list)
-        winners = trade_pnls_arr[trade_pnls_arr > 0]
-        losers = trade_pnls_arr[trade_pnls_arr < 0]
 
-        win_rate = float(len(winners) / total_trades)
-        avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
-        avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 0.0
-        gross_profit = float(np.sum(winners))
-        gross_loss = float(np.abs(np.sum(losers)))
-        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
-        avg_trade_pnl = float(np.mean(trade_pnls_arr))
-        winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
+        # ─── F-3 (AR-1101 §4) — REALIZED STATISTICS USE CLOSED TRADES ONLY ──────────
+        # `trade_pnls_arr` deliberately stays the EXECUTED population: the equity curve
+        # below marks every executed trade to market, and the reconciliation sanity
+        # check joins equity against `np.sum(trade_pnls_arr)`. Narrowing it here would
+        # break that join and relabel MTM state as realized P&L. Only the REALIZED
+        # statistics below are narrowed to closed trades.
+        realized_pnls, closed_trade_count, open_trade_count = partition_realized_open(
+            trades_list, trade_pnls_list
+        )
+        winners = realized_pnls[realized_pnls > 0]
+        losers = realized_pnls[realized_pnls < 0]
+
+        # Realized P&L and open MTM P&L reported SEPARATELY (AR-1101 §4). `total_return`
+        # remains the executed total, so a consumer that needs a like-for-like realized
+        # join has one without re-deriving the closed/open split for itself.
+        realized_pnl_total = float(np.sum(realized_pnls))
+        open_pnl_total = float(np.sum(trade_pnls_arr)) - realized_pnl_total
+
+        # A population of nothing but open positions has NO realized statistics; the
+        # defaults hoisted above stand rather than a fabricated 0/0.
+        if closed_trade_count > 0:
+            win_rate = float(len(winners) / closed_trade_count)
+            avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
+            avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 0.0
+            gross_profit = float(np.sum(winners))
+            gross_loss = float(np.abs(np.sum(losers)))
+            profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
+            avg_trade_pnl = float(np.mean(realized_pnls))
+            winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
 
     # ─── Build equity curve from managed trades ─────────────────
     # Uses managed entry/exit data so equity matches per-trade P&L exactly.
@@ -8786,6 +8915,13 @@ def run_class_backtest(
         "total_return": round(total_return, 6), "sharpe_ratio": round(sharpe, 4),
         "max_drawdown": round(max_dd, 6), "win_rate": round(win_rate, 4),
         "profit_factor": round(profit_factor, 4), "total_trades": total_trades,
+        # F-3 (AR-1101 §4). These MUST be here and not only in the final envelope: this
+        # prelim dict is what `run_sanity_checks` and `run_cross_validation` receive, and
+        # the independent recomputation needs the split to verify a realized metric
+        # against the realized population rather than the executed one.
+        "closed_trade_count": closed_trade_count, "open_trade_count": open_trade_count,
+        "realized_pnl_total": round(realized_pnl_total, 2),
+        "open_pnl_total": round(open_pnl_total, 2),
         "avg_trade_pnl": round(avg_trade_pnl, 2), "total_trading_days": total_trading_days,
         "trades": trades_list, "daily_pnls": daily_pnl_values,
         "equity_curve": _aggregate_equity_daily(equity, equity_index, ts_et_index=_ts_et_list_eq_cls),
@@ -8803,7 +8939,11 @@ def run_class_backtest(
     analytics = compute_full_analytics(daily_pnl_records, trades_list)
 
     # ─── Task 3.5: Win rate per-trade AND per-day ────────────
-    win_rate_per_trade = len([t for t in trades_list if float(t.get("PnL", t.get("pnl", 0))) > 0]) / max(total_trades, 1)
+    # F-3 (AR-1101 §4): a realized win rate counts CLOSED trades in BOTH the numerator
+    # and the denominator. This site is independent of the `win_rate` computed above and
+    # carried the same defect separately — it is fixed through the same one predicate.
+    _wrpt_closed = [t for t in trades_list if not is_open_at_frame_end(t)]
+    win_rate_per_trade = len([t for t in _wrpt_closed if float(t.get("PnL", t.get("pnl", 0))) > 0]) / max(len(_wrpt_closed), 1)
     win_rate_per_day = winning_days / max(total_trading_days, 1)
 
     # ─── Task 3.6: Long/short split metrics ──────────────────
@@ -8879,7 +9019,15 @@ def run_class_backtest(
         "win_rate_per_trade": round(win_rate_per_trade, 4),
         "win_rate_per_day": round(win_rate_per_day, 4),
         "profit_factor": round(profit_factor, 4),
+        # F-3 (AR-1101 §4). `total_trades` remains the EXECUTED count; the two fields
+        # below say how that population splits, so a reader can no longer mistake an
+        # unresolved position for a completed trade. Realized statistics above
+        # (win_rate, profit_factor, avg_trade_pnl) are computed over the closed subset.
         "total_trades": total_trades,
+        "closed_trade_count": closed_trade_count,
+        "open_trade_count": open_trade_count,
+        "realized_pnl_total": round(realized_pnl_total, 2),
+        "open_pnl_total": round(open_pnl_total, 2),
         "avg_trade_pnl": round(avg_trade_pnl, 2),
         "avg_daily_pnl": round(avg_daily_pnl, 2),
         "winning_days": winning_days,

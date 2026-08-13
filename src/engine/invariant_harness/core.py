@@ -681,11 +681,29 @@ def _check_profit_factor_finite(result: dict) -> InvariantCheck:
 
 
 def _check_avg_trade_pnl_consistent(result: dict) -> InvariantCheck:
-    """INV-11 WARNING: total_return / total_trades ≈ avg_trade_pnl."""
+    """INV-11 WARNING: total_return / total_trades ≈ avg_trade_pnl.
+
+    ─── F-3 (AR-1101 §4) — THIS JOIN HAD TO MOVE WITH THE METRIC ───────────────────────
+    `avg_trade_pnl` is now a REALIZED average (closed trades only), while `total_return`
+    and `total_trades` remain the EXECUTED totals. Joining those two sides compares
+    different populations, and on the F-3 discriminator fixture it fired a false WARNING
+    reading "Possible winner/loser array filtering bug" — accusing the repair of being
+    the defect. `A JOIN IS ONLY EVIDENCE WHILE BOTH SIDES DESCRIBE THE SAME POPULATION.`
+
+    So when the envelope carries the realized fields, both sides come from the realized
+    population. Envelopes without them (older artifacts, hand-built fixtures) keep the
+    original join, so this check is not silently disarmed for anything that predates F-3.
+    """
     TOLERANCE = 0.50
     total_trades = int(_aggregate_metric(result, "total_trades", 0))
     total_return = _aggregate_metric(result, "total_return", 0.0)
     avg_trade_pnl = _aggregate_metric(result, "avg_trade_pnl", 0.0)
+
+    _basis = "total_return / total_trades"
+    if "closed_trade_count" in result and "realized_pnl_total" in result:
+        total_trades = int(_aggregate_metric(result, "closed_trade_count", 0))
+        total_return = _aggregate_metric(result, "realized_pnl_total", 0.0)
+        _basis = "realized_pnl_total / closed_trade_count"
 
     if total_trades == 0:
         return InvariantCheck(
@@ -706,12 +724,12 @@ def _check_avg_trade_pnl_consistent(result: dict) -> InvariantCheck:
         name="avg_trade_pnl_consistent",
         passed=passed,
         tolerance=f"${TOLERANCE:.2f}",
-        expected=f"total_return / total_trades = {implied_avg:.4f} ≈ avg_trade_pnl ({avg_trade_pnl:.4f})",
+        expected=f"{_basis} = {implied_avg:.4f} ≈ avg_trade_pnl ({avg_trade_pnl:.4f})",
         actual=f"diff = {diff:.4f}",
         evidence=(
-            f"avg_trade_pnl {avg_trade_pnl:.2f} consistent with total_return / trades = {implied_avg:.2f}"
+            f"avg_trade_pnl {avg_trade_pnl:.2f} consistent with {_basis} = {implied_avg:.2f}"
             if passed else
-            f"avg_trade_pnl {avg_trade_pnl:.2f} differs from total_return/trades = {implied_avg:.2f} "
+            f"avg_trade_pnl {avg_trade_pnl:.2f} differs from {_basis} = {implied_avg:.2f} "
             f"by ${diff:.4f}. Possible winner/loser array filtering bug."
         ),
         severity="WARNING",

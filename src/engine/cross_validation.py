@@ -16,6 +16,7 @@ import numpy as np
 from scipy import stats as scipy_stats
 
 from src.engine.monte_carlo import create_authoritative_rng
+from src.engine.trade_status import is_open_at_frame_end
 
 # ── WFE floor thresholds (institutional 2026 standard) ───────────────────────
 # Hard floor: WFE < WFE_HARD_FLOOR triggers red-flag audit (Pass B.2 blocks at
@@ -397,10 +398,33 @@ def _verify_metrics(result: dict, trades: list, daily_pnls: list) -> dict:
     if not trades:
         return {"status": "SKIP", "detail": "no trades to verify", "checks": checks}
 
+    # ─── F-3 (AR-1101 §4) — VERIFY THE REALIZED NUMBERS AGAINST THE REALIZED POPULATION ──
+    # `win_rate` and `profit_factor` are computed over CLOSED trades only: a position
+    # still open at the frame end is open risk, not a completed win or loss. This
+    # recomputation is an INDEPENDENT check of those numbers, so it must define the
+    # population the same way — otherwise it reports a disagreement it created itself.
+    #
+    # 🛑 MEASURED, and it is not theoretical: on the F-3 discriminator fixture (2 closed
+    # winners + 1 unresolved position at a loss) this check read
+    #   win_rate_recomputed  reported=1.0000 recomputed=0.6667 error=0.3333   FAIL
+    #   profit_factor_recomputed reported=999.99 recomputed=5.7031            FAIL
+    # — two FAILs inside the envelope while the whole test suite stayed green, because a
+    # verification result is DATA, not an exception.
+    # ★ `A CHECK THAT COUNTS A DIFFERENT POPULATION THAN THE METRIC IT CHECKS MANUFACTURES
+    #    THE DISAGREEMENT IT REPORTS.`
+    #
+    # Envelopes without the split (older artifacts, hand-built fixtures) keep the original
+    # whole-population behaviour, so this verification is not silently disarmed for them.
+    _verify_trades = trades
+    if "closed_trade_count" in result:
+        _verify_trades = [t for t in trades if not is_open_at_frame_end(t)]
+
     # 2. Win rate — recompute from trade P&Ls
-    trade_pnls = [float(t.get("PnL", t.get("pnl", 0))) for t in trades]
+    trade_pnls = [float(t.get("PnL", t.get("pnl", 0))) for t in _verify_trades]
     actual_wins = sum(1 for p in trade_pnls if p > 0)
-    actual_win_rate = actual_wins / len(trades) if trades else 0.0
+    # Denominator is the population the P&Ls were drawn from — `len(trades)` here would
+    # divide realized winners by the EXECUTED count, which is the F-3 defect itself.
+    actual_win_rate = actual_wins / len(trade_pnls) if trade_pnls else 0.0
     wr_error = abs(actual_win_rate - reported_win_rate)
     wr_ok = wr_error < 0.01  # 1% tolerance
     checks.append({
