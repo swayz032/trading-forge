@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `a0cb5b3635cf3e8f2e7b1c0eab0d72c77ad9c224`  (worktree DIRTY at generation time)
+> Generated at commit `93fe04c12c62396c77e5a6be488cdbeea27dfb70`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -31,7 +31,7 @@ first and its cost is made visible.
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
 | `src/` | Python | 297 | 386 | 124466 | 1917 |
-| `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
+| `src/` | TypeScript | 462 | 723 | 209912 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
 TypeScript symbol rule: every line matching an **exported declaration** pattern
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1867 | 759 |
+| `src/` | 1868 | 759 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2125** | **980** |
+| **TOTAL** | **2126** | **980** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 438 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 84 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1108 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1109 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **174**.  Modules reachable from them: **714** of **2125** parsed files.
+Total entry points: **174**.  Modules reachable from them: **714** of **2126** parsed files.
 
 <details><summary>All 174 entry points and why each was counted</summary>
 
@@ -279,8 +279,8 @@ table below it.**
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3680 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1159 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.2% of 4895 rows |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1164 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.1% of 4900 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=174 |
 | C6 | a registered route module is reachable | PASS | modules reachable=714 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
@@ -288,9 +288,9 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1917 ts=2928 |
+| C12 | symbols enumerated in both languages | PASS | py=1917 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=43 (probe runs; 0 would be a legitimate reading) |
-| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6609/6609 TS import specifiers non-blank |
+| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6610/6610 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
@@ -304,8 +304,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **218 of 4578 enumerated symbol names (4.8%) are defined in more than one file, covering
-  485 of 4845 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **219 of 4582 enumerated symbol names (4.8%) are defined in more than one file, covering
+  487 of 4850 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -324,12 +324,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3680 | 75.2% |
+| `WIRED` | 3680 | 75.1% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1159 | 23.7% |
+| `BUILT-UNREACHABLE` | 1164 | 23.8% |
 | `DECLARED-ABSENT` | 43 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4895** | |
+| **TOTAL** | **4900** | |
 
 ---
 
@@ -491,7 +491,7 @@ table below it.**
 | `src/server/production` | 29 | 0 | 4 | 0 | 1 | 34 |
 | `src/server/routes` | 158 | 0 | 9 | 1 | 1 | 169 |
 | `src/server/scheduler.ts` | 11 | 0 | 1 | 0 | 0 | 12 |
-| `src/server/services` | 903 | 0 | 208 | 3 | 0 | 1114 |
+| `src/server/services` | 903 | 0 | 213 | 3 | 0 | 1119 |
 | `src/server/slumdawg-hmac.ts` | 0 | 0 | 4 | 0 | 0 | 4 |
 | `src/server/types` | 0 | 0 | 2 | 0 | 1 | 3 |
 | `src/shared/db-types.ts` | 0 | 0 | 20 | 0 | 0 | 20 |
@@ -1058,7 +1058,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1159** `BUILT-UNREACHABLE` symbols, **613 have test coverage but no production caller**.
+Of **1164** `BUILT-UNREACHABLE` symbols, **616 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1087,7 +1087,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `getNotificationServiceStatus` | function | `src/server/services/notification-service.ts:368` | 5 | unique |
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
-| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:588` | 5 | unique |
+| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:669` | 5 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
 | `_result` | function | `src/engine/anti_setups/regime_filter.py:156` | 3 | unique |
@@ -1158,6 +1158,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:79` | 2 | unique |
 | `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:121` | 2 | unique |
 | `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | 2 | unique |
+| `parseSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:306` | 2 | unique |
 | `runStrategyProductionCheck` | function | `src/server/services/strategy-production-check-service.ts:23` | 2 | unique |
 | `_resetActiveCount` | function | `src/server/services/trade-critique-service.ts:113` | 2 | unique |
 | `isUnconfiguredSlumdawgSecret` | function | `src/server/slumdawg-hmac.ts:45` | 2 | unique |
@@ -1371,9 +1372,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `MIN_CRITIQUES_FOR_FULL_ANALYSIS` | const | `src/server/lib/replay/critique-disagreement.ts:30` | 1 | unique |
 | `PaperPositionRow` | interface | `src/server/lib/replay/critique-disagreement.ts:38` | 1 | unique |
 | `TradeCritiqueRow` | interface | `src/server/lib/replay/critique-disagreement.ts:46` | 1 | unique |
-| `aggregateByGrade` | function | `src/server/lib/replay/critique-disagreement.ts:146` | 1 | unique |
 
-_...313 more omitted from this table._
+_...316 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -2836,7 +2836,7 @@ _...313 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/server/services</code> - 208 symbols</summary>
+<details><summary><code>src/server/services</code> - 213 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -3021,19 +3021,24 @@ _...313 more omitted from this table._
 | `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | defining module is not reachable from any measured entry point |
 | `SpecEntryCondition` | interface | `src/server/services/spec-onboarding-service.ts:185` | defining module is not reachable from any measured entry point |
 | `SpecArtifactBody` | interface | `src/server/services/spec-onboarding-service.ts:194` | defining module is not reachable from any measured entry point |
-| `SpecArtifact` | interface | `src/server/services/spec-onboarding-service.ts:210` | defining module is not reachable from any measured entry point |
-| `ParseResult` | interface | `src/server/services/spec-onboarding-service.ts:221` | defining module is not reachable from any measured entry point |
-| `parseSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:230` | defining module is not reachable from any measured entry point |
-| `deriveConfluenceFactors` | function | `src/server/services/spec-onboarding-service.ts:289` | defining module is not reachable from any measured entry point |
-| `ConceptNameResult` | interface | `src/server/services/spec-onboarding-service.ts:309` | defining module is not reachable from any measured entry point |
-| `deriveConceptName` | function | `src/server/services/spec-onboarding-service.ts:315` | defining module is not reachable from any measured entry point |
-| `buildDirectionalEntries` | function | `src/server/services/spec-onboarding-service.ts:356` | defining module is not reachable from any measured entry point |
-| `SymbolCode` | type | `src/server/services/spec-onboarding-service.ts:384` | defining module is not reachable from any measured entry point |
-| `OnboardSpecOptions` | interface | `src/server/services/spec-onboarding-service.ts:386` | defining module is not reachable from any measured entry point |
-| `PerSymbolStatus` | type | `src/server/services/spec-onboarding-service.ts:431` | defining module is not reachable from any measured entry point |
-| `PerSymbolOnboardResult` | interface | `src/server/services/spec-onboarding-service.ts:456` | defining module is not reachable from any measured entry point |
-| `OnboardSpecResult` | interface | `src/server/services/spec-onboarding-service.ts:467` | defining module is not reachable from any measured entry point |
-| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:588` | defining module is not reachable from any measured entry point |
+| `SOURCE_TIMEFRAME_ROLES_SCHEMA` | const | `src/server/services/spec-onboarding-service.ts:224` | defining module is not reachable from any measured entry point |
+| `SOURCE_TIMEFRAME_ROLE_NAMES` | const | `src/server/services/spec-onboarding-service.ts:227` | defining module is not reachable from any measured entry point |
+| `TimeframeRoleBinding` | interface | `src/server/services/spec-onboarding-service.ts:234` | defining module is not reachable from any measured entry point |
+| `SourceTimeframeRolesEnvelope` | interface | `src/server/services/spec-onboarding-service.ts:242` | defining module is not reachable from any measured entry point |
+| `parseSourceTimeframeRoles` | function | `src/server/services/spec-onboarding-service.ts:256` | defining module is not reachable from any measured entry point |
+| `SpecArtifact` | interface | `src/server/services/spec-onboarding-service.ts:286` | defining module is not reachable from any measured entry point |
+| `ParseResult` | interface | `src/server/services/spec-onboarding-service.ts:297` | defining module is not reachable from any measured entry point |
+| `parseSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:306` | defining module is not reachable from any measured entry point |
+| `deriveConfluenceFactors` | function | `src/server/services/spec-onboarding-service.ts:370` | defining module is not reachable from any measured entry point |
+| `ConceptNameResult` | interface | `src/server/services/spec-onboarding-service.ts:390` | defining module is not reachable from any measured entry point |
+| `deriveConceptName` | function | `src/server/services/spec-onboarding-service.ts:396` | defining module is not reachable from any measured entry point |
+| `buildDirectionalEntries` | function | `src/server/services/spec-onboarding-service.ts:437` | defining module is not reachable from any measured entry point |
+| `SymbolCode` | type | `src/server/services/spec-onboarding-service.ts:465` | defining module is not reachable from any measured entry point |
+| `OnboardSpecOptions` | interface | `src/server/services/spec-onboarding-service.ts:467` | defining module is not reachable from any measured entry point |
+| `PerSymbolStatus` | type | `src/server/services/spec-onboarding-service.ts:512` | defining module is not reachable from any measured entry point |
+| `PerSymbolOnboardResult` | interface | `src/server/services/spec-onboarding-service.ts:537` | defining module is not reachable from any measured entry point |
+| `OnboardSpecResult` | interface | `src/server/services/spec-onboarding-service.ts:548` | defining module is not reachable from any measured entry point |
+| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:669` | defining module is not reachable from any measured entry point |
 | `__resetEnabledFirmsCache` | function | `src/server/services/strategy-assignment-service.ts:197` | no non-test reference outside its own definition; 3 test file(s) do reference it |
 | `getActiveAssignments` | function | `src/server/services/strategy-assignment-service.ts:620` | no non-test reference outside its own definition |
 | `unreleaseFromFamily` | function | `src/server/services/strategy-assignment-service.ts:697` | no non-test reference outside its own definition |
@@ -5384,7 +5389,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
 | `SourceTimeframeRoleError` | class | `src/engine/source_timeframe_roles.py:62` | 1 | unique |
-| `TimeframeRoleBinding` | class | `src/engine/source_timeframe_roles.py:102` | 0 | unique |
+| `TimeframeRoleBinding` | class | `src/engine/source_timeframe_roles.py:102` | 1 | AMBIG |
 | `_exact_keys` | function | `src/engine/source_timeframe_roles.py:144` | 1 | AMBIG |
 | `SourceTimeframeRoles` | class | `src/engine/source_timeframe_roles.py:158` | 3 | unique |
 
