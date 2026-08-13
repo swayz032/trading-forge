@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `83c6fa411e31dce1244a30d103c563117592362e`  (worktree DIRTY at generation time)
+> Generated at commit `e4b9b51d07d638692a84f71ecd6e0e364813f503`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 297 | 387 | 124548 | 1918 |
+| `src/` | Python | 297 | 387 | 124584 | 1918 |
 | `src/` | TypeScript | 462 | 724 | 209939 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -283,7 +283,7 @@ table below it.**
 | C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.1% of 4901 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=174 |
 | C6 | a registered route module is reachable | PASS | modules reachable=714 |
-| C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
+| C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
@@ -518,10 +518,10 @@ invisible for weeks.
 
 ### 5.1 Every environment flag read anywhere in `src/`
 
-**467 distinct flags.**  `Defaults observed` is the literal that follows the read
+**468 distinct flags.**  `Defaults observed` is the literal that follows the read
 (`os.environ.get(X, default)`, `process.env.X ?? default`, or the value it is compared to).
 
-<details><summary>All 467 flags</summary>
+<details><summary>All 468 flags</summary>
 
 | Flag | Defaults observed | Read in N files |
 |---|---|---:|
@@ -925,6 +925,7 @@ invisible for weeks.
 | `TF_PHASE_5_ENABLED` | `'false'` | 1 |
 | `TF_POSITION_LOCKING` | `(no default; compared to "1")` | 1 |
 | `TF_PYTHON_USER_SITE` | `(no default)` | 4 |
+| `TF_REAL_DATA_WITNESS` | `(no default)` | 1 |
 | `TF_ROLE_DEMOTION_AUDIT_PATH` | `(REQUIRED - no default)`, `(no default)`, `DEFAULT_AUDIT_PATH` | 2 |
 | `TF_ROLE_DEMOTION_MODE` | `'off'`, `(REQUIRED - no default)`, `(no default)` | 2 |
 | `TF_RUNTIME_STAGE` | `(no default)` | 1 |
