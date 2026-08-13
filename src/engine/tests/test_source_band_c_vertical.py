@@ -492,3 +492,65 @@ class TestTheRemainingDiscriminators:
             "reached back and closed a position that did not exist until its close"
         )
         assert t["Avg Exit Price"] == TARGET_2R
+
+
+class TestExitTimestampIsTheManagedExit:
+    """GRADE F-2 (HIGH) / AR-1089 §7 STEP 1 — `Exit Idx` and `Exit Timestamp` are ONE identity.
+
+    The managed-exit block overwrote `Avg Exit Price`, `Exit Idx`, `exit_reason` and P&L but
+    left `Exit Timestamp` at vectorbt's value. On the source arm every vectorbt trade carries
+    `Status:"Open"`, so that stale timestamp is the LAST BAR OF THE FRAME — and `prop_sim.py`
+    reads it, turning a fifteen-minute trade into an overnight prop-firm violation.
+
+    `TWO FIELDS DESCRIBING ONE EVENT MUST MOVE TOGETHER OR ONE OF THEM IS LYING.`
+    """
+
+    def test_the_exit_timestamp_is_the_bar_at_the_managed_exit_idx(self):
+        result, _out = _run()
+        t = result["trades"][0]
+        exit_idx = int(t["Exit Idx"])
+        # The frame the run executed on, rebuilt from the SAME generator the run used.
+        frame = _bars_from(list(_SESSION))
+        expected = frame["ts_event"].to_list()[exit_idx]
+        assert datetime.fromisoformat(t["Exit Timestamp"]) == expected, (
+            f"Exit Timestamp {t['Exit Timestamp']} does not name bar {exit_idx}"
+        )
+
+    def test_the_intraday_trade_no_longer_looks_like_an_OVERNIGHT_hold(self):
+        """The observable consequence, which is the whole point of the repair. Entry at
+        10:10 ET and exit at 10:25 ET are the SAME session; the stale value was the frame's
+        final bar three days later."""
+        result, _out = _run()
+        t = result["trades"][0]
+        entry = datetime.fromisoformat(t["entry_timestamp"])
+        exit_ts = datetime.fromisoformat(t["Exit Timestamp"])
+        assert exit_ts > entry, "the exit precedes the entry"
+        assert (exit_ts - entry) < timedelta(hours=1), (
+            f"a {exit_ts - entry} hold for a trade that exited 3 bars after entry — the stale "
+            "vectorbt timestamp is still in the record"
+        )
+        assert exit_ts.date() == entry.date(), "same-session trade spans a date boundary"
+
+    def test_it_is_NOT_scoped_to_the_source_arm_LEGACY_CONTROL(self):
+        """🛑 THE SHARED-PATH CONTROL AR-1089 §7.1 REQUIRES. This block is generic — every
+        class backtest with a managed exit flows through it — so a fix that only worked on
+        the source arm would leave the same false-overnight defect live for every existing
+        strategy. A legacy run must also carry a timestamp that names its own exit bar."""
+        result, _out = _run(_config(_compiled_spec(source_risk=None)))
+        trades = result.get("trades") or []
+        if not trades:
+            pytest.skip("legacy arm produced no trade on this fixture; nothing to control")
+        t = trades[0]
+        frame = _bars_from(list(_SESSION))
+        expected = frame["ts_event"].to_list()[int(t["Exit Idx"])]
+        assert datetime.fromisoformat(t["Exit Timestamp"]) == expected, (
+            "the legacy arm still carries vectorbt's stale exit timestamp"
+        )
+
+    def test_the_ENTRY_timestamp_is_untouched(self):
+        """AR-1089 §7.1: "preserve entry timestamp behavior." A repair that also moved the
+        entry would change trade timing rather than correct it."""
+        result, _out = _run()
+        t = result["trades"][0]
+        assert t["entry_timestamp"] == t["Entry Timestamp"]
+        assert datetime.fromisoformat(t["Entry Timestamp"]) == DECISION_TS

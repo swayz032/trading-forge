@@ -8049,6 +8049,39 @@ def run_class_backtest(
             # Override with managed exit data
             trade["Avg Exit Price"] = round(exit_p, 4)
             trade["Exit Idx"] = exit_idx
+            # ─── GRADE F-2 (HIGH) — `Exit Idx` AND `Exit Timestamp` ARE ONE IDENTITY ─────
+            # 🛑 THE DEFECT: this block overwrote `Avg Exit Price`, `Exit Idx`, `exit_reason`
+            # and P&L with the MANAGED exit, and left `Exit Timestamp` at the value vectorbt
+            # emitted — which the column loop above had already copied verbatim. On the
+            # source arm every vectorbt trade carries `Status:"Open"`, so that stale
+            # timestamp is THE LAST BAR OF THE FRAME.
+            #
+            # ⚠️ AND IT IS READ. `prop_sim.py:84-94` uses it, so a trade that entered and
+            # exited fifteen minutes apart was reported as an OVERNIGHT PROP-FIRM VIOLATION
+            # — measured on this campaign's own 3-session fixture. A false breach in the
+            # surface that decides prop-firm compliance is worse than a missing one: it
+            # accuses a strategy of a rule violation it did not commit.
+            # ★ `TWO FIELDS DESCRIBING ONE EVENT MUST MOVE TOGETHER OR ONE OF THEM IS LYING.`
+            #
+            # 🛑 STAMPED FROM THE EXECUTED FRAME AT THAT EXACT `exit_idx`, NOT RECOMPUTED.
+            # `close_pd.index` is the same object `ts_to_idx` was built from a few hundred
+            # lines above, so this is that map's exact inverse — index and timestamp cannot
+            # disagree by construction. Parsing or rebuilding a datetime from strings here
+            # would be a SECOND derivation free to drift from the first (AR-1089 §7.1).
+            # `.isoformat()` mirrors what the column loop already does for datetime columns,
+            # so the field's REPRESENTATION is unchanged — only its VALUE is corrected.
+            #
+            # ⚠️ THIS BLOCK IS GENERIC, NOT SOURCE_FAITHFUL-ONLY: every class backtest with
+            # a managed exit gets the corrected timestamp. That is a deliberate, named legacy
+            # correction — the old value was wrong on those paths too — and it carries its own
+            # control in the test suite rather than being asserted only on the source arm.
+            if exit_idx is not None and 0 <= int(exit_idx) < len(close_pd.index):
+                _managed_exit_ts = close_pd.index[int(exit_idx)]
+                trade["Exit Timestamp"] = (
+                    _managed_exit_ts.isoformat()
+                    if hasattr(_managed_exit_ts, "isoformat")
+                    else _managed_exit_ts
+                )
             trade["exit_reason"] = exit_reason
             trade["PnL"] = round(net_pnl, 2)
             trade["GrossPnL"] = round(gross, 2)
