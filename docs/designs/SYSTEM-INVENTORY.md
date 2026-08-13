@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `ef0aca3cdbe2b7cda86fa019b00a8adac2cdc384`  (worktree DIRTY at generation time)
+> Generated at commit `b12c0595e78ec41a7cc88fe23b250839cfb41ce3`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 293 | 377 | 122998 | 1899 |
+| `src/` | Python | 293 | 378 | 122998 | 1899 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1854 | 755 |
+| `src/` | 1855 | 755 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2112** | **976** |
+| **TOTAL** | **2113** | **976** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 427 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1099 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1100 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **621** of **2112** parsed files.
+Total entry points: **94**.  Modules reachable from them: **621** of **2113** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
