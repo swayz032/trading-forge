@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `c19fb90469f03c68cfefd2c1062e5f1264ae3a8f`  (worktree DIRTY at generation time)
+> Generated at commit `9d25bae773fced12593a53360b0e5495105fecfb`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 293 | 376 | 122933 | 1899 |
+| `src/` | Python | 293 | 377 | 122983 | 1899 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1853 | 755 |
+| `src/` | 1854 | 755 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2111** | **976** |
+| **TOTAL** | **2112** | **976** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 427 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 83 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1098 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1099 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **621** of **2111** parsed files.
+Total entry points: **94**.  Modules reachable from them: **621** of **2112** parsed files.
 
 <details><summary>All 94 entry points and why each was counted</summary>
 
@@ -1131,7 +1131,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `archetype_distribution` | function | `src/engine/archetypes/historical_labeler.py:19` | 1 | unique |
 | `label_history` | function | `src/engine/archetypes/historical_labeler.py:8` | 1 | unique |
 | `map_strategy_to_archetypes` | function | `src/engine/archetypes/strategy_mapper.py:10` | 1 | unique |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:9259` | 1 | unique |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:9292` | 1 | unique |
 | `MappingSchemaError` | class | `src/engine/battery/mapping_guard.py:24` | 1 | unique |
 | `_print_boundary` | function | `src/engine/battery/selection_deflation.py:198` | 1 | unique |
 | `run_selection_deflation_check` | function | `src/engine/battery/selection_deflation.py:115` | 1 | unique |
@@ -1437,7 +1437,7 @@ _...478 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `shift_higher_tf_columns` | function | `src/engine/backtester.py:2449` | no non-test reference outside its own definition |
-| `validate_candidate_authority` | function | `src/engine/backtester.py:9259` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `validate_candidate_authority` | function | `src/engine/backtester.py:9292` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -3716,13 +3716,13 @@ This is the *we already have this* list.  Check it before writing anything.
 | `compute_recency_weighted_score` | function | `src/engine/backtester.py:7139` | 0 | unique |
 | `_empty_result` | function | `src/engine/backtester.py:7225` | 1 | AMBIG |
 | `run_class_backtest` | function | `src/engine/backtester.py:7256` | 7 | unique |
-| `_compute_decay_analysis` | function | `src/engine/backtester.py:8992` | 0 | unique |
-| `_load_strategy_class` | function | `src/engine/backtester.py:9017` | 1 | unique |
-| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:9036` | 0 | unique |
-| `_rescore_with_crisis` | function | `src/engine/backtester.py:9066` | 0 | unique |
-| `_candidate_refusal_envelope` | function | `src/engine/backtester.py:9137` | 0 | unique |
-| `resolve_candidate_authority` | function | `src/engine/backtester.py:9176` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:9293` | 189 | AMBIG |
+| `_compute_decay_analysis` | function | `src/engine/backtester.py:9025` | 0 | unique |
+| `_load_strategy_class` | function | `src/engine/backtester.py:9050` | 1 | unique |
+| `_unevaluated_crisis_sentinel` | function | `src/engine/backtester.py:9069` | 0 | unique |
+| `_rescore_with_crisis` | function | `src/engine/backtester.py:9099` | 0 | unique |
+| `_candidate_refusal_envelope` | function | `src/engine/backtester.py:9170` | 0 | unique |
+| `resolve_candidate_authority` | function | `src/engine/backtester.py:9209` | 0 | unique |
+| `main` | function | `src/engine/backtester.py:9326` | 189 | AMBIG |
 
 </details>
 
