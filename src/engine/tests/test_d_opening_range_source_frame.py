@@ -168,18 +168,42 @@ def test_supplier_source_contains_no_aggregation(banned):
     assert banned not in executable
 
 
-def test_REAL_loader_refuses_on_this_box_today():
-    """THE HONEST STATE OF THE ENVIRONMENT, asserted rather than described.
+def test_REAL_loader_path_refuses_today_and_the_REASON_matters():
+    """THE HONEST STATE, asserted rather than described — and the reason CHANGED.
 
-    This is a REAL call to the production loader. It refuses — cache older than the 24h
-    TTL, so it falls to S3, which refuses for missing AWS credentials. If this test ever
-    starts FAILING, real data became reachable and the real-data 5m witness this suite
-    explicitly does not claim becomes available. That is the intended signal.
+    `[MEASURED 2026-08-13]` the first reading of this was wrong. I reported real 5m as
+    unloadable because `load_ohlcv` fell through a stale cache to S3 and refused for
+    missing AWS credentials. **The credentials were in `.env` all along**; Python simply
+    does not auto-load it. With them exported, `load_ohlcv('MES','5m',...)` returns
+    **1308 real bars**, tz-aware, quality gate passed.
+
+    🛑 THE REAL BLOCKER IS DOWNSTREAM OF THE DATA, AND IT IS OURS:
+    `RoleFrame.verify_spacing()` requires EVERY consecutive gap to equal the timeframe
+    exactly. Real futures data cannot satisfy that. `[MEASURED]` over 2024-03-04..08:
+
+        5m: 1308 bars — gaps  5.0 x1303,  65.0 x4
+        1m: 6536 bars — gaps  1.0 x6527,  2.0 x4,  61.0 x4
+
+    The four large gaps are the CME daily maintenance halt (17:00-18:00 ET). The sampling
+    is CORRECT; the predicate cannot distinguish a legitimate session break from wrong
+    sampling, because it was red-proofed only against synthetic contiguous fixtures.
+
+        ★★★★★ `A GUARD THAT HAS ONLY EVER SEEN FIXTURES IS AN UNTESTED HYPOTHESIS ABOUT
+           PRODUCTION, AND THE CLEANER ITS FIXTURES THE LONGER THAT GOES UNNOTICED.`
+
+    NOT repaired here: widening the predicate is a SEMANTIC decision about what counts as
+    a legitimate break, on a safety guard, and it is reported to GPT rather than taken
+    unilaterally (AR-1130). The obvious candidate — every gap a positive INTEGER MULTIPLE
+    of the timeframe — would admit 65=13x5 while still convicting a 1m series labelled 5m
+    (1 is not a multiple of 5), so the discriminator survives. That remains GPT's call.
+
+    This test asserts the refusal WITHOUT credentials (the state of a bare test run) and
+    is deliberately tolerant of either failure mode, because both are real refusals.
     """
     from src.engine.data_loader import DataLoadConfigError
 
     strategy = _Strategy("1m")
     with pytest.raises((ValueError, DataLoadConfigError)):
-        _supply_opening_range_source_frame(strategy, _roles("5m"), "MES", "2024-03-01", "2024-03-08")
+        _supply_opening_range_source_frame(strategy, _roles("5m"), "MES", "2024-03-04", "2024-03-08")
 
     assert strategy.opening_range_source_frame is None
