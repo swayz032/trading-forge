@@ -69,38 +69,39 @@ contract is keyed on. So this entry point now **REFUSES** a bare source-video id
     ★★★★★ `AN ARGUMENT WHOSE NAME DESCRIBES A DIFFERENT OBJECT THAN ITS VALUE IS A
        DEFECT THAT ONLY FIRES ON THE FIRST REAL RUN — WHICH IS THE RUN THAT MATTERS.`
 
-WHAT MAKES THIS AN ENTRY POINT — AND WHAT DOES **NOT**
--------------------------------------------------------
-🛑 **NOT the `__main__` guard, whatever `system_inventory.py` advertises.** Rule **(c)**
-of `discover_entry_points` claims to find *"Python modules with an
-`if __name__ == \"__main__\"` block"*, but `[MEASURED, AR-1122 §3]` `refs` is built only
-from `ast.Name` / `ast.Attribute` nodes and `"__main__"` is an `ast.Constant`, so the
-rule has **never fired anywhere in this repo** (its reason string appears 0 times in the
-generated inventory, while the other rules fire freely). Building this module on that
-rule made the reachability proof FAIL: the module was added as three MORE unreachable
-symbols while advertising itself as an entry point. GPT has since authorized a narrow
-repair of rule (c) (AR-1123 §3).
+HOW THIS MODULE IS RUN, AND WHAT IS *NOT* CLAIMED ABOUT IT
+-----------------------------------------------------------
+Two things make this module runnable, and **neither is claimed to be the sole reason the
+broader module graph is reachable:**
 
-✅ **The `package.json` declaration is the explicit operator command for this lane** —
-rule **(a)**:
+1. **The `__main__` guard at the foot of this file** is REQUIRED for `python -m` to
+   execute it. `scripts/system_inventory.py` rule **(c)** now discovers that guard
+   structurally (`py_has_main_guard`, repaired under AR-1123 §3), so the inventory can
+   see it.
+2. **The `package.json` declaration** is the explicit operator command for this lane —
+   rule **(a)**:
 
-    "compile:certified-record": "python -m src.engine.extraction.compile_certified_record"
+       "compile:certified-record": "python -m src.engine.extraction.compile_certified_record"
 
-⚠️ **AND A CORRECTION I OWE, BECAUSE I PUBLISHED THE WRONG REASON ONCE ALREADY.** While
-rule (c) was dead I measured that deleting this one line returned `src/engine/extraction`
-to `0 WIRED / 272` and put the producer back in the unreachable table, and I reported
-that flip as this module's achievement. **Once rule (c) was repaired (AR-1123 §3), I
-re-ran the same ablation and it changes NOTHING** — the module stays `241 WIRED / 33`
-and the producer stays reachable, because 81 other runnable modules became visible and
-reach it too. **That flip was an artifact of a defective instrument, not a property of
-this file.** Both the `__main__` guard and the package.json line are kept — GPT's §3
-directs the package script stay as the explicit operator command for this lane — but
-**neither is now the sole thing making the producer reachable.**
+   AR-1123 §3 directs it stay, and it does.
 
-**WHAT IS STILL TRUE, MEASURED BY GREP AND NOT BY THE INVENTORY:** before this module,
-`produce_spec_artifact_from_record` had **ZERO non-test callers** — every reference lived
-under `src/engine/tests/`. This module is its **only** non-test caller. That is the real
-defect this file closes, and it never depended on the broken rule.
+⚠️ **A CORRECTION I OWE, BECAUSE I PUBLISHED THE WRONG REASON ONCE.** While rule (c) was
+still broken I measured that deleting the package.json line returned `src/engine/extraction`
+to `0 WIRED / 272` and put the producer back in the unreachable table, and I reported that
+flip as this module's achievement. **After rule (c) was repaired I re-ran the same ablation
+and it changes NOTHING** — the module stays `241 WIRED / 33` and the producer stays
+reachable, because 81 other runnable modules became visible and reach it too. **That flip
+was an artifact of a defective instrument, not a property of this file. It is retracted
+(AR-1125 §4) and must not be cited as evidence for this module again.**
+
+**SPINE A'S DURABLE VALUE, AND IT IS NARROWER THAN I FIRST CLAIMED:** an explicit,
+operator-callable compile boundary —
+
+    certified record -> compile_certified_record -> produce_spec_artifact_from_record -> .spec.json
+
+— and, `[MEASURED BY GREP, independent of the inventory]`, a **direct non-test caller of
+the canonical producer**, which previously had **ZERO** (every reference lived under
+`src/engine/tests/`). That fact never depended on the broken rule. It is enough.
 
     ★★★★★ `RE-RUN THE MEASUREMENT AFTER REPAIRING THE INSTRUMENT THAT PRODUCED IT.
        A NUMBER CARRIED ACROSS A FIX IS STALE EVEN WHEN THE WORDS AROUND IT ARE FRESH.`
@@ -299,9 +300,9 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-# REQUIRED for `python -m` to execute this module — but NOT what makes it reachable to
-# SYSTEM-INVENTORY. Rule (c) (`__main__` discovery) is dead code at the time of writing
-# (AR-1122 §3, repair authorized in AR-1123 §3); the reachability edge is the
-# `compile:certified-record` declaration in package.json. See the module docstring.
+# REQUIRED for `python -m` to execute this module. SYSTEM-INVENTORY rule (c) discovers
+# this guard structurally since the AR-1123 §3 repair. The `compile:certified-record`
+# package.json declaration remains the explicit operator command for this lane. Neither
+# is the sole reason the wider module graph is reachable — see the module docstring.
 if __name__ == "__main__":
     raise SystemExit(main())

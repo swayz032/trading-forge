@@ -19,10 +19,12 @@ Each test here is red-proofable and was red-proofed at birth (AR-1122 §3):
 
 🛑 THE INSTRUMENT WAS BROKEN, AND IT COST A FAILED PROOF AND A WRONG CLAIM (AR-1122 §3)
 ----------------------------------------------------------------------------------------
+**HISTORICAL — the defect described here is REPAIRED in the current tree.**
 `scripts/system_inventory.py::discover_entry_points` rule (c) advertised
 *"Python modules with an `if __name__ == \"__main__\"` block"* and tested
 `f.refs.get("__main__")`. `refs` is built only from `ast.Name`/`ast.Attribute` nodes and
-`"__main__"` is an `ast.Constant`, so the rule fired **0 times repo-wide**.
+`"__main__"` is an `ast.Constant`, so the rule **then** fired 0 times repo-wide. It is
+now structural (`py_has_main_guard`, AR-1123 §3) and discovers 81 modules.
 
 I built this entry point on that rule and the reachability proof FAILED — the module was
 added as 3 MORE unreachable symbols (269 -> 272) while advertising itself as an entry
@@ -177,8 +179,12 @@ def test_cli_exposes_spec_id_and_not_video():
 
 
 def test_package_json_declares_the_entry_point():
-    """THE REACHABILITY CARRIER. Deleting this declaration is what actually reverts
-    `src/engine/extraction` to BUILT-UNREACHABLE — proven by ablation, not assumed."""
+    """The explicit operator command for this compile lane (AR-1123 §3 directs it stay).
+
+    🛑 NOT a reachability carrier. The AR-1122 claim that deleting this line reverts
+    `src/engine/extraction` to BUILT-UNREACHABLE is RETRACTED (AR-1125 §4): re-run
+    against the repaired inventory, the same ablation changes nothing.
+    """
     pkg = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
     scripts = pkg.get("scripts") or {}
     assert ENTRY_SCRIPT_NAME in scripts, (
@@ -190,7 +196,8 @@ def test_package_json_declares_the_entry_point():
 
 
 def test_entry_module_keeps_its_main_guard():
-    """`python -m` needs it even though the inventory cannot see it."""
+    """`python -m` needs it to execute the module; the repaired inventory rule (c) can
+    now discover it too (AR-1123 §3)."""
     assert '__name__ == "__main__"' in ENTRY_MODULE.read_text(encoding="utf-8")
 
 
