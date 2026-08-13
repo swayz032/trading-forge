@@ -343,6 +343,115 @@ class TestABLATION:
         assert two_closed_one_open_loser["win_rate"] == 1.0
 
 
+class TestTheMUTATIONControls:
+    """AR-1104 §5.F requires TWO mutations. The first (restore the old denominator) is
+    `TestABLATION` above. This is the second: trust raw vectorbt `Status` over a managed
+    exit -- the exact naive fix §2 forbids -- and show it destroys realized data."""
+
+    MANAGED_BUT_UNCLOSED_BY_VECTORBT = {"Status": "Open", "exit_reason": "stop_loss"}
+
+    def test_the_shipped_predicate_calls_a_managed_exit_CLOSED(self):
+        assert not is_open_at_frame_end(self.MANAGED_BUT_UNCLOSED_BY_VECTORBT)
+
+    def test_MUTATION_raw_status_only_DELETES_a_realized_loss(self, monkeypatch):
+        """`closed = [t for t in trades if t["Status"] == "Closed"]` -- the shape AR-1104
+        §2 names -- classifies a managed stop-out as an unresolved position. Its realized
+        LOSS then vanishes from the denominator, which inflates the win rate. This
+        mutation makes that concrete: same input, one predicate swapped."""
+        trades = [self.MANAGED_BUT_UNCLOSED_BY_VECTORBT]
+        pnls = [-50.0]
+
+        realized, closed_n, open_n = partition_realized_open(trades, pnls)
+        assert closed_n == 1 and open_n == 0, "shipped behaviour: the loss is realized"
+        assert realized.tolist() == [-50.0]
+
+        monkeypatch.setattr(bt, "is_open_at_frame_end", lambda t: str(t.get("Status", "")) == "Open")
+        realized_m, closed_m, open_m = partition_realized_open(trades, pnls)
+        assert (closed_m, open_m) == (0, 1), "the mutation did not reach the partition"
+        assert realized_m.size == 0, (
+            "MUTATION WITNESS: a real $50 realized loss was deleted from the realized "
+            "population by trusting raw vectorbt Status over the managed exit"
+        )
+
+
+class TestTheLEGACYPathBehaviourally:
+    """AR-1104 §5.E -- prove the correction in `run_backtest`, not only the class path.
+
+    This drives the real legacy/DSL money path. It is a SEPARATE engine function with its
+    own duplicated copy of the metric block, which is why AR-1104 requires it named.
+    """
+
+    @pytest.fixture(scope="class")
+    def legacy_result(self):
+        from datetime import datetime, timedelta
+
+        import polars as pl
+
+        from src.engine.config import (
+            BacktestRequest,
+            IndicatorConfig,
+            PositionSizeConfig,
+            StopConfig,
+            StrategyConfig,
+        )
+
+        # Slope and spread are load-bearing, not cosmetic: at spread=5.0 the 2xATR stop is
+        # ~20pt, above the MES 14pt house ceiling, and EVERY entry is skipped (measured:
+        # `E.3 stop_ceiling_skips=2`, 0 trades). spread=3.0 keeps the stop under the
+        # ceiling so the fixture actually produces a population to measure.
+        closes = [4000 + i * 0.5 for i in range(120)]
+        closes += [closes[-1] - i * 1.0 for i in range(1, 21)]
+        closes += [closes[-1] + i * 0.5 for i in range(1, 61)]
+        base = datetime(2023, 6, 1)
+        df = pl.DataFrame({
+            "ts_event": [base + timedelta(days=i) for i in range(len(closes))],
+            "open": [c - 1.0 for c in closes],
+            "high": [c + 3.0 for c in closes],
+            "low": [c - 3.0 for c in closes],
+            "close": closes,
+            "volume": [100_000] * len(closes),
+        })
+        strategy = StrategyConfig(
+            name="F3Legacy", symbol="MES", timeframe="daily",
+            indicators=[IndicatorConfig(type="sma", period=5), IndicatorConfig(type="sma", period=50)],
+            entry_long="close crosses_above sma_5",
+            entry_short="close crosses_below sma_50",
+            exit="close crosses_below sma_5",
+            stop_loss=StopConfig(type="atr", multiplier=2.0),
+            position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
+        )
+        req = BacktestRequest(strategy=strategy, start_date="2023-01-01", end_date="2024-12-31")
+        return bt.run_backtest(req, data=df)
+
+    def test_the_legacy_envelope_CARRIES_the_lifecycle_counts(self, legacy_result):
+        for field in ("closed_trade_count", "open_trade_count", "realized_pnl_total",
+                      "open_pnl_total", "realized_metrics_status"):
+            assert field in legacy_result, f"legacy path does not emit {field}"
+
+    def test_the_legacy_counts_partition_its_executed_population(self, legacy_result):
+        r = legacy_result
+        assert r["total_trades"] > 0, "fixture produced no trades -- it witnesses nothing"
+        assert r["closed_trade_count"] + r["open_trade_count"] == r["total_trades"]
+
+    def test_the_legacy_realized_status_is_consistent_with_its_counts(self, legacy_result):
+        r = legacy_result
+        expected = "OK" if r["closed_trade_count"] > 0 else "NO_CLOSED_TRADES"
+        assert r["realized_metrics_status"] == expected
+
+    def test_legacy_win_rate_per_trade_uses_THE_SAME_population_as_win_rate(self, legacy_result):
+        """AR-1104 §5.E: `win_rate_per_trade` must not invent a third denominator."""
+        r = legacy_result
+        trades = r["trades"]
+        closed = [t for t in trades if not is_open_at_frame_end(t)]
+        wins = len([t for t in closed if float(t.get("PnL", t.get("pnl", 0))) > 0])
+        expected = wins / max(len(closed), 1)
+        assert r["win_rate_per_trade"] == pytest.approx(expected, abs=0.0001)
+        assert r["win_rate"] == pytest.approx(expected, abs=0.0001), (
+            "win_rate and win_rate_per_trade disagree -- they are counting different "
+            "populations again"
+        )
+
+
 class TestTheRepairIsReachableFromBOTHPATHS:
     """AR-1101 section 4: 'Do not special-case SOURCE_FAITHFUL if the underlying metric
     definition is globally wrong.' It was wrong in both functions, so both must route

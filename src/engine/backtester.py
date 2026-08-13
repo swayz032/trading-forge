@@ -5776,6 +5776,11 @@ def run_backtest(
     open_trade_count = 0
     realized_pnl_total = 0.0
     open_pnl_total = 0.0
+    # F-3 / AR-1104 §4 — EXPLICIT EMPTY-SAMPLE STATE. When no trade ever closed there is
+    # no realized performance to report, and a bare `win_rate = 0.0` is indistinguishable
+    # from "measured, and it lost every time". This field makes the difference explicit
+    # instead of leaving a manufactured zero to be read as an observation.
+    realized_metrics_status = "NO_TRADES"
     # Default arrays for winners/losers/avg values — used in expectancy_per_trade calculation.
     # These are overwritten inside `if trades_records is not None:` when trades exist.
     winners = np.array([])
@@ -6065,8 +6070,14 @@ def run_backtest(
         realized_pnl_total = float(np.sum(realized_pnls))
         open_pnl_total = float(np.sum(trade_pnls_arr)) - realized_pnl_total
 
-        # A population of nothing but open positions has NO realized statistics; the
-        # defaults hoisted above stand rather than a fabricated 0/0.
+        # A population of nothing but open positions has NO realized statistics.
+        # AR-1104 §4: expose an explicit unavailable state rather than manufacturing a
+        # 0% win rate or an `inf` profit factor that could be mistaken for an observation.
+        # The numeric fields stay at their deterministic 0.0 defaults (never `inf`), so
+        # every downstream gate and score sees a value that cannot pass — fail-safe — and
+        # `realized_metrics_status` says why.
+        realized_metrics_status = "OK" if closed_trade_count > 0 else "NO_CLOSED_TRADES"
+
         if closed_trade_count > 0:
             win_rate = float(len(winners) / closed_trade_count)
             avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
@@ -6376,6 +6387,7 @@ def run_backtest(
         "closed_trade_count": closed_trade_count, "open_trade_count": open_trade_count,
         "realized_pnl_total": round(realized_pnl_total, 2),
         "open_pnl_total": round(open_pnl_total, 2),
+        "realized_metrics_status": realized_metrics_status,
         "avg_trade_pnl": round(avg_trade_pnl, 2), "total_trading_days": total_trading_days,
         "trades": trades_list, "daily_pnls": daily_pnl_values,
         "equity_curve": _aggregate_equity_daily(equity, equity_index, ts_et_index=_ts_et_list_eq),
@@ -6406,6 +6418,14 @@ def run_backtest(
 
     # ─── Task 3.7: Minimum sample size & confidence intervals ─
     statistical_warnings: list[str] = []
+    # F-3 / AR-1104 §4: say the realized sample is EMPTY in the same place every other
+    # sample-quality caveat is said, so a reader who never opens
+    # `realized_metrics_status` still cannot read 0.0 as measured performance.
+    if realized_metrics_status == "NO_CLOSED_TRADES":
+        statistical_warnings.append(
+            f"{open_trade_count} executed trade(s), NONE closed — realized metrics "
+            "(win rate, profit factor, expectancy) are UNAVAILABLE, not zero"
+        )
     if total_trades < MINIMUM_TRADES:
         statistical_warnings.append(f"Only {total_trades} trades — statistically unreliable (need {MINIMUM_TRADES}+)")
     if long_short_split["long"]["trades"] < MINIMUM_TRADES_PER_SIDE and long_short_split["long"]["trades"] > 0:
@@ -6468,6 +6488,7 @@ def run_backtest(
         "open_trade_count": open_trade_count,
         "realized_pnl_total": round(realized_pnl_total, 2),
         "open_pnl_total": round(open_pnl_total, 2),
+        "realized_metrics_status": realized_metrics_status,
         "avg_trade_pnl": round(avg_trade_pnl, 2),
         "avg_daily_pnl": round(avg_daily_pnl, 2),
         "winning_days": winning_days,
@@ -8377,6 +8398,11 @@ def run_class_backtest(
     open_trade_count = 0
     realized_pnl_total = 0.0
     open_pnl_total = 0.0
+    # F-3 / AR-1104 §4 — EXPLICIT EMPTY-SAMPLE STATE. When no trade ever closed there is
+    # no realized performance to report, and a bare `win_rate = 0.0` is indistinguishable
+    # from "measured, and it lost every time". This field makes the difference explicit
+    # instead of leaving a manufactured zero to be read as an observation.
+    realized_metrics_status = "NO_TRADES"
     # Default arrays for winners/losers/avg values — used in expectancy_per_trade
     # calculation below. Overwritten inside `if trades_records is not None:` when
     # trades exist. GATE3-DEFECT-1 FIX (corpus-v3 gate3 re-run protocol, 2026-07-06):
@@ -8632,8 +8658,14 @@ def run_class_backtest(
         realized_pnl_total = float(np.sum(realized_pnls))
         open_pnl_total = float(np.sum(trade_pnls_arr)) - realized_pnl_total
 
-        # A population of nothing but open positions has NO realized statistics; the
-        # defaults hoisted above stand rather than a fabricated 0/0.
+        # A population of nothing but open positions has NO realized statistics.
+        # AR-1104 §4: expose an explicit unavailable state rather than manufacturing a
+        # 0% win rate or an `inf` profit factor that could be mistaken for an observation.
+        # The numeric fields stay at their deterministic 0.0 defaults (never `inf`), so
+        # every downstream gate and score sees a value that cannot pass — fail-safe — and
+        # `realized_metrics_status` says why.
+        realized_metrics_status = "OK" if closed_trade_count > 0 else "NO_CLOSED_TRADES"
+
         if closed_trade_count > 0:
             win_rate = float(len(winners) / closed_trade_count)
             avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
@@ -8922,6 +8954,7 @@ def run_class_backtest(
         "closed_trade_count": closed_trade_count, "open_trade_count": open_trade_count,
         "realized_pnl_total": round(realized_pnl_total, 2),
         "open_pnl_total": round(open_pnl_total, 2),
+        "realized_metrics_status": realized_metrics_status,
         "avg_trade_pnl": round(avg_trade_pnl, 2), "total_trading_days": total_trading_days,
         "trades": trades_list, "daily_pnls": daily_pnl_values,
         "equity_curve": _aggregate_equity_daily(equity, equity_index, ts_et_index=_ts_et_list_eq_cls),
@@ -8951,6 +8984,14 @@ def run_class_backtest(
 
     # ─── Task 3.7: Minimum sample size & confidence intervals ─
     statistical_warnings: list[str] = []
+    # F-3 / AR-1104 §4: say the realized sample is EMPTY in the same place every other
+    # sample-quality caveat is said, so a reader who never opens
+    # `realized_metrics_status` still cannot read 0.0 as measured performance.
+    if realized_metrics_status == "NO_CLOSED_TRADES":
+        statistical_warnings.append(
+            f"{open_trade_count} executed trade(s), NONE closed — realized metrics "
+            "(win rate, profit factor, expectancy) are UNAVAILABLE, not zero"
+        )
     if total_trades < MINIMUM_TRADES:
         statistical_warnings.append(f"Only {total_trades} trades — statistically unreliable (need {MINIMUM_TRADES}+)")
     if long_short_split["long"]["trades"] < MINIMUM_TRADES_PER_SIDE and long_short_split["long"]["trades"] > 0:
@@ -9028,6 +9069,7 @@ def run_class_backtest(
         "open_trade_count": open_trade_count,
         "realized_pnl_total": round(realized_pnl_total, 2),
         "open_pnl_total": round(open_pnl_total, 2),
+        "realized_metrics_status": realized_metrics_status,
         "avg_trade_pnl": round(avg_trade_pnl, 2),
         "avg_daily_pnl": round(avg_daily_pnl, 2),
         "winning_days": winning_days,
