@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `e4b9b51d07d638692a84f71ecd6e0e364813f503`  (worktree DIRTY at generation time)
+> Generated at commit `c30ca401e90483e61e91ef1687bf3f1bbd9fff0a`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -31,7 +31,7 @@ first and its cost is made visible.
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
 | `src/` | Python | 297 | 387 | 124584 | 1918 |
-| `src/` | TypeScript | 462 | 724 | 209939 | 2933 |
+| `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
 TypeScript symbol rule: every line matching an **exported declaration** pattern
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1870 | 759 |
+| `src/` | 1871 | 759 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2128** | **980** |
+| **TOTAL** | **2129** | **980** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 438 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 84 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1111 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1112 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **174**.  Modules reachable from them: **714** of **2128** parsed files.
+Total entry points: **174**.  Modules reachable from them: **715** of **2129** parsed files.
 
 <details><summary>All 174 entry points and why each was counted</summary>
 
@@ -278,11 +278,11 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3681 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1164 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.1% of 4901 rows |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3690 |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1155 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.3% of 4901 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=174 |
-| C6 | a registered route module is reachable | PASS | modules reachable=714 |
+| C6 | a registered route module is reachable | PASS | modules reachable=715 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
@@ -290,9 +290,9 @@ table below it.**
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=1918 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=43 (probe runs; 0 would be a legitimate reading) |
-| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6622/6622 TS import specifiers non-blank |
+| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6626/6626 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
-| C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
+| C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=415 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
 | C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=174 |
 | C18 | `export { X as Y }` binding form is enumerated | PASS | alertRoutes enumerated=True |
@@ -324,9 +324,9 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3681 | 75.1% |
+| `WIRED` | 3690 | 75.3% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1164 | 23.8% |
+| `BUILT-UNREACHABLE` | 1155 | 23.6% |
 | `DECLARED-ABSENT` | 43 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
 | **TOTAL** | **4901** | |
@@ -491,7 +491,7 @@ table below it.**
 | `src/server/production` | 29 | 0 | 4 | 0 | 1 | 34 |
 | `src/server/routes` | 158 | 0 | 9 | 1 | 1 | 169 |
 | `src/server/scheduler.ts` | 11 | 0 | 1 | 0 | 0 | 12 |
-| `src/server/services` | 903 | 0 | 213 | 3 | 0 | 1119 |
+| `src/server/services` | 912 | 0 | 204 | 3 | 0 | 1119 |
 | `src/server/slumdawg-hmac.ts` | 0 | 0 | 4 | 0 | 0 | 4 |
 | `src/server/types` | 0 | 0 | 2 | 0 | 1 | 3 |
 | `src/shared/db-types.ts` | 0 | 0 | 20 | 0 | 0 | 20 |
@@ -1059,7 +1059,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1164** `BUILT-UNREACHABLE` symbols, **616 have test coverage but no production caller**.
+Of **1155** `BUILT-UNREACHABLE` symbols, **613 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1091,7 +1091,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
-| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | 4 | unique |
 | `_result` | function | `src/engine/anti_setups/regime_filter.py:156` | 3 | unique |
 | `produce_topology` | function | `src/engine/extraction/topology_producer.py:146` | 3 | unique |
 | `run_prop_compliance` | function | `src/engine/prop_compliance.py:232` | 3 | unique |
@@ -1158,8 +1157,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `runDrainStallCheck` | function | `src/server/services/scout-watchdog-service.ts:158` | 2 | unique |
 | `runRejectDistributionCheck` | function | `src/server/services/scout-watchdog-service.ts:350` | 2 | unique |
 | `runRejectSpikeCheck` | function | `src/server/services/scout-watchdog-service.ts:442` | 2 | unique |
-| `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:79` | 2 | unique |
-| `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:121` | 2 | unique |
 | `runStrategyProductionCheck` | function | `src/server/services/strategy-production-check-service.ts:23` | 2 | unique |
 | `_resetActiveCount` | function | `src/server/services/trade-critique-service.ts:113` | 2 | unique |
 | `isUnconfiguredSlumdawgSecret` | function | `src/server/slumdawg-hmac.ts:45` | 2 | unique |
@@ -1373,8 +1370,11 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `MIN_CRITIQUES_FOR_FULL_ANALYSIS` | const | `src/server/lib/replay/critique-disagreement.ts:30` | 1 | unique |
 | `PaperPositionRow` | interface | `src/server/lib/replay/critique-disagreement.ts:38` | 1 | unique |
 | `TradeCritiqueRow` | interface | `src/server/lib/replay/critique-disagreement.ts:46` | 1 | unique |
+| `aggregateByGrade` | function | `src/server/lib/replay/critique-disagreement.ts:146` | 1 | unique |
+| `aggregateParameterHints` | function | `src/server/lib/replay/critique-disagreement.ts:311` | 1 | unique |
+| `applyCritiqueDecisionRule` | function | `src/server/lib/replay/critique-disagreement.ts:347` | 1 | unique |
 
-_...316 more omitted from this table._
+_...313 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -2837,7 +2837,7 @@ _...316 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/server/services</code> - 213 symbols</summary>
+<details><summary><code>src/server/services</code> - 204 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -3011,15 +3011,6 @@ _...316 more omitted from this table._
 | `RejectAction` | export-binding-type | `src/server/services/scout-watchdog-service.ts:531` | defining module is not reachable from any measured entry point |
 | `getDailyStats` | function | `src/server/services/settlement-reconciliation-service.ts:172` | no non-test reference outside its own definition |
 | `_resetSmtCacheForTest` | function | `src/server/services/smt-live-service.ts:293` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `RiskOwnershipMode` | type | `src/server/services/source-risk-contract.ts:27` | defining module is not reachable from any measured entry point |
-| `SourceStopAnchor` | type | `src/server/services/source-risk-contract.ts:37` | defining module is not reachable from any measured entry point |
-| `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:79` | defining module is not reachable from any measured entry point |
-| `SourceSpan` | interface | `src/server/services/source-risk-contract.ts:100` | defining module is not reachable from any measured entry point |
-| `SourceStopContract` | interface | `src/server/services/source-risk-contract.ts:107` | defining module is not reachable from any measured entry point |
-| `SourceTargetContract` | interface | `src/server/services/source-risk-contract.ts:114` | defining module is not reachable from any measured entry point |
-| `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:121` | defining module is not reachable from any measured entry point |
-| `HasSourceRisk` | interface | `src/server/services/source-risk-contract.ts:132` | defining module is not reachable from any measured entry point |
-| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | defining module is not reachable from any measured entry point |
 | `SpecEntryCondition` | interface | `src/server/services/spec-onboarding-service.ts:185` | defining module is not reachable from any measured entry point |
 | `SpecArtifactBody` | interface | `src/server/services/spec-onboarding-service.ts:194` | defining module is not reachable from any measured entry point |
 | `SOURCE_TIMEFRAME_ROLES_SCHEMA` | const | `src/server/services/spec-onboarding-service.ts:224` | defining module is not reachable from any measured entry point |
@@ -6828,7 +6819,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/server/services</code> - 903 symbols</summary>
+<details><summary><code>src/server/services</code> - 912 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -7218,13 +7209,13 @@ This is the *we already have this* list.  Check it before writing anything.
 | `getLatestFrankensteinRun` | function | `src/server/services/frankenstein-service.ts:403` | 2 | unique |
 | `computeFunnelMetrics` | function | `src/server/services/funnel-metrics-service.ts:14` | 1 | unique |
 | `recordFunnelSnapshot` | function | `src/server/services/funnel-metrics-service.ts:63` | 1 | unique |
-| `DefectCode` | type | `src/server/services/graduated-strategy-auditor.ts:33` | 0 | unique |
-| `WarningCode` | type | `src/server/services/graduated-strategy-auditor.ts:47` | 0 | unique |
-| `AuditFinding` | interface | `src/server/services/graduated-strategy-auditor.ts:62` | 0 | unique |
-| `AuditResult` | interface | `src/server/services/graduated-strategy-auditor.ts:67` | 1 | AMBIG |
-| `AuditInput` | interface | `src/server/services/graduated-strategy-auditor.ts:115` | 1 | AMBIG |
-| `auditGraduatedConfig` | function | `src/server/services/graduated-strategy-auditor.ts:124` | 6 | unique |
-| `formatAuditResult` | function | `src/server/services/graduated-strategy-auditor.ts:322` | 5 | unique |
+| `DefectCode` | type | `src/server/services/graduated-strategy-auditor.ts:35` | 0 | unique |
+| `WarningCode` | type | `src/server/services/graduated-strategy-auditor.ts:49` | 0 | unique |
+| `AuditFinding` | interface | `src/server/services/graduated-strategy-auditor.ts:64` | 0 | unique |
+| `AuditResult` | interface | `src/server/services/graduated-strategy-auditor.ts:69` | 1 | AMBIG |
+| `AuditInput` | interface | `src/server/services/graduated-strategy-auditor.ts:117` | 1 | AMBIG |
+| `auditGraduatedConfig` | function | `src/server/services/graduated-strategy-auditor.ts:126` | 6 | unique |
+| `formatAuditResult` | function | `src/server/services/graduated-strategy-auditor.ts:408` | 5 | unique |
 | `GraveyardCheckResult` | interface | `src/server/services/graveyard-gate.ts:41` | 0 | unique |
 | `RelevantFailure` | interface | `src/server/services/graveyard-gate.ts:57` | 0 | unique |
 | `GraveyardGate` | class | `src/server/services/graveyard-gate.ts:66` | 2 | unique |
@@ -7609,6 +7600,15 @@ This is the *we already have this* list.  Check it before writing anything.
 | `initSmtBarBufferProvider` | function | `src/server/services/smt-live-service.ts:48` | 1 | unique |
 | `SmtLiveSnapshot` | interface | `src/server/services/smt-live-service.ts:73` | 0 | unique |
 | `getSmtLiveSnapshot` | function | `src/server/services/smt-live-service.ts:236` | 1 | unique |
+| `RiskOwnershipMode` | type | `src/server/services/source-risk-contract.ts:27` | 1 | unique |
+| `SourceStopAnchor` | type | `src/server/services/source-risk-contract.ts:37` | 1 | unique |
+| `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:79` | 1 | unique |
+| `SourceSpan` | interface | `src/server/services/source-risk-contract.ts:100` | 0 | unique |
+| `SourceStopContract` | interface | `src/server/services/source-risk-contract.ts:107` | 1 | unique |
+| `SourceTargetContract` | interface | `src/server/services/source-risk-contract.ts:114` | 1 | unique |
+| `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:121` | 1 | unique |
+| `HasSourceRisk` | interface | `src/server/services/source-risk-contract.ts:132` | 0 | unique |
+| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | 2 | unique |
 | `VerifyArgs` | interface | `src/server/services/source-url-verifier.ts:29` | 0 | unique |
 | `VerifyResult` | interface | `src/server/services/source-url-verifier.ts:37` | 2 | AMBIG |
 | `verifySourceUrl` | function | `src/server/services/source-url-verifier.ts:77` | 1 | unique |
