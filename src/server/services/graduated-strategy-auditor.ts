@@ -30,6 +30,8 @@
  * file will see tests fail loudly if they touch the wrong path.
  */
 
+import { resolveSpecStopLoss } from "./source-risk-contract.js";
+
 export type DefectCode =
   | "B3_FIXED_POINT_STOP"
   | "B4_TIME_STOP_MISSING"
@@ -153,11 +155,95 @@ export function auditGraduatedConfig(input: AuditInput): AuditResult {
 
   // ─── B. Framework compliance ────────────────────────────────────────────
 
+  // ─── B3 — REPAIRED (AR-1133 §3). THE OLD RULE INVERTED CLAUDE.md. ──────────────
+  //
+  // This used to be `if (sl?.type !== "atr") -> B3_FIXED_POINT_STOP`, with the message
+  // "must be 'atr' — NO fixed-point stops per CLAUDE.md §13". That misstated the policy:
+  // CLAUDE.md §4 is titled "Stop Loss — structural, NEVER fixed-point" and §13 says
+  // "structural with ATR bounds". A source-owned STRUCTURAL stop is the thing the policy
+  // WANTS; the rule was classifying it as the thing the policy forbids.
+  //
+  // It stayed hidden because `source_risk` was dropped by the onboarding parser, so
+  // `resolveSpecStopLoss()` always returned ATR and this branch never saw a structural
+  // stop. B-RISK-1 fixed that transport defect and exposed this one.
+  //
+  //   ★★★★★ `A FEATURE KEPT DEAD BY A SEPARATE BUG NEVER MEETS THE GUARD THAT WOULD
+  //      HAVE REJECTED IT — SO A STALE GUARD CAN READ AS CORRECT FOR AS LONG AS THE
+  //      FEATURE STAYS BROKEN.`
+  //
+  // 🛑 THE STAMPS ARE NOT THE AUTHORITY. A caller can write `ownership:"source"` and
+  // `source_exact:true` into a config by hand, so whitelisting those strings would let a
+  // counterfeit structural stop through. The authority is the CANONICAL RESOLVER run
+  // against the certified source contract, and the audited stop must equal its output on
+  // the whole semantic payload (AR-1133 §3.2).
   const sl = strat?.stop_loss ?? {};
-  if (sl?.type !== "atr") {
+  if (sl?.type === "source_structural") {
+    const spec = c?.compiled_spec?.spec;
+    const sourceRisk = spec?.source_risk;
+
+    if (!spec || sourceRisk?.mode !== "SOURCE_FAITHFUL") {
+      defects.push({
+        code: "B3_FIXED_POINT_STOP",
+        message:
+          "stop_loss.type='source_structural' but the config carries no " +
+          "compiled_spec.spec.source_risk with mode='SOURCE_FAITHFUL'. A source-owned stop " +
+          "is only legal as the canonical output of a certified source contract; without " +
+          "one this is an unattributed non-ATR stop.",
+      });
+    } else {
+      let canonical: Record<string, unknown> | null = null;
+      let resolverError: string | null = null;
+      try {
+        canonical = resolveSpecStopLoss(spec);
+      } catch (err) {
+        resolverError = (err as Error)?.message ?? String(err);
+      }
+
+      if (resolverError !== null) {
+        defects.push({
+          code: "B3_FIXED_POINT_STOP",
+          message: `source-owned stop REFUSED by the canonical resolver: ${resolverError}`,
+        });
+      } else if (canonical?.type !== "source_structural") {
+        defects.push({
+          code: "B3_FIXED_POINT_STOP",
+          message:
+            `stop_loss claims 'source_structural' but the canonical contract resolves to ` +
+            `'${String(canonical?.type)}' — the audited stop is not what the source teaches.`,
+        });
+      } else {
+        // FULL semantic payload, not a type check. A changed anchor, a flipped wick rule
+        // or a moved quote span all mean a DIFFERENT taught stop wearing the same label.
+        const FIELDS = [
+          "type",
+          "anchor",
+          "required_anchor",
+          "include_wick",
+          "source_exact",
+          "ownership",
+        ] as const;
+        const mismatched = FIELDS.filter(
+          (f) => JSON.stringify(sl?.[f]) !== JSON.stringify(canonical?.[f]),
+        );
+        const spanA = JSON.stringify(sl?.span ?? null);
+        const spanB = JSON.stringify(canonical?.span ?? null);
+        if (spanA !== spanB) mismatched.push("span" as (typeof FIELDS)[number]);
+
+        if (mismatched.length > 0) {
+          defects.push({
+            code: "B3_FIXED_POINT_STOP",
+            message:
+              `source-owned stop does NOT match the canonical resolution of the certified ` +
+              `source contract; differing field(s): ${mismatched.join(", ")}. A stop that ` +
+              "diverges from the teacher's contract is not source-owned, whatever it is stamped.",
+          });
+        }
+      }
+    }
+  } else if (sl?.type !== "atr") {
     defects.push({
       code: "B3_FIXED_POINT_STOP",
-      message: `stop_loss.type='${sl?.type}' (must be 'atr' — NO fixed-point stops per CLAUDE.md §13)`,
+      message: `stop_loss.type='${sl?.type}' — not an ATR stop and not the canonical output of a certified SOURCE_FAITHFUL contract. CLAUDE.md §4/§13: structural, NEVER fixed-point.`,
     });
   } else {
     const mult = Number(sl?.multiplier ?? 0);
