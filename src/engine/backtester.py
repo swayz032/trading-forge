@@ -7562,13 +7562,28 @@ def run_class_backtest(
     # dropped" produce the SAME sizes and are not the same fact.
     # ★ `A DEFAULT THAT RUNS BECAUSE AN INSTRUCTION WAS DROPPED IS INDISTINGUISHABLE, AT THE
     #    RESULT, FROM A DEFAULT THAT RUNS BECAUSE IT WAS CHOSEN — UNLESS THE ARTIFACT SAYS SO.`
-    # `sizing_owner` is the axis AR-1095 §3 separates from strategy semantics: FIXED_RESEARCH
-    # is the normalized benchmark size (Surface 1); TRADING_FORGE is capital allocation
-    # (Surface 2). NOTE: `TRADING_FORGE` here names the DEFAULT ATR fallback, not a persisted
-    # scaling plan — `firm_config.SCALING_PLANS` is deliberately EMPTY (R-059, size-upgrade
-    # ladders are fiction at Topstep), so no plan id can honestly be claimed.
+    # `sizing_owner` is the axis AR-1095 §3 separates from strategy semantics: FIXED_RESEARCH is
+    # the normalized benchmark size (Surface A, strategy edge); capital allocation is Surface B.
+    #
+    # 🛑 THE LABEL IS `ENGINE_DEFAULT`, NOT `TRADING_FORGE` — AR-1099 §3 CORRECTED ME HERE.
+    # I first labelled this fallback `TRADING_FORGE` on the reasoning that
+    # `firm_config.SCALING_PLANS` is empty, therefore no Trading Forge scaling plan exists. That
+    # was a misreading of what R-059 retired. `[MEASURED]` R-059 removed ONE FICTIONAL MECHANISM
+    # (a Topstep account auto-upgrading 50K -> 100K -> 150K on profit), while the REAL doctrine
+    # is alive in `CLAUDE.md §1` and `docs/scaling-plan-baby-mode.md`: the contract pyramid, base
+    # 9 MES / 9 MNQ / 18 MCL, +3 per proven-trades tier, buffer-derived risk cap, 50-micro
+    # ceiling, and horizontal multi-account replication as the primary growth lever.
+    #
+    # This `$500 dynamic_atr` fallback implements NONE of that — no base-9 identity, no tier, no
+    # payout-aware re-size, no account replication state, no scaling receipt. Calling it
+    # `TRADING_FORGE` would have told a reader the governed scaling doctrine ran when only a
+    # generic engine default ran.
+    # ★ `AN EMPTY REGISTRY MEANT ONE MECHANISM WAS RETIRED, NOT THAT THE DISCIPLINE DOES NOT
+    #    EXIST — AND I TURNED THE FIRST INTO THE SECOND.`
+    # `TRADING_FORGE_SCALING` is RESERVED for a future run where an explicit scaling contract
+    # actually selects and executes that doctrine.
     _cls_sizing_meta: dict = {
-        "sizing_owner": "FIXED_RESEARCH" if fixed_contracts is not None else "TRADING_FORGE",
+        "sizing_owner": "FIXED_RESEARCH" if fixed_contracts is not None else "ENGINE_DEFAULT",
         "sizing_mode": size_config.type,
         "sizing_plan_id": None,
         "requested_contracts": fixed_contracts,

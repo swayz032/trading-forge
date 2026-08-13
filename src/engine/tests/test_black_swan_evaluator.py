@@ -14,36 +14,50 @@ Design contract:
   - JSON output contract matches the plan spec verbatim.
 """
 
+# ─── AR-1099 §8 — THE SESSION-GLOBAL vectorbt MOCK IS REMOVED ────────────────────────────
+# 🛑 WHAT USED TO BE HERE, AND WHY IT WAS DANGEROUS:
+#
+#     _vbt_mock = types.ModuleType("vectorbt")
+#     _vbt_mock.Portfolio = MagicMock()
+#     sys.modules.setdefault("vectorbt", _vbt_mock)
+#
+# It ran at IMPORT time and was never removed, so once pytest collected this file the mock was
+# installed for the WHOLE SESSION. `backtester` imports vectorbt LAZILY INSIDE its functions, so
+# every later backtest in that session resolved to the mock — and `int(MagicMock()) == 1`.
+#
+# ⚠️ THAT IS THE SAME NUMBER THE F-4 TRADE-POPULATION DEFECT PRODUCED, IN THE SAME FIELD, ON THE
+# SAME ROUTE. A whole-directory run manufactured "1 trade" out of nothing, making a real defect
+# and a test artifact indistinguishable (AR-1097 §5). It cost this desk a 365-file bisect.
+# ★ `A MOCK THAT OUTLIVES ITS TEST IS NOT A TEST DOUBLE, IT IS A GLOBAL REDEFINITION OF REALITY.`
+#
+# 🛑 AND ITS STATED PREMISE NO LONGER HOLDS. `[MEASURED 2026-08-12]` the old comment said
+# "backtester.py ... pulls vectorbt at module level":
+#     $ grep -nE '^import vectorbt|^from vectorbt' src/engine/backtester.py   -> NO MATCHES
+#     $ python -c "import src.engine.black_swan_evaluator, sys;
+#                  print('vectorbt' in sys.modules)"                          -> False
+# backtester's vectorbt import is lazy and in-function by design. Importing this module's
+# dependencies pulls no vectorbt at all, so there is no JIT hang to guard against and nothing to
+# replace the mock with. The repo's centralized opt-in mechanism (`conftest.py` / `TF_MOCK_VBT`)
+# remains available if a real need ever returns — it restores `sys.modules` afterwards, which is
+# precisely what this copy-paste never did.
+
 from __future__ import annotations
 
 import json
-import sys
-import types
 import uuid
 from datetime import datetime, timedelta
-from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import polars as pl
 import pytest
-
-# Guard against vectorbt JIT compile hang during pytest collection.
-# backtester.py (imported by black_swan_evaluator) pulls vectorbt at module
-# level which triggers Numba/Cython JIT on Windows — hangs forever under
-# pytest. This mock must be registered BEFORE the src.engine.* imports below.
-_vbt_mock = types.ModuleType("vectorbt")
-_vbt_mock.Portfolio = MagicMock()
-sys.modules.setdefault("vectorbt", _vbt_mock)
 
 from src.engine.black_swan_evaluator import (
     BLACK_SWAN_TOP_K,
     DEFAULT_PROP_FIRM_CAP_DOLLARS,
     RegimeRecord,
-    RegimeSurvivalResult,
     evaluate_strategy,
     score_survival,
 )
-
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -629,6 +643,7 @@ class TestF1RegimeBankAdvisoryDegradation:
     def test_advisory_json_structure_is_serializable(self):
         """Advisory result JSON matches the expected schema and is json.dumps-safe."""
         import json
+
         from src.engine.black_swan_evaluator import _UNKNOWN_MODEL_VERSION
 
         advisory = {
@@ -658,9 +673,8 @@ class TestF1RegimeBankAdvisoryDegradation:
 
     def test_advisory_does_not_raise_on_empty_bank(self):
         """When _query_regime_bank raises ValueError, CLI does not raise — returns advisory."""
+        import json
         from unittest.mock import patch
-        import json, sys
-        from io import StringIO
 
         # Patch both DB functions to simulate empty bank + valid strategy
         with patch(
@@ -802,7 +816,7 @@ class TestArchetypeRouting:
 
         with patch("src.engine.black_swan_evaluator.run_class_backtest", side_effect=mock_class_run):
             with patch("src.engine.black_swan_evaluator.run_backtest", side_effect=mock_dsl_run):
-                result = evaluate_strategy(
+                evaluate_strategy(
                     strategy_config=strategy_config,
                     regime_records=[regime],
                     prop_firm_cap_dollars=2000.0,
@@ -861,7 +875,7 @@ class TestArchetypeRouting:
 
         with patch("src.engine.black_swan_evaluator.run_class_backtest", side_effect=mock_class_run):
             with patch("src.engine.black_swan_evaluator.run_backtest", side_effect=mock_dsl_run):
-                result = evaluate_strategy(
+                evaluate_strategy(
                     strategy_config=strategy_config,
                     regime_records=[regime],
                     prop_firm_cap_dollars=2000.0,
@@ -905,9 +919,8 @@ class TestArchetypeRouting:
 
     def test_archetype_map_has_all_python_class_archetypes(self):
         """_ARCHETYPE_TO_CLASS_PATH must contain all archetypes that have Python classes."""
-        from src.engine.black_swan_evaluator import _ARCHETYPE_TO_CLASS_PATH, _KNOWN_DSL_FALLBACK_ARCHETYPES
+        from src.engine.black_swan_evaluator import _ARCHETYPE_TO_CLASS_PATH
         # All Python class paths must be unique (no accidentally sharing one path)
-        class_paths = list(_ARCHETYPE_TO_CLASS_PATH.values())
         # At minimum, these known archetypes must be routed
         required_archetypes = {
             "bounce_off_level",

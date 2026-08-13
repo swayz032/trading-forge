@@ -134,19 +134,36 @@ class TestP4RemovingTheCommandNAMESTheFallback:
     `sizing_source` say plainly that no command was supplied.
     """
 
-    def test_the_fallback_declares_itself_as_a_DEFAULT_not_as_a_plan(self):
+    def test_the_fallback_declares_itself_as_an_ENGINE_DEFAULT_not_as_the_scaling_doctrine(self):
+        """🛑 THIS ASSERTION READ `== "TRADING_FORGE"` AND AR-1099 §3 CORRECTED IT.
+
+        I reasoned: `firm_config.SCALING_PLANS` is empty, therefore Trading Forge has no scaling
+        plan, therefore the framework default IS Trading Forge's sizing. `[MEASURED]` that is
+        wrong. R-059 retired ONE FICTION (a Topstep account auto-upgrading on profit). The REAL
+        doctrine is alive in `CLAUDE.md §1` and `docs/scaling-plan-baby-mode.md` — contract
+        pyramid, base 9 MES / 9 MNQ / 18 MCL, +3 per proven-trades tier, buffer-derived risk cap,
+        50-micro ceiling, horizontal account replication.
+
+        This `$500 dynamic_atr` fallback implements none of it, so labelling it `TRADING_FORGE`
+        told a reader the governed doctrine ran when a generic default ran.
+        ★ `AN EMPTY REGISTRY MEANT ONE MECHANISM WAS RETIRED, NOT THAT THE DISCIPLINE DOES NOT
+           EXIST.`
+        """
         result, _out = _run_bars(_bars3(), config=_config_sized(None))
         sizing = result["sizing"]
         assert sizing["requested_contracts"] is None
-        assert sizing["sizing_owner"] == "TRADING_FORGE"
+        assert sizing["sizing_owner"] == "ENGINE_DEFAULT"
+        assert sizing["sizing_owner"] != "TRADING_FORGE", (
+            "the generic fallback is claiming to be the governed Trading Forge scaling doctrine"
+        )
         assert sizing["sizing_mode"] == "dynamic_atr"
         assert sizing["sizing_source"] == "engine_default_no_sizing_command_supplied"
         assert sizing["target_risk_dollars"] == 500.0
 
     def test_the_fallback_claims_NO_scaling_plan_id(self):
-        """`firm_config.SCALING_PLANS` is deliberately EMPTY (R-059 — size-upgrade ladders are
-        fiction at Topstep), so no plan id can honestly be claimed. Asserting `None` keeps a
-        future seat from inventing one to fill the field."""
+        """No scaling CONTRACT selected this size, so no plan id may be claimed. Asserting
+        `None` keeps a future seat from inventing one to fill the field — and
+        `TRADING_FORGE_SCALING` stays reserved for a run that actually executes the doctrine."""
         result, _out = _run_bars(_bars3(), config=_config_sized(None))
         assert result["sizing"]["sizing_plan_id"] is None
 
