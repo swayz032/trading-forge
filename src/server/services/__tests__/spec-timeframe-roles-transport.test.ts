@@ -154,6 +154,107 @@ describe("SPINE-B — the firebreak REFUSES rather than repairs", () => {
   });
 });
 
+describe("B-FAILCLOSED-1 (AR-1130 §4) — present-but-malformed is NOT absent", () => {
+  // Returning ok:true with the carrier quietly missing converts "the source supplied a
+  // malformed load-bearing contract" into "the source supplied no contract". Those are
+  // different facts, and only one is legal: absent = legacy strategy, malformed = a
+  // corrupted source claim that must never be silently downgraded into legacy.
+  const MALFORMED: Array<[string, unknown]> = [
+    ["wrong schema", envelope({ schema: "SOURCE_TIMEFRAME_ROLES/2" })],
+    ["bindings not an array", envelope({ bindings: {} })],
+    ["null", null],
+    ["a bare string", "SOURCE_TIMEFRAME_ROLES/1"],
+    ["an array envelope", []],
+  ];
+
+  it.each(MALFORMED)("REFUSES the whole artifact when the carrier is %s", (_label, bad) => {
+    const parsed = parseSpecArtifact(artifact({ source_timeframe_roles: bad }));
+    expect(parsed.ok).toBe(false);
+    expect(parsed.reason).toBe("invalid_source_timeframe_roles");
+    expect(parsed.artifact).toBeUndefined();
+  });
+
+  it("REFUSES when a single binding is malformed inside an otherwise valid envelope", () => {
+    const bad = envelope();
+    bad.bindings[2].timeframe = "";
+    const parsed = parseSpecArtifact(artifact({ source_timeframe_roles: bad }));
+    expect(parsed.ok).toBe(false);
+    expect(parsed.reason).toBe("invalid_source_timeframe_roles");
+  });
+
+  it("legacy absent carrier still parses — absence is NOT malformation", () => {
+    const parsed = parseSpecArtifact(artifact());
+    expect(parsed.ok).toBe(true);
+    expect(parsed.artifact!.spec.source_timeframe_roles).toBeUndefined();
+  });
+
+  it("a valid carrier still parses and transports", () => {
+    const parsed = parseSpecArtifact(artifact({ source_timeframe_roles: envelope() }));
+    expect(parsed.ok).toBe(true);
+    expect(parsed.artifact!.spec.source_timeframe_roles).toEqual(envelope());
+  });
+});
+
+describe("B-RISK-1 (AR-1130 §5) — source_risk survives, so the TAUGHT stop survives", () => {
+  // THE DEFECT: source_risk was declared on SpecArtifactBody (AR-1059 §4) and omitted
+  // from the parser's fixed key literal, so every artifact lost it here. GPT traced the
+  // consumer: the same parsed `spec` reaches resolveSpecStopLoss(), which returns the
+  // taught structural stop for SOURCE_FAITHFUL and otherwise falls back to framework ATR
+  // 1.5. The drop therefore SILENTLY CONVERTED A TEACHER-TAUGHT STOP INTO A FRAMEWORK
+  // STOP and took the fixed-R target with it.
+  const sourceRisk = {
+    mode: "SOURCE_FAITHFUL" as const,
+    stop: { anchor: "sweep_wick_below_entry" as const, include_wick: true, span: { start: 100, end: 240 } },
+    target: { type: "FIXED_R" as const, r_multiple: 2, span: { start: 300, end: 420 } },
+  };
+
+  it("survives parse UNCHANGED", () => {
+    const parsed = parseSpecArtifact(artifact({ source_risk: sourceRisk }));
+    expect(parsed.ok).toBe(true);
+    expect(parsed.artifact!.spec.source_risk).toEqual(sourceRisk);
+  });
+
+  it("the parsed spec yields the TAUGHT structural stop, not ATR", async () => {
+    const { resolveSpecStopLoss } = await import("../source-risk-contract.js");
+    const parsed = parseSpecArtifact(artifact({ source_risk: sourceRisk }));
+
+    const stop = resolveSpecStopLoss(parsed.artifact!.spec);
+
+    // This is the assertion the dropped field was silently defeating.
+    expect(stop.type).toBe("source_structural");
+    expect(stop.ownership).toBe("source");
+    expect(stop.anchor).toBe("sweep_wick_below_entry");
+    expect(stop.include_wick).toBe(true);
+    expect(stop).not.toHaveProperty("multiplier"); // i.e. NOT the ATR shape
+  });
+
+  it("the fixed-R target payload survives alongside the stop", () => {
+    const parsed = parseSpecArtifact(artifact({ source_risk: sourceRisk }));
+    const target = parsed.artifact!.spec.source_risk!.target!;
+    expect(target.type).toBe("FIXED_R");
+    expect(target.r_multiple).toBe(2);
+    expect(target.span).toEqual({ start: 300, end: 420 });
+  });
+
+  it("legacy artifact with no source_risk keeps the framework ATR default", async () => {
+    const { resolveSpecStopLoss } = await import("../source-risk-contract.js");
+    const parsed = parseSpecArtifact(artifact());
+
+    expect(parsed.artifact!.spec.source_risk).toBeUndefined();
+    expect(resolveSpecStopLoss(parsed.artifact!.spec)).toEqual({ type: "atr", multiplier: 1.5 });
+  });
+
+  it("transports verbatim — TS does not reinterpret the contract", () => {
+    // A TS-side re-validation would be a second semantic authority (AR-1130 §5 forbids
+    // it). Proof that none exists: an UNKNOWN mode passes through untouched, and the
+    // canonical resolver — not this parser — is what decides what it means.
+    const odd = { mode: "TF_OVERLAY_VARIANT" as const, stop: sourceRisk.stop };
+    const parsed = parseSpecArtifact(artifact({ source_risk: odd }));
+    expect(parsed.ok).toBe(true);
+    expect(parsed.artifact!.spec.source_risk).toEqual(odd);
+  });
+});
+
 describe("SPINE-B — TypeScript never AUTHORS a role", () => {
   it("does not synthesise roles from a scalar timeframe or a recovery heuristic", () => {
     const parsed = parseSpecArtifact(

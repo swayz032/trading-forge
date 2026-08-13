@@ -329,6 +329,20 @@ export function parseSpecArtifact(raw: unknown): ParseResult {
   if (typeof spec.entry_trigger_id !== "string") {
     return { ok: false, reason: "missing_entry_trigger_id" };
   }
+
+  // ─── B-FAILCLOSED-1 (AR-1130 §4) — PRESENT-BUT-MALFORMED IS NOT ABSENT ──────────
+  // Returning the artifact with the carrier quietly missing converts "the source
+  // supplied a malformed load-bearing contract" into "the source supplied no contract".
+  // Those are DIFFERENT FACTS, and only one of them is legal: an absent carrier is a
+  // legacy strategy, while a malformed one is a corrupted source claim that must not be
+  // silently downgraded into legacy. So presence is decided on the RAW field and
+  // validity is decided by the parser.
+  const rawRoles = (spec as Record<string, unknown>).source_timeframe_roles;
+  const parsedRoles = parseSourceTimeframeRoles(rawRoles);
+  if (rawRoles !== undefined && parsedRoles === undefined) {
+    return { ok: false, reason: "invalid_source_timeframe_roles" };
+  }
+
   return {
     ok: true,
     artifact: {
@@ -349,7 +363,20 @@ export function parseSpecArtifact(raw: unknown): ParseResult {
         // field absent from this literal is SILENTLY DROPPED before persistence — which
         // is why adding the carrier to the Python output alone would not have been
         // enough (AR-1119 §2.4).
-        source_timeframe_roles: parseSourceTimeframeRoles(spec.source_timeframe_roles),
+        source_timeframe_roles: parsedRoles,
+        // ─── B-RISK-1 (AR-1130 §5) — AND `source_risk` WAS ALREADY BEING DROPPED ────
+        // It was DECLARED on this interface (AR-1059 §4) and omitted from this literal,
+        // so every artifact lost it here. That is not cosmetic: GPT traced the consumer —
+        // the same parsed `spec` reaches `resolveSpecStopLoss(spec)`, which returns the
+        // taught structural stop for a SOURCE_FAITHFUL contract and otherwise falls back
+        // to the framework ATR 1.5 stop. So the drop SILENTLY CONVERTED A TEACHER-TAUGHT
+        // STOP INTO A FRAMEWORK STOP, and took the target/r_multiple with it — directly
+        // against the golden `teacher stop -> fixed R target` proof.
+        //
+        // 🛑 TRANSPORTED VERBATIM, NOT VALIDATED. `resolveSpecStopLoss` is the canonical
+        // authority for this contract's meaning; re-checking its shape here would create
+        // the second semantic authority AR-1130 §5 forbids.
+        source_risk: spec.source_risk as SourceRiskContract | undefined,
       },
       pipeline_version: typeof r.pipeline_version === "string" ? r.pipeline_version : undefined,
     },
