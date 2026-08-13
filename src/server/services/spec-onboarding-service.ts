@@ -205,6 +205,82 @@ export interface SpecArtifactBody {
    * Present only when the teacher explicitly taught risk. See source-risk-contract.ts.
    */
   source_risk?: SourceRiskContract;
+  /**
+   * SPINE-B (AR-1121 §4.B / AR-1123 §6.B). The source-owned timeframe ROLES, produced
+   * by the canonical Python compiler and carried INSIDE the certified `spec` body, so
+   * `spec_hash` covers them.
+   *
+   * 🛑 TYPESCRIPT IS TRANSPORT AND A STRUCTURAL FIREBREAK — NEVER AN AUTHOR.
+   * It may check the envelope's SHAPE (see `parseSourceTimeframeRoles`). It may NOT
+   * choose a timeframe, upgrade an evidence grade, fill a missing role, or derive any
+   * of this from `recoverSpecTimeframe()`, the confidence-0.4 lowest-timeframe
+   * backfill, `strategy.timeframe` or `trigger_tf`. Teaching TS to manufacture these
+   * would create a second semantic compiler — the B1 architecture AR-1119 §1 REJECTED.
+   */
+  source_timeframe_roles?: SourceTimeframeRolesEnvelope;
+}
+
+/** The exact schema string the Python authority stamps. Mirrored, never invented. */
+export const SOURCE_TIMEFRAME_ROLES_SCHEMA = "SOURCE_TIMEFRAME_ROLES/1";
+
+/** The closed role set, mirrored from `src/engine/source_timeframe_roles.py`. */
+export const SOURCE_TIMEFRAME_ROLE_NAMES = [
+  "OPENING_RANGE_WINDOW",
+  "BREAKOUT_CONFIRMATION",
+  "FVG_DETECTION",
+  "ENTRY_COMPLETION",
+] as const;
+
+export interface TimeframeRoleBinding {
+  role: string;
+  timeframe: string;
+  evidence_grade: string;
+  source_quote: string;
+  condition_id: string;
+}
+
+export interface SourceTimeframeRolesEnvelope {
+  schema: string;
+  bindings: TimeframeRoleBinding[];
+}
+
+/**
+ * STRUCTURAL firebreak only. Returns the envelope UNCHANGED when it is well-shaped,
+ * or `undefined` when the field is absent.
+ *
+ * 🛑 IT RETURNS THE PARSED OBJECT, IT NEVER REPAIRS ONE. A malformed envelope yields
+ * `undefined` rather than a patched-up envelope, because a half-filled role set that
+ * reaches the engine is exactly what the Python authority refuses at construction — and
+ * a carrier TS "fixed" would arrive downstream indistinguishable from a taught one.
+ */
+export function parseSourceTimeframeRoles(raw: unknown): SourceTimeframeRolesEnvelope | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  if (typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const env = raw as Record<string, unknown>;
+  if (env.schema !== SOURCE_TIMEFRAME_ROLES_SCHEMA) return undefined;
+  if (!Array.isArray(env.bindings)) return undefined;
+
+  const bindings: TimeframeRoleBinding[] = [];
+  for (const b of env.bindings) {
+    if (typeof b !== "object" || b === null) return undefined;
+    const r = b as Record<string, unknown>;
+    // Every field is required and must be a non-empty string. An empty timeframe or a
+    // missing quote is precisely what a DROPPED source fact looks like downstream.
+    for (const key of ["role", "timeframe", "evidence_grade", "source_quote", "condition_id"]) {
+      if (typeof r[key] !== "string" || (r[key] as string).length === 0) return undefined;
+    }
+    if (!SOURCE_TIMEFRAME_ROLE_NAMES.includes(r.role as (typeof SOURCE_TIMEFRAME_ROLE_NAMES)[number])) {
+      return undefined;
+    }
+    bindings.push({
+      role: r.role as string,
+      timeframe: r.timeframe as string,
+      evidence_grade: r.evidence_grade as string,
+      source_quote: r.source_quote as string,
+      condition_id: r.condition_id as string,
+    });
+  }
+  return { schema: env.schema, bindings };
 }
 
 export interface SpecArtifact {
@@ -269,6 +345,11 @@ export function parseSpecArtifact(raw: unknown): ParseResult {
         invalidations: Array.isArray(spec.invalidations) ? (spec.invalidations as SpecEntryCondition[]) : [],
         entry_trigger_id: spec.entry_trigger_id,
         framework_overlay: (spec.framework_overlay as Record<string, unknown>) ?? undefined,
+        // SPINE-B: transport only. The parser rebuilds `spec` from a FIXED key set, so a
+        // field absent from this literal is SILENTLY DROPPED before persistence — which
+        // is why adding the carrier to the Python output alone would not have been
+        // enough (AR-1119 §2.4).
+        source_timeframe_roles: parseSourceTimeframeRoles(spec.source_timeframe_roles),
       },
       pipeline_version: typeof r.pipeline_version === "string" ? r.pipeline_version : undefined,
     },
