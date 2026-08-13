@@ -6,6 +6,58 @@
 
 This addendum updates the V4 engineering order without weakening source-fidelity, research-validity, replay, PAPER, or safety gates. It does not replace historical V4 evidence; it governs the current sequencing where older planning text conflicts.
 
+## MASTER ARCHITECTURE — AUTHORITATIVE SIX-STAGE CHAIN
+
+The V4 system is organized as one ordered architecture:
+
+```text
+GRAPH ENGINEERING
+-> COMPILER
+-> STRATEGY FACTORY
+-> CONTEXT OBSERVER
+-> QUALIFICATION
+-> AUTONOMOUS RUNTIME
+```
+
+This six-stage chain is the authoritative organizing model for current engineering and future advisor/worker decisions.
+
+### Stage 1 — Graph Engineering
+
+Graph Engineering represents the source strategy as exact decisions, dependencies, ordering, state transitions, invalidations, entry requirements and source-owned exits. Existing DecisionAtom/state-machine/decision-closure/dependency-graph machinery is the backbone. Do not create a competing graph architecture unless measured evidence proves the current representation cannot carry a required source decision.
+
+### Stage 2 — Compiler
+
+The compiler lowers a certified source graph into deterministic executable strategy logic while preserving source semantics and provenance across the production boundaries. It must refuse unsupported or ambiguous source decisions rather than silently substitute nearby logic.
+
+### Stage 3 — Strategy Factory
+
+The Strategy Factory processes the source library at scale. Each source strategy receives either a faithful executable compile or an exact measured refusal. Faithful compiles move into source-faithful backtesting and candidate screening immediately; the factory does not wait for every refusal in the library to be repaired.
+
+### Stage 4 — Context Observer
+
+The Context Observer records deterministic decision-time market context around source-faithful signals/trades. It is read-only with respect to the source strategy. It cannot veto a source trade, move source exits, change size, or silently mutate strategy state. Cheap context observation should piggyback on existing historical passes where practical.
+
+### Stage 5 — Qualification
+
+Qualification determines whether a faithfully compiled candidate deserves promotion. This includes source-faithful edge screening, bounded Context Edge challengers where justified, untouched OOS, walk-forward/robustness methods, execution stress, deterministic replay parity and the required 3–5 day PAPER qualification window. Discovery is never treated as proof.
+
+### Stage 6 — Autonomous Runtime
+
+Only qualified artifacts may enter the autonomous runtime. The runtime includes the deployed bot/services, risk/control enforcement, strategy lifecycle state, decay/health monitoring, restart/recovery, durable logging, alerts and the proven 3AM n8n advisory/reporting loop. Claude Code is an engineering/build dependency before deployment, not a required runtime dependency for ordinary operation.
+
+### Supporting capability — Visual Intelligence
+
+Visual Intelligence is not a seventh competing stage. It supports the six-stage chain when measured evidence requires it:
+
+- **Source Visual Intelligence** supports Graph Engineering / compiler fidelity when transcript text alone cannot establish what the teacher visually demonstrated.
+- **Market Visual Intelligence** supports Context Observer / qualification when genuinely visual information cannot be recovered faithfully from deterministic structured market data.
+
+Prefer existing deterministic graph and market primitives whenever they can express the required fact. Do not rebuild Graph Engineering, create a second context brain, or insert broad visual-model work ahead of the critical path without a measured blocker.
+
+### Fast-engineering law
+
+Every new proposal must map to one of the six stages or to an explicitly supporting capability. If it does not remove a measured blocker, increase faithful throughput, strengthen qualification evidence, or harden autonomous operation, defer it. Reuse existing machinery before adding new architecture.
+
 ## 1. Current critical path
 
 The active worker order remains AR-1138, as clarified by AR-1140.
@@ -146,7 +198,8 @@ Until the August 27 technical-readiness decision, classify new work as follows.
 - source-faithful edge screening;
 - finalist robustness/correctness;
 - PAPER readiness and PAPER defects;
-- required 3AM loop readiness evidence.
+- required 3AM loop readiness evidence;
+- no-Claude autonomous-runtime readiness blockers.
 
 ### P1 if it does not delay P0
 
@@ -176,7 +229,8 @@ The external advisor may work only in non-conflicting lanes:
 2. pre-audit the grading/compiler joins ahead of the worker;
 3. pre-audit PAPER readiness;
 4. pre-audit the 3AM n8n live-evidence requirements;
-5. do not modify the worker's unfinished engineering files or create a competing implementation.
+5. pre-audit no-Claude autonomous-runtime readiness;
+6. do not modify the worker's unfinished engineering files or create a competing implementation.
 
 ### When the worker quota returns
 
@@ -190,10 +244,13 @@ The external advisor may work only in non-conflicting lanes:
 8. shortlist and validate finalists;
 9. begin PAPER as early as safely possible, targeting Aug 20 for the five-day window;
 10. run the proven 3AM advisory loop each PAPER night;
-11. make the downstream venue-readiness decision only after the required technical/research/PAPER gates are green.
+11. prove the no-Claude autonomy drill before treating the downstream runtime as self-sufficient;
+12. make the downstream venue-readiness decision only after the required technical/research/PAPER/autonomy gates are green.
 
 ## 12. Freeze statement
 
 No Context Edge, Visual Intelligence, full-library repair or optimization project may be inserted in front of the current compiler breakthrough unless a newly measured blocker proves that specific capability is required.
 
-**Frozen fast path:** finish the real compiler proof -> disposition the library -> find credible source edge -> deepen context only on survivors -> validate finalists -> 3–5 day PAPER with a frozen candidate and proven nightly advisory evidence -> downstream readiness decision.
+**Authoritative architecture:** Graph Engineering -> Compiler -> Strategy Factory -> Context Observer -> Qualification -> Autonomous Runtime.
+
+**Frozen fast path:** finish the real compiler proof -> disposition the library -> find credible source edge -> deepen context only on survivors -> validate finalists -> 3–5 day PAPER with a frozen candidate and proven nightly advisory evidence -> prove no-Claude autonomy -> downstream readiness decision.
