@@ -1048,6 +1048,114 @@ def _apply_naked_management(
     return managed_trades
 
 
+def _resolve_source_managed_exit(
+    *,
+    entry_idx: int,
+    entry_price: float,
+    is_short: bool,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    open_np: Optional[np.ndarray],
+    structural_stop_map: dict | None,
+    r_multiple: float,
+    scan_bound: int,
+    fallback_exit_idx: int,
+    fallback_exit_price: float,
+) -> dict:
+    """THE one implementation of "where does this source trade close?" (AR-1092 §6 Q5).
+
+    ─── WHY THIS EXISTS AS A SEPARATE FUNCTION ─────────────────────────────────────────────
+    F-4's repair needs the source exit to be known BEFORE vectorbt decides occupancy, and
+    `_apply_source_fixed_r_management` needs it AFTER, to price the resulting record. AR-1092
+    §7 forbids "two independent source exit engines whose answers can disagree" and §9.7 makes
+    "cannot reuse without duplicating the stop/target arithmetic" a STOP condition.
+
+    ★ `TWO CALLERS OF ONE FUNCTION CANNOT DISAGREE; TWO COPIES OF ONE FORMULA ALWAYS EVENTUALLY
+       DO.` So the arithmetic was EXTRACTED here verbatim, not re-written in the new pass.
+
+    ─── CAUSALITY, WHICH IS THE CONSTRAINT THAT MATTERS ────────────────────────────────────
+    🛑 AR-1092 §7 forbids fabricating an exit "by looking ahead through future bars merely to
+    free vectorbt". This scan does not look ahead in that sense: `source_stop` and
+    `target.target_price` are BOTH fixed at `entry_idx` from the taught anchor, and the loop
+    then walks bars FORWARD, returning the FIRST bar that touches one of them. The exit at bar
+    `k` is a function of the levels known at entry and of bars <= k only. That is the same
+    causal shape `_apply_dsl_stop_loss_and_time_stop` already uses for the house ATR stop.
+
+    Returns the full exit decision; the caller decides what to do with it.
+    """
+    from src.engine.context.structural_targets import (  # noqa: PLC0415 — lazy, sibling
+        compute_source_fixed_r_target,
+    )
+
+    # The stop is the SOURCE stop, resolved through the same fail-closed resolver every
+    # other engine uses. `source_faithful=True` makes it refuse rather than fall back to
+    # ATR when the taught anchor is missing (AR-1073), which is the behaviour that makes
+    # the number below trustworthy.
+    risk_points, stop_basis = _resolve_stop_risk_points(
+        entry_idx=entry_idx, is_short=is_short,
+        atr_fallback_points=0.0, stop_ceiling=float("inf"),
+        structural_stop_map=structural_stop_map,
+        source_faithful=True,
+    )
+    source_stop = entry_price + risk_points if is_short else entry_price - risk_points
+    target = compute_source_fixed_r_target(
+        direction="short" if is_short else "long",
+        entry_price=entry_price,
+        stop_price=source_stop,
+        r_multiple=r_multiple,
+    )
+
+    exit_price = fallback_exit_price
+    exit_idx = fallback_exit_idx
+    exit_reason = "signal"
+    gap_count = 0
+
+    for bar in range(entry_idx + 1, min(scan_bound, len(high_np))):
+        bar_high = float(high_np[bar])
+        bar_low = float(low_np[bar])
+        bar_open = (
+            float(open_np[bar]) if open_np is not None and bar < len(open_np) else bar_low
+        )
+
+        # 🛑 STOP IS TESTED BEFORE TARGET. Within one OHLC bar the tick order is unknown,
+        # and resolving an ambiguous bar in the trade's FAVOUR would inflate every result
+        # that ever hits both. The conservative resolution is the honest one, and it is
+        # stated rather than left to the order of two `if`s.
+        if not is_short and bar_low <= source_stop:
+            exit_price = bar_open if bar_open < source_stop else source_stop
+            gap_count += 1 if bar_open < source_stop else 0
+            exit_reason, exit_idx = "source_stop", bar
+            break
+        if is_short and bar_high >= source_stop:
+            exit_price = bar_open if bar_open > source_stop else source_stop
+            gap_count += 1 if bar_open > source_stop else 0
+            exit_reason, exit_idx = "source_stop", bar
+            break
+        if not is_short and bar_high >= target.target_price:
+            exit_price = (
+                bar_open if bar_open > target.target_price else target.target_price
+            )
+            exit_reason, exit_idx = "source_fixed_r_target", bar
+            break
+        if is_short and bar_low <= target.target_price:
+            exit_price = (
+                bar_open if bar_open < target.target_price else target.target_price
+            )
+            exit_reason, exit_idx = "source_fixed_r_target", bar
+            break
+
+    return {
+        "risk_points": risk_points,
+        "stop_basis": stop_basis,
+        "source_stop": source_stop,
+        "target": target,
+        "exit_price": exit_price,
+        "exit_idx": exit_idx,
+        "exit_reason": exit_reason,
+        "gap_count": gap_count,
+    }
+
+
 def _apply_source_fixed_r_management(
     trades_records,
     high_np: np.ndarray,
@@ -1086,11 +1194,11 @@ def _apply_source_fixed_r_management(
     edited away.
 
     A trade that reaches neither level exits where vectorbt's own signal exit put it, unchanged.
-    """
-    from src.engine.context.structural_targets import (  # noqa: PLC0415 — lazy, sibling
-        compute_source_fixed_r_target,
-    )
 
+    🛑 THE ARITHMETIC MOVED, THE SEMANTICS DID NOT. Everything described above is now computed
+    by `_resolve_source_managed_exit`; this function is its per-trade-record caller. The lazy
+    `compute_source_fixed_r_target` import moved with it — there is exactly one call site.
+    """
     managed_trades = []
 
     for _, row in trades_records.iterrows():
@@ -1105,62 +1213,30 @@ def _apply_source_fixed_r_management(
         )
         is_short = "Short" in direction_str
 
-        # The stop is the SOURCE stop, resolved through the same fail-closed resolver every
-        # other engine uses. `source_faithful=True` makes it refuse rather than fall back to
-        # ATR when the taught anchor is missing (AR-1073), which is the behaviour that makes
-        # the number below trustworthy.
-        risk_points, stop_basis = _resolve_stop_risk_points(
-            entry_idx=entry_idx, is_short=is_short,
-            atr_fallback_points=0.0, stop_ceiling=float("inf"),
-            structural_stop_map=structural_stop_map,
-            source_faithful=True,
-        )
-        source_stop = entry_p + risk_points if is_short else entry_p - risk_points
-        target = compute_source_fixed_r_target(
-            direction="short" if is_short else "long",
+        # 🛑 ONE ARITHMETIC, TWO CALLERS (AR-1092 §6 Q5 / §9.7). This body used to hold the
+        # stop/target resolution and the bar scan inline. It is now delegated to
+        # `_resolve_source_managed_exit`, which the PRE-PORTFOLIO occupancy pass calls too —
+        # so the exit that released the position and the exit that prices the trade are
+        # THE SAME COMPUTATION, not two implementations that happen to agree today.
+        _decision = _resolve_source_managed_exit(
+            entry_idx=entry_idx,
             entry_price=entry_p,
-            stop_price=source_stop,
+            is_short=is_short,
+            high_np=high_np, low_np=low_np, open_np=open_np,
+            structural_stop_map=structural_stop_map,
             r_multiple=r_multiple,
+            scan_bound=original_exit_idx + 1,
+            fallback_exit_idx=original_exit_idx,
+            fallback_exit_price=original_exit_p,
         )
-
-        exit_price = original_exit_p
-        exit_idx = original_exit_idx
-        exit_reason = "signal"
-        gap_count = 0
-
-        for bar in range(entry_idx + 1, min(original_exit_idx + 1, len(high_np))):
-            bar_high = float(high_np[bar])
-            bar_low = float(low_np[bar])
-            bar_open = (
-                float(open_np[bar]) if open_np is not None and bar < len(open_np) else bar_low
-            )
-
-            # 🛑 STOP IS TESTED BEFORE TARGET. Within one OHLC bar the tick order is unknown,
-            # and resolving an ambiguous bar in the trade's FAVOUR would inflate every result
-            # that ever hits both. The conservative resolution is the honest one, and it is
-            # stated rather than left to the order of two `if`s.
-            if not is_short and bar_low <= source_stop:
-                exit_price = bar_open if bar_open < source_stop else source_stop
-                gap_count += 1 if bar_open < source_stop else 0
-                exit_reason, exit_idx = "source_stop", bar
-                break
-            if is_short and bar_high >= source_stop:
-                exit_price = bar_open if bar_open > source_stop else source_stop
-                gap_count += 1 if bar_open > source_stop else 0
-                exit_reason, exit_idx = "source_stop", bar
-                break
-            if not is_short and bar_high >= target.target_price:
-                exit_price = (
-                    bar_open if bar_open > target.target_price else target.target_price
-                )
-                exit_reason, exit_idx = "source_fixed_r_target", bar
-                break
-            if is_short and bar_low <= target.target_price:
-                exit_price = (
-                    bar_open if bar_open < target.target_price else target.target_price
-                )
-                exit_reason, exit_idx = "source_fixed_r_target", bar
-                break
+        risk_points = _decision["risk_points"]
+        stop_basis = _decision["stop_basis"]
+        source_stop = _decision["source_stop"]
+        target = _decision["target"]
+        exit_price = _decision["exit_price"]
+        exit_idx = _decision["exit_idx"]
+        exit_reason = _decision["exit_reason"]
+        gap_count = _decision["gap_count"]
 
         managed_trades.append({
             "entry_idx": entry_idx,
