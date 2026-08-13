@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `398a6aa01e734f38e8e2dbffe8604c766c67352f`  (worktree DIRTY at generation time)
+> Generated at commit `fc1c8b1ae8307fe519b04b81f43ea768eca9bf34`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 297 | 385 | 124401 | 1916 |
+| `src/` | Python | 297 | 385 | 124414 | 1916 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -1023,9 +1023,9 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:1668` | import specifier resolves to no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:2194` | import specifier resolves to no file on disk |
 | `src/engine/tests/test_x.py` | path-literal | `src/engine/tests/test_accept5_disposition_display_truth.py:52` | repo-relative path literal with no file on disk |
-| `src/engine/_probe_runnable.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:120` | repo-relative path literal with no file on disk |
-| `src/engine/_probe_prose.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:123` | repo-relative path literal with no file on disk |
-| `src/engine/tests/test_probe.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:127` | repo-relative path literal with no file on disk |
+| `src/engine/_probe_runnable.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:118` | repo-relative path literal with no file on disk |
+| `src/engine/_probe_prose.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:121` | repo-relative path literal with no file on disk |
+| `src/engine/tests/test_probe.py` | path-literal | `src/engine/tests/test_inventory_main_guard_detection.py:125` | repo-relative path literal with no file on disk |
 | `scripts/claude-rung-v32/shakedown_specs/-igpOZs8LsM__s0.spec.json` | path-literal | `src/engine/tests/test_spine_c_factory_role_arrow.py:48` | repo-relative path literal with no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/walk_forward.py:1198` | import specifier resolves to no file on disk |
 | `src/server/db/migrations/0058_audit_log_append_only.down.sql` | path-literal | `src/server/__tests__/audit-log-append-only.test.ts:56` | repo-relative path literal with no file on disk |
@@ -3943,11 +3943,11 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_spine_condition` | function | `src/engine/extraction/cert_assembler.py:138` | 0 | unique |
 | `terminal_read_grade` | function | `src/engine/extraction/cert_assembler.py:186` | 0 | unique |
 | `assemble_certificate` | function | `src/engine/extraction/cert_assembler.py:299` | 2 | unique |
-| `SpecIdentityError` | class | `src/engine/extraction/compile_certified_record.py:120` | 0 | unique |
-| `parse_spec_id` | function | `src/engine/extraction/compile_certified_record.py:128` | 0 | unique |
-| `_load_record` | function | `src/engine/extraction/compile_certified_record.py:162` | 0 | unique |
-| `compile_record_to_artifact` | function | `src/engine/extraction/compile_certified_record.py:179` | 0 | unique |
-| `main` | function | `src/engine/extraction/compile_certified_record.py:236` | 190 | AMBIG |
+| `SpecIdentityError` | class | `src/engine/extraction/compile_certified_record.py:133` | 0 | unique |
+| `parse_spec_id` | function | `src/engine/extraction/compile_certified_record.py:141` | 0 | unique |
+| `_load_record` | function | `src/engine/extraction/compile_certified_record.py:175` | 0 | unique |
+| `compile_record_to_artifact` | function | `src/engine/extraction/compile_certified_record.py:192` | 0 | unique |
+| `main` | function | `src/engine/extraction/compile_certified_record.py:249` | 190 | AMBIG |
 | `SpineCondition` | class | `src/engine/extraction/compile_lints.py:117` | 2 | unique |
 | `CompiledSpine` | class | `src/engine/extraction/compile_lints.py:135` | 2 | unique |
 | `LintResult` | class | `src/engine/extraction/compile_lints.py:165` | 0 | unique |
