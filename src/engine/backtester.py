@@ -3250,6 +3250,50 @@ def _source_risk_mode_from_spec(compiled_spec) -> Optional[str]:
     return source_risk.get("mode")
 
 
+def _bind_source_timeframe_roles(strategy):
+    """ONE role object: the set SOURCE_FAITHFUL validates IS the set the instance uses.
+
+    AR-1123 §4 / AR-1125 ORDER C1. `[MEASURED, AR-1118/AR-1120]` the defect this closes:
+    `run_class_backtest` resolved the persisted carrier into `_cls_source_timeframe_roles`
+    and `grep` found that local in exactly two places — its initialisation and its
+    assignment — **read by nothing**. Meanwhile the executing instance's
+    `self.source_timeframe_roles` was `None` in production, because no non-test caller
+    supplied it. So the engine validated a role contract it could not act on, and the
+    AR-1115 fail-closed refusal could never fire.
+
+        ★★★★★ `A VALIDATED LOCAL AND A SEPARATE CONSTRUCTOR OBJECT ARE TWO AUTHORITIES
+           THAT AGREE UNTIL THE DAY THEY DO NOT — AND NOTHING WOULD HAVE NOTICED.`
+
+    🛑 NO SECOND AUTHORITY. When the factory already supplied a typed object (the
+    AR-1121 §4.C arrow), that object is KEPT and the persisted payload is required to
+    agree with it CANONICALLY. A mismatch REFUSES rather than picking a winner: two
+    answers to "which timeframe owns the opening range" is precisely the conflict
+    AR-1110 §5 refuses instead of resolving.
+
+    Enforcing it here rather than only at the Band C call site means the invariant holds
+    for EVERY caller that reaches this gate, not only the one production path I happened
+    to wire.
+    """
+    validated = _resolve_source_timeframe_roles(strategy)
+
+    existing = getattr(strategy, "source_timeframe_roles", None)
+    if existing is not None:
+        if existing.to_payload() != validated.to_payload():
+            raise ValueError(
+                "the role contract supplied to this strategy instance and the one "
+                "persisted in `spec.source_timeframe_roles` DISAGREE. Two independent "
+                "authorities for which timeframe owns which decision is the conflict "
+                "AR-1110 §5 refuses rather than resolving — a silently chosen winner "
+                "here would execute a strategy nobody taught. REFUSING."
+            )
+        return existing
+
+    # No factory-supplied object: the validated set becomes the instance's set, so the
+    # object the gate proved is the object `_h_opening_range` will read.
+    strategy.source_timeframe_roles = validated
+    return validated
+
+
 def _resolve_source_timeframe_roles(strategy):
     """The taught timeframe ROLES off the persisted source contract. REFUSES, never recovers.
 
@@ -7530,11 +7574,18 @@ def run_class_backtest(
     # A performance number produced from that is a clean measurement of a strategy
     # nobody taught. So the roles are resolved HERE, beside the R multiple, before
     # any bar is evaluated — and their absence refuses rather than recovering.
+    #
+    # ─── AR-1125 ORDER C1 — THE VALIDATED SET IS NOW THE INSTANCE'S SET ─────────
+    # This assignment used to be the end of the line: `_cls_source_timeframe_roles`
+    # was written here and read by NOTHING, while the executing instance carried
+    # `None`. `_bind_source_timeframe_roles` closes that hop — it validates, requires
+    # canonical agreement with any factory-supplied object, and leaves the SAME object
+    # on the strategy, so the set proven here is the set `_h_opening_range` reads.
     _cls_source_r_multiple = 0.0
     _cls_source_timeframe_roles = None
     if _source_faithful:
         _cls_source_r_multiple = _resolve_source_fixed_r(strategy)
-        _cls_source_timeframe_roles = _resolve_source_timeframe_roles(strategy)
+        _cls_source_timeframe_roles = _bind_source_timeframe_roles(strategy)
 
     # ─── P1-A: Warmup data prepend (IS context for indicator initialization) ──
     # Mirror run_backtest warmup_data logic. Prepend IS rows so strategy.compute()
