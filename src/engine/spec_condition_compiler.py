@@ -1054,12 +1054,47 @@ class SpecConditionStrategy(BaseStrategy):
             execution_interval_minutes=interval_minutes,
         )
 
+        # ── AR-1115 §3.1 — A MISSING TAUGHT INPUT IS NOT A QUIET NO-TRADE DAY ───────────
+        # `[MEASURED, AR-1115 §2.4]` the refusal AR-1114 red-proofed lived in
+        # `build_causal_opening_range`, which SYSTEM-INVENTORY classified BUILT-UNREACHABLE
+        # — so it was never on this path at all, and AR-1115 §3.3 has since deleted it.
+        # THIS handler — the one the money path actually calls — answered a missing or
+        # incomplete window with `continue`, i.e. "no signal today".
+        #
+        # For LEGACY execution that is correct and stays: a strategy that never declared a
+        # source-owned window has taught us nothing about which days must have one, so an
+        # absent range is an ordinary quiet session.
+        #
+        # Once a SOURCE_FAITHFUL role contract has NAMED the 5m chart as the window's owner,
+        # the same silence means something else entirely: a REQUIRED SOURCE FACT IS ABSENT.
+        # Masking that into a false-y signal column is the substitution AR-1113 §3.2 forbids,
+        # wearing its most innocent costume — no wrong number is produced, so nothing looks
+        # wrong, and the run reports a clean day it never actually evaluated.
+        #
+        #   ★★★★★ `A MISSING REQUIRED INPUT AND A GENUINELY QUIET DAY PRODUCE THE SAME
+        #      ALL-FALSE COLUMN. ONLY THE CONTRACT SAYS WHICH ONE HAPPENED.`
+        #
+        # The resolver above has already refused every role combination that is not sVkm's,
+        # so `roles is not None` HERE means "the authorised sVkm contract is driving this
+        # run" — it is not a second, weaker admission test.
+        source_role_driven = self.source_timeframe_roles is not None
+
         for session_date, indices in indices_by_session.items():
             session_bars = or_bars_by_session.get(session_date, [])
             if not session_bars:
-                # A session the SOURCE frame does not cover records nothing and gates
-                # nothing — the same fail-closed, per-session shape as a refused window.
-                # It must not borrow a neighbouring session's range.
+                if source_role_driven:
+                    raise FamilyMetaEnforcementError(
+                        f"condition {b.condition_id!r} runs under a source-owned timeframe "
+                        f"role contract that requires the opening-range window to come from "
+                        f"the declared source chart, and NO source bar covers session "
+                        f"{session_date.isoformat()} — the required taught input is missing. "
+                        f"Refused rather than masked: without this line the session would "
+                        f"gate all-False and be indistinguishable from a day the source "
+                        f"legitimately taught no signal (AR-1115 §3.1)."
+                    )
+                # LEGACY (no role carrier) — unchanged. A session the source frame does not
+                # cover records nothing and gates nothing, the same fail-closed, per-session
+                # shape as a refused window. It must not borrow a neighbouring session's range.
                 continue
 
             # EXACTLY ONE ADAPTER CALL PER (candidate, session_date), and it is handed ONLY
@@ -1081,6 +1116,19 @@ class SpecConditionStrategy(BaseStrategy):
             # poison the days around it either. `FAIL CLOSED` is the adapter's shape and it
             # must survive the handler, per session.
             if not state.opening_range_complete:
+                if source_role_driven:
+                    raise FamilyMetaEnforcementError(
+                        f"condition {b.condition_id!r} runs under a source-owned timeframe "
+                        f"role contract, and the declared source chart cannot produce ONE "
+                        f"COMPLETE taught opening range for session "
+                        f"{session_date.isoformat()} "
+                        f"(adapter window status: "
+                        f"{state.opening_range_window_status.value!r}). "
+                        f"The window is present but "
+                        f"incomplete, duplicated, off-grid or otherwise unidentifiable. "
+                        f"Refused rather than masked (AR-1115 §3.1): a required source fact "
+                        f"that is absent may not be reported as a quiet no-trade day."
+                    )
                 continue
 
             # The lock comes from the adapter's OWN window arithmetic, for THIS date. No

@@ -13,15 +13,24 @@ set" would reproduce exactly that defect one layer up.
     ★★★★★ `A TEST THAT ACCEPTS A VALUE WITHOUT SHOWING THE VALUE CHANGED SOMETHING IS
        THE VALIDATION-WITHOUT-CONSUMPTION DEFECT, WEARING A TEST'S CLOTHES.`
 
-So the load-bearing controls here are the ones where a NUMBER MOVES or a RUN REFUSES:
-`test_the_5m_frame_is_what_produces_the_levels`, `test_role_value_is_load_bearing_*`,
-and the two anti-stub red-proofs at the bottom, which prove this suite can actually
-reject the implementations it was built to reject.
+So the load-bearing controls here are the ones where a NUMBER MOVES or a RUN REFUSES.
+
+AR-1115 RESHAPED THIS SUITE, AND THE REASON MATTERS
+---------------------------------------------------
+Sections 1-7 originally proved `build_causal_opening_range`, and AR-1115 section 2.4
+established that SYSTEM-INVENTORY classified that helper BUILT-UNREACHABLE: the money
+path never called it. Those proofs were therefore evidence about dead code.
+
+    ***** `A SAFETY PROOF ATTACHED TO DEAD CODE IS NOT PRODUCTION EVIDENCE.`
+
+The helper is deleted and its unique refusals were MEASURED against the production seam
+before removal, not argued about. What remains here is the narrow primitives production
+actually calls (section 6), the wiring proofs (section 8), and the production-seam
+proofs that call `_h_opening_range` itself (section 9).
 """
 
 from __future__ import annotations
 
-import dataclasses
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -32,7 +41,6 @@ from src.engine.opening_range_definition import (
     OpeningRangeDefinition,
     OpeningRangeProvenance,
     OpeningRangeVariant,
-    OpeningRangeWindowStatus,
 )
 from src.engine.source_timeframe_roles import (
     BREAKOUT_CONFIRMATION,
@@ -46,11 +54,9 @@ from src.engine.source_timeframe_roles import (
     TimeframeRoleBinding,
 )
 from src.engine.svkm_role_execution import (
-    CausalOpeningRange,
     RoleFrame,
     SourceRoleExecutionError,
     assert_svkm_role_combination,
-    build_causal_opening_range,
     parse_minutes,
 )
 
@@ -134,204 +140,10 @@ def _or_frame_5m(high: float = 100.50, low: float = 99.75) -> RoleFrame:
     )
 
 
-def _exec_frame_1m() -> RoleFrame:
-    return RoleFrame(
-        timeframe="1m",
-        timestamps=tuple(_open(i) for i in range(0, 15)),
-        highs=tuple(100.0 + i * 0.05 for i in range(0, 15)),
-        lows=tuple(99.5 + i * 0.05 for i in range(0, 15)),
-    )
-
-
-def _build(**overrides) -> CausalOpeningRange:
-    kwargs = dict(
-        roles=_svkm_roles(),
-        definition=DEFINITION,
-        variant=FIVE,
-        opening_range_frame=_or_frame_5m(),
-        execution_frame=_exec_frame_1m(),
-        session_date=SESSION,
-    )
-    kwargs.update(overrides)
-    return build_causal_opening_range(**kwargs)
-
-
-# ══ 1. POSITIVE WITNESS ══════════════════════════════════════════════════════
-
-
-def test_positive_witness_the_5m_window_produces_a_complete_range():
-    """The taught 09:30 five-minute candle becomes a usable ORH/ORL."""
-    causal = _build()
-    state = causal.state_as_of(_open(5))
-    assert state.opening_range_complete is True
-    assert state.opening_range_high == pytest.approx(100.50)
-    assert state.opening_range_low == pytest.approx(99.75)
-
-
-def test_the_5m_frame_is_what_produces_the_levels():
-    """★ THE LOAD-BEARING CONTROL. Change ONLY the 5m frame; the levels must follow.
-
-    This is the discriminator the previous step could not offer: it proves the numbers
-    come from the series the OPENING_RANGE_WINDOW role selected, not from the 1m
-    execution series that happens to be sitting next to it.
-    """
-    baseline = _build().state_as_of(_open(5))
-    widened = _build(opening_range_frame=_or_frame_5m(high=101.75, low=98.20))
-    moved = widened.state_as_of(_open(5))
-
-    assert moved.opening_range_high == pytest.approx(101.75)
-    assert moved.opening_range_low == pytest.approx(98.20)
-    assert moved.opening_range_high != baseline.opening_range_high
-    assert moved.opening_range_low != baseline.opening_range_low
-
-
-# ══ 2. CAUSALITY — AR-1113 §3.1 / §6.F ═══════════════════════════════════════
-
-
-def test_no_1m_bar_before_the_lock_may_see_the_range():
-    """Half-open `[start, lock)`: 09:30-09:34 see nothing, 09:35 is the first that may."""
-    causal = _build()
-    for minute in range(0, 5):
-        state = causal.state_as_of(_open(minute))
-        assert state.opening_range_complete is False, f"09:3{minute} saw a completed range"
-        assert state.opening_range_high is None
-        assert state.opening_range_low is None
-        assert state.opening_range_window_status is OpeningRangeWindowStatus.FORMING
-    assert causal.is_available_at(_open(5)) is True
-
-
-def test_causality_mutation_the_final_minute_cannot_reach_earlier_1m_bars():
-    """AR-1113 §6.F. Mutate the 5m candle's extremes — as its final minute would — and
-    every PRE-LOCK 1m bar's available state must be byte-identical.
-
-    If an earlier bar changes, the adapter is leaking future 5m information backwards.
-    """
-    baseline = _build()
-    mutated = _build(opening_range_frame=_or_frame_5m(high=133.00, low=66.00))
-
-    def _visible(causal):
-        return [
-            dataclasses.astuple(causal.state_as_of(_open(m))) for m in range(0, 5)
-        ]
-
-    assert _visible(baseline) == _visible(mutated), (
-        "a pre-lock 1m bar's visible opening-range state changed when a value INSIDE "
-        "the still-forming 5m candle changed — that is future information reaching "
-        "earlier bars"
-    )
-    # POSITIVE WITNESS that the mutation was real and the comparison had power:
-    # after the lock the very same mutation MUST move the levels.
-    assert baseline.state_as_of(_open(5)).opening_range_high != pytest.approx(133.00)
-    assert mutated.state_as_of(_open(5)).opening_range_high == pytest.approx(133.00)
-
-
-# ══ 3. THE ROLE VALUE IS LOAD-BEARING — AR-1113 §6.B ═════════════════════════
-
-
-def test_role_value_is_load_bearing_a_divergent_window_role_refuses():
-    """Declare the opening-range window on a different chart and the run REFUSES.
-
-    🛑 SCOPE, STATED HONESTLY: AR-1113 §6.B asks for a divergent role to CHANGE the
-    computed ORH/ORL. Under the narrow authorisation of §3 this adapter is sVkm-only, so
-    a divergent window role refuses instead. That still proves the value is consumed —
-    a parser that merely accepted the string would run on unchanged — but it is a
-    REFUSAL discriminator, not a recomputation one, and §6.B's literal form needs the
-    generic path that §3 does not authorise. Disclosed rather than quietly satisfied.
-    """
-    with pytest.raises(SourceRoleExecutionError, match="5m-window / 1m-execution"):
-        _build(roles=_svkm_roles(opening_range_tf="15m"))
-
-
-def test_role_value_is_load_bearing_a_1m_window_role_refuses():
-    """The exact defect the carrier was built to stop: the whole strategy on one chart."""
-    with pytest.raises(SourceRoleExecutionError, match="OPENING_RANGE_WINDOW"):
-        _build(roles=_svkm_roles(opening_range_tf="1m"))
-
-
 def test_a_missing_role_refuses_at_the_carrier_not_here():
     """An incomplete role set never reaches this adapter — the carrier refuses first."""
     with pytest.raises(SourceTimeframeRoleError, match="missing required timeframe role"):
         SourceTimeframeRoles(bindings=_svkm_roles().bindings[:3])
-
-
-# ══ 4. FRAME / ROLE DISAGREEMENT — AR-1113 §3.2 ══════════════════════════════
-
-
-def test_a_1m_series_mislabelled_as_5m_refuses():
-    """★ A LABEL CHECK CANNOT CATCH THIS — the declared string matches; the DATA does not."""
-    mislabelled = RoleFrame(
-        timeframe="5m",
-        timestamps=tuple(_open(i) for i in range(0, 6)),  # 1-minute spacing
-        highs=tuple(100.0 for _ in range(6)),
-        lows=tuple(99.0 for _ in range(6)),
-    )
-    with pytest.raises(SourceRoleExecutionError, match="disagree"):
-        _build(opening_range_frame=mislabelled)
-
-
-def test_a_frame_declared_for_the_wrong_role_refuses():
-    frame = _or_frame_5m()
-    wrong = dataclasses.replace(frame, timeframe="15m")
-    with pytest.raises(SourceRoleExecutionError, match="OPENING_RANGE_WINDOW declares"):
-        _build(opening_range_frame=wrong)
-
-
-def test_frames_in_different_zones_refuse():
-    utc_exec = RoleFrame(
-        timeframe="1m",
-        timestamps=tuple(_open(i, tz=UTC) for i in range(0, 15)),
-        highs=tuple(100.0 + i * 0.05 for i in range(0, 15)),
-        lows=tuple(99.5 + i * 0.05 for i in range(0, 15)),
-    )
-    with pytest.raises(SourceRoleExecutionError, match="timezone identity"):
-        _build(execution_frame=utc_exec)
-
-
-def test_frames_not_expressed_in_the_taught_zone_refuse():
-    """Deliberately stricter than the instants require, and the reason is a real defect
-    class: a frame of naive ET stamps localised as UTC picks a 5m candle four hours from
-    the taught one, and every downstream number stays plausible."""
-    utc_or = RoleFrame(
-        timeframe="5m",
-        timestamps=(_open(0, tz=UTC), _open(5, tz=UTC), _open(10, tz=UTC)),
-        highs=(100.50, 100.90, 101.10),
-        lows=(99.75, 100.10, 100.40),
-    )
-    utc_exec = RoleFrame(
-        timeframe="1m",
-        timestamps=tuple(_open(i, tz=UTC) for i in range(0, 15)),
-        highs=tuple(100.0 + i * 0.05 for i in range(0, 15)),
-        lows=tuple(99.5 + i * 0.05 for i in range(0, 15)),
-    )
-    with pytest.raises(SourceRoleExecutionError, match="taught source timezone"):
-        _build(opening_range_frame=utc_or, execution_frame=utc_exec)
-
-
-# ══ 5. INCOMPLETE / UNIDENTIFIABLE 5m WINDOW — AR-1113 §3.2 ══════════════════
-
-
-def test_a_missing_5m_opening_bar_refuses():
-    """The window's own candle is absent. The adapter would otherwise return a
-    confident, tighter range with no flag raised anywhere."""
-    gapped = RoleFrame(
-        timeframe="5m",
-        timestamps=(_open(5), _open(10), _open(15)),  # 09:30 candle absent
-        highs=(100.90, 101.10, 101.30),
-        lows=(100.10, 100.40, 100.60),
-    )
-    with pytest.raises(SourceRoleExecutionError, match="did not complete"):
-        _build(opening_range_frame=gapped)
-
-
-def test_a_duplicated_5m_opening_bar_refuses():
-    dup = RoleFrame(
-        timeframe="5m",
-        timestamps=(_open(0), _open(0), _open(5)),
-        highs=(100.50, 100.55, 100.90),
-        lows=(99.75, 99.70, 100.10),
-    )
-    with pytest.raises(SourceRoleExecutionError, match="duplicate timestamps"):
-        _build(opening_range_frame=dup)
 
 
 def test_an_empty_frame_refuses():
@@ -414,46 +226,6 @@ def test_parse_minutes_refuses_non_minute_timeframes():
 
 
 # ══ 7. ANTI-STUB RED-PROOFS — DOES THIS SUITE HAVE POWER? ════════════════════
-
-
-def test_red_proof_a_lock_ignoring_implementation_fails_the_causal_control():
-    """★ THE RED-PROOF. An implementation that publishes the levels from the first bar
-    is the single most plausible wrong version of this module. If the causal control
-    above cannot reject it, that control is decoration.
-
-    `A GREEN CHECK WITH NO DEMONSTRATED PATH TO RED IS NOT EVIDENCE.`
-    """
-    real = _build()
-
-    class _LockIgnoring(CausalOpeningRange):
-        def state_as_of(self, as_of):  # noqa: ARG002 - deliberately ignores the gate
-            return self.complete_state
-
-    leaky = _LockIgnoring(
-        lock=real.lock,
-        complete_state=real.complete_state,
-        forming_state=real.forming_state,
-    )
-
-    # The real one refuses pre-lock; the leaky one does not. That difference IS the guard.
-    assert real.state_as_of(_open(0)).opening_range_complete is False
-    assert leaky.state_as_of(_open(0)).opening_range_complete is True
-
-    # And the §6.F comparison must actually FAIL against the leaky implementation.
-    baseline_visible = [leaky.state_as_of(_open(m)).opening_range_high for m in range(0, 5)]
-    mutated_real = _build(opening_range_frame=_or_frame_5m(high=133.00, low=66.00))
-    mutated_leaky = _LockIgnoring(
-        lock=mutated_real.lock,
-        complete_state=mutated_real.complete_state,
-        forming_state=mutated_real.forming_state,
-    )
-    mutated_visible = [
-        mutated_leaky.state_as_of(_open(m)).opening_range_high for m in range(0, 5)
-    ]
-    assert baseline_visible != mutated_visible, (
-        "the causality control cannot distinguish a leaking implementation, so it is "
-        "not a causality control"
-    )
 
 
 # ══ 8. THE WIRING — DOES THE MONEY PATH ACTUALLY READ THE ROLE? ══════════════
@@ -586,3 +358,271 @@ def test_red_proof_the_role_combination_guard_is_what_refuses():
     assert_svkm_role_combination(_svkm_roles())  # the honest positive witness
     with pytest.raises(SourceRoleExecutionError):
         assert_svkm_role_combination(_svkm_roles(opening_range_tf="15m"))
+
+
+# == 9. THE PRODUCTION SEAM ITSELF - AR-1115 section 3.2 =====================
+#
+# THE SECTIONS THAT USED TO SIT ABOVE THIS ONE PROVED `build_causal_opening_range`, AND
+#    `[MEASURED, AR-1115 section 2.4]` NOTHING IN PRODUCTION EVER CALLED IT.
+#    SYSTEM-INVENTORY classified it BUILT-UNREACHABLE and a grep for non-test callers
+#    returned none, so AR-1115 section 3.3 deleted it and those sections went with it.
+#
+#      `A SAFETY PROOF ATTACHED TO DEAD CODE IS NOT PRODUCTION EVIDENCE.` (AR-1115 s1)
+#
+# These tests therefore call `_h_opening_range` - the handler the money path dispatches
+# to - and nothing else. They are deliberately FEW, not twenty-five: the ruling asked for
+# the incomplete-window refusal and the causality mutation on the production path, and
+# said in terms not to repeat the helper suite here.
+
+import numpy as np  # noqa: E402
+
+from src.engine.opening_range_candidate import (  # noqa: E402
+    OpeningRangeExecutionCandidate,
+)
+from src.engine.spec_family_bindings import ConditionBinding  # noqa: E402
+
+_OR_CONDITION_ID = "TEST_ONLY:svkm-role-execution"
+
+
+def _prod_candidate() -> OpeningRangeExecutionCandidate:
+    """The sVkm candidate: the taught 5-MINUTE window, owned by THIS condition.
+
+    `source_condition_id` must equal the binding's `condition_id` or the handler refuses
+    on a different rule entirely (the AR-1034 identity join), which would make every
+    assertion below pass for the wrong reason.
+    """
+    return OpeningRangeExecutionCandidate(
+        source_spec_id="TEST_ONLY:svkm",
+        source_condition_id=_OR_CONDITION_ID,
+        definition=DEFINITION,
+        variant=FIVE,
+    )
+
+
+def _prod_binding() -> ConditionBinding:
+    return ConditionBinding(
+        condition_id=_OR_CONDITION_ID,
+        type="OPENING_RANGE_DEFINITION",
+        role="context",
+        object="opening_range",
+        bindable=True,
+        primitive="opening_range_adapter.compute_opening_range_state",
+        approximation=False,
+        executed=True,
+    )
+
+
+def _prod_strategy(*, roles=None, frame=None):
+    """A real `SpecConditionStrategy` executing on 1m, with the sVkm candidate."""
+    from src.engine.spec_condition_compiler import SpecConditionStrategy
+    from src.engine.tests.test_source_vertical_join import _compiled_spec
+
+    return SpecConditionStrategy(
+        compiled_spec=_compiled_spec(),
+        symbol="MES",
+        timeframe="1m",
+        opening_range_candidate=_prod_candidate(),
+        source_timeframe_roles=roles,
+        opening_range_source_frame=frame,
+    )
+
+
+def _prod_ctx(minutes: int = 15) -> dict:
+    """`minutes` one-minute EXECUTION bars from 09:30. Held CONSTANT across mutations."""
+    ts_list = [_open(i) for i in range(minutes)]
+    return {
+        "n": minutes,
+        "ts_list": ts_list,
+        "high": np.array([100.0 + i * 0.05 for i in range(minutes)], dtype=float),
+        "low": np.array([99.5 + i * 0.05 for i in range(minutes)], dtype=float),
+    }
+
+
+def _frame_5m(*, high: float = 100.50, low: float = 99.75, skip_open: bool = False):
+    """The 5m source frame. `skip_open=True` omits the 09:30 candle - the taught window."""
+    stamps = (_open(5), _open(10)) if skip_open else (_open(0), _open(5), _open(10))
+    highs = (100.90, 101.10) if skip_open else (high, 100.90, 101.10)
+    lows = (100.10, 100.40) if skip_open else (low, 100.10, 100.40)
+    return RoleFrame(timeframe="5m", timestamps=stamps, highs=highs, lows=lows)
+
+
+# -- A. PRODUCTION INCOMPLETE-WINDOW REFUSAL (AR-1115 section 3.2 A) ---------
+
+
+def test_PRODUCTION_a_missing_0930_source_bar_REFUSES_not_masks():
+    """AR-1115 section 3.2 A, ON THE PATH THAT RUNS.
+
+    The 5m source frame exists, is correctly labelled and correctly spaced - it simply
+    does not carry the 09:30 candle the source teaches. The adapter therefore returns
+    INCOMPLETE_OPENING_WINDOW, and BEFORE this unit the handler answered that with
+    `continue`: an all-False column indistinguishable from a genuinely quiet day.
+    """
+    from src.engine.family_meta_enforcement import FamilyMetaEnforcementError
+
+    strategy = _prod_strategy(roles=_svkm_roles(), frame=_frame_5m(skip_open=True))
+    with pytest.raises(
+        FamilyMetaEnforcementError, match="ONE COMPLETE taught opening range"
+    ):
+        strategy._h_opening_range(_prod_binding(), _prod_ctx())
+
+
+def test_PRODUCTION_a_session_absent_from_the_source_frame_REFUSES():
+    """The other half of "missing": the source chart does not cover this session AT ALL,
+    so the handler never reaches the adapter. Under a role contract that is still an
+    absent required input, not a quiet day."""
+    from src.engine.family_meta_enforcement import FamilyMetaEnforcementError
+
+    elsewhere = RoleFrame(
+        timeframe="5m",
+        timestamps=tuple(_open(i) + timedelta(days=7) for i in (0, 5, 10)),
+        highs=(100.50, 100.90, 101.10),
+        lows=(99.75, 100.10, 100.40),
+    )
+    strategy = _prod_strategy(roles=_svkm_roles(), frame=elsewhere)
+    with pytest.raises(FamilyMetaEnforcementError, match="NO source bar covers session"):
+        strategy._h_opening_range(_prod_binding(), _prod_ctx())
+
+
+def test_PRODUCTION_the_POSITIVE_WITNESS_the_same_setup_COMPLETE_does_not_refuse():
+    """WITHOUT THIS, BOTH REFUSALS ABOVE ARE SATISFIED BY A HANDLER THAT REFUSES
+    EVERYTHING. The identical instance with the 09:30 bar present must run to completion
+    and produce the taught levels off the 5m frame."""
+    strategy = _prod_strategy(
+        roles=_svkm_roles(), frame=_frame_5m(high=100.50, low=99.75)
+    )
+    out = strategy._h_opening_range(_prod_binding(), _prod_ctx())
+
+    assert out.any(), "the window never became available, so nothing was actually executed"
+    record = strategy._source_or_sessions[SESSION]
+    assert record.or_high == pytest.approx(100.50)
+    assert record.or_low == pytest.approx(99.75)
+
+
+def test_PRODUCTION_LEGACY_no_role_contract_still_MASKS_rather_than_refusing():
+    """THE OTHER SIDE OF THE CONTRACT, AND THE REASON THE REFUSAL IS CONDITIONAL.
+
+    AR-1115 section 3.1: legacy/no-role execution keeps its historical behaviour. The
+    same 1m instance with the same incomplete window and NO role carrier must still
+    return an all-False column - a strategy that never declared a source-owned window
+    taught us nothing about which days are required to have one.
+    """
+    strategy = _prod_strategy(roles=None, frame=None)
+    out = strategy._h_opening_range(_prod_binding(), _prod_ctx(minutes=3))
+
+    assert out.dtype == bool and len(out) == 3
+    assert not out.any(), "legacy behaviour changed: a quiet day is no longer all-False"
+
+
+# -- B. PRODUCTION CAUSALITY MUTATION (AR-1115 section 3.2 B) ----------------
+
+
+def test_PRODUCTION_the_5m_range_cannot_reach_a_pre_lock_1m_bar():
+    """AR-1115 section 3.2 B - NO 1m BAR MAY READ A FUTURE 5m HIGH/LOW, ON PRODUCTION.
+
+    The 1-minute EXECUTION bars are byte-identical between the two runs. The ONLY
+    difference is information INSIDE the 09:30-09:35 source candle: its high moves from
+    100.50 to 133.00, which changes the completed 5m range.
+
+    If the production lock comparison (`ts_list[i] >= lock`) regressed, the 09:30..09:34
+    bars would become available before the candle that defines their range had closed -
+    a bar reading its own future. The availability column must be IDENTICAL across the
+    mutation, and only the post-lock levels may move.
+    """
+    ctx = _prod_ctx()
+
+    baseline = _prod_strategy(roles=_svkm_roles(), frame=_frame_5m(high=100.50))
+    out_base = baseline._h_opening_range(_prod_binding(), ctx)
+
+    mutated = _prod_strategy(roles=_svkm_roles(), frame=_frame_5m(high=133.00))
+    out_mut = mutated._h_opening_range(_prod_binding(), ctx)
+
+    # 1. THE MUTATION ACTUALLY LANDED - otherwise this test compares two identical runs
+    #    and passes on a handler that ignores the source frame entirely.
+    assert baseline._source_or_sessions[SESSION].or_high == pytest.approx(100.50)
+    assert mutated._source_or_sessions[SESSION].or_high == pytest.approx(133.00)
+
+    # 2. THE PRE-LOCK WINDOW IS NON-EMPTY - a vacuous causality assertion is the trap
+    #    here: with no pre-lock bars, "no pre-lock bar leaked" is true of everything.
+    lock_idx = baseline._source_or_sessions[SESSION].lock_idx
+    assert lock_idx == 5, (
+        f"the 5-minute window should lock at the 09:35 bar (index 5), not {lock_idx}; "
+        f"with a different lock this test is no longer measuring causality"
+    )
+    assert not out_base[:lock_idx].any(), "a pre-lock 1m bar was already gated available"
+
+    # 3. AVAILABILITY IS BYTE-IDENTICAL ACROSS THE MUTATION, PRE- AND POST-LOCK.
+    assert np.array_equal(out_base, out_mut), (
+        "changing information inside the 09:30 5m candle changed which 1m bars are "
+        "available - the production handler is leaking future 5m information"
+    )
+    assert mutated._source_or_sessions[SESSION].lock_idx == lock_idx
+
+
+# -- C. ASSERTIONS MIGRATED OFF THE DELETED HELPER (AR-1115 section 3.3) -----
+#
+# `build_causal_opening_range` / `CausalOpeningRange` are DELETED by this unit. Before
+# deleting them I measured each of their unique refusals against the production seam
+# rather than reasoning about it, because deleting a safety assertion with no production
+# twin is a regression wearing the word "cleanup". The three below had real twins and are
+# pinned here so the deletion cannot quietly take them with it.
+#
+# ONE helper refusal is deliberately NOT migrated: the helper refused two frames whose
+# timestamps were expressed in DIFFERENT ZONES, and its own docstring called that
+# "deliberately stricter than the instants require". `[MEASURED]` production accepts the
+# same instants expressed in UTC and produces the identical taught range (or_high 100.50,
+# lock_idx 5), because `astimezone()` recovers the taught session date. That strictness
+# was a property of the helper's representation, not a safety property of the money path.
+#
+#   `A REFUSAL THE PRODUCTION PATH HAS NO REASON TO MAKE IS NOT A SAFETY ASSERTION
+#    YOU ARE LOSING - BUT YOU OWE THE MEASUREMENT THAT SAYS WHICH KIND IT WAS.`
+
+
+def test_PRODUCTION_naive_ET_stamps_mislabelled_as_UTC_REFUSE():
+    """THE REAL DEFECT THE DELETED ZONE TEST WAS PROTECTING AGAINST.
+
+    Wall-clock ET stamps localised as UTC are DIFFERENT INSTANTS - they select a 5m
+    candle four hours from the taught one, and every downstream number stays plausible.
+    Production catches this through the AR-1115 3.1 refusal: the taught 09:30 window has
+    no source bar, so the required source fact is absent and the run refuses.
+    """
+    from src.engine.family_meta_enforcement import FamilyMetaEnforcementError
+
+    mislocalised = RoleFrame(
+        timeframe="5m",
+        timestamps=tuple(_open(i).replace(tzinfo=UTC) for i in (0, 5, 10)),
+        highs=(100.50, 100.90, 101.10),
+        lows=(99.75, 100.10, 100.40),
+    )
+    strategy = _prod_strategy(roles=_svkm_roles(), frame=mislocalised)
+    with pytest.raises(FamilyMetaEnforcementError):
+        strategy._h_opening_range(_prod_binding(), _prod_ctx())
+
+
+def test_PRODUCTION_a_duplicated_0930_source_bar_REFUSES():
+    """AR-1113 section 3.2 - "the opening-range bar cannot be uniquely identified"."""
+    from src.engine.family_meta_enforcement import FamilyMetaEnforcementError
+
+    dup = RoleFrame(
+        timeframe="5m",
+        timestamps=(_open(0), _open(0), _open(5)),
+        highs=(100.50, 100.55, 100.90),
+        lows=(99.75, 99.70, 100.10),
+    )
+    strategy = _prod_strategy(roles=_svkm_roles(), frame=dup)
+    with pytest.raises(FamilyMetaEnforcementError, match="does not match the persisted role"):
+        strategy._h_opening_range(_prod_binding(), _prod_ctx())
+
+
+def test_PRODUCTION_a_frame_labelled_for_the_wrong_role_REFUSES():
+    """A correctly-spaced 5-minute series wearing a `1m` label under a 5m role."""
+    from src.engine.family_meta_enforcement import FamilyMetaEnforcementError
+
+    wrong = RoleFrame(
+        timeframe="1m",
+        timestamps=(_open(0), _open(5), _open(10)),
+        highs=(100.50, 100.90, 101.10),
+        lows=(99.75, 100.10, 100.40),
+    )
+    strategy = _prod_strategy(roles=_svkm_roles(), frame=wrong)
+    with pytest.raises(FamilyMetaEnforcementError, match="does not match the persisted role"):
+        strategy._h_opening_range(_prod_binding(), _prod_ctx())

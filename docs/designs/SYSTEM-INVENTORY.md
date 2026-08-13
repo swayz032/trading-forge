@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `04231a130fb27f33a1157906988a833083f740b6`  (worktree DIRTY at generation time)
+> Generated at commit `25229a80d05c48950d95d86994fb9dc04b6cc71c`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 296 | 382 | 124166 | 1913 |
+| `src/` | Python | 296 | 382 | 124079 | 1911 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -55,7 +55,7 @@ Published so that under-inclusion is visible instead of silent.
 
 | Not enumerated | Count | Why |
 |---|---:|---|
-| Python class methods | 440 | one row per method would swamp the map; a method is reached through its class |
+| Python class methods | 438 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 84 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
 | `src/` test files | 1104 | tests are the reference surface, never the symbol surface |
@@ -198,9 +198,9 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3290 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1545 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4886 rows |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3289 |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1544 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4884 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=94 |
 | C6 | a registered route module is reachable | PASS | modules reachable=624 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
@@ -208,7 +208,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1913 ts=2928 |
+| C12 | symbols enumerated in both languages | PASS | py=1911 ts=2928 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6609/6609 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -224,8 +224,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **218 of 4575 enumerated symbol names (4.8%) are defined in more than one file, covering
-  484 of 4841 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **218 of 4573 enumerated symbol names (4.8%) are defined in more than one file, covering
+  484 of 4839 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -244,12 +244,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3290 | 67.3% |
+| `WIRED` | 3289 | 67.3% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1545 | 31.6% |
+| `BUILT-UNREACHABLE` | 1544 | 31.6% |
 | `DECLARED-ABSENT` | 38 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4886** | |
+| **TOTAL** | **4884** | |
 
 ---
 
@@ -391,7 +391,7 @@ table below it.**
 | `src/engine/stress_test.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/surface_code_encoder.py` | 3 | 0 | 1 | 0 | 0 | 4 |
 | `src/engine/survival` | 15 | 0 | 0 | 0 | 0 | 15 |
-| `src/engine/svkm_role_execution.py` | 5 | 0 | 1 | 0 | 0 | 6 |
+| `src/engine/svkm_role_execution.py` | 4 | 0 | 0 | 0 | 0 | 4 |
 | `src/engine/synthetic` | 8 | 0 | 1 | 0 | 0 | 9 |
 | `src/engine/synthetic_market_simulator.py` | 0 | 0 | 13 | 0 | 0 | 13 |
 | `src/engine/tensor_signal_model.py` | 12 | 0 | 1 | 0 | 0 | 13 |
@@ -973,7 +973,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1545** `BUILT-UNREACHABLE` symbols, **779 have test coverage but no production caller**.
+Of **1544** `BUILT-UNREACHABLE` symbols, **778 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1288,7 +1288,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | 1 | unique |
 | `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
 
-_...479 more omitted from this table._
+_...478 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -2407,14 +2407,6 @@ _...479 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `circuit_to_qasm` | function | `src/engine/surface_code_encoder.py:223` | no non-test reference outside its own definition |
-
-</details>
-
-<details><summary><code>src/engine/svkm_role_execution.py</code> - 1 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `build_causal_opening_range` | function | `src/engine/svkm_role_execution.py:268` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 
 </details>
 
@@ -4675,10 +4667,10 @@ This is the *we already have this* list.  Check it before writing anything.
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `OpeningRangeBar` | class | `src/engine/opening_range_adapter.py:96` | 2 | unique |
+| `OpeningRangeBar` | class | `src/engine/opening_range_adapter.py:96` | 1 | unique |
 | `_window_bounds` | function | `src/engine/opening_range_adapter.py:133` | 1 | unique |
 | `_aggregate_levels` | function | `src/engine/opening_range_adapter.py:184` | 0 | unique |
-| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | 2 | unique |
+| `compute_opening_range_state` | function | `src/engine/opening_range_adapter.py:237` | 1 | unique |
 
 </details>
 
@@ -4720,11 +4712,11 @@ This is the *we already have this* list.  Check it before writing anything.
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `OpeningRangeWindowStatus` | class | `src/engine/opening_range_definition.py:65` | 2 | unique |
+| `OpeningRangeWindowStatus` | class | `src/engine/opening_range_definition.py:65` | 1 | unique |
 | `OpeningRangeProvenance` | class | `src/engine/opening_range_definition.py:88` | 2 | unique |
-| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | 5 | unique |
-| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 5 | unique |
-| `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | 2 | unique |
+| `OpeningRangeVariant` | class | `src/engine/opening_range_definition.py:105` | 4 | unique |
+| `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 4 | unique |
+| `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | 1 | unique |
 | `classify_opening_range_definition` | function | `src/engine/opening_range_definition.py:384` | 1 | unique |
 
 </details>
@@ -5319,7 +5311,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `candle_confirmation_check` | function | `src/engine/spec_condition_compiler.py:450` | 0 | unique |
 | `_bars_to_ts_list` | function | `src/engine/spec_condition_compiler.py:478` | 1 | unique |
 | `SpecConditionStrategy` | class | `src/engine/spec_condition_compiler.py:494` | 1 | unique |
-| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2784` | 8 | unique |
+| `from_compiled_spec` | function | `src/engine/spec_condition_compiler.py:2832` | 8 | unique |
 
 </details>
 
@@ -5493,15 +5485,14 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/svkm_role_execution.py</code> - 5 symbols</summary>
+<details><summary><code>src/engine/svkm_role_execution.py</code> - 4 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
-| `SourceRoleExecutionError` | class | `src/engine/svkm_role_execution.py:83` | 1 | unique |
-| `parse_minutes` | function | `src/engine/svkm_role_execution.py:107` | 1 | unique |
-| `assert_svkm_role_combination` | function | `src/engine/svkm_role_execution.py:133` | 1 | unique |
-| `RoleFrame` | class | `src/engine/svkm_role_execution.py:158` | 1 | unique |
-| `CausalOpeningRange` | class | `src/engine/svkm_role_execution.py:237` | 0 | unique |
+| `SourceRoleExecutionError` | class | `src/engine/svkm_role_execution.py:86` | 1 | unique |
+| `parse_minutes` | function | `src/engine/svkm_role_execution.py:110` | 1 | unique |
+| `assert_svkm_role_combination` | function | `src/engine/svkm_role_execution.py:136` | 1 | unique |
+| `RoleFrame` | class | `src/engine/svkm_role_execution.py:161` | 1 | unique |
 
 </details>
 

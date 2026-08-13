@@ -45,32 +45,35 @@ NO SECOND CALCULATOR
 --------------------
 The range arithmetic is delegated to `opening_range_adapter.compute_opening_range_state`,
 the module the desk already audited (R-736 §5-1: `A SECOND CALCULATOR AGREES WITH THE
-FIRST UNTIL THE DAY IT DOES NOT`). This file contributes the ROLE BINDING and the CAUSAL
-GATE, and no max/min of its own.
+FIRST UNTIL THE DAY IT DOES NOT`). This file contributes the ROLE BINDING and the FRAME
+VALIDATION, and no max/min of its own.
 
-CAUSALITY IS THE WHOLE SAFETY ARGUMENT (AR-1113 §3.1, §6.F)
-------------------------------------------------------------
-The 5m range may become visible to the 1m path only AFTER the source 5m candle is
-complete. No 1m bar may read a future 5m high/low. The lock instant is the boundary and
-it is half-open `[start, lock)` — the 1m bar stamped exactly at `lock` is the first bar
-permitted to see levels, because by then the 5m candle it summarises has closed.
+🛑 THE CAUSAL GATE IS NOT IN THIS FILE, AND SAYING SO IS THE POINT (AR-1115 §3.3)
+---------------------------------------------------------------------------------
+It once was, in `CausalOpeningRange` — and `[MEASURED, AR-1115 §2.4]` NOTHING IN
+PRODUCTION EVER CALLED IT. SYSTEM-INVENTORY classified it BUILT-UNREACHABLE while this
+module's suite red-proofed it heavily, so the campaign held a well-tested causal
+implementation and a separately-written live one, and only the dead one was being
+examined.
+
+    ★★★★★ `A SAFETY PROOF ATTACHED TO DEAD CODE IS NOT PRODUCTION EVIDENCE — AND THE
+       BETTER ITS PROOFS LOOK, THE LONGER NOBODY CHECKS THE PATH THAT RUNS.`
+
+The causal gate that ACTUALLY EXECUTES lives in
+`spec_condition_compiler._h_opening_range`: the lock comes from the opening-range
+adapter's own `_window_bounds`, and no execution bar is marked available until
+`ts_list[i] >= lock`. The rule it enforces is unchanged and still the whole safety
+argument — the 5m range may become visible to the 1m path only AFTER the source candle
+is complete, half-open `[start, lock)` — but the proofs for it are now attached to that
+handler, in `tests/test_svkm_role_execution.py` §9.B, not to this file.
 """
 
 from __future__ import annotations
 
 import dataclasses
 import re
-from collections.abc import Sequence
-from datetime import date, datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta
 
-from src.engine.opening_range_adapter import OpeningRangeBar, compute_opening_range_state
-from src.engine.opening_range_definition import (
-    OpeningRangeDefinition,
-    OpeningRangeState,
-    OpeningRangeVariant,
-    OpeningRangeWindowStatus,
-)
 from src.engine.source_timeframe_roles import (
     BREAKOUT_CONFIRMATION,
     ENTRY_COMPLETION,
@@ -233,167 +236,29 @@ class RoleFrame:
         return "|".join(sorted({str(ts.utcoffset()) for ts in self.timestamps}))
 
 
-@dataclasses.dataclass(frozen=True)
-class CausalOpeningRange:
-    """The 5m opening range, and the instant before which the 1m path may not see it.
-
-    THE CAUSAL GATE LIVES HERE AND NOWHERE ELSE. A caller cannot reach the levels
-    without passing an instant, so "read the range" and "prove you are allowed to" are
-    the same call. An attribute holding bare levels would be readable from any bar.
-    """
-
-    lock: datetime
-    complete_state: OpeningRangeState
-    forming_state: OpeningRangeState
-
-    def state_as_of(self, as_of: datetime) -> OpeningRangeState:
-        """The OR state legally visible to an execution bar at `as_of`.
-
-        Half-open `[start, lock)`: a 1m bar stamped exactly at `lock` is the FIRST that
-        may see levels, because the 5m candle it summarises has closed by then.
-        """
-        if as_of.tzinfo is None or as_of.utcoffset() is None:
-            raise SourceRoleExecutionError(
-                f"as_of {as_of!r} is timezone-naive; availability cannot be decided "
-                "against an instant that has no zone"
-            )
-        if as_of < self.lock:
-            return self.forming_state
-        return self.complete_state
-
-    def is_available_at(self, as_of: datetime) -> bool:
-        return self.state_as_of(as_of).opening_range_complete
-
-
-def build_causal_opening_range(
-    *,
-    roles: SourceTimeframeRoles,
-    definition: OpeningRangeDefinition,
-    variant: OpeningRangeVariant,
-    opening_range_frame: RoleFrame,
-    execution_frame: RoleFrame,
-    session_date: date,
-) -> CausalOpeningRange:
-    """The sVkm 5m opening range, gated so no 1m bar can read it early.
-
-    Every branch below is a REFUSAL. There is deliberately no path that returns a
-    usable range from an incomplete, mislabelled, or mismatched input, and no path that
-    consults `strategy.timeframe`, `trigger_tf`, or a lowest-timeframe rule — AR-1113
-    §3.2 forbids the fallback by name, and the way to forbid a fallback is not to write
-    one.
-
-        `NO "BEST EFFORT" SUBSTITUTION IS AUTHORISED ON SOURCE_FAITHFUL.` (AR-1113 §3.2)
-    """
-    # ── 1. The role set must be sVkm's, by VALUE ─────────────────────────────
-    assert_svkm_role_combination(roles)
-
-    or_timeframe = roles.timeframe_for(OPENING_RANGE_WINDOW)
-    exec_timeframe = roles.timeframe_for(BREAKOUT_CONFIRMATION)
-
-    # ── 2. The supplied frames must be the frames the ROLES asked for ────────
-    # Declared-vs-declared first (cheap, catches a caller wiring the frames to the
-    # wrong roles), then declared-vs-actual (`verify_spacing`, which is the one that
-    # can catch a mislabelled series).
-    if opening_range_frame.timeframe.strip() != or_timeframe.strip():
-        raise SourceRoleExecutionError(
-            f"OPENING_RANGE_WINDOW declares {or_timeframe!r} but the supplied "
-            f"opening-range frame is {opening_range_frame.timeframe!r}. The persisted "
-            "role carrier and the actual supplied frame disagree (AR-1113 §3.2)."
-        )
-    if execution_frame.timeframe.strip() != exec_timeframe.strip():
-        raise SourceRoleExecutionError(
-            f"the 1m execution roles declare {exec_timeframe!r} but the supplied "
-            f"execution frame is {execution_frame.timeframe!r}. The persisted role "
-            "carrier and the actual supplied frame disagree (AR-1113 §3.2)."
-        )
-    opening_range_frame.verify_spacing()
-    execution_frame.verify_spacing()
-
-    # ── 3. The two frames must describe the same session ─────────────────────
-    if opening_range_frame.zone_key() != execution_frame.zone_key():
-        raise SourceRoleExecutionError(
-            "the 1m execution frame and the 5m opening-range frame disagree on "
-            f"timezone identity ({execution_frame.zone_key()!r} vs "
-            f"{opening_range_frame.zone_key()!r}); joining them would align the range "
-            "to the wrong hour (AR-1113 §3.2). REFUSING."
-        )
-
-    zone = ZoneInfo(definition.source_timezone)
-    frame_offsets = {str(ts.utcoffset()) for ts in opening_range_frame.timestamps}
-    taught_offsets = {
-        str(ts.astimezone(zone).utcoffset())
-        for ts in opening_range_frame.timestamps
-    }
-    if frame_offsets != taught_offsets:
-        raise SourceRoleExecutionError(
-            f"the supplied frames sit at offsets {sorted(frame_offsets)} but the taught "
-            f"source timezone {definition.source_timezone!r} puts those instants at "
-            f"{sorted(taught_offsets)}; the session identity the teacher taught and the "
-            "one the data carries are different (AR-1113 §3.2). REFUSING."
-        )
-
-    # ── 4. Delegate the arithmetic. NO SECOND CALCULATOR. ────────────────────
-    or_interval = parse_minutes(or_timeframe)
-    bars: Sequence[OpeningRangeBar] = tuple(
-        OpeningRangeBar(timestamp=ts, high=h, low=lo)
-        for ts, h, lo in zip(
-            opening_range_frame.timestamps,
-            opening_range_frame.highs,
-            opening_range_frame.lows,
-            strict=True,
-        )
-    )
-
-    # The lock instant is recomputed by the SAME rule the adapter uses, and then
-    # PROVEN below by asking the adapter itself — see the equivalence assertion.
-    hour_text, _, minute_text = definition.session_start_local.partition(":")
-    start = datetime(
-        session_date.year,
-        session_date.month,
-        session_date.day,
-        int(hour_text),
-        int(minute_text),
-        tzinfo=zone,
-    )
-    lock = start + timedelta(minutes=variant.duration_minutes)
-
-    complete_state = compute_opening_range_state(
-        definition,
-        variant,
-        bars,
-        session_date=session_date,
-        bar_interval_minutes=or_interval,
-        as_of=lock,
-    )
-    forming_state = compute_opening_range_state(
-        definition,
-        variant,
-        bars,
-        session_date=session_date,
-        bar_interval_minutes=or_interval,
-        as_of=start,
-    )
-
-    # ── 5. An incomplete 5m window REFUSES; it does not execute on a gap ─────
-    # The adapter returns a refusal STATE (every numeric field None) for a missing,
-    # duplicated or off-grid window. On SOURCE_FAITHFUL that state may not simply flow
-    # onward as "no signal today" — AR-1113 §3.2 lists *"the 5m source bar is missing or
-    # incomplete"* and *"the opening-range bar cannot be uniquely identified"* as
-    # refusals. Converting the state into a raise here is what makes them refusals.
-    if not complete_state.opening_range_complete:
-        raise SourceRoleExecutionError(
-            "the 5m opening-range window did not complete: "
-            f"{complete_state.opening_range_window_status.value}. The source 5m bar is "
-            "missing, duplicated, off-grid or non-finite, so the taught range cannot be "
-            "identified (AR-1113 §3.2). REFUSING rather than executing 1m bars against "
-            "a range that was never established."
-        )
-    if forming_state.opening_range_window_status is not OpeningRangeWindowStatus.FORMING:
-        raise SourceRoleExecutionError(
-            "the adapter did not report FORMING before the lock instant; the causal "
-            "gate cannot be trusted if the pre-lock state is not a refusal"
-        )
-
-    return CausalOpeningRange(
-        lock=lock, complete_state=complete_state, forming_state=forming_state
-    )
+# ── AR-1115 §3.3 — `CausalOpeningRange` / `build_causal_opening_range` DELETED HERE ──
+#
+# They were a SECOND causal implementation, tested heavily and called by nothing:
+# SYSTEM-INVENTORY classified `build_causal_opening_range` BUILT-UNREACHABLE and a grep
+# for non-test callers returned none. Production causality lives in
+# `spec_condition_compiler._h_opening_range`'s own lock loop, and AR-1115 §2.5 ruled that
+# the helper's ablations therefore proved the helper, not the money path.
+#
+#   ★★★★★ `A SAFETY PROOF ATTACHED TO DEAD CODE IS NOT PRODUCTION EVIDENCE — AND TWO
+#      IMPLEMENTATIONS OF ONE RULE AGREE UNTIL THE DAY THE LIVE ONE CHANGES ALONE.`
+#
+# Every unique refusal it carried was MEASURED against the production seam before it was
+# removed, not argued about, and each real one is now pinned by a `test_PRODUCTION_*`
+# test in `tests/test_svkm_role_execution.py` §9.C:
+#
+#   duplicated 09:30 bar            -> REFUSES in production (`verify_spacing`)
+#   frame labelled for a wrong role -> REFUSES in production (label check)
+#   naive ET stamps read as UTC     -> REFUSES in production (AR-1115 §3.1 incomplete)
+#   missing 09:30 candle            -> REFUSES in production (AR-1115 §3.1 incomplete)
+#   two frames in different zones   -> production ACCEPTS, and is RIGHT to: the same
+#                                      instants in UTC yield the identical taught range.
+#                                      That refusal was representation strictness, which
+#                                      the helper's own docstring admitted.
+#
+# What survives here is exactly what production calls: `SourceRoleExecutionError`,
+# `parse_minutes`, `assert_svkm_role_combination`, `RoleFrame`.
