@@ -1,29 +1,32 @@
 """SPINE-D guards — AR-1121 §4.D / AR-1125 §6.D: the direct source frame supplier.
 
-🛑 WHAT THIS SUITE DOES **NOT** PROVE, STATED FIRST
----------------------------------------------------
-**It is NOT a real-data witness.** `[MEASURED 2026-08-13]` real 5m cannot be loaded
-through the production path on this box: `load_ohlcv` prefers a local cache gated by a
-**24h TTL** (`_is_cache_fresh`), `data_cache/ES/ratio_adj/5min.parquet` is **554.8 hours
-old**, so the loader falls through to S3 and `_check_s3_read_config` refuses for missing
-`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`.
-
-That refusal is itself real and is asserted below. The SUCCESS path is exercised with an
-injected series and is labelled SYNTHETIC everywhere it appears. **A real 5m frame
-traversing this supplier remains UNPROVEN and is not claimed.**
-
-    ★★★★★ `I READ THE PARQUET FILES ON DISK AND CONCLUDED THE LOADER COULD SERVE THEM.
-       THE FILES WERE THERE; THE LOADER WENT TO S3. MEASURE THE RESOLVER, NOT THE ASSET.`
-
-WHAT IT DOES PROVE: the supplier reads the taught chart's OWN series, never aggregates
-one, and REFUSES rather than falling back to the execution frame — which matters because
+WHAT IS PROVEN, AND BY WHICH KIND OF EVIDENCE
+----------------------------------------------
+Most cases here are STRUCTURAL and use an INJECTED series, labelled SYNTHETIC where it
+appears: the supplier reads the taught chart's OWN series, never aggregates one, and
+REFUSES rather than falling back to the execution frame — which matters because
 `[AR-1113 §3.2]` for this source the fallback can produce the RIGHT number, and that is
 precisely why it may not happen silently.
+
+**The REAL-market-data witness is `test_D_REAL_1_...`, opt-in behind
+`TF_REAL_DATA_WITNESS=1`** (AR-1133 §3/§5.2). `[MEASURED 2026-08-13]` it passes on real
+MES 2024-03-04..08: 1308 real 5m bars supplied to a strategy executing on 6536 real 1m
+bars, two SEPARATE direct loader reads, no resampling.
+
+⚠️ **AN EARLIER VERSION OF THIS DOCSTRING SAID REAL 5m COULD NOT BE LOADED HERE. THAT WAS
+WRONG.** I concluded it from a stale-cache/S3 refusal without checking that the AWS
+credentials sat unexported in `.env` — the operator caught it. Both the claim and the
+sentinel test that encoded it have been removed.
+
+    ★★★★★ `I READ THE PARQUET FILES ON DISK AND CONCLUDED THE LOADER COULD SERVE THEM;
+       THEN I READ THE LOADER'S ERROR AND CONCLUDED THE DATA DID NOT EXIST. BOTH TIMES I
+       MEASURED SOMETHING ADJACENT TO THE QUESTION. MEASURE THE RESOLVER, NOT THE ASSET.`
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import os
 
 import polars as pl
 import pytest
@@ -168,42 +171,42 @@ def test_supplier_source_contains_no_aggregation(banned):
     assert banned not in executable
 
 
-def test_REAL_loader_path_refuses_today_and_the_REASON_matters():
-    """THE HONEST STATE, asserted rather than described — and the reason CHANGED.
+@pytest.mark.skipif(
+    os.environ.get("TF_REAL_DATA_WITNESS") != "1",
+    reason=(
+        "OPT-IN real-market-data witness (AR-1133 §3). Requires exported AWS credentials "
+        "or a fresh data_cache. Run with TF_REAL_DATA_WITNESS=1."
+    ),
+)
+def test_D_REAL_1_real_5m_frame_reaches_a_1m_executing_strategy():
+    """D-REAL-1 — THE REAL WITNESS. No fixture may satisfy this (AR-1133 §5.2).
 
-    `[MEASURED 2026-08-13]` the first reading of this was wrong. I reported real 5m as
-    unloadable because `load_ohlcv` fell through a stale cache to S3 and refused for
-    missing AWS credentials. **The credentials were in `.env` all along**; Python simply
-    does not auto-load it. With them exported, `load_ohlcv('MES','5m',...)` returns
-    **1308 real bars**, tz-aware, quality gate passed.
+    `[MEASURED 2026-08-13, exported creds, MES 2024-03-04..08]`:
 
-    🛑 THE REAL BLOCKER IS DOWNSTREAM OF THE DATA, AND IT IS OURS:
-    `RoleFrame.verify_spacing()` requires EVERY consecutive gap to equal the timeframe
-    exactly. Real futures data cannot satisfy that. `[MEASURED]` over 2024-03-04..08:
+        real 5m series      1308 bars   (gaps 5.0 x1303, 65.0 x4 — the CME halt)
+        real 1m series      6536 bars
+        verify_spacing()    PASSED under the AR-1133 §5.1 predicate
+        frame attached      strategy.opening_range_source_frame is the returned frame
+        no resampling       the 5m came from its OWN load_ohlcv("MES","5m") read
 
-        5m: 1308 bars — gaps  5.0 x1303,  65.0 x4
-        1m: 6536 bars — gaps  1.0 x6527,  2.0 x4,  61.0 x4
-
-    The four large gaps are the CME daily maintenance halt (17:00-18:00 ET). The sampling
-    is CORRECT; the predicate cannot distinguish a legitimate session break from wrong
-    sampling, because it was red-proofed only against synthetic contiguous fixtures.
-
-        ★★★★★ `A GUARD THAT HAS ONLY EVER SEEN FIXTURES IS AN UNTESTED HYPOTHESIS ABOUT
-           PRODUCTION, AND THE CLEANER ITS FIXTURES THE LONGER THAT GOES UNNOTICED.`
-
-    NOT repaired here: widening the predicate is a SEMANTIC decision about what counts as
-    a legitimate break, on a safety guard, and it is reported to GPT rather than taken
-    unilaterally (AR-1130). The obvious candidate — every gap a positive INTEGER MULTIPLE
-    of the timeframe — would admit 65=13x5 while still convicting a 1m series labelled 5m
-    (1 is not a multiple of 5), so the discriminator survives. That remains GPT's call.
-
-    This test asserts the refusal WITHOUT credentials (the state of a bare test run) and
-    is deliberately tolerant of either failure mode, because both are real refusals.
+    🛑 THIS REPLACED A SENTINEL THAT ENCODED "CREDENTIALS MUST BE ABSENT" AS PRODUCT
+    BEHAVIOUR. That test asserted the loader REFUSES, which was true only while the
+    credentials sat unexported in `.env`; once they were exported it failed — correctly,
+    but a generic regression test must never depend on whether operator secrets happen
+    to be present (AR-1133 §3). It is now an explicit opt-in integration witness.
     """
-    from src.engine.data_loader import DataLoadConfigError
-
     strategy = _Strategy("1m")
-    with pytest.raises((ValueError, DataLoadConfigError)):
-        _supply_opening_range_source_frame(strategy, _roles("5m"), "MES", "2024-03-04", "2024-03-08")
+    frame = _supply_opening_range_source_frame(
+        strategy, _roles("5m"), "MES", "2024-03-04", "2024-03-08"
+    )
 
-    assert strategy.opening_range_source_frame is None
+    assert frame is not None and strategy.opening_range_source_frame is frame
+    assert frame.timeframe == "5m"
+    assert len(frame.highs) > 100, "a real week of 5m bars, not a stub"
+    assert all(ts.tzinfo is not None for ts in frame.timestamps)
+
+    # The execution frame is REAL 1m and is a SEPARATE read — the whole point of D.
+    from src.engine.data_loader import load_ohlcv
+
+    exec_df = load_ohlcv("MES", "1m", "2024-03-04", "2024-03-08")
+    assert len(exec_df) > len(frame.highs), "1m must be finer-grained than the 5m source"

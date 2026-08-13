@@ -72,7 +72,7 @@ from __future__ import annotations
 
 import dataclasses
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from src.engine.source_timeframe_roles import (
     BREAKOUT_CONFIRMATION,
@@ -215,15 +215,51 @@ class RoleFrame:
                 f"frame {self.timeframe!r} contains duplicate timestamps; which bar is "
                 "the truth is not a question this adapter may answer by picking one"
             )
+        # ─── AR-1133 §5.1 — THE GRID PREDICATE, REPAIRED AGAINST REAL FUTURES DATA ───
+        # The original rule was `every gap == timeframe`. `[MEASURED 2026-08-13]` NO REAL
+        # futures series can satisfy it: MES 5m over 2024-03-04..08 is 1308 bars with
+        # gaps `5.0 x1303` and `65.0 x4`, the four 65s being the CME daily maintenance
+        # halt (17:00-18:00 ET). The sampling was CORRECT and the predicate was wrong —
+        # it could not tell a legitimate session break from wrong sampling, because it
+        # had only ever been red-proofed against synthetic CONTIGUOUS fixtures.
+        #
+        #   ★★★★★ `A GUARD THAT HAS ONLY EVER SEEN FIXTURES IS AN UNTESTED HYPOTHESIS
+        #      ABOUT PRODUCTION — AND THE CLEANER ITS FIXTURES, THE LONGER THAT HOLDS.`
+        #
+        # 🛑 THE EXACT-GAP WITNESS IS NOT REDUNDANT, AND IT CLOSES A HOLE MY OWN FIRST
+        # PROPOSAL HAD. "Integer multiple" alone accepts a pure 10m series labelled 5m,
+        # since every 10m gap is a multiple of 5. Requiring at least ONE gap to equal the
+        # declared timeframe exactly forces the series to actually be ON that grid rather
+        # than merely compatible with it (AR-1133 §5.1).
+        #
+        # SCOPE, STATED SO IT IS NOT OVER-READ: this proves CADENCE/GRID compatibility.
+        # It does NOT prove bar-content provenance — that comes from
+        # `_supply_opening_range_source_frame()` requesting the role's own timeframe from
+        # the production loader, plus the no-resampling guard.
+        saw_exact_gap = False
         for earlier, later in zip(self.timestamps, self.timestamps[1:], strict=False):
             gap = later - earlier
-            if gap != timedelta(minutes=expected):
+            total_seconds = gap.total_seconds()
+            expected_seconds = expected * 60
+            if total_seconds <= 0 or total_seconds % expected_seconds != 0:
                 raise SourceRoleExecutionError(
                     f"frame declared {self.timeframe!r} has a {gap} gap between "
-                    f"{earlier.isoformat()} and {later.isoformat()}; the declared role "
-                    "timeframe and the supplied series disagree (AR-1113 §3.2). "
-                    "REFUSING rather than aggregating a series of unknown sampling."
+                    f"{earlier.isoformat()} and {later.isoformat()}, which is not a whole "
+                    f"multiple of {expected}m; the declared role timeframe and the supplied "
+                    "series disagree (AR-1113 §3.2). REFUSING rather than aggregating a "
+                    "series of unknown sampling."
                 )
+            if total_seconds == expected_seconds:
+                saw_exact_gap = True
+
+        if not saw_exact_gap:
+            raise SourceRoleExecutionError(
+                f"frame declared {self.timeframe!r} contains NO adjacent gap of exactly "
+                f"{expected}m — every gap is a larger multiple. A coarser series is "
+                "arithmetically compatible with a finer grid (a 10m series 'fits' 5m), so "
+                "without one exact-cadence witness this frame cannot be shown to be on "
+                f"the {self.timeframe!r} grid at all. REFUSING (AR-1133 §5.1)."
+            )
 
     def zone_key(self) -> str:
         """The frame's UTC offsets, as the identity two frames must agree on.
