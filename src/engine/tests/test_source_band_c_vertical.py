@@ -554,3 +554,95 @@ class TestExitTimestampIsTheManagedExit:
         t = result["trades"][0]
         assert t["entry_timestamp"] == t["Entry Timestamp"]
         assert datetime.fromisoformat(t["Entry Timestamp"]) == DECISION_TS
+
+
+class TestTheHousePolicyCannotReachTheSourceTrade:
+    """AR-1089 §4 — items 11 and 14 as PERMANENT BEHAVIOR GUARDS, not ablations.
+
+    🛑 I HAD CALLED THESE "ABLATION-SHAPED" AND UN-TESTABLE. That was wrong, and the mistake
+    was reasoning from HOW I HAD BEEN PROVING THEM rather than from WHAT WOULD CHANGE IF THE
+    DEFECT RETURNED. A committed test never needed to mutate production code — it needed a
+    FIXTURE whose observable result moves. `I CLASSIFIED THE GUARD BY MY OWN METHOD INSTEAD
+    OF BY THE DEFECT.`
+
+    ⚠️ THE CANONICAL FIXTURE CANNOT DISCRIMINATE EITHER OF THEM, which is exactly why they
+    needed their own. `[MEASURED]` the MES house ceiling is 14.0 and the floor 6.0; the
+    canonical taught risk is 7.5 — comfortably between them, so neither clamp is reachable
+    and a test on that fixture would pass on an engine that clamped hard.
+    `A FIXTURE THAT NEVER CROSSES THE THRESHOLD CANNOT WITNESS THE THRESHOLD.`
+    """
+
+    def test_11_a_taught_risk_LARGER_than_the_house_ceiling_survives_intact(self):
+        """§10 discriminator 11 — the shape the independent grader supplied.
+
+        The displacement wick is dropped to 100.0, making the taught risk 19.0 — above the
+        MES ceiling of 14.0. Under the house clamp this trade would carry 14.0 points of risk
+        and a target measured off it. It must instead carry the full taught distance, and the
+        2R target must be measured off THAT.
+
+        ─── HONEST SCOPE, MEASURED RATHER THAN CLAIMED ────────────────────────────────────
+        🛑 THIS TEST GUARDS A COMBINATION, NOT EITHER HALF. The taught risk is protected on
+        this route by TWO independent mechanisms, and I found that out by ablating rather than
+        by reading:
+
+          (a) `_resolve_stop_risk_points` returns the exact distance under `source_faithful`
+              BEFORE the clamp branch is reached; and
+          (b) `_apply_source_fixed_r_management` passes `stop_ceiling=float("inf")` anyway.
+
+        `[MEASURED]` removing (a) alone -> this test STAYS GREEN (the ceiling is `inf`).
+        Removing (b) alone -> STAYS GREEN (the early return fires first). Removing BOTH ->
+        RED. So a single-mechanism regression here would be caught by the unit-level
+        `TestTheStopCommandIsExact` suite, NOT by this test.
+
+        I originally wrote this as though it witnessed the clamp being refused. It does not.
+        ★ `A GUARD BEHIND TWO INDEPENDENT DEFENCES WITNESSES NEITHER OF THEM ALONE — AND
+           IT WILL READ AS THOUGH IT WITNESSES BOTH.`
+        """
+        from src.engine.backtester import _get_stop_ceiling_for_symbol
+        ceiling = _get_stop_ceiling_for_symbol("MES")
+
+        rows = [list(r) for r in _SESSION]
+        rows[7] = [111.6, 119.0, 100.0, 118.5]    # displacement wick -> taught stop 100.0
+        rows[11] = [120.5, 158.0, 120.0, 157.5]   # reaches the 2R target of 157.0
+        taught_risk = ENTRY_PRICE - 100.0         # 19.0
+        assert taught_risk > ceiling, (
+            f"POSITIVE WITNESS FAILED: taught risk {taught_risk} does not exceed the house "
+            f"ceiling {ceiling}, so this fixture cannot witness a clamp at all"
+        )
+
+        result, _out = _run(_config(), bars=_bars_from([tuple(r) for r in rows]))
+        t = (result.get("trades") or [None])[0]
+        assert t is not None, f"no trade; error={result.get('error')!r}"
+        assert t["risk_points"] == pytest.approx(taught_risk), (
+            f"the taught stop was clamped to {t['risk_points']} (house ceiling {ceiling})"
+        )
+        assert t["stop_basis"] == "source_exact"
+        assert t["Avg Exit Price"] == pytest.approx(ENTRY_PRICE + 2.0 * taught_risk), (
+            "the target was measured off a clamped risk rather than the taught one"
+        )
+
+    def test_14_a_price_path_that_would_trip_STYLE_C_TP1_still_exits_whole_at_the_target(self):
+        """§10 discriminator 14 — the shape AR-1089 §4 supplied: make the MARKET discriminate
+        the two behaviours instead of mutating the engine.
+
+        Bar 10's high is raised to 127.0, which is past 1R (119.0 + 7.5 = 126.5) and short of
+        2R. Style C would take its first partial there, leaving a reduced position and a
+        `tp1` exit reason on the record. The source contract has no partials: the position
+        must still be whole and must still exit once, at the teacher's 2R target.
+        """
+        one_r = ENTRY_PRICE + RISK_POINTS
+        rows = [list(r) for r in _SESSION]
+        rows[10] = [119.5, 127.0, 119.0, 120.5]
+        assert rows[10][1] > one_r, (
+            "POSITIVE WITNESS FAILED: the fixture never reaches 1R, so a Style-C partial "
+            "would not have fired even on an engine that ran the ladder"
+        )
+        assert rows[10][1] < TARGET_2R, "the fixture reaches 2R early; it tests nothing"
+
+        result, _out = _run(_config(), bars=_bars_from([tuple(r) for r in rows]))
+        t = (result.get("trades") or [None])[0]
+        assert t is not None, f"no trade; error={result.get('error')!r}"
+        assert t["Size"] == 1.0, "the position was reduced — a partial reached the source arm"
+        assert t["exit_reason"] == "source_fixed_r_target"
+        assert t["Avg Exit Price"] == TARGET_2R
+        assert len(result["trades"]) == 1, "the position was split into more than one record"
