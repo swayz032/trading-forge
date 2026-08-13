@@ -3942,6 +3942,159 @@ def _apply_dsl_stop_loss_and_time_stop(
     return entry_long_out, exit_long_out, entry_short_out, exit_short_out, metadata
 
 
+def _apply_source_faithful_occupancy(
+    entry_long: np.ndarray,
+    exit_long: np.ndarray,
+    entry_short: np.ndarray,
+    exit_short: np.ndarray,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    open_np: Optional[np.ndarray],
+    structural_stop_map: dict | None,
+    r_multiple: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
+    """AR-1092 §5 — THE SOURCE-MANAGED TRADE MUST RELEASE THE POSITION (F-4).
+
+    ─── THE DEFECT THIS CLOSES ─────────────────────────────────────────────────────────────
+    `[MEASURED, AR-1093 Q1]` occupancy is owned by `vbt.Portfolio.from_signals`, and the source
+    arm never sets `exit_long` — `exit_long` is framework-owned and no source strategy writes
+    it. So vectorbt opened on the FIRST source entry, never saw a reason to close, and ignored
+    every later event; `_apply_source_fixed_r_management` then retrofitted the taught stop and
+    target onto the single record vectorbt had made. The independent grade measured the
+    consequence: **40 valid source entry events -> 1 executed trade.**
+
+    ★ `THE SOURCE ENGINE WAS DOWNSTREAM OF THE DECISION IT NEEDED TO INFLUENCE. IT COULD
+       RE-PRICE THE ONE TRADE VECTORBT MADE; IT COULD NOT CREATE THE TRADES VECTORBT REFUSED.`
+
+    ─── WHY THIS IS NOT A SECOND BACKTESTER (AR-1092 §9.1, §9.7) ────────────────────────────
+    This is the same shape `_apply_dsl_stop_loss_and_time_stop` (above) has always used for the
+    house ATR stop: a forward bar loop that holds `in_long`/`in_short`, writes an exit into the
+    signal array when a level fixed AT ENTRY is breached, and clears occupancy so a later entry
+    survives. That function is BYPASSED under SOURCE_FAITHFUL because its CONTENT is the house
+    ceiling and the 15:55 flatten — neither taught. ⚠️ The bypass gave up the house RULES and,
+    silently, the OCCUPANCY RELEASE with them, and nothing replaced it. This replaces it, with
+    source-owned arithmetic, in the same architectural slot.
+
+    🛑 The exit decision is NOT recomputed here. It is delegated to
+    `_resolve_source_managed_exit` — the identical function `_apply_source_fixed_r_management`
+    calls to price the resulting record. **One implementation, two callers**, so the exit that
+    releases the position and the exit that prices the trade cannot disagree (AR-1092 §6 Q5).
+
+    ─── CAUSALITY (AR-1092 §7, §9.2) ───────────────────────────────────────────────────────
+    🛑 No exit is fabricated from future knowledge. The stop and the fixed-R target are BOTH
+    fixed at the entry bar from the taught anchor; the scan then returns the FIRST later bar
+    that touches one. An exit written at bar `k` depends only on those entry-time levels and on
+    bars <= k. `A FORWARD SCAN FOR A LEVEL SET AT ENTRY IS SIMULATION; PICKING THE BAR THAT
+    FLATTERS THE RESULT IS LOOK-AHEAD. THEY ARE NOT THE SAME ACT.`
+
+    ─── OVERLAP POLICY, EXPLICIT AND COUNTED (AR-1092 §8 P2) ───────────────────────────────
+    While a source trade is open, later source entry events are REJECTED and COUNTED. sVkm does
+    not teach pyramiding. The rejection is written into the array and reported in metadata, so
+    the suppression is a stated policy rather than an accident of vectorbt's internals — which
+    is precisely the distinction §8 P2 demands.
+
+    ─── WHAT IS DELIBERATELY LEFT ALONE ────────────────────────────────────────────────────
+    A trade that touches NEITHER level writes NO exit. Its position stays open to the end of
+    the frame exactly as it does today, so the unresolved-tail record keeps its current
+    `Status: "Open"` shape. Forcing a synthetic close on the last bar would have been a second,
+    unrequested semantic change hiding inside this one.
+
+    Returns the 5-tuple shape its sibling uses: (entry_long, exit_long, entry_short,
+    exit_short, metadata).
+    """
+    entry_long_out = entry_long.copy()
+    exit_long_out = exit_long.copy()
+    entry_short_out = entry_short.copy()
+    exit_short_out = exit_short.copy()
+
+    n = len(entry_long_out)
+    meta: dict = {
+        "source_events_long": int(np.sum(entry_long)),
+        "source_events_short": int(np.sum(entry_short)),
+        "source_trades_opened": 0,
+        "source_overlap_suppressed": 0,
+        "source_same_bar_conflicts": 0,
+        "source_unresolved_open": 0,
+        "source_trade_plan": [],
+        # AR-1092 §8 P2 — "the policy is visible in audit metadata". A COUNT says how many
+        # events were rejected; only the BAR LIST says WHICH, and that is what lets a reader
+        # (or a test) check the rejection against the trade that was open at the time.
+        "source_overlap_suppressed_bars": [],
+        "overlap_policy": "reject_while_occupied",
+    }
+
+    occupied_until: int | None = None
+
+    for i in range(n):
+        want_long = bool(entry_long_out[i])
+        want_short = bool(entry_short_out[i])
+        if not (want_long or want_short):
+            continue
+
+        # Still in a source trade: reject the later event EXPLICITLY and count it.
+        if occupied_until is not None and i <= occupied_until:
+            if want_long:
+                entry_long_out[i] = False
+            if want_short:
+                entry_short_out[i] = False
+            meta["source_overlap_suppressed"] += 1
+            meta["source_overlap_suppressed_bars"].append(i)
+            continue
+
+        # Same-bar long+short. vectorbt's default conflict mode drops both, and changing that
+        # is not this unit's authorization — so leave the bar untouched, open nothing, and
+        # DISCLOSE it rather than silently picking a side.
+        if want_long and want_short:
+            meta["source_same_bar_conflicts"] += 1
+            continue
+
+        is_short = want_short
+        # 🛑 THE ENTRY PRICE IS THE DECISION CANDLE'S CLOSE, and that is not a choice made here:
+        # SOURCE_FAITHFUL forbids the +1 next-bar roll (AR-1079 §7, refused at the fill_model
+        # boundary), so vectorbt fills this entry at `close[i]` — the third FVG candle at its
+        # close, which is the teacher's own convention. Reading the same `close_np` vectorbt
+        # will read is what keeps the planned stop/target identical to the executed one.
+        decision = _resolve_source_managed_exit(
+            entry_idx=i,
+            entry_price=float(close_np[i]),
+            is_short=is_short,
+            high_np=high_np, low_np=low_np, open_np=open_np,
+            structural_stop_map=structural_stop_map,
+            r_multiple=r_multiple,
+            scan_bound=n,
+            fallback_exit_idx=n - 1,
+            fallback_exit_price=float(close_np[n - 1]),
+        )
+
+        meta["source_trades_opened"] += 1
+        if decision["exit_reason"] in ("source_stop", "source_fixed_r_target"):
+            exit_idx = int(decision["exit_idx"])
+            if is_short:
+                exit_short_out[exit_idx] = True
+            else:
+                exit_long_out[exit_idx] = True
+            occupied_until = exit_idx
+            meta["source_trade_plan"].append({
+                "entry_idx": i,
+                "exit_idx": exit_idx,
+                "exit_reason": decision["exit_reason"],
+                "direction": "short" if is_short else "long",
+            })
+        else:
+            # Neither level reached inside this frame — leave it open, as today.
+            meta["source_unresolved_open"] += 1
+            occupied_until = n - 1
+            meta["source_trade_plan"].append({
+                "entry_idx": i,
+                "exit_idx": None,
+                "exit_reason": "open_at_frame_end",
+                "direction": "short" if is_short else "long",
+            })
+
+    return entry_long_out, exit_long_out, entry_short_out, exit_short_out, meta
+
+
 # ─── Wave 21 E.4 — Account-ruin / DLL halt ──────────────────────────────────
 # Per CLAUDE.md §4:
 #   Personal DLL = 67% of firm DLL → HALT new entries for session
@@ -7876,6 +8029,49 @@ def run_class_backtest(
         _cls_dsl_guards_meta["guards_failed_audit_action"] = "backtest.dsl_guards_failed"
         print(
             f"[Class guards] ERROR — guards skipped (non-fatal): {_cls_guard_err!r}",
+            file=sys.stderr,
+        )
+
+    # ─── F-4 (AR-1092 §5) — SOURCE OCCUPANCY RELEASE, BEFORE VECTORBT DECIDES ────────────
+    # 🛑 DELIBERATELY OUTSIDE THE GUARD `try/except` ABOVE. That block is fail-SAFE: it
+    # degrades to an unguarded run and sets `guards_failed=True`. That is right for the house
+    # guards and WRONG here — degrading this pass would silently restore the collapsed
+    # one-trade population under a SOURCE_FAITHFUL label, which is the exact defect F-4
+    # exists to remove. ★ `THE OFF BRANCH OF A CORRECTNESS REPAIR MUST REFUSE, NEVER FALL
+    # BACK TO THE WRONG ROUTE.` So an exception here propagates.
+    #
+    # Legacy and TF_OVERLAY_VARIANT never enter this branch (`_source_faithful` is False for
+    # both), so their entry/exit arrays reach `from_signals` byte-identical (AR-1093 Q6).
+    _cls_source_occupancy_meta: dict = {}
+    if _source_faithful:
+        (
+            _occ_entry_long, _occ_exit_long, _occ_entry_short, _occ_exit_short,
+            _cls_source_occupancy_meta,
+        ) = _apply_source_faithful_occupancy(
+            entries_pd.to_numpy().astype(bool),
+            exits_pd.to_numpy().astype(bool),
+            short_entries_pd.to_numpy().astype(bool),
+            short_exits_pd.to_numpy().astype(bool),
+            high_np=high_np,
+            low_np=low_np,
+            close_np=close_pd.to_numpy(),
+            open_np=df["open"].to_numpy() if "open" in df.columns else None,
+            structural_stop_map=_cls_structural_stop_map,
+            r_multiple=_cls_source_r_multiple,
+        )
+        entries_pd = pd.Series(_occ_entry_long, index=entries_pd.index)
+        exits_pd = pd.Series(_occ_exit_long, index=exits_pd.index)
+        short_entries_pd = pd.Series(_occ_entry_short, index=short_entries_pd.index)
+        short_exits_pd = pd.Series(_occ_exit_short, index=short_exits_pd.index)
+        print(
+            "[Source occupancy] "
+            f"events={_cls_source_occupancy_meta['source_events_long'] + _cls_source_occupancy_meta['source_events_short']} "
+            f"trades_opened={_cls_source_occupancy_meta['source_trades_opened']} "
+            f"overlap_suppressed={_cls_source_occupancy_meta['source_overlap_suppressed']} "
+            f"same_bar_conflicts={_cls_source_occupancy_meta['source_same_bar_conflicts']} "
+            f"unresolved_open={_cls_source_occupancy_meta['source_unresolved_open']} "
+            f"suppressed_bars={_cls_source_occupancy_meta['source_overlap_suppressed_bars']} "
+            f"policy={_cls_source_occupancy_meta['overlap_policy']}",
             file=sys.stderr,
         )
 

@@ -210,18 +210,29 @@ class TestTheVerticalTrade:
 
     @pytest.fixture(autouse=True)
     def _result(self, _production_flag_state):
+        """🛑 POPULATION CHANGED AT F-4, AND THE CHANGE IS THE POINT.
+
+        This fixture asserted `len(trades) == 1` from AR-1085 until F-4. That `1` was never a
+        property of the source strategy — it was the collapse: vectorbt held the first position
+        open and dropped the later two events. The fixture is THREE sessions and the strategy
+        emits one event per session, so the faithful population was always 3.
+
+        Every per-value assertion below still reads the FIRST session's trade and is unchanged.
+        `A COUNT THAT ENCODED A DEFECT IS NOT A BASELINE TO PRESERVE.`
+        """
         self.result, self.stdout = _run()
         trades = self.result.get("trades") or []
-        assert len(trades) == 1, (
-            f"expected exactly one auditable trade, got {len(trades)}; "
+        assert len(trades) == 3, (
+            f"expected one auditable trade per session (3), got {len(trades)}; "
             f"error={self.result.get('error')!r}"
         )
         self.trade = trades[0]
+        self.trades = trades
 
     def test_the_route_ran_as_SOURCE_FAITHFUL(self):
         """Read BY KEY off the parsed result, never by the grep that selected it."""
         assert self.result["source_risk_mode"] == "SOURCE_FAITHFUL"
-        assert self.result["total_trades"] == 1
+        assert self.result["total_trades"] == 3
 
     def test_1_entry_is_the_taught_THIRD_FVG_CANDLE_at_its_CLOSE(self):
         """AR-1079 §7: "entry bar = that same third candle; entry price = that candle's
@@ -276,26 +287,85 @@ class TestTheVerticalTrade:
 class TestWhatThisRunDOESNOTProve:
     """🛑 LIMITATIONS AS TESTS, so they cannot quietly stop being true."""
 
-    def test_only_one_of_three_signals_becomes_a_trade_and_that_is_DISCLOSED(self):
-        """MEASURED: the strategy emits THREE source entries (one per session, `raw=3 (L:3
-        S:0)`) and exactly ONE becomes a trade — the engine's own line says
-        `vectorbt drop: 67%`.
+    def test_every_source_signal_now_becomes_a_trade_F4_CLOSED(self):
+        """🛑 THIS TEST REPLACES `test_only_one_of_three_signals_becomes_a_trade_and_that_is_
+        DISCLOSED`, AND THE OLD ASSERTIONS ARE QUOTED HERE RATHER THAN DELETED.
 
-        This is pre-existing position-model behaviour, not something the source join
-        introduced: `exit_long` is framework-owned and never set by the strategy, so the
-        position opened at the first entry is still open when the later entries fire and
-        vectorbt ignores them. The retro-fitted exit is applied afterwards by trade
-        management.
+        Until F-4 this file asserted, and passed:
 
-        ⚠️ IT IS PINNED HERE BECAUSE IT IS A TRAP FOR THE NEXT READER: any future
-        source-faithful trade-count or performance claim must account for it, and
-        `raw=3 -> trades=1` is invisible unless someone reads the pipeline line.
-        `A SIGNAL THAT NEVER BECAME A TRADE IS NOT A REFUSAL, AND IT IS NOT AN ENTRY EITHER.`
+            assert "raw=3 (L:3 S:0)" in out
+            assert "trades=1" in out
+            assert "vectorbt drop: 67%" in out
+
+        That was an honest pin of a real defect (AR-1085 disclosed it; the independent grade
+        measured it at scale as `40 events -> 1 trade`). The cause was never the source logic:
+        `exit_long` is framework-owned and no source strategy sets it, so vectorbt opened on the
+        first event, never closed, and dropped the rest — while `_apply_source_fixed_r_management`
+        retrofitted the taught stop/target onto that single record afterwards.
+
+        AR-1092 §5 ordered the release. `_apply_source_faithful_occupancy` now computes each
+        source trade's exit BEFORE the portfolio is built and writes it into `exit_long`, so a
+        completed source trade returns the state to flat and the next session's event executes.
+
+        ⚠️ THE DROP LINE IS NOT GONE — IT NOW READS `0%`, WHICH IS THE POINT. A missing line
+        would be indistinguishable from a renamed diagnostic; a line reading `0%` is a positive
+        witness that the same instrument is still measuring the same quantity.
         """
-        _result, out = _run()
+        result, out = _run()
         assert "raw=3 (L:3 S:0)" in out, "the source arm no longer emits one event per session"
-        assert "trades=1" in out
-        assert "vectorbt drop: 67%" in out
+        assert "trades=3" in out, "the source events did not all become trades"
+        assert "vectorbt drop: 0%" in out, (
+            "the drop diagnostic is not reading zero — signals are still being swallowed"
+        )
+        assert len(result["trades"]) == 3
+
+    def test_the_occupancy_pass_DISCLOSES_its_policy_and_counts(self):
+        """AR-1092 §8 P2/P8: the overlapping-signal policy must be VISIBLE, not an accident of
+        vectorbt internals. On this fixture the three events are separated, so nothing is
+        suppressed — and that zero is asserted so a future fixture that DOES overlap cannot
+        silently reuse this green."""
+        _result, out = _run()
+        assert "[Source occupancy]" in out, "the occupancy pass emitted no disclosure line"
+        assert "events=3" in out
+        assert "trades_opened=3" in out
+        assert "overlap_suppressed=0" in out
+        assert "policy=reject_while_occupied" in out
+
+    def test_the_HOUSE_POSITION_SIZER_still_ramps_and_that_DOMINATES_any_pnl(self):
+        """🛑 A LIMITATION F-4 MADE VISIBLE, PINNED IMMEDIATELY RATHER THAN DISCOVERED LATER.
+
+        `[MEASURED]` the three trades are IDENTICAL in every source-owned value — entry 119.0,
+        risk 7.5, exit 134.0, `source_fixed_r_target` — and yet:
+
+            trade 1 (bar 8):  Size = 1.0
+            trade 2 (bar 41): Size = 15.0
+            trade 3 (bar 74): Size = 15.0
+
+        The class path sizes with `PositionSizeConfig(type="dynamic_atr",
+        target_risk_dollars=500.0)` off ATR-14 (`backtester.py` ~7535). At bar 8 the ATR is
+        still inside its own warmup, so the sizer falls back to 1 contract; by bar 41 it is
+        established and asks for 15.
+
+        ⚠️ THIS IS NOT A DEFECT AND IT IS NOT MINE. Framework-owned SIZING is deliberately
+        separate from source-owned entry/stop/target, and F-4 touched no sizing code. But it was
+        INVISIBLE while only one trade ever existed, and it is a 15x lever on P&L.
+
+        ★ `THE SOURCE OWNS WHERE THE TRADE STARTS AND STOPS; THE HOUSE OWNS HOW BIG IT IS — SO A
+           P&L NUMBER FROM THIS ROUTE IS NOT YET A STATEMENT ABOUT THE TEACHER.`
+
+        Pinned so no expectancy/Sharpe/drawdown claim is ever read off this population without
+        meeting it first.
+        """
+        result, _out = _run()
+        sizes = [t["Size"] for t in result["trades"]]
+        assert sizes == [1.0, 15.0, 15.0], (
+            f"the house sizing ramp changed ({sizes}) — re-derive any P&L claim before editing "
+            "this expectation, and say so"
+        )
+        for t in result["trades"]:
+            assert t["risk_points"] == pytest.approx(RISK_POINTS)
+            assert t["Avg Entry Price"] == ENTRY_PRICE
+            assert t["Avg Exit Price"] == TARGET_2R
 
     def test_the_exit_reason_COUNTER_does_not_yet_know_about_source_exits(self):
         """🛑 A DISCLOSURE DEFECT I INTRODUCED, PINNED RATHER THAN LEFT TO BE DISCOVERED.
@@ -312,7 +382,9 @@ class TestWhatThisRunDOESNOTProve:
         """
         result, out = _run()
         assert result["trades"][0]["exit_reason"] == "source_fixed_r_target"
-        assert "1 signal exits" in out, (
+        # F-4: three source trades now complete, so the miscounting counter reports 3, not 1.
+        # The DEFECT is unchanged — it still files source target hits under "signal exits".
+        assert "3 signal exits" in out, (
             "the counter changed — if it now names source exits, delete this test and say so"
         )
 
@@ -478,20 +550,25 @@ class TestTheRemainingDiscriminators:
         rows[8] = [118.5, 120.0, 111.0, 119.0]   # decision candle trades BELOW the stop
         result, _out = _run(_config(), bars=_bars_from([tuple(r) for r in rows]))
         trades = result.get("trades") or []
-        assert len(trades) == 1, (
-            "POSITIVE WITNESS FAILED: the event did not survive the fixture, so nothing about "
+        # F-4 STRENGTHENED THIS DISCRIMINATOR RATHER THAN WEAKENING IT. Before the occupancy
+        # release only the first session could witness the entry-bar boundary; the other two
+        # events never became trades. Now all three do, and EVERY one must clear the boundary —
+        # three independent witnesses of the same rule instead of one.
+        assert len(trades) == 3, (
+            "POSITIVE WITNESS FAILED: the events did not survive the fixture, so nothing about "
             "the entry-bar boundary was measured"
         )
-        t = trades[0]
-        assert t["risk_points"] == pytest.approx(RISK_POINTS), (
-            "the stop moved with bar 8's low — it must come from bar 7, a different candle"
-        )
-        assert t["entry_idx"] == 8 and t["Avg Entry Price"] == ENTRY_PRICE
-        assert t["exit_reason"] == "source_fixed_r_target", (
-            f"the trade exited via {t['exit_reason']!r} — a touch inside the decision candle "
-            "reached back and closed a position that did not exist until its close"
-        )
-        assert t["Avg Exit Price"] == TARGET_2R
+        for t in trades:
+            assert t["risk_points"] == pytest.approx(RISK_POINTS), (
+                "the stop moved with bar 8's low — it must come from bar 7, a different candle"
+            )
+            assert t["Avg Entry Price"] == ENTRY_PRICE
+            assert t["exit_reason"] == "source_fixed_r_target", (
+                f"the trade exited via {t['exit_reason']!r} — a touch inside the decision candle "
+                "reached back and closed a position that did not exist until its close"
+            )
+            assert t["Avg Exit Price"] == TARGET_2R
+        assert trades[0]["entry_idx"] == 8
 
 
 class TestExitTimestampIsTheManagedExit:
@@ -640,9 +717,18 @@ class TestTheHousePolicyCannotReachTheSourceTrade:
         assert rows[10][1] < TARGET_2R, "the fixture reaches 2R early; it tests nothing"
 
         result, _out = _run(_config(), bars=_bars_from([tuple(r) for r in rows]))
-        t = (result.get("trades") or [None])[0]
-        assert t is not None, f"no trade; error={result.get('error')!r}"
+        trades = result.get("trades") or []
+        assert trades, f"no trade; error={result.get('error')!r}"
+        t = trades[0]
         assert t["Size"] == 1.0, "the position was reduced — a partial reached the source arm"
-        assert t["exit_reason"] == "source_fixed_r_target"
-        assert t["Avg Exit Price"] == TARGET_2R
-        assert len(result["trades"]) == 1, "the position was split into more than one record"
+        # 🛑 THE ASSERTION'S MEANING IS PRESERVED, NOT ITS NUMBER. This line read `== 1` and
+        # meant "the ladder did not split ONE position into several records". The fixture is
+        # three sessions and every one of them crosses 1R, so the faithful count is now
+        # ONE RECORD PER SESSION. A partial would show up as MORE than three.
+        assert len(trades) == 3, (
+            f"expected exactly one whole-position record per session (3), got {len(trades)} — "
+            "a partial split a source position into more than one record"
+        )
+        for _t in trades:
+            assert _t["exit_reason"] == "source_fixed_r_target"
+            assert _t["Avg Exit Price"] == TARGET_2R
