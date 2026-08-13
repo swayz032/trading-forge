@@ -60,6 +60,9 @@ from src.engine.tests.test_source_vertical_join import (
     ENTRY_PRICE,
     OR_CONDITION_ID,
     RISK_POINTS,
+    SPEC_HASH,
+    SPEC_ID,
+    SYNTHETIC_QUOTE,
     TARGET_2R,
     TAUGHT_STOP,
     _compiled_spec,
@@ -67,7 +70,9 @@ from src.engine.tests.test_source_vertical_join import (
 
 ET = ZoneInfo("America/New_York")
 UTC = ZoneInfo("UTC")
-SPEC_HASH = "svkm-vertical-fixture"
+# 🛑 The identity is IMPORTED, not restated. This file carried its own copy of the
+# `svkm-*` strings, so AR-1110 §2.3's defect lived in TWO files while the ruling named
+# one. Single-sourcing it means the next rename cannot leave a stale twin behind.
 DECISION_TS = datetime(2024, 1, 2, 10, 10, tzinfo=ET).astimezone(UTC)
 
 
@@ -81,7 +86,7 @@ def _production_flag_state(monkeypatch):
 
 def _candidate() -> OpeningRangeExecutionCandidate:
     variant = OpeningRangeVariant(
-        variant_label="15m", duration_minutes=15, source_quote="the first 15 minute range",
+        variant_label="15m", duration_minutes=15, source_quote=SYNTHETIC_QUOTE,
     )
     definition = OpeningRangeDefinition(
         session_start_local="09:30",
@@ -90,11 +95,11 @@ def _candidate() -> OpeningRangeExecutionCandidate:
         market_scope="US equities / S&P 500 example, regular-session opening",
         trading_day_rule="relative for every single trading day",
         provenance=OpeningRangeProvenance(
-            source_quote="the first 15 minute range", condition_id=OR_CONDITION_ID,
+            source_quote=SYNTHETIC_QUOTE, condition_id=OR_CONDITION_ID,
         ),
     )
     return OpeningRangeExecutionCandidate(
-        source_spec_id="svkm-source-vertical__s0",
+        source_spec_id=SPEC_ID,
         source_condition_id=OR_CONDITION_ID,
         definition=definition,
         variant=variant,
@@ -151,7 +156,7 @@ def _config(compiled_spec: dict | None = None) -> dict:
         "start_date": "2024-01-02",
         "end_date": "2024-01-05",
         "strategy": {
-            "name": "svkm-source-vertical", "symbol": "MES", "timeframe": "5m",
+            "name": "synthetic-or-fvg-conformance", "symbol": "MES", "timeframe": "5m",
             "fixed_contracts": 1,
         },
         "compiled_spec": compiled_spec if compiled_spec is not None else _compiled_spec(),

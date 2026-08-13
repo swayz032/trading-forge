@@ -21,6 +21,31 @@ WHAT IS PROVEN HERE, AND WHAT IS NOT — READ THIS BEFORE TRUSTING A GREEN
 ★ `A COMPONENT PROOF IS NOT A VERTICAL PROOF, AND SAYING SO IS THE ONLY THING THAT KEEPS
    IT USEFUL.`
 
+🛑🛑 THIS FIXTURE IS SYNTHETIC. IT IS NOT sVkm, AND IT IS NOT ANY KNOWN SOURCE VIDEO.
+------------------------------------------------------------------------------------
+Until 2026-08-13 this file carried `SPEC_ID = "svkm-source-vertical__s0"` while teaching a
+15-MINUTE opening range evaluated on 5-MINUTE bars. `[MEASURED, AR-1109]` the sVkm teacher
+(`sVkmZklJDHI`) taught neither of those things: his range is the FIRST 09:30 FIVE-MINUTE
+CANDLE, and his breakout, FVG and entry are all on the ONE-MINUTE chart. His transcript
+contains `opening range` x0, `order block` x0 and `30 minute` x0.
+
+So the file was stamping one lesson's identity onto another lesson's semantics —
+AR-1110 §2.3 upgraded that to a BLOCKING PROVENANCE DEFECT, not a naming nit.
+
+`[MEASURED, AR-1110 step A]` the true owner CANNOT be proven: this fixture's former
+`source_quote`, "the first 15 minute range", matches ZERO of the 40 archived transcripts,
+and AR-1110 §2.3 forbids guessing. So per its option 2 the fixture is now EXPLICITLY
+SYNTHETIC — no `svkm-*` id, no source-video claim, no teacher quote.
+
+WHAT THAT DOES AND DOES NOT COST: every behavioural assertion below is unchanged and still
+load-bearing. The sequence it proves — range -> close-breakout -> 3-candle FVG outside the
+range -> third-candle-close entry — is real conformance coverage of the ENGINE. What it may
+never again be cited as is evidence about what any teacher said.
+
+★★★★★ `A FIXTURE THAT NAMES A SOURCE IS MAKING A CLAIM ABOUT A HUMAN BEING'S WORDS. IF YOU
+   CANNOT JOIN IT TO THE TRANSCRIPT, THE HONEST IDENTITY IS "SYNTHETIC" — NOT THE NEAREST
+   PLAUSIBLE LESSON.`
+
 THE FIXTURE, STATED SO A READER CAN CHECK THE ARITHMETIC
 --------------------------------------------------------
 5-minute bars, `America/New_York`, session start 09:30, taught variant 15m, so the range
@@ -88,9 +113,20 @@ def _production_default_flag_state(monkeypatch):
 
 
 ET = ZoneInfo("America/New_York")
-SPEC_ID = "svkm-source-vertical__s0"
+# 🛑 NOT A SOURCE-VIDEO IDENTITY. See "THIS FIXTURE IS SYNTHETIC" in the module
+# docstring — AR-1110 §2.3. The former value `svkm-source-vertical__s0` stamped a
+# 15m-range / 5m-execution lesson with the sVkm identity, whose teacher taught a 5m
+# range and 1m execution (AR-1109 §1). Ownership of this lesson is UNPROVEN, so this
+# id deliberately names no source at all.
+SPEC_ID = "synthetic-or-fvg-conformance__s0"
+SPEC_HASH = "synthetic-or-fvg-conformance-fixture"
 OR_CONDITION_ID = "OPENING_RANGE_DEFINITION:the-opening-range#0"
 FVG_CONDITION_ID = "WAIT_STRUCTURE:the-fair-value-gap#0"
+# 🛑 NOT A TEACHER QUOTE. `[MEASURED, AR-1109]` the string this replaced — "the first
+# 15 minute range" — matches ZERO of the 40 rows of `youtube_evidence_archive` (controls
+# green: "one minute time frame" -> 5 hits, a nonsense sentence -> 0). AR-1110 §2.3
+# forbids guessing the owning lesson, so this fixture claims none.
+SYNTHETIC_QUOTE = "SYNTHETIC FIXTURE QUOTE — no source video; see module docstring"
 
 
 # ── the taught window ────────────────────────────────────────────────────────
@@ -98,7 +134,7 @@ FVG_CONDITION_ID = "WAIT_STRUCTURE:the-fair-value-gap#0"
 
 def _candidate() -> OpeningRangeExecutionCandidate:
     variant = OpeningRangeVariant(
-        variant_label="15m", duration_minutes=15, source_quote="the first 15 minute range",
+        variant_label="15m", duration_minutes=15, source_quote=SYNTHETIC_QUOTE,
     )
     definition = OpeningRangeDefinition(
         session_start_local="09:30",
@@ -107,7 +143,7 @@ def _candidate() -> OpeningRangeExecutionCandidate:
         market_scope="US equities / S&P 500 example, regular-session opening",
         trading_day_rule="relative for every single trading day",
         provenance=OpeningRangeProvenance(
-            source_quote="the first 15 minute range",
+            source_quote=SYNTHETIC_QUOTE,
             condition_id=OR_CONDITION_ID,
         ),
     )
@@ -155,7 +191,7 @@ def _compiled_spec(*, source_risk: dict | None = "default", direction: str = "bo
     }
     if source_risk is not None:
         spec["source_risk"] = source_risk
-    return {"spec": spec, "spec_hash": "svkm-vertical-fixture"}
+    return {"spec": spec, "spec_hash": SPEC_HASH}
 
 
 # ── the taught price action ──────────────────────────────────────────────────

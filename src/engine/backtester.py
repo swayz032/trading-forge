@@ -9475,6 +9475,50 @@ def resolve_candidate_authority(config: dict) -> tuple[Optional[dict], Optional[
             None,
         )
 
+    # ── ANCHOR (4) — CROSS-SOURCE PROVENANCE. AR-1110 §6. ────────────────────
+    # The three anchors inside `resolve_row_for_execution` prove the receipt is
+    # INTERNALLY consistent: receipt <-> row <-> payload. Every one of them passes
+    # when a WHOLLY DIFFERENT LESSON's candidate is presented alongside this run's
+    # compiled spec, because none of them ever looks at the spec being executed.
+    #
+    # That is not hypothetical. `[MEASURED, AR-1109/AR-1110 §2.3]` two committed
+    # fixtures carried a 15-minute-range / 5-minute-execution lesson stamped
+    # `svkm-source-vertical__s0`, while the sVkm teacher taught a 5-minute range
+    # with 1-minute execution. Self-consistent, plausible, and about the wrong
+    # human being's words — and nothing in the engine could tell.
+    #
+    #   `THREE ANCHORS THAT ONLY CHECK EACH OTHER PROVE THE PAPERWORK IS TIDY,
+    #    NOT THAT IT DESCRIBES THIS TRADE.`
+    #
+    # So: the candidate's parent spec must BE the spec this run executes. Fail
+    # closed — a missing hash on either side refuses rather than skipping the
+    # check, because "absent" is exactly what a swapped artifact looks like.
+    # 🛑 SCOPE, STATED BECAUSE I MEASURED IT RATHER THAN ASSUMING IT: this anchor binds
+    # only when the run carries an INLINE `compiled_spec`. I tried the stricter form —
+    # refuse a candidate sidecar that arrives with no spec to join — and `[MEASURED]` it
+    # turned 3 real MP1 ingress controls RED (`test_control_1_a_real_candidate_row_is_
+    # proven_and_proceeds` and two others): the production ingress route legitimately
+    # proves a candidate row BEFORE any inline spec exists. So the strict form was
+    # WRONG, not merely inconvenient, and this is the correct boundary.
+    # ⇒ RESIDUAL, NOT CLOSED: a candidate-aware run with NO inline compiled_spec is
+    #   still unguarded by this anchor. Closing that belongs at the ingress layer that
+    #   owns the spec/candidate pairing, not here.
+    compiled = config.get("compiled_spec")
+    if isinstance(compiled, dict):
+        executed_hash = compiled.get("spec_hash")
+        claimed_parent = config[_CANDIDATE_PARENT_KEY]
+        if not executed_hash or executed_hash != claimed_parent:
+            return (
+                _candidate_refusal_envelope(
+                    "cross-source provenance: this run's compiled spec "
+                    f"({executed_hash!r}) is not the spec that certified this execution "
+                    f"candidate ({claimed_parent!r}); one lesson's opening range may not "
+                    "execute under another lesson's spec identity",
+                    config,
+                ),
+                None,
+            )
+
     strategy_cfg = config.get("strategy") or {}
     row = CandidatePersistenceRow(
         parent_spec_hash=config[_CANDIDATE_PARENT_KEY],
