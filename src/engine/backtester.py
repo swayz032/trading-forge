@@ -3250,6 +3250,83 @@ def _source_risk_mode_from_spec(compiled_spec) -> Optional[str]:
     return source_risk.get("mode")
 
 
+def _supply_opening_range_source_frame(strategy, roles, symbol, start_date, end_date):
+    """SPINE-D (AR-1121 §4.D / AR-1125 §6.D) — the REAL direct source frame. NO RESAMPLER.
+
+    Loads the opening-range role's own timeframe as its own series and hands it to the
+    instance, so `_h_opening_range` can read the taught chart instead of the execution
+    chart. Returns the `RoleFrame`, or `None` when the roles declare the SAME timeframe
+    the instance executes on (the consumer then legitimately uses the execution frame,
+    and it CHECKS that equality rather than assuming it).
+
+    🛑 NO 1m->5m AGGREGATION, DELIBERATELY. Deriving the 5m series from 1m bars would
+    answer an ungraded question by assumption — *does our aggregation reproduce the
+    vendor's 5m bar boundaries and timestamp semantics?* — and a wrong answer there
+    produces a plausible opening range that is simply not the taught one. The data layer
+    already stores real 5m series; this reads them (AR-1113 §3.1).
+
+    🛑 FAIL-CLOSED. An unloadable, empty or mislabeled frame REFUSES. It never falls back
+    to the execution frame: `[MEASURED, AR-1113 §3.2]` for this source that substitution
+    can even produce the RIGHT number, which is exactly why it may not be made silently.
+
+        ★★★★★ `A FALLBACK THAT SOMETIMES PRODUCES THE CORRECT ANSWER IS THE HARDEST KIND
+           OF WRONG TO FIND, BECAUSE ITS FAILURES LOOK LIKE ITS SUCCESSES.`
+    """
+    from datetime import timezone
+
+    from src.engine.source_timeframe_roles import OPENING_RANGE_WINDOW
+    from src.engine.svkm_role_execution import RoleFrame, SourceRoleExecutionError
+
+    or_timeframe = roles.timeframe_for(OPENING_RANGE_WINDOW)
+    if str(or_timeframe).strip() == str(getattr(strategy, "timeframe", "")).strip():
+        # Declared == execution. The consumer's own equality branch handles this; supplying
+        # a duplicate series here would create a second copy of the same bars to disagree.
+        return None
+
+    frame_df = load_ohlcv(symbol, or_timeframe, start_date, end_date)
+    if frame_df is None or len(frame_df) == 0:
+        raise ValueError(
+            f"SOURCE_FAITHFUL declares its opening-range window on the {or_timeframe!r} "
+            f"chart, but no {or_timeframe!r} series could be loaded for {symbol!r} over "
+            f"{start_date}..{end_date}. REFUSING rather than computing the taught range "
+            "off the execution frame."
+        )
+
+    stamps = frame_df["ts_event"].to_list()
+    aware = []
+    for ts in stamps:
+        if ts.tzinfo is None:
+            # The loader's stamps are UTC instants; an unzoned stamp is stamped UTC rather
+            # than guessed, because a wall-clock without a zone is not a moment in time.
+            ts = ts.replace(tzinfo=timezone.utc)
+        aware.append(ts)
+
+    try:
+        frame = RoleFrame(
+            timeframe=str(or_timeframe),
+            timestamps=tuple(aware),
+            highs=tuple(float(h) for h in frame_df["high"].to_list()),
+            lows=tuple(float(low) for low in frame_df["low"].to_list()),
+        )
+        # 🛑 THE LABEL IS NOT THE EVIDENCE. `__post_init__` checks shape, order-independent
+        # arity and zone-awareness — it does NOT check that the series IS the timeframe it
+        # claims. `verify_spacing()` reads the actual bar gaps, and it is a SEPARATE call:
+        # constructing the frame without it accepts a 1m series labelled `5m`, which is the
+        # exact substitution AR-1113 §3.2 refuses. I omitted this call in the first draft
+        # and the suite convicted it.
+        frame.verify_spacing()
+    except SourceRoleExecutionError as err:
+        # The frame's own spacing/label guards convict it. Re-raised as this layer's
+        # refusal with the authority layer's message intact, so the reader learns WHICH
+        # property failed rather than merely that one did.
+        raise ValueError(
+            f"the loaded {or_timeframe!r} series is not a usable source frame: {err} REFUSING."
+        ) from err
+
+    strategy.opening_range_source_frame = frame
+    return frame
+
+
 def _bind_source_timeframe_roles(strategy):
     """ONE role object: the set SOURCE_FAITHFUL validates IS the set the instance uses.
 
@@ -7586,6 +7663,11 @@ def run_class_backtest(
     if _source_faithful:
         _cls_source_r_multiple = _resolve_source_fixed_r(strategy)
         _cls_source_timeframe_roles = _bind_source_timeframe_roles(strategy)
+        # SPINE-D: supply the taught chart's OWN series. Returns None when the declared
+        # and execution timeframes agree; refuses when a divergent frame cannot be loaded.
+        _supply_opening_range_source_frame(
+            strategy, _cls_source_timeframe_roles, symbol, start_date, end_date
+        )
 
     # ─── P1-A: Warmup data prepend (IS context for indicator initialization) ──
     # Mirror run_backtest warmup_data logic. Prepend IS rows so strategy.compute()
