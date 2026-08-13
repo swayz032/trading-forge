@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `d4c897658f978de51d1afb57acb33959163f712d`  (worktree DIRTY at generation time)
+> Generated at commit `4727dbaacb7d7267fb4c8cb61ba3e4bc43c1b941`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -31,7 +31,7 @@ first and its cost is made visible.
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
 | `src/` | Python | 297 | 387 | 124548 | 1918 |
-| `src/` | TypeScript | 462 | 723 | 209912 | 2933 |
+| `src/` | TypeScript | 462 | 723 | 209939 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
 TypeScript symbol rule: every line matching an **exported declaration** pattern
@@ -290,7 +290,7 @@ table below it.**
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=1918 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=43 (probe runs; 0 would be a legitimate reading) |
-| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6610/6610 TS import specifiers non-blank |
+| C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6612/6612 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
@@ -1087,7 +1087,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `getNotificationServiceStatus` | function | `src/server/services/notification-service.ts:368` | 5 | unique |
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
-| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:669` | 5 | unique |
+| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:696` | 5 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
 | `_result` | function | `src/engine/anti_setups/regime_filter.py:156` | 3 | unique |
@@ -1110,6 +1110,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `__resetEquityWindowsForTests` | function | `src/server/services/dd-velocity-gate.ts:292` | 3 | unique |
 | `__resetInternalsForTests` | function | `src/server/services/market-internals-service.ts:274` | 3 | unique |
 | `__getOllamaHealthyForTests` | function | `src/server/services/model-router.ts:418` | 3 | unique |
+| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | 3 | unique |
 | `__resetEnabledFirmsCache` | function | `src/server/services/strategy-assignment-service.ts:197` | 3 | unique |
 | `PassageLedger` | class | `src/engine/battery/passage_ledger.py:137` | 2 | unique |
 | `list_patterns` | function | `src/engine/compiler/pattern_library.py:233` | 2 | unique |
@@ -1157,7 +1158,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `runRejectSpikeCheck` | function | `src/server/services/scout-watchdog-service.ts:442` | 2 | unique |
 | `ANCHOR_TO_RESOLVER` | const | `src/server/services/source-risk-contract.ts:79` | 2 | unique |
 | `SourceRiskContract` | interface | `src/server/services/source-risk-contract.ts:121` | 2 | unique |
-| `resolveSpecStopLoss` | function | `src/server/services/source-risk-contract.ts:158` | 2 | unique |
 | `parseSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:306` | 2 | unique |
 | `runStrategyProductionCheck` | function | `src/server/services/strategy-production-check-service.ts:23` | 2 | unique |
 | `_resetActiveCount` | function | `src/server/services/trade-critique-service.ts:113` | 2 | unique |
@@ -3029,16 +3029,16 @@ _...316 more omitted from this table._
 | `SpecArtifact` | interface | `src/server/services/spec-onboarding-service.ts:286` | defining module is not reachable from any measured entry point |
 | `ParseResult` | interface | `src/server/services/spec-onboarding-service.ts:297` | defining module is not reachable from any measured entry point |
 | `parseSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:306` | defining module is not reachable from any measured entry point |
-| `deriveConfluenceFactors` | function | `src/server/services/spec-onboarding-service.ts:370` | defining module is not reachable from any measured entry point |
-| `ConceptNameResult` | interface | `src/server/services/spec-onboarding-service.ts:390` | defining module is not reachable from any measured entry point |
-| `deriveConceptName` | function | `src/server/services/spec-onboarding-service.ts:396` | defining module is not reachable from any measured entry point |
-| `buildDirectionalEntries` | function | `src/server/services/spec-onboarding-service.ts:437` | defining module is not reachable from any measured entry point |
-| `SymbolCode` | type | `src/server/services/spec-onboarding-service.ts:465` | defining module is not reachable from any measured entry point |
-| `OnboardSpecOptions` | interface | `src/server/services/spec-onboarding-service.ts:467` | defining module is not reachable from any measured entry point |
-| `PerSymbolStatus` | type | `src/server/services/spec-onboarding-service.ts:512` | defining module is not reachable from any measured entry point |
-| `PerSymbolOnboardResult` | interface | `src/server/services/spec-onboarding-service.ts:537` | defining module is not reachable from any measured entry point |
-| `OnboardSpecResult` | interface | `src/server/services/spec-onboarding-service.ts:548` | defining module is not reachable from any measured entry point |
-| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:669` | defining module is not reachable from any measured entry point |
+| `deriveConfluenceFactors` | function | `src/server/services/spec-onboarding-service.ts:397` | defining module is not reachable from any measured entry point |
+| `ConceptNameResult` | interface | `src/server/services/spec-onboarding-service.ts:417` | defining module is not reachable from any measured entry point |
+| `deriveConceptName` | function | `src/server/services/spec-onboarding-service.ts:423` | defining module is not reachable from any measured entry point |
+| `buildDirectionalEntries` | function | `src/server/services/spec-onboarding-service.ts:464` | defining module is not reachable from any measured entry point |
+| `SymbolCode` | type | `src/server/services/spec-onboarding-service.ts:492` | defining module is not reachable from any measured entry point |
+| `OnboardSpecOptions` | interface | `src/server/services/spec-onboarding-service.ts:494` | defining module is not reachable from any measured entry point |
+| `PerSymbolStatus` | type | `src/server/services/spec-onboarding-service.ts:539` | defining module is not reachable from any measured entry point |
+| `PerSymbolOnboardResult` | interface | `src/server/services/spec-onboarding-service.ts:564` | defining module is not reachable from any measured entry point |
+| `OnboardSpecResult` | interface | `src/server/services/spec-onboarding-service.ts:575` | defining module is not reachable from any measured entry point |
+| `onboardSpecArtifact` | function | `src/server/services/spec-onboarding-service.ts:696` | defining module is not reachable from any measured entry point |
 | `__resetEnabledFirmsCache` | function | `src/server/services/strategy-assignment-service.ts:197` | no non-test reference outside its own definition; 3 test file(s) do reference it |
 | `getActiveAssignments` | function | `src/server/services/strategy-assignment-service.ts:620` | no non-test reference outside its own definition |
 | `unreleaseFromFamily` | function | `src/server/services/strategy-assignment-service.ts:697` | no non-test reference outside its own definition |
