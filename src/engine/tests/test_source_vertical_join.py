@@ -40,6 +40,7 @@ ruling says must change — or must not.
 
 from __future__ import annotations
 
+import textwrap
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -679,3 +680,70 @@ class TestFailClosedIsVisible:
         strat.compute(_frame())
         assert strat.last_source_refusal is None
         assert len(_events(strat)) == 1
+
+
+class TestTheMonotonicOrderPremise:
+    """AR-1089 §6 — MEASURE THE PREMISE, DO NOT BUILD A SORTING SUBSYSTEM.
+
+    The grader raised it as a hypothesis: `_build_source_entry_events` bounds each session
+    with `min(indices)` / `max(indices)`, which assumes a session's bars occupy a CONTIGUOUS,
+    chronologically ordered run. Neither of us had measured whether anything guarantees that.
+
+    `[MEASURED]` `data_loader.load_ohlcv` ends its return path with
+
+        df = df.unique(subset=["ts_event"], keep="last").sort("ts_event")
+
+    unconditionally — so the canonical class-path frame is BOTH deduplicated and sorted, and
+    grouping a sorted frame by local date therefore yields contiguous runs. The premise holds
+    upstream, and the right response is to PIN the guarantee, not to sort again downstream.
+
+    🛑 AND NOT TO SORT DOWNSTREAM ON PURPOSE. AR-1089 §6: "Do not silently sort inside the
+    source-event lane; silent sorting could invalidate already-derived event/index identity."
+    A second sort would renumber bars that zones and events have already been built against.
+    `THE FIX FOR AN UNVERIFIED PREMISE IS TO VERIFY IT, NOT TO ENFORCE IT TWICE.`
+
+    ⚠️ HONEST LIMIT: the Band C harness PATCHES `load_ohlcv`, so it inherits this guarantee by
+    construction rather than exercising it. That is why the guarantee is pinned HERE, against
+    the real loader's own source, instead of being assumed from a green vertical run.
+    """
+
+    def test_the_canonical_loader_sorts_and_dedups_on_its_RETURN_PATH(self):
+        """An `ast` assertion, not a grep: it reads the executable statement inside the real
+        `load_ohlcv` body. A comment or a docstring mentioning `sort` would not satisfy it."""
+        import ast
+        import inspect
+
+        from src.engine import data_loader
+
+        tree = ast.parse(textwrap.dedent(inspect.getsource(data_loader.load_ohlcv)))
+        calls = {
+            node.func.attr
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+        }
+        assert "sort" in calls, (
+            "load_ohlcv no longer sorts its frame — the source-event lane's contiguity "
+            "assumption is now unbacked, and AR-1089 §6's second branch applies: "
+            "SOURCE_FAITHFUL must fail closed on non-monotonic input"
+        )
+        assert "unique" in calls, (
+            "load_ohlcv no longer deduplicates ts_event — duplicate timestamps would make "
+            "the warmup rebase's join key non-unique (AR-1079 §12 stop condition)"
+        )
+
+    def test_a_sorted_deduped_frame_yields_CONTIGUOUS_session_runs(self):
+        """The join that actually closes the hypothesis: sorted + unique is what makes
+        `min(indices)`..`max(indices)` a valid session bound. Proven on the real handler's
+        own output rather than argued."""
+        strat = _strategy()
+        strat.compute(_frame(sessions=3))
+        ranges = [strat._source_or_sessions[k] for k in sorted(strat._source_or_sessions)]
+        assert len(ranges) == 3
+        for rng in ranges:
+            span = rng.last_idx - rng.first_idx + 1
+            assert span == len(_SESSION), (
+                f"session {rng.session_date} spans {span} rows for {len(_SESSION)} bars — "
+                "its rows are not contiguous, so min/max is not a valid bound"
+            )
+        for a, b in zip(ranges, ranges[1:], strict=False):
+            assert a.last_idx < b.first_idx, "session runs overlap"
