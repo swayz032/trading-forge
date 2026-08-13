@@ -2837,6 +2837,8 @@ def from_compiled_spec(
     strategy_name: str | None = None,
     restore_condition_ids: frozenset[str] | None = None,
     opening_range_candidate: OpeningRangeExecutionCandidate | None = None,
+    source_timeframe_roles: SourceTimeframeRoles | None = None,
+    opening_range_source_frame: RoleFrame | None = None,
 ) -> SpecConditionStrategy:
     """Factory mirroring the `_load_strategy_class` -> `cls()` pattern in
     backtester.py, but parameterized with the actual spec payload since this
@@ -2864,6 +2866,30 @@ def from_compiled_spec(
     Deriving one from the other would look like a sensible default and would silently trade a
     window the teacher never assigned to this instance. Choosing WHICH candidate an instance
     gets is the fan-out's job (12B), one instance per taught candidate.
+
+    ─── SPINE-C — THE ROLE ARROW, TRANSPORT ONLY (AR-1121 §4.C) ─────────────────────────
+    `source_timeframe_roles` and `opening_range_source_frame` are passed through UNCHANGED,
+    on exactly the same terms as `opening_range_candidate` above: this factory does not read
+    them, validate them, choose them, or infer either one from the other or from `timeframe`.
+
+    🛑 THIS ARROW WAS MISSING AND THAT IS WHY §9.1 COULD NOT ACT. `[MEASURED, AR-1118/AR-1120]`
+    `SpecConditionStrategy.__init__` has accepted both parameters since AR-1113, and
+    `run_class_backtest` has parsed the persisted carrier into `_cls_source_timeframe_roles`
+    since then too — but that local was assigned and read by NOTHING, and this factory had no
+    parameter to carry either value. So the validated persisted carrier and the executing
+    instance were TWO DISCONNECTED CHANNELS: in production `self.source_timeframe_roles` was
+    always `None`, which made the AR-1115 fail-closed refusal unable to fire and the 5m
+    selection unable to engage. The consumer was correct; its INPUT was unreachable.
+
+        ★★★★★ `A CORRECT CONSUMER FED BY AN UNREACHABLE INPUT PASSES EVERY REACHABILITY CHECK
+           YOU THOUGHT TO RUN, BECAUSE YOU CHECKED THE CONSUMER.`
+
+    🛑 `None` STAYS LEGAL AND STILL HARD-REFUSES AT EXECUTION, for the same reason the candidate
+    does: the refusal belongs in `_h_opening_range` where the condition is evaluated. Defaulting
+    a role set here — or synthesising a `RoleFrame` from `timeframe` — would manufacture source
+    semantics this factory is not the authority for, which is the B1 architecture AR-1121 §2
+    REJECTED. Producing the roles is Python's job at compile time; transporting them is TS's;
+    this factory only hands the same object onward.
     """
     return SpecConditionStrategy(
         compiled_spec=compiled_spec,
@@ -2873,4 +2899,6 @@ def from_compiled_spec(
         strategy_name=strategy_name,
         restore_condition_ids=restore_condition_ids,
         opening_range_candidate=opening_range_candidate,
+        source_timeframe_roles=source_timeframe_roles,
+        opening_range_source_frame=opening_range_source_frame,
     )

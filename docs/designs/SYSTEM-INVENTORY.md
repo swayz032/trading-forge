@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `53c51fff3ac9e792b12b931f5422468ecc2b6520`  (worktree DIRTY at generation time)
+> Generated at commit `3882ffa26c8f131550d495f2916d2b8318087411`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 297 | 383 | 124281 | 1914 |
+| `src/` | Python | 297 | 384 | 124309 | 1914 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1864 | 759 |
+| `src/` | 1865 | 759 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2122** | **980** |
+| **TOTAL** | **2123** | **980** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 438 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 84 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1105 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1106 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **95**.  Modules reachable from them: **627** of **2122** parsed files.
+Total entry points: **95**.  Modules reachable from them: **627** of **2123** parsed files.
 
 <details><summary>All 95 entry points and why each was counted</summary>
 
@@ -201,7 +201,7 @@ table below it.**
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3323 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1513 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 68.0% of 4887 rows |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 68.0% of 4888 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=95 |
 | C6 | a registered route module is reachable | PASS | modules reachable=627 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
@@ -210,7 +210,7 @@ table below it.**
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=1914 ts=2928 |
-| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
+| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=39 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6609/6609 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
@@ -248,9 +248,9 @@ table below it.**
 | `WIRED` | 3323 | 68.0% |
 | `FLAG-GATED` | 6 | 0.1% |
 | `BUILT-UNREACHABLE` | 1513 | 31.0% |
-| `DECLARED-ABSENT` | 38 | 0.8% |
+| `DECLARED-ABSENT` | 39 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4887** | |
+| **TOTAL** | **4888** | |
 
 ---
 
@@ -396,7 +396,7 @@ table below it.**
 | `src/engine/synthetic` | 8 | 0 | 1 | 0 | 0 | 9 |
 | `src/engine/synthetic_market_simulator.py` | 0 | 0 | 13 | 0 | 0 | 13 |
 | `src/engine/tensor_signal_model.py` | 12 | 0 | 1 | 0 | 0 | 13 |
-| `src/engine/tests` | 0 | 0 | 0 | 1 | 0 | 1 |
+| `src/engine/tests` | 0 | 0 | 0 | 2 | 0 | 2 |
 | `src/engine/trade_status.py` | 1 | 0 | 1 | 0 | 0 | 2 |
 | `src/engine/validation` | 16 | 0 | 1 | 0 | 0 | 17 |
 | `src/engine/validation_runner.py` | 5 | 0 | 0 | 0 | 0 | 5 |
@@ -920,7 +920,7 @@ invisible for weeks.
 
 ## 6. DECLARED-ABSENT - referenced, but not on disk
 
-**38 rows.**  Two probes feed this: unresolvable internal import specifiers, and
+**39 rows.**  Two probes feed this: unresolvable internal import specifiers, and
 repo-relative path literals (`src/**.py`, `scripts/**`) naming a file that does not exist -
 the latter is the TS->Python subprocess seam, where a typo fails only at runtime.
 
@@ -944,6 +944,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:1668` | import specifier resolves to no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/monte_carlo.py:2194` | import specifier resolves to no file on disk |
 | `src/engine/tests/test_x.py` | path-literal | `src/engine/tests/test_accept5_disposition_display_truth.py:52` | repo-relative path literal with no file on disk |
+| `scripts/claude-rung-v32/shakedown_specs/-igpOZs8LsM__s0.spec.json` | path-literal | `src/engine/tests/test_spine_c_factory_role_arrow.py:48` | repo-relative path literal with no file on disk |
 | `src.engine.audit_writer` | module | `src/engine/walk_forward.py:1198` | import specifier resolves to no file on disk |
 | `src/server/db/migrations/0058_audit_log_append_only.down.sql` | path-literal | `src/server/__tests__/audit-log-append-only.test.ts:56` | repo-relative path literal with no file on disk |
 | `src/types/sse-events.ts` | path-literal | `src/server/__tests__/deepscan12-track-r-sse-safety-gate.test.ts:21` | repo-relative path literal with no file on disk |
