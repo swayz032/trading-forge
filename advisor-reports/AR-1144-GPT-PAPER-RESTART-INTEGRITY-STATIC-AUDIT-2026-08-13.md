@@ -1,141 +1,57 @@
-# AR-1144 — GPT STATIC AUDIT: PRE-PAPER RESTART INTEGRITY — CORRECTED
+# AR-1144 — GPT STATIC AUDIT: CUSTOM PAPER RESTART INTEGRITY — SECOND CORRECTION
 
 **Date:** 2026-08-13  
-**Engineering branch inspected:** `h1-wave4-sealed12-driver` at pushed head `5a82f6f51eeb0d6b47976f83a73cfa8446ca0013`  
-**Status:** CORRECTED after deeper route inspection.  
-**Worker collision rule:** Claude remains mid-order on AR-1138. Do not restart or modify that unfinished compiler/grading lane.
+**Compiler branch:** `h1-wave4-sealed12-driver` at `5a82f6f51eeb0d6b47976f83a73cfa8446ca0013`  
+**Runtime lineage inspected:** `main` at `64bd430810dc73e4206f8221792c922364eeec0f`
 
-## 0. Correction to the first AR-1144 wording
+## Correction
 
-The first version overstated the orphan-session restart issue as an official 3-5 day PAPER qualification blocker.
+The prior version used the TradingView/TradersPost paper route as the authority for the operator's custom PAPER engine. That was incorrect.
 
-Deeper inspection of current `src/server/routes/paper.ts` proves the internal Massive-WebSocket simulator is **pre-PAPER only**. The route explicitly refuses to start it when the strategy lifecycle is in:
+Repository commit `91e1870fa148fd8ff3335050ca5870b3bb3e456d` (`M3-core: PAPER Authority Flip — internal-engine-only MVP`) changed PAPER so the internal Massive-WS/custom simulator is the PAPER-state record keeper. `main` contains that commit. The isolated compiler branch diverged before it and therefore still contains older PAPER-authority assumptions.
 
-```text
-PAPER | DEPLOY_READY | PILOT | DEPLOYED
-```
+Use the branches for different questions:
 
-and states that PAPER+ strategies use **TradersPost as the canonical journal**.
+- `h1-wave4-sealed12-driver` — AR-1138 compiler/extraction evidence.
+- M3-containing runtime/main lineage — custom PAPER static-readiness evidence.
 
-Therefore:
+## Current custom PAPER restart behavior on main
 
-- the orphan/NULL-strategy restart behavior below is a real **pre-PAPER simulator integrity** issue;
-- it is **not automatically the authority for the official 3-5 day PAPER window**;
-- it becomes an official qualification problem only if pre-PAPER simulator evidence is mistakenly counted as PAPER evidence or if the separate TradersPost/PAPER authority has an analogous identity gap.
+`src/server/lib/paper-authority-states.ts` defines only `DEPLOY_READY`, `PILOT`, and `DEPLOYED` as broker-authoritative. PAPER is intentionally internal-engine-only.
 
-This correction supersedes any earlier AR-1144 sentence calling the internal orphan session itself a proven official PAPER blocker.
+`src/server/scheduler.ts::resumeActivePaperSessions()` therefore reconnects PAPER sessions to the custom internal stream after a process restart. It also rehydrates deferred pending-entry state for internal sessions.
 
-## 1. Reusable pre-PAPER restart foundation exists
+## Identity continuity finding
 
-Repository history already contains useful restart durability work:
+`paper_sessions.strategy_id` remains nullable with `ON DELETE SET NULL`. The restart authority guard treats a missing lifecycle state as non-broker-authoritative, so an orphan session can pass that particular guard.
 
-- `c4a730d0fd0cadfae1dcd7f45fba62d2146cb4a7` persisted deferred internal-paper entries in `paper_pending_entries`, added boot rehydration coverage, and replaced unseeded fill randomness with deterministic seeded behavior.
-- `adfee35502b0d769dd1eeea627ef932720db7a33` later composed the real sizing -> pending entry -> open -> close path against a real PGlite DB with a shared correlation ID.
-- `04927bd3ce8ddc60f49ccf3cc1493c63f2dbf23b` repaired scheduler boot wiring that could otherwise prevent `resumeActivePaperSessions()` from running.
+Downstream behavior limits the impact:
 
-**Decision:** reuse this machinery for pre-PAPER screening; do not rebuild it.
+- `getSessionConfig(sessionId)` returns `null` when the session has no strategy ID, so normal strategy evaluation cannot load a config.
+- PAPER trading-day counting joins `paper_trades` through `paper_sessions` and filters by the target strategy ID, so a NULL strategy ID is not credited to the deleted strategy.
 
-## 2. Concrete current-branch pre-PAPER finding — orphan session resumes fail-open
+Therefore this is best classified as an **identity/evidence-continuity gap**, not proof that orphan PAPER evidence is falsely credited.
 
-Current `src/server/db/schema.ts` defines:
+## Restart qualification invariant
+
+An official custom PAPER restart receipt should prove:
 
 ```text
-paper_sessions.strategy_id -> strategies.id, ON DELETE SET NULL
+session strategy ID resolves
+same candidate version is still active
+pending/open state belongs to that candidate
+restart/backfill does not duplicate qualifying state
 ```
 
-So an active internal simulator session can remain with `strategy_id = NULL` after its strategy row disappears.
+If candidate identity cannot be reconstructed, that restart interval should not be counted as clean qualification evidence until reconciled.
 
-Current `src/server/scheduler.ts::resumeActivePaperSessions()` explicitly treats a NULL lifecycle state / orphaned or legacy session as pre-PAPER and eligible to resume. A resolved strategy in PAPER+ is skipped, but a missing strategy does not trigger that skip.
+## Verdict
 
-Current shape:
+- Custom PAPER authority on current main doctrine: **internal Massive/custom engine**.
+- TradingView/TradersPost as the operator's custom PAPER authority: **incorrect**.
+- Compiler branch as the source for current PAPER doctrine: **incorrect; it diverged before M3**.
+- Custom PAPER restart/rehydration foundation: **present**.
+- Orphan-session identity handling: **needs a bounded fail-closed qualification control**.
+- Exact immutable candidate-version continuity across the full PAPER window: **not yet proven by this audit**.
 
-```text
-active internal paper_sessions row
--> strategy lookup misses / strategy_id NULL
--> lifecycleState = null
--> PAPER+ skip guard does not fire
--> session is treated as pre-PAPER
--> internal simulator may be resumed
-```
-
-### Corrected verdict
-
-This is a **pre-PAPER simulator integrity fail-open**.
-
-It should not be silently treated as valid screening evidence for a known strategy because restart is guessing that a missing strategy is safe pre-PAPER state.
-
-## 3. Official PAPER authority is separate
-
-Current `POST /api/paper/start` explicitly refuses PAPER+ strategies and returns:
-
-```text
-paper_start_refused_paper_state
-```
-
-with the reason that PAPER+ strategies use TradersPost as the canonical paper journal and the internal simulator is pre-PAPER only.
-
-That separation is good and materially reduces the blast radius of the orphan restart finding.
-
-### New audit target
-
-The real official-PAPER question is now:
-
-```text
-Does the TradersPost/PAPER journal bind every qualifying day/trade to the exact frozen strategy identity/version, and does that identity survive restart/reconnect without ambiguity?
-```
-
-That must be audited separately; this file does not claim the answer.
-
-## 4. Pre-PAPER restart invariant
-
-For internal screening, restart must never guess strategy identity.
-
-A resumed internal simulator session should have reconstructable proof of:
-
-```text
-session.strategy_id resolves
-AND resolved strategy is still eligible for internal pre-PAPER simulation
-AND pending entries/positions belong to that same session/strategy
-AND restart does not duplicate signals/trades
-```
-
-A missing/deleted strategy should be treated as degraded/invalid screening evidence rather than silently assumed safe.
-
-## 5. Pre-PAPER restart witness
-
-Before relying on internal screening results at scale, use the existing recovery machinery to prove:
-
-1. known strategy/session identity before restart;
-2. pending-entry persistence where applicable;
-3. conservative position/governor restoration;
-4. backfill/reconnect does not replay a signal as a second trade;
-5. orphan/NULL-strategy session does not masquerade as valid named-strategy evidence;
-6. correlation/restart receipt identifies before/after state.
-
-## 6. Official 3-5 day PAPER work moves to a different audit lane
-
-Do **not** use the internal simulator restart witness as the sole official PAPER certification.
-
-For the 3-5 trading-day window, audit the actual PAPER+ authority:
-
-```text
-frozen strategy identity/version
--> TradersPost canonical journal
--> execution/trade evidence
--> nightly 3AM advisory receipt
--> no mutation of frozen candidate
--> restart/reconnect identity continuity
-```
-
-AR-1145 already covers the nightly 3AM evidence half. A separate immutability/journal audit should cover the frozen strategy binding.
-
-## 7. Corrected verdict
-
-- Internal pending-entry restart durability: **FOUND / reusable foundation**.
-- Internal scheduler boot resume path: **FOUND**.
-- PAPER+ internal-simulator refusal: **FOUND and GOOD**.
-- Orphan/NULL-strategy internal resume: **FAIL-OPEN FOR PRE-PAPER SCREENING IDENTITY**.
-- Proven impact on official TradersPost PAPER journal: **NOT ESTABLISHED**.
-- Official 3-5 day PAPER restart/immutability witness: **STILL NOT YET CERTIFIED, BUT MUST BE AUDITED ON THE TRADERPOST/PAPER+ PATH, NOT INFERRED FROM THIS INTERNAL SIMULATOR FINDING**.
-
-**Advisor directive:** preserve AR-1138. Carry the orphan handling as a bounded pre-PAPER integrity item and move official PAPER immutability review to the TradersPost/PAPER+ authority.
+This file supersedes both earlier AR-1144 interpretations.
