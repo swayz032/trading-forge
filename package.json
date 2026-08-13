@@ -34,6 +34,7 @@
     "audit:n8n": "node scripts/audit-n8n-workflows.mjs",
     "preflight:vacation": "tsx scripts/pre-vacation-preflight.ts",
     "forge": "tsx scripts/cli.ts",
+    "compile:certified-record": "python -m src.engine.extraction.compile_certified_record",
     "discord": "tsx src/discord/bot.ts",
     "discord:dev": "tsx watch src/discord/bot.ts",
     "test:metrics": "python -m pytest src/engine/tests/test_metric_snapshot.py src/engine/tests/test_golden_fixtures.py src/engine/tests/test_frankenstein.py src/engine/tests/test_cross_engine_parity.py -v --tb=short",

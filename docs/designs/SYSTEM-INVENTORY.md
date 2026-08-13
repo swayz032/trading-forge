@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `25229a80d05c48950d95d86994fb9dc04b6cc71c`  (worktree DIRTY at generation time)
+> Generated at commit `d8fa19580da49fbfd4490ccaa0f2c5a326619939`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 296 | 382 | 124079 | 1911 |
+| `src/` | Python | 297 | 382 | 124281 | 1914 |
 | `src/` | TypeScript | 462 | 722 | 209831 | 2928 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1862 | 758 |
+| `src/` | 1863 | 759 |
 | `scripts/` | 223 | 221 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2120** | **979** |
+| **TOTAL** | **2121** | **980** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -86,9 +86,9 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **94**.  Modules reachable from them: **624** of **2120** parsed files.
+Total entry points: **95**.  Modules reachable from them: **627** of **2121** parsed files.
 
-<details><summary>All 94 entry points and why each was counted</summary>
+<details><summary>All 95 entry points and why each was counted</summary>
 
 | Entry point | Discovered because |
 |---|---|
@@ -138,6 +138,7 @@ Total entry points: **94**.  Modules reachable from them: **624** of **2120** pa
 | `src/engine/economic_calendar.py` | subprocess path literal in scripts/check-ts-python-event-product-scope-parity.ts (+1 more) |
 | `src/engine/exits/style_c_handler.py` | `python -m src.engine.exits.style_c_handler` module spec in src/server/services/paper-execution-service.ts |
 | `src/engine/exits/style_d_handler.py` | `python -m src.engine.exits.style_d_handler` module spec in src/server/services/paper-execution-service.ts |
+| `src/engine/extraction/compile_certified_record.py` | package.json script `compile:certified-record` (python -m) |
 | `src/engine/firm_config.py` | subprocess path literal in scripts/check-ts-python-firm-rules-version.ts |
 | `src/engine/frankenstein_test.py` | `python -m src.engine.frankenstein_test` module spec in src/server/services/frankenstein-service.ts |
 | `src/engine/gate_block_analyzer.py` | subprocess path literal in src/server/lib/carter/carter-recommend.ts |
@@ -198,23 +199,23 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3289 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1544 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 67.3% of 4884 rows |
-| C5 | server entry point discovered | PASS | entry points discovered=94 |
-| C6 | a registered route module is reachable | PASS | modules reachable=624 |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3323 |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1513 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 68.0% of 4887 rows |
+| C5 | server entry point discovered | PASS | entry points discovered=95 |
+| C6 | a registered route module is reachable | PASS | modules reachable=627 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=127, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1911 ts=2928 |
+| C12 | symbols enumerated in both languages | PASS | py=1914 ts=2928 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=38 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6609/6609 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=414 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
-| C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=94 |
+| C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=95 |
 | C18 | `export { X as Y }` binding form is enumerated | PASS | alertRoutes enumerated=True |
 
 **19 / 19 controls pass.**
@@ -224,8 +225,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **218 of 4573 enumerated symbol names (4.8%) are defined in more than one file, covering
-  484 of 4839 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **218 of 4575 enumerated symbol names (4.8%) are defined in more than one file, covering
+  485 of 4842 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -244,12 +245,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3289 | 67.3% |
+| `WIRED` | 3323 | 68.0% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1544 | 31.6% |
+| `BUILT-UNREACHABLE` | 1513 | 31.0% |
 | `DECLARED-ABSENT` | 38 | 0.8% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4884** | |
+| **TOTAL** | **4887** | |
 
 ---
 
@@ -305,7 +306,7 @@ table below it.**
 | `src/engine/evt_tail.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/exits` | 20 | 0 | 2 | 0 | 0 | 22 |
 | `src/engine/exportability.py` | 3 | 0 | 0 | 0 | 0 | 3 |
-| `src/engine/extraction` | 0 | 0 | 269 | 0 | 0 | 269 |
+| `src/engine/extraction` | 24 | 0 | 248 | 0 | 0 | 272 |
 | `src/engine/family_meta_enforcement.py` | 10 | 0 | 2 | 0 | 0 | 12 |
 | `src/engine/fill_model.py` | 9 | 0 | 1 | 0 | 0 | 10 |
 | `src/engine/firm_config.py` | 2 | 0 | 1 | 0 | 0 | 3 |
@@ -342,7 +343,7 @@ table below it.**
 | `src/engine/opening_range_candidate_receipt.py` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/engine/opening_range_definition.py` | 6 | 0 | 1 | 0 | 0 | 7 |
 | `src/engine/opening_range_execution_fanout.py` | 0 | 0 | 1 | 0 | 0 | 1 |
-| `src/engine/opening_range_lowering.py` | 0 | 0 | 10 | 0 | 0 | 10 |
+| `src/engine/opening_range_lowering.py` | 10 | 0 | 0 | 0 | 0 | 10 |
 | `src/engine/optimizer.py` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `src/engine/paper_analytics.py` | 1 | 0 | 0 | 0 | 0 | 1 |
 | `src/engine/parameter_evolver.py` | 6 | 0 | 0 | 0 | 0 | 6 |
@@ -973,7 +974,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1544** `BUILT-UNREACHABLE` symbols, **778 have test coverage but no production caller**.
+Of **1513** `BUILT-UNREACHABLE` symbols, **765 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -992,13 +993,11 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `selectModel` | function | `src/server/services/model-router.ts:806` | 11 | unique |
 | `loadCredentials` | function | `src/server/lib/credential-loader.ts:323` | 9 | unique |
 | `flushNotifications` | function | `src/server/services/notification-service.ts:356` | 8 | unique |
-| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:1024` | 6 | unique |
 | `ExpressionStrategy` | class | `src/engine/strategy_base.py:72` | 6 | unique |
 | `__setOllamaHealthyForTests` | function | `src/server/services/model-router.ts:411` | 6 | unique |
 | `DEFAULT_ACCOUNT_TYPE` | const | `src/shared/firm-config.ts:366` | 6 | unique |
 | `_synthetic_dry_run_propose_fn` | function | `src/engine/extraction/pilot_conveyor.py:1794` | 5 | unique |
 | `certified_reader_identity` | function | `src/engine/extraction/sealed_read_driver.py:288` | 5 | unique |
-| `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:645` | 5 | unique |
 | `_resetForTest` | function | `src/server/lib/carter/carter-issues-store.ts:231` | 5 | unique |
 | `_testOnly` | const | `src/server/scheduler.ts:746` | 5 | unique |
 | `__clearPromptCacheForTests` | function | `src/server/services/model-router.ts:933` | 5 | unique |
@@ -1016,12 +1015,10 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `terminal_read_grade` | function | `src/engine/extraction/cert_assembler.py:186` | 3 | unique |
 | `LintResult` | class | `src/engine/extraction/compile_lints.py:165` | 3 | unique |
 | `aggregate` | function | `src/engine/extraction/pilot_conveyor.py:1678` | 3 | unique |
-| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:758` | 3 | unique |
 | `Tier1Detection` | class | `src/engine/extraction/tier1_detectors.py:54` | 3 | unique |
 | `produce_topology` | function | `src/engine/extraction/topology_producer.py:146` | 3 | unique |
 | `CheckResult` | class | `src/engine/forensics/compile_fidelity.py:98` | 3 | unique |
 | `run_leg_a` | function | `src/engine/forensics/compile_fidelity.py:859` | 3 | unique |
-| `lower_opening_range_definition` | function | `src/engine/opening_range_lowering.py:367` | 3 | unique |
 | `run_prop_compliance` | function | `src/engine/prop_compliance.py:232` | 3 | unique |
 | `compute_rl_kill_switch_state` | function | `src/engine/quantum_rl_agent.py:2098` | 3 | unique |
 | `emitArchetypeEvaluatorFailed` | function | `src/server/lib/archetype-routing-observability.ts:266` | 3 | unique |
@@ -1053,7 +1050,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `_rater_output_contract` | function | `src/engine/extraction/sealed_read_driver.py:2662` | 2 | unique |
 | `run_verdict_stage` | function | `src/engine/extraction/sealed_read_driver.py:3225` | 2 | unique |
 | `verify_sealed_manifest` | function | `src/engine/extraction/sealed_read_gate.py:94` | 2 | unique |
-| `_untaught_exit` | function | `src/engine/extraction/spec_producer.py:496` | 2 | unique |
 | `coverage` | function | `src/engine/extraction/tier1_coverage_report.py:86` | 2 | unique |
 | `run_tier1` | function | `src/engine/extraction/tier1_detectors.py:586` | 2 | unique |
 | `LegAInputs` | class | `src/engine/forensics/calibration_battery.py:57` | 2 | unique |
@@ -1224,11 +1220,6 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `operator_gate` | function | `src/engine/extraction/sealed_read_gate.py:213` | 1 | unique |
 | `reject_if_spent16` | function | `src/engine/extraction/sealed_read_gate.py:181` | 1 | unique |
 | `verify_transcripts_present` | function | `src/engine/extraction/sealed_read_gate.py:155` | 1 | unique |
-| `RecordCompileResult` | class | `src/engine/extraction/spec_producer.py:936` | 1 | unique |
-| `_approximation_metrics` | function | `src/engine/extraction/spec_producer.py:763` | 1 | unique |
-| `_classify_family` | function | `src/engine/extraction/spec_producer.py:356` | 1 | unique |
-| `_family_evidence` | function | `src/engine/extraction/spec_producer.py:264` | 1 | unique |
-| `_spec_role` | function | `src/engine/extraction/spec_producer.py:623` | 1 | unique |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:848` | 1 | unique |
 | `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | 1 | unique |
 | `run_layer_reliability` | function | `src/engine/extraction/tier1_coverage_report.py:142` | 1 | unique |
@@ -1279,16 +1270,26 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `validate_null_calibration_labels` | function | `src/engine/null_calibration_guard.py:63` | 1 | unique |
 | `would_collide` | function | `src/engine/opening_range_candidate_persistence.py:150` | 1 | unique |
 | `build_execution_instances` | function | `src/engine/opening_range_execution_fanout.py:53` | 1 | unique |
-| `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | 1 | unique |
-| `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | 1 | unique |
 | `run_b15_ablation` | function | `src/engine/parameter_jitter_battery.py:629` | 1 | unique |
 | `check_ffn_express_consistency` | function | `src/engine/prop_compliance.py:172` | 1 | unique |
 | `compare_vs_optuna` | function | `src/engine/quantum_annealing_optimizer.py:311` | 1 | unique |
 | `decode_solution` | function | `src/engine/quantum_annealing_optimizer.py:306` | 1 | unique |
 | `BenchmarkResult` | class | `src/engine/quantum_bench.py:28` | 1 | unique |
 | `ToleranceConfig` | class | `src/engine/quantum_bench.py:21` | 1 | unique |
+| `benchmark_against_classical` | function | `src/engine/quantum_bench.py:46` | 1 | unique |
+| `build_reproducibility_hash` | function | `src/engine/quantum_bench.py:113` | 1 | unique |
+| `persist_benchmark` | function | `src/engine/quantum_bench.py:119` | 1 | unique |
+| `validate_tolerance` | function | `src/engine/quantum_bench.py:108` | 1 | unique |
+| `QuantumRunConfig` | class | `src/engine/quantum_mc.py:177` | 1 | unique |
+| `run_hybrid_compare` | function | `src/engine/quantum_mc.py:633` | 1 | unique |
+| `run_quantum_tail_loss_estimation` | function | `src/engine/quantum_mc.py:304` | 1 | unique |
+| `run_quantum_target_hit_estimation` | function | `src/engine/quantum_mc.py:291` | 1 | unique |
+| `deserialize_uncertainty_model` | function | `src/engine/quantum_models.py:196` | 1 | unique |
+| `serialize_uncertainty_model` | function | `src/engine/quantum_models.py:191` | 1 | unique |
+| `_load_production_state_at` | function | `src/engine/quantum_rl_agent.py:159` | 1 | unique |
+| `should_use_static_router_epsilon_greedy` | function | `src/engine/quantum_rl_agent.py:1513` | 1 | unique |
 
-_...478 more omitted from this table._
+_...465 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1597,7 +1598,7 @@ _...478 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/extraction</code> - 269 symbols</summary>
+<details><summary><code>src/engine/extraction</code> - 248 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1784,28 +1785,7 @@ _...478 more omitted from this table._
 | `_token_present` | function | `src/engine/extraction/sealed_read_gate.py:204` | defining module is not reachable from any measured entry point |
 | `operator_gate` | function | `src/engine/extraction/sealed_read_gate.py:213` | defining module is not reachable from any measured entry point |
 | `gate_sealed_read` | function | `src/engine/extraction/sealed_read_gate.py:249` | defining module is not reachable from any measured entry point |
-| `_stem_pattern` | function | `src/engine/extraction/spec_producer.py:235` | defining module is not reachable from any measured entry point |
-| `_norm` | function | `src/engine/extraction/spec_producer.py:255` | defining module is not reachable from any measured entry point |
-| `_slug` | function | `src/engine/extraction/spec_producer.py:259` | defining module is not reachable from any measured entry point |
-| `_family_evidence` | function | `src/engine/extraction/spec_producer.py:264` | defining module is not reachable from any measured entry point |
-| `_classify_family` | function | `src/engine/extraction/spec_producer.py:356` | defining module is not reachable from any measured entry point |
-| `_direction` | function | `src/engine/extraction/spec_producer.py:423` | defining module is not reachable from any measured entry point |
-| `_condition_text` | function | `src/engine/extraction/spec_producer.py:428` | defining module is not reachable from any measured entry point |
-| `_concrete_stop` | function | `src/engine/extraction/spec_producer.py:444` | defining module is not reachable from any measured entry point |
-| `_concrete_target` | function | `src/engine/extraction/spec_producer.py:476` | defining module is not reachable from any measured entry point |
-| `_untaught_exit` | function | `src/engine/extraction/spec_producer.py:496` | defining module is not reachable from any measured entry point |
-| `_anchor_grounds` | function | `src/engine/extraction/spec_producer.py:544` | defining module is not reachable from any measured entry point |
-| `_cert_span_for` | function | `src/engine/extraction/spec_producer.py:557` | defining module is not reachable from any measured entry point |
-| `_entry_condition` | function | `src/engine/extraction/spec_producer.py:589` | defining module is not reachable from any measured entry point |
-| `_spec_role` | function | `src/engine/extraction/spec_producer.py:623` | defining module is not reachable from any measured entry point |
-| `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:645` | defining module is not reachable from any measured entry point |
-| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:758` | defining module is not reachable from any measured entry point |
-| `_approximation_metrics` | function | `src/engine/extraction/spec_producer.py:763` | defining module is not reachable from any measured entry point |
-| `_all_strings` | function | `src/engine/extraction/spec_producer.py:832` | defining module is not reachable from any measured entry point |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:848` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `RecordCompileResult` | class | `src/engine/extraction/spec_producer.py:936` | defining module is not reachable from any measured entry point |
-| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:1024` | no non-test reference outside its own definition; 6 test file(s) do reference it |
-| `_opening_range_condition_id` | function | `src/engine/extraction/spec_producer.py:1111` | defining module is not reachable from any measured entry point |
 | `materialize_sets` | function | `src/engine/extraction/tier1_coverage_report.py:52` | defining module is not reachable from any measured entry point |
 | `_fires_by_family` | function | `src/engine/extraction/tier1_coverage_report.py:75` | defining module is not reachable from any measured entry point |
 | `coverage` | function | `src/engine/extraction/tier1_coverage_report.py:86` | defining module is not reachable from any measured entry point |
@@ -2141,23 +2121,6 @@ _...478 more omitted from this table._
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
 | `build_execution_instances` | function | `src/engine/opening_range_execution_fanout.py:53` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-
-</details>
-
-<details><summary><code>src/engine/opening_range_lowering.py</code> - 10 symbols</summary>
-
-| Symbol | Kind | Defined at | Reason |
-|---|---|---|---|
-| `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | defining module is not reachable from any measured entry point |
-| `_duration_minutes` | function | `src/engine/opening_range_lowering.py:122` | defining module is not reachable from any measured entry point |
-| `_timezone_in` | function | `src/engine/opening_range_lowering.py:131` | defining module is not reachable from any measured entry point |
-| `_clock` | function | `src/engine/opening_range_lowering.py:143` | defining module is not reachable from any measured entry point |
-| `_taught_spans` | function | `src/engine/opening_range_lowering.py:159` | defining module is not reachable from any measured entry point |
-| `_VariantProblem` | class | `src/engine/opening_range_lowering.py:195` | defining module is not reachable from any measured entry point |
-| `_taught_variants` | function | `src/engine/opening_range_lowering.py:200` | defining module is not reachable from any measured entry point |
-| `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | defining module is not reachable from any measured entry point |
-| `OpeningRangeLoweringResult` | class | `src/engine/opening_range_lowering.py:352` | defining module is not reachable from any measured entry point |
-| `lower_opening_range_definition` | function | `src/engine/opening_range_lowering.py:367` | defining module is not reachable from any measured entry point |
 
 </details>
 
@@ -3513,15 +3476,15 @@ This is the *we already have this* list.  Check it before writing anything.
 | `pull_definition` | function | `src/data/scripts/databento_definition_pull.py:92` | 0 | unique |
 | `check_against_expected` | function | `src/data/scripts/databento_definition_pull.py:179` | 0 | unique |
 | `save_to_cache` | function | `src/data/scripts/databento_definition_pull.py:213` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 189 | AMBIG |
+| `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 190 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_imbalance_pull.py:64` | 4 | AMBIG |
 | `et_to_utc_window` | function | `src/data/scripts/databento_imbalance_pull.py:72` | 0 | unique |
 | `pull_imbalance_for_date` | function | `src/data/scripts/databento_imbalance_pull.py:98` | 0 | unique |
 | `get_trading_dates` | function | `src/data/scripts/databento_imbalance_pull.py:185` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_imbalance_pull.py:197` | 189 | AMBIG |
+| `main` | function | `src/data/scripts/databento_imbalance_pull.py:197` | 190 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_statistics_pull.py:66` | 4 | AMBIG |
 | `pull_statistics` | function | `src/data/scripts/databento_statistics_pull.py:74` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 189 | AMBIG |
+| `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 190 | AMBIG |
 
 </details>
 
@@ -3650,7 +3613,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_get_archetype_class_map` | function | `src/engine/archetype_evaluator.py:100` | 0 | unique |
 | `_build_synthetic_df` | function | `src/engine/archetype_evaluator.py:191` | 0 | unique |
 | `evaluate_archetype` | function | `src/engine/archetype_evaluator.py:262` | 0 | unique |
-| `main` | function | `src/engine/archetype_evaluator.py:374` | 189 | AMBIG |
+| `main` | function | `src/engine/archetype_evaluator.py:374` | 190 | AMBIG |
 | `_emit_error` | function | `src/engine/archetype_evaluator.py:453` | 0 | unique |
 
 </details>
@@ -3735,7 +3698,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_rescore_with_crisis` | function | `src/engine/backtester.py:9363` | 0 | unique |
 | `_candidate_refusal_envelope` | function | `src/engine/backtester.py:9434` | 0 | unique |
 | `resolve_candidate_authority` | function | `src/engine/backtester.py:9473` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:9634` | 189 | AMBIG |
+| `main` | function | `src/engine/backtester.py:9634` | 190 | AMBIG |
 
 </details>
 
@@ -3982,7 +3945,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_bars` | function | `src/engine/context_runner.py:25` | 1 | unique |
 | `run_bias` | function | `src/engine/context_runner.py:35` | 0 | unique |
 | `run_evaluate` | function | `src/engine/context_runner.py:141` | 0 | unique |
-| `main` | function | `src/engine/context_runner.py:317` | 189 | AMBIG |
+| `main` | function | `src/engine/context_runner.py:317` | 190 | AMBIG |
 
 </details>
 
@@ -4092,7 +4055,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_parquet_data` | function | `src/engine/deepar_forecaster.py:147` | 0 | unique |
 | `_prepare_series` | function | `src/engine/deepar_forecaster.py:195` | 0 | unique |
 | `DeepARForecaster` | class | `src/engine/deepar_forecaster.py:291` | 0 | unique |
-| `main` | function | `src/engine/deepar_forecaster.py:571` | 189 | AMBIG |
+| `main` | function | `src/engine/deepar_forecaster.py:571` | 190 | AMBIG |
 
 </details>
 
@@ -4197,6 +4160,37 @@ This is the *we already have this* list.  Check it before writing anything.
 | `ExportabilityResult` | class | `src/engine/exportability.py:70` | 1 | unique |
 | `_pine_inexpressible_notes` | function | `src/engine/exportability.py:86` | 0 | unique |
 | `score_exportability` | function | `src/engine/exportability.py:129` | 1 | unique |
+
+</details>
+
+<details><summary><code>src/engine/extraction</code> - 24 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `_load_record` | function | `src/engine/extraction/compile_certified_record.py:83` | 0 | unique |
+| `compile_record_to_artifact` | function | `src/engine/extraction/compile_certified_record.py:100` | 0 | unique |
+| `main` | function | `src/engine/extraction/compile_certified_record.py:148` | 190 | AMBIG |
+| `_stem_pattern` | function | `src/engine/extraction/spec_producer.py:235` | 0 | unique |
+| `_norm` | function | `src/engine/extraction/spec_producer.py:255` | 1 | AMBIG |
+| `_slug` | function | `src/engine/extraction/spec_producer.py:259` | 3 | unique |
+| `_family_evidence` | function | `src/engine/extraction/spec_producer.py:264` | 0 | unique |
+| `_classify_family` | function | `src/engine/extraction/spec_producer.py:356` | 0 | unique |
+| `_direction` | function | `src/engine/extraction/spec_producer.py:423` | 0 | unique |
+| `_condition_text` | function | `src/engine/extraction/spec_producer.py:428` | 0 | unique |
+| `_concrete_stop` | function | `src/engine/extraction/spec_producer.py:444` | 0 | unique |
+| `_concrete_target` | function | `src/engine/extraction/spec_producer.py:476` | 0 | unique |
+| `_untaught_exit` | function | `src/engine/extraction/spec_producer.py:496` | 0 | unique |
+| `_anchor_grounds` | function | `src/engine/extraction/spec_producer.py:544` | 0 | unique |
+| `_cert_span_for` | function | `src/engine/extraction/spec_producer.py:557` | 0 | unique |
+| `_entry_condition` | function | `src/engine/extraction/spec_producer.py:589` | 0 | unique |
+| `_spec_role` | function | `src/engine/extraction/spec_producer.py:623` | 0 | unique |
+| `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:645` | 0 | unique |
+| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:758` | 1 | unique |
+| `_approximation_metrics` | function | `src/engine/extraction/spec_producer.py:763` | 0 | unique |
+| `_all_strings` | function | `src/engine/extraction/spec_producer.py:832` | 0 | unique |
+| `RecordCompileResult` | class | `src/engine/extraction/spec_producer.py:936` | 1 | unique |
+| `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:1024` | 1 | unique |
+| `_opening_range_condition_id` | function | `src/engine/extraction/spec_producer.py:1111` | 0 | unique |
 
 </details>
 
@@ -4335,7 +4329,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `cluster_graveyard` | function | `src/engine/graveyard/cluster.py:19` | 0 | unique |
 | `_aggregate_failure_modes` | function | `src/engine/graveyard/cluster.py:97` | 0 | unique |
 | `_aggregate_categories` | function | `src/engine/graveyard/cluster.py:106` | 0 | unique |
-| `main` | function | `src/engine/graveyard/cluster.py:119` | 189 | AMBIG |
+| `main` | function | `src/engine/graveyard/cluster.py:119` | 190 | AMBIG |
 | `embed_strategy` | function | `src/engine/graveyard/embedder.py:21` | 2 | unique |
 | `embed_text` | function | `src/engine/graveyard/embedder.py:71` | 0 | unique |
 | `FailureTag` | class | `src/engine/graveyard/failure_tagger.py:22` | 0 | unique |
@@ -4637,7 +4631,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_sample_paths` | function | `src/engine/monte_carlo.py:1426` | 0 | unique |
 | `_compute_risk_metrics` | function | `src/engine/monte_carlo.py:1448` | 0 | unique |
 | `run_monte_carlo` | function | `src/engine/monte_carlo.py:1467` | 4 | unique |
-| `main` | function | `src/engine/monte_carlo.py:2219` | 189 | AMBIG |
+| `main` | function | `src/engine/monte_carlo.py:2219` | 190 | AMBIG |
 
 </details>
 
@@ -4718,6 +4712,23 @@ This is the *we already have this* list.  Check it before writing anything.
 | `OpeningRangeDefinition` | class | `src/engine/opening_range_definition.py:125` | 4 | unique |
 | `OpeningRangeState` | class | `src/engine/opening_range_definition.py:189` | 1 | unique |
 | `classify_opening_range_definition` | function | `src/engine/opening_range_definition.py:384` | 1 | unique |
+
+</details>
+
+<details><summary><code>src/engine/opening_range_lowering.py</code> - 10 symbols</summary>
+
+| Symbol | Kind | Defined at | Non-test caller files | Name |
+|---|---|---|---:|---|
+| `OpeningRangeLoweringDisposition` | class | `src/engine/opening_range_lowering.py:74` | 0 | unique |
+| `_duration_minutes` | function | `src/engine/opening_range_lowering.py:122` | 0 | unique |
+| `_timezone_in` | function | `src/engine/opening_range_lowering.py:131` | 0 | unique |
+| `_clock` | function | `src/engine/opening_range_lowering.py:143` | 0 | unique |
+| `_taught_spans` | function | `src/engine/opening_range_lowering.py:159` | 0 | unique |
+| `_VariantProblem` | class | `src/engine/opening_range_lowering.py:195` | 0 | unique |
+| `_taught_variants` | function | `src/engine/opening_range_lowering.py:200` | 0 | unique |
+| `OpeningRangeSourceRefusal` | class | `src/engine/opening_range_lowering.py:297` | 0 | unique |
+| `OpeningRangeLoweringResult` | class | `src/engine/opening_range_lowering.py:352` | 1 | unique |
+| `lower_opening_range_definition` | function | `src/engine/opening_range_lowering.py:367` | 1 | unique |
 
 </details>
 
@@ -5044,7 +5055,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `fit_hmm_regime` | function | `src/engine/regime.py:187` | 0 | unique |
 | `_compute_avg_duration` | function | `src/engine/regime.py:259` | 0 | unique |
 | `_compute_regime_persistence` | function | `src/engine/regime.py:275` | 0 | unique |
-| `main` | function | `src/engine/regime.py:293` | 189 | AMBIG |
+| `main` | function | `src/engine/regime.py:293` | 190 | AMBIG |
 
 </details>
 
@@ -5449,7 +5460,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_default_scenarios` | function | `src/engine/stress_test.py:26` | 0 | unique |
 | `_run_crisis_backtest` | function | `src/engine/stress_test.py:96` | 0 | unique |
 | `run_stress_test` | function | `src/engine/stress_test.py:142` | 1 | unique |
-| `main` | function | `src/engine/stress_test.py:191` | 189 | AMBIG |
+| `main` | function | `src/engine/stress_test.py:191` | 190 | AMBIG |
 
 </details>
 
@@ -5474,14 +5485,14 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_firm_profile` | function | `src/engine/survival/firm_profiles.py:65` | 2 | unique |
 | `list_firms` | function | `src/engine/survival/firm_profiles.py:73` | 1 | unique |
 | `compare_strategies` | function | `src/engine/survival/survival_comparator.py:12` | 0 | unique |
-| `main` | function | `src/engine/survival/survival_comparator.py:124` | 189 | AMBIG |
+| `main` | function | `src/engine/survival/survival_comparator.py:124` | 190 | AMBIG |
 | `_recovery_speed_score` | function | `src/engine/survival/survival_scorer.py:51` | 0 | unique |
 | `_worst_month_score` | function | `src/engine/survival/survival_scorer.py:109` | 0 | unique |
 | `_commission_drag_score` | function | `src/engine/survival/survival_scorer.py:160` | 0 | unique |
 | `_eval_speed_score` | function | `src/engine/survival/survival_scorer.py:205` | 0 | unique |
 | `_assign_grade` | function | `src/engine/survival/survival_scorer.py:246` | 0 | unique |
 | `survival_score` | function | `src/engine/survival/survival_scorer.py:260` | 6 | unique |
-| `main` | function | `src/engine/survival/survival_scorer.py:379` | 189 | AMBIG |
+| `main` | function | `src/engine/survival/survival_scorer.py:379` | 190 | AMBIG |
 
 </details>
 
@@ -5502,7 +5513,7 @@ This is the *we already have this* list.  Check it before writing anything.
 |---|---|---|---:|---|
 | `_make_result_record` | function | `src/engine/synthetic/populate_regime_bank.py:105` | 0 | unique |
 | `run_populate` | function | `src/engine/synthetic/populate_regime_bank.py:144` | 0 | unique |
-| `main` | function | `src/engine/synthetic/populate_regime_bank.py:382` | 189 | AMBIG |
+| `main` | function | `src/engine/synthetic/populate_regime_bank.py:382` | 190 | AMBIG |
 | `_emit_output` | function | `src/engine/synthetic/populate_regime_bank.py:467` | 0 | unique |
 | `ScenarioSpec` | class | `src/engine/synthetic/stochastic_regime_generator.py:126` | 1 | unique |
 | `_returns_to_ohlcv` | function | `src/engine/synthetic/stochastic_regime_generator.py:379` | 0 | unique |
@@ -5569,7 +5580,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `run_runtime` | function | `src/engine/validation_runner.py:46` | 0 | unique |
 | `run_cross` | function | `src/engine/validation_runner.py:71` | 0 | unique |
 | `run_list_specs` | function | `src/engine/validation_runner.py:91` | 0 | unique |
-| `main` | function | `src/engine/validation_runner.py:97` | 189 | AMBIG |
+| `main` | function | `src/engine/validation_runner.py:97` | 190 | AMBIG |
 
 </details>
 
