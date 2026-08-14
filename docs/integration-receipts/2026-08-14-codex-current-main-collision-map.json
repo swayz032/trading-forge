@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "scope": "read-only current-main collision baseline; no integration action",
+  "observed_on": "2026-08-14",
+  "branch": {
+    "name": "codex/continuous-main-integration-20260814",
+    "head": "64bd430810dc73e4206f8221792c922364eeec0f",
+    "origin_main": "64bd430810dc73e4206f8221792c922364eeec0f",
+    "matches_origin_main": true
+  },
+  "refs": {
+    "origin/main": {
+      "sha": "64bd430810dc73e4206f8221792c922364eeec0f",
+      "subject": "fix(slumhouse): keep office carousel only",
+      "committed_at": "2026-08-11T23:44:07-04:00"
+    },
+    "origin/h1-wave4-sealed12-driver": {
+      "sha": "5a82f6f51eeb0d6b47976f83a73cfa8446ca0013",
+      "subject": "SYSTEM-INVENTORY: regenerate for the Lane C extraction pre-push gate",
+      "committed_at": "2026-08-13T05:59:12-04:00"
+    },
+    "origin/external-advisor/gpt-rulings": {
+      "sha": "c2706a0c1fc84d047eed96a4691c0daae0e4f7b4",
+      "subject": "AR-1168 GPT: stage two-worker identity package",
+      "committed_at": "2026-08-14T03:40:24-04:00"
+    }
+  },
+  "method": {
+    "ref_refresh": "git fetch --prune origin",
+    "changed_file_definition": "git diff --name-only --no-renames <pair_merge_base> <ref>",
+    "overlap_definition": "sorted set intersection of the two changed-file lists",
+    "classification_rules": {
+      "backtester": "backtest, src/engine/, strategy compiler paths",
+      "lifecycle": "lifecycle, paper-signal, promotion, graduation paths",
+      "schema_migrations": "schema.ts, migration, drizzle, src/server/db/ paths",
+      "conveyor_audit_governance": "conveyor, audit, governance, AGENT-LOGS, AGENTS, CLAUDE, system-map, compliance paths",
+      "other": "all remaining paths"
+    }
+  },
+  "comparisons": {
+    "main_h1": {
+      "left": "origin/main",
+      "right": "origin/h1-wave4-sealed12-driver",
+      "merge_base": "a9d7a71a56f375ca79a89663c6685e2ce44d2331",
+      "left_changed_count": 1350,
+      "right_changed_count": 1755,
+      "overlap_count": 43,
+      "critical_overlap_count": 27,
+      "critical_overlaps": {
+        "backtester": [
+          "src/engine/backtester.py",
+          "src/engine/cloud_backend.py",
+          "src/engine/context/htf_context.py",
+          "src/engine/fill_model.py",
+          "src/engine/gate_block_analyzer.py",
+          "src/engine/parameter_jitter_battery.py",
+          "src/engine/prop_compliance.py",
+          "src/engine/quantum_rl_agent.py",
+          "src/engine/skip_engine/calendar_filter.py",
+          "src/engine/survival/firm_profiles.py",
+          "src/engine/tests/test_accuracy_fixes.py",
+          "src/engine/tests/test_apply_trade_management_branching.py",
+          "src/engine/tests/test_audit_a12.py",
+          "src/engine/tests/test_black_swan_evaluator.py",
+          "src/engine/tests/test_entry_windows.py",
+          "src/engine/tests/test_parameter_jitter_battery.py",
+          "src/engine/tests/test_performance_gate.py",
+          "src/engine/tests/test_pine_compiler.py",
+          "src/engine/tests/test_wave_b_intrabar_stops.py",
+          "src/server/__tests__/candidate-backtest-conveyor.test.ts",
+          "src/server/routes/backtests.ts",
+          "src/server/services/backtest-service.ts",
+          "src/server/services/candidate-backtest-conveyor-service.ts"
+        ],
+        "lifecycle": ["src/server/services/lifecycle-service.ts"],
+        "schema_migrations": ["src/server/db/schema.ts"],
+        "conveyor_audit_governance": [
+          "AGENT-LOGS.md",
+          "src/server/__tests__/topstep-2026-compliance.test.ts"
+        ],
+        "other": [
+          ".gitattributes",
+          ".gitignore",
+          "docs/prop-firm-rules-2026-topstep.md",
+          "package.json",
+          "scripts/check-spec-binding-plan-parity.ts",
+          "scripts/corpus-v3-shadow-gate3.py",
+          "scripts/validate-scaling-schedule.py",
+          "scripts/wave26-gemma4-smoke-test.ts",
+          "src/server/__tests__/b11-b12-feedback-loops.test.ts",
+          "src/server/lib/firm-rules-version.ts",
+          "src/server/services/agent-service.ts",
+          "src/server/services/critic-optimizer-service.ts",
+          "src/server/services/evolution-service.ts",
+          "src/server/services/framework-overlay.ts",
+          "src/server/services/prompt-evolution-service.ts",
+          "src/shared/firm-config.ts"
+        ]
+      }
+    },
+    "main_gpt": {
+      "left": "origin/main",
+      "right": "origin/external-advisor/gpt-rulings",
+      "merge_base": "a9d7a71a56f375ca79a89663c6685e2ce44d2331",
+      "left_changed_count": 1350,
+      "right_changed_count": 1700,
+      "overlap_count": 21,
+      "critical_overlap_count": 12,
+      "critical_overlaps": {
+        "backtester": [
+          "src/engine/backtester.py",
+          "src/engine/cloud_backend.py",
+          "src/engine/context/htf_context.py",
+          "src/engine/fill_model.py",
+          "src/engine/gate_block_analyzer.py",
+          "src/engine/prop_compliance.py",
+          "src/engine/quantum_rl_agent.py",
+          "src/engine/skip_engine/calendar_filter.py",
+          "src/engine/survival/firm_profiles.py",
+          "src/server/services/backtest-service.ts"
+        ],
+        "lifecycle": [],
+        "schema_migrations": [],
+        "conveyor_audit_governance": [
+          "AGENT-LOGS.md",
+          "src/server/__tests__/topstep-2026-compliance.test.ts"
+        ],
+        "other": [
+          ".gitattributes",
+          "docs/prop-firm-rules-2026-topstep.md",
+          "package.json",
+          "scripts/check-spec-binding-plan-parity.ts",
+          "scripts/corpus-v3-shadow-gate3.py",
+          "scripts/validate-scaling-schedule.py",
+          "scripts/wave26-gemma4-smoke-test.ts",
+          "src/server/lib/firm-rules-version.ts",
+          "src/shared/firm-config.ts"
+        ]
+      }
+    },
+    "h1_gpt": {
+      "left": "origin/h1-wave4-sealed12-driver",
+      "right": "origin/external-advisor/gpt-rulings",
+      "merge_base": "849ad1398fd628a0c65ee0f5050eed6c0db72395",
+      "left_changed_count": 372,
+      "right_changed_count": 297,
+      "overlap_count": 13,
+      "critical_overlap_count": 2,
+      "critical_overlaps": {
+        "backtester": ["src/engine/extraction/spec_producer.py"],
+        "lifecycle": ["docs/advisor-rulings/AR-1105-WORKER-F3-REALIZED-LIFECYCLE-2026-08-12.md"],
+        "schema_migrations": [],
+        "conveyor_audit_governance": [],
+        "other": [
+          "docs/advisor-rulings/AR-1093-WORKER-F4-PREFLIGHT-2026-08-12.md",
+          "docs/advisor-rulings/AR-1094-WORKER-F4-TRADE-POPULATION-2026-08-12.md",
+          "docs/advisor-rulings/AR-1096-WORKER-SIZING-INGRESS-PREFLIGHT-2026-08-12.md",
+          "docs/advisor-rulings/AR-1097-WORKER-GRADE-CLOSURE-AND-MOCK-LEAK-2026-08-12.md",
+          "docs/advisor-rulings/AR-1098-WORKER-SIZING-INGRESS-CLOSED-2026-08-12.md",
+          "docs/advisor-rulings/AR-1100-WORKER-SIZING-LABEL-AND-MOCK-CLASS-STOP-2026-08-12.md",
+          "docs/advisor-rulings/AR-1102-WORKER-VECTORBT-ISOLATION-CLOSED-2026-08-12.md",
+          "docs/advisor-rulings/AR-1103-WORKER-F3-BLAST-RADIUS-MEASURED-2026-08-12.md",
+          "docs/advisor-rulings/GRADE-F4-TRADE-POPULATION-2026-08-12.md",
+          "scripts/test-validate-v4-phase1-graph.mjs",
+          "scripts/validate-v4-phase1-graph.mjs"
+        ]
+      }
+    }
+  },
+  "integration_requirement": "Recompute this map against the exact accepted packet heads immediately before every merge or cherry-pick; do not rely on this baseline after either source advances."
+}
