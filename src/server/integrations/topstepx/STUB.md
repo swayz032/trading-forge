@@ -1,10 +1,12 @@
 # TopstepX Integration — DEFERRED
 
-## Status
+## Status — live deferred, offline ready
 
-**Not implemented.** TopstepX integration is deferred until the operator opens a Topstep account with an active TopstepX API subscription.
+**Live transport is not implemented.** Authentication and network transport stay deferred until the operator opens an account with active API access.
 
-The `broker_type='topstepx'` value is reserved in the `broker_accounts` table constraint. The broker-router returns `{ success: false, reason: "topstepx_not_configured" }` for any account with this broker type.
+An offline-only simulator now exists in `offline-adapter.ts`. It models the official order, trade, position, cancel, flatten, retry-deduplication, reconnect replay, and reconciliation contracts without importing `fetch`, opening a socket, reading credentials, or touching the broker router.
+
+The `broker_type='topstepx'` value is reserved in the `broker_accounts` table constraint. The broker-router continues to return `{ success: false, reason: "topstepx_not_configured" }` for any account with this broker type. Offline readiness is not live readiness.
 
 ## When to implement
 
@@ -26,7 +28,7 @@ src/server/integrations/topstepx/
   STUB.md           -- this file (remove when implemented)
 ```
 
-The broker-router `routeOrder()` function already has a dispatch branch that calls the TopstepX client. Replace the stub error return with a real `submitWebhookOrder()` call.
+Do not wire the simulator into `routeOrder()`. When paid access exists, implement a separate authenticated client, grade it against Practice first, and only then replace the fail-closed router branch.
 
 ## Topstep 2026 compliance notes
 
@@ -38,7 +40,7 @@ Per `docs/prop-firm-rules-2026-topstep.md`:
 
 ## References
 
-- TopstepX API documentation: https://api.topstepx.com/docs (requires active subscription)
+- ProjectX Gateway API documentation: https://gateway.docs.projectx.com/
 - Topstep 2026 rules: `docs/prop-firm-rules-2026-topstep.md`
 - Broker router: `src/server/services/broker-router.ts`
 - Migration 0098: `src/server/db/migrations/0098_broker_accounts.sql`

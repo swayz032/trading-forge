@@ -38,6 +38,12 @@ test("replay command targets the fresh-bootstrap replay test", () => {
   const { args } = replayCmd();
   assert.ok(args.join(" ").includes("fresh-bootstrap-migration-replay"));
 });
+test("replay command uses the Node-hosted npm CLI on Windows", () => {
+  const command = replayCmd("win32", "C:\\Program Files\\nodejs\\node.exe");
+  assert.equal(command.cmd, "C:\\Program Files\\nodejs\\node.exe");
+  assert.match(command.args[0], /node_modules[\\/]npm[\\/]bin[\\/]npm-cli\.js$/);
+  assert.deepEqual(command.args.slice(1, 4), ["exec", "--", "vitest"]);
+});
 test("exitToResult maps 0→ok, nonzero→not ok", () => {
   assert.equal(exitToResult(0, 5).ok, true);
   assert.equal(exitToResult(1, 5).ok, false);

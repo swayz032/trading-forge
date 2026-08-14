@@ -1,5 +1,23 @@
 # Trading Forge — Build History & Pass-by-Pass Execution Records
 
+### Session Log — 2026-08-14 [Codex] pre-Claude host packet, offline Topstep simulator, and packet validator
+
+**Mission:** finish every Codex/local-computer task before Claude resumes, preserve the dirty H1 evidence in place, and leave Claude a self-contained execution package with no later Codex dependency.
+
+**Work completed:**
+- Recorded the H1 preservation manifest and local test census without editing, cleaning, resetting, or copying its dirty worktree.
+- Audited the real Windows tower: NSSM boot wrapper active, API healthy, runtime checkout ahead/dirty, health SHA falsely `unknown`, API watchdog task absent, and nightly Rails failure causes pinned.
+- Added fail-closed running-code identity for LocalSystem Git ownership, repaired the Windows Rails replay launcher, and added a tested but unactivated five-minute LocalSystem watchdog installer.
+- Built the zero-network TopstepX offline simulator: official order/trade/position shapes, account-scoped retry dedup, conflicting-tag refusal, fill/trade replay idempotency, out-of-order reconnect convergence, positions, flatten, and drift reconciliation. The live router remains `topstepx_not_configured`.
+- Added the SHA-pinned `compiler` / `runtime` / `integration` packet validator for Claude, plus P0-6, Topstep, and Slumhouse/PAPER receipts.
+- Browser-validated the deployed Slumhouse login and locked Office shell with zero console errors/warnings. Authenticated PAPER reads returned 0 sessions/positions/trades; no session or order was started.
+
+**Verification:** H1 compiler worktree focused battery 137 passed; Codex runtime battery 12 files / 170 passed; Node harness/watchdog/Rails battery 23 passed; `npm run build`, production isolation, 2026 compliance, and system-map all exit 0. Watchdog registration descriptor is green but the task remains intentionally unregistered until deployment activation. No paid Topstep, credentials, external broker call, or live/practice order was used.
+
+**Known-facts updates:** P0-6 is not certifiable while deployed SHA is unknown and the external watchdog task is absent. A healthy HTTP response is not deployment-authority evidence. Offline Topstep green is not Practice/Combine/live green. The current PAPER runtime is safely idle, not an active-session proof.
+
+**Carry-forward:** Claude Lead integrates the pinned Codex packet, Worker 1 lands AR-1138/compiler work, Worker 2 runs runtime/PAPER work from the prepared clean seed, and GPT independently grades. Claude can execute every remaining command from the exit handoff without Codex.
+
 ### Session Log — 2026-08-14 [Codex] current-main integration baseline accepted and published
 
 **Mission:** start the approved acceleration plan without consuming Claude quota or claiming unavailable TopstepX evidence.

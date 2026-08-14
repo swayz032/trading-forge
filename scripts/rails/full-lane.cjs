@@ -33,7 +33,14 @@ const SCHTASK_LIMIT_MS = 180 * 60 * 1000;   // 180 min — backstop ABOVE the 12
 
 // ── I/O layer (pure command shapes are unit-tested; the spawns are RED-proofed via the core) ──
 function pytestCmd() { return { cmd: process.platform === "win32" ? "python" : "python3", args: ["-m", "pytest", "src/engine", "-q", "-m", "not gpu"], timeoutMs: PYTEST_TIMEOUT_MS }; }
-function replayCmd() { return { cmd: "npx", args: ["vitest", "run", "src/server/__tests__/fresh-bootstrap-migration-replay.test.ts"], timeoutMs: REPLAY_TIMEOUT_MS }; }
+function replayCmd(platform = process.platform, execPath = process.execPath) {
+  const vitestArgs = ["vitest", "run", "src/server/__tests__/fresh-bootstrap-migration-replay.test.ts"];
+  if (platform === "win32") {
+    const npmCli = path.join(path.dirname(execPath), "node_modules", "npm", "bin", "npm-cli.js");
+    return { cmd: execPath, args: [npmCli, "exec", "--", ...vitestArgs], timeoutMs: REPLAY_TIMEOUT_MS };
+  }
+  return { cmd: "npx", args: vitestArgs, timeoutMs: REPLAY_TIMEOUT_MS };
+}
 function exitToResult(code, durationMs) { return { ok: code === 0, exitCode: code, durationMs }; }
 
 function runCmd({ cmd, args, timeoutMs }) {

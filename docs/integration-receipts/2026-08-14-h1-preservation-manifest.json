@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-08-14",
+  "purpose": "preserve the exact pre-reset Worker 1 checkout without cleaning, resetting, or copying its local state",
+  "worktree": "C:/Users/tonio/Projects/wt-h1-wave4-20260712",
+  "branch": "h1-wave4-sealed12-driver",
+  "head": "5a82f6f51eeb0d6b47976f83a73cfa8446ca0013",
+  "tracking_ref": "origin/h1-wave4-sealed12-driver",
+  "dirty_state": {
+    "entries": 83,
+    "tracked_modified_count": 1,
+    "tracked_modified": [
+      "docs/wave25-exit-engine-ab-report.md"
+    ],
+    "untracked_count": 82,
+    "largest_untracked_groups": {
+      "docs/replay-results/h1-scripts": 58,
+      "docs/replay-results/h1-battery": 2,
+      "other_design_replay_and_handoff_paths": 22
+    }
+  },
+  "pinned_source": {
+    "transcript_path": "src/engine/extraction/fixtures/source-evidence/sVkmZklJDHI.transcript.txt",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "extraction_path": "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json",
+    "embedded_extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+    "artifact_file_sha256": "25bc0a5a77b219b6d4e8bc81f1802b3d91f8ee58c870417240203191f65f04c5",
+    "hash_note": "embedded_extraction_sha256 identifies the extraction payload; artifact_file_sha256 identifies the complete wrapper file"
+  },
+  "focused_baseline": {
+    "command": "python -m pytest src/engine/tests/test_pilot_conveyor.py src/engine/tests/test_spec_producer.py src/engine/tests/test_svkm_role_execution.py -q --tb=short",
+    "exit_code": 0,
+    "passed": 137,
+    "duration_seconds": 1.40,
+    "status_changed_by_test": false
+  },
+  "preservation_law": "Resume this checkout in place. Do not git clean, reset, checkout-over, delete untracked artifacts, rerun extraction, or replace it with a fresh worktree."
+}
