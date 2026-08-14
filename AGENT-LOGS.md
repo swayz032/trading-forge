@@ -1,5 +1,17 @@
 # Trading Forge — Build History & Pass-by-Pass Execution Records
 
+### Session Log — 2026-08-14 [Codex] current-main integration baseline accepted and published
+
+**Mission:** start the approved acceleration plan without consuming Claude quota or claiming unavailable TopstepX evidence.
+
+**Work completed:** created the isolated branch `codex/continuous-main-integration-20260814` from `origin/main` at `64bd4308`; refreshed the three governing refs; and published a deterministic collision map plus current-main validation receipt in `docs/integration-receipts/`. The measured overlaps are 43 files for main/H1, 21 for main/GPT, and 13 for H1/GPT. The main/H1 intersection includes backtester, lifecycle, schema, and conveyor/audit authority and therefore requires per-packet integration rather than a final bulk merge.
+
+**Verification:** `npm run build`, `npm run check:production-isolation`, `npm run check:2026-compliance`, and `npm run system-map:check` all exited 0. An independent task review returned ACCEPT with no findings. Baseline commit `94780029` was pushed to `origin/codex/continuous-main-integration-20260814`.
+
+**Boundaries:** no Claude invocation, merge, cherry-pick, TopstepX authentication/API request, credential access, deployment, or order activity occurred. Paid TopstepX validation remains purchase-gated; engineering integration remains gated on independently accepted worker commits.
+
+**Carry-forward:** recompute the collision map against exact current SHAs immediately before each accepted packet; run touched-authority Python/TypeScript tests and all hard gates; never accumulate the divergent histories into one unreviewed final merge.
+
 ### Session Log — 2026-07-23 [Codex] Slumhouse passcode migration incident repaired
 
 **Incident:** After moving the public Slumhouse from `tf-relay-production.up.railway.app` to `trading-forge-production.up.railway.app`, Discord OAuth succeeded but the operator Office reported a correct passcode as wrong.
