@@ -14,13 +14,15 @@ export function readRunningCodeIdentity(
   envCommit = process.env.GIT_COMMIT,
   run: GitCommandRunner = defaultRunner,
 ): RunningCodeIdentity {
-  if (envCommit) return { commit: envCommit, dirty: false };
+  const declaredCommit = envCommit?.trim();
   try {
     const prefix = ["-c", "safe.directory=*"];
     const commit = run("git", [...prefix, "rev-parse", "HEAD"]).trim();
-    const dirty = run("git", [...prefix, "status", "--porcelain"]).trim().length > 0;
+    const dirty =
+      run("git", [...prefix, "status", "--porcelain"]).trim().length > 0 ||
+      Boolean(declaredCommit && declaredCommit !== commit);
     return { commit, dirty };
   } catch {
-    return { commit: "unknown", dirty: true };
+    return { commit: declaredCommit || "unknown", dirty: true };
   }
 }

@@ -18,7 +18,7 @@ import { readRunningCodeIdentity } from "./lib/running-code-identity.js";
 
 // RUNNING-CODE IDENTITY (freeze-enabler): the exact git commit + dirty state of the code THIS process is
 // executing — read once at boot. Lets a hard-freeze evaluation harness verify the backend wasn't stale or
-// silently changed mid-run (the W4.2 single-supervisor confound). env GIT_COMMIT overrides (CI/deploy builds).
+// silently changed mid-run (the W4.2 single-supervisor confound). env GIT_COMMIT is cross-checked against Git.
 const RUNNING_COMMIT = readRunningCodeIdentity();
 import { strategyRoutes } from "./routes/strategies.js";
 import { journalRoutes } from "./routes/journal.js";

@@ -15942,6 +15942,25 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** `npm run system-map:check` still reports the repository's pre-existing stale generated topology section. This UI/data-adapter change adds no API mount, scheduler job, table, or subsystem mapping and did not rewrite the unrelated generated map.
 
+### Session Log — 2026-08-14 P0-6 running-code identity hardening
+
+**Mission:** Remove the independently reproduced `GIT_COMMIT` false-clean bypass without touching Claude Worker 1/2 branches or activating the live P0-6 deployment packet.
+
+**Work completed:**
+- Added regression coverage proving an environment-declared commit cannot bypass direct Git SHA and dirty-state checks.
+- Made direct Git the running-checkout authority when available; a declared/actual SHA mismatch now fails closed as dirty.
+- When Git is unavailable, retained the declared build attribution but marked the result dirty so it cannot certify a freeze.
+- Kept the change isolated on `codex/p0-6-identity-hardening-20260814` from base `0b133d8bc54b1769e7b17e276f3894f0d249b55d`.
+
+**Verification:**
+- TDD RED: focused identity suite failed 3 new cases against the old environment bypass.
+- TDD GREEN: `npx vitest run src/server/lib/__tests__/running-code-identity.test.ts` — 6/6 passed.
+- `npm run build`, `npm run check:production-isolation`, `npm run check:2026-compliance`, and `npm run system-map:check` — exit 0.
+
+**Known-facts updates:** A configured `GIT_COMMIT` is attribution only, not independent clean-checkout proof. Exact deployment authority requires agreement with direct Git; unavailable Git remains fail-closed dirty.
+
+**Carry-forward:** Publish the bounded commit, run the runtime packet validator against its exact SHA, and route it to GPT. Live deployment, watchdog registration, service restart, and PAPER evidence remain separately gated.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
