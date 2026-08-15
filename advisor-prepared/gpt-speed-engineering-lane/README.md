@@ -1,11 +1,13 @@
 # GPT Three Speeds — Engineering Tooling
 
-This directory is the implementation lane for **Coding Loop Speed** and **Machine / CI Speed**.
+This directory is the implementation lane for **Coding Loop Speed**, **Machine / CI Speed**, and bounded **Claude Support Engineering** helpers.
 It does not own trading semantics, compiler meaning, PAPER decisions, or broker execution.
 
 ## Robustness law
 
-A speed change is valid only when it preserves or strengthens failure detection. No speedup may come from skipping a required test, hiding a failure, weakening fail-closed behavior, or crossing Worker 1/2 ownership.
+A speed/support change is valid only when it preserves or strengthens failure detection. No speedup may come from skipping a required test, hiding a failure, weakening fail-closed behavior, or crossing Worker 1/2 ownership.
+
+Support helpers may inspect worker changes, receipts, refs, and path ownership. They do **not** authorize semantic edits, activate Worker 2, bypass AR-1138, activate PAPER qualification, enable broker egress, or enable Topstep network access.
 
 ## Tools
 
@@ -26,6 +28,30 @@ Read-only worktree guard. It verifies exact worker identity input, expected bran
 
 Example:
 `node worker-bootstrap.mjs --worker worker-1 --expected-branch h1-wave4-sealed12-driver --order AR-1138`
+
+### lane-boundary-guard.mjs
+Fail-closed pre-edit path guard for the two Claude workers. It allows only paths that match the selected worker's obvious lane, blocks obvious other-worker paths, requires handoff for known shared coordination paths, and sends unknown ownership to review instead of inventing authority.
+
+Examples:
+`node lane-boundary-guard.mjs --worker worker-1 src/server/compiler/lower.ts`
+
+`node lane-boundary-guard.mjs --worker worker-2 src/server/services/fill-reconciliation-service.ts`
+
+A non-zero exit means Claude should not silently proceed on the supplied path set.
+
+### commit-evidence-verifier.mjs
+Mechanical verifier for worker receipts. It checks that the reported commit exists in Git, that the reported branch contains it, and that `files_changed` exactly matches the commit diff. It also requires the receipt to assert `pushed=true` and `stopped_for_gpt=true`.
+
+Example:
+`node commit-evidence-verifier.mjs --input receipt.json --repo .`
+
+This reduces repeated self-review paperwork, but it does not replace GPT's semantic review of production code and tests.
+
+### branch-collision-audit.mjs
+Read-only comparison for two worker refs. It finds the merge base, computes each branch's changed-path set, and fails closed on exact path overlap. No overlap is only a path-collision result; semantic/shared-contract coordination rules still apply.
+
+Example:
+`node branch-collision-audit.mjs --left worker-1-branch --right worker-2-branch --repo .`
 
 ## Test
 
