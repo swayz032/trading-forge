@@ -11,7 +11,7 @@ function redact(line) {
 }
 
 function isSignal(line) {
-  return /\b(error|failed|failure|exception|fatal|panic|assert(?:ion)?|unhandled rejection|not ok)\b/i.test(line);
+  return /(?:\b(?:error|failed|failure|exception|fatal|panic|assert(?:ion)?|unhandled rejection|not ok)\b|\b(?:Assertion|Type|Reference|Range|Syntax)Error\b)/i.test(line);
 }
 
 export function extractCiRootCause(logText, { context = 2, maxBlocks = 5 } = {}) {
