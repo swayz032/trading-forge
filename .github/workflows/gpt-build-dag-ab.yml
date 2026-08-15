@@ -1,0 +1,132 @@
+name: GPT Build DAG A/B Proof
+
+on:
+  push:
+    branches:
+      - "external-advisor/gpt-speed-engineering"
+    paths:
+      - ".github/workflows/gpt-build-dag-ab.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SUBJECT_SHA: c25c19d6e7ee32c7f8a168ddedd710cfff15d11f
+  NODE_VERSION: "24"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  precondition:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+      - name: Prove frozen subject had serialized Build dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F 'needs: [test-node, test-python, test-parity]' .github/workflows/ci.yml
+
+  candidate-build:
+    name: Candidate Build after real prerequisite
+    needs: precondition
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Python dependencies (CI-light)
+        run: pip install -r ci/requirements-fast.txt
+      - name: Package-lock structural integrity
+        run: node scripts/check-package-lock-integrity.mjs
+      - name: Install Node dependencies
+        run: npm ci
+      - name: System map drift gate
+        run: npm run system-map:check
+      - name: Build — tsc --noEmit
+        run: npx tsc --noEmit
+      - name: Gate — TS/Python exit-engine parity
+        run: npm run check:ts-python-exit-parity
+      - name: Gate — TS/Python firm-rules version
+        run: npm run check:ts-python-firm-rules-version
+      - name: Gate — TS/Python Tier 1 macro calendar parity
+        run: npm run check:ts-python-tier1-parity
+      - name: Gate — TS/Python PM size-factor parity
+        run: npm run check:ts-python-pm-factor-parity
+      - name: Gate — TS/Python stop-geometry parity
+        run: npm run check:ts-python-stop-geometry-parity
+      - name: Gate — JSONB gate-input contract keys
+        run: npm run check:gate-contract-keys
+      - name: Gate — PGlite CORE_DDL ↔ schema.ts parity
+        run: npm run check:pglite-ddl-parity
+
+  unrelated-test-tail:
+    name: Simulated unrelated test tail
+    needs: precondition
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preserve historical wait shape
+        run: sleep 120
+
+  control-build:
+    name: Control Build after unrelated tail
+    needs: unrelated-test-tail
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Python dependencies (CI-light)
+        run: pip install -r ci/requirements-fast.txt
+      - name: Package-lock structural integrity
+        run: node scripts/check-package-lock-integrity.mjs
+      - name: Install Node dependencies
+        run: npm ci
+      - name: System map drift gate
+        run: npm run system-map:check
+      - name: Build — tsc --noEmit
+        run: npx tsc --noEmit
+      - name: Gate — TS/Python exit-engine parity
+        run: npm run check:ts-python-exit-parity
+      - name: Gate — TS/Python firm-rules version
+        run: npm run check:ts-python-firm-rules-version
+      - name: Gate — TS/Python Tier 1 macro calendar parity
+        run: npm run check:ts-python-tier1-parity
+      - name: Gate — TS/Python PM size-factor parity
+        run: npm run check:ts-python-pm-factor-parity
+      - name: Gate — TS/Python stop-geometry parity
+        run: npm run check:ts-python-stop-geometry-parity
+      - name: Gate — JSONB gate-input contract keys
+        run: npm run check:gate-contract-keys
+      - name: Gate — PGlite CORE_DDL ↔ schema.ts parity
+        run: npm run check:pglite-ddl-parity
+
+  proof:
+    name: Same Build truth, earlier start
+    if: always()
+    needs: [candidate-build, control-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require both exact Build executions green
+        shell: bash
+        run: |
+          set -euo pipefail
+          test '${{ needs.candidate-build.result }}' = 'success'
+          test '${{ needs.control-build.result }}' = 'success'
+          echo BUILD_DAG_AB_GREEN
