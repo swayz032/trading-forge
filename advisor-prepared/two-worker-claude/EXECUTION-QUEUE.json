@@ -1,7 +1,16 @@
 {
-  "schema_version": "two-worker-execution-queue-v1.1",
+  "schema_version": "two-worker-execution-queue-v1.2",
   "generated_date": "2026-08-14",
   "source_branch": "external-advisor/gpt-rulings",
+  "support_controls": {
+    "start_card": "advisor-prepared/two-worker-claude/START-HERE-AFTER-AR-1138.md",
+    "test_index": "advisor-prepared/two-worker-claude/TEST-COMMAND-INDEX.md",
+    "gpt_pre_grade_cards": "advisor-prepared/two-worker-claude/GPT-PRE-GRADE-CARDS.md",
+    "worker_handoff_contract": "advisor-prepared/two-worker-claude/WORKER-HANDOFF-CONTRACT.md",
+    "evidence_receipt_template": "advisor-prepared/two-worker-claude/EVIDENCE-RECEIPT-TEMPLATE.md",
+    "collision_guard": "advisor-prepared/two-worker-claude/WORKTREE-COLLISION-GUARD.json",
+    "stop_researching_rule": "advisor-prepared/two-worker-claude/STOP-RESEARCHING-RULE.md"
+  },
   "activation_gate": {
     "required": [
       "AR-1138 worker completion",
@@ -21,7 +30,8 @@
     "topstep_router_expected_state": "topstepx_not_configured",
     "shared_worktree_allowed": false,
     "shared_identity_bearing_onboarding_allowed": false,
-    "one_active_order_per_worker": true
+    "one_active_order_per_worker": true,
+    "cross_lane_semantic_edits_without_handoff": false
   },
   "worker_1": {
     "worker_id": "worker-1",
@@ -33,11 +43,39 @@
       "state": "RESUME_EXACT_UNFINISHED_STATE",
       "activation": "IMMEDIATE_WHEN_CLAUDE_QUOTA_RETURNS"
     },
-    "next_proof_target": {
-      "id": "AR-1183",
-      "name": "ONE_STRATEGY_GOLDEN_RUN",
-      "depends_on": ["AR-1138_GPT_PASS", "RUNNABLE_COMPILER_FACTORY_PATH"]
-    },
+    "post_ar1138_queue": [
+      {
+        "priority": 1,
+        "name": "GRAPH_CLOSURE",
+        "map": "advisor-prepared/two-worker-claude/worker1-implementation-maps/POST-AR-1138-GRAPH-CLOSURE.md",
+        "depends_on": ["AR-1138_GPT_PASS"]
+      },
+      {
+        "priority": 2,
+        "name": "COMPILER_VERTICAL",
+        "map": "advisor-prepared/two-worker-claude/worker1-implementation-maps/POST-AR-1138-COMPILER-VERTICAL.md",
+        "depends_on": ["AR-1138_GPT_PASS", "GRAPH_CLOSURE_GREEN_OR_PROVEN_SUFFICIENT"]
+      },
+      {
+        "priority": 3,
+        "name": "STRATEGY_FACTORY_VERTICAL",
+        "map": "advisor-prepared/two-worker-claude/worker1-implementation-maps/POST-AR-1138-STRATEGY-FACTORY-VERTICAL.md",
+        "depends_on": ["COMPILER_VERTICAL_GPT_PASS"]
+      },
+      {
+        "priority": 4,
+        "name": "LIBRARY_DISPOSITION",
+        "map": "advisor-prepared/two-worker-claude/worker1-implementation-maps/POST-AR-1138-LIBRARY-DISPOSITION.md",
+        "depends_on": ["STRATEGY_FACTORY_VERTICAL_GPT_PASS"]
+      },
+      {
+        "priority": 5,
+        "id": "AR-1183",
+        "name": "ONE_STRATEGY_GOLDEN_RUN_HANDOFF",
+        "map": "advisor-prepared/two-worker-claude/worker1-implementation-maps/POST-AR-1138-GOLDEN-RUN-HANDOFF.md",
+        "depends_on": ["STRATEGY_FACTORY_VERTICAL_GPT_PASS", "GPT_GOLDEN_CANDIDATE_AUTHORIZATION"]
+      }
+    ],
     "forbidden_default_ownership": ["PAPER_RUNTIME", "AUTONOMOUS_RUNTIME", "BROKER_EXECUTION_SAFETY"]
   },
   "worker_2": {
@@ -154,5 +192,6 @@
     "forbidden_default_ownership": ["SOURCE_SEMANTICS", "GRAPH_ENGINEERING", "COMPILER_LOWERING"]
   },
   "authorization_rule": "This queue is routing metadata, not blanket authorization. GPT/main advisor authorizes one bounded packet per worker at a time.",
-  "completion_rule": "Every completed packet must publish repository evidence, commit/push proof, exact RED/GREEN commands, controls, and stop for GPT review when gated."
+  "completion_rule": "Every completed packet uses the short evidence receipt, publishes repository evidence and commit/push proof, runs required controls, and stops for GPT review when gated.",
+  "prep_phase_status": "FINAL_ACCELERATION_LAYER_COMPLETE_AFTER_AR_1189_STOP_PREPARING_AND_BUILD"
 }
