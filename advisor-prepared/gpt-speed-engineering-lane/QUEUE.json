@@ -1,0 +1,131 @@
+{
+  "schema_version": "gpt-speed-engineering-lane-v1",
+  "generated_date": "2026-08-14",
+  "mission": {
+    "thinking_speed": {
+      "status": "HEAVILY_OPTIMIZED_MAINTAIN_ONLY",
+      "default_action": "DO_NOT_EXPAND_WITHOUT_FRESH_BLOCKER"
+    },
+    "coding_loop_speed": {
+      "status": "ACTIVE_OPTIMIZATION_TARGET",
+      "focus": [
+        "focused_tests",
+        "code_navigation",
+        "deterministic_fixtures",
+        "worker_bootstrap",
+        "evidence_automation",
+        "compiler_iteration_harness",
+        "runtime_fault_harness"
+      ]
+    },
+    "machine_ci_speed": {
+      "status": "ACTIVE_OPTIMIZATION_TARGET",
+      "focus": [
+        "parallelism",
+        "caching",
+        "sharding",
+        "warm_services",
+        "install_reuse",
+        "build_reuse",
+        "critical_path_reduction"
+      ]
+    }
+  },
+  "hard_laws": [
+    "AR_1138_REMAINS_FIRST_WORKER_1_ORDER",
+    "NO_SPEEDUP_BY_WEAKENING_REQUIRED_PROOF",
+    "NO_NEW_FALSE_GREEN_ROUTE",
+    "NO_BROKER_EGRESS_ACTIVATION",
+    "NO_TOPSTEP_NETWORK_ACTIVATION",
+    "NO_GLOBAL_TEST_PARALLELISM_WITHOUT_DETERMINISM_PROOF",
+    "MEASURE_BEFORE_AND_AFTER"
+  ],
+  "queue": [
+    {
+      "id": "SPEED-01",
+      "name": "CI_WALL_CLOCK_BASELINE",
+      "priority": 1,
+      "lane": "MACHINE_CI_SPEED",
+      "state": "READY",
+      "output": "ranked critical-path timing receipt"
+    },
+    {
+      "id": "SPEED-02",
+      "name": "CHANGED_FILE_FOCUSED_TEST_SELECTOR",
+      "priority": 2,
+      "lane": "CODING_LOOP_SPEED",
+      "state": "READY",
+      "rule": "advises focused development tests; never replaces certification"
+    },
+    {
+      "id": "SPEED-03",
+      "name": "AUTOMATED_EVIDENCE_RECEIPT",
+      "priority": 3,
+      "lane": "CODING_LOOP_SPEED",
+      "state": "READY"
+    },
+    {
+      "id": "SPEED-04",
+      "name": "WORKER_BOOTSTRAP_COMMAND",
+      "priority": 4,
+      "lane": "CODING_LOOP_SPEED",
+      "state": "READY"
+    },
+    {
+      "id": "SPEED-05",
+      "name": "WORKER1_SINGLE_STRATEGY_COMPILER_HARNESS",
+      "priority": 5,
+      "lane": "CODING_LOOP_SPEED",
+      "state": "GATED",
+      "depends_on": ["AR_1138_GPT_PASS"]
+    },
+    {
+      "id": "SPEED-06",
+      "name": "WORKER2_RUNTIME_FAULT_HARNESS",
+      "priority": 6,
+      "lane": "CODING_LOOP_SPEED",
+      "state": "GATED",
+      "depends_on": ["WORKER_2_ACTIVATION"]
+    },
+    {
+      "id": "SPEED-07",
+      "name": "CI_INSTALL_SETUP_DUPLICATION_AUDIT",
+      "priority": 7,
+      "lane": "MACHINE_CI_SPEED",
+      "state": "READY"
+    },
+    {
+      "id": "SPEED-08",
+      "name": "SAFE_PARALLELISM_SHARDING_AUDIT",
+      "priority": 8,
+      "lane": "MACHINE_CI_SPEED",
+      "state": "READY",
+      "known_constraint": "Fast Lane full Vitest evidence currently uses one worker due prior Node/V8 thread-pool false-red behavior"
+    },
+    {
+      "id": "SPEED-09",
+      "name": "DETERMINISTIC_FIXTURE_WARM_SERVICE_AUDIT",
+      "priority": 9,
+      "lane": "CODING_LOOP_AND_MACHINE_CI",
+      "state": "READY"
+    },
+    {
+      "id": "SPEED-10",
+      "name": "SPEED_REGRESSION_VISIBILITY",
+      "priority": 10,
+      "lane": "MACHINE_CI_SPEED",
+      "state": "WAIT_FOR_BASELINES",
+      "depends_on": ["SPEED-01"]
+    }
+  ],
+  "acceptance_contract": {
+    "required": [
+      "before_measurement",
+      "after_measurement",
+      "same_or_stronger_correctness_coverage",
+      "negative_or_mutation_control_when_applicable",
+      "no_false_green",
+      "rollback_or_revert_path_for_infrastructure_changes"
+    ]
+  }
+}
