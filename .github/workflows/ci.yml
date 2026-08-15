@@ -264,13 +264,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies (bounded parity set)
         run: |
           node scripts/check-package-lock-integrity.mjs
           npm ci
           python -m pip install --upgrade pip
-          pip install -r src/engine/requirements.txt
-          pip install pytest
+          pip install -r ci/requirements-fast.txt
 
       - name: Run cross-engine parity tests
         run: |
