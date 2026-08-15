@@ -7,74 +7,66 @@ It does not own trading semantics, compiler meaning, PAPER decisions, or broker 
 
 A speed/support change is valid only when it preserves or strengthens failure detection. No speedup may come from skipping a required test, hiding a failure, weakening fail-closed behavior, or crossing Worker 1/2 ownership.
 
-Support helpers may inspect worker changes, receipts, refs, and path ownership. They do **not** authorize semantic edits, activate Worker 2, bypass AR-1138, activate PAPER qualification, enable broker egress, or enable Topstep network access.
+Support helpers may inspect worker changes, receipts, refs, CI evidence, timing data, and path ownership. They do **not** authorize semantic edits, activate Worker 2, bypass AR-1138, activate PAPER qualification, enable broker egress, or enable Topstep network access.
 
-## Tools
+## Start / finish wrappers
+
+### claude-preflight.mjs
+One-command read-only start gate. It combines the exact paused branch/commit/clean-tree check with intended-path lane ownership. Any stale anchor, wrong lane, shared coordination path, or unknown ownership returns STOP rather than silently proceeding.
+
+Example config:
+`{"worker":"worker-1","expected_branch":"h1-wave4-sealed12-driver","expected_head":"<sha>","intended_paths":["src/server/compiler/lower.ts"]}`
+
+Example:
+`node claude-preflight.mjs --input preflight.json --repo .`
+
+### claude-finish-check.mjs
+One-command mechanical finish gate. It verifies the real base/head diff stayed in the authorized edit scope, re-checks lane ownership on actual changed paths, verifies the commit receipt, requires the checked head to equal the reported commit, requires a clean tree, and optionally checks exact-path collision with the other worker branch.
+
+Example:
+`node claude-finish-check.mjs --input finish.json --repo .`
+
+PASS means **PASS_FOR_GPT_REVIEW**, not semantic approval. GPT still inspects production code, RED/GREEN validity, controls, architecture, and CI.
+
+## Existing support tools
 
 ### changed-test-selector.mjs
 Given changed repository paths, returns the smallest safe first test set it can prove. If it cannot prove a focused mapping, it deliberately escalates to full-fleet/full-CI instead of guessing.
 
-Example:
-`node changed-test-selector.mjs src/server/services/fill-reconciliation-service.ts`
-
 ### evidence-receipt.mjs
 Turns structured worker evidence into the short GPT receipt format. It fails closed when required proof is missing, requires `pushed=true` and `stopped_for_gpt=true`, and redacts common secret forms.
-
-Example:
-`node evidence-receipt.mjs --input receipt.json --output receipt.md`
 
 ### worker-bootstrap.mjs
 Read-only worktree guard. It verifies exact worker identity input, expected branch, clean Git status, current HEAD, and active order. It never changes branches or files.
 
-Example:
-`node worker-bootstrap.mjs --worker worker-1 --expected-branch h1-wave4-sealed12-driver --order AR-1138`
-
 ### lane-boundary-guard.mjs
-Fail-closed pre-edit path guard for the two Claude workers. It allows only paths that match the selected worker's obvious lane, blocks obvious other-worker paths, requires handoff for known shared coordination paths, and sends unknown ownership to review instead of inventing authority.
-
-Examples:
-`node lane-boundary-guard.mjs --worker worker-1 src/server/compiler/lower.ts`
-
-`node lane-boundary-guard.mjs --worker worker-2 src/server/services/fill-reconciliation-service.ts`
-
-A non-zero exit means Claude should not silently proceed on the supplied path set.
+Fail-closed pre-edit path guard for the two Claude workers. Obvious other-worker paths block; shared coordination paths require handoff; unknown ownership requires review.
 
 ### commit-evidence-verifier.mjs
-Mechanical verifier for worker receipts. It checks that the reported commit exists in Git, that the reported branch contains it, and that `files_changed` exactly matches the commit diff. It also requires the receipt to assert `pushed=true` and `stopped_for_gpt=true`.
-
-Example:
-`node commit-evidence-verifier.mjs --input receipt.json --repo .`
-
-This reduces repeated self-review paperwork, but it does not replace GPT's semantic review of production code and tests.
+Mechanical worker receipt verifier. The reported commit must exist, the branch must contain it, and `files_changed` must exactly match the commit diff. It does not replace semantic review.
 
 ### branch-collision-audit.mjs
-Read-only comparison for two worker refs. It finds the merge base, computes each branch's changed-path set, and fails closed on exact path overlap. No overlap is only a path-collision result; semantic/shared-contract coordination rules still apply.
-
-Example:
-`node branch-collision-audit.mjs --left worker-1-branch --right worker-2-branch --repo .`
+Read-only comparison for two worker refs. It finds the merge base and exact changed-path overlaps. Zero overlap is not semantic merge authorization.
 
 ### resume-anchor-guard.mjs
-Read-only exact-state guard for resuming paused Claude work. It verifies the expected branch, exact expected commit, and clean worktree before work resumes. A moved branch, wrong branch, or dirty tree is a stop rather than an implicit rebase of the worker's mental model.
-
-Example:
-`node resume-anchor-guard.mjs --expected-branch h1-wave4-sealed12-driver --expected-head <sha>`
+Exact-state resume guard. Wrong branch, moved commit, or dirty worktree stops.
 
 ### edit-scope-guard.mjs
-Fail-closed packet-scope checker. Given an explicit authorization file and a base/head diff, it rejects any changed path outside the exact files or explicit directory prefixes the active packet authorized. Empty scope is rejected; there is no implicit "anything goes" mode.
-
-Example scope:
-`{"allowed_exact":["src/a.ts","test/a.test.ts"],"allowed_prefixes":["fixtures/ar-1138/"]}`
-
-Example:
-`node edit-scope-guard.mjs --base <start-sha> --head HEAD --scope-file packet-scope.json`
+Packet-scope checker. Any actual changed path outside explicitly allowed files/prefixes stops. Empty scope is rejected.
 
 ### ci-failure-triage.mjs
-Fail-closed GitHub Actions jobs summarizer. It strips successful-job noise and surfaces failed jobs/steps. Cancelled jobs are not green, and queued/in-progress jobs return `INCOMPLETE` rather than a false success.
+GitHub Actions jobs summarizer. Successful-job noise is stripped; failed jobs/steps are surfaced. Cancelled and incomplete runs never become green.
 
-Example:
-`node ci-failure-triage.mjs --input jobs.json`
+## New Wave 3 helpers
 
-This is triage only; it does not reinterpret a failing job as acceptable or replace the underlying logs when root-cause inspection is required.
+### test-theater-detector.mjs
+Conservative static screening for obvious fake-green/test-theater risks. It can block critical skip/todo declarations and configured production dependency mocks, and requires review when expected production import tokens or required mutation evidence are absent. A clean result is only `NO_STATIC_RISK_SIGNALS`; it never claims the test truly exercises production behavior.
+
+### ci-root-cause-extractor.mjs
+Redacting log-noise reducer. It extracts bounded context around likely failure signals, deduplicates repeated excerpts, and returns `NO_ROOT_CAUSE_SIGNAL_FOUND` rather than inventing a diagnosis when nothing useful is found. It cannot waive a failed CI job.
+
+### test-hotspot-profiler.mjs
+Deterministic timing profiler for normalized test timing rows. It ranks slow tests and computes individual/cumulative wall-time share. Timing evidence identifies optimization candidates only; it never authorizes skipping or weakening coverage.
 
 ## Test
 
