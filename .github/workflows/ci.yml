@@ -281,7 +281,9 @@ jobs:
   build:
     name: Build Check
     runs-on: ubuntu-latest
-    needs: [test-node, test-python, test-parity]
+    # A/B proof run 31863281670 showed this job consumes no test artifacts and
+    # produces the same Build + parity/schema gate truth when started after lint.
+    needs: lint
     steps:
       - uses: actions/checkout@v4
 
