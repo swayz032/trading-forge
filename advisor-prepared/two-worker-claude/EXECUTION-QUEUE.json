@@ -1,5 +1,5 @@
 {
-  "schema_version": "two-worker-execution-queue-v1",
+  "schema_version": "two-worker-execution-queue-v1.1",
   "generated_date": "2026-08-14",
   "source_branch": "external-advisor/gpt-rulings",
   "activation_gate": {
@@ -53,7 +53,8 @@
         "class": "SECURITY",
         "size": "TINY",
         "reason": "production dev-auth bypass configuration trap",
-        "depends_on": []
+        "depends_on": [],
+        "implementation_map": "advisor-prepared/two-worker-claude/implementation-maps/AR-1178-AUTH-DEV-BYPASS.md"
       },
       {
         "id": "AR-1175",
@@ -61,7 +62,8 @@
         "class": "CAPITAL_SAFETY",
         "size": "SMALL",
         "reason": "one-contract reconciliation blind spot",
-        "depends_on": []
+        "depends_on": [],
+        "implementation_map": "advisor-prepared/two-worker-claude/implementation-maps/AR-1175-ONE-CONTRACT-DRIFT.md"
       },
       {
         "id": "AR-1176",
@@ -69,7 +71,8 @@
         "class": "CAPITAL_SAFETY",
         "size": "SMALL",
         "reason": "account-wide reconcile clear can erase unresolved symbol drift",
-        "depends_on": ["AR-1175_REVIEW_OR_COMPATIBILITY_CHECK"]
+        "depends_on": ["AR-1175_REVIEW_OR_COMPATIBILITY_CHECK"],
+        "implementation_map": "advisor-prepared/two-worker-claude/implementation-maps/AR-1176-SYMBOL-SCOPED-RECONCILE-CLEAR.md"
       },
       {
         "id": "AR-1173",
@@ -77,7 +80,8 @@
         "class": "AUTONOMY",
         "size": "SMALL",
         "reason": "unhandled rejection logs and survives instead of entering fatal teardown",
-        "depends_on": []
+        "depends_on": [],
+        "implementation_map": "advisor-prepared/two-worker-claude/implementation-maps/AR-1173-UNHANDLED-REJECTION-FATAL-TEARDOWN.md"
       },
       {
         "id": "AR-1184",
@@ -86,7 +90,10 @@
         "size": "MEDIUM",
         "reason": "entry uses first enabled firm account while exits fail closed on multi-account ambiguity",
         "depends_on": ["AR-1175", "AR-1176"],
-        "hard_gate_for": ["BROKER_EGRESS"]
+        "hard_gate_for": ["BROKER_EGRESS"],
+        "implementation_map": "advisor-prepared/two-worker-claude/implementation-maps/AR-1184-PAPER-LIVE-ACCOUNT-IDENTITY.md",
+        "first_edit_phase": "PHASE_A_FAIL_CLOSED_ACCOUNT_RESOLUTION",
+        "phase_b": "SEPARATE_GPT_AUTHORIZATION_REQUIRED_FOR_EXPLICIT_MULTI_ACCOUNT_SESSION_IDENTITY"
       },
       {
         "id": "AR-1177",
