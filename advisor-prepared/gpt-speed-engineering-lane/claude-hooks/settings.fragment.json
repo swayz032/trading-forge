@@ -1,0 +1,39 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|fork",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/advisor-prepared/gpt-speed-engineering-lane/tooling/claude-hook-runner.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/gpt-worker-guard.json",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/advisor-prepared/gpt-speed-engineering-lane/tooling/claude-hook-runner.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/gpt-worker-guard.json",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/advisor-prepared/gpt-speed-engineering-lane/tooling/claude-hook-runner.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/gpt-worker-guard.json",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
