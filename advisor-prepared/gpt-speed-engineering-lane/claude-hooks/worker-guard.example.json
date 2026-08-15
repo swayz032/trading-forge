@@ -1,0 +1,23 @@
+{
+  "schema": "gpt-claude-hook-guard-v1",
+  "worker": "worker-1",
+  "session_anchor": {
+    "expected_branch": "REPLACE_WITH_EXACT_WORKER_BRANCH",
+    "expected_head": "REPLACE_WITH_EXACT_PAUSED_SHA",
+    "require_clean": true
+  },
+  "edit_scope": {
+    "allowed_exact": [
+      "src/server/compiler/lower.ts"
+    ],
+    "allowed_prefixes": []
+  },
+  "finish": {
+    "enabled": true,
+    "base": "REPLACE_WITH_PACKET_BASE_SHA",
+    "head": "HEAD",
+    "receipt_file": ".git/gpt-worker-receipt.json",
+    "other_worker_ref": null,
+    "collision_base": null
+  }
+}
