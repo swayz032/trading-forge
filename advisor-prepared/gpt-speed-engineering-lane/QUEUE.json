@@ -1,5 +1,5 @@
 {
-  "schema_version": "gpt-speed-engineering-lane-v1",
+  "schema_version": "gpt-speed-engineering-lane-v1.1",
   "generated_date": "2026-08-14",
   "mission": {
     "thinking_speed": {
@@ -38,38 +38,55 @@
     "NO_BROKER_EGRESS_ACTIVATION",
     "NO_TOPSTEP_NETWORK_ACTIVATION",
     "NO_GLOBAL_TEST_PARALLELISM_WITHOUT_DETERMINISM_PROOF",
-    "MEASURE_BEFORE_AND_AFTER"
+    "MEASURE_BEFORE_AND_AFTER",
+    "BENCHMARK_SUCCESS_IS_NOT_PRODUCTION_AUTHORIZATION"
   ],
+  "execution_branch": "external-advisor/gpt-speed-engineering",
   "queue": [
     {
       "id": "SPEED-01",
       "name": "CI_WALL_CLOCK_BASELINE",
       "priority": 1,
       "lane": "MACHINE_CI_SPEED",
-      "state": "READY",
-      "output": "ranked critical-path timing receipt"
+      "state": "COMPLETE",
+      "evidence": {
+        "fast_lane_run": 31560374167,
+        "subject_sha": "98c0683dc5deafa63c77e7f70ac6b98e014a8019",
+        "wall_seconds": 415,
+        "largest_step": "Collect full Vitest report",
+        "largest_step_seconds": 251
+      }
     },
     {
       "id": "SPEED-02",
       "name": "CHANGED_FILE_FOCUSED_TEST_SELECTOR",
       "priority": 2,
       "lane": "CODING_LOOP_SPEED",
-      "state": "READY",
-      "rule": "advises focused development tests; never replaces certification"
+      "state": "IMPLEMENTED_PROVEN_ISOLATED",
+      "rule": "advises focused development tests; never replaces certification",
+      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4",
+      "hosted_proof_runs": [31861640477, 31861824914],
+      "fail_closed_rule": "unproven mapping escalates to full-fleet/full-CI"
     },
     {
       "id": "SPEED-03",
       "name": "AUTOMATED_EVIDENCE_RECEIPT",
       "priority": 3,
       "lane": "CODING_LOOP_SPEED",
-      "state": "READY"
+      "state": "IMPLEMENTED_PROVEN_ISOLATED",
+      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4",
+      "hosted_proof_runs": [31861640477, 31861824914],
+      "controls": ["required proof fields", "pushed must be true", "stopped_for_gpt must be true", "common secret redaction"]
     },
     {
       "id": "SPEED-04",
       "name": "WORKER_BOOTSTRAP_COMMAND",
       "priority": 4,
       "lane": "CODING_LOOP_SPEED",
-      "state": "READY"
+      "state": "IMPLEMENTED_PROVEN_ISOLATED_NOT_INSTALLED_IN_AR1138",
+      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4",
+      "hosted_proof_runs": [31861640477, 31861824914],
+      "controls": ["read-only", "wrong branch fails", "dirty tree fails"]
     },
     {
       "id": "SPEED-05",
@@ -92,15 +109,42 @@
       "name": "CI_INSTALL_SETUP_DUPLICATION_AUDIT",
       "priority": 7,
       "lane": "MACHINE_CI_SPEED",
-      "state": "READY"
+      "state": "PROVEN_CANDIDATE_NOT_ADOPTED",
+      "finding": "cross-engine parity installs the full engine/quantum/ML stack although the exact 35-test selection passes with ci/requirements-fast.txt",
+      "benchmark_run": 31862024411,
+      "same_commit_light_proof_run": 31862200710,
+      "measurement": {
+        "historical_heavy_install_step_seconds": 121,
+        "bounded_node_plus_python_install_seconds": 52,
+        "saved_seconds": 69,
+        "exact_test_census": "35 passed, 0 failed, 0 skipped"
+      },
+      "production_ci_changed": false
     },
     {
       "id": "SPEED-08",
       "name": "SAFE_PARALLELISM_SHARDING_AUDIT",
       "priority": 8,
       "lane": "MACHINE_CI_SPEED",
-      "state": "READY",
-      "known_constraint": "Fast Lane full Vitest evidence currently uses one worker due prior Node/V8 thread-pool false-red behavior"
+      "state": "PROVEN_TWO_RUNNER_CANDIDATE_ONE_RUNNER_ADOPTION_STILL_GATED",
+      "constraint": "do not restore unstable in-process/thread parallelism",
+      "two_runner_proof": {
+        "run": 31861913966,
+        "subject_sha": "98c0683dc5deafa63c77e7f70ac6b98e014a8019",
+        "serial_seconds": 259,
+        "parallel_two_shard_seconds": 142,
+        "saved_seconds": 117,
+        "speedup_ratio": 1.824,
+        "test_files": 922,
+        "tests": 13485,
+        "equivalence": "exact file/assertion/status evidence plus identical existing baseline-comparator verdict"
+      },
+      "one_runner_adoption_experiment": {
+        "run": 31862262190,
+        "commit": "7491e1db6c7d82bc5d28fd2f453d9cc9517f451f",
+        "state_at_receipt": "RUNNING_UNACCEPTED",
+        "rule": "no production Fast Lane change unless this or an equivalent adoption-shape proof passes"
+      }
     },
     {
       "id": "SPEED-09",
@@ -114,8 +158,19 @@
       "name": "SPEED_REGRESSION_VISIBILITY",
       "priority": 10,
       "lane": "MACHINE_CI_SPEED",
-      "state": "WAIT_FOR_BASELINES",
-      "depends_on": ["SPEED-01"]
+      "state": "READY",
+      "depends_on": ["SPEED-01_COMPLETE"]
+    },
+    {
+      "id": "SPEED-11",
+      "name": "FULL_CI_BUILD_DAG_TAIL",
+      "priority": 11,
+      "lane": "MACHINE_CI_SPEED",
+      "state": "MEASURED_CANDIDATE_NEEDS_AB_PROOF",
+      "finding": "Build Check waits for test-node/test-python/test-parity although it checks out independently and consumes no test artifacts",
+      "historical_subject_sha": "c25c19d6e7ee32c7f8a168ddedd710cfff15d11f",
+      "projected_saved_critical_path_seconds": 104,
+      "production_ci_changed": false
     }
   ],
   "acceptance_contract": {
