@@ -1,0 +1,52 @@
+name: GPT Parity Dependency A-B Proof
+
+on:
+  push:
+    branches:
+      - "hardening/gpt-speed-parity-fast-deps"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+  PYTHON_VERSION: "3.12"
+  TF_RUNTIME_STAGE: preprod
+
+jobs:
+  light-parity:
+    name: Light Parity — same 35 tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Package-lock structural integrity
+        run: node scripts/check-package-lock-integrity.mjs
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Install bounded parity Python dependencies
+        run: pip install --disable-pip-version-check -q -r ci/requirements-fast.txt
+      - name: Run exact existing parity selection
+        run: pytest src/engine/tests/test_cross_engine_parity.py -v --tb=short -x --junitxml=/tmp/parity.xml
+      - name: Fail closed unless exact historical census survives
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('/tmp/parity.xml').getroot()
+          suites = [root] if root.tag == 'testsuite' else list(root.iter('testsuite'))
+          tests = sum(int(s.attrib.get('tests', 0)) for s in suites)
+          failures = sum(int(s.attrib.get('failures', 0)) + int(s.attrib.get('errors', 0)) for s in suites)
+          skipped = sum(int(s.attrib.get('skipped', 0)) for s in suites)
+          assert tests == 35, f'test census drift: {tests} != 35'
+          assert failures == 0, f'parity failures: {failures}'
+          assert skipped == 0, f'unexpected skips: {skipped}'
+          print('PARITY_A_B_GREEN: 35 passed, 0 failed, 0 skipped')
+          PY
