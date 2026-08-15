@@ -1,0 +1,138 @@
+name: GPT Vitest One-Runner Shard Benchmark
+
+on:
+  push:
+    branches:
+      - "external-advisor/gpt-speed-engineering"
+    paths:
+      - ".github/workflows/gpt-vitest-one-runner-shard-benchmark.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SUBJECT_SHA: "98c0683dc5deafa63c77e7f70ac6b98e014a8019"
+  NODE_ENV: test
+  TF_RUNTIME_STAGE: preprod
+  PGHOST: localhost
+  PGPORT: 5432
+  PGUSER: postgres
+  PGPASSWORD: postgres
+
+jobs:
+  one-runner-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Checkout speed tooling
+        uses: actions/checkout@v4
+      - name: Checkout exact baseline subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+          path: subject
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: subject/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact subject dependencies once
+        working-directory: subject
+        run: |
+          npm ci
+          python -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --disable-pip-version-check -q -r ci/requirements-fast.txt
+          echo "$GITHUB_WORKSPACE/subject/.venv/bin" >> "$GITHUB_PATH"
+      - name: Provision three isolated databases
+        working-directory: subject
+        run: |
+          set -euo pipefail
+          psql -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          DO $do$ BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='forge') THEN CREATE ROLE forge LOGIN PASSWORD 'forge_ci'; END IF;
+          END $do$;
+          SQL
+          for db in tf_serial tf_shard1 tf_shard2; do
+            dropdb --if-exists --force "$db"
+            createdb --owner=forge "$db"
+            DATABASE_URL="postgresql://forge:forge_ci@localhost:5432/$db" npm run db:migrate >/dev/null
+          done
+      - name: Serial control
+        working-directory: subject
+        run: |
+          mkdir -p bench
+          start=$(date +%s)
+          set +e
+          DATABASE_URL="postgresql://forge:forge_ci@localhost:5432/tf_serial" node node_modules/vitest/vitest.mjs run --pool=forks --maxWorkers=1 --minWorkers=1 --reporter=json --outputFile=bench/serial.json
+          rc=$?
+          set -e
+          end=$(date +%s)
+          test -s bench/serial.json
+          echo "$rc" > bench/serial-rc.txt
+          echo "$((end-start))" > bench/serial-seconds.txt
+      - name: Two isolated single-worker shard processes on same runner
+        working-directory: subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_shard() {
+            local n="$1" db="$2"
+            local start end rc
+            start=$(date +%s)
+            set +e
+            DATABASE_URL="postgresql://forge:forge_ci@localhost:5432/$db" node node_modules/vitest/vitest.mjs run --pool=forks --maxWorkers=1 --minWorkers=1 --shard="$n/2" --reporter=json --outputFile="bench/shard$n.json"
+            rc=$?
+            set -e
+            end=$(date +%s)
+            test -s "bench/shard$n.json"
+            echo "$rc" > "bench/shard$n-rc.txt"
+            echo "$((end-start))" > "bench/shard$n-seconds.txt"
+          }
+          run_shard 1 tf_shard1 & p1=$!
+          run_shard 2 tf_shard2 & p2=$!
+          wait "$p1"
+          wait "$p2"
+      - name: Merge shard evidence fail-closed
+        run: node advisor-prepared/gpt-speed-engineering-lane/tooling/merge-vitest-shards.mjs subject/bench/shard1.json subject/bench/shard2.json --output subject/bench/merged.json
+      - name: Prove exact file/assertion/status equivalence
+        run: node advisor-prepared/gpt-speed-engineering-lane/tooling/compare-vitest-evidence.mjs subject/bench/serial.json subject/bench/merged.json
+      - name: Prove existing baseline comparator gives identical verdict
+        run: |
+          set +e
+          node subject/ci/compare-baseline.mjs --suite vitest --results subject/bench/serial.json --baseline subject/ci/baseline-failures.json > /tmp/serial-verdict.txt 2>&1
+          serial_rc=$?
+          node subject/ci/compare-baseline.mjs --suite vitest --results subject/bench/merged.json --baseline subject/ci/baseline-failures.json > /tmp/merged-verdict.txt 2>&1
+          merged_rc=$?
+          set -e
+          test "$serial_rc" -eq "$merged_rc"
+          diff -u /tmp/serial-verdict.txt /tmp/merged-verdict.txt
+      - name: Publish one-runner measurement
+        working-directory: subject
+        run: |
+          serial=$(cat bench/serial-seconds.txt)
+          s1=$(cat bench/shard1-seconds.txt)
+          s2=$(cat bench/shard2-seconds.txt)
+          max=$s1
+          if [ "$s2" -gt "$max" ]; then max=$s2; fi
+          node -e "const fs=require('fs'); const serial=+process.argv[1], s1=+process.argv[2], s2=+process.argv[3], parallel=Math.max(s1,s2); const out={subject_sha:process.env.SUBJECT_SHA,serial_seconds:serial,shard_1_seconds:s1,shard_2_seconds:s2,parallel_seconds:parallel,speedup_ratio:+(serial/parallel).toFixed(3),saved_seconds:serial-parallel,runner_model:'one_runner_two_processes_separate_databases'}; fs.writeFileSync('bench/one-runner-measurement.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));" "$serial" "$s1" "$s2"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vitest-one-runner-shard-benchmark
+          path: subject/bench/
+          retention-days: 7
