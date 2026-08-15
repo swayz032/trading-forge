@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "mode": "advisory",
+  "source_baseline": {
+    "fast_lane_run": 31560374167,
+    "subject_sha": "98c0683dc5deafa63c77e7f70ac6b98e014a8019",
+    "job_seconds": 415,
+    "vitest_seconds": 251
+  },
+  "policy": {
+    "warning_margin_percent": 20,
+    "note": "Visibility only. These thresholds do not weaken correctness gates and are not blocking unless the observer is explicitly invoked with --strict."
+  },
+  "jobs": {
+    "Machine-enforced push verdict": 498
+  },
+  "steps": {
+    "Machine-enforced push verdict::Collect full Vitest report": 301
+  }
+}
