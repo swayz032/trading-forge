@@ -1,0 +1,58 @@
+{
+  "schema_version": "two-worker-collision-guard-v1",
+  "rule": "Separate worktrees and branches are mandatory. Ownership is by semantic authority, not merely filename. Shared-file edits require a committed handoff before the second worker edits or merges.",
+  "worker_1": {
+    "lane": "COMPILER-FACTORY",
+    "owns_semantics": [
+      "source decision representation",
+      "DecisionAtom/canonical graph",
+      "compiler lowering and refusal semantics",
+      "Strategy Factory source-faithful artifact"
+    ],
+    "typical_paths": [
+      "src/server/lib/decision-atom.ts",
+      "scripts/atomize-transcript.ts",
+      "compiler/graph/factory files proven by AR-1138",
+      "compiler/graph/factory focused fixtures and tests"
+    ]
+  },
+  "worker_2": {
+    "lane": "PAPER-RUNTIME-SAFETY",
+    "owns_semantics": [
+      "PAPER execution/runtime",
+      "qualification operations",
+      "autonomous runtime/recovery",
+      "broker execution safety",
+      "fill/position reconciliation"
+    ],
+    "typical_paths": [
+      "src/server/services/paper-*.ts",
+      "src/server/routes/paper.ts",
+      "src/server/services/fill-reconciliation-service.ts",
+      "src/server/services/server-mediated-executor.ts",
+      "runtime/watchdog/recovery focused tests"
+    ]
+  },
+  "coordination_required_paths": [
+    "package.json",
+    "src/server/db/schema.ts",
+    "src/server/index.ts",
+    ".github/workflows/**",
+    "src/server/db/migrations/**",
+    "shared API/JSON contract files",
+    "shared lifecycle/strategy-assignment authority files",
+    "any file already modified by the other active worker branch"
+  ],
+  "pre_edit_check": [
+    "git status --short must show only own expected changes",
+    "compare intended touched paths against other worker's last handoff/commit",
+    "if same shared path is required, STOP and exchange WORKER-HANDOFF-CONTRACT before editing"
+  ],
+  "merge_rule": "Do not resolve a semantic conflict by choosing whichever side compiles. The owning worker resolves its semantic authority; the consuming worker then rebases/consumes the committed contract.",
+  "forbidden": [
+    "shared worktree",
+    "uncommitted cross-worker dependency",
+    "silent edit of other worker's semantic lane",
+    "large opportunistic refactor of a coordination-required file"
+  ]
+}
