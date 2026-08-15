@@ -1,35 +1,11 @@
 {
-  "schema_version": "gpt-speed-engineering-lane-v1.2",
+  "schema_version": "gpt-speed-engineering-lane-v1.3",
   "generated_date": "2026-08-14",
+  "execution_branch": "external-advisor/gpt-speed-engineering",
   "mission": {
-    "thinking_speed": {
-      "status": "HEAVILY_OPTIMIZED_MAINTAIN_ONLY",
-      "default_action": "DO_NOT_EXPAND_WITHOUT_FRESH_BLOCKER"
-    },
-    "coding_loop_speed": {
-      "status": "ACTIVE_OPTIMIZATION_TARGET",
-      "focus": [
-        "focused_tests",
-        "code_navigation",
-        "deterministic_fixtures",
-        "worker_bootstrap",
-        "evidence_automation",
-        "compiler_iteration_harness",
-        "runtime_fault_harness"
-      ]
-    },
-    "machine_ci_speed": {
-      "status": "ACTIVE_OPTIMIZATION_TARGET",
-      "focus": [
-        "parallelism",
-        "caching",
-        "sharding",
-        "warm_services",
-        "install_reuse",
-        "build_reuse",
-        "critical_path_reduction"
-      ]
-    }
+    "thinking_speed": {"status": "HEAVILY_OPTIMIZED_MAINTAIN_ONLY"},
+    "coding_loop_speed": {"status": "UNGATED_WAVE_COMPLETE"},
+    "machine_ci_speed": {"status": "UNGATED_WAVE_COMPLETE"}
   },
   "hard_laws": [
     "AR_1138_REMAINS_FIRST_WORKER_1_ORDER",
@@ -41,153 +17,98 @@
     "MEASURE_BEFORE_AND_AFTER",
     "BENCHMARK_SUCCESS_IS_NOT_PRODUCTION_AUTHORIZATION"
   ],
-  "execution_branch": "external-advisor/gpt-speed-engineering",
   "queue": [
     {
       "id": "SPEED-01",
       "name": "CI_WALL_CLOCK_BASELINE",
-      "priority": 1,
-      "lane": "MACHINE_CI_SPEED",
       "state": "COMPLETE",
-      "evidence": {
-        "fast_lane_run": 31560374167,
-        "subject_sha": "98c0683dc5deafa63c77e7f70ac6b98e014a8019",
-        "wall_seconds": 415,
-        "largest_step": "Collect full Vitest report",
-        "largest_step_seconds": 251
-      }
+      "evidence": {"run": 31560374167, "subject_sha": "98c0683dc5deafa63c77e7f70ac6b98e014a8019", "wall_seconds": 415, "vitest_seconds": 251}
     },
     {
       "id": "SPEED-02",
       "name": "CHANGED_FILE_FOCUSED_TEST_SELECTOR",
-      "priority": 2,
-      "lane": "CODING_LOOP_SPEED",
       "state": "IMPLEMENTED_PROVEN_ISOLATED",
-      "rule": "advises focused development tests; never replaces certification",
-      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4",
-      "hosted_proof_runs": [31861640477, 31861824914],
-      "fail_closed_rule": "unproven mapping escalates to full-fleet/full-CI"
+      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4"
     },
     {
       "id": "SPEED-03",
       "name": "AUTOMATED_EVIDENCE_RECEIPT",
-      "priority": 3,
-      "lane": "CODING_LOOP_SPEED",
       "state": "IMPLEMENTED_PROVEN_ISOLATED",
-      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4",
-      "hosted_proof_runs": [31861640477, 31861824914],
-      "controls": ["required proof fields", "pushed must be true", "stopped_for_gpt must be true", "common secret redaction"]
+      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4"
     },
     {
       "id": "SPEED-04",
       "name": "WORKER_BOOTSTRAP_COMMAND",
-      "priority": 4,
-      "lane": "CODING_LOOP_SPEED",
       "state": "IMPLEMENTED_PROVEN_ISOLATED_NOT_INSTALLED_IN_AR1138",
-      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4",
-      "hosted_proof_runs": [31861640477, 31861824914],
-      "controls": ["read-only", "wrong branch fails", "dirty tree fails"]
+      "implementation_commit": "5d9b58dccc5123512adb9451e1359eb0ab7b02d4"
     },
     {
       "id": "SPEED-05",
       "name": "WORKER1_SINGLE_STRATEGY_COMPILER_HARNESS",
-      "priority": 5,
-      "lane": "CODING_LOOP_SPEED",
-      "state": "GATED",
+      "state": "GATED_NOT_UNFINISHED",
       "depends_on": ["AR_1138_GPT_PASS"]
     },
     {
       "id": "SPEED-06",
       "name": "WORKER2_RUNTIME_FAULT_HARNESS",
-      "priority": 6,
-      "lane": "CODING_LOOP_SPEED",
-      "state": "GATED",
+      "state": "GATED_NOT_UNFINISHED",
       "depends_on": ["WORKER_2_ACTIVATION"]
     },
     {
       "id": "SPEED-07",
       "name": "CI_INSTALL_SETUP_DUPLICATION_AUDIT",
-      "priority": 7,
-      "lane": "MACHINE_CI_SPEED",
-      "state": "STRONGLY_PROVEN_CANDIDATE_NOT_ADOPTED",
-      "finding": "cross-engine parity installs the full engine/quantum/ML stack although the exact 35-test selection passes with ci/requirements-fast.txt",
-      "benchmark_run": 31862024411,
-      "same_commit_light_proof_run": 31862200710,
-      "same_commit_heavy_ci_run": 31862200652,
-      "measurement": {
-        "historical_heavy_install_step_seconds": 121,
-        "bounded_node_plus_python_install_seconds": 52,
-        "historical_saved_seconds": 69,
-        "same_commit_heavy_job_seconds": 199,
-        "same_commit_light_job_seconds": 76,
-        "same_commit_saved_seconds": 123,
-        "exact_test_census": "35 passed, 0 failed, 0 skipped"
+      "state": "ADOPTION_PATCH_PROVEN_READY_TO_MERGE",
+      "current_main_patch": {
+        "branch": "hardening/gpt-speed-parity-adoption-20260814",
+        "commit": "73ebad1c1fc88388fb5af4b7fe1ada938c3e3fc9",
+        "ci_run": 31863381616,
+        "parity_job_seconds": 100,
+        "test_census": "35 passed, 0 failed, 0 skipped"
       },
-      "production_ci_changed": false
+      "green_baseline_proof": {
+        "branch": "hardening/gpt-speed-parity-greenproof-20260814",
+        "commit": "f0695a9e0a99dd5d73be2503ea33ac92a76597e6",
+        "ci_run": 31863460674,
+        "parity_job_seconds": 114,
+        "parity_job": "GREEN"
+      },
+      "historical_heavy_job_seconds": 199,
+      "production_main_changed": false
     },
     {
       "id": "SPEED-08",
       "name": "SAFE_PARALLELISM_SHARDING_AUDIT",
-      "priority": 8,
-      "lane": "MACHINE_CI_SPEED",
       "state": "TWO_RUNNER_PROVEN_ONE_RUNNER_REJECTED_PRODUCTION_UNCHANGED",
-      "constraint": "do not restore unstable in-process/thread parallelism",
-      "two_runner_proof": {
-        "run": 31861913966,
-        "subject_sha": "98c0683dc5deafa63c77e7f70ac6b98e014a8019",
-        "serial_seconds": 259,
-        "parallel_two_shard_seconds": 142,
-        "saved_seconds": 117,
-        "speedup_ratio": 1.824,
-        "test_files": 922,
-        "tests": 13485,
-        "equivalence": "exact file/assertion/status evidence plus identical existing baseline-comparator verdict"
-      },
-      "rejected_one_runner_adoption": {
-        "run": 31862262190,
-        "commit": "7491e1db6c7d82bc5d28fd2f453d9cc9517f451f",
-        "state": "REJECTED",
-        "geometry": "one GitHub runner, two concurrent single-worker forked shard processes, separate databases",
-        "evidence": {
-          "same_files": true,
-          "same_assertion_count": true,
-          "same_assertion_statuses": false,
-          "same_overall_success_flag": true,
-          "serial_files": 922,
-          "merged_files": 922,
-          "serial_assertions": 13485,
-          "merged_assertions": 13485
-        },
-        "reason": "assertion-status drift under same-runner concurrency violates exact evidence conservation",
-        "rule": "do not adopt this geometry and do not weaken the comparator to make it pass"
-      },
-      "production_fast_lane_changed": false
+      "two_runner_proof": {"run": 31861913966, "serial_seconds": 259, "parallel_seconds": 142, "saved_seconds": 117, "speedup_ratio": 1.824, "test_files": 922, "assertions": 13485, "exact_status_equivalence": true},
+      "rejected_one_runner": {"run": 31862262190, "same_files": true, "same_assertion_count": true, "same_assertion_statuses": false}
     },
     {
       "id": "SPEED-09",
       "name": "DETERMINISTIC_FIXTURE_WARM_SERVICE_AUDIT",
-      "priority": 9,
-      "lane": "CODING_LOOP_AND_MACHINE_CI",
-      "state": "READY"
+      "state": "COMPLETE_NO_CHANGE_ISOLATION_PRESERVED",
+      "reason": "measured setup savings are smaller than the demonstrated same-runner determinism risk"
     },
     {
       "id": "SPEED-10",
       "name": "SPEED_REGRESSION_VISIBILITY",
-      "priority": 10,
-      "lane": "MACHINE_CI_SPEED",
-      "state": "READY",
-      "depends_on": ["SPEED-01_COMPLETE"]
+      "state": "IMPLEMENTED_PROVEN_ISOLATED",
+      "observer_commit": "ecff6ff74f1d72e12c2e9f59c5a23635b68fb148",
+      "budget_commit": "95651aeb1cf8fd7345a8e6adffc5c56ddb087516",
+      "hosted_proof_run": 31863565763,
+      "default_mode": "advisory",
+      "strict_mode": "explicit opt-in only"
     },
     {
       "id": "SPEED-11",
       "name": "FULL_CI_BUILD_DAG_TAIL",
-      "priority": 11,
-      "lane": "MACHINE_CI_SPEED",
-      "state": "MEASURED_CANDIDATE_NEEDS_AB_PROOF",
-      "finding": "Build Check waits for test-node/test-python/test-parity although it checks out independently and consumes no test artifacts",
-      "historical_subject_sha": "c25c19d6e7ee32c7f8a168ddedd710cfff15d11f",
-      "projected_saved_critical_path_seconds": 104,
-      "production_ci_changed": false
+      "state": "ADOPTION_PATCH_PROVEN_READY_TO_MERGE",
+      "ab_proof": {"run": 31863281670, "candidate_build_seconds": 117, "control_build_seconds": 117, "both_green": true, "final_proof_green": true},
+      "adoption_branch": "hardening/gpt-speed-build-dag-adoption-20260814",
+      "adoption_commit": "95d5b43f04ff9f2e998f2c0dc8e28734ea483b98",
+      "adoption_ci_run": 31863611329,
+      "actual_patched_build_job_seconds": 112,
+      "actual_patched_build_job": "GREEN",
+      "production_main_changed": false
     }
   ],
   "acceptance_contract": {
