@@ -53,6 +53,29 @@ Read-only comparison for two worker refs. It finds the merge base, computes each
 Example:
 `node branch-collision-audit.mjs --left worker-1-branch --right worker-2-branch --repo .`
 
+### resume-anchor-guard.mjs
+Read-only exact-state guard for resuming paused Claude work. It verifies the expected branch, exact expected commit, and clean worktree before work resumes. A moved branch, wrong branch, or dirty tree is a stop rather than an implicit rebase of the worker's mental model.
+
+Example:
+`node resume-anchor-guard.mjs --expected-branch h1-wave4-sealed12-driver --expected-head <sha>`
+
+### edit-scope-guard.mjs
+Fail-closed packet-scope checker. Given an explicit authorization file and a base/head diff, it rejects any changed path outside the exact files or explicit directory prefixes the active packet authorized. Empty scope is rejected; there is no implicit "anything goes" mode.
+
+Example scope:
+`{"allowed_exact":["src/a.ts","test/a.test.ts"],"allowed_prefixes":["fixtures/ar-1138/"]}`
+
+Example:
+`node edit-scope-guard.mjs --base <start-sha> --head HEAD --scope-file packet-scope.json`
+
+### ci-failure-triage.mjs
+Fail-closed GitHub Actions jobs summarizer. It strips successful-job noise and surfaces failed jobs/steps. Cancelled jobs are not green, and queued/in-progress jobs return `INCOMPLETE` rather than a false success.
+
+Example:
+`node ci-failure-triage.mjs --input jobs.json`
+
+This is triage only; it does not reinterpret a failing job as acceptable or replace the underlying logs when root-cause inspection is required.
+
 ## Test
 
 `node --test advisor-prepared/gpt-speed-engineering-lane/tooling/*.test.mjs`
