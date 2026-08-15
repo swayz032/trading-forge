@@ -1,0 +1,85 @@
+name: GPT Parity Fast-Dependency Benchmark
+
+on:
+  push:
+    branches:
+      - "external-advisor/gpt-speed-engineering"
+    paths:
+      - ".github/workflows/gpt-parity-fast-deps-benchmark.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SUBJECT_SHA: "c25c19d6e7ee32c7f8a168ddedd710cfff15d11f"
+  TF_RUNTIME_STAGE: preprod
+
+jobs:
+  parity-fast-deps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact historical green subject
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+          path: subject
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: subject/package-lock.json
+      - name: Install Node dependencies exactly as parity job requires
+        working-directory: subject
+        run: |
+          node scripts/check-package-lock-integrity.mjs
+          start=$(date +%s)
+          npm ci
+          end=$(date +%s)
+          mkdir -p bench
+          echo "$((end-start))" > bench/npm-seconds.txt
+      - name: Install bounded parity dependencies
+        working-directory: subject
+        run: |
+          start=$(date +%s)
+          python -m pip install --disable-pip-version-check -q -r ci/requirements-fast.txt
+          end=$(date +%s)
+          echo "$((end-start))" > bench/python-seconds.txt
+      - name: Run exact parity test selection
+        working-directory: subject
+        run: |
+          start=$(date +%s)
+          pytest src/engine/tests/test_cross_engine_parity.py -v --tb=short -x --junitxml=bench/parity.xml
+          end=$(date +%s)
+          echo "$((end-start))" > bench/test-seconds.txt
+      - name: Assert historical test census conserved
+        working-directory: subject
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('bench/parity.xml').getroot()
+          suites = [root] if root.tag == 'testsuite' else list(root.iter('testsuite'))
+          tests = sum(int(s.attrib.get('tests', 0)) for s in suites)
+          failures = sum(int(s.attrib.get('failures', 0)) + int(s.attrib.get('errors', 0)) for s in suites)
+          skipped = sum(int(s.attrib.get('skipped', 0)) for s in suites)
+          assert tests == 35, (tests, 'expected historical census 35')
+          assert failures == 0, failures
+          assert skipped == 0, skipped
+          print('PARITY_CENSUS_CONSERVED: 35 passed, 0 failed, 0 skipped')
+          PY
+      - name: Publish measurement
+        working-directory: subject
+        run: |
+          npm_s=$(cat bench/npm-seconds.txt)
+          py_s=$(cat bench/python-seconds.txt)
+          test_s=$(cat bench/test-seconds.txt)
+          node -e "const fs=require('fs'); const npm=Number(process.argv[1]), py=Number(process.argv[2]), test=Number(process.argv[3]); const out={subject_sha:process.env.SUBJECT_SHA,historical_heavy_install_step_seconds:121,npm_ci_seconds:npm,fast_python_install_seconds:py,parity_test_seconds:test,new_install_seconds:npm+py,install_seconds_saved_vs_historical:121-(npm+py)}; fs.writeFileSync('bench/measurement.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));" "$npm_s" "$py_s" "$test_s"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parity-fast-deps-benchmark
+          path: subject/bench/
+          retention-days: 7
