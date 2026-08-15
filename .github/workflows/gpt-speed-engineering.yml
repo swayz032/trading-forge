@@ -1,0 +1,35 @@
+name: GPT Speed Engineering Tooling
+
+on:
+  push:
+    branches:
+      - "external-advisor/gpt-speed-engineering"
+    paths:
+      - "advisor-prepared/gpt-speed-engineering-lane/**"
+      - ".github/workflows/gpt-speed-engineering.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gpt-speed-engineering-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tooling-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Run speed-tooling tests
+        run: node --test advisor-prepared/gpt-speed-engineering-lane/tooling/*.test.mjs
+      - name: Smoke changed-file selector fail-closed fallback
+        run: |
+          node advisor-prepared/gpt-speed-engineering-lane/tooling/changed-test-selector.mjs src/server/services/nonexistent-example.ts > /tmp/selector.json
+          grep -q 'test:full-fleet' /tmp/selector.json
+      - name: Validate baseline JSON
+        run: node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('advisor-prepared/gpt-speed-engineering-lane/baselines/fast-lane-2026-08-12.json','utf8')); if(x.job_wall_seconds!==415||x.steps[0].seconds!==251) process.exit(1)"

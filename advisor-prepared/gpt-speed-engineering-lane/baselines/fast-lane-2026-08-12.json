@@ -1,0 +1,19 @@
+{
+  "schema_version": "speed-baseline-v1",
+  "source": "GitHub Actions run 31560374167",
+  "head_sha": "98c0683dc5deafa63c77e7f70ac6b98e014a8019",
+  "conclusion": "success",
+  "job_wall_seconds": 415,
+  "steps": [
+    {"name":"Collect full Vitest report","seconds":251,"share_of_job":0.6048},
+    {"name":"Install CPU-only Python fast-lane dependencies","seconds":44,"share_of_job":0.1060},
+    {"name":"TypeScript typecheck","seconds":27,"share_of_job":0.0651},
+    {"name":"Remaining contract and parity checks","seconds":21,"share_of_job":0.0506},
+    {"name":"Rails/soak unit tests (node:test lane)","seconds":18,"share_of_job":0.0434},
+    {"name":"Initialize containers","seconds":14,"share_of_job":0.0337},
+    {"name":"Collect fast pytest report","seconds":11,"share_of_job":0.0265},
+    {"name":"Install Node dependencies","seconds":10,"share_of_job":0.0241}
+  ],
+  "first_investigation_target": "Collect full Vitest report",
+  "constraint": "Current single-worker forks mode exists to avoid an observed Node/V8 WASM teardown false-red. Do not increase parallelism without deterministic evidence and mutation/failure controls."
+}
