@@ -1,0 +1,151 @@
+{
+  "schema_version": "two-worker-execution-queue-v1",
+  "generated_date": "2026-08-14",
+  "source_branch": "external-advisor/gpt-rulings",
+  "activation_gate": {
+    "required": [
+      "AR-1138 worker completion",
+      "AR-1138 tests/evidence",
+      "AR-1138 commit and push",
+      "AR-1138 worker report",
+      "GPT independent PASS",
+      "Worker 1 distinct onboarding identity proof",
+      "Worker 2 distinct onboarding identity proof",
+      "separate worktree/branch proof"
+    ],
+    "two_worker_mode_before_gate": false
+  },
+  "global_locks": {
+    "broker_egress": false,
+    "topstep_live_transport": false,
+    "topstep_router_expected_state": "topstepx_not_configured",
+    "shared_worktree_allowed": false,
+    "shared_identity_bearing_onboarding_allowed": false,
+    "one_active_order_per_worker": true
+  },
+  "worker_1": {
+    "worker_id": "worker-1",
+    "role": "Trading Forge Worker 1 / Agent Teams Lead",
+    "lane": "COMPILER-FACTORY",
+    "mission": ["GRAPH_ENGINEERING", "COMPILER", "STRATEGY_FACTORY"],
+    "current_order": {
+      "id": "AR-1138",
+      "state": "RESUME_EXACT_UNFINISHED_STATE",
+      "activation": "IMMEDIATE_WHEN_CLAUDE_QUOTA_RETURNS"
+    },
+    "next_proof_target": {
+      "id": "AR-1183",
+      "name": "ONE_STRATEGY_GOLDEN_RUN",
+      "depends_on": ["AR-1138_GPT_PASS", "RUNNABLE_COMPILER_FACTORY_PATH"]
+    },
+    "forbidden_default_ownership": ["PAPER_RUNTIME", "AUTONOMOUS_RUNTIME", "BROKER_EXECUTION_SAFETY"]
+  },
+  "worker_2": {
+    "worker_id": "worker-2",
+    "role": "Trading Forge Worker 2 / Runtime & Execution Engineer",
+    "lane": "PAPER-RUNTIME-SAFETY",
+    "mission": ["PAPER", "QUALIFICATION_OPS", "AUTONOMOUS_RUNTIME", "EXECUTION_SAFETY"],
+    "activation": "AFTER_AR_1138_GPT_PASS_AND_IDENTITY_PROOF",
+    "default_triage_queue": [
+      {
+        "id": "AR-1178",
+        "priority": 1,
+        "class": "SECURITY",
+        "size": "TINY",
+        "reason": "production dev-auth bypass configuration trap",
+        "depends_on": []
+      },
+      {
+        "id": "AR-1175",
+        "priority": 2,
+        "class": "CAPITAL_SAFETY",
+        "size": "SMALL",
+        "reason": "one-contract reconciliation blind spot",
+        "depends_on": []
+      },
+      {
+        "id": "AR-1176",
+        "priority": 3,
+        "class": "CAPITAL_SAFETY",
+        "size": "SMALL",
+        "reason": "account-wide reconcile clear can erase unresolved symbol drift",
+        "depends_on": ["AR-1175_REVIEW_OR_COMPATIBILITY_CHECK"]
+      },
+      {
+        "id": "AR-1173",
+        "priority": 4,
+        "class": "AUTONOMY",
+        "size": "SMALL",
+        "reason": "unhandled rejection logs and survives instead of entering fatal teardown",
+        "depends_on": []
+      },
+      {
+        "id": "AR-1184",
+        "priority": 5,
+        "class": "EXECUTION_PARITY",
+        "size": "MEDIUM",
+        "reason": "entry uses first enabled firm account while exits fail closed on multi-account ambiguity",
+        "depends_on": ["AR-1175", "AR-1176"],
+        "hard_gate_for": ["BROKER_EGRESS"]
+      },
+      {
+        "id": "AR-1177",
+        "priority": 6,
+        "class": "CI_RELEASE",
+        "size": "SMALL",
+        "reason": "Fast Green must not equal Launch Green; full-lane receipt must bind exact release SHA",
+        "depends_on": []
+      },
+      {
+        "id": "AR-1174",
+        "priority": 7,
+        "class": "NETWORK_AUTONOMY",
+        "size": "SMALL_TO_MEDIUM",
+        "reason": "dormant network failover must report honest unmeasured status before any activation",
+        "depends_on": []
+      },
+      {
+        "id": "AR-1154",
+        "priority": 8,
+        "class": "PAPER_QUALIFICATION",
+        "name": "deterministic PAPER day receipt",
+        "depends_on": []
+      },
+      {
+        "id": "AR-1155",
+        "priority": 9,
+        "class": "PAPER_QUALIFICATION",
+        "name": "PAPER qualification activation",
+        "depends_on": ["AR-1154"]
+      },
+      {
+        "id": "AR-1156",
+        "priority": 10,
+        "class": "PAPER_DATA",
+        "name": "Massive Futures PAPER feed",
+        "depends_on": ["AR-1155"]
+      },
+      {
+        "id": "AR-1157+AR-1180",
+        "priority": 11,
+        "class": "NIGHTLY_AUTONOMY",
+        "name": "3AM durable receipt plus crash/retry identity",
+        "depends_on": ["AR-1154"]
+      },
+      {
+        "id": "AR-1158+AR-1181",
+        "priority": 12,
+        "class": "ROTATION_AUTONOMY",
+        "name": "restart-safe strategy rotation coordinator plus chaos matrix",
+        "depends_on": ["QUALIFIED_RESERVE_AUTHORITY"]
+      }
+    ],
+    "special_security_lane": {
+      "id": "AR-1179",
+      "rule": "If a potentially live credential is confirmed, rotate/revoke first. Do not copy secret bytes into reports. Cleanup/history work follows containment."
+    },
+    "forbidden_default_ownership": ["SOURCE_SEMANTICS", "GRAPH_ENGINEERING", "COMPILER_LOWERING"]
+  },
+  "authorization_rule": "This queue is routing metadata, not blanket authorization. GPT/main advisor authorizes one bounded packet per worker at a time.",
+  "completion_rule": "Every completed packet must publish repository evidence, commit/push proof, exact RED/GREEN commands, controls, and stop for GPT review when gated."
+}
