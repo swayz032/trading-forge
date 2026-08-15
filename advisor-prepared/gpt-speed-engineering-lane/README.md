@@ -68,6 +68,21 @@ Redacting log-noise reducer. It extracts bounded context around likely failure s
 ### test-hotspot-profiler.mjs
 Deterministic timing profiler for normalized test timing rows. It ranks slow tests and computes individual/cumulative wall-time share. Timing evidence identifies optimization candidates only; it never authorizes skipping or weakening coverage.
 
+## Native Claude robustness bridge
+
+### claude-hook-runner.mjs + claude-hook-bridge.mjs
+Gated Claude Code hook integration for the worker-company operating system. It reuses the existing resume-anchor, lane-boundary, edit-scope, finish-check, receipt, and collision authorities instead of creating duplicate policy.
+
+When later activated per the existing AR-1138 / two-worker gates:
+- `SessionStart` verifies the exact paused branch/SHA and arms a session marker only on success;
+- `PreToolUse` blocks native edits that escape the worker lane or explicit packet scope;
+- `PreToolUse` also blocks common Bash mutation paths that would bypass inspected Edit/Write targets while keeping normal read/test Bash commands available;
+- `TaskCompleted` blocks completion unless the real commit/evidence packet passes the existing finish check.
+
+Candidate hook settings and manifest examples live in `claude-hooks/`. They are intentionally **not** installed into `.claude/settings.json` on the active worker while AR-1138 is unfinished.
+
+This bridge is defense in depth. It does not replace separate worktrees, Git history, CI, worker identity onboarding, canonical `worker-execution`, or GPT semantic review.
+
 ## Test
 
 `node --test advisor-prepared/gpt-speed-engineering-lane/tooling/*.test.mjs`
