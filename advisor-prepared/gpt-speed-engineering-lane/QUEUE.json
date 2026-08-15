@@ -1,5 +1,5 @@
 {
-  "schema_version": "gpt-speed-engineering-lane-v1.1",
+  "schema_version": "gpt-speed-engineering-lane-v1.2",
   "generated_date": "2026-08-14",
   "mission": {
     "thinking_speed": {
@@ -109,14 +109,18 @@
       "name": "CI_INSTALL_SETUP_DUPLICATION_AUDIT",
       "priority": 7,
       "lane": "MACHINE_CI_SPEED",
-      "state": "PROVEN_CANDIDATE_NOT_ADOPTED",
+      "state": "STRONGLY_PROVEN_CANDIDATE_NOT_ADOPTED",
       "finding": "cross-engine parity installs the full engine/quantum/ML stack although the exact 35-test selection passes with ci/requirements-fast.txt",
       "benchmark_run": 31862024411,
       "same_commit_light_proof_run": 31862200710,
+      "same_commit_heavy_ci_run": 31862200652,
       "measurement": {
         "historical_heavy_install_step_seconds": 121,
         "bounded_node_plus_python_install_seconds": 52,
-        "saved_seconds": 69,
+        "historical_saved_seconds": 69,
+        "same_commit_heavy_job_seconds": 199,
+        "same_commit_light_job_seconds": 76,
+        "same_commit_saved_seconds": 123,
         "exact_test_census": "35 passed, 0 failed, 0 skipped"
       },
       "production_ci_changed": false
@@ -126,7 +130,7 @@
       "name": "SAFE_PARALLELISM_SHARDING_AUDIT",
       "priority": 8,
       "lane": "MACHINE_CI_SPEED",
-      "state": "PROVEN_TWO_RUNNER_CANDIDATE_ONE_RUNNER_ADOPTION_STILL_GATED",
+      "state": "TWO_RUNNER_PROVEN_ONE_RUNNER_REJECTED_PRODUCTION_UNCHANGED",
       "constraint": "do not restore unstable in-process/thread parallelism",
       "two_runner_proof": {
         "run": 31861913966,
@@ -139,12 +143,25 @@
         "tests": 13485,
         "equivalence": "exact file/assertion/status evidence plus identical existing baseline-comparator verdict"
       },
-      "one_runner_adoption_experiment": {
+      "rejected_one_runner_adoption": {
         "run": 31862262190,
         "commit": "7491e1db6c7d82bc5d28fd2f453d9cc9517f451f",
-        "state_at_receipt": "RUNNING_UNACCEPTED",
-        "rule": "no production Fast Lane change unless this or an equivalent adoption-shape proof passes"
-      }
+        "state": "REJECTED",
+        "geometry": "one GitHub runner, two concurrent single-worker forked shard processes, separate databases",
+        "evidence": {
+          "same_files": true,
+          "same_assertion_count": true,
+          "same_assertion_statuses": false,
+          "same_overall_success_flag": true,
+          "serial_files": 922,
+          "merged_files": 922,
+          "serial_assertions": 13485,
+          "merged_assertions": 13485
+        },
+        "reason": "assertion-status drift under same-runner concurrency violates exact evidence conservation",
+        "rule": "do not adopt this geometry and do not weaken the comparator to make it pass"
+      },
+      "production_fast_lane_changed": false
     },
     {
       "id": "SPEED-09",
