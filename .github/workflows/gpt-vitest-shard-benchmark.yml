@@ -1,0 +1,179 @@
+name: GPT Vitest Shard Benchmark
+
+on:
+  push:
+    branches:
+      - "external-advisor/gpt-speed-engineering"
+    paths:
+      - "advisor-prepared/gpt-speed-engineering-lane/tooling/merge-vitest-shards.mjs"
+      - "advisor-prepared/gpt-speed-engineering-lane/tooling/compare-vitest-evidence.mjs"
+      - "advisor-prepared/gpt-speed-engineering-lane/tooling/vitest-sharding.test.mjs"
+      - ".github/workflows/gpt-vitest-shard-benchmark.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gpt-vitest-shard-benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_ENV: test
+  TF_RUNTIME_STAGE: preprod
+  PGHOST: localhost
+  PGPORT: 5432
+  PGUSER: postgres
+  PGPASSWORD: postgres
+  DATABASE_URL: postgresql://forge:forge_ci@localhost:5432/trading_forge_ci
+
+jobs:
+  serial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "24", cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: npm ci
+      - name: Install fast Python dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --disable-pip-version-check -q -r ci/requirements-fast.txt
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+      - name: Provision benchmark DB
+        run: |
+          psql -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          DO $do$ BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='forge') THEN CREATE ROLE forge LOGIN PASSWORD 'forge_ci'; END IF;
+          END $do$;
+          SQL
+          dropdb --if-exists --force trading_forge_ci
+          createdb --owner=forge trading_forge_ci
+          npm run db:migrate
+      - name: Serial single-worker Vitest evidence
+        run: |
+          mkdir -p bench
+          start=$(date +%s)
+          set +e
+          node node_modules/vitest/vitest.mjs run --pool=forks --maxWorkers=1 --minWorkers=1 --reporter=json --outputFile=bench/report.json
+          rc=$?
+          set -e
+          end=$(date +%s)
+          test -s bench/report.json
+          echo "$rc" > bench/exit-code.txt
+          echo "$((end-start))" > bench/seconds.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: vitest-serial, path: bench/, retention-days: 3 }
+
+  shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "24", cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: npm ci
+      - name: Install fast Python dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --disable-pip-version-check -q -r ci/requirements-fast.txt
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+      - name: Provision benchmark DB
+        run: |
+          psql -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          DO $do$ BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='forge') THEN CREATE ROLE forge LOGIN PASSWORD 'forge_ci'; END IF;
+          END $do$;
+          SQL
+          dropdb --if-exists --force trading_forge_ci
+          createdb --owner=forge trading_forge_ci
+          npm run db:migrate
+      - name: Single-worker process shard ${{ matrix.shard }}/2
+        run: |
+          mkdir -p bench
+          start=$(date +%s)
+          set +e
+          node node_modules/vitest/vitest.mjs run --pool=forks --maxWorkers=1 --minWorkers=1 --shard=${{ matrix.shard }}/2 --reporter=json --outputFile=bench/report.json
+          rc=$?
+          set -e
+          end=$(date +%s)
+          test -s bench/report.json
+          echo "$rc" > bench/exit-code.txt
+          echo "$((end-start))" > bench/seconds.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vitest-shard-${{ matrix.shard }}
+          path: bench/
+          retention-days: 3
+
+  prove-equivalence:
+    runs-on: ubuntu-latest
+    needs: [serial, shard]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "24" }
+      - uses: actions/download-artifact@v4
+        with: { name: vitest-serial, path: /tmp/serial }
+      - uses: actions/download-artifact@v4
+        with: { name: vitest-shard-1, path: /tmp/shard1 }
+      - uses: actions/download-artifact@v4
+        with: { name: vitest-shard-2, path: /tmp/shard2 }
+      - name: Merge shards fail-closed
+        run: node advisor-prepared/gpt-speed-engineering-lane/tooling/merge-vitest-shards.mjs /tmp/shard1/report.json /tmp/shard2/report.json --output /tmp/merged.json
+      - name: Prove exact assertion evidence equivalence
+        run: node advisor-prepared/gpt-speed-engineering-lane/tooling/compare-vitest-evidence.mjs /tmp/serial/report.json /tmp/merged.json
+      - name: Prove existing baseline comparator gives identical verdict
+        run: |
+          set +e
+          node ci/compare-baseline.mjs --suite vitest --results /tmp/serial/report.json > /tmp/serial-verdict.txt 2>&1
+          serial_rc=$?
+          node ci/compare-baseline.mjs --suite vitest --results /tmp/merged.json > /tmp/merged-verdict.txt 2>&1
+          merged_rc=$?
+          set -e
+          test "$serial_rc" -eq "$merged_rc"
+          diff -u /tmp/serial-verdict.txt /tmp/merged-verdict.txt
+      - name: Publish benchmark measurement
+        run: |
+          serial=$(cat /tmp/serial/seconds.txt)
+          s1=$(cat /tmp/shard1/seconds.txt)
+          s2=$(cat /tmp/shard2/seconds.txt)
+          max=$s1
+          if [ "$s2" -gt "$max" ]; then max=$s2; fi
+          node -e "const fs=require('fs'); const serial=Number(process.argv[1]), s1=Number(process.argv[2]), s2=Number(process.argv[3]), parallel=Math.max(s1,s2); const out={serial_seconds:serial,shard_1_seconds:s1,shard_2_seconds:s2,parallel_test_seconds:parallel,speedup_ratio:Number((serial/parallel).toFixed(3)),saved_seconds:serial-parallel}; fs.writeFileSync('/tmp/benchmark.json',JSON.stringify(out,null,2)); console.log(JSON.stringify(out,null,2));" "$serial" "$s1" "$s2"
+      - uses: actions/upload-artifact@v4
+        with: { name: vitest-shard-benchmark, path: /tmp/benchmark.json, retention-days: 7 }
