@@ -88,7 +88,12 @@ function validateManifest(manifest) {
 
 function sessionContext(anchor) {
   if (anchor.ok) {
-    return `GPT worker guard: anchor verified on ${anchor.branch} at ${anchor.head}. Native edits remain subject to lane + authorized-scope enforcement.`;
+    // Name any governed dirty path that was actually exercised: a silent pass cannot be told
+    // apart from an exception that never fired.
+    const excepted = (anchor.accepted_dirty || [])
+      .map((entry) => `${entry.path} @ ${entry.diff_sha256.slice(0, 12)} (${entry.authority})`)
+      .join('; ');
+    return `GPT worker guard: anchor verified on ${anchor.branch} at ${anchor.head}.${excepted ? ` Governed dirty exception in force: ${excepted}.` : ''} Native edits remain subject to lane + authorized-scope enforcement.`;
   }
   return `GPT worker guard STOP: ${anchor.errors.join('; ')}. Do not edit. Resolve the exact worker branch/resume anchor first.`;
 }
@@ -119,6 +124,8 @@ export function evaluateHookEvent({ input, manifest, env = process.env }) {
       expectedBranch: manifest.session_anchor.expected_branch,
       expectedHead: manifest.session_anchor.expected_head,
       requireClean: manifest.session_anchor.require_clean !== false,
+      // AR-1265 §4: exact path + exact diff hash, never a blanket allow-dirty.
+      allowedDirty: manifest.session_anchor.allowed_dirty || [],
     });
     if (anchor.ok) persistAnchorOk(env.CLAUDE_ENV_FILE);
     return {
@@ -156,6 +163,10 @@ export function evaluateHookEvent({ input, manifest, env = process.env }) {
           toolInput: input.tool_input,
           g2,
           cwd: repoRoot,
+          // AR-1265 §3.2: in the dedicated eight-call session, membership is decided by the
+          // session rather than by the payload, so a G2 dispatch carrying only condition prose
+          // cannot slip through as benign.
+          strictSession: manifest.g2_precall.strict_session === true,
         });
         if (!verdict.allow) {
           return { ...deny(`G2 pre-call guard: ${verdict.reason}`), _audit: { event, g2: verdict } };

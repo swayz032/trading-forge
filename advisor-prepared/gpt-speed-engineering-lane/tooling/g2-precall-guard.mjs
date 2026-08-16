@@ -33,8 +33,23 @@ import crypto from 'node:crypto';
 export const G2_PERMIT_SCHEMA = 'g2d-precall-permit-v1';
 export const APPROVED_REQUESTED_MODEL = 'opus';
 
-// Subagent-dispatch tools. A model call issued through any of these can spend an attempt.
-const SUBAGENT_TOOLS = new Set(['Agent', 'Task']);
+/**
+ * Subagent-dispatch tools. A model call issued through any of these can spend an attempt.
+ *
+ * AR-1265 §3.1 — TOOL-NAME PARITY IS LOAD-BEARING. A correct guard that never receives the
+ * event is not a guard, so this set and the installed PreToolUse matcher must name the SAME
+ * tools. Exported so the registration-parity control can assert that instead of trusting a
+ * comment: at the graded pin the matcher was `Edit|Write|NotebookEdit|Bash` while this set
+ * was {Agent, Task}, and the gap was invisible to every synthetic test.
+ *
+ * `[MEASURED 2026-08-16]` the live Claude Code runtime for this seat exposes the subagent
+ * dispatch tool as `Agent`; no tool named `Task` is present in its registry (`TaskOutput` and
+ * `TaskStop` are distinct tools acting on already-spawned tasks). Both names are retained
+ * because a name that never arrives costs nothing, while a name that arrives unguarded is
+ * exactly the one-shot hole this file exists to close.
+ */
+export const SUBAGENT_TOOL_NAMES = Object.freeze(['Agent', 'Task']);
+const SUBAGENT_TOOLS = new Set(SUBAGENT_TOOL_NAMES);
 
 /** Mirrors isolated_attempt_receipt._safe_name so "already spent" is checked against the
  *  receipt files the Python side actually writes, not a name we invented here. */
@@ -139,10 +154,24 @@ const deny = (reason) => ({ allow: false, g2: true, reason });
  * Non-G2 subagent usage is untouched and remains usable under its own policy — this guard
  * exists to protect eight frozen calls, not to police ordinary work.
  */
-export function evaluateG2PreCall({ toolName, toolInput, g2, cwd = process.cwd() }) {
+export function evaluateG2PreCall({ toolName, toolInput, g2, cwd = process.cwd(), strictSession = false }) {
   if (!SUBAGENT_TOOLS.has(toolName)) return { allow: true, g2: false, reason: 'not a subagent dispatch' };
 
-  const shaped = isG2Shaped(g2, toolInput);
+  // AR-1265 §3.2 — THE CONTENT-DETECTION BYPASS.
+  // Content-shaped detection is fail-closed against a caller who *mentions* G2 surface, but it
+  // is still evadable by a G2 dispatch carrying only condition PROSE: no queue filename, no
+  // condition ref, no permit marker. That call would be classified benign and allowed, and the
+  // attempt would burn. So the dedicated eight-call execution session runs in STRICT mode, where
+  // membership is decided by the SESSION, not by the payload:
+  //
+  //     strict session  =>  EVERY subagent dispatch needs a valid permit, full stop.
+  //
+  // Cheap helper work is simply not permitted inside that reserved session; it exists to spend
+  // exactly eight controlled calls, not to do general engineering. The non-G2 calibration runs
+  // BEFORE strict mode is armed, never as an exemption carved inside it.
+  const shaped = strictSession
+    ? { g2: true, why: 'strict dedicated G2 execution session: every subagent dispatch requires a permit' }
+    : isG2Shaped(g2, toolInput);
   if (!shaped.g2) return { allow: true, g2: false, reason: 'benign non-G2 subagent usage' };
 
   const permitPath = extractPermitPath(toolInput);
