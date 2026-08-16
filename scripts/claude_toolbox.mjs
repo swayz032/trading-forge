@@ -38,22 +38,47 @@ const TOOLBOX_REF = 'origin/external-advisor/gpt-speed-engineering';
 const TOOLBOX_DIR = 'advisor-prepared/gpt-speed-engineering-lane/tooling';
 const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 
+/**
+ * IMMUTABLE PIN — the P1 item that stood OPEN from AR-1239 §14 through AR-1249.
+ *
+ * 🛑 WHY A BRANCH REF WAS NOT ENOUGH. `TOOLBOX_REF` is a BRANCH, and a branch moves. Every run
+ * silently adopted whatever that branch pointed at, so the guards protecting this seat could be
+ * changed under it between two runs and the receipt would faithfully record the new commit
+ * without anything ever saying "this is not what you activated". A provenance receipt that
+ * reports a moving target documents drift; it does not detect it.
+ *
+ * So the pin is the authority and the branch is only a hint. `materialize()` resolves the PIN,
+ * and separately reports whether the branch has moved away from it. Drift becomes a visible fact
+ * instead of a silent upgrade.
+ */
+const TOOLBOX_PIN = 'dd1bc2306dee2f894272fa7c4a973c4812672dfe';
+
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 }
 
 /** Materialize the pinned tooling into a cache dir. Returns a provenance receipt. */
 export function materialize() {
+  // THE PIN IS THE AUTHORITY. A missing pin is a hard stop: running from whatever the branch
+  // happens to point at is the exact behaviour the pin exists to end.
   let commit;
   try {
-    commit = git(['rev-parse', TOOLBOX_REF]).trim();
+    commit = git(['rev-parse', `${TOOLBOX_PIN}^{commit}`]).trim();
   } catch {
     throw new Error(
-      `TOOLBOX REF NOT FOUND: ${TOOLBOX_REF}. The toolbox is not rebuilt here by design — ` +
-      `without the ref there is nothing to activate, and inventing a replacement is exactly ` +
-      `what AR-1236 §11 forbids. Fetch the ref and re-run.`,
+      `TOOLBOX PIN NOT FOUND: ${TOOLBOX_PIN}. The toolbox is not rebuilt here by design — ` +
+      `without the pinned commit there is nothing authorized to activate, and inventing a ` +
+      `replacement is exactly what AR-1236 §11 forbids. Fetch ${TOOLBOX_REF} and re-run.`,
     );
   }
+  if (commit !== TOOLBOX_PIN) {
+    throw new Error(`pin ${TOOLBOX_PIN} resolved to ${commit}; refusing an ambiguous pin.`);
+  }
+
+  // The branch is a HINT now, not the source. Its position is reported so a move is visible.
+  let branchCommit = null;
+  try { branchCommit = git(['rev-parse', TOOLBOX_REF]).trim(); } catch { branchCommit = null; }
+  const drifted = branchCommit !== null && branchCommit !== TOOLBOX_PIN;
 
   const files = git(['ls-tree', '-r', '--name-only', commit, '--', TOOLBOX_DIR])
     .split('\n').map((s) => s.trim()).filter((s) => s.endsWith('.mjs'));
@@ -70,18 +95,32 @@ export function materialize() {
     manifest.push({ file: name, sha256: crypto.createHash('sha256').update(body).digest('hex') });
   }
 
+  const bundleSha = crypto.createHash('sha256')
+    .update(manifest.map((m) => `${m.file}:${m.sha256}`).join('\n')).digest('hex');
+
   return {
-    schema: 'worker1-toolbox-activation-v1',
-    authority: 'AR-1236 §11 (activate, do not rebuild) + AR-1230',
+    schema: 'worker1-toolbox-activation-v2',
+    authority: 'AR-1236 §11 (activate, do not rebuild) + AR-1230 + AR-1254 §10 (immutable pin)',
     ref: TOOLBOX_REF,
+    pin: TOOLBOX_PIN,
     commit,
+    pin_is_authority: true,
+    branch_commit: branchCommit,
+    branch_drifted_from_pin: drifted,
+    drift_note: drifted
+      ? `⚠ ${TOOLBOX_REF} has moved to ${branchCommit}, away from the pinned ${TOOLBOX_PIN}. ` +
+        'This run used the PIN. The branch moving is not an upgrade and does not change what is ' +
+        'activated — re-pin deliberately, with a member diff, or keep running the pin.'
+      : `${TOOLBOX_REF} still matches the pin.`,
     cache: CACHE,
     file_count: manifest.length,
+    bundle_sha256: bundleSha,
     manifest,
     note:
-      'Materialized FROM the pinned ref, never copied into the worker branch. One source of ' +
+      'Materialized FROM the PINNED COMMIT, never copied into the worker branch. One source of ' +
       'truth; a drifting second copy of a guard is a guard that stops biting while still ' +
-      'reporting PASS.',
+      'reporting PASS. `bundle_sha256` covers every file name+hash, so a content change inside ' +
+      'the pin is detectable without diffing 37 rows by eye.',
   };
 }
 

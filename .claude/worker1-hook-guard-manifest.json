@@ -1,0 +1,37 @@
+{
+  "schema": "gpt-claude-hook-guard-v1",
+  "worker": "worker-1",
+  "_authority": "AR-1254 §10 (bounded native-protection activation packet) + AR-1236 §11 (activate the existing toolbox, do not rebuild it)",
+  "_what_this_is": "The manifest the pinned toolbox's claude-hook-runner.mjs requires. It does NOT restate the lane rules — those live in lane-boundary-guard.mjs::classifyPath inside the pinned toolbox, and a second copy of a boundary rule is a rule that drifts and stops biting while still reporting PASS. edit_scope NARROWS this packet on top of that.",
+  "_toolbox_pin": "dd1bc2306dee2f894272fa7c4a973c4812672dfe",
+  "_toolbox_bundle_sha256": "1d36694ff7515d9a2e48d2a6d396e1bb64cedb5c192cdd2a6b73fbaeacfca1f4",
+
+  "session_anchor": {
+    "expected_branch": "claude/worker1-h1-20260815",
+    "expected_head": "claude/worker1-h1-20260815",
+    "require_clean": true,
+    "_expected_head_is_a_ref_on_purpose": "resume-anchor-guard resolves expected_head with `rev-parse <x>^{commit}`, so a REF NAME works and a pinned SHA would go stale on the next commit — a guard that is stale by design gets disabled by whoever it annoys. Anchoring to the branch still catches a detached HEAD, the wrong branch, and a checkout that is not at the branch tip.",
+    "_require_clean_is_true_and_currently_refuses": "TRUE on purpose. This worktree carries one unrelated dirty file, docs/wave25-exit-engine-ab-report.md — a timestamp-only regeneration from an earlier run. AR-1245 §9 says do not sweep it into G2 commits and do not use it as a reason to clean mid-G2, so it stands. The guard therefore refuses, and that refusal is CORRECT: the tree really is dirty. Setting this to false to obtain a green would be weakening a guard to hide a true finding. Its disposition belongs to the desk."
+  },
+
+  "edit_scope": {
+    "allowed_prefixes": [
+      "src/engine/extraction/",
+      "src/engine/tests/",
+      "scripts/",
+      "docs/replay-results/",
+      ".claude/"
+    ],
+    "allowed_exact": [
+      "docs/designs/SYSTEM-INVENTORY.md"
+    ],
+    "_not_listed_is_not_allowed": "Runtime, PAPER, broker/Topstep, compiler execution semantics and the backtester are absent deliberately. AR-1249 §12 and AR-1254 §12 keep them LOCKED, and Worker-2 production authority is not unlocked here."
+  },
+
+  "finish": {
+    "enabled": false,
+    "_why_disabled": "claude-finish-check needs a committed receipt file describing a finished packet. G2-D has not run, so there is no finished packet to check and enabling it would make TaskCompleted assert against a receipt that does not exist. It is switched on when a real finish receipt exists — an enabled check with nothing to check is the false-green shape this desk keeps convicting.",
+    "receipt_file": null,
+    "base": "eaf205252230732274c20b8174ab942da856b45b"
+  }
+}
