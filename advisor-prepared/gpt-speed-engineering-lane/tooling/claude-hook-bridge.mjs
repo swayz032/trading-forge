@@ -192,8 +192,15 @@ export function evaluateHookEvent({ input, manifest }) {
     return {
       hookSpecificOutput: {
         hookEventName: 'SessionStart',
+        // 🛑 THIS STRING MUST NOT CONTAIN THE SUCCESS PHRASE. MEASURED 2026-08-16: an earlier
+        // wording — "the resume anchor verified but the session could not be armed" — contained
+        // the literal substring `anchor verified`, and the seat launcher's arm witness matches on
+        // exactly that. The launcher printed `guard : ARMED` and `seat OK` while reading a STOP.
+        // A refusal that contains the success phrase is a false GREEN in every downstream
+        // detector, and the arm witness is the one gate standing between the operator and an
+        // ungoverned seat. `A REFUSAL THAT SPELLS THE SUCCESS PHRASE IS A PASS.`
         additionalContext: armError
-          ? `GPT worker guard STOP: the resume anchor verified but the session could not be armed: ${armError}. Do not edit.`
+          ? `GPT worker guard STOP: the resume anchor check passed but this session could not be armed: ${armError}. Do not edit.`
           : sessionContext(anchor),
       },
       _audit: { event, anchor, armed: armed !== null, arm_error: armError },

@@ -421,6 +421,34 @@ test('SessionStart mints no marker when the anchor does not verify', () => {
   assert.equal(decision(gate), 'deny');
 });
 
+/**
+ * DETECTOR-COLLISION CONTROL.
+ *
+ * The Worker-1 seat launcher decides whether to seat at all by matching the SessionStart output
+ * against the phrase `anchor verified`. MEASURED 2026-08-16: a first draft of the arm-failure
+ * message read "the resume anchor verified but the session could not be armed", so the launcher
+ * matched the success phrase INSIDE A STOP and printed `guard : ARMED` / `seat OK`. A false green
+ * in the one gate standing between the operator and an ungoverned seat.
+ *
+ * `A REFUSAL THAT SPELLS THE SUCCESS PHRASE IS A PASS.`
+ */
+test('a SessionStart that cannot arm never emits the success phrase', () => {
+  const { root } = makeRepo('nosession');
+  const manifestPath = writeManifest(root);
+
+  // No session_id: the anchor still verifies, but nothing can be bound to it. This is exactly the
+  // shape the launcher's arm probe used to send.
+  const start = runHook(root, manifestPath, { cwd: root, hook_event_name: 'SessionStart', source: 'startup' });
+  const context = start.json.hookSpecificOutput.additionalContext;
+  assert.match(context, /STOP/);
+  assert.match(context, /could not be armed/);
+  assert.doesNotMatch(context, /anchor verified/);
+
+  // And it must really be unarmed, not merely worded as such.
+  const gate = preToolUse(root, manifestPath, 's1', 'Edit', ...editOwned(root));
+  assert.equal(decision(gate), 'deny');
+});
+
 test('TaskCompleted blocks across the real process boundary when no session was armed', () => {
   const { root } = makeRepo('finish');
   const manifestPath = writeManifest(root);
