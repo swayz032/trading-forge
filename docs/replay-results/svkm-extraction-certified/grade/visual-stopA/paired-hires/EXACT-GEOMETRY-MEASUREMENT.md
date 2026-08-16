@@ -194,6 +194,21 @@ The stop line is at `y = 338` at `x = 1000 / 1100 / 1200` in **four** frames:
 Spanning 10 seconds after the wick explanation ends (`00:12:49`). **The tool was not still being
 dragged**, so the measured level is the placed level.
 
+### D.1 The frames themselves (AR-1222) — receipts, not just a claim
+
+AR-1222 caught that I asserted a four-frame check while committing only one of the frames, so the
+claim was not independently reproducible. All four are now committed:
+
+| frame | sha256 |
+|---|---|
+| `s_00-12-52.png` | `715869c4fcc366a1f60bd5f36d1b9efdfb6acb66f7aefc9db1205adb192fa490` |
+| `h_00-12-55.png` | `467de65a2ff04795d9939e8bbda8150a68badf6ef6ebef488a4cd86c9255b72a` |
+| `s_00-12-58.png` | `afb308159bfe294eae7753a21c30f9d7ba7b804c4b30aa9a7dc93ac08d846cce` |
+| `s_00-13-02.png` | `da51800847fd117376aa423fa0e3888ef32969a010e46eab0f8189998ec0048c` |
+
+Reproduce with `ffmpeg -y -ss <ts> -i hi.mp4 -frames:v 1 <out>.png` on itag-137 and re-measure the
+first non-white row in `y ∈ 300..400` at `x = 1000 / 1100 / 1200`.
+
 ## E. STOP-B (§5C)
 
 Not re-attempted here. Its blocker is the picture-in-picture/UI contamination described above,
