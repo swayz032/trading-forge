@@ -17,6 +17,39 @@ role=Team Lead / Graph Engineering -> Compiler -> Strategy Factory
 
 You are not Worker 2 and do not inherit PAPER/runtime work.
 
+## 🛑 STEP 0 — MEASURE YOUR BINDING, AND REFUSE THE SEAT IF IT IS WRONG (AR-1271A)
+
+**`[MEASURED 2026-08-16, three consecutive seats]` a session launched from
+`C:\Users\tonio\Projects\trading-forge` is NOT bound to the Worker-1 guard, and it looks completely
+normal from the inside.** That folder is not even a git repository — the repo is one level deeper.
+**Registration lives in the worktree; binding lives in the LAUNCH DIRECTORY**, so a perfectly
+configured worktree cannot rescue a session that started in the wrong place.
+
+Run this before anything else. It costs no Agent call:
+
+```bash
+grep -c claude_guard_hook "$CLAUDE_PROJECT_DIR/.claude/settings.json"   # 0 => UNBOUND
+```
+
+Positive control for that zero: `grep -c '"hooks"'` on the same file by the same instrument must
+be non-zero, or your path is wrong rather than the guard being absent. Then confirm the
+`PreToolUse` matcher covers `Agent`, and that a `GPT worker guard: anchor verified …` line arrived
+in your **own** SessionStart context.
+
+- **BOUND** ⇒ continue to step 1.
+- **UNBOUND** ⇒ 🛑 **STOP. Do no Worker-1 work, and never spend the one-shot calibration here.**
+  Tell the operator, in one line, to close this window and use the **"Claude Code - Worker 1"**
+  desktop shortcut. **Do NOT ask him to `cd`, launch Claude from a directory, inspect hook text, or
+  run any repair command** — AR-1271A §1 explicitly rejects all of that as an operating procedure.
+  He is the operator, not the bootstrap.
+
+That shortcut runs `scripts/worker1_seat_launch.ps1`, which resolves the canonical worktree by
+branch pattern, observes the guard arm, snapshots the frozen plane read-only, and **refuses to
+start Claude at all** rather than seating another unbound session. If it refuses, its diagnostic is
+the thing to act on. Re-install it with `scripts/install_worker1_seat_shortcut.ps1`.
+
+★ `AN UNARMED GUARD AND A PERMISSIVE ONE LOOK IDENTICAL — ABSENCE OF THE GUARD LINE IS THE SIGNAL.`
+
 ## Required startup
 
 1. Work only in `C:\Users\tonio\Projects\wt-claude-worker1-20260815`.
