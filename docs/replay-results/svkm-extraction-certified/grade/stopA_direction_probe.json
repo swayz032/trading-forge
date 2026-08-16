@@ -1,0 +1,59 @@
+{
+  "artifact": "svkm-stopA-direction-probe",
+  "ruling": "AR-1202 \u00a77",
+  "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+  "stop_a_char": 13869,
+  "example_scope": [
+    0,
+    16311
+  ],
+  "boundary_markers": [
+    16311,
+    17756,
+    17771
+  ],
+  "admissible_direction_statements": [
+    {
+      "match": "taking a short",
+      "char": 11000,
+      "kind": "explicit trade declaration",
+      "context": "d know that if we have traded into the downside of this range, it means that the price is going down. So, we want to be taking a short, but it doesn't mean that we just get our short tool here and we just enter randomly here or randomly here. Like, there"
+    }
+  ],
+  "excluded_inadmissible_hits": [
+    {
+      "match": "short tool",
+      "char": 11057,
+      "excluded_because": "TOOL NAME \u2014 TradingView drawing instrument, not a trade declaration"
+    },
+    {
+      "match": "short tool",
+      "char": 13284,
+      "excluded_because": "TOOL NAME \u2014 TradingView drawing instrument, not a trade declaration"
+    },
+    {
+      "match": "short tool",
+      "char": 14554,
+      "excluded_because": "TOOL NAME \u2014 TradingView drawing instrument, not a trade declaration"
+    },
+    {
+      "match": "downside",
+      "char": 10059,
+      "excluded_because": "DIRECTIONAL BIAS \u2014 describes where price may go, not the trade taken"
+    },
+    {
+      "match": "downside",
+      "char": 10619,
+      "excluded_because": "DIRECTIONAL BIAS \u2014 describes where price may go, not the trade taken"
+    },
+    {
+      "match": "downside",
+      "char": 10919,
+      "excluded_because": "DIRECTIONAL BIAS \u2014 describes where price may go, not the trade taken"
+    }
+  ],
+  "verdict": "TRANSCRIPT_DIRECTION_BOUND",
+  "note": "An explicit grammatical trade-direction statement exists inside STOP-A's own example scope. See admissible_direction_statements.",
+  "worker_made_geometry_decision": false,
+  "worker_inferred_direction": false
+}
