@@ -1,0 +1,129 @@
+{
+  "law_version": "isolated-fallback-law-v1",
+  "authority": "AR-1247 \u00a79 (freeze the selection law before the first isolated call)",
+  "input_route_version": "opus-phase1-route-v2",
+  "eligible_dispositions": [
+    "HELD_ACCIDENTAL_EVIDENCE_REUSE",
+    "HELD_DUPLICATE_ROLE_AMBIGUITY",
+    "RED_ANTECEDENT_UNBOUND",
+    "RED_SOURCE_FIDELITY",
+    "REFUSED_NOT_LITERAL",
+    "REFUSED_NO_EVIDENCE",
+    "REFUSED_RELEVANCE"
+  ],
+  "max_attempts_per_condition": 1,
+  "substitution_rule": "The isolated return REPLACES the batch candidate for its condition if and only if it passes literal verification against the pinned transcript. It is then re-run through the complete final-set collision, primary relevance, mechanically authorized antecedent composition and fidelity, in that order. A worse isolated answer does not restore the batch candidate: the condition remains unresolved and RED. There is no comparison step between the batch and isolated answers, and therefore no way to keep whichever grades greener.",
+  "substitution_rule_sha256": "6fc9af3587be490430e3b9c0c169aed8a2ab2f833f342999d5c8bd23ac5e57f6",
+  "pinned_inputs": {
+    "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+    "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-157741d7cc760ea5",
+    "raw_return_sha256": "cd7e572912a5213fc66c04056b64675c7969fd6596382745f71a421038395468",
+    "source_trial": "1",
+    "task_sha256": "eaae2c0e85c318896e6222f7f1a3f1ab0e230aa667592b878cceb6c910ae17bb",
+    "taxonomy_version": "h1-pilot-2026-07-12",
+    "transcript_char_count": "25071",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "video_id": "sVkmZklJDHI"
+  },
+  "queue": [
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "disposition": "REFUSED_RELEVANCE",
+      "gate": "evidence_relevance",
+      "reason": "MISGROUNDED_BELOW_FLOOR: the span covers only 0.097 of the condition's distinctive content (floor 0.10) \u2014 it shares a word, not a subject",
+      "condition_text": "This establishes the initial volatility range for the trading session.",
+      "task_input_sha256": "3f43ec665f18308c159bef681affcbdaaa67600895b0c112974d8cd51b259241"
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "disposition": "HELD_DUPLICATE_ROLE_AMBIGUITY",
+      "gate": "span_collision",
+      "reason": "span reused across roles with ['confluences[1].description']; the condition texts overlap 0.86 of the smaller term set, so this is THE SAME REQUIREMENT WRITTEN TWICE UPSTREAM \u2014 recorded, never silently deduplicated (AR-1236 \u00a75)",
+      "condition_text": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
+      "task_input_sha256": "01d44c2dcd03caf54f348108ce79ca70762df2578494d5ed0d8478ad29d30d21"
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "disposition": "REFUSED_RELEVANCE",
+      "gate": "evidence_relevance",
+      "reason": "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it",
+      "condition_text": "The breakout confirms the market direction (up or down) for the trade.",
+      "task_input_sha256": "154a24d1a9aec620efd4bedbffb25b0d634b22c909d24ac4a9f44b8083e248d8"
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "disposition": "REFUSED_RELEVANCE",
+      "gate": "evidence_relevance",
+      "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.30 vs 0.28), so it does not ground THIS one \u2014 the signature of generic text being reused as evidence",
+      "condition_text": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
+      "task_input_sha256": "389d94a9d97d49407d35e9e6059d3b4a814c9d5e4f6faed15baf5671be461a2a"
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "disposition": "REFUSED_RELEVANCE",
+      "gate": "evidence_relevance",
+      "reason": "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it",
+      "condition_text": "The FVG provides a high-probability entry point after the initial directional breakout.",
+      "task_input_sha256": "f8ec398d88c594b22cdcb22d01a1e6e3c3dbe7f4bb03281808bec6e16148f27d"
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "disposition": "REFUSED_RELEVANCE",
+      "gate": "evidence_relevance",
+      "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.39 vs 0.17), so it does not ground THIS one \u2014 the signature of generic text being reused as evidence",
+      "condition_text": "Entering on the closure confirms the FVG structure and minimizes entry risk.",
+      "task_input_sha256": "37884f7b6199dbceafbd8b240ba5b92f8b8817433556bde802436ae9ddd25aae"
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "disposition": "RED_SOURCE_FIDELITY",
+      "gate": "source_fidelity_guard",
+      "reason": "TIMING_WINDOW_WIDENING: source names a point in time; condition spans it into a window ('during' + extent noun)",
+      "condition_text": "The trade must be initiated during the 9:30 AM ET New York session.",
+      "task_input_sha256": "22373bdfab5415c573a370f3f6ce7e416361214e674b4383c54b2e6976bacf8f"
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "disposition": "HELD_DUPLICATE_ROLE_AMBIGUITY",
+      "gate": "span_collision",
+      "reason": "span reused across roles with ['entry_sequence[1].action']; the condition texts overlap 0.86 of the smaller term set, so this is THE SAME REQUIREMENT WRITTEN TWICE UPSTREAM \u2014 recorded, never silently deduplicated (AR-1236 \u00a75)",
+      "condition_text": "The 1m candle must close outside of the initial 5m range.",
+      "task_input_sha256": "a0f8a7e028d369ac3ac5994f84cd73783b93cbcd9cc1985fc7d9f9a80cf23ba6"
+    }
+  ],
+  "excluded": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "disposition": "ACCEPTED_PENDING_CERTIFICATION",
+      "why": "ACCEPTED conditions never escalate (AR-1247 \u00a79)"
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "disposition": "ACCEPTED_PENDING_CERTIFICATION",
+      "why": "ACCEPTED conditions never escalate (AR-1247 \u00a79)"
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "disposition": "ACCEPTED_PENDING_CERTIFICATION",
+      "why": "ACCEPTED conditions never escalate (AR-1247 \u00a79)"
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "disposition": "ACCEPTED_PENDING_CERTIFICATION",
+      "why": "ACCEPTED conditions never escalate (AR-1247 \u00a79)"
+    }
+  ],
+  "attempts": {},
+  "derived_from": {
+    "route_grade": "RED",
+    "accepted_count": 4,
+    "condition_count": 12,
+    "disposition_counts": {
+      "ACCEPTED_PENDING_CERTIFICATION": 4,
+      "REFUSED_RELEVANCE": 5,
+      "HELD_DUPLICATE_ROLE_AMBIGUITY": 2,
+      "RED_SOURCE_FIDELITY": 1
+    },
+    "route_artifact_rewritten": false
+  }
+}
