@@ -96,7 +96,13 @@ $manifest = Join-Path $Worktree '.claude\worker1-hook-guard-manifest.json'
 if (-not (Test-Path $manifest)) {
   Refuse 'C5 arm' "missing guard manifest $manifest"
 } elseif ($failures.Count -eq 0) {
-  $payload = '{"hook_event_name":"SessionStart","source":"startup"}'
+  # session_id is REQUIRED. Since the AR-1271A lifecycle repair the guard arms by minting a marker
+  # BOUND to the session, so a payload without one cannot arm at all -- and MEASURED 2026-08-16,
+  # the probe that omitted it produced a STOP that this script read as ARMED (see the detector
+  # below). The probe uses its own id, never a real seat's: the marker it mints is bound to
+  # 'seat-armprobe' and can therefore arm nothing else. It is removed immediately afterwards.
+  $probeSession = 'seat-armprobe'
+  $payload = '{"hook_event_name":"SessionStart","source":"startup","session_id":"' + $probeSession + '"}'
   # MEASURED 2026-08-16: `$payload | & node ...` prepended a UTF-8 BOM to stdin, so the guard
   # received BOM + '{...}', died on invalid JSON, and the launcher refused for a reason that had
   # nothing to do with the guard's state. Setting $OutputEncoding did NOT fix it -- PowerShell's
@@ -124,7 +130,27 @@ if (-not (Test-Path $manifest)) {
     Remove-Item $payloadFile -ErrorAction SilentlyContinue
   }
   $armedText = ($armed | Out-String).Trim()
-  if ($armedText -match 'anchor verified') {
+
+  # The probe's marker is bound to $probeSession and can arm no real seat, but it is not left
+  # lying in the git directory either. Removed before the verdict so a refusal cannot leak it.
+  try {
+    $probeGitDir = (& git -C $Worktree rev-parse --absolute-git-dir).Trim()
+    Remove-Item (Join-Path $probeGitDir "tf-claude-guard-session-$probeSession.json") -ErrorAction SilentlyContinue
+  } catch { }
+
+  # !! THE DETECTOR MUST NOT BE A SUBSTRING SEARCH FOR THE HAPPY PHRASE.
+  # MEASURED 2026-08-16: it was, and an arm-failure message reading "the resume anchor verified
+  # but the session could not be armed" matched it. This script printed `guard : ARMED` and
+  # `seat OK` while holding a STOP in its hand -- a false green in the ONE gate standing between
+  # the operator and an ungoverned seat, which is the failure this whole launcher exists to
+  # prevent. `A REFUSAL THAT SPELLS THE SUCCESS PHRASE IS A PASS.`
+  #
+  # Now the verdict requires BOTH halves, and the STOP test comes FIRST so any future refusal
+  # wording -- including one nobody has written yet -- is caught by the marker every refusal
+  # carries rather than by the absence of a phrase somebody remembered to avoid.
+  if ($armedText -match 'STOP' -or $armedText -match 'could not be armed') {
+    Refuse 'C5 arm' "guard REFUSED to arm. It answered: $armedText"
+  } elseif ($armedText -match 'anchor verified') {
     Write-Host '  guard  : ARMED' -ForegroundColor Green
     Write-Host "           $armedText"
   } else {
