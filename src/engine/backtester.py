@@ -333,13 +333,22 @@ def apply_eligibility_gate(
         # (framework_refusal.evaluate_framework_risk) rather than two that can drift.
         gate_stats["mode"] = "passthrough_strategy_unregistered"
         gate_stats["passthrough_reason"] = f"strategy_name={strategy_name!r} not in playbook_router.ALL_STRATS"
-        # Explicit provenance (§5 LANE A): operators must be able to tell
-        # "overlay bypassed, framework risk ENFORCED" from a fully evaluated overlay run.
-        gate_stats["framework_risk_enforced"] = True
+        # AR-1212 §4/§6 TELEMETRY CORRECTION: this used to stamp
+        # gate_stats["framework_risk_enforced"] = True here, BEFORE any per-signal work.
+        # MEASURED against my own forced-refusal probe: a signal was KEPT despite a forced
+        # skip_trade while that flag still read True — a boolean stamped before the checks
+        # reports "enforced" on bars that were never checked. That is a false green, and I
+        # shipped it. Replaced with counters incremented at the ACTUAL check site below, so
+        # "not checked" can never be reported as "safe".
         _overlay_bypassed = True
     else:
         gate_stats["mode"] = "tf_institutional_overlay"
         _overlay_bypassed = False
+
+    # Measured framework-risk telemetry (AR-1212 §6). A bar that exits before the stop plan
+    # is built increments NOTHING, so these can never overstate coverage.
+    gate_stats["framework_risk_checked"] = 0
+    gate_stats["framework_risk_refused"] = 0
 
     filtered = entry_signals.copy()
     signal_indices = np.where(entry_signals)[0]
@@ -490,6 +499,9 @@ def apply_eligibility_gate(
                 "strategy_name": strategy_name or symbol,
                 "entry_price": entry_price,
             }
+            # The stop plan exists here, so framework risk is genuinely evaluable for THIS
+            # bar. Counted at the real check site, never stamped up-front.
+            gate_stats["framework_risk_checked"] += 1
             decision = evaluate_signal(
                 signal=signal_dict,
                 bias_state=bias_state,
@@ -502,6 +514,8 @@ def apply_eligibility_gate(
 
             if decision.action == "SKIP":
                 reason = decision.reasoning[0] if decision.reasoning else "unknown"
+                if reason.startswith("SKIP_TRADE"):
+                    gate_stats["framework_risk_refused"] += 1
                 # Ablation override: if this rejection came from a layer that is
                 # currently disabled by TF_OVERLAY_DISABLE_LAYERS, treat the signal
                 # as TAKE and record the override count in gate_stats["ablation_overrides"].

@@ -192,11 +192,21 @@ def _backtest_gate(monkeypatch, strategy_name: str, force_skip: bool):
 
 
 def test_backtest_unregistered_still_reports_the_passthrough_mode(monkeypatch):
-    """Provenance (§5 LANE A): operators must still be able to tell an overlay-bypassed
-    run from a fully evaluated one, and must now also see that framework risk ran."""
+    """Provenance: an operator must still be able to tell an overlay-bypassed run from a
+    fully evaluated one.
+
+    AR-1212 §6 CORRECTION: this test used to assert
+    `stats["framework_risk_enforced"] is True`. That boolean was stamped before any
+    per-signal work, so it read True on bars that were never checked — a false green I
+    shipped and GPT caught. It is gone; the honest counters replace it, and they must be
+    PRESENT (so coverage is always reportable) without claiming anything they did not
+    measure.
+    """
     _, _, stats = _backtest_gate(monkeypatch, SVKM_NAME, force_skip=False)
     assert stats["mode"] == "passthrough_strategy_unregistered"
-    assert stats.get("framework_risk_enforced") is True
+    assert "framework_risk_checked" in stats
+    assert "framework_risk_refused" in stats
+    assert "framework_risk_enforced" not in stats, "the false-green boolean is back"
 
 
 def test_backtest_no_longer_returns_before_the_structural_stop_loop():
@@ -245,3 +255,120 @@ def test_one_canonical_refusal_predicate_not_two():
                 p.read_text(encoding="utf-8", errors="replace").splitlines())
     ]
     assert control, "scanner found nothing at all — it is broken, not the code"
+
+
+# --------------------------------------------------------------------------- #
+# AR-1212 §5 — REDS FOR THE BACKTEST GAP THAT IS **NOT** FIXED
+#
+# GPT rejected AR-1211's "repaired in BOTH engines" claim and was right. In the
+# backtester the structural stop is computed only AFTER the overlay-disabled early
+# return, the no-HTF early return, the per-bar HTF `continue`, session context, bias,
+# playbook routing and location score. Any of those can keep a signal before framework
+# risk is ever evaluable.
+#
+# These are xfail(strict=True) on purpose: the defect is REAL and NOT FIXED. strict
+# means that the moment the architecture is repaired these turn RED and demand the
+# marker be removed, so they cannot rot into silent acceptance.
+# --------------------------------------------------------------------------- #
+
+import datetime as _dt  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+
+
+def _htf_stub():
+    return SimpleNamespace(
+        prev_day_high=5020.0, prev_day_low=4980.0, prev_day_close=5000.0,
+        daily_bias="BULLISH", h4_bias="BULLISH", h1_bias="BULLISH",
+        asia_high=5015.0, asia_low=4985.0, london_high=5012.0, london_low=4988.0,
+        weekly_open=5000.0, daily_open=5000.0, premium_discount="EQ",
+        h4_fvg=None, h1_fvg=None, daily_high=5020.0, daily_low=4980.0,
+    )
+
+
+def _forced_refusal_gate(monkeypatch, *, with_ts: bool, htf_obj):
+    """Run the backtest gate with compute_structural_stop forced to refuse, counting
+    whether it was called at all."""
+    import numpy as np
+    import polars as pl
+
+    from src.engine import backtester as bt
+    from src.engine.context import structural_stops as ss
+
+    calls = {"n": 0}
+    real = ss.compute_structural_stop
+
+    def _forced(*a, **k):
+        calls["n"] += 1
+        p = real(*a, **k)
+        return ss.StopPlan(
+            stop_price=p.stop_price, stop_reason="fvg_exceeds_ceiling_TEST",
+            buffer=p.buffer, risk_dollars=p.risk_dollars,
+            session_adjustment=p.session_adjustment, buffer_ticks=p.buffer_ticks,
+            sweep_aware_buffer=p.sweep_aware_buffer, skip_trade=True,
+        )
+
+    monkeypatch.setattr(ss, "compute_structural_stop", _forced)
+    monkeypatch.delenv("TF_CONFLUENCE_OVERLAY_DISABLED", raising=False)
+
+    n = 40
+    if with_ts:
+        base = _dt.datetime(2026, 1, 5, 14, 35)
+        ts = [base + _dt.timedelta(minutes=i) for i in range(n)]
+    else:
+        ts = [None] * n
+    df = pl.DataFrame({
+        "close": np.linspace(5000, 5010, n), "ts_event": ts,
+        "high": np.linspace(5001, 5011, n), "low": np.linspace(4999, 5009, n),
+        "atr": np.full(n, 5.0),
+    })
+    entries = np.zeros(n, dtype=bool)
+    entries[20] = True
+    filtered, _, stats = bt.apply_eligibility_gate(
+        entries.copy(), np.zeros(n, dtype=bool), df, "long", "MES",
+        htf_cache={"2026-01-05": htf_obj} if htf_obj is not None else {},
+        strategy_name=SVKM_NAME,
+    )
+    return filtered, stats, calls["n"]
+
+
+@pytest.mark.xfail(strict=True, reason=(
+    "AR-1212 §3/§5 RED B — NOT FIXED. An optional-overlay context error is raised BEFORE "
+    "compute_structural_stop runs, so the signal is kept with framework risk never "
+    "evaluated (measured: compute_structural_stop calls = 0)."
+))
+def test_red_b_context_failure_must_not_outrun_mandatory_risk(monkeypatch):
+    filtered, stats, stop_calls = _forced_refusal_gate(
+        monkeypatch, with_ts=True, htf_obj=_htf_stub()
+    )
+    assert stop_calls > 0, "the stop was never computed — risk could not have been evaluated"
+    assert not filtered[20], "signal survived a forced framework refusal"
+    assert stats.get("framework_risk_refused", 0) > 0
+
+
+@pytest.mark.xfail(strict=True, reason=(
+    "AR-1212 §5 RED C — NOT FIXED. The no-HTF passthrough keeps the signal before any "
+    "stop plan exists, so a stop-ceiling refusal cannot win over the passthrough."
+))
+def test_red_c_missing_htf_passthrough_must_still_evaluate_framework_risk(monkeypatch):
+    filtered, stats, stop_calls = _forced_refusal_gate(
+        monkeypatch, with_ts=False, htf_obj=None
+    )
+    assert stop_calls > 0
+    assert not filtered[20]
+
+
+def test_telemetry_cannot_report_risk_checked_when_it_was_not(monkeypatch):
+    """AR-1212 §6 TELEMETRY — this one PASSES, and it is the part I did repair.
+
+    The old code stamped framework_risk_enforced=True before any per-signal work, so a
+    bar that exited early was reported as risk-enforced. That was a false green I shipped.
+    The counters must instead read 0 on exactly those paths.
+    """
+    _, stats, stop_calls = _forced_refusal_gate(monkeypatch, with_ts=True, htf_obj=_htf_stub())
+    assert stop_calls == 0, "fixture no longer reproduces the pre-risk exit; re-derive this test"
+    assert stats.get("framework_risk_checked") == 0, (
+        "telemetry claims risk was checked on a bar that exited before the stop plan existed"
+    )
+    assert "framework_risk_enforced" not in stats, (
+        "the unconditional false-green boolean is back"
+    )
