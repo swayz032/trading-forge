@@ -45,9 +45,23 @@ const SAFE_REF = 'entry_sequence_0_rationale';
 // Windows, where TEMP is routinely a short/linked path and `path.relative` would otherwise
 // produce a `../` escape against a root spelled differently.
 // ---------------------------------------------------------------------------
+const SESSION_ID = 'ar1270-session';
+
 function makeRepo() {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ar1270-')));
   execFileSync('git', ['init', '-q'], { cwd: root });
+  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: root });
+  execFileSync('git', ['config', 'user.name', 'test'], { cwd: root });
+  // A real commit on a real branch. The anchor used to be the unresolvable placeholder
+  // `{expected_branch:'x', expected_head:'x'}`, which was harmless only while PreToolUse could be
+  // armed by handing it a fabricated env var. Arming is bound state now, so the fixture has to
+  // present a tree that can actually be anchored. require_clean stays FALSE: every artifact below
+  // is deliberately untracked, and these controls are about the PATH boundary, not cleanliness.
+  fs.writeFileSync(path.join(root, 'README.md'), 'synthetic\n');
+  execFileSync('git', ['add', '.'], { cwd: root });
+  execFileSync('git', ['commit', '-q', '-m', 'base'], { cwd: root });
+  execFileSync('git', ['branch', '-M', 'worker-one'], { cwd: root });
+
   fs.mkdirSync(path.join(root, RECEIPTS), { recursive: true });
   fs.writeFileSync(path.join(root, RECEIPTS, 'README.md'), 'synthetic\n');
   fs.writeFileSync(path.join(root, QUEUE), JSON.stringify({ queue: [], attempts: {} }, null, 2));
@@ -56,7 +70,7 @@ function makeRepo() {
   fs.writeFileSync(manifestPath, JSON.stringify({
     schema: 'gpt-claude-hook-guard-v1',
     worker: 'worker-1',
-    session_anchor: { expected_branch: 'x', expected_head: 'x', require_clean: false },
+    session_anchor: { expected_branch: 'worker-one', expected_head: 'worker-one', require_clean: false },
     edit_scope: {
       // The REAL Worker-1 scope shape: the broad prefix that made F-5 reachable is present on
       // purpose. A control that quietly narrowed the scope would prove nothing about the seat.
@@ -69,26 +83,42 @@ function makeRepo() {
     finish: { enabled: false },
   }, null, 2));
 
+  // ARM THE SEAT THE WAY THE SEAT ARMS: a real SessionStart child process, exactly as the doorway
+  // runs it. The old rig injected `TF_CLAUDE_GUARD_ANCHOR_OK=1` into the child's env, which is a
+  // value production never produces for a PreToolUse hook — so these controls were running
+  // against a state the real seat could not reach. Without a genuine arm every control below
+  // would "pass" for the wrong reason and prove nothing about the boundary.
+  const armed = runHook(root, manifestPath, {
+    hook_event_name: 'SessionStart', source: 'startup', cwd: root, session_id: SESSION_ID,
+  });
+  const armedText = armed.stdout;
+  if (!/anchor verified/.test(armedText)) {
+    throw new Error(`fixture failed to arm the guard session: ${armedText || armed.stderr}`);
+  }
+
   return { root, manifestPath };
 }
 
 /** Drive the REGISTERED runner exactly as `scripts/claude_guard_hook.mjs` does. */
+function runHook(root, manifestPath, payload) {
+  const child = spawnSync(process.execPath, [RUNNER, '--manifest', manifestPath], {
+    input: JSON.stringify(payload),
+    encoding: 'utf8',
+    cwd: root,
+    env: process.env,
+  });
+  return { stdout: (child.stdout || '').trim(), stderr: (child.stderr || '').trim() };
+}
+
 function hook({ root, manifestPath }, toolName, toolInput) {
-  const input = JSON.stringify({
+  const child = runHook(root, manifestPath, {
     hook_event_name: 'PreToolUse',
     tool_name: toolName,
     tool_input: toolInput,
     cwd: root,
+    session_id: SESSION_ID,
   });
-  const child = spawnSync(process.execPath, [RUNNER, '--manifest', manifestPath], {
-    input,
-    encoding: 'utf8',
-    cwd: root,
-    // PreToolUse is fail-closed without the SessionStart anchor flag; without this every control
-    // below would "pass" for the wrong reason and prove nothing about the boundary.
-    env: { ...process.env, TF_CLAUDE_GUARD_ANCHOR_OK: '1' },
-  });
-  const out = (child.stdout || '').trim();
+  const out = child.stdout;
   const parsed = out ? JSON.parse(out) : {};
   const decision = parsed.hookSpecificOutput?.permissionDecision ?? 'allow';
   return { decision, reason: parsed.hookSpecificOutput?.permissionDecisionReason ?? '', raw: out };

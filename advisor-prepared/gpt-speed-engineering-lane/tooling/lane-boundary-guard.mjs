@@ -79,6 +79,24 @@ export const SELF_PROTECTED_RULES = [
     reason: 'the real G2 one-shot receipt namespace that the forced-capture gate reads as evidence',
     bash_tokens: ['isolated-receipts-t1'],
   },
+
+  // THE ARMED-SESSION MARKER. New control-plane artifact, so it arrives protected.
+  //
+  // SessionStart now records what it verified in a marker inside the worktree's git directory,
+  // and PreToolUse refuses every tool call whose live tree disagrees with it. That makes the
+  // marker a thing worth forging: a worker able to write one could manufacture the single fact
+  // PreToolUse cannot re-measure — that the tree was CLEAN when the seat started.
+  //
+  // Scope alone would already refuse it today, because no Worker-1 prefix covers the git
+  // directory. That is a property of THIS packet's scope, not of the boundary, and "a broader
+  // prefix in some future manifest opens it" is exactly how AR-1269 §4 found the receipt gap.
+  // `AN EDITABLE PROOF IS NOT A PROOF.`
+  {
+    kind: 'contains',
+    value: 'tf-claude-guard-session',
+    reason: 'the armed-session marker that proves SessionStart verified this exact seat',
+    bash_tokens: ['tf-claude-guard-session'],
+  },
 ];
 
 const COORDINATION_RULES = [

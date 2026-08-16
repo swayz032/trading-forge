@@ -14,6 +14,12 @@ import {
   loadNativeCallManifest,
   SUBAGENT_TOOL_NAMES,
 } from './g2-precall-guard.mjs';
+import { mintGuardSession, revokeGuardSession, verifyGuardSession } from './guard-session-marker.mjs';
+
+// Re-exported for the lifecycle red proofs: those controls must be able to place a marker where
+// the guard will actually look for it, and re-deriving the path in the test would be the second
+// copy that drifts.
+export { guardSessionMarkerPath } from './guard-session-marker.mjs';
 
 const GUARDED_EDIT_TOOLS = new Set(['Edit', 'Write', 'NotebookEdit']);
 
@@ -107,10 +113,25 @@ function sessionContext(anchor) {
   return `GPT worker guard STOP: ${anchor.errors.join('; ')}. Do not edit. Resolve the exact worker branch/resume anchor first.`;
 }
 
-function persistAnchorOk(envFile) {
-  if (!envFile) return;
-  fs.appendFileSync(envFile, 'export TF_CLAUDE_GUARD_ANCHOR_OK=1\n');
-}
+/**
+ * 🛑 REMOVED: `persistAnchorOk(env.CLAUDE_ENV_FILE)`, which appended
+ * `export TF_CLAUDE_GUARD_ANCHOR_OK=1` and was the only thing SessionStart did to arm the seat.
+ *
+ * MEASURED 2026-08-16 in the shipped claude.exe: `CLAUDE_ENV_FILE` is set in the hook child's
+ * environment for SessionStart, Setup, CwdChanged and FileChanged ONLY, and its documented
+ * purpose is to apply env to subsequent BASH TOOL commands. It is never turned into the
+ * environment of a later hook subprocess. PreToolUse read `env.TF_CLAUDE_GUARD_ANCHOR_OK` from
+ * its own process env, which nothing had ever set, so a correctly-launched seat was denied its
+ * own first tool call. Two green tests covered the two ENDS of that handshake and none covered
+ * the wire.
+ *
+ * The variable is not merely rerouted, it is DELETED. Writing it into the Bash tool's session
+ * env would leave a bare, unbound "you are armed" constant lying around in a place a later
+ * session can read — which is the fail-OPEN version of the same bug. Arming now goes through
+ * guard-session-marker.mjs, where it is bound to session, worktree, git dir, branch, head and
+ * toolbox pin, and where most of those facts are RE-MEASURED on every tool call rather than
+ * remembered.
+ */
 
 function loadReceipt(repoRoot, receiptFile) {
   if (typeof receiptFile !== 'string' || receiptFile.trim() === '') throw new Error('finish.receipt_file is required');
@@ -120,7 +141,22 @@ function loadReceipt(repoRoot, receiptFile) {
   return JSON.parse(fs.readFileSync(absolute, 'utf8'));
 }
 
-export function evaluateHookEvent({ input, manifest, env = process.env }) {
+/**
+ * The single gate both post-start events go through. It answers one question — "is the thing I
+ * am about to permit the same thing SessionStart actually proved?" — and it answers it from the
+ * live tree, not from a remembered flag.
+ */
+function armedSession(input, manifest, repoRoot) {
+  try {
+    return verifyGuardSession({ repoRoot, sessionId: input.session_id, manifest });
+  } catch (error) {
+    // Fail closed and say why. A refusal whose reason is unreadable is how the previous defect
+    // hid in plain sight for three seats.
+    return { ok: false, reason: error.message };
+  }
+}
+
+export function evaluateHookEvent({ input, manifest }) {
   validateManifest(manifest);
   if (!input || typeof input !== 'object') throw new Error('hook input must be an object');
   const cwd = input.cwd || process.cwd();
@@ -136,19 +172,38 @@ export function evaluateHookEvent({ input, manifest, env = process.env }) {
       // AR-1265 §4: exact path + exact diff hash, never a blanket allow-dirty.
       allowedDirty: manifest.session_anchor.allowed_dirty || [],
     });
-    if (anchor.ok) persistAnchorOk(env.CLAUDE_ENV_FILE);
+    let armed = null;
+    let armError = null;
+    try {
+      if (anchor.ok) {
+        armed = mintGuardSession({ repoRoot, sessionId: input.session_id, manifest, anchor }).marker;
+      } else {
+        // A refused SessionStart must also TAKE AWAY any marker a previous session left behind.
+        // Otherwise the seat that failed its anchor check inherits the last one that passed —
+        // an armed state nobody verified, which is the exact fail-OPEN shape being designed out.
+        revokeGuardSession({ repoRoot, sessionId: input.session_id });
+      }
+    } catch (error) {
+      // Could not mint => the seat is NOT armed. Say so in the context the operator reads, rather
+      // than reporting "anchor verified" over a session that will deny its own first tool call.
+      armError = error.message;
+      try { revokeGuardSession({ repoRoot, sessionId: input.session_id }); } catch { /* already unarmed */ }
+    }
     return {
       hookSpecificOutput: {
         hookEventName: 'SessionStart',
-        additionalContext: sessionContext(anchor),
+        additionalContext: armError
+          ? `GPT worker guard STOP: the resume anchor verified but the session could not be armed: ${armError}. Do not edit.`
+          : sessionContext(anchor),
       },
-      _audit: { event, anchor },
+      _audit: { event, anchor, armed: armed !== null, arm_error: armError },
     };
   }
 
   if (event === 'PreToolUse') {
-    if (env.TF_CLAUDE_GUARD_ANCHOR_OK !== '1') {
-      return { ...deny('worker session anchor was not verified at SessionStart; edits are fail-closed'), _audit: { event, anchor_verified: false } };
+    const session = armedSession(input, manifest, repoRoot);
+    if (!session.ok) {
+      return { ...deny(`worker session is not armed: ${session.reason}`), _audit: { event, anchor_verified: false, session } };
     }
 
     if (input.tool_name === 'Bash') {
@@ -233,8 +288,9 @@ export function evaluateHookEvent({ input, manifest, env = process.env }) {
   }
 
   if (event === 'TaskCompleted') {
-    if (env.TF_CLAUDE_GUARD_ANCHOR_OK !== '1') {
-      return { ...block('worker session anchor was never verified; task completion is blocked'), _audit: { event, anchor_verified: false } };
+    const session = armedSession(input, manifest, repoRoot);
+    if (!session.ok) {
+      return { ...block(`worker session is not armed: ${session.reason}; task completion is blocked`), _audit: { event, anchor_verified: false, session } };
     }
     if (!manifest.finish || manifest.finish.enabled !== true) {
       return { ...block('finish verification is not armed for this packet; task completion is fail-closed'), _audit: { event, finish_armed: false } };

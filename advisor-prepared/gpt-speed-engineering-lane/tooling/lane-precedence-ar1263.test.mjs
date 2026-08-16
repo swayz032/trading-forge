@@ -65,11 +65,23 @@ function pre(root, file_path) {
   };
 }
 
+// Arms through the REAL SessionStart event rather than handing PreToolUse a fabricated
+// `{ TF_CLAUDE_GUARD_ANCHOR_OK: '1' }`. That constant was never something production could
+// produce: SessionStart wrote it to CLAUDE_ENV_FILE, which is only ever placed in the
+// environment of SessionStart/Setup/CwdChanged/FileChanged hooks and is applied to the Bash
+// tool's shell, never to a later hook process. Arming is now bound state, so it has to be
+// established the way the seat establishes it.
+function arm(root, m) {
+  const started = evaluateHookEvent({ input: { cwd: root, hook_event_name: 'SessionStart', source: 'startup', session_id: 's1' }, manifest: m });
+  assert.equal(started._audit.anchor.ok, true, 'fixture failed to arm the guard session');
+}
+
 function decisionFor(root, base, file_path) {
+  const m = manifest(base);
+  arm(root, m);
   const result = evaluateHookEvent({
     input: pre(root, file_path),
-    manifest: manifest(base),
-    env: { TF_CLAUDE_GUARD_ANCHOR_OK: '1' },
+    manifest: m,
   });
   return {
     decision: result.hookSpecificOutput?.permissionDecision || 'allow',
