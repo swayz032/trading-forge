@@ -159,6 +159,36 @@ def _validate_composition_specs(
             raise ValueError(
                 f"composition spec for {ref!r} has no `qualifier` — there is nothing to carry."
             )
+        # AR-1247 F-2. An empty entity/definitional vocabulary makes the same-entity and
+        # redefinition checks unfalsifiable while the record still reads like a governed
+        # composition request. Refused HERE as well as in the helper: the helper protects every
+        # caller, this refuses the route's own callers earlier and louder.
+        if not tuple(spec.get("entity_terms") or ()):
+            raise ValueError(
+                f"composition spec for {ref!r} declares no `entity_terms`. The same-entity and "
+                "redefinition checks would then be unable to fail, and a gate that cannot "
+                "refuse is not a gate."
+            )
+        if not tuple(spec.get("definitional_markers") or ()):
+            raise ValueError(
+                f"composition spec for {ref!r} declares no `definitional_markers`. No antecedent "
+                "could then be shown to DEFINE anything and no redefinition could be detected."
+            )
+        ante = spec.get("antecedent_span")
+        if ante is not None:
+            try:
+                start, end = int(ante[0]), int(ante[1])
+            except (TypeError, ValueError, IndexError):
+                raise ValueError(
+                    f"composition spec for {ref!r} has an unreadable `antecedent_span` {ante!r}; "
+                    "provenance must be a concrete [start, end] pair."
+                ) from None
+            if not 0 <= start < end:
+                raise ValueError(
+                    f"composition spec for {ref!r} has an invalid `antecedent_span` "
+                    f"[{start}, {end}]. A negative or inverted offset does not raise in Python — "
+                    "it silently slices different text, and that text would become the receipt."
+                )
         out[ref] = spec
     return out
 

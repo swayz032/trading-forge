@@ -337,6 +337,70 @@ def test_the_new_disposition_is_registered_as_escalating_and_the_constant_is_not
     assert rt.ACCEPTED not in rt.ESCALATES_TO_ISOLATED
 
 
+# --------------------------------------------------------------------------- #
+# 7. AR-1247 C1 — the same-entity invariant and non-vacuous vocabulary, THROUGH THE ROUTE
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    "label,override,expect_in_reason",
+    [
+        # the antecedent does not name the declared entity at all
+        ("wrong entity at the antecedent", {"entity_terms": ("wick",)},
+         "ENTITY_ABSENT_AT_ANTECEDENT"),
+        # `candle` IS in the antecedent and IS defined there, but the reference never names it
+        ("wrong entity at the referring span", {"entity_terms": ("candle",)},
+         "ENTITY_ABSENT_AT_REFERENCE"),
+        # the entity is mentioned but nothing there defines it
+        ("antecedent mentions but does not define",
+         {"definitional_markers": ("no_such_marker_in_this_source",)},
+         "ANTECEDENT_DOES_NOT_DEFINE"),
+        # a bad upper bound survives spec validation and must still be refused by the helper
+        ("end beyond the transcript", {"antecedent_span": [ANTE_START, 10**9]},
+         "SPAN_OUT_OF_BOUNDS"),
+    ],
+)
+def test_the_same_entity_invariant_is_enforced_through_the_real_route(
+    label, override, expect_in_reason
+):
+    """AR-1247 F-1. Order + qualifier grounding + no-redefinition are NOT sufficient: without
+    an endpoint entity check, a spec can carry a qualifier out of a span with the right words
+    about the wrong object. Each of these must end unresolved, not composed."""
+    row = _by_ref(_run(specs=[_spec(**override)]))[C_BREAK["condition_ref"]]
+
+    assert row["disposition"] == rt.RED_ANTECEDENT_UNBOUND, f"{label}: {row['disposition']}"
+    assert row["gate"] == "evidence_antecedent"
+    assert expect_in_reason in row["reason"], f"{label}: {row['reason']}"
+    assert row["evidence_is_composed"] is False
+    assert row["composition"]["bound"] is False
+
+
+@pytest.mark.parametrize(
+    "label,override,expect_msg",
+    [
+        ("empty entity_terms", {"entity_terms": ()}, "entity_terms"),
+        ("empty definitional_markers", {"definitional_markers": ()}, "definitional_markers"),
+        ("negative antecedent span", {"antecedent_span": [-5, 40]}, "invalid `antecedent_span`"),
+        ("inverted antecedent span", {"antecedent_span": [900, 100]}, "invalid `antecedent_span`"),
+    ],
+)
+def test_a_vacuous_or_out_of_bounds_spec_is_refused_at_validation(label, override, expect_msg):
+    """AR-1247 F-2. An empty entity/definitional vocabulary makes every safety check
+    unfalsifiable while the record still looks governed; a negative or inverted offset does not
+    raise in Python, it silently slices different text into the receipt."""
+    with pytest.raises(ValueError, match=expect_msg):
+        _run(specs=[_spec(**override)])
+
+
+def test_the_valid_positive_control_still_composes_after_the_C1_repair():
+    """The repair must not have made composition impossible. Same authored spec as §1's GREEN
+    half — if this ever reddens, the new checks are over-refusing rather than discriminating."""
+    row = _by_ref(_run(specs=[_spec()]))[C_BREAK["condition_ref"]]
+    assert row["disposition"] == rt.ACCEPTED, row["reason"]
+    assert row["evidence_is_composed"] is True
+    assert "DEFINES" in row["composition"]["reason"]
+
+
 def test_without_any_spec_no_row_claims_composition_and_dispositions_are_unaffected():
     """THE NO-OP PROOF. G2-C must be inert until a caller authors a spec, or it would have
     changed the standing route artifact by merely existing."""
