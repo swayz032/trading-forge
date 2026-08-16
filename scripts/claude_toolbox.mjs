@@ -140,7 +140,23 @@ async function main() {
     return failed.length ? 1 : 0;
   }
 
-  console.error('usage: materialize | preflight | theater');
+  if (cmd === 'finish') {
+    // AR-1239 §8: the usage block advertised `finish` while the dispatcher exposed only
+    // materialize/preflight/theater. An advertised command that does not exist is a false
+    // capability claim in the tool whose job is checking claims — so it is wired, not deleted.
+    const { runClaudeFinishCheck } = await load('claude-finish-check.mjs');
+    const payloadPath = arg('--json');
+    if (!payloadPath) {
+      console.error('finish requires --json <path> with {worker, base, scope, receipt}');
+      return 2;
+    }
+    const payload = JSON.parse(fs.readFileSync(payloadPath, 'utf8'));
+    const out = runClaudeFinishCheck({ cwd: process.cwd(), ...payload });
+    console.log(JSON.stringify({ toolbox: { ref: receipt.ref, commit: receipt.commit }, ...out }, null, 2));
+    return out.ok ? 0 : 1;
+  }
+
+  console.error('usage: materialize | preflight | theater --files <...> | finish --json <path>');
   return 2;
 }
 
