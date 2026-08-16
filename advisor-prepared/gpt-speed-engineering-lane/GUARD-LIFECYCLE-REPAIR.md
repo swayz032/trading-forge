@@ -274,6 +274,23 @@ Launcher refusal path re-proved end to end after the edits: an untracked file in
 `WORKER-1 SEAT REFUSED TO START` / `[C5 arm] guard REFUSED to arm`, **exit 1**; control removed →
 `ARMED` / `seat OK`, **exit 0**.
 
+`materialize()` receipt at the final pin: `pin == branch_commit`, `drifted: false`, 44 files,
+bundle `c8b7cec4`.
+
+### One reported failure, disclosed rather than buried
+
+Running the suite **from the flattened TEMP cache** gives 198/199, not 199/199. The failure is
+`g2-precall-guard.test.mjs` → *REGISTRATION PARITY*, which does
+`path.resolve(import.meta.dirname, '..', 'claude-hooks', 'settings.fragment.json')` — a sibling
+directory that exists in the repo and not in the cache, where `materialize()` flattens every file
+to a basename in one directory.
+
+Measured as **pre-existing and layout-only**, not introduced here: the identical test fails the
+identical way against the OLD 42-file toolbox at `18108039`, and passes in the repo at both pins.
+It has no operational effect — the doorway executes `claude-hook-runner.mjs` from the cache and
+never runs tests there. Recorded because an instrument that reported a failure must be reported,
+and "199/199" without this line would be a claim broader than its evidence.
+
 ## 6. What is NOT done, and is not mine
 
 - ~~**The re-pin.**~~ **APPLIED — see §5b.** The paragraph below is kept as the record of what was
