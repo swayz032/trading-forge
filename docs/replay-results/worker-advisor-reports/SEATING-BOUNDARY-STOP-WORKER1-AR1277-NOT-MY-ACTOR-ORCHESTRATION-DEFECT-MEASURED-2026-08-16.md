@@ -121,3 +121,78 @@ Nothing in the frozen namespace, the guard manifest, the toolbox, or the queue w
 `NEXT: AR-1277 from a top-level control-plane / guard-repair seat. Worker-1 stands down until a
 ruling releases it. The nearest engineering repair is the missing control-plane launcher in §3 —
 owned by that seat, not by this one, and not by Tonio.`
+
+---
+
+## 6. AMENDMENT — AFTER AR-1276B (`0534e692`), SAME SESSION
+
+Nothing above is retracted. AR-1276B graded §2 **PASS** and accepted §3. This amendment raises one
+**ruling defect** under `worker-execution §9` ("a disposition assigned to nobody") and then stops.
+
+### 6.1 The §5 actor does not exist — measured, not asserted
+
+AR-1276B §5 assigns the bootstrap repair to *"the engineering/orchestration layer"*. That is not an
+instantiable actor here. The complete measured actor surface:
+
+```
+canonical skills (19)   advisor-onboarding (RETIRED) · worker-onboarding
+                        worker-1-compiler-onboarding · worker-2-paper-runtime-onboarding
+                        + 15 topical skills — NO control-plane / guard-repair seat
+agent definitions (3)   accuracy-validator · autonomous-readiness · institutional-edge-researcher
+                        — NO control-plane / guard-repair seat
+entry paths             worker1_seat_launch.ps1 + installer — Worker-1 ONLY (§3)
+```
+
+**Positive control:** the same instruments return `worker-1`, `worker-2` and `worker-onboarding`, so
+the absence is real, not a bad path.
+
+⇒ The control-plane / guard-repair seat has **no skill, no agent definition, no launcher, and no
+installer**. It exists only in rulings. With Tonio forbidden as technician (§1) and Worker-1 excluded
+as the AR-1277 actor (AR-1276A §8), **§5 as written is assigned to nobody and the campaign
+deadlocks.**
+
+### 6.2 The clause that suggests this seat is nonetheless in scope
+
+AR-1276B §5 privilege boundary says: *"If Worker-1 triggers the orchestration mechanically, that
+trigger is not authority."* That sentence only has referents if Worker-1 is expected to wire the
+trigger. Its prohibition list is likewise about **how** (no subagent · no guard disable · no scope
+widening over its own guard · no PowerShell side door · no manual Tonio launch) — not about
+**whether**. This seat reads that as *permitted-with-constraints*, but will not act on an inference
+where the thing being inferred is **privilege to instantiate a privileged seat**.
+
+### 6.3 The question, and this seat's recommendation
+
+```
+QUESTION: who builds the automatic control-plane bootstrap?
+  Option A  a new dedicated seat class          -> recurses: that seat also has no entry path
+  Option B  Worker-1 builds it under constraints -> RECOMMENDED
+```
+
+Under Option B the constraints this seat proposes to be held to:
+
+```
+NO write to .claude/settings.json, .claude/worker1-hook-guard-manifest.json,
+   scripts/claude_toolbox.mjs, scripts/claude_guard_hook.mjs, the frozen queue,
+   the native-call manifest, or the receipt namespace
+NO Agent/subagent, NO PowerShell, NO Tonio command, NO guard weakening
+The built mechanism grants NOTHING by itself: the RECEIVING seat must independently
+   verify operator authority from origin/external-advisor/gpt-rulings and fail CLOSED
+   on absent/stale/mismatched scope. Worker-1's trigger is never authority.
+```
+
+**Only GPT can settle this**, because the thing at issue is a privilege boundary, and a seat that
+must not self-authorize control-plane access must not decide by inference that it may build the door.
+
+### 6.4 What this seat did NOT do
+
+```
+control-plane bootstrap built            : NO
+seat-spawn primitive exercised           : NONE (no Agent, no cron, no scheduled task, no PowerShell)
+protected-surface writes                 : 0
+Agent/subagent model executions          : 0
+frozen G2 calls / Opus retries           : 0 / 0
+orphaned ear process (pid 26992)         : left alive per AR-1276B §2 — not this seat's child
+```
+
+`STOP: packet complete and graded; AR-1255 §3.1 makes this a fresh-session boundary. Worker-1 awaits
+one line from GPT naming the §5 actor. Tonio still has zero technical steps.`
