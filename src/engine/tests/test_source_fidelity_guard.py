@@ -174,3 +174,94 @@ def test_empty_quote_set_is_refusal_not_pass():
 def test_blank_condition_refuses(condition):
     findings = check_condition_fidelity(condition, ["anything at all"])
     assert "EMPTY_CONDITION" in _kinds(findings), findings
+
+
+# --------------------------------------------------------------------------- #
+# AR-1206 §2.2 — CAUSAL CLAIMS. The contract named them; the gate must execute them.
+# --------------------------------------------------------------------------- #
+
+
+def test_causal_inflation_fires_when_source_states_only_sequence():
+    """A source that says B happens AFTER A does not license "A CAUSES B"."""
+    findings = check_condition_fidelity(
+        "The displacement causes the gap to fill.",
+        ["once that candle has printed, the gap forms just after it"],
+    )
+    assert "CAUSAL_INFLATION" in _kinds(findings), findings
+
+
+def test_causal_claim_supported_by_source_causal_language_does_not_fire():
+    findings = check_condition_fidelity(
+        "The displacement causes the gap to fill.",
+        ["the gap fills because of that displacement candle"],
+    )
+    assert "CAUSAL_INFLATION" not in _kinds(findings), findings
+
+
+def test_non_causal_condition_never_raises_causal():
+    findings = check_condition_fidelity(
+        "Mark the high and low of the range.",
+        ["mark the high of the candle here. And then mark out the low."],
+    )
+    assert "CAUSAL_INFLATION" not in _kinds(findings), findings
+
+
+# --------------------------------------------------------------------------- #
+# AR-1206 §2.3 — SEMANTIC ATTACHMENT. This is the birth control that must exist
+# BEFORE the guard is allowed any certificate authority.
+# --------------------------------------------------------------------------- #
+
+
+def test_unrelated_hedge_in_the_window_does_not_license_a_modifier():
+    """🛑 AR-1206 §2.3, verbatim: an unrelated sentence saying `price will probably
+    retest` must NOT license `high-probability` attached to a different object.
+
+    Without this, the modifier check is satisfiable by any stray occurrence of the
+    stem anywhere in the evidence window — which is exactly the false-green shape
+    this whole campaign exists to kill.
+    """
+    findings = check_condition_fidelity(
+        "The FVG provides a high-probability entry point.",
+        ["price will probably retest the level before continuing lower"],
+    )
+    assert "UNSUPPORTED_MODIFIER" in _kinds(findings), findings
+
+
+def test_modifier_attached_to_the_same_object_is_licensed():
+    """The control's control: real, attached support must still pass, or the rule
+    above is just an always-red assertion."""
+    findings = check_condition_fidelity(
+        "The FVG provides a high-probability entry point.",
+        ["this fvg entry point is a high probability setup"],
+    )
+    assert "UNSUPPORTED_MODIFIER" not in _kinds(findings), findings
+
+
+def test_adding_an_unrelated_support_stem_does_not_change_the_verdict():
+    """AR-1206 §2.3 control 4 — MONOTONICITY.
+
+    Appending a sentence that is irrelevant to the target clause must leave that
+    clause's verdict untouched. If it can flip a finding off, then the detector is
+    silenceable by unrelated text and every clean result is worthless.
+    """
+    condition = "The FVG provides a high-probability entry point."
+    base = ["the gap prints outside the range and we can enter"]
+    contaminated = [base[0] + " Also, you're probably wondering what the setup is."]
+
+    before = _kinds(check_condition_fidelity(condition, base))
+    after = _kinds(check_condition_fidelity(condition, contaminated))
+    assert before == after, (
+        f"an unrelated support stem changed the verdict: {before} -> {after}"
+    )
+    assert "UNSUPPORTED_MODIFIER" in after, after
+
+
+def test_unrelated_certainty_elsewhere_does_not_license_certainty():
+    """Same attachment rule for certainty: a certainty verb about some other object
+    must not silently satisfy a certainty claim about this one."""
+    findings = check_condition_fidelity(
+        "The breakout confirms the market direction.",
+        ["I can confirm my subscription renewed, but that only gives us an idea "
+         "of the direction"],
+    )
+    assert "CERTAINTY_INFLATION" in _kinds(findings), findings

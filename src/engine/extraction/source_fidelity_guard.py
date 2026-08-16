@@ -1,6 +1,21 @@
-"""SOURCE-FIDELITY GUARD — generic clause-level inflation detector.
+"""SOURCE-FIDELITY DETECTOR — generic clause-level inflation screen.
 
-Authority: GPT ruling AR-1204 §6 LANE 1. Contract, verbatim:
+🛑 STATUS, STATED ON THE ARTIFACT RATHER THAN BESIDE IT (AR-1206 §2, §2.4):
+THIS IS A DETECTOR, NOT A CERTIFICATION GATE.
+
+  * `findings == []` means ONLY "this heuristic detected no inflation".
+    It NEVER means "source fidelity certified", and it may not be used to
+    weaken or clear any existing red certificate.
+  * As of this writing nothing in the grading path calls it — SYSTEM-INVENTORY
+    records it as `not reachable from any measured entry point`. It is a
+    standalone helper with tests, not an end-to-end birth gate.
+  * It is a CHEAP DETERMINISTIC SCREEN, deliberately not a semantic oracle. The
+    clause-attachment rule below can still be fooled by an unrelated marker that
+    happens to sit in a same-topic clause. Known and accepted; that is why the
+    output is advisory.
+
+Authority: GPT rulings AR-1204 §6 LANE 1 (contract) and AR-1206 §2 (hardening).
+Contract:
 
     normalized terminology is allowed; unsupported certainty, modifiers,
     timing windows, quantities, and causal claims are not.
@@ -91,6 +106,26 @@ _POINT_TIME = re.compile(r"\b\d{1,2}\s*[:.]\s*\d{2}\b")
 # A marker that the extraction turned an instant into a named stretch of time.
 _EXTENT_NOUN = re.compile(r"\b(session|window|period|hours?)\b", re.I)
 
+# Causal assertions. AR-1206 §2.1: the declared contract named causal claims and the
+# first implementation did not check them. It does now.
+_CAUSAL_PATTERNS = (
+    r"\bcause[sd]?\b", r"\bcausing\b", r"\bbecause\b", r"\bleads?\s+to\b",
+    r"\bled\s+to\b", r"\bresults?\s+in\b", r"\bresulting\s+in\b",
+    r"\bdue\s+to\b", r"\btherefore\b", r"\bmakes?\s+it\b", r"\bdrives?\b",
+)
+
+# Clause separators. AR-1206 §2.2: support must bind to the PROPOSITION, so the unit
+# of attachment is a clause, not the whole joined evidence window.
+_CLAUSE_SPLIT = re.compile(r"[.!?;]|\b(?:but|however|although|whereas|while)\b")
+
+_STOPWORDS = frozenset("""
+a an the this that these those of to in on at for with by from as is are was were be been
+being it its we you i he she they them our your their and or if then so not no do does did
+can could will would should must have has had there here what which who when how why all
+any some just going go get got me my us out up down over under into about
+""".split())
+
+
 _NUM_WORDS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
     "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
@@ -116,6 +151,43 @@ def _has_hedge(text: str) -> str | None:
         m = re.search(pat, text)
         if m:
             return m.group(0)
+    return None
+
+
+def _content_words(text: str, exclude: frozenset[str] = frozenset()) -> set[str]:
+    """Meaning-bearing tokens: what a clause is ABOUT."""
+    toks = re.findall(r"[a-z0-9]+", text.lower())
+    return {t for t in toks if len(t) >= 3 and t not in _STOPWORDS and t not in exclude}
+
+
+def _clauses(text: str) -> list[str]:
+    return [c.strip() for c in _CLAUSE_SPLIT.split(text) if c and c.strip()]
+
+
+def _attached_support(
+    quotes: list[str],
+    marker_pattern: str,
+    condition_topic: set[str],
+) -> str | None:
+    """Return the supporting marker ONLY if it sits in a clause that is about the same
+    thing as the condition.
+
+    AR-1206 §2.2 is the reason this exists: `stem in joined_quotes` let ANY occurrence
+    anywhere in the evidence window silence a finding — `you're probably wondering`
+    licensing `high-probability` on a trading rule. Support must attach to the
+    proposition, so a clause qualifies only if it shares a content word with the
+    condition (the condition's own marker tokens excluded, so a marker cannot license
+    itself).
+
+    Deliberately a cheap deterministic screen, not a semantic oracle: it can still be
+    fooled by a same-topic clause, and it is documented as a screen for that reason.
+    """
+    for quote in quotes:
+        for clause in _clauses(quote):
+            if not re.search(marker_pattern, clause):
+                continue
+            if _content_words(clause) & condition_topic:
+                return re.search(marker_pattern, clause).group(0)
     return None
 
 
@@ -165,22 +237,45 @@ def check_condition_fidelity(
     findings: list[FidelityFinding] = []
 
     # 1. CERTAINTY — condition determines where the source only hedges.
+    #    Support must be CLAUSE-ATTACHED (AR-1206 §2.2): a certainty verb about some
+    #    other proposition may not suppress this finding.
     cond_cert = _has_certainty(cond)
-    if cond_cert and not _has_certainty(joined):
-        hedge = _has_hedge(joined)
-        if hedge:
-            findings.append(FidelityFinding(
-                "CERTAINTY_INFLATION", cond_cert,
-                f"condition asserts {cond_cert!r} but the source only hedges ({hedge!r})",
-            ))
+    if cond_cert:
+        cert_pattern = r"\b(?:" + "|".join(_CERTAINTY_STEMS) + r")\w*"
+        topic = _content_words(cond, exclude=_content_words(cond_cert))
+        if not _attached_support(quotes, cert_pattern, topic):
+            hedge = _has_hedge(joined)
+            if hedge:
+                findings.append(FidelityFinding(
+                    "CERTAINTY_INFLATION", cond_cert,
+                    f"condition asserts {cond_cert!r}; the source offers no certainty "
+                    f"attached to this proposition, only a hedge ({hedge!r})",
+                ))
 
-    # 2. MODIFIER — probability/quality claim with no support in the source.
+    # 2. MODIFIER — probability/quality claim with no CLAUSE-ATTACHED support.
     for pattern, stem in _MODIFIER_CLAIMS:
         m = re.search(pattern, cond)
-        if m and stem not in joined:
+        if not m:
+            continue
+        topic = _content_words(cond, exclude=_content_words(m.group(0)))
+        if not _attached_support(quotes, stem, topic):
             findings.append(FidelityFinding(
                 "UNSUPPORTED_MODIFIER", m.group(0),
-                f"condition claims {m.group(0)!r}; no {stem!r} support in the source span",
+                f"condition claims {m.group(0)!r}; no {stem!r} support attached to this "
+                "proposition in the source span",
+            ))
+
+    # 5. CAUSAL — condition asserts causation the source never states (AR-1206 §2.1).
+    cond_causal = next((m.group(0) for p in _CAUSAL_PATTERNS
+                        for m in [re.search(p, cond)] if m), None)
+    if cond_causal:
+        causal_any = r"(?:" + "|".join(_CAUSAL_PATTERNS) + r")"
+        topic = _content_words(cond, exclude=_content_words(cond_causal))
+        if not _attached_support(quotes, causal_any, topic):
+            findings.append(FidelityFinding(
+                "CAUSAL_INFLATION", cond_causal,
+                f"condition asserts causation ({cond_causal!r}); the source states no "
+                "causal relation attached to this proposition",
             ))
 
     # 3. TIMING — an instant in the source became an extent in the condition.
