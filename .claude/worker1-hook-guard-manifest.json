@@ -1,17 +1,26 @@
 {
   "schema": "gpt-claude-hook-guard-v1",
   "worker": "worker-1",
-  "_authority": "AR-1254 §10 (bounded native-protection activation packet) + AR-1236 §11 (activate the existing toolbox, do not rebuild it)",
+  "_authority": "AR-1265 §4/§5/§9 (live registration + hash-pinned dirty exception) on top of AR-1254 §10 + AR-1236 §11 (activate the existing toolbox, do not rebuild it)",
   "_what_this_is": "The manifest the pinned toolbox's claude-hook-runner.mjs requires. It does NOT restate the lane rules — those live in lane-boundary-guard.mjs::classifyPath inside the pinned toolbox, and a second copy of a boundary rule is a rule that drifts and stops biting while still reporting PASS. edit_scope NARROWS this packet on top of that.",
-  "_toolbox_pin": "dd1bc2306dee2f894272fa7c4a973c4812672dfe",
-  "_toolbox_bundle_sha256": "1d36694ff7515d9a2e48d2a6d396e1bb64cedb5c192cdd2a6b73fbaeacfca1f4",
+  "_toolbox_pin": "6a06ffaedff6b3577cb739b1179b0f7523b4f12b",
+  "_toolbox_bundle_sha256": "e725cad459ea25003f6745a294bd407d06bfbf634c755b2cdca7fc63c823a55f",
+  "_toolbox_pin_history": "dd1bc230 (AR-1254) -> 6a06ffae (AR-1266 §E). The new pin is a DESCENDANT of the old one and carries AR-1264 A+C and AR-1266 A-C, all reviewed by AR-1265. bundle_sha256 is COMPUTED by scripts/claude_toolbox.mjs materialize over 40 files, never hand-copied.",
 
   "session_anchor": {
     "expected_branch": "claude/worker1-h1-20260815",
     "expected_head": "claude/worker1-h1-20260815",
     "require_clean": true,
+    "allowed_dirty": [
+      {
+        "path": "docs/wave25-exit-engine-ab-report.md",
+        "diff_sha256": "e200765c11e85aeb9d5f0eb6d04cb04ea3985bfffc0a33e762c9960652547170",
+        "authority": "AR-1265 §4"
+      }
+    ],
     "_expected_head_is_a_ref_on_purpose": "resume-anchor-guard resolves expected_head with `rev-parse <x>^{commit}`, so a REF NAME works and a pinned SHA would go stale on the next commit — a guard that is stale by design gets disabled by whoever it annoys. Anchoring to the branch still catches a detached HEAD, the wrong branch, and a checkout that is not at the branch tip.",
-    "_require_clean_is_true_and_currently_refuses": "TRUE on purpose. This worktree carries one unrelated dirty file, docs/wave25-exit-engine-ab-report.md — a timestamp-only regeneration from an earlier run. AR-1245 §9 says do not sweep it into G2 commits and do not use it as a reason to clean mid-G2, so it stands. The guard therefore refuses, and that refusal is CORRECT: the tree really is dirty. Setting this to false to obtain a green would be weakening a guard to hide a true finding. Its disposition belongs to the desk."
+    "_dirty_disposition": "AR-1265 §4 REPLACES the standing block. The desk refused BOTH remedies the worker could have taken alone: do NOT commit the timestamp-only docs/wave25-exit-engine-ab-report.md merely to make the guard green, and do NOT set require_clean:false. Instead this exception pins the exact path AND the sha256 of the exact `git diff HEAD --binary -- <path>` bytes. Any future edit to that file changes the diff and blocks SessionStart, so the historical finding is preserved without letting anything else hide behind the same filename. diff_sha256 was COMPUTED and cross-checked by two instruments (the guard's own dirtyDiffSha256 and `git diff | sha256sum`), never hand-copied.",
+    "_still_forbidden": "A blanket allow-dirty, a glob, a directory, an entry with no diff hash, an entry with no authority, and allowed_dirty combined with require_clean:false are all refused by resume-anchor-guard by construction, not by convention. Untracked files remain blocking and cannot be laundered by listing them."
   },
 
   "edit_scope": {
@@ -25,12 +34,22 @@
     "allowed_exact": [
       "docs/designs/SYSTEM-INVENTORY.md"
     ],
-    "_not_listed_is_not_allowed": "Runtime, PAPER, broker/Topstep, compiler execution semantics and the backtester are absent deliberately. AR-1249 §12 and AR-1254 §12 keep them LOCKED, and Worker-2 production authority is not unlocked here."
+    "_not_listed_is_not_allowed": "Runtime, PAPER, broker/Topstep, compiler execution semantics and the backtester are absent deliberately. AR-1249 §12 and AR-1254 §12 keep them LOCKED, and Worker-2 production authority is not unlocked here.",
+    "_claude_prefix_is_not_authority_over_the_guard": "`.claude/` appears above, but AR-1263 §7A self-protection is evaluated FIRST and is never scope-overridable — this manifest, .claude/settings*.json, .claude/hooks/ and the pinned toolbox all DENY regardless of what this list says. That is deliberate: a worker must never gain permission to edit the file that declares its own permissions merely because a broad prefix covers it."
+  },
+
+  "g2_precall": {
+    "enabled": true,
+    "strict_session": false,
+    "queue_path": "docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json",
+    "receipt_dir": "docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1",
+    "_why_enabled_now": "AR-1265 §5.4. With PreToolUse now registering Agent/Task, a G2-shaped subagent dispatch without a valid durable pre-call permit is refused BEFORE the model call. Post-call refusal cannot un-spend a one-shot attempt.",
+    "_why_strict_session_is_false_here": "AR-1265 §3.2 arms strict mode for the DEDICATED eight-call execution session only, where every Agent/Task dispatch requires a permit and ordinary helper work is simply not allowed. This packet is not that session, and the non-G2 calibration must run BEFORE strict mode is armed rather than as an exemption carved inside it. Flipping this to true is a deliberate act for the execution session, not a default."
   },
 
   "finish": {
     "enabled": false,
-    "_why_disabled": "claude-finish-check needs a committed receipt file describing a finished packet. G2-D has not run, so there is no finished packet to check and enabling it would make TaskCompleted assert against a receipt that does not exist. It is switched on when a real finish receipt exists — an enabled check with nothing to check is the false-green shape this desk keeps convicting.",
+    "_why_disabled": "claude-finish-check needs a committed receipt file describing a finished packet. G2-D has not run, so there is no finished packet to check and enabling it would make TaskCompleted assert against a receipt that does not exist. It is switched on when a real finish receipt exists — an enabled check with nothing to check is the false-green shape this desk keeps convicting. AR-1265 §5.7 also holds full `P1 NATIVE ACTIVE` back until TaskCompleted finish enforcement is proven, and AR-1264 §7 reported that claude-finish-check still carries the old structural REVIEW_REQUIRED problem — it will bite the moment finish is armed.",
     "receipt_file": null,
     "base": "eaf205252230732274c20b8174ab942da856b45b"
   }

@@ -34,7 +34,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const TOOLBOX_REF = 'origin/external-advisor/gpt-speed-engineering';
+// AR-1266 §E: re-pointed from `origin/external-advisor/gpt-speed-engineering` to the branch
+// carrying the AR-1265-reviewed toolbox. The base branch is the ANCESTOR of this one, so the
+// authority did not change hands — the reviewed repairs simply live two commits further on.
+// Left as a HINT only; the pin below is still the authority.
+const TOOLBOX_REF = 'origin/claude/worker1-p1-toolbox-20260816';
 const TOOLBOX_DIR = 'advisor-prepared/gpt-speed-engineering-lane/tooling';
 const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 
@@ -51,7 +55,12 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
  * and separately reports whether the branch has moved away from it. Drift becomes a visible fact
  * instead of a silent upgrade.
  */
-const TOOLBOX_PIN = 'dd1bc2306dee2f894272fa7c4a973c4812672dfe';
+// RE-PINNED 2026-08-16 by AR-1266 §E, on AR-1265's order to "integrate the exact reviewed
+// toolbox ... refresh the toolbox pin/bundle identity to the exact reviewed source".
+//   dd1bc230 -> 6a06ffae   (AR-1264 A+C, then AR-1266 A-C)
+// A re-pin is a DELIBERATE act with a member diff behind it, which is precisely the motion the
+// comment above demands instead of silently adopting whatever a branch points at.
+const TOOLBOX_PIN = '6a06ffaedff6b3577cb739b1179b0f7523b4f12b';
 
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
