@@ -198,6 +198,28 @@ AR-1265 §4 governed path) and the frozen plane read **8 queued / 0 spent / rece
   the bundle now covers **44** `.mjs` files, not 42 (`guard-session-marker.mjs` and
   `claude-hook-lifecycle.test.mjs` are new; `claude_toolbox.mjs` derives the file set from
   `git ls-tree`, so no list needs editing). Operator or GPT only.
+
+  The two values are COMPUTED and supplied here so nobody has to hand-derive them, using
+  `claude_toolbox.mjs materialize`'s own algorithm and cross-checked by a second, independent
+  hasher (`git cat-file | sha256sum`), which agreed byte for byte:
+
+  ```
+  _toolbox_pin            d4c9681975f11a98d31b93bbef5c6448a4dba573
+  _toolbox_bundle_sha256  47dacc36380a61b6118a26b168759b12d118b80455b009b7016287a17ad43bcb
+  file_count              44   (was 42)
+  ```
+
+  `git merge-base --is-ancestor 18108039 d4c96819` → **0**, so the descendant invariant in
+  `_toolbox_pin_history` holds.
+
+  `d4c96819` is the commit carrying the toolbox change. The commit that adds *this document* sits
+  on top of it and touches nothing under `tooling/`, so the bundle sha is identical at either
+  commit — pin whichever you prefer; `d4c96819` is the one measured above.
+
+  **These are values to apply, not an instruction to apply them, and re-verify them yourself before
+  pinning — a supplied hash is still a RELAYED hash.** The commit currently lives on
+  `guardfix/ar1271a-lifecycle`; the activator treats the pin as authority and the branch as a hint,
+  but fast-forwarding `claude/worker1-p1-toolbox-20260816` onto it first is the tidier order.
 - **Witnessing the fix inside a live guarded seat.** That needs the re-pin first. Until then the
   live seat runs the broken toolbox and will deny every tool call.
 - Any Worker-1 lane work, the frozen eight, and the one-shot Opus calibration. Untouched.
