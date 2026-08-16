@@ -25,6 +25,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { materialize } from './claude_toolbox.mjs';
 
@@ -75,14 +76,74 @@ function ensureToolbox() {
   return probe;
 }
 
-function cachedToolbox() {
+/**
+ * 🛑 AR-1267 §4 (F-2) — THE CACHE DID NOT VERIFY THE PIN IT CLAIMED TO CACHE.
+ *
+ * The comment above always said "only when the cache does not already hold this exact pin", but
+ * the code checked two things that are true of ANY previous materialization:
+ *
+ *     .pin-stamp exists  &&  claude-hook-runner.mjs exists   ->  reuse
+ *
+ * It never READ the stamp. So after a deliberate re-pin, an older permissive runner left in TEMP
+ * kept winning: GitHub and the manifest said NEW LAW, the process executed OLD LAW, and every
+ * receipt in sight agreed with the manifest. That is a silent guard downgrade — the worst shape
+ * this desk knows, because nothing anywhere reports a disagreement.
+ *
+ * `A CACHE KEYED ON EXISTENCE IS NOT A CACHE OF ANYTHING IN PARTICULAR.`
+ *
+ * The expected identity is the MANIFEST's, not this file's: the manifest is self-protected and
+ * declares what the seat activated, while a constant here is one more thing a re-pin can forget.
+ * Verified before the child runs, in this order, and any failure rematerializes or DENIES —
+ * never a silent reuse:
+ *
+ *   1. read the cached stamp;         2. exact-match expected pin;
+ *   3. exact-match expected bundle;   4. re-hash the cached FILES back to that bundle;
+ *   5. after rematerialization, require the returned pin + bundle to equal the manifest;
+ *   6. any mismatch or failure -> DENY.
+ *
+ * Step 4 is local hashing of ~40 small files, not 40 `git show` calls, so the fast path stays
+ * fast (AR-1267 §4: "Do not solve this by materializing 40 Git objects on every tool call").
+ */
+function bundleShaOfCache(cacheDir) {
+  const names = fs.readdirSync(cacheDir).filter((n) => n.endsWith('.mjs')).sort();
+  if (names.length === 0) return null;
+  const rows = names.map((name) => {
+    const body = fs.readFileSync(path.join(cacheDir, name), 'utf8');
+    return `${name}:${crypto.createHash('sha256').update(body, 'utf8').digest('hex')}`;
+  });
+  return crypto.createHash('sha256').update(rows.join('\n')).digest('hex');
+}
+
+function cachedToolbox(expected) {
+  if (!expected || !expected.pin || !expected.bundle) {
+    throw new Error(
+      'the guard manifest declares no _toolbox_pin/_toolbox_bundle_sha256, so the cached toolbox ' +
+      'identity cannot be verified; refusing rather than trusting whatever is in TEMP',
+    );
+  }
   const cacheDir = path.join(process.env.TEMP || process.env.TMP || '/tmp', 'tf-claude-toolbox');
   const stampPath = path.join(cacheDir, '.pin-stamp');
   const runner = path.join(cacheDir, 'claude-hook-runner.mjs');
+
   if (fs.existsSync(stampPath) && fs.existsSync(runner)) {
-    return { cache: cacheDir, runner, reused: true };
+    const [pin, bundle] = fs.readFileSync(stampPath, 'utf8').split('\n').map((s) => s.trim());
+    if (pin === expected.pin && bundle === expected.bundle && bundleShaOfCache(cacheDir) === expected.bundle) {
+      return { cache: cacheDir, runner, reused: true };
+    }
+    // Stale, tampered, or from another pin. Fall through and rematerialize from the pinned
+    // commit; the post-check below is what decides whether the result may be executed.
   }
+
   const receipt = ensureToolbox();
+  if (receipt.pin !== expected.pin) {
+    throw new Error(`materialized toolbox pin ${receipt.pin} != manifest _toolbox_pin ${expected.pin}`);
+  }
+  if (receipt.bundle_sha256 !== expected.bundle) {
+    throw new Error(
+      `materialized toolbox bundle ${receipt.bundle_sha256} != manifest _toolbox_bundle_sha256 ` +
+      `${expected.bundle}; the pinned commit does not contain the reviewed toolbox`,
+    );
+  }
   return { cache: receipt.cache, runner: path.join(receipt.cache, 'claude-hook-runner.mjs'), reused: false };
 }
 
@@ -95,7 +156,13 @@ try {
   if (!manifestPath) throw new Error('--manifest is required');
   if (!fs.existsSync(manifestPath)) throw new Error(`manifest not found: ${manifestPath}`);
 
-  const { runner } = cachedToolbox();
+  // AR-1267 §4: the MANIFEST is the expected identity. It is self-protected, so the worker
+  // cannot move the target it is measured against.
+  const manifestDoc = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const { runner } = cachedToolbox({
+    pin: manifestDoc._toolbox_pin,
+    bundle: manifestDoc._toolbox_bundle_sha256,
+  });
   if (!fs.existsSync(runner)) throw new Error(`pinned claude-hook-runner.mjs not present at ${runner}`);
 
   const child = spawnSync(process.execPath, [runner, '--manifest', manifestPath], {

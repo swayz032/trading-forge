@@ -58,9 +58,12 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 // RE-PINNED 2026-08-16 by AR-1266 §E, on AR-1265's order to "integrate the exact reviewed
 // toolbox ... refresh the toolbox pin/bundle identity to the exact reviewed source".
 //   dd1bc230 -> 6a06ffae   (AR-1264 A+C, then AR-1266 A-C)
+// RE-PINNED AGAIN 2026-08-16 by AR-1268 §G, on AR-1267 §9G ("Integrate by deliberate immutable
+// re-pin, not copy"):
+//   6a06ffae -> e0c44ca4   (AR-1268 A/C/D/E — the four pre-call boundary edges)
 // A re-pin is a DELIBERATE act with a member diff behind it, which is precisely the motion the
 // comment above demands instead of silently adopting whatever a branch points at.
-const TOOLBOX_PIN = '6a06ffaedff6b3577cb739b1179b0f7523b4f12b';
+const TOOLBOX_PIN = 'e0c44ca4374358e3f9717a73c5faa1f7e963aa89';
 
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
