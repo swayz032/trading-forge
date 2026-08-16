@@ -9,11 +9,26 @@
   "conditions_screened": 12,
   "conditions_unresolved": [],
   "conditions_flagged": 7,
+  "conditions_misgrounded": 8,
+  "misgrounded_refs": [
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
   "results": [
     {
       "condition_ref": "confluences[0].description",
       "condition_text": "The trade must be initiated during the 9:30 AM ET New York session.",
       "quote_count": 1,
+      "relevance_grounded": true,
+      "relevance_reasons": [
+        "GROUNDED: the span fits this condition (0.22) better than any rival (0.02)"
+      ],
       "findings": [
         {
           "kind": "TIMING_WINDOW_WIDENING",
@@ -26,6 +41,10 @@
       "condition_ref": "confluences[1].description",
       "condition_text": "The 1m candle must close outside of the initial 5m range.",
       "quote_count": 1,
+      "relevance_grounded": true,
+      "relevance_reasons": [
+        "GROUNDED: the span fits this condition (0.34) better than any rival (0.16)"
+      ],
       "findings": [
         {
           "kind": "UNSUPPORTED_QUANTITY",
@@ -38,18 +57,31 @@
       "condition_ref": "entry_sequence[0].action",
       "condition_text": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
       "quote_count": 2,
+      "relevance_grounded": true,
+      "relevance_reasons": [
+        "MISGROUNDED_BELOW_FLOOR: the span covers only 0.055 of the condition's distinctive content (floor 0.10) \u2014 it shares a word, not a subject",
+        "GROUNDED: the span fits this condition (0.13) better than any rival (0.04)"
+      ],
       "findings": []
     },
     {
       "condition_ref": "entry_sequence[0].rationale",
       "condition_text": "This establishes the initial volatility range for the trading session.",
       "quote_count": 1,
+      "relevance_grounded": false,
+      "relevance_reasons": [
+        "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+      ],
       "findings": []
     },
     {
       "condition_ref": "entry_sequence[1].action",
       "condition_text": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
       "quote_count": 1,
+      "relevance_grounded": false,
+      "relevance_reasons": [
+        "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+      ],
       "findings": [
         {
           "kind": "UNSUPPORTED_QUANTITY",
@@ -62,6 +94,10 @@
       "condition_ref": "entry_sequence[1].rationale",
       "condition_text": "The breakout confirms the market direction (up or down) for the trade.",
       "quote_count": 1,
+      "relevance_grounded": true,
+      "relevance_reasons": [
+        "GROUNDED: the span fits this condition (0.25) better than any rival (0.00)"
+      ],
       "findings": [
         {
           "kind": "CERTAINTY_INFLATION",
@@ -74,6 +110,10 @@
       "condition_ref": "entry_sequence[2].action",
       "condition_text": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
       "quote_count": 1,
+      "relevance_grounded": false,
+      "relevance_reasons": [
+        "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+      ],
       "findings": [
         {
           "kind": "UNSUPPORTED_QUANTITY",
@@ -86,6 +126,10 @@
       "condition_ref": "entry_sequence[2].rationale",
       "condition_text": "The FVG provides a high-probability entry point after the initial directional breakout.",
       "quote_count": 1,
+      "relevance_grounded": false,
+      "relevance_reasons": [
+        "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+      ],
       "findings": [
         {
           "kind": "UNSUPPORTED_MODIFIER",
@@ -103,24 +147,40 @@
       "condition_ref": "entry_sequence[3].action",
       "condition_text": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
       "quote_count": 1,
+      "relevance_grounded": false,
+      "relevance_reasons": [
+        "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+      ],
       "findings": []
     },
     {
       "condition_ref": "entry_sequence[3].rationale",
       "condition_text": "Entering on the closure confirms the FVG structure and minimizes entry risk.",
       "quote_count": 1,
+      "relevance_grounded": false,
+      "relevance_reasons": [
+        "MISGROUNDED_BELOW_FLOOR: the span covers only 0.017 of the condition's distinctive content (floor 0.10) \u2014 it shares a word, not a subject"
+      ],
       "findings": []
     },
     {
       "condition_ref": "stop.rationale",
       "condition_text": "The stop is placed at the bottom of the FVG candle, including the wick, to allow room for breathing.",
       "quote_count": 1,
+      "relevance_grounded": false,
+      "relevance_reasons": [
+        "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+      ],
       "findings": []
     },
     {
       "condition_ref": "targets[0].rationale",
       "condition_text": "The strategy uses a fixed mechanical target based on a 2R risk-to-reward ratio.",
       "quote_count": 1,
+      "relevance_grounded": false,
+      "relevance_reasons": [
+        "MISGROUNDED_BELOW_FLOOR: the span covers only 0.019 of the condition's distinctive content (floor 0.10) \u2014 it shares a word, not a subject"
+      ],
       "findings": [
         {
           "kind": "UNSUPPORTED_QUANTITY",

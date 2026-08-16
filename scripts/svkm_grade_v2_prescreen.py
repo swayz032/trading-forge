@@ -42,6 +42,9 @@ from src.engine.extraction.evidence_antecedent import (  # noqa: E402
     Span,
     bind_qualifier_to_antecedent,
 )
+from src.engine.extraction.evidence_relevance import (  # noqa: E402
+    evaluate_evidence_relevance,
+)
 from src.engine.extraction.source_fidelity_guard import (  # noqa: E402
     check_condition_fidelity,
 )
@@ -130,15 +133,33 @@ def main() -> int:
             unresolved.append(ref)
             print(f"[SKIP] {ref} — condition text could not be resolved from the extraction")
             continue
+        # STAGE 2 — EVIDENCE RELEVANCE, before any fidelity judgement (AR-1224 §5).
+        # A span that is not ABOUT this condition cannot be evidence for it, so asking
+        # "did extraction inflate?" of an irrelevant quote is meaningless.
+        rivals = [_resolve(strategy, r) for r in evidence if r != ref]
+        rivals = [r for r in rivals if r]
+        rel = [
+            evaluate_evidence_relevance(cond_text, q, rivals, source_document=transcript)
+            for q in evidence[ref]
+        ]
+        grounded = any(v.grounded for v in rel)
+
+        # STAGE 3 — fidelity pre-screen (only meaningful on grounded evidence)
         findings = check_condition_fidelity(cond_text, evidence[ref])
         rows.append({
             "condition_ref": ref,
             "condition_text": cond_text,
             "quote_count": len(evidence[ref]),
+            "relevance_grounded": grounded,
+            "relevance_reasons": [v.reason for v in rel],
             "findings": [
                 {"kind": f.kind, "clause": f.clause, "detail": f.detail} for f in findings
             ],
         })
+        if not grounded:
+            print(f"[MISGROUND] {ref}")
+            print(f"            {rel[0].reason}")
+            continue
         flag = "FLAG" if findings else "  ok"
         print(f"[{flag}] {ref}")
         for f in findings:
@@ -157,6 +178,7 @@ def main() -> int:
     print(f"             {binding.reason}")
 
     flagged = [r for r in rows if r["findings"]]
+    misgrounded = [r for r in rows if not r["relevance_grounded"]]
     artifact = {
         "artifact": "svkm-grade-v2-prescreen",
         "ruling": "AR-1218 §6 / AR-1222 LANE G",
@@ -168,6 +190,8 @@ def main() -> int:
         "conditions_screened": len(rows),
         "conditions_unresolved": unresolved,
         "conditions_flagged": len(flagged),
+        "conditions_misgrounded": len(misgrounded),
+        "misgrounded_refs": [r["condition_ref"] for r in misgrounded],
         "results": rows,
         "antecedent_binding": {
             "qualifier": QUALIFIER,
@@ -183,7 +207,7 @@ def main() -> int:
         json.dump(artifact, fh, indent=2, default=str)
     os.replace(tmp, path)
     print()
-    print(f"evidence={len(evidence)} screened={len(rows)} flagged={len(flagged)} unresolved={unresolved}")
+    print(f"evidence={len(evidence)} screened={len(rows)} flagged={len(flagged)} MISGROUNDED={len(misgrounded)} unresolved={unresolved}")
     print(f"wrote {path}")
     return 0
 
