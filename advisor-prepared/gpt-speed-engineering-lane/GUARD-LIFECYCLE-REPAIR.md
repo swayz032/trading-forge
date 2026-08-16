@@ -191,9 +191,101 @@ AR-1265 §4 governed path) and the frozen plane read **8 queued / 0 spent / rece
 
 ---
 
+## 5b. The re-pin — APPLIED, and the two defects it exposed
+
+Applied on the operator's explicit instruction after this seat's brief had reserved it. Doing it
+surfaced two defects that no amount of unit testing would have.
+
+### A RE-PIN IS TWO FILES
+
+`_toolbox_pin` / `_toolbox_bundle_sha256` in the self-protected manifest are the **expected**
+identity. `TOOLBOX_PIN` in `scripts/claude_toolbox.mjs` is what actually gets **materialized**.
+Editing only the manifest produced, at the live doorway:
+
+```
+Worker-1 guard doorway failed closed: materialized toolbox pin 18108039...
+!= manifest _toolbox_pin a2d5942d...
+```
+
+Correct, fail-closed, and how the second half got found. **Editing only the constant would have
+been far worse** — the new law executing while the self-protected manifest still attested to the
+old one, with nothing anywhere disagreeing.
+`A RE-PIN IS TWO FILES. CHANGE ONE AND YOU HAVE EITHER A BRICK OR A LIE.`
+
+### THE ARM WITNESS REPORTED `ARMED` OFF A STOP
+
+`worker1_seat_launch.ps1`'s C5 probe sent `{"hook_event_name":"SessionStart","source":"startup"}`
+with **no `session_id`**. Under the bound-marker guard that cannot arm, so the guard answered
+*"GPT worker guard STOP: the resume anchor verified but the session could not be armed…"*.
+
+The launcher's detector was `if ($armedText -match 'anchor verified')`. **My own refusal wording
+contained the success phrase.** The launcher printed `guard : ARMED` and `seat OK` while holding a
+refusal — a false green in the one gate standing between the operator and an ungoverned seat, which
+is the exact failure the launcher exists to prevent.
+`A REFUSAL THAT SPELLS THE SUCCESS PHRASE IS A PASS.`
+
+Fixed on **both** sides, because either alone leaves the trap armed for the next wording:
+
+- **Guard** (`338dbd80`): refusal reworded to "the resume anchor **check passed** but this session
+  could not be armed", plus a detector-collision control that sends the launcher's exact
+  `session_id`-less probe shape and asserts STOP present, "could not be armed" present, `anchor
+  verified` **absent** — then proves the session really is unarmed rather than merely worded so.
+- **Launcher**: the probe now carries its own `session_id` (`seat-armprobe`, bound to nothing real,
+  marker removed immediately after), and the verdict tests for **STOP first**, so a refusal wording
+  nobody has written yet is caught by the marker every refusal carries rather than by the absence
+  of a phrase somebody remembered to avoid.
+
+Detector truth table, old vs new, over five real guard outputs — exactly one verdict changes:
+
+| guard output | old | new |
+|---|---|---|
+| genuine arm | ARMED | ARMED |
+| **historical false green** | **ARMED** | **REFUSE** |
+| current arm failure | REFUSE | REFUSE |
+| dirty-tree refusal | REFUSE | REFUSE |
+| doorway failed closed | REFUSE | REFUSE |
+
+### Applied values
+
+```
+_toolbox_pin            338dbd80abbe21648e58862cc00e6cee6a8a0b26
+_toolbox_bundle_sha256  c8b7cec408b017ce6d2c04dcc4ad705726c3bfadbd9e9f4afb0a9d0c6aee894e
+file_count              44   (was 42)
+```
+
+Two instruments agreed on the bundle (`materialize`'s own algorithm and
+`git cat-file | sha256sum`). `git merge-base --is-ancestor 18108039 338dbd80` → 0.
+`claude/worker1-p1-toolbox-20260816` fast-forwarded onto it, so `TOOLBOX_REF` reports no drift.
+
+### Witnessed at the live doorway — real manifest, real worktree, real seat surface
+
+| | at `18108039` | at `338dbd80` |
+|---|---|---|
+| SessionStart | "anchor verified" | "anchor verified" |
+| PreToolUse `Read` | **DENY** — *worker session anchor was not verified at SessionStart* | **ALLOW** |
+| PreToolUse cross-lane `Write` | deny | deny (`BLOCK:…paper-engine.ts`) |
+| Bash naming the marker | n/a | deny (protected-surface fence) |
+| TEMP cache stamp | `18108039` / `1d12f612`, 42 files | `338dbd80` / `c8b7cec4`, 44 files |
+
+Seat pre-flight after the re-pin: `guard : ARMED` on a genuine arm, `seat OK`, exit 0, probe marker
+cleaned up, `frozen : 8 queued / 0 spent | receipts+0`.
+
+Launcher refusal path re-proved end to end after the edits: an untracked file in the worktree →
+`WORKER-1 SEAT REFUSED TO START` / `[C5 arm] guard REFUSED to arm`, **exit 1**; control removed →
+`ARMED` / `seat OK`, **exit 0**.
+
 ## 6. What is NOT done, and is not mine
 
-- **The re-pin.** `_toolbox_pin` → this branch's commit and `_toolbox_bundle_sha256` → the
+- ~~**The re-pin.**~~ **APPLIED — see §5b.** The paragraph below is kept as the record of what was
+  reserved and why, and of the values as first computed; the values actually in force are
+  `338dbd80` / `c8b7cec4`, not `d4c96819` / `47dacc36`.
+
+- **Witnessing the fix inside a live guarded Claude seat.** Everything in §5b drives the real
+  doorway with the real manifest as a child process, which is the same executable path the seat
+  uses — but it is not a Claude session with hooks bound. That last mile still needs a guarded
+  seat, and repairing the guard needs an unguarded one.
+
+- **The original reservation, kept for the record.** `_toolbox_pin` → this branch's commit and `_toolbox_bundle_sha256` → the
   recomputed bundle, in `.claude/worker1-hook-guard-manifest.json`. That file is self-protected and
   the bundle now covers **44** `.mjs` files, not 42 (`guard-session-marker.mjs` and
   `claude-hook-lifecycle.test.mjs` are new; `claude_toolbox.mjs` derives the file set from
