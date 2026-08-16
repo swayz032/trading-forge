@@ -1,0 +1,146 @@
+{
+  "artifact": "svkm-grade-v2-prescreen",
+  "ruling": "AR-1218 \u00a76 / AR-1222 LANE G",
+  "status": "PRE-SCREEN / EVIDENCE REQUEST \u2014 NOT A GRADE, NOT A CERTIFICATE",
+  "does_not_clear_red_certificate": true,
+  "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+  "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+  "conditions_with_evidence": 12,
+  "conditions_screened": 12,
+  "conditions_unresolved": [],
+  "conditions_flagged": 7,
+  "results": [
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The trade must be initiated during the 9:30 AM ET New York session.",
+      "quote_count": 1,
+      "findings": [
+        {
+          "kind": "TIMING_WINDOW_WIDENING",
+          "clause": "during",
+          "detail": "source names a point in time; condition spans it into a window ('during' + extent noun)"
+        }
+      ]
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The 1m candle must close outside of the initial 5m range.",
+      "quote_count": 1,
+      "findings": [
+        {
+          "kind": "UNSUPPORTED_QUANTITY",
+          "clause": "1",
+          "detail": "condition states ['1'] which the source span does not"
+        }
+      ]
+    },
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
+      "quote_count": 2,
+      "findings": []
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "This establishes the initial volatility range for the trading session.",
+      "quote_count": 1,
+      "findings": []
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
+      "quote_count": 1,
+      "findings": [
+        {
+          "kind": "UNSUPPORTED_QUANTITY",
+          "clause": "1, 5",
+          "detail": "condition states ['1', '5'] which the source span does not"
+        }
+      ]
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "The breakout confirms the market direction (up or down) for the trade.",
+      "quote_count": 1,
+      "findings": [
+        {
+          "kind": "CERTAINTY_INFLATION",
+          "clause": "confirms",
+          "detail": "condition asserts 'confirms'; the source offers no certainty attached to this proposition, only a hedge ('gives us an idea')"
+        }
+      ]
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
+      "quote_count": 1,
+      "findings": [
+        {
+          "kind": "UNSUPPORTED_QUANTITY",
+          "clause": "5",
+          "detail": "condition states ['5'] which the source span does not"
+        }
+      ]
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "The FVG provides a high-probability entry point after the initial directional breakout.",
+      "quote_count": 1,
+      "findings": [
+        {
+          "kind": "UNSUPPORTED_MODIFIER",
+          "clause": "high-probability",
+          "detail": "condition claims 'high-probability'; no 'probab' support attached to this proposition in the source span"
+        },
+        {
+          "kind": "UNSUPPORTED_MODIFIER",
+          "clause": "probability",
+          "detail": "condition claims 'probability'; no 'probab' support attached to this proposition in the source span"
+        }
+      ]
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
+      "quote_count": 1,
+      "findings": []
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "Entering on the closure confirms the FVG structure and minimizes entry risk.",
+      "quote_count": 1,
+      "findings": []
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed at the bottom of the FVG candle, including the wick, to allow room for breathing.",
+      "quote_count": 1,
+      "findings": []
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The strategy uses a fixed mechanical target based on a 2R risk-to-reward ratio.",
+      "quote_count": 1,
+      "findings": [
+        {
+          "kind": "UNSUPPORTED_QUANTITY",
+          "clause": "2",
+          "detail": "condition states ['2'] which the source span does not"
+        }
+      ]
+    }
+  ],
+  "antecedent_binding": {
+    "qualifier": "initial",
+    "bound": true,
+    "reason": "BOUND: antecedent grounds 'initial' via 'first', precedes the reference, and nothing redefines the entity in between",
+    "antecedent_span": [
+      8644,
+      8797
+    ],
+    "referring_span": [
+      9294,
+      9512
+    ]
+  }
+}
