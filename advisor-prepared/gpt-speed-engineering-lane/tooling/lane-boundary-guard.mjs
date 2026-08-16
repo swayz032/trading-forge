@@ -20,23 +20,65 @@ import { fileURLToPath } from 'node:url';
 //   `A GUARD YOU ARE PERMITTED TO EDIT IS A GUARD YOU AUTHORED.`
 // These are `exact`, not a `scripts/` prefix, deliberately: the lane's ordinary script work must
 // stay allowed, and a prefix here would quietly convert F-1 into a lane-wide freeze.
+// `bash_tokens` (AR-1270 §B) are ADDITIONAL distinctive spellings of the SAME surface that the
+// Bash fence looks for, for the case where a shell command names the file without its full
+// repository path (`cd <dir> && ... isolated_fallback_queue_t1.json`). They are declared HERE,
+// beside the rule they belong to, so the fence has no rule list of its own to drift from.
+// They are opt-in per rule ON PURPOSE: the bare basenames of `.claude/settings.json` and
+// `.claude/hooks/` are `settings.json` and `hooks`, which are far too generic to fence a shell
+// command on without bricking ordinary work.
 export const SELF_PROTECTED_RULES = [
   { kind: 'contains', value: 'hook-guard-manifest', reason: 'the worker guard manifest declares the worker\'s own permissions' },
   { kind: 'exact', value: '.claude/settings.json', reason: 'live hook registration' },
   { kind: 'exact', value: '.claude/settings.local.json', reason: 'live hook registration' },
   { kind: 'prefix', value: '.claude/hooks/', reason: 'live hook implementations' },
   { kind: 'prefix', value: 'advisor-prepared/gpt-speed-engineering-lane/tooling/', reason: 'the pinned guard toolbox' },
-  { kind: 'exact', value: 'scripts/claude_guard_hook.mjs', reason: 'the live hook doorway that executes the guard' },
-  { kind: 'exact', value: 'scripts/claude_toolbox.mjs', reason: 'the activator that selects and materializes the pinned toolbox' },
-  { kind: 'exact', value: 'scripts/g2d_precall_transition.py', reason: 'the protected claim->dispatch transition doorway' },
-  { kind: 'exact', value: 'scripts/g2d_freeze_native_calls.py', reason: 'the freezer of the native-call execution identity' },
+  { kind: 'exact', value: 'scripts/claude_guard_hook.mjs', reason: 'the live hook doorway that executes the guard', bash_tokens: ['claude_guard_hook'] },
+  { kind: 'exact', value: 'scripts/claude_toolbox.mjs', reason: 'the activator that selects and materializes the pinned toolbox', bash_tokens: ['claude_toolbox'] },
+  { kind: 'exact', value: 'scripts/g2d_precall_transition.py', reason: 'the protected claim->dispatch transition doorway', bash_tokens: ['g2d_precall_transition'] },
+  { kind: 'exact', value: 'scripts/g2d_freeze_native_calls.py', reason: 'the freezer of the native-call execution identity', bash_tokens: ['g2d_freeze_native_calls'] },
   // AR-1267 §6 requires a changed prompt/model/condition to DENY before the model runs. That
   // property is only as strong as the artifact it compares against, and the artifact lives under
   // `docs/replay-results/`, which the Worker-1 edit scope ALLOWS. An editable expectation is not
-  // an expectation. (Scoped to the file this packet introduces; see AR-1268 FINDINGS for the
-  // pre-existing sibling — the frozen QUEUE sits under the same allowed prefix and is NOT
-  // protected here, because AR-1267 §9 forbids broadening and it is not this packet's defect.)
+  // an expectation.
   { kind: 'contains', value: 'native_call_manifest', reason: 'the frozen native-call execution identity the pre-call guard matches against' },
+
+  // AR-1270 §A, on AR-1269 §4 (F-5) — THE G2 CONTROL PLANE ITSELF.
+  //
+  // AR-1268 protected the native-call manifest and left these two, because AR-1267 §9 forbade
+  // broadening. AR-1269 §4 confirmed the gap independently and authorized exactly this repair.
+  // Both live under `docs/replay-results/`, which the Worker-1 edit scope ALLOWS, so until now
+  // the guarded worker could Write its own control plane.
+  //
+  // THE RECEIPT HALF IS THE SERIOUS ONE. `outstandingCapture()` treats a prior dispatch as
+  // captured when `.raw.json` and `.completion.json` merely EXIST, so a worker able to Write into
+  // the receipt directory can manufacture file-existence state that clears the forced-capture
+  // stop and lets the NEXT one-shot call proceed while the previous answer is still uncaptured.
+  // That is control-plane integrity, not denial of service.
+  //
+  // THE QUEUE HALF IS BOUNDED AND MUST NOT BE OVERSTATED (AR-1269 §4, verbatim: "Do not overstate
+  // the queue gap as an authorization bypass"): the native-call manifest pins the queue sha256 and
+  // the guard compares it, so a queue edit already FAILS CLOSED rather than authorizing a changed
+  // task. It is protected here because an editable frozen artifact is not frozen, not because it
+  // was an open authorization hole.
+  //
+  // 🛑 THIS DOES NOT DISABLE THE DURABLE RECEIPT LAW. These rules bind the CLAUDE TOOL SURFACE —
+  // Edit/Write/NotebookEdit and (via the fence below) Bash. The trusted transition doorway writes
+  // receipts from inside its own process, which is not a Claude tool call and is not classified
+  // here. AR-1269 §6A: "The trusted transition/finalization code may still create receipts through
+  // its intended internal process path."
+  {
+    kind: 'exact',
+    value: 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json',
+    reason: 'the frozen eight-condition G2 queue',
+    bash_tokens: ['isolated_fallback_queue_t1'],
+  },
+  {
+    kind: 'prefix',
+    value: 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1/',
+    reason: 'the real G2 one-shot receipt namespace that the forced-capture gate reads as evidence',
+    bash_tokens: ['isolated-receipts-t1'],
+  },
 ];
 
 const COORDINATION_RULES = [
@@ -193,6 +235,76 @@ export function auditPaths(worker, paths, options = {}) {
       review_required: reviewed.length,
     },
   };
+}
+
+/**
+ * AR-1270 §B, on AR-1269 §5 (F-6) — THE PROTECTED-SURFACE BASH FENCE.
+ *
+ * 🛑 THE DEFECT THIS CLOSES. PreToolUse is registered for `Edit|Write|NotebookEdit|Bash|Agent|
+ * Task`, but only the first three ever had their target path extracted and classified. The Bash
+ * arm went to `bashMutationReason()`, a blacklist of mutation SPELLINGS (`sed -i`, `tee`, `rm`,
+ * redirection, `writeFileSync`...). A writer whose spelling was not on that list never reached
+ * the path classifier AT ALL — so it could target a `SELF_PROTECTED` file freely. Worse, the
+ * trusted `scripts/g2d_precall_transition.py` creates REAL receipts, so an unrecognised Bash
+ * shape invoking it directly manufactures durable transition state with no native dispatch
+ * behind it.
+ *
+ * ★★★★★ `A COMMAND-SPELLING BLACKLIST CANNOT SUPPORT A CATEGORICAL PATH CLAIM.`
+ *
+ * 🛑 AND THE FIX IS NOT MORE SPELLINGS. AR-1269 §5, verbatim: "Do not repair this by adding two
+ * more spellings such as `dd` or `os.write` to the blacklist. That is whack-a-mole, not a
+ * boundary." So this fence does not ask WHAT the command does. It asks WHETHER THE COMMAND
+ * REFERENCES A PROTECTED SURFACE AT ALL, and denies if it does — which is decidable without a
+ * shell parser and does not care whether the writer is one this desk has seen before.
+ *
+ * SCOPE, STATED HONESTLY: this is reference-based, so it also denies a harmless `cat` of a
+ * protected file, and it denies Bash that names the pinned toolbox directory (which includes
+ * running the toolbox's own test files by path). That is stricter than the three shapes AR-1269
+ * §6B lists as the minimum. It is deliberate — a uniform rule over the WHOLE self-protected set
+ * has no "which subset did you pick, and why" seam for the next writer to walk through — but it
+ * is a widening of the stated floor and is disclosed as such. Narrowing it is one field.
+ *
+ * It is NOT a shell parser and does not try to be. It reads the same `SELF_PROTECTED_RULES` the
+ * path classifier reads, because a second copy of a boundary rule drifts and stops biting while
+ * still reporting PASS.
+ */
+function normalizeForFence(text) {
+  return text.replaceAll('\\', '/').replace(/\/{2,}/g, '/').toLowerCase();
+}
+
+/** Every distinctive spelling of a protected surface, derived FROM the rules, never beside them. */
+export function protectedSurfaceTokens(rules = SELF_PROTECTED_RULES) {
+  const tokens = [];
+  for (const rule of rules) {
+    const forms = new Set([rule.value]);
+    // `.claude/hooks/` must also fence `ls .claude/hooks` — a trailing slash is a spelling, not a
+    // different surface.
+    if (rule.value.endsWith('/')) forms.add(rule.value.slice(0, -1));
+    for (const extra of rule.bash_tokens || []) forms.add(extra);
+    for (const form of forms) {
+      if (form) tokens.push({ token: normalizeForFence(form), reason: rule.reason, rule: rule.value });
+    }
+  }
+  return tokens;
+}
+
+export function bashProtectedSurfaceReason(command, options = {}) {
+  // A Bash event whose command cannot be read is not something a fence can CLEAR. The existing
+  // mutation check already treats this as a denial; keeping the same disposition here means the
+  // fence never turns an unreadable command into a pass.
+  if (typeof command !== 'string' || command.trim() === '') return null;
+
+  const haystack = normalizeForFence(command);
+  for (const { token, reason, rule } of protectedSurfaceTokens(options.selfProtectedRules || SELF_PROTECTED_RULES)) {
+    if (haystack.includes(token)) {
+      return (
+        `Bash is not a side door to the protected control plane: this command references ` +
+        `\`${rule}\` (${reason}). Denied by the protected-surface fence REGARDLESS of what the ` +
+        `command would do — the boundary is the surface, not the spelling of the writer.`
+      );
+    }
+  }
+  return null;
 }
 
 /**

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { verifyResumeAnchor } from './resume-anchor-guard.mjs';
-import { auditPaths, decideEditPermission } from './lane-boundary-guard.mjs';
+import { auditPaths, decideEditPermission, bashProtectedSurfaceReason } from './lane-boundary-guard.mjs';
 import { evaluateScope } from './edit-scope-guard.mjs';
 import { runClaudeFinishCheck } from './claude-finish-check.mjs';
 import {
@@ -61,7 +61,11 @@ function extractEditPaths(input, repoRoot) {
   return [...new Set(candidates.map((p) => normalizeToolPath(repoRoot, input.cwd || repoRoot, p)))];
 }
 
-function bashMutationReason(command) {
+// Exported for the AR-1270 §B RED PROOFS only. Those controls must be able to assert that the
+// OLD boundary does not recognise a shape, because "the blacklist returns null" is precisely what
+// used to mean ALLOWED. Asserting that against an inaccessible function is not possible, and
+// re-implementing the regexes in the test would be the second copy that drifts.
+export function bashMutationReason(command) {
   if (typeof command !== 'string' || command.trim() === '') return 'Bash command is missing';
   const c = command.trim();
   const dangerousGit = /\bgit\s+(checkout|switch|reset|clean|rebase|merge|cherry-pick)\b|\bgit\s+push\b[^\n;&|]*--force(?:-with-lease)?\b|\bgit\s+branch\s+-[dD]\b/i;
@@ -148,10 +152,19 @@ export function evaluateHookEvent({ input, manifest, env = process.env }) {
     }
 
     if (input.tool_name === 'Bash') {
-      const reason = bashMutationReason(input.tool_input?.command);
+      const command = input.tool_input?.command;
+      // AR-1270 §B, on AR-1269 §5 (F-6). THE ORDER IS THE POINT: the protected-surface fence runs
+      // FIRST, so a command touching the control plane is denied on the SURFACE it names, before
+      // anything asks whether its writer's spelling happens to be one we recognise. Running the
+      // blacklist first would leave the categorical hole exactly where AR-1269 found it.
+      const fenced = bashProtectedSurfaceReason(command);
+      if (fenced) {
+        return { ...deny(fenced), _audit: { event, bash_protected_surface_blocked: true, bash_mutation_blocked: false } };
+      }
+      const reason = bashMutationReason(command);
       return reason
-        ? { ...deny(reason), _audit: { event, bash_mutation_blocked: true } }
-        : { _audit: { event, bash_mutation_blocked: false } };
+        ? { ...deny(reason), _audit: { event, bash_protected_surface_blocked: false, bash_mutation_blocked: true } }
+        : { _audit: { event, bash_protected_surface_blocked: false, bash_mutation_blocked: false } };
     }
 
     // AR-1263 §7C: the G2-D one-shot boundary sits BEFORE the model call. A subagent
