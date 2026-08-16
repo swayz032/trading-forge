@@ -5,7 +5,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { verifyResumeAnchor } from './resume-anchor-guard.mjs';
-import { auditPaths } from './lane-boundary-guard.mjs';
+import { auditPaths, decideEditPermission } from './lane-boundary-guard.mjs';
 import { evaluateScope } from './edit-scope-guard.mjs';
 import { runClaudeFinishCheck } from './claude-finish-check.mjs';
 
@@ -156,13 +156,12 @@ export function evaluateHookEvent({ input, manifest, env = process.env }) {
       allowedExact: manifest.edit_scope.allowed_exact || [],
       allowedPrefixes: manifest.edit_scope.allowed_prefixes || [],
     });
-    if (!lane.safe_to_edit_without_handoff) {
-      return { ...deny(`lane guard rejected ${paths.join(', ')}: ${lane.results.map((r) => `${r.verdict}:${r.reason}`).join(' | ')}`), _audit: { event, paths, lane, scope } };
+    // AR-1263 §7A precedence, evaluated by the single shared law.
+    const decision = decideEditPermission(lane, scope);
+    if (!decision.allow) {
+      return { ...deny(`${decision.reason} [${paths.join(', ')}]`), _audit: { event, paths, lane, scope, decision } };
     }
-    if (!scope.ok) {
-      return { ...deny(`authorized edit scope rejected: ${scope.out_of_scope.join(', ')}`), _audit: { event, paths, lane, scope } };
-    }
-    return { _audit: { event, paths, lane, scope } };
+    return { _audit: { event, paths, lane, scope, decision } };
   }
 
   if (event === 'TaskCompleted') {

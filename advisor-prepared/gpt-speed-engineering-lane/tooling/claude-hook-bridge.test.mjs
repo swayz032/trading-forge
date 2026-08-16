@@ -110,7 +110,10 @@ test('PreToolUse denies obvious cross-lane Worker 2 path', () => {
     env: verifiedEnv(),
   });
   assert.equal(permissionDecision(result), 'deny');
-  assert.match(result.hookSpecificOutput.permissionDecisionReason, /lane guard rejected/);
+  // AR-1263 §7A reworded this to say WHY it is not overridable, and the reason must still
+  // name the verdict and the offending path rather than being a generic refusal.
+  assert.match(result.hookSpecificOutput.permissionDecisionReason, /not scope-overridable/);
+  assert.match(result.hookSpecificOutput.permissionDecisionReason, /BLOCK:src\/server\/services\/paper-engine\.ts/);
 });
 
 test('PreToolUse denies same-lane path that is outside the authorized packet scope', () => {

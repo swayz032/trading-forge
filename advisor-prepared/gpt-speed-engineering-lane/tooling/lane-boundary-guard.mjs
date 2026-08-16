@@ -4,6 +4,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// AR-1263 §7A. The guard's own control surface. These deny REGARDLESS of packet scope,
+// because a packet that lists a broad prefix such as `.claude/` would otherwise hand the
+// worker authority over the rules that bind it.
+//
+// BOOTSTRAP NOTE, deliberate: with the guard ACTIVE a worker cannot repair this toolbox.
+// That is the point — a repair is a desk-authorized packet on the toolbox authority branch
+// (as AR-1264 itself is), not something a guarded seat grants itself mid-session.
+const SELF_PROTECTED_RULES = [
+  { kind: 'contains', value: 'hook-guard-manifest', reason: 'the worker guard manifest declares the worker\'s own permissions' },
+  { kind: 'exact', value: '.claude/settings.json', reason: 'live hook registration' },
+  { kind: 'exact', value: '.claude/settings.local.json', reason: 'live hook registration' },
+  { kind: 'prefix', value: '.claude/hooks/', reason: 'live hook implementations' },
+  { kind: 'prefix', value: 'advisor-prepared/gpt-speed-engineering-lane/tooling/', reason: 'the pinned guard toolbox' },
+];
+
 const COORDINATION_RULES = [
   { kind: 'exact', value: 'package.json', reason: 'shared package contract' },
   { kind: 'exact', value: 'src/server/db/schema.ts', reason: 'shared database schema' },
@@ -76,11 +91,25 @@ function relatedTestOwnership(repoPath) {
   return null;
 }
 
-export function classifyPath(worker, rawPath) {
+export function classifyPath(worker, rawPath, options = {}) {
   if (!['worker-1', 'worker-2'].includes(worker)) {
     throw new Error(`worker must be worker-1 or worker-2, got: ${worker}`);
   }
   const repoPath = normalizeRepoPath(rawPath);
+
+  // AR-1263 §7A: self-protection is evaluated FIRST and is not scope-gated.
+  // `selfProtectedRules` is injectable so the mutation control can prove this category is
+  // what does the work. It is a parameter, never mutable module state — a guard with a
+  // runtime switch that disables it is not a guard.
+  const selfProtectedRules = options.selfProtectedRules || SELF_PROTECTED_RULES;
+  const selfProtected = matchAny(repoPath, selfProtectedRules);
+  if (selfProtected) {
+    return {
+      path: repoPath,
+      verdict: 'SELF_PROTECTED',
+      reason: `self-protected control surface: ${selfProtected.reason}`,
+    };
+  }
 
   const coordination = matchAny(repoPath, COORDINATION_RULES);
   if (coordination) {
@@ -114,24 +143,60 @@ export function classifyPath(worker, rawPath) {
   };
 }
 
-export function auditPaths(worker, paths) {
+// AR-1263 §7A: these deny no matter what the packet scope says.
+const DENY_REGARDLESS_VERDICTS = ['SELF_PROTECTED', 'BLOCK', 'HANDOFF_REQUIRED'];
+
+export function auditPaths(worker, paths, options = {}) {
   if (!Array.isArray(paths) || paths.length === 0) {
     throw new Error('at least one changed path is required');
   }
-  const results = paths.map((p) => classifyPath(worker, p));
-  const blocking = results.filter((x) => ['BLOCK', 'HANDOFF_REQUIRED', 'REVIEW_REQUIRED'].includes(x.verdict));
+  const results = paths.map((p) => classifyPath(worker, p, options));
+  const blocking = results.filter((x) => [...DENY_REGARDLESS_VERDICTS, 'REVIEW_REQUIRED'].includes(x.verdict));
+  const hardDenied = results.filter((x) => DENY_REGARDLESS_VERDICTS.includes(x.verdict));
+  const reviewed = results.filter((x) => x.verdict === 'REVIEW_REQUIRED');
   return {
     schema: 'gpt-lane-boundary-audit-v1',
     worker,
+    // UNCHANGED MEANING on purpose: review genuinely IS still required, and
+    // claude-finish-check / claude-preflight read this field with that strict sense.
     safe_to_edit_without_handoff: blocking.length === 0,
+    // AR-1263 §7A precedence fields.
+    deny_regardless_of_scope: hardDenied.length > 0,
+    scope_gated: hardDenied.length === 0 && reviewed.length > 0,
+    deny_reasons: hardDenied.map((x) => `${x.verdict}:${x.path}:${x.reason}`),
     results,
     summary: {
       allow: results.filter((x) => x.verdict === 'ALLOW_LANE_MATCH').length,
+      self_protected: results.filter((x) => x.verdict === 'SELF_PROTECTED').length,
       block: results.filter((x) => x.verdict === 'BLOCK').length,
       handoff_required: results.filter((x) => x.verdict === 'HANDOFF_REQUIRED').length,
-      review_required: results.filter((x) => x.verdict === 'REVIEW_REQUIRED').length,
+      review_required: reviewed.length,
     },
   };
+}
+
+/**
+ * AR-1263 §7A, the whole precedence law in one place:
+ *
+ *   self-protected / BLOCK / HANDOFF_REQUIRED -> DENY, scope is never consulted
+ *   REVIEW_REQUIRED                           -> allow ONLY if packet scope covers it
+ *   ALLOW_LANE_MATCH                          -> still must satisfy packet scope
+ *
+ * Kept as one exported pure function so the bridge, the preflight and the controls all
+ * read the SAME rule. A second copy of a boundary rule drifts and stops biting while
+ * still reporting PASS.
+ */
+export function decideEditPermission(laneAudit, scopeResult) {
+  if (!laneAudit || typeof laneAudit !== 'object') throw new Error('laneAudit is required');
+  if (!scopeResult || typeof scopeResult !== 'object') throw new Error('scopeResult is required');
+
+  if (laneAudit.deny_regardless_of_scope) {
+    return { allow: false, reason: `lane guard refused (not scope-overridable): ${laneAudit.deny_reasons.join(' | ')}` };
+  }
+  if (!scopeResult.ok) {
+    return { allow: false, reason: `authorized edit scope rejected: ${scopeResult.out_of_scope.join(', ')}` };
+  }
+  return { allow: true, reason: 'lane precedence satisfied and target is inside authorized packet scope' };
 }
 
 function parseCli(argv) {

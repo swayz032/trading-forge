@@ -38,7 +38,8 @@ test('mixed audit fails closed when any path needs coordination or review', () =
     'package.json',
   ]);
   assert.equal(audit.safe_to_edit_without_handoff, false);
-  assert.deepEqual(audit.summary, { allow: 1, block: 0, handoff_required: 1, review_required: 0 });
+  // AR-1263 §7A added the self_protected counter to this summary contract.
+  assert.deepEqual(audit.summary, { allow: 1, self_protected: 0, block: 0, handoff_required: 1, review_required: 0 });
 });
 
 test('unsafe repository paths are rejected', () => {
