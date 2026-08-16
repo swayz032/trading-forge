@@ -68,19 +68,19 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 //                           classifier). Member diff: 3 files, +377/-12. Descendant verified with
 //                           `git merge-base --is-ancestor e0c44ca4 18108039`.
 // RE-PINNED AGAIN 2026-08-16 by the guard-repair seat, on the operator's explicit instruction:
-//   18108039 -> 338dbd80   (the SessionStart -> PreToolUse lifecycle repair). 18108039's guard
+//   18108039 -> 4dff9782   (the SessionStart -> PreToolUse lifecycle repair). 18108039's guard
 //                           DENIED EVERY TOOL CALL IN A CORRECTLY-LAUNCHED SEAT and did it
 //                           silently: SessionStart wrote `TF_CLAUDE_GUARD_ANCHOR_OK=1` into the
 //                           file at CLAUDE_ENV_FILE, PreToolUse read that name from its own
 //                           process env, and — MEASURED in the shipped claude.exe — nothing ever
 //                           carries it across, because CLAUDE_ENV_FILE reaches only
 //                           SessionStart/Setup/CwdChanged/FileChanged and feeds the BASH TOOL's
-//                           shell. Fail-CLOSED, so three seats could not see it. 338dbd80 deletes
+//                           shell. Fail-CLOSED, so three seats could not see it. 4dff9782 deletes
 //                           that variable and arms through a marker BOUND to session + worktree +
 //                           git dir + branch + head + pin + bundle, most of it RE-MEASURED per
 //                           tool call. Member diff: 8 files, +1199/-65 (2 new toolbox modules, so
 //                           the bundle covers 44 files, not 42). Descendant verified with
-//                           `git merge-base --is-ancestor 18108039 338dbd80`.
+//                           `git merge-base --is-ancestor 18108039 4dff9782`.
 //
 // 🛑 THIS CONSTANT IS HALF OF A RE-PIN, AND THE HALF THAT IS EASY TO FORGET.
 // The manifest's `_toolbox_pin` is the EXPECTED identity; THIS is what actually gets materialized.
@@ -93,7 +93,7 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 //
 // A re-pin is a DELIBERATE act with a member diff behind it, which is precisely the motion the
 // comment above demands instead of silently adopting whatever a branch points at.
-const TOOLBOX_PIN = '338dbd80abbe21648e58862cc00e6cee6a8a0b26';
+const TOOLBOX_PIN = '4dff9782376760f285c138fc7312a0719afa7504';
 
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
