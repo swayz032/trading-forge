@@ -334,6 +334,47 @@ def cmd_verify(trials: list[int]) -> int:
     return 0
 
 
+# --------------------------------------------------------------------------- #
+# route — the AR-1236 §10 versioned Phase-1 path, on real pinned data
+# --------------------------------------------------------------------------- #
+
+# AR-1236 §10.12: NEW versioned artifacts. The historical red Phase-1/certificate are HISTORY and
+# are never mutated into green — the driver refuses by path, not by intention.
+ROUTE_DIR = os.path.join(bench.POP_DIR, "grade", "opus-v2")
+
+
+def cmd_route(trial: int) -> int:
+    from src.engine.extraction import opus_phase1_route as rt
+
+    transcript, _ = bench._load_pinned()
+    index = json.loads(open(TASK_INDEX_PATH, encoding="utf-8").read())
+    answers = json.loads(open(_answers_path(trial), encoding="utf-8").read())
+    if answers["task_sha256"] != index["task_sha256"]:
+        raise SystemExit(f"[route] ABORT: trial {trial} is bound to a different task.")
+
+    record = rt.run_route(transcript, index["conditions"], answers["answers"])
+    record["input"] = index["input"]
+    record["task_sha256"] = index["task_sha256"]
+    record["source_trial"] = trial
+    record["raw_return_sha256"] = answers["raw_return_sha256"]
+    record["historical_artifact_policy"] = (
+        "This is a NEW versioned artifact. The historical RED phase1/certificate under "
+        "grade/ are untouched history and are never rewritten into green (AR-1236 §10.12)."
+    )
+
+    out = os.path.join(ROUTE_DIR, f"opus_phase1_route_t{trial}.json")
+    bench._assert_not_frozen(out)
+    bench._write_json(out, record)
+
+    print(f"[route] trial {trial} -> {out}")
+    print(f"[route] GRADE = {record['grade']}   accepted {record['accepted_count']}"
+          f"/{record['condition_count']}")
+    for k, v in sorted(record["disposition_counts"].items()):
+        print(f"[route]   {k:34s} {v}")
+    print(f"[route] escalate to isolated Opus: {len(record['escalate_to_isolated'])} conditions")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -344,6 +385,8 @@ def main() -> int:
     i.add_argument("--receipt", default=None)
     v = sub.add_parser("verify")
     v.add_argument("--trials", type=int, nargs="+", default=[1, 2, 3])
+    r = sub.add_parser("route")
+    r.add_argument("--trial", type=int, default=1)
     args = ap.parse_args()
 
     if args.cmd == "emit":
@@ -352,6 +395,8 @@ def main() -> int:
         return cmd_ingest(args.src, args.trial, args.receipt)
     if args.cmd == "verify":
         return cmd_verify(args.trials)
+    if args.cmd == "route":
+        return cmd_route(args.trial)
     return 2
 
 
