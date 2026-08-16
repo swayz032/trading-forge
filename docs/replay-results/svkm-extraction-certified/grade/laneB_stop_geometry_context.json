@@ -1,0 +1,71 @@
+{
+  "artifact": "svkm-laneB-stop-geometry-context",
+  "ruling": "AR-1200 \u00a76 LANE B",
+  "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+  "window_chars": 400,
+  "example_boundary_markers": [
+    {
+      "char": 16311,
+      "text": "another example in a second, but I just want you to understand, you don't have to complica"
+    },
+    {
+      "char": 17756,
+      "text": "take a look at another example. So once again we are on NASDAQ on the five minute time fra"
+    }
+  ],
+  "statements": [
+    {
+      "label": "STOP-A / fair value CANDLE",
+      "statement": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle",
+      "char": 13869,
+      "context_char_span": [
+        13469,
+        14377
+      ],
+      "context": "ound about here. The actual entry would be around about here because this is a little dogey candle. the price is actually closing up here in the middle here, not down here, not up there. Uh, and we know this because we have wicks on either side of the candle. The body of the candle was in the middle, which is where it's ended up closing. So, the entry would actually be around about here. And then what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe. Okay, having very very tight stop losses aren't necessarily the smartest way to do this. You do need to give your trade a bit of room to breathe. And then all we're",
+      "example_index": 0,
+      "preceding_direction_markers": [
+        {
+          "token": "long",
+          "char": 12941
+        },
+        {
+          "token": "short tool",
+          "char": 13284
+        },
+        {
+          "token": "short",
+          "char": 13284
+        }
+      ]
+    },
+    {
+      "label": "STOP-B / fair value GAP",
+      "statement": "We would put our stop to the low of the fair value gap would be just there including the wick.",
+      "char": 18758,
+      "context_char_span": [
+        18358,
+        19252
+      ],
+      "context": "alue gap. So I can see that although it is a small fair value gap, it is still a fair value gap, right? The fair value gap is just ensuring that the high of candle one in this instance does not overlap the low of candle 3. And whilst it is a small fair value gap, it's still a model entry that we can take advantage of. So our entry would be at the candle close. So price would be around about here. We would put our stop to the low of the fair value gap would be just there including the wick. Okay. And once again we are doing a simple 2our target just to here. So we can go ahead and get this one ready for a buy. Our target here would be $1,900 with stop loss at the low of $940 at risk. So, let's go ahead and play this one out and see how it goes. Okay, target hit. So, almost $2,000 on that trade. And this one took a little bit more time, you know, a little bit longer than the one that",
+      "example_index": 2,
+      "preceding_direction_markers": [
+        {
+          "token": "another example",
+          "char": 17771
+        },
+        {
+          "token": "upside",
+          "char": 18173
+        },
+        {
+          "token": "upside",
+          "char": 18268
+        }
+      ]
+    }
+  ],
+  "same_example": false,
+  "worker_resolved_geometry": false,
+  "note": "Direction markers are MECHANICAL token hits in the preceding 1200 chars, not an interpretation. Whether the two statements are contradictory after context is left to GPT per AR-1200 \u00a76. No geometry decision was made here."
+}
