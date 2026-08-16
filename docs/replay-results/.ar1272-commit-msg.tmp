@@ -1,0 +1,19 @@
+AR-1272 WORKER: the one Opus calibration is spent; frozen eight still 0/8
+
+Executes AR-1271 10A-10G from the first BOUND Worker-1 seat.
+
+Frozen control plane verified identical before and after the single call:
+queue SHA 5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939,
+8 entries, attempts 0/8, receipts README-only, no .attempt/.dispatch/.raw/.completion.
+
+Agent to PreToolUse traversal remains NOT PROVEN: "allow" is non-discriminating
+(consistent with both "guard ran" and "hook never fired"), and the guard discards
+its own per-call audit record at claude-hook-bridge.mjs:329. The one discriminating
+test was deliberately refused rather than risk spending a frozen G2 attempt.
+
+F-4: a correctly-BOUND seat cannot write advisor-reports/ (measured: edit scope
+rejected, with a passing control write to docs/replay-results/), so delivery to
+origin/external-advisor/gpt-rulings needs a desk decision. Prior seats could publish
+only because they were unbound.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
