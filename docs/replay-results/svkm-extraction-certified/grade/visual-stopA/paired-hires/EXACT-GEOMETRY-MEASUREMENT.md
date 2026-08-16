@@ -120,3 +120,75 @@ symmetry stays fail-closed.**
   its candles were not; for STOP-A no candle high other than 343 lies near the stop.
 - Single frame per example. A drag still in progress would look identical to a settled placement;
   `00:12:55` was chosen because it is after the wick explanation ends at `00:12:49`.
+
+---
+
+# ADDENDUM — AR-1220 §5: PIXEL→PRICE CALIBRATION + SETTLED-FRAME CHECK
+
+**AR-1220 downgraded STOP-A from `CANDLE_EXTREME_CONFIRMED` to `VISUALLY_UNRESOLVED` for the
+exact object. This addendum calibrates the residual to price — and the downgrade is CORRECT.**
+
+## A. Calibration (§5A) — measured, not assumed
+
+The axis gridline labels were located programmatically (dark-glyph rows in the axis strip):
+
+```
+label rows y = 165, 218, 271, 324, 377, 430, 483, 536, 589   -> spacing exactly 53 px
+values       24,870 → 24,790 in 10-point steps
+=> 53 px per 10 points = 5.30 px per point   (MNQ tick = 0.25 pt = 1.33 px)
+```
+
+**Two independent confirmations that the scale is right** — the derived prices match the chart's
+own highlighted labels:
+
+| level | derived | chart's own label |
+|---|---|---|
+| STOP | `24,837.36` | `24,837.50` (partially occluded grey label) |
+| ENTRY | `24,795.85` | `24,795.25` (grey highlight) |
+
+## B. The candidates, in price
+
+| object | y | price |
+|---|---|---|
+| STOP line | 338 | **24,837.36** |
+| displacement candle HIGH | 343 | **24,836.42** |
+| FVG upper boundary | 350 | **24,835.09** |
+| ENTRY line | 558 | **24,795.85** |
+
+```
+stop − candle high  = 0.94 pts ≈ 3.8 ticks
+stop − FVG upper    = 2.26 pts ≈ 9.1 ticks
+```
+
+## C. What this settles, and what it does not
+
+- ✅ **The FVG-boundary hypothesis stays rejected** — 2.26 pts away, and on the far side of the
+  candle high.
+- ✅ **The candle-extreme family stays favoured** — nearer by ~2.4× in price, not just pixels.
+- 🛑 **The exact object remains `VISUALLY_UNRESOLVED`.** The plotted stop is **not** the wick
+  high: it sits **~1 point / ~4 ticks above it**. On MNQ that is economically real, not a
+  rounding artifact — so "the stop is the wick high" would be a false executable definition.
+
+**Per AR-1220 §5A, I am not inventing the residual as strategy logic.** The transcript teaches no
+numeric buffer, and one example cannot establish a consistent one. The teacher's *semantic*
+anchor remains the candle extreme including the wick; the ~4 ticks is an unexplained
+hand-placement offset, recorded as such and not promoted to a rule.
+
+## D. Settled-placement check (§5B) — PASSES
+
+The stop line is at `y = 338` at `x = 1000 / 1100 / 1200` in **four** frames:
+
+```
+00:12:52   [338, 338, 338]
+00:12:55   [338, 338, 338]
+00:12:58   [338, 338, 338]
+00:13:02   [338, 338, 338]
+```
+
+Spanning 10 seconds after the wick explanation ends (`00:12:49`). **The tool was not still being
+dragged**, so the measured level is the placed level.
+
+## E. STOP-B (§5C)
+
+Not re-attempted here. Its blocker is the picture-in-picture/UI contamination described above,
+and AR-1220 §5C says to stop rather than force symmetry from one ambiguous example.
