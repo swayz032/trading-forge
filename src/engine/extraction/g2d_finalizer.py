@@ -63,8 +63,21 @@ def _require(cond: bool, ref: str, what: str) -> None:
         raise FinalizationRefused(f"PROVENANCE REFUSED for {ref!r}: {what}")
 
 
+def _model_family_is_opus(value: str) -> bool:
+    """Does an EXPOSED model identity name the Opus family?
+
+    ⚠️ STATED ASSUMPTION, NOT A MEASURED FACT. AR-1259 §8 C says the exposed
+    `actual_model_identity` must be Opus but does not fix the string the runtime emits, and the
+    runtime emits a versioned name (`claude-opus-5`), not the bare word. A literal `== "opus"`
+    would refuse every honest completion the runtime can actually produce, so family membership
+    is read as a case-insensitive substring. If the runtime ever exposes a name that contains
+    "opus" without being Opus, this is the line that is wrong.
+    """
+    return "opus" in (value or "").lower()
+
+
 def collect_isolated_results(queue_path: str, receipt_dir: str) -> dict[str, str]:
-    """Read every stored raw isolated return and JOIN IT TO ITS DURABLE ATTEMPT (AR-1254 F-1).
+    """Read every stored raw isolated return and JOIN IT TO ITS COMPLETE QUARTET (AR-1260 §A).
 
     🛑 THE DEFECT THIS CLOSES, AND IT WAS MINE. The previous version located `<ref>.raw.json`,
     recomputed `sha256(raw_output)` and accepted the file if it matched its own recorded hash.
@@ -79,8 +92,26 @@ def collect_isolated_results(queue_path: str, receipt_dir: str) -> dict[str, str
     So a raw return is admissible only as one half of a matched pair, with BOTH halves joined to
     the exact frozen queue BYTES — not to the filename, which is attacker-chosen and was the only
     thing the old code trusted.
+
+    🛑 AR-1260 §A WIDENS THAT PAIR TO THE COMPLETE QUARTET, AND THE GAP WAS REAL
+        The pair above is `.attempt` + `.raw`. But the durable handoff writes FOUR files, and the
+        two this consumer never opened are the two that carry the call itself:
+
+            .attempt     the budget was claimed        (this consumer read it)
+            .dispatch    a call was actually issued    (NOT READ — so a raw return for a call
+                                                        that was never issued was admissible)
+            .raw         the text that came back       (this consumer read it)
+            .completion  the call actually finished    (NOT READ — so the half-written crash
+                                                        state read as a finished call)
+
+        All four must name the same condition, the same frozen `task_input_sha256`, the same
+        queue-artifact bytes, and `attempt_number == 1`. Anything less is a set of files that
+        happen to sit in one directory.
+
+    ★ `FOUR FILES ARE A CHAIN ONLY IF SOMETHING WALKS ALL FOUR LINKS. TWO OF THEM WERE DECOR.`
     """
     from .isolated_attempt_receipt import ATTEMPT_CLAIMED, DurableAttemptLedger, _safe_name
+    from .isolated_bridge import NATIVE_TASK_DISPATCHED, NOT_EXPOSED, RAW_RETURN_CAPTURED
 
     # Loading through the ledger re-verifies law version, substitution-rule hash and pinned
     # 64-hex source identities, and gives us the authoritative queue-artifact SHA.
@@ -90,25 +121,58 @@ def collect_isolated_results(queue_path: str, receipt_dir: str) -> dict[str, str
     out: dict[str, str] = {}
     for entry in ledger.queue["queue"]:
         ref = entry["condition_ref"]
-        a_path = os.path.join(receipt_dir, f"{_safe_name(ref)}.attempt.json")
-        r_path = os.path.join(receipt_dir, f"{_safe_name(ref)}.raw.json")
-        a_exists, r_exists = os.path.exists(a_path), os.path.exists(r_path)
+        paths = {
+            part: os.path.join(receipt_dir, f"{_safe_name(ref)}.{part}.json")
+            for part in ("attempt", "dispatch", "raw", "completion")
+        }
+        have = {part: os.path.exists(p) for part, p in paths.items()}
 
-        if not a_exists and not r_exists:
+        if not any(have.values()):
             continue                      # simply not attempted yet
-        if r_exists and not a_exists:
-            raise FinalizationRefused(
-                f"PROVENANCE REFUSED for {ref!r}: a raw return exists with NO durable attempt "
-                "receipt beside it. An orphan raw file is text of unknown origin — the attempt "
-                "receipt is the only thing that ties a return to the one authorized call."
-            )
-        if a_exists and not r_exists:
-            continue                      # crash-shaped: claimed, no answer. Spent, not usable.
 
-        with open(a_path, encoding="utf-8") as fh:
+        # --- §A: the quartet is walked in ORDER, and every hole is named ------------------- #
+        if not have["attempt"]:
+            raise FinalizationRefused(
+                f"PROVENANCE REFUSED for {ref!r}: {sorted(k for k, v in have.items() if v)} "
+                "exist with NO durable attempt receipt beside them. An orphan raw file is text "
+                "of unknown origin — the attempt receipt is the only thing that ties a return "
+                "to the one authorized call."
+            )
+        if have["completion"] and not have["dispatch"]:
+            raise FinalizationRefused(
+                f"PROVENANCE REFUSED for {ref!r}: a completion receipt exists with NO dispatch "
+                "receipt. A call cannot finish that was never issued; this completion attests to "
+                "a call for which no budgeted dispatch was ever recorded."
+            )
+        if have["raw"] and not have["dispatch"]:
+            raise FinalizationRefused(
+                f"PROVENANCE REFUSED for {ref!r}: a raw return exists with NO dispatch receipt. "
+                "The attempt receipt proves a budget was claimed; only the dispatch receipt "
+                "proves the one authorized call was actually issued."
+            )
+        if have["raw"] and not have["completion"]:
+            raise FinalizationRefused(
+                f"PROVENANCE REFUSED for {ref!r}: STRANDED/INCOMPLETE — a raw return exists with "
+                "NO completion receipt. The final transition is a two-file commit and only half "
+                "of it is on disk, so this call's outcome is unknown. It is not "
+                f"{RAW_RETURN_CAPTURED}, and it is not retried (AR-1260 §B)."
+            )
+        if have["completion"] and not have["raw"]:
+            raise FinalizationRefused(
+                f"PROVENANCE REFUSED for {ref!r}: a completion receipt exists with NO raw return. "
+                "A finished call with no answer stored is not evidence of an answer."
+            )
+        if not have["raw"]:
+            continue        # crash-shaped: claimed and/or dispatched, no answer. Spent, unusable.
+
+        with open(paths["attempt"], encoding="utf-8") as fh:
             att = json.load(fh)
-        with open(r_path, encoding="utf-8") as fh:
+        with open(paths["dispatch"], encoding="utf-8") as fh:
+            dsp = json.load(fh)
+        with open(paths["raw"], encoding="utf-8") as fh:
             rec = json.load(fh)
+        with open(paths["completion"], encoding="utf-8") as fh:
+            cmp_ = json.load(fh)
 
         _require(att.get("status") == ATTEMPT_CLAIMED, ref,
                  f"attempt status is {att.get('status')!r}, not {ATTEMPT_CLAIMED!r}")
@@ -126,6 +190,24 @@ def collect_isolated_results(queue_path: str, receipt_dir: str) -> dict[str, str
                  f"the attempt used invocation path {att.get('invocation_path')!r}, which is not "
                  f"an approved Claude Code subscription subagent path")
 
+        # --- .dispatch — the call was issued, once, for the authorized model --------------- #
+        _require(dsp.get("state") == NATIVE_TASK_DISPATCHED, ref,
+                 f"the dispatch receipt is in state {dsp.get('state')!r}, not "
+                 f"{NATIVE_TASK_DISPATCHED!r}")
+        _require(dsp.get("condition_ref") == ref, ref,
+                 f"the dispatch receipt names {dsp.get('condition_ref')!r}")
+        _require(dsp.get("task_input_sha256") == entry["task_input_sha256"], ref,
+                 "the dispatch's task_input_sha256 is not this queue entry's frozen value")
+        _require(dsp.get("queue_artifact_sha256") == queue_sha, ref,
+                 "the dispatch was issued against a DIFFERENT queue artifact")
+        _require(dsp.get("requested_model_identity") == APPROVED_MODEL_IDENTITY, ref,
+                 f"the dispatch requested model {dsp.get('requested_model_identity')!r}")
+        _require(dsp.get("invocation_path") in APPROVED_INVOCATION_PATHS, ref,
+                 f"the dispatch used invocation path {dsp.get('invocation_path')!r}, which is not "
+                 f"an approved Claude Code subscription subagent path")
+        _require(att.get("requested_model_identity") == dsp.get("requested_model_identity"), ref,
+                 "the attempt and the dispatch disagree about which model was requested")
+
         _require(rec.get("condition_ref") == ref, ref,
                  f"the raw record names {rec.get('condition_ref')!r}")
         _require(rec.get("queue_artifact_sha256") == queue_sha, ref,
@@ -136,6 +218,34 @@ def collect_isolated_results(queue_path: str, receipt_dir: str) -> dict[str, str
         _require(_sha(raw) == rec.get("raw_output_sha256"), ref,
                  "the stored raw return does not match its own recorded sha256 — it has been "
                  "altered since it was written")
+
+        # --- .completion — the call finished, and it is THIS call -------------------------- #
+        _require(cmp_.get("state") == RAW_RETURN_CAPTURED, ref,
+                 f"the completion receipt is in state {cmp_.get('state')!r}, not "
+                 f"{RAW_RETURN_CAPTURED!r}")
+        _require(cmp_.get("condition_ref") == ref, ref,
+                 f"the completion receipt names {cmp_.get('condition_ref')!r}")
+        _require(cmp_.get("task_input_sha256") == entry["task_input_sha256"], ref,
+                 "the completion's task_input_sha256 is not this queue entry's frozen value")
+        _require(cmp_.get("queue_artifact_sha256") == queue_sha, ref,
+                 "the completion was written against a DIFFERENT queue artifact")
+        _require(cmp_.get("raw_output_sha256") == rec.get("raw_output_sha256"), ref,
+                 "the completion receipt attests to a DIFFERENT raw return than the one stored")
+        # §C — the completion may not assert a model on its own authority. It must agree with the
+        # dispatch beside it, and a hard-coded 'opus' that contradicts its dispatch dies here.
+        _require(cmp_.get("requested_model_identity") == dsp.get("requested_model_identity"), ref,
+                 f"the completion claims requested model {cmp_.get('requested_model_identity')!r} "
+                 f"but the dispatch recorded {dsp.get('requested_model_identity')!r}")
+        actual = cmp_.get("actual_model_identity")
+        _require(actual == NOT_EXPOSED or _model_family_is_opus(actual), ref,
+                 f"the completion exposes actual model identity {actual!r}, which is not Opus. "
+                 f"Only {NOT_EXPOSED} is an acceptable non-answer here")
+        d_task, c_task = dsp.get("native_task_id"), cmp_.get("native_task_id")
+        if d_task not in (None, "", NOT_EXPOSED) and c_task not in (None, "", NOT_EXPOSED):
+            _require(d_task == c_task, ref,
+                     f"native task id mismatch: the dispatch recorded {d_task!r} and the "
+                     f"completion names {c_task!r} — two exposed identities that disagree "
+                     "describe two different calls")
 
         out[ref] = raw
     return out

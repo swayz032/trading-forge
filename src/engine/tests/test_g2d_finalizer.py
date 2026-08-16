@@ -277,47 +277,74 @@ def test_a_fidelity_defect_survives_a_literal_and_relevant_quote():
 # --------------------------------------------------------------------------- #
 
 
-def _receipts(tmp_path, claim=True, raw=Q_RANGE):
-    """Build a real queue artifact + real receipt directory via the real ledger."""
+def _receipts(tmp_path, through="full", raw=Q_RANGE):
+    """Build a real queue artifact + receipt directory by driving the REAL durable handoff.
+
+    AR-1260 §A: the admissible unit is the QUARTET, so the fixture builds it through the bridge
+    rather than by calling `persist_raw_return` directly. Driving the real transitions is what
+    makes the negative controls below negative controls rather than hand-built shapes that no
+    code path can actually produce.
+
+    `through` names the last stage reached:
+        "none" · "attempt" · "dispatch" · "raw" (STRANDED: no completion) · "full"
+    """
     from src.engine.extraction.isolated_attempt_receipt import DurableAttemptLedger
+    from src.engine.extraction.isolated_bridge import (
+        capture_native_return,
+        record_native_dispatch,
+    )
 
     q = _queue()
     qp = tmp_path / "queue.json"
     qp.write_text(json.dumps(q, indent=2), encoding="utf-8")
     rd = tmp_path / "receipts"
     led = DurableAttemptLedger.load(str(qp), str(rd))
-    if claim:
+
+    stages = ("none", "attempt", "dispatch", "raw", "full")
+    assert through in stages, through
+    reached = stages.index(through)
+
+    if reached >= 1:
         led.claim_attempt(R_RANGE, q["queue"][0]["task_input_sha256"])
-        if raw is not None:
-            led.persist_raw_return(R_RANGE, raw)
+    if reached >= 2:
+        record_native_dispatch(led, R_RANGE, native_task_id="task_fixture")
+    if reached >= 3:
+        capture_native_return(led, R_RANGE, raw, completion={"native_task_id": "task_fixture"})
+    if reached == 3:
+        # crash injection: the second file of the final two-file commit never landed
+        _path(rd, "completion").unlink()
     return q, str(qp), str(rd), led
 
 
-def _tamper(rd, suffix, **fields):
+def _path(rd, suffix, ref=R_RANGE):
     import pathlib
 
     from src.engine.extraction.isolated_attempt_receipt import _safe_name
 
-    p = pathlib.Path(rd) / f"{_safe_name(R_RANGE)}.{suffix}.json"
+    return pathlib.Path(rd) / f"{_safe_name(ref)}.{suffix}.json"
+
+
+def _tamper(rd, suffix, **fields):
+    p = _path(rd, suffix)
     rec = json.loads(p.read_text(encoding="utf-8"))
     rec.update(fields)
     p.write_text(json.dumps(rec, indent=2), encoding="utf-8")
     return p
 
 
-def test_POSITIVE_CONTROL_a_correctly_paired_attempt_and_raw_is_accepted(tmp_path):
+def test_POSITIVE_CONTROL_an_exact_valid_quartet_is_accepted(tmp_path):
     """Without this the refusals below prove only that nothing is ever accepted."""
     _q, qp, rd, _ = _receipts(tmp_path)
+    for part in ("attempt", "dispatch", "raw", "completion"):
+        assert _path(rd, part).exists(), f"the fixture did not build a real .{part} receipt"
     assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}
 
 
 def test_an_ORPHAN_raw_file_with_no_attempt_receipt_is_refused(tmp_path):
     """🛑 THE BYPASS AR-1254 F-1 FOUND. The old collector accepted this: the filename looked
     right and the hash recomputed correctly, and nothing required the attempt receipt."""
-    from src.engine.extraction.isolated_attempt_receipt import _safe_name
-
     _q, qp, rd, _ = _receipts(tmp_path)
-    (__import__("pathlib").Path(rd) / f"{_safe_name(R_RANGE)}.attempt.json").unlink()
+    _path(rd, "attempt").unlink()
 
     with pytest.raises(FinalizationRefused, match="NO durable attempt receipt"):
         collect_isolated_results(qp, rd)
@@ -329,9 +356,7 @@ def test_a_planted_orphan_raw_for_a_never_attempted_ref_is_refused(tmp_path):
     import hashlib
     import pathlib
 
-    from src.engine.extraction.isolated_attempt_receipt import _safe_name
-
-    q, qp, rd, _ = _receipts(tmp_path, claim=False)
+    q, qp, rd, _ = _receipts(tmp_path, through="none")
     pathlib.Path(rd).mkdir(parents=True, exist_ok=True)
     planted = "we mark the high and the low of the first five minute candle to build our range"
     rec = {
@@ -340,8 +365,7 @@ def test_a_planted_orphan_raw_for_a_never_attempted_ref_is_refused(tmp_path):
         "raw_output_sha256": hashlib.sha256(planted.encode("utf-8")).hexdigest(),
         "parsed": False,
     }
-    (pathlib.Path(rd) / f"{_safe_name(R_RANGE)}.raw.json").write_text(
-        json.dumps(rec), encoding="utf-8")
+    _path(rd, "raw").write_text(json.dumps(rec), encoding="utf-8")
 
     with pytest.raises(FinalizationRefused, match="NO durable attempt receipt"):
         collect_isolated_results(qp, rd)
@@ -350,10 +374,125 @@ def test_a_planted_orphan_raw_for_a_never_attempted_ref_is_refused(tmp_path):
 def test_a_crash_shaped_attempt_yields_no_result_and_finalization_refuses(tmp_path):
     """Attempt present, raw missing. Collection returns nothing for it — and finalization then
     refuses the whole set rather than grading eleven of twelve."""
-    _q, qp, rd, _ = _receipts(tmp_path, raw=None)
+    _q, qp, rd, _ = _receipts(tmp_path, through="attempt")
     assert collect_isolated_results(qp, rd) == {}
     with pytest.raises(FinalizationRefused, match="INCOMPLETE FINAL SET"):
         finalize(TRANSCRIPT, CONDITIONS, _batch(), _queue(), {})
+
+
+# --------------------------------------------------------------------------- #
+# AR-1260 §A — THE COMPLETE QUARTET. THE TWO LINKS THIS CONSUMER NEVER WALKED
+# --------------------------------------------------------------------------- #
+
+
+def test_attempt_and_raw_with_NO_dispatch_is_refused(tmp_path):
+    """🛑 The gap. `.attempt` + `.raw` was the whole admissible pair, so a raw return for a call
+    that was never issued satisfied the consumer completely."""
+    _q, qp, rd, _ = _receipts(tmp_path)
+    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}, "control must pass first"
+    _path(rd, "dispatch").unlink()
+
+    with pytest.raises(FinalizationRefused, match="NO dispatch receipt"):
+        collect_isolated_results(qp, rd)
+
+
+def test_attempt_dispatch_and_raw_with_NO_completion_is_refused_as_STRANDED(tmp_path):
+    """The crash state, seen from the consumer. Half of a two-file commit is not a finished call
+    and must not be graded as one."""
+    _q, qp, rd, _ = _receipts(tmp_path, through="raw")
+    assert _path(rd, "raw").exists() and not _path(rd, "completion").exists()
+
+    with pytest.raises(FinalizationRefused, match="STRANDED/INCOMPLETE"):
+        collect_isolated_results(qp, rd)
+
+
+def test_a_completion_without_a_dispatch_is_refused(tmp_path):
+    """A call cannot finish that was never issued."""
+    _q, qp, rd, _ = _receipts(tmp_path)
+    _path(rd, "dispatch").unlink()
+
+    with pytest.raises(FinalizationRefused, match="NO dispatch receipt"):
+        collect_isolated_results(qp, rd)
+
+
+def test_a_completion_with_no_raw_beside_it_is_refused(tmp_path):
+    """A finished call with no answer stored is not evidence of an answer."""
+    _q, qp, rd, _ = _receipts(tmp_path)
+    _path(rd, "raw").unlink()
+
+    with pytest.raises(FinalizationRefused, match="NO raw return"):
+        collect_isolated_results(qp, rd)
+
+
+def test_a_dispatch_with_no_attempt_is_refused(tmp_path):
+    """The budget claim is the first link; nothing downstream of it stands on its own."""
+    _q, qp, rd, _ = _receipts(tmp_path)
+    _path(rd, "attempt").unlink()
+    _path(rd, "raw").unlink()
+    _path(rd, "completion").unlink()
+
+    with pytest.raises(FinalizationRefused, match="NO durable attempt receipt"):
+        collect_isolated_results(qp, rd)
+
+
+@pytest.mark.parametrize(
+    "label,suffix,fields,match",
+    [
+        # ---- .dispatch: mismatched task id / condition / queue ---------------------------- #
+        ("dispatch names another condition", "dispatch",
+         {"condition_ref": "entry_sequence[9].action"}, "dispatch receipt names"),
+        ("dispatch task hash wrong", "dispatch",
+         {"task_input_sha256": "f" * 64}, "dispatch's task_input_sha256"),
+        ("dispatch issued against another queue", "dispatch",
+         {"queue_artifact_sha256": "e" * 64}, "DIFFERENT queue artifact"),
+        ("dispatch requested a non-Opus model", "dispatch",
+         {"requested_model_identity": "sonnet"}, "dispatch requested model"),
+        ("dispatch used an unapproved path", "dispatch",
+         {"invocation_path": "anthropic API key"}, "not an approved"),
+        ("dispatch state is not DISPATCHED", "dispatch",
+         {"state": "READY"}, "dispatch receipt is in state"),
+        # ---- .completion: mismatched task id / condition / queue -------------------------- #
+        ("completion names another condition", "completion",
+         {"condition_ref": "entry_sequence[9].action"}, "completion receipt names"),
+        ("completion task hash wrong", "completion",
+         {"task_input_sha256": "f" * 64}, "completion's task_input_sha256"),
+        ("completion written against another queue", "completion",
+         {"queue_artifact_sha256": "e" * 64}, "DIFFERENT queue artifact"),
+        ("completion attests to another raw return", "completion",
+         {"raw_output_sha256": "c" * 64}, "DIFFERENT raw return"),
+        ("completion state is not CAPTURED", "completion",
+         {"state": "NATIVE_TASK_DISPATCHED"}, "completion receipt is in state"),
+        ("completion hard-codes a model its dispatch never requested", "completion",
+         {"requested_model_identity": "sonnet"}, "completion claims requested model"),
+        ("completion exposes a non-Opus actual model", "completion",
+         {"actual_model_identity": "claude-sonnet-5"}, "which is not Opus"),
+        ("completion names a different native task id", "completion",
+         {"native_task_id": "task_zzz"}, "native task id mismatch"),
+    ],
+)
+def test_the_dispatch_and_completion_are_joined_not_assumed(
+    tmp_path, label, suffix, fields, match
+):
+    _q, qp, rd, _ = _receipts(tmp_path)
+    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}, "control must pass first"
+    _tamper(rd, suffix, **fields)
+    with pytest.raises(FinalizationRefused, match=match):
+        collect_isolated_results(qp, rd)
+
+
+def test_an_UNEXPOSED_actual_model_identity_is_accepted_as_an_honest_absence(tmp_path):
+    """Discrimination control for the actual-model check above: it must fire on a CONFLICTING
+    identity, not on the runtime declining to expose one. The Claude Code subscription runtime
+    genuinely does not surface this field, so refusing NOT_EXPOSED would refuse every real run."""
+    from src.engine.extraction.isolated_bridge import NOT_EXPOSED
+
+    _q, qp, rd, _ = _receipts(tmp_path)
+    _tamper(rd, "completion", actual_model_identity=NOT_EXPOSED)
+    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}
+
+    # ...and a VERSIONED Opus name is the family, not a conflict
+    _tamper(rd, "completion", actual_model_identity="claude-opus-5")
+    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}
 
 
 @pytest.mark.parametrize(

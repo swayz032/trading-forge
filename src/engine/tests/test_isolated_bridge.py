@@ -23,6 +23,7 @@ from src.engine.extraction.isolated_bridge import (
     NOT_EXPOSED,
     RAW_RETURN_CAPTURED,
     READY,
+    STRANDED_INCOMPLETE,
     bridge_report,
     capture_native_return,
     record_native_dispatch,
@@ -214,8 +215,181 @@ def test_the_report_partitions_every_queued_ref_exactly_once(rig):
     assert rep["complete"] == [REF]
     assert rep["unstarted"] == [OTHER]
     assert rep["stranded_mid_handoff"] == []
-    partitioned = sorted(rep["complete"] + rep["unstarted"] + rep["stranded_mid_handoff"])
+    assert rep["stranded_incomplete"] == []
+    partitioned = sorted(rep["complete"] + rep["unstarted"]
+                         + rep["stranded_mid_handoff"] + rep["stranded_incomplete"])
     assert partitioned == sorted(rep["states"])
+
+
+# --------------------------------------------------------------------------- #
+# 4. AR-1260 §B — THE FINAL TRANSITION IS A TWO-FILE COMMIT
+# --------------------------------------------------------------------------- #
+
+
+def _kill_completion(rig, ref=REF):
+    """Simulate the process dying between the two writes of the final commit, by deleting the
+    second file. This is a FAILURE INJECTION, not a tidy-up: the point is that what remains is
+    exactly what a crash would have left behind."""
+    import pathlib
+
+    from src.engine.extraction.isolated_attempt_receipt import _safe_name
+
+    p = pathlib.Path(rig[1]) / f"{_safe_name(ref)}.completion.json"
+    assert p.exists(), "positive witness: the completion receipt was written in the first place"
+    p.unlink()
+    return p
+
+
+def test_raw_without_a_completion_receipt_is_STRANDED_not_captured(rig):
+    """🛑 The defect. `state_of` used to answer RAW_RETURN_CAPTURED on the strength of `.raw`
+    alone, so a crash between the two writes produced a directory that read COMPLETE."""
+    _claim(rig)
+    record_native_dispatch(_led(rig), REF)
+    capture_native_return(_led(rig), REF, "an answer")
+    assert state_of(_led(rig), REF) == RAW_RETURN_CAPTURED, "control must pass first"
+
+    _kill_completion(rig)
+    assert state_of(_led(rig), REF) == STRANDED_INCOMPLETE
+
+
+def test_a_stranded_ref_is_reported_in_its_own_bucket(rig):
+    _claim(rig)
+    record_native_dispatch(_led(rig), REF)
+    capture_native_return(_led(rig), REF, "an answer")
+    _kill_completion(rig)
+
+    rep = bridge_report(_led(rig))
+    assert rep["stranded_incomplete"] == [REF]
+    assert rep["complete"] == []
+    assert rep["stranded_mid_handoff"] == []
+
+
+def test_a_stranded_ref_is_NOT_automatically_retried(rig):
+    """AR-1260 §B: the attempt was claimed, so it is spent. Recovery is a decision, not a state
+    transition this module may perform on its own."""
+    _claim(rig)
+    record_native_dispatch(_led(rig), REF)
+    capture_native_return(_led(rig), REF, "an answer")
+    _kill_completion(rig)
+
+    with pytest.raises(AttemptRefused, match="STRANDED_INCOMPLETE"):
+        capture_native_return(_led(rig), REF, "a second go at it")
+    with pytest.raises(AttemptRefused, match="already at state"):
+        record_native_dispatch(_led(rig), REF)
+    with pytest.raises(AttemptRefused):
+        _led(rig).claim_attempt(REF, _sha_for(_led(rig), REF))
+
+
+def test_a_refused_completion_contract_leaves_NO_raw_file_behind(rig):
+    """The order-of-operations half of §B. The old code wrote `.raw` first and validated the
+    completion contract afterwards, so a rejected metadata field produced the stranded state as
+    a matter of ROUTINE — no crash required."""
+    _claim(rig)
+    record_native_dispatch(_led(rig), REF)
+
+    with pytest.raises(AttemptRefused, match="unrecognised fields"):
+        capture_native_return(_led(rig), REF, "a quote", completion={"cost_in_dollars": 0.02})
+
+    assert state_of(_led(rig), REF) == NATIVE_TASK_DISPATCHED
+    assert not __import__("os").path.exists(_led(rig).raw_path(REF)), \
+        "a refusal left half of the final commit on disk"
+
+
+def test_a_completion_receipt_with_no_raw_beside_it_is_also_stranded(rig):
+    """The planted/salvaged shape. This module cannot produce it, so a reader must not treat it
+    as an absence — it is a half-state and is named as one."""
+    import pathlib
+
+    from src.engine.extraction.isolated_attempt_receipt import _safe_name
+
+    _claim(rig)
+    record_native_dispatch(_led(rig), REF)
+    capture_native_return(_led(rig), REF, "an answer")
+    (pathlib.Path(rig[1]) / f"{_safe_name(REF)}.raw.json").unlink()
+
+    assert state_of(_led(rig), REF) == STRANDED_INCOMPLETE
+
+
+# --------------------------------------------------------------------------- #
+# 5. AR-1260 §C — MODEL AND TASK IDENTITY ARE JOINED, NEVER RESTATED
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("model", ["sonnet", "haiku", "claude-opus-5", "Opus", ""])
+def test_record_native_dispatch_refuses_any_model_that_is_not_opus(rig, model):
+    """G2-D authorizes exactly one model. The old version recorded whatever it was handed, which
+    made the receipt an accurate record of an unauthorized call."""
+    _claim(rig)
+    with pytest.raises(AttemptRefused, match="is not 'opus'"):
+        record_native_dispatch(_led(rig), REF, requested_model_identity=model)
+
+
+def test_POSITIVE_CONTROL_opus_is_still_accepted(rig):
+    """Without this, the refusals above prove only that nothing is ever accepted."""
+    _claim(rig)
+    rec = record_native_dispatch(_led(rig), REF, requested_model_identity="opus")
+    assert rec["requested_model_identity"] == "opus"
+
+
+def test_the_completion_takes_its_requested_model_FROM_the_dispatch(rig):
+    """§C: `"requested_model_identity": "opus"` used to be a literal in the completion builder, so
+    the completion asserted a model on its own authority and nothing compared the two receipts.
+
+    Proven BEHAVIOURALLY, not by grepping the source: the dispatch receipt on disk is edited to
+    name a different model, and the completion must come back carrying THAT value. A source-text
+    assertion would pass on a comment and, when first written, this one failed against the
+    docstring that quotes the old literal."""
+    import pathlib
+
+    from src.engine.extraction.isolated_attempt_receipt import _safe_name
+
+    _claim(rig)
+    dispatch = record_native_dispatch(_led(rig), REF)
+    assert dispatch["requested_model_identity"] == "opus"
+
+    # drift the DISPATCH on disk — the finalizer will refuse this later, but the question here is
+    # only whether the completion READS it or RESTATES a literal.
+    p = pathlib.Path(rig[1]) / f"{_safe_name(REF)}.dispatch.json"
+    d = json.loads(p.read_text(encoding="utf-8"))
+    d["requested_model_identity"] = "sonnet-from-a-drifted-receipt"
+    p.write_text(json.dumps(d, indent=2), encoding="utf-8")
+
+    rec = capture_native_return(_led(rig), REF, "a quote")
+    assert rec["requested_model_identity"] == "sonnet-from-a-drifted-receipt", \
+        "the completion builder restated a model identity instead of joining the dispatch"
+
+
+def test_the_completion_carries_the_dispatchs_native_task_id_for_joining(rig):
+    _claim(rig)
+    record_native_dispatch(_led(rig), REF, native_task_id="task_abc")
+    rec = capture_native_return(_led(rig), REF, "a quote")
+    assert rec["dispatch_native_task_id"] == "task_abc"
+
+
+def test_two_exposed_task_ids_that_disagree_are_refused(rig):
+    _claim(rig)
+    record_native_dispatch(_led(rig), REF, native_task_id="task_abc")
+    with pytest.raises(AttemptRefused, match="native task id mismatch"):
+        capture_native_return(_led(rig), REF, "a quote",
+                              completion={"native_task_id": "task_zzz"})
+
+
+def test_matching_task_ids_are_accepted_and_an_unexposed_one_is_not_a_conflict(rig):
+    """Discrimination control for the test above: the refusal must fire on DISAGREEMENT, not on
+    the mere presence of the field."""
+    _claim(rig)
+    record_native_dispatch(_led(rig), REF, native_task_id="task_abc")
+    rec = capture_native_return(_led(rig), REF, "a quote",
+                                completion={"native_task_id": "task_abc"})
+    assert rec["native_task_id"] == "task_abc"
+
+    # OTHER: the dispatch exposed nothing, so there is no second identity to disagree with
+    _claim(rig, OTHER)
+    record_native_dispatch(_led(rig), OTHER)
+    rec2 = capture_native_return(_led(rig), OTHER, "another quote",
+                                 completion={"native_task_id": "task_late"})
+    assert rec2["dispatch_native_task_id"] == NOT_EXPOSED
+    assert rec2["native_task_id"] == "task_late"
 
 
 def test_each_ref_keeps_its_own_handoff(rig):
