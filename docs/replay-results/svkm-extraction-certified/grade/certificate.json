@@ -1,0 +1,242 @@
+{
+  "artifact": "svkm-grade-certificate",
+  "provenance_class": "GRADE_RUN_REAL \u2014 NOT CERTIFIED",
+  "tier3_verdicts_supplied": 0,
+  "tier3_support_supplied": 0,
+  "dry_run": false,
+  "note": "tier-3 fall-through items were NOT adjudicated: that requires a real blind rater (stage-1 role + stage-2 support). No verdict was manufactured.",
+  "results": [
+    {
+      "certificate": {
+        "conditions": [
+          {
+            "surface_class": "cannot-determine-at-tier-1",
+            "classifying_tier": null,
+            "quote_anchor": "",
+            "char_span": [
+              18462,
+              18580
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "cannot-determine-at-tier-1",
+            "classifying_tier": null,
+            "quote_anchor": "",
+            "char_span": [
+              19546,
+              19997
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "cannot-determine-at-tier-1",
+            "classifying_tier": null,
+            "quote_anchor": "",
+            "char_span": [
+              19546,
+              19757
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "cannot-determine-at-tier-1",
+            "classifying_tier": null,
+            "quote_anchor": "",
+            "char_span": [
+              19546,
+              19757
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "cannot-determine-at-tier-1",
+            "classifying_tier": null,
+            "quote_anchor": "",
+            "char_span": [
+              19546,
+              19757
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "cannot-determine-at-tier-1",
+            "classifying_tier": null,
+            "quote_anchor": "",
+            "char_span": [
+              19546,
+              19757
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "cannot-determine-at-tier-1",
+            "classifying_tier": null,
+            "quote_anchor": "",
+            "char_span": [
+              19546,
+              19757
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "unanchored",
+            "classifying_tier": null,
+            "quote_anchor": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
+            "char_span": [
+              -1,
+              -1
+            ],
+            "adjudication_verdict": null,
+            "condition_ref": "entry_sequence[0].action",
+            "anchor_reason": "proposed_quote_not_literal_substring"
+          },
+          {
+            "surface_class": "unanchored",
+            "classifying_tier": null,
+            "quote_anchor": "The breakout confirms the market direction (up or down) for the trade.",
+            "char_span": [
+              -1,
+              -1
+            ],
+            "adjudication_verdict": null,
+            "condition_ref": "entry_sequence[1].rationale",
+            "anchor_reason": "proposed_quote_not_literal_substring"
+          },
+          {
+            "surface_class": "unanchored",
+            "classifying_tier": null,
+            "quote_anchor": "The FVG provides a high-probability entry point after the initial directional breakout.",
+            "char_span": [
+              -1,
+              -1
+            ],
+            "adjudication_verdict": null,
+            "condition_ref": "entry_sequence[2].rationale",
+            "anchor_reason": "proposed_quote_not_literal_substring"
+          },
+          {
+            "surface_class": "unanchored",
+            "classifying_tier": null,
+            "quote_anchor": "The trade must be initiated during the 9:30 AM ET New York session.",
+            "char_span": [
+              -1,
+              -1
+            ],
+            "adjudication_verdict": null,
+            "condition_ref": "confluences[0].description",
+            "anchor_reason": "proposed_quote_not_literal_substring"
+          },
+          {
+            "surface_class": "unanchored",
+            "classifying_tier": null,
+            "quote_anchor": "The 1m candle must close outside of the initial 5m range.",
+            "char_span": [
+              -1,
+              -1
+            ],
+            "adjudication_verdict": null,
+            "condition_ref": "confluences[1].description",
+            "anchor_reason": "proposed_quote_not_literal_substring"
+          }
+        ],
+        "compile_integrity": {
+          "direction_conflation_lint": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "unsat_sat_check": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "or_alternatives_honored": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "f2_coverage_gate": {
+            "status": "PASS",
+            "reason": null,
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "causality_lint": {
+            "status": "PASS",
+            "reason": null,
+            "offending_anchor": null,
+            "offending_char_span": null,
+            "regex_leg_status": "PASS",
+            "same_bar_leg_status": "NOT_EVALUATED",
+            "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+          }
+        },
+        "terminal_read_grade": "INDETERMINATE",
+        "terminal_read_clean": false,
+        "terminal_read_disposition": {
+          "conflation_check": "NOT_EVALUATED",
+          "enumeration_consistency": "AXIS_ABSENT",
+          "direction_conflation_lint": "RE_STATIONED_TO_H2",
+          "unsat_sat_check": "RE_STATIONED_TO_H2",
+          "or_alternatives_honored": "RE_STATIONED_TO_H2",
+          "f2_coverage_gate": "PASS",
+          "causality_lint.regex_leg": "PASS",
+          "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+        },
+        "provenance": {
+          "source_video_id": "sVkmZklJDHI",
+          "full_transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+          "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-157741d7cc760ea5",
+          "taxonomy_version": "h1-pilot-2026-07-12",
+          "dry_run": false
+        },
+        "scope_line": null,
+        "pilot_grade": false,
+        "full_grade": false,
+        "full_grade_basis": {
+          "load_bearing_axes_policy": [
+            "conflation_verdict(semantic)",
+            "enumeration_consistency(semantic)",
+            "f2_coverage_gate",
+            "causality_lint.regex_leg",
+            "pilot_anchoring_classification"
+          ],
+          "per_certificate_axis_contributions": "see terminal_read_disposition",
+          "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+          "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+          "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+          "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+          "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+        },
+        "certificate_grade": false,
+        "axis3_audit": null,
+        "strategy_index": 0,
+        "unanchored_condition_count": 5,
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 5
+        },
+        "diagnosis": {
+          "unanchored": 5,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 7,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 0
+        },
+        "dry_run": false
+      },
+      "diagnosis": {
+        "unanchored": 5,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 7,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 0
+      }
+    }
+  ]
+}
