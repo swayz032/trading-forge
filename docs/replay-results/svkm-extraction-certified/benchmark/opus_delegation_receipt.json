@@ -3,7 +3,7 @@
   "authority": "AR-1232 §8 (what counts as a valid Opus run)",
   "invocation_method": "Claude Code Agent tool (subagent), model override = opus",
   "subagent_type": "general-purpose",
-  "agent_count": 24,
+  "agent_count": 36,
   "agent_labels": [
     "Locator task es0 action",
     "Locator task es0 rationale",
@@ -28,7 +28,19 @@
     "T2 confluences 0",
     "T2 confluences 1",
     "T2 stop rationale",
-    "T2 targets rationale"
+    "T2 targets rationale",
+    "T3 es0 action",
+    "T3 es0 rationale",
+    "T3 es1 action",
+    "T3 es1 rationale",
+    "T3 es2 action",
+    "T3 es2 rationale",
+    "T3 es3 action",
+    "T3 es3 rationale",
+    "T3 confluences 0",
+    "T3 confluences 1",
+    "T3 stop rationale",
+    "T3 targets rationale"
   ],
   "model_identity_reported": "opus",
   "model_identity_caveat": "strongest identity the execution path exposes; exact provider build string not available to the orchestrator and not invented",
@@ -176,9 +188,81 @@
       "trial": 2,
       "duration_ms": 8443,
       "subagent_tokens": 53056
+    },
+    {
+      "agent_label": "T3 es0 action",
+      "trial": 3,
+      "duration_ms": 9717,
+      "subagent_tokens": 53062
+    },
+    {
+      "agent_label": "T3 es0 rationale",
+      "trial": 3,
+      "duration_ms": 11886,
+      "subagent_tokens": 53312
+    },
+    {
+      "agent_label": "T3 es1 action",
+      "trial": 3,
+      "duration_ms": 8540,
+      "subagent_tokens": 53058
+    },
+    {
+      "agent_label": "T3 es1 rationale",
+      "trial": 3,
+      "duration_ms": 16536,
+      "subagent_tokens": 53050
+    },
+    {
+      "agent_label": "T3 es2 action",
+      "trial": 3,
+      "duration_ms": 7121,
+      "subagent_tokens": 53056
+    },
+    {
+      "agent_label": "T3 es2 rationale",
+      "trial": 3,
+      "duration_ms": 7907,
+      "subagent_tokens": 53056
+    },
+    {
+      "agent_label": "T3 es3 action",
+      "trial": 3,
+      "duration_ms": 9844,
+      "subagent_tokens": 53051
+    },
+    {
+      "agent_label": "T3 es3 rationale",
+      "trial": 3,
+      "duration_ms": 8696,
+      "subagent_tokens": 53058
+    },
+    {
+      "agent_label": "T3 confluences 0",
+      "trial": 3,
+      "duration_ms": 7469,
+      "subagent_tokens": 53039
+    },
+    {
+      "agent_label": "T3 confluences 1",
+      "trial": 3,
+      "duration_ms": 7585,
+      "subagent_tokens": 53035
+    },
+    {
+      "agent_label": "T3 stop rationale",
+      "trial": 3,
+      "duration_ms": 8480,
+      "subagent_tokens": 53053
+    },
+    {
+      "agent_label": "T3 targets rationale",
+      "trial": 3,
+      "duration_ms": 7872,
+      "subagent_tokens": 53050
     }
   ],
-  "total_subagent_tokens": 1273449,
+  "total_subagent_tokens": 1910329,
   "distinguishes_from_parent_prose": "each answer arrived as a separate Agent completion with its own duration and token count; the parent worker holds no transcript for any of them and never saw the task files' rendered contents in its own context",
   "frozen_packet_sha256": "fe6e73e1326ff50424bd905ed684c341479909e8e1482198c059b2e32d29bcd7",
   "frozen_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
@@ -186,5 +270,5 @@
   "frozen_extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
   "gemma_output_excluded_from_delegation": "CONFIRMED. Each delegation file contains only the frozen system prompt, one condition, and the pinned transcript (emit-tasks). The gemma run writes to a different artifact and no gemma output, prior span, adjudication label, or expected answer was in any prompt.",
   "read_only": "each subagent was instructed not to modify any file and not to read any other file; none holds write authority over the benchmark artifacts",
-  "trials": 2
+  "trials": 3
 }
