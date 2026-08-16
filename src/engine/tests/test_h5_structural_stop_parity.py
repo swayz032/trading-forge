@@ -285,9 +285,18 @@ class TestApplyTradeManagementStructuralStopParity:
 class TestApplyEligibilityGateStructuralStopMapSchema:
     def test_passthrough_mode_yields_empty_structural_stop_map(self):
         """htf_cache=None → passthrough mode; gate_stats["structural_stop_map"]
-        must still exist (empty dict) so callers can safely .get() it without
-        risking a KeyError — the additive schema change must not break the
-        pre-existing passthrough contract."""
+        must still exist so callers can safely .get() it without risking a
+        KeyError — the additive schema change must not break the pre-existing
+        passthrough contract.
+
+        AR-1216 §2/§3 STRENGTHENED THIS: the map must no longer be EMPTY on a
+        passthrough. Phase-0 mandatory risk now approves a real stop before this
+        early return, and that stop MUST be published to management here —
+        otherwise admission checks one stop and `_resolve_stop_risk_points` can
+        fall back to an ATR stop for management. The load-bearing intent of this
+        test (the key is always present and safely gettable) is preserved; only
+        the incidental emptiness, which was an artifact of nothing populating it,
+        is updated."""
         from src.engine.backtester import apply_eligibility_gate
 
         n = 10
@@ -304,9 +313,13 @@ class TestApplyEligibilityGateStructuralStopMapSchema:
             htf_cache=None,
         )
         assert gate_stats["mode"] == "passthrough_htf_unavailable"
-        assert gate_stats.get("structural_stop_map", "MISSING") == {}
+        smap = gate_stats.get("structural_stop_map", "MISSING")
+        assert smap != "MISSING", "the additive key must always be present"
         # Passthrough: signals pass through unfiltered.
         assert bool(filtered[3]) is True
+        # AR-1216: the surviving signal's Phase-0 stop must reach management.
+        assert 3 in smap, "a signal survived a passthrough with no exported stop plan"
+        assert smap[3]["stop_price"] and smap[3]["distance"] > 0
 
     def test_ablation_disabled_mode_yields_empty_structural_stop_map(self, monkeypatch):
         """TF_CONFLUENCE_OVERLAY_DISABLED=true early-return path must also carry

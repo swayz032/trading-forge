@@ -349,6 +349,19 @@ def apply_eligibility_gate(
             )
         else:
             _phase0_stop_plans[_p0_i] = _p0_plan
+            # AR-1216 §2/§3: PUBLISH TO MANAGEMENT HERE, not later inside the overlay loop.
+            # MEASURED defect this closes: on source_entry_only / no-HTF / per-bar-missing-HTF
+            # / unregistered-context-exception paths the run returned BEFORE the loop's map
+            # write, so structural_stop_map came back EMPTY even though Phase 0 had already
+            # approved a real stop — and `_resolve_stop_risk_points` can then fall back to an
+            # ATR management stop. Admission would have checked STOP A while management used
+            # STOP B, which is the exact divergence AR-1214 §4 forbade.
+            # One publication point, same schema as the loop's write below.
+            gate_stats["structural_stop_map"][_p0_i] = {
+                "distance": abs(float(_p0_close[_p0_i]) - _p0_plan.stop_price),
+                "stop_price": _p0_plan.stop_price,
+                "stop_reason": _p0_plan.stop_reason,
+            }
     # ─────────────────────────────────────────────────────────────────────────
 
     # ABLATION TOGGLE (2026-06-30, #4 two-mode backtest reporting): when TF_CONFLUENCE_OVERLAY_DISABLED=true the
@@ -533,11 +546,20 @@ def apply_eligibility_gate(
             # eventual TAKE/REDUCE/SKIP decision — cheap, and harmless for
             # SKIPped signals since they never become a trade and are never
             # looked up by the management loop.
-            gate_stats["structural_stop_map"][int(idx)] = {
-                "distance": abs(entry_price - stop_plan.stop_price),
-                "stop_price": stop_plan.stop_price,
-                "stop_reason": stop_plan.stop_reason,
-            }
+            # AR-1216 §3: Phase 0 already published this bar. The loop VERIFIES rather than
+            # re-publishing, so there is exactly one place a management stop is authored and
+            # any divergence is a loud failure instead of a silent overwrite.
+            _published = gate_stats["structural_stop_map"].get(int(idx))
+            if _published is None:
+                raise AssertionError(
+                    f"bar {int(idx)} survived Phase 0 but was never published to "
+                    "structural_stop_map"
+                )
+            if _published["stop_price"] != stop_plan.stop_price:
+                raise AssertionError(
+                    f"admission/management stop divergence at bar {int(idx)}: "
+                    f"published {_published['stop_price']} vs loop {stop_plan.stop_price}"
+                )
 
             # Structural targets
             target_plan = compute_targets(

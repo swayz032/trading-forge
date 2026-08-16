@@ -409,3 +409,147 @@ def test_red_d_control_source_entry_only_safe_stop_passes_through(monkeypatch):
     )
     assert stats.get("mode") == "source_entry_only"
     assert filtered[20], "a SAFE stop must still pass through source_entry_only"
+
+
+# --------------------------------------------------------------------------- #
+# AR-1216 §4 — ADMISSION -> MANAGEMENT STOP PARITY ACROSS EVERY BYPASS BOUNDARY
+#
+# Phase 0 approving a stop is not enough: the SAME stop must reach management. Before
+# this repair the map was published only inside the overlay loop, so every early
+# return/continue handed management an EMPTY map and `_resolve_stop_risk_points` could
+# fall back to an ATR stop — admission checks STOP A, management uses STOP B.
+#
+# The proof target is the IDENTITY of the stop, never "risk was checked".
+# --------------------------------------------------------------------------- #
+
+
+def _gate_with_safe_stop(monkeypatch, *, htf_cache, overlay_disabled=False, raise_ctx=False):
+    """Run the gate so Phase 0 approves a SAFE stop, then take a bypass boundary."""
+    import datetime as dt
+
+    import numpy as np
+    import polars as pl
+
+    from src.engine import backtester as bt
+
+    if overlay_disabled:
+        monkeypatch.setenv("TF_CONFLUENCE_OVERLAY_DISABLED", "true")
+    else:
+        monkeypatch.delenv("TF_CONFLUENCE_OVERLAY_DISABLED", raising=False)
+
+    n = 40
+    base = dt.datetime(2026, 1, 5, 14, 35)
+    df = pl.DataFrame({
+        "close": np.linspace(5000, 5010, n),
+        "ts_event": [base + dt.timedelta(minutes=i) for i in range(n)],
+        "high": np.linspace(5001, 5011, n), "low": np.linspace(4999, 5009, n),
+        "atr_14": np.full(n, 5.0),
+    })
+    entries = np.zeros(n, dtype=bool)
+    entries[20] = True
+    filtered, _, stats = bt.apply_eligibility_gate(
+        entries.copy(), np.zeros(n, dtype=bool), df, "long", "MES",
+        htf_cache=htf_cache, strategy_name=SVKM_NAME,
+    )
+    return filtered, stats
+
+
+def _assert_stop_exported(filtered, stats, bar=20):
+    assert bool(filtered[bar]), "the safe signal did not survive the bypass"
+    smap = stats.get("structural_stop_map")
+    assert smap, "structural_stop_map is EMPTY — management would fall back to ATR"
+    assert bar in smap, f"bar {bar} survived with no exported stop plan"
+    entry = smap[bar]
+    assert entry["stop_price"] > 0 and entry["distance"] > 0
+    assert entry["stop_reason"]
+    return entry
+
+
+def test_ar1216_a_source_entry_only_exports_the_phase0_stop(monkeypatch):
+    filtered, stats = _gate_with_safe_stop(
+        monkeypatch, htf_cache={"2026-01-05": _htf_stub()}, overlay_disabled=True)
+    assert stats["mode"] == "source_entry_only"
+    _assert_stop_exported(filtered, stats)
+
+
+def test_ar1216_b_top_level_no_htf_exports_the_phase0_stop(monkeypatch):
+    filtered, stats = _gate_with_safe_stop(monkeypatch, htf_cache=None)
+    assert stats["mode"] == "passthrough_htf_unavailable"
+    _assert_stop_exported(filtered, stats)
+
+
+def test_ar1216_c_per_bar_missing_htf_exports_the_phase0_stop(monkeypatch):
+    """Non-empty cache that lacks the signal's day — the per-bar `continue`."""
+    filtered, stats = _gate_with_safe_stop(
+        monkeypatch, htf_cache={"1999-01-01": _htf_stub()})
+    _assert_stop_exported(filtered, stats)
+
+
+def test_ar1216_d_unregistered_context_exception_exports_the_phase0_stop(monkeypatch):
+    """The optional-context error path: a bare object() raises inside session/bias work
+    AFTER Phase 0, the unregistered signal is kept — and its stop must still be exported."""
+    filtered, stats = _gate_with_safe_stop(
+        monkeypatch, htf_cache={"2026-01-05": object()})
+    assert stats["mode"] == "passthrough_strategy_unregistered"
+    _assert_stop_exported(filtered, stats)
+
+
+def test_ar1216_e_downstream_resolver_selects_the_phase0_distance(monkeypatch):
+    """§4 E — close the HANDOFF, not just the dictionary shape.
+
+    Feed a real exported map into the production resolver and prove it selects the
+    Phase-0 structural distance rather than an ATR stop.
+
+    BOTH lookup conventions are exercised, because they are different joins:
+      * source_faithful=True  -> key is the SIGNAL bar itself (entry on the decision bar)
+      * legacy                -> key is entry_idx - 1 (next-bar-fill roll), AND the branch
+        is gated behind BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED, which DEFAULTS FALSE.
+        Without setting it this test would silently exercise the ATR fallback while
+        appearing to prove structural selection.
+    """
+    from src.engine.backtester import _resolve_stop_risk_points
+
+    filtered, stats = _gate_with_safe_stop(monkeypatch, htf_cache=None)
+    exported = _assert_stop_exported(filtered, stats)
+    distinctive = exported["distance"]
+    atr_fallback = distinctive + 7.0  # deliberately different, so selection is observable
+    smap = {"long": stats["structural_stop_map"], "short": {}}
+
+    # (1) source-faithful convention: key == signal bar
+    risk_sf, basis_sf = _resolve_stop_risk_points(
+        entry_idx=20, is_short=False, atr_fallback_points=atr_fallback,
+        stop_ceiling=1000.0, structural_stop_map=smap, source_faithful=True,
+    )
+    assert risk_sf == pytest.approx(distinctive), (
+        f"source-faithful management resolved {risk_sf}, not the Phase-0 admission "
+        f"distance {distinctive} (ATR fallback was {atr_fallback})"
+    )
+    assert basis_sf == "source_exact"
+
+    # (2) legacy convention: key == entry_idx - 1, and the parity flag must be ON or the
+    #     structural branch is dead and this proves nothing.
+    monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+    risk_legacy, basis_legacy = _resolve_stop_risk_points(
+        entry_idx=21, is_short=False, atr_fallback_points=atr_fallback,
+        stop_ceiling=1000.0, structural_stop_map=smap, source_faithful=False,
+    )
+    assert basis_legacy == "structural", (
+        f"legacy management fell back to {basis_legacy!r} instead of the exported stop"
+    )
+    assert risk_legacy == pytest.approx(distinctive)
+
+
+def test_ar1216_e_negative_control_empty_map_does_not_resolve_structurally(monkeypatch):
+    """The control that makes E mean something: with an EMPTY map — the state this repair
+    fixed — management must NOT report a structural stop. If this also passed, E would be
+    proving nothing about the export."""
+    from src.engine.backtester import _resolve_stop_risk_points
+
+    monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")
+    risk, basis = _resolve_stop_risk_points(
+        entry_idx=21, is_short=False, atr_fallback_points=99.0,
+        stop_ceiling=1000.0, structural_stop_map={"long": {}, "short": {}},
+        source_faithful=False,
+    )
+    assert basis == "atr_fallback"
+    assert risk == pytest.approx(99.0)
