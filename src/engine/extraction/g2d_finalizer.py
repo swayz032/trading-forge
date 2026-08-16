@@ -54,31 +54,89 @@ def _sha(text: str) -> str:
     return hashlib.sha256((text or "").encode("utf-8")).hexdigest()
 
 
-def collect_isolated_results(queue: dict, receipt_dir: str) -> dict[str, str]:
-    """Read every stored raw isolated return, verifying each against its own recorded hash.
+APPROVED_INVOCATION_PATHS = frozenset({"fresh Claude Code subscription subagent"})
+APPROVED_MODEL_IDENTITY = "opus"
 
-    A raw artifact that no longer hashes to the value written beside it has been edited after
-    the fact, and it is refused rather than used — the raw store is the evidence the fallback
-    exists to preserve, so a mutated one invalidates the run rather than merely looking odd.
+
+def _require(cond: bool, ref: str, what: str) -> None:
+    if not cond:
+        raise FinalizationRefused(f"PROVENANCE REFUSED for {ref!r}: {what}")
+
+
+def collect_isolated_results(queue_path: str, receipt_dir: str) -> dict[str, str]:
+    """Read every stored raw isolated return and JOIN IT TO ITS DURABLE ATTEMPT (AR-1254 F-1).
+
+    🛑 THE DEFECT THIS CLOSES, AND IT WAS MINE. The previous version located `<ref>.raw.json`,
+    recomputed `sha256(raw_output)` and accepted the file if it matched its own recorded hash.
+    That proves only that the file is INTERNALLY SELF-CONSISTENT. It proves nothing about where
+    the text came from, so a planted orphan raw file with a correctly recomputed hash would have
+    been accepted — an end-to-end provenance bypass around a durable ledger that was otherwise
+    sound. **The ledger can be perfect and still be bypassed downstream by a consumer that
+    accepts an orphan.**
+
+    ★ `A FILE THAT AGREES WITH ITSELF IS NOT PROVENANCE. THE JOIN KEY IS THE ATTEMPT RECEIPT.`
+
+    So a raw return is admissible only as one half of a matched pair, with BOTH halves joined to
+    the exact frozen queue BYTES — not to the filename, which is attacker-chosen and was the only
+    thing the old code trusted.
     """
-    from .isolated_attempt_receipt import _safe_name
+    from .isolated_attempt_receipt import ATTEMPT_CLAIMED, DurableAttemptLedger, _safe_name
+
+    # Loading through the ledger re-verifies law version, substitution-rule hash and pinned
+    # 64-hex source identities, and gives us the authoritative queue-artifact SHA.
+    ledger = DurableAttemptLedger.load(queue_path, receipt_dir)
+    queue_sha = ledger.queue_sha256
 
     out: dict[str, str] = {}
-    for entry in queue["queue"]:
+    for entry in ledger.queue["queue"]:
         ref = entry["condition_ref"]
-        path = os.path.join(receipt_dir, f"{_safe_name(ref)}.raw.json")
-        if not os.path.exists(path):
-            continue
-        with open(path, encoding="utf-8") as fh:
-            rec = json.load(fh)
-        raw = rec.get("raw_output")
-        if _sha(raw) != rec.get("raw_output_sha256"):
+        a_path = os.path.join(receipt_dir, f"{_safe_name(ref)}.attempt.json")
+        r_path = os.path.join(receipt_dir, f"{_safe_name(ref)}.raw.json")
+        a_exists, r_exists = os.path.exists(a_path), os.path.exists(r_path)
+
+        if not a_exists and not r_exists:
+            continue                      # simply not attempted yet
+        if r_exists and not a_exists:
             raise FinalizationRefused(
-                f"the stored raw return for {ref!r} does not match its own recorded sha256. The "
-                "raw artifact has been altered since it was written; it is the pre-parse "
-                "evidence this run is built on, so the finalization refuses rather than "
-                "grading edited evidence."
+                f"PROVENANCE REFUSED for {ref!r}: a raw return exists with NO durable attempt "
+                "receipt beside it. An orphan raw file is text of unknown origin — the attempt "
+                "receipt is the only thing that ties a return to the one authorized call."
             )
+        if a_exists and not r_exists:
+            continue                      # crash-shaped: claimed, no answer. Spent, not usable.
+
+        with open(a_path, encoding="utf-8") as fh:
+            att = json.load(fh)
+        with open(r_path, encoding="utf-8") as fh:
+            rec = json.load(fh)
+
+        _require(att.get("status") == ATTEMPT_CLAIMED, ref,
+                 f"attempt status is {att.get('status')!r}, not {ATTEMPT_CLAIMED!r}")
+        _require(att.get("attempt_number") == 1, ref,
+                 f"attempt_number is {att.get('attempt_number')!r}, not 1")
+        _require(att.get("condition_ref") == ref, ref,
+                 f"the attempt receipt names {att.get('condition_ref')!r}")
+        _require(att.get("task_input_sha256") == entry["task_input_sha256"], ref,
+                 "the attempt's task_input_sha256 is not this queue entry's frozen value")
+        _require(att.get("queue_artifact_sha256") == queue_sha, ref,
+                 "the attempt was claimed against a DIFFERENT queue artifact")
+        _require(att.get("requested_model_identity") == APPROVED_MODEL_IDENTITY, ref,
+                 f"the attempt requested model {att.get('requested_model_identity')!r}")
+        _require(att.get("invocation_path") in APPROVED_INVOCATION_PATHS, ref,
+                 f"the attempt used invocation path {att.get('invocation_path')!r}, which is not "
+                 f"an approved Claude Code subscription subagent path")
+
+        _require(rec.get("condition_ref") == ref, ref,
+                 f"the raw record names {rec.get('condition_ref')!r}")
+        _require(rec.get("queue_artifact_sha256") == queue_sha, ref,
+                 "the raw record was written against a DIFFERENT queue artifact")
+        _require(rec.get("parsed") is False, ref,
+                 "the raw record is not marked parsed=false; it is not the pre-parse evidence")
+        raw = rec.get("raw_output")
+        _require(_sha(raw) == rec.get("raw_output_sha256"), ref,
+                 "the stored raw return does not match its own recorded sha256 — it has been "
+                 "altered since it was written")
+
         out[ref] = raw
     return out
 

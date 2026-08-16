@@ -272,30 +272,131 @@ def test_a_fidelity_defect_survives_a_literal_and_relevant_quote():
 # --------------------------------------------------------------------------- #
 
 
-def test_an_edited_raw_artifact_refuses_collection(tmp_path):
-    from src.engine.extraction.isolated_attempt_receipt import (
-        DurableAttemptLedger,
-        _safe_name,
-    )
+# --------------------------------------------------------------------------- #
+# D1.1 (AR-1254 F-1) — A RAW FILE IS ADMISSIBLE ONLY AS HALF OF A JOINED PAIR
+# --------------------------------------------------------------------------- #
+
+
+def _receipts(tmp_path, claim=True, raw=Q_RANGE):
+    """Build a real queue artifact + real receipt directory via the real ledger."""
+    from src.engine.extraction.isolated_attempt_receipt import DurableAttemptLedger
 
     q = _queue()
     qp = tmp_path / "queue.json"
-    qp.write_text(json.dumps(q), encoding="utf-8")
+    qp.write_text(json.dumps(q, indent=2), encoding="utf-8")
     rd = tmp_path / "receipts"
     led = DurableAttemptLedger.load(str(qp), str(rd))
-    led.claim_attempt(R_RANGE, q["queue"][0]["task_input_sha256"])
-    led.persist_raw_return(R_RANGE, Q_RANGE)
+    if claim:
+        led.claim_attempt(R_RANGE, q["queue"][0]["task_input_sha256"])
+        if raw is not None:
+            led.persist_raw_return(R_RANGE, raw)
+    return q, str(qp), str(rd), led
 
-    # honest read first — the positive control
-    assert collect_isolated_results(q, str(rd)) == {R_RANGE: Q_RANGE}
 
-    path = rd / f"{_safe_name(R_RANGE)}.raw.json"
-    rec = json.loads(path.read_text(encoding="utf-8"))
-    rec["raw_output"] = "a quietly improved quote"      # hash left untouched
-    path.write_text(json.dumps(rec), encoding="utf-8")
+def _tamper(rd, suffix, **fields):
+    import pathlib
 
-    with pytest.raises(FinalizationRefused, match="does not match its own recorded sha256"):
-        collect_isolated_results(q, str(rd))
+    from src.engine.extraction.isolated_attempt_receipt import _safe_name
+
+    p = pathlib.Path(rd) / f"{_safe_name(R_RANGE)}.{suffix}.json"
+    rec = json.loads(p.read_text(encoding="utf-8"))
+    rec.update(fields)
+    p.write_text(json.dumps(rec, indent=2), encoding="utf-8")
+    return p
+
+
+def test_POSITIVE_CONTROL_a_correctly_paired_attempt_and_raw_is_accepted(tmp_path):
+    """Without this the refusals below prove only that nothing is ever accepted."""
+    _q, qp, rd, _ = _receipts(tmp_path)
+    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}
+
+
+def test_an_ORPHAN_raw_file_with_no_attempt_receipt_is_refused(tmp_path):
+    """🛑 THE BYPASS AR-1254 F-1 FOUND. The old collector accepted this: the filename looked
+    right and the hash recomputed correctly, and nothing required the attempt receipt."""
+    from src.engine.extraction.isolated_attempt_receipt import _safe_name
+
+    _q, qp, rd, _ = _receipts(tmp_path)
+    (__import__("pathlib").Path(rd) / f"{_safe_name(R_RANGE)}.attempt.json").unlink()
+
+    with pytest.raises(FinalizationRefused, match="NO durable attempt receipt"):
+        collect_isolated_results(qp, rd)
+
+
+def test_a_planted_orphan_raw_for_a_never_attempted_ref_is_refused(tmp_path):
+    """The attacker-shaped version: no attempt was ever made, and a self-consistent raw file is
+    dropped in with the correct name and a correctly recomputed hash."""
+    import hashlib
+    import pathlib
+
+    from src.engine.extraction.isolated_attempt_receipt import _safe_name
+
+    q, qp, rd, _ = _receipts(tmp_path, claim=False)
+    pathlib.Path(rd).mkdir(parents=True, exist_ok=True)
+    planted = "we mark the high and the low of the first five minute candle to build our range"
+    rec = {
+        "condition_ref": R_RANGE,
+        "raw_output": planted,
+        "raw_output_sha256": hashlib.sha256(planted.encode("utf-8")).hexdigest(),
+        "parsed": False,
+    }
+    (pathlib.Path(rd) / f"{_safe_name(R_RANGE)}.raw.json").write_text(
+        json.dumps(rec), encoding="utf-8")
+
+    with pytest.raises(FinalizationRefused, match="NO durable attempt receipt"):
+        collect_isolated_results(qp, rd)
+
+
+def test_a_crash_shaped_attempt_yields_no_result_and_finalization_refuses(tmp_path):
+    """Attempt present, raw missing. Collection returns nothing for it — and finalization then
+    refuses the whole set rather than grading eleven of twelve."""
+    _q, qp, rd, _ = _receipts(tmp_path, raw=None)
+    assert collect_isolated_results(qp, rd) == {}
+    with pytest.raises(FinalizationRefused, match="INCOMPLETE FINAL SET"):
+        finalize(TRANSCRIPT, CONDITIONS, _batch(), _queue(), {})
+
+
+@pytest.mark.parametrize(
+    "label,suffix,fields,match",
+    [
+        ("attempt names another condition", "attempt",
+         {"condition_ref": "entry_sequence[9].action"}, "attempt receipt names"),
+        ("attempt task hash wrong", "attempt",
+         {"task_input_sha256": "f" * 64}, "not this queue entry's frozen value"),
+        ("attempt claimed against another queue", "attempt",
+         {"queue_artifact_sha256": "e" * 64}, "DIFFERENT queue artifact"),
+        ("attempt requested the wrong model", "attempt",
+         {"requested_model_identity": "haiku"}, "requested model"),
+        ("attempt used an unapproved path", "attempt",
+         {"invocation_path": "anthropic API key"}, "not an approved"),
+        ("attempt status is not the pre-call claim", "attempt",
+         {"status": "COMPLETED"}, "attempt status is"),
+        ("attempt number is not 1", "attempt",
+         {"attempt_number": 2}, "attempt_number is"),
+        ("raw names another condition", "raw",
+         {"condition_ref": "entry_sequence[9].action"}, "raw record names"),
+        ("raw written against another queue", "raw",
+         {"queue_artifact_sha256": "e" * 64}, "DIFFERENT queue artifact"),
+        ("raw is not pre-parse evidence", "raw",
+         {"parsed": True}, "not marked parsed=false"),
+        ("raw edited after the fact", "raw",
+         {"raw_output": "a quietly improved quote"}, "does not match its own recorded sha256"),
+    ],
+)
+def test_every_provenance_field_is_joined_not_assumed(tmp_path, label, suffix, fields, match):
+    _q, qp, rd, _ = _receipts(tmp_path)
+    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}, "control must pass first"
+    _tamper(rd, suffix, **fields)
+    with pytest.raises(FinalizationRefused, match=match):
+        collect_isolated_results(qp, rd)
+
+
+def test_the_filename_is_never_the_identity_join(tmp_path):
+    """The filename is attacker-chosen. Both records must name the ref themselves."""
+    _q, qp, rd, _ = _receipts(tmp_path)
+    _tamper(rd, "raw", condition_ref="entry_sequence[9].action")
+    with pytest.raises(FinalizationRefused, match="raw record names"):
+        collect_isolated_results(qp, rd)
 
 
 def test_the_final_machine_result_is_byte_stable_for_identical_inputs():
