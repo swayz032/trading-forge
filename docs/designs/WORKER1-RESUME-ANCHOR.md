@@ -5,36 +5,87 @@ session consumes a small resume packet, not the old conversation). **Overwrite t
 packet boundary — it describes the CURRENT boundary only, never history.**
 
 ```text
-LAST UPDATED    : 2026-08-16, by the AR-1268 seat, at its own session boundary
+LAST UPDATED    : 2026-08-16, by the AR-1268 seat, at its own session boundary, AFTER AR-1269 landed
 WORKTREE        : C:\Users\tonio\Projects\wt-claude-worker1-20260815
 BRANCH          : claude/worker1-h1-20260815
 HEAD            : refs/heads/claude/worker1-h1-20260815 — resolve it, do NOT pin it.
                   Committing this file moves the head it would name, so a SHA here is stale by
                   construction, one commit behind, forever.
 TOOLBOX         : claude/worker1-p1-toolbox-20260816 @ e0c44ca4  (pin == branch, no drift)
-LAST DELIVERED  : AR-1268 — seat pin d62b9b88, toolbox pin e0c44ca4. Both pushed and verified on
-                  origin by ls-remote. AWAITING GRADE.
-NEWEST RULING   : advisor-reports/AR-1267-GPT-EXTERNAL-ADVISOR-RULING-AR1266-P1-CONFIGURED-PARTIAL-PASS-PRECALL-STATE-MACHINE-AND-CACHE-REPAIR-REQUIRED-2026-08-16.md
+LAST DELIVERED  : AR-1268 — seat pin d62b9b88, toolbox pin e0c44ca4. GRADED by AR-1269:
+                  SUBSTANTIAL PARTIAL PASS. F-2/F-3/F-4 accepted at their mechanical scopes;
+                  §9H restraint given full credit; the frozen eight are pristine.
+NEWEST RULING   : advisor-reports/AR-1269-GPT-EXTERNAL-ADVISOR-RULING-AR1268-P1-PRECALL-PARTIAL-PASS-RECEIPT-AND-BASH-BOUNDARY-REPAIR-REQUIRED-2026-08-16.md
+                  (GPT branch head ab4ddbb3 — read it back from origin, it is not local)
 NEWEST WORKER AR: advisor-reports/AR-1268-WORKER-PRECALL-BOUNDARY-CLOSED-STALE-CACHE-CLAIM-DISPATCH-NATIVE-CALL-IDENTITY-2026-08-16.md
-                  (GPT branch head 05682688 — read it back from origin, it is not local)
-NEXT WORKER AR  : AR-1269
+NEXT WORKER AR  : AR-1270
 G2 BUDGET       : 0/8 spent. queue 5935b1c6… · 8 ready · receipt dir README-only.
-                  Re-measured AFTER the re-pin, not carried across it.
+                  Re-measured AFTER the re-pin, not carried across it. Confirmed independently
+                  by GPT against GitHub at d62b9b88.
 ```
 
-## Your assignment — READ AR-1267's SUCCESSOR FIRST. It is whatever GPT rules on AR-1268.
+## Your assignment — AR-1269 §6, items A–D. Read that ruling; it is the contract.
 
-AR-1267 §9 A–G are **delivered and ungraded**. Do not redo them, and do not start anything new
-until you have read the ruling on AR-1268.
+**Bounded trust-surface repair only.** AR-1269 §6: *"Do not reopen F-2/F-3/F-4. Do not redesign
+G2. Do not spend a frozen call."*
 
-🛑 **THE ONE THING STILL OPEN IS §9H, AND IT IS NOT YOURS TO SELF-AUTHORIZE.** The single non-G2
-Opus calibration needs an **explicit operator utterance in the live session** — AR-1267 §9H:
-*"Do not infer authorization from this markdown ruling alone."* The AR-1268 seat asked in plain
-English and the answer had not arrived at its boundary. **If the operator says the word, the
+```text
+A  self-protect the frozen QUEUE (exact) and the real RECEIPT NAMESPACE (prefix). Keep the
+   existing exact protections. The trusted transition/finalization code must still create
+   receipts through its own process path — do NOT replace the durable receipt law with
+   Claude Edit/Write. Mutation control: removing the receipt-prefix rule makes one forbidden
+   receipt write allowed again.
+B  close the BASH route around path self-protection. A protected-surface FENCE placed BEFORE
+   the generic mutation-spelling logic. 🛑 AR-1269 §5: "Do not repair this by adding two more
+   spellings such as `dd` or `os.write` to the blacklist. That is whack-a-mole, not a boundary."
+   Three shapes the current blacklist does NOT establish must DENY: an alternate file writer at
+   a protected file · an interpreter/low-level write into the receipt namespace · a direct Bash
+   invocation of g2d_precall_transition.py on the REAL control-plane paths. Plus a discriminator
+   proving ordinary Bash read/test work is not bricked. Controls must drive the REGISTERED HOOK
+   PATH, not bashMutationReason() in isolation.
+C  deliberate immutable re-pin -> recompute bundle -> update the real manifest -> registered-
+   command controls -> stale-cache control still bites -> read-only preflight 8 READY / 0 spent.
+D  synthetic receipts only. No .attempt/.dispatch/.raw/.completion may be created under the REAL
+   receipt directory by this packet.
+```
+
+🛑 **NO FROZEN G2-D CALL IS AUTHORIZED UNTIL F-5 AND F-6 ARE GREEN** and read back through the
+real registered doorway (AR-1269 §7).
+
+🛑 **§9H IS STILL OPEN AND STILL NOT YOURS TO SELF-AUTHORIZE.** The single non-G2 Opus calibration
+needs an **explicit operator utterance in the live session**; AR-1269 §7 says explicitly that the
+ruling *"does not manufacture the required operator utterance."* The AR-1268 seat asked in plain
+English and no answer had arrived at its boundary. **If the operator says the word,** the
 calibration must produce all four witnesses: a real native `Agent` dispatch traversing the
 installed PreToolUse hook · requested model Opus · actual model identity / task id / usage
-captured or honestly NOT_EXPOSED · the frozen eight untouched.** Calibration is NOT one of the
-eight.
+captured or honestly NOT_EXPOSED · the frozen eight untouched. Calibration is NOT one of the
+eight — but per §7 it is still gated behind F-5/F-6 for anything frozen.
+
+## The two findings you are inheriting (AR-1269 §4–§5)
+
+```text
+F-5 RED  the real RECEIPT namespace is directly worker-writable through the allowed
+         `docs/replay-results/` prefix, and outstandingCapture() treats a prior dispatch as
+         captured when `.raw` + `.completion` merely EXIST. So the worker can manufacture
+         file-existence state that clears the forced-capture stop and lets the next one-shot
+         call proceed with the previous answer uncaptured. Not DoS — control-plane integrity.
+         (AR-1268 reported this gap against itself; GPT confirmed it independently.)
+         ⚠ The QUEUE half is bounded and must NOT be overstated as an authorization bypass: the
+         native-call manifest pins the queue SHA and the guard compares it, so a queue edit
+         FAILS CLOSED. Protect it anyway; describe it accurately.
+F-6 RED  🛑 THE ONE AR-1268 MISSED, AND IT IS THE INSTRUCTIVE ONE. PreToolUse is registered for
+         `Edit|Write|NotebookEdit|Bash|Agent|Task`, but only the first three have their target
+         PATH extracted and run through SELF_PROTECTED_RULES. The Bash arm goes to
+         `bashMutationReason()`, a blacklist of mutation SPELLINGS (`sed -i`, `tee`, `rm`,
+         redirection, writeFileSync…). An unrecognised writer never reaches the path classifier
+         at all. Worse: `scripts/g2d_precall_transition.py` creates REAL receipts, so an allowed
+         Bash shape invoking it directly manufactures durable transition state with no native
+         dispatch behind it.
+         ★★★★★ A COMMAND-SPELLING BLACKLIST CANNOT SUPPORT A CATEGORICAL PATH CLAIM. AR-1268
+         wrote "the guarded worker cannot edit its own control surface" while only the
+         Edit/Write SURFACE was path-classified. The tests passed; the sentence was wider than
+         the mechanism. Scope the claim to the surface you actually classified.
+```
 
 ## What AR-1268 closed, so you do not re-derive it
 
@@ -87,9 +138,18 @@ memory   I asserted `attempt_status == "CLAIMED"` and `native_task_id == "NOT_EX
 tests    two previously-PASSING tests went RED on the model binding — the call they blessed
          carried no `model` field. That is the defect caught by its own suite. Update them to the
          new contract and KEEP the old shape as negative controls; never delete them.
-ear      the ear fired on this seat's OWN push to the GPT branch. That is the live delivery proof
-         a throwaway red-proof cannot give you. Arm yours; an orphan from a dead seat delivers to
-         nobody, and one was found running here again.
+ear      the ear fired on this seat's OWN push to the GPT branch, and then again when AR-1269
+         landed ~minutes later. That is the live delivery proof a throwaway red-proof cannot
+         give you. Arm yours; an orphan from a dead seat delivers to nobody, and one was found
+         running here again.
+headline 🛑 GRADED CORRECTION, AR-1269 §3 + §8. The AR-1268 headline said `PRECALL BOUNDARY
+         CLOSED`. GPT's grade: "FOUR REQUIRED REPAIRS PASS AT BOUNDED MECHANICAL SCOPE; FULL
+         TRUST BOUNDARY STILL OPEN." The body was honest and even reported one of the two
+         remaining gaps against itself — and the TITLE was still wider than the evidence, which
+         is the third consecutive packet to make that mistake (AR-1266's "P1 IS LIVE" was the
+         one before). ★★★★★ `A SELF-REPORTED CAVEAT IN THE BODY DOES NOT NARROW A CATEGORICAL
+         HEADLINE. Name the SURFACE and the SCOPE in the title: "…closed for Edit/Write" would
+         have been true and would have made F-6 obvious to me before GPT found it.`
 ```
 
 ## Still-open inherited items
@@ -97,11 +157,11 @@ ear      the ear fired on this seat's OWN push to the GPT branch. That is the li
 ```text
 §9H      calibration — operator utterance only. Blocks the real native event witness AND D1-C2.
 D1-C2    actual_model_identity remains UNWITNESSED. Do NOT widen APPROVED_ACTUAL_MODEL_IDENTITIES.
-grader   the independent grade on d62b9b88 is OWED and unspent. AR-1267 required none, and the
-         runtime boundary that gates §9H gates subagents generally. One word and it goes out.
-queue    🛑 REPORTED, NOT FIXED (AR-1268 §1): the frozen QUEUE and the real RECEIPT DIRECTORY sit
-         under docs/replay-results/, an ALLOWED prefix, and are NOT self-protected — the same
-         species as F-1 one level over. Pre-existing; §9 forbids broadening. Desk question.
+grader   the independent grade on d62b9b88 is OWED and unspent. Neither AR-1267 nor AR-1269
+         requires one, and the runtime boundary that gates §9H gates subagents generally.
+         One word from the operator and it goes out.
+queue    NOW ASSIGNED — it is AR-1270 item A. The AR-1268 seat reported it and did not fix it
+         because §9 forbade broadening; AR-1269 confirmed it and authorized the repair.
 subagent the frozen rows pin subagent_type 'general-purpose'. That is a reading of the live
          schema's isolation semantics, falsifiable in one calibration call. If the desk wants a
          different type the artifact must be RE-FROZEN BEFORE the first call, never after.
