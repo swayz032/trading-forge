@@ -5,8 +5,9 @@ session consumes a small resume packet, not the old conversation). **Overwrite t
 packet boundary — it describes the CURRENT boundary only, never history.**
 
 ```text
-LAST UPDATED    : 2026-08-16, by the seat that received GPT's AR-1271 ruling. That seat was again
-                  NOT guard-bound, so it ran NO Agent call and spent NOTHING (AR-1271 §10G).
+LAST UPDATED    : 2026-08-16, by the THIRD consecutive NOT-guard-bound seat. It ran NO Agent call
+                  and spent NOTHING (AR-1271 §10G). It did establish the ROOT CAUSE of the
+                  recurrence and de-risk the reseat — see "WHY EVERY DEFAULT SEAT IS UNBOUND".
 WORKTREE        : C:\Users\tonio\Projects\wt-claude-worker1-20260815
 BRANCH          : claude/worker1-h1-20260815
 HEAD            : refs/heads/claude/worker1-h1-20260815 — resolve it, do NOT pin it.
@@ -82,6 +83,61 @@ through `scripts/claude_guard_hook.mjs` — GPT independently confirmed this in 
 
 ★ `A CAPABILITY AUTHORIZED TO A SEAT THAT CANNOT EXERCISE IT IS NOT YET AUTHORIZED.`
 
+## 🛑 WHY EVERY DEFAULT SEAT IS UNBOUND — THE ROOT CAUSE, MEASURED 2026-08-16 (third seat)
+
+Two prior seats recorded *that* they were unbound. Neither recorded *why it keeps happening*, so
+the recurrence read as bad luck. It is not luck — it is structural, and it will repeat on every
+single seat that launches from the default directory:
+
+```text
+C:\Users\tonio\Projects\trading-forge  IS NOT A GIT REPOSITORY.
+  git -C C:\Users\tonio\Projects\trading-forge rev-parse --is-inside-work-tree
+  -> fatal: not a git repository (or any of the parent directories): .git
+The actual repo is one level DEEPER: C:\Users\tonio\Projects\trading-forge\trading-forge
+```
+
+That container folder is where Claude Code is being launched, so:
+
+- its `.claude/settings.json` is the one that binds, and it registers `grading-guard.ps1` /
+  `advisor-ruling-guard.ps1` on `Write|Edit|MultiEdit` — **`grep -c claude_guard_hook` = 0**, and
+  **no `Agent` and no `Task` matcher anywhere**;
+- `scripts/claude_guard_hook.mjs` **does not exist there at all** (`ls` -> No such file);
+- the user-level `~/.claude/settings.json` declares **no `hooks` key** at all.
+
+⇒ A seat launched from the default directory can never bind the Worker-1 guard, no matter how
+correct the worktree's own committed settings are. **Registration lives in the worktree; binding
+lives in the launch directory.** This is the same decoy that makes a bare `git ls-remote` resolve
+to nothing there (`[session-cwd-decoy-git]`) — one folder, two victims.
+
+### The remedy is a RESEAT, and it is one command
+
+```bash
+cd C:\Users\tonio\Projects\wt-claude-worker1-20260815
+claude
+```
+
+`[MEASURED]` there is **no** `--project-dir`/`--cwd` flag on this CLI (`claude --help`); `--add-dir`
+only widens tool access and `--settings` would not fix `$CLAUDE_PROJECT_DIR` expansion inside the
+registered hook command. **The launch directory is the only lever.**
+
+### 🛑 `EnterWorktree` IS NOT A REMEDY — do not burn a turn discovering this again
+
+`[MEASURED]` the tool requires the target to sit under `.claude/worktrees/` of the *current* repo,
+and requires the current directory to BE a repo. This worktree is at
+`C:\Users\tonio\Projects\wt-claude-worker1-20260815` — not under any `.claude/worktrees/` — and the
+launch dir is not a repo at all, so `path` is rejected on both counts. Passing `name` instead would
+CREATE a stray worktree in a governed repo, and an untracked/extra tree is exactly what the
+SessionStart gate is built to STOP on. **And even on success it switches a working directory, not a
+startup binding — §10A asks for the latter.**
+
+### Why the calibration was NOT run headlessly instead
+
+A `claude -p` child launched from the worktree would bind. It was deliberately not used: AR-1269A
+is a **one-shot, non-renewable** authorization (§10C "One means one"), §10D demands observed
+runtime witnesses, and §10A demands session-start evidence captured *before* the spend. Gambling a
+non-renewable authorization inside a nested process this seat cannot fully observe is the wrong
+trade. `[irreversible-gap]`: authorize and execute in separate motions.
+
 ## ✅ NEW AT THIS BOUNDARY — THE SEAT YOU ARE ABOUT TO TAKE IS **VERIFIED READY**
 
 AR-1270 proved its own seat was wrong. It did not prove the target seat is right. That gap is now
@@ -113,6 +169,25 @@ HOOK PAIR     Exactly TWO hooks registered — SessionStart + PreToolUse. TaskCo
 🛑 **RE-RUN THE ARM WITNESS YOURSELF AFTER SEATING.** The witness above was taken at this
 boundary's head; a head that moves is a measurement that decays. It is one command and it is the
 cheapest thing you will do all session.
+
+**`[RE-MEASURED 2026-08-16 at this boundary, third seat]` all four still hold.** The ARM line
+resolved live to `anchor verified on claude/worker1-h1-20260815 at <this head>` with the governed
+dirty exception `e200765c11e8` in force; the bogus-`_toolbox_pin` copy still produced
+`STOP: doorway failed closed: materialized toolbox pin 18108039… != … 0000…`; the dirty-diff hash
+recomputed **identical** to the manifest value; untracked files **0**. The doorway also
+rematerialized the real toolbox at pin `18108039…`, matching manifest and AR-1271 §5.
+⇒ **Nothing checkable in advance is broken. The reseat should arm on the first try.**
+
+### ★ CHEAP BINDING PROBE — use it BEFORE you spend the one Agent call
+
+The registered `PreToolUse` matcher is `Edit|Write|NotebookEdit|Bash|Agent|Task`. **`Bash` is on
+that list**, so an ordinary Bash call already traverses the same hook the calibration needs — no
+Agent call, nothing spent. Combined with the SessionStart `additionalContext` arriving in your own
+chat, that is two independent binding witnesses available for free.
+🛑 **Both are negative-capable and that is the point:** this seat saw **no** guard line in its
+SessionStart context and ran many Bash calls with no guard involvement — which is what being
+unbound looks like from the inside. **Absence of the guard line IS the unbound signal; do not read
+a quiet session as a protected one.** `AN UNARMED GUARD AND A PERMISSIVE ONE LOOK IDENTICAL.`
 
 ## GPT's AR-1271 dispositions you must not re-litigate
 
@@ -152,6 +227,12 @@ tmp      Windows `python` and git-bash disagree about `/tmp`: python wrote C:\tm
          its own tmp, and the redirect died with "No such file". A path is an instrument too.
          Use ONE explicit path both interpreters resolve identically — and NEVER write a scratch
          file inside the worktree, where an untracked file BLOCKS SessionStart.
+control  A fail-closed control DENIED for the WRONG REASON and nearly passed as the right one: the
+         scratchpad path was written msys-style, Windows `python` could not create the file, and
+         the guard answered "manifest not found" — a real DENY from a different mechanism than the
+         bad-pin one being tested. Caught only by reading the reason string, not the verdict.
+         ★ `A CONTROL THAT FAILS FOR THE WRONG REASON IS A GREEN CHECK ON AN UNTESTED PATH.`
+         Same `tmp` root cause as the row below; the fix is one explicit Windows path.
 orphan   An ear process from a dead seat was found running (parent PID gone from Win32_Process).
          It was NOT killed — you never kill an ear you did not arm — and it was NOT counted as
          mine, because its events reach a session that no longer exists.
