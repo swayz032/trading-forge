@@ -273,7 +273,6 @@ def apply_eligibility_gate(
     from src.engine.context.location_score import compute_location_score
     from src.engine.context.playbook_router import route_playbook
     from src.engine.context.session_context import compute_session_context
-    from src.engine.context.structural_stops import compute_structural_stop
     from src.engine.context.structural_targets import compute_targets
 
     # H5 fix (deep-scan #15, 2026-07-03): "structural_stop_map" captures, per
@@ -286,6 +285,71 @@ def apply_eligibility_gate(
         "total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}, "skipped_signals": [],
         "structural_stop_map": {},
     }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PHASE 0 — MANDATORY FRAMEWORK RISK (AR-1214 §4)
+    #
+    # Runs BEFORE every optional mode, passthrough and context dependency:
+    # source_entry_only, the no-HTF return, the per-bar missing-HTF `continue`,
+    # session/bias/playbook/location, and the registered/unregistered overlay
+    # behaviour. AR-1212 §3 measured the defect this closes: a signal could be kept
+    # while `compute_structural_stop` was never called even once, so a ceiling
+    # refusal could not exist.
+    #
+    # This is information-complete: AR-1214 §3 established, and the call below
+    # confirms, that this path's structural stop depends only on entry price, ATR,
+    # point value, tick size and the per-symbol ceiling — NO HTF/OB/FVG/swing input.
+    # Moving it earlier therefore loses nothing.
+    #
+    # NOT COMPUTED TWICE (§4 critical rule): the plan is stored per bar and REUSED by
+    # the overlay loop below, so admission and management cannot diverge on buffer,
+    # ceiling or timing.
+    # SKIP-NOT-CLAMP is preserved: a refused signal is REMOVED; its stop is never
+    # rewritten.
+    from src.engine.context.framework_refusal import evaluate_framework_risk
+    from src.engine.context.structural_stops import (
+        compute_structural_stop as _compute_structural_stop_phase0,
+    )
+
+    _p0_close = df["close"].to_numpy()
+    _p0_atr = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 0.0)
+    _p0_point_value = spec.point_value if spec else 5.0
+    _p0_tick_size = spec.tick_size if spec else 0.25
+    _phase0_stop_plans: dict = {}
+
+    # Measured telemetry (AR-1212 §6): incremented only where a stop plan really exists,
+    # so "not checked" can never be reported as "safe".
+    gate_stats["framework_risk_checked"] = 0
+    gate_stats["framework_risk_refused"] = 0
+
+    entry_signals = entry_signals.copy()
+    for _p0_idx in np.where(entry_signals)[0]:
+        _p0_i = int(_p0_idx)
+        _p0_atr_val = float(_p0_atr[_p0_i]) if not np.isnan(_p0_atr[_p0_i]) else 1.0
+        _p0_plan = _compute_structural_stop_phase0(
+            direction=direction,
+            entry_price=float(_p0_close[_p0_i]),
+            point_value=_p0_point_value,
+            atr=_p0_atr_val,
+            tick_size=_p0_tick_size,
+            symbol=symbol,
+            max_stop_points=_get_stop_ceiling_for_symbol(symbol),
+        )
+        gate_stats["framework_risk_checked"] += 1
+        _p0_refusal = evaluate_framework_risk(_p0_plan)
+        if _p0_refusal.refused:
+            entry_signals[_p0_i] = False
+            gate_stats["framework_risk_refused"] += 1
+            gate_stats["skip"] += 1
+            gate_stats["skip_reasons"]["framework_risk"] = (
+                gate_stats["skip_reasons"].get("framework_risk", 0) + 1
+            )
+            gate_stats["skipped_signals"].append(
+                {"bar_idx": _p0_i, "reason": _p0_refusal.reason}
+            )
+        else:
+            _phase0_stop_plans[_p0_i] = _p0_plan
+    # ─────────────────────────────────────────────────────────────────────────
 
     # ABLATION TOGGLE (2026-06-30, #4 two-mode backtest reporting): when TF_CONFLUENCE_OVERLAY_DISABLED=true the
     # institutional confluence overlay (this 7-layer A+ eligibility gate) is OFF, so the backtest measures the PURE
@@ -345,11 +409,6 @@ def apply_eligibility_gate(
         gate_stats["mode"] = "tf_institutional_overlay"
         _overlay_bypassed = False
 
-    # Measured framework-risk telemetry (AR-1212 §6). A bar that exits before the stop plan
-    # is built increments NOTHING, so these can never overstate coverage.
-    gate_stats["framework_risk_checked"] = 0
-    gate_stats["framework_risk_refused"] = 0
-
     filtered = entry_signals.copy()
     signal_indices = np.where(entry_signals)[0]
     gate_stats["total"] = len(signal_indices)
@@ -384,11 +443,10 @@ def apply_eligibility_gate(
     # VWAP (pass 0 if not available — location score gives neutral 8/15)
     has_vwap = "vwap" in df.columns
 
-    # ATR for stop/target computation
-    atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 0.0)
-
-    point_value = spec.point_value if spec else 5.0
-    tick_size = spec.tick_size if spec else 0.25
+    # ATR / point value / tick size are no longer read here: PHASE 0 above owns the
+    # structural-stop computation and the overlay loop reuses its plan (AR-1214 §4,
+    # "do not compute the stop twice"). Leaving the assignments would be dead code that
+    # implies a second, independent stop input set.
 
     # PER-LAYER ABLATION DISABLE (layer4-ablation 2026-07-02):
     # TF_OVERLAY_DISABLE_LAYERS=no_trade,kill_zone lets the ablation harness
@@ -459,16 +517,16 @@ def apply_eligibility_gate(
             # passed → sweep buffer also defaulted to MES 3-tick for ALL symbols.
             # FIX: use _get_stop_ceiling_for_symbol(symbol) so MNQ gets 62pt,
             # MCL gets 1.0pt, MES stays 14pt — matching the DSL path at :2064.
-            atr_val = float(atr_np[idx]) if not np.isnan(atr_np[idx]) else 1.0
-            stop_plan = compute_structural_stop(
-                direction=direction,
-                entry_price=entry_price,
-                point_value=point_value,
-                atr=atr_val,
-                tick_size=tick_size,
-                symbol=symbol,
-                max_stop_points=_get_stop_ceiling_for_symbol(symbol),
-            )
+            # REUSE Phase 0's plan (AR-1214 §4: "Do not compute the stop twice").
+            # Every surviving signal was checked and found safe there, so a miss here
+            # would mean the two phases disagree about which bars exist — fail loudly
+            # rather than silently recomputing a second, possibly different stop.
+            stop_plan = _phase0_stop_plans.get(int(idx))
+            if stop_plan is None:
+                raise AssertionError(
+                    f"Phase-0 stop plan missing for bar {int(idx)} — admission and "
+                    "management would diverge"
+                )
 
             # H5 fix (deep-scan #15, 2026-07-03): record the structural stop
             # distance for this admission bar. Recorded regardless of the
@@ -499,9 +557,6 @@ def apply_eligibility_gate(
                 "strategy_name": strategy_name or symbol,
                 "entry_price": entry_price,
             }
-            # The stop plan exists here, so framework risk is genuinely evaluable for THIS
-            # bar. Counted at the real check site, never stamped up-front.
-            gate_stats["framework_risk_checked"] += 1
             decision = evaluate_signal(
                 signal=signal_dict,
                 bias_state=bias_state,

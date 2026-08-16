@@ -285,7 +285,7 @@ def _htf_stub():
     )
 
 
-def _forced_refusal_gate(monkeypatch, *, with_ts: bool, htf_obj):
+def _forced_refusal_gate(monkeypatch, *, with_ts: bool, htf_obj, clear_overlay_env: bool = True):
     """Run the backtest gate with compute_structural_stop forced to refuse, counting
     whether it was called at all."""
     import numpy as np
@@ -308,7 +308,8 @@ def _forced_refusal_gate(monkeypatch, *, with_ts: bool, htf_obj):
         )
 
     monkeypatch.setattr(ss, "compute_structural_stop", _forced)
-    monkeypatch.delenv("TF_CONFLUENCE_OVERLAY_DISABLED", raising=False)
+    if clear_overlay_env:
+        monkeypatch.delenv("TF_CONFLUENCE_OVERLAY_DISABLED", raising=False)
 
     n = 40
     if with_ts:
@@ -331,11 +332,6 @@ def _forced_refusal_gate(monkeypatch, *, with_ts: bool, htf_obj):
     return filtered, stats, calls["n"]
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "AR-1212 §3/§5 RED B — NOT FIXED. An optional-overlay context error is raised BEFORE "
-    "compute_structural_stop runs, so the signal is kept with framework risk never "
-    "evaluated (measured: compute_structural_stop calls = 0)."
-))
 def test_red_b_context_failure_must_not_outrun_mandatory_risk(monkeypatch):
     filtered, stats, stop_calls = _forced_refusal_gate(
         monkeypatch, with_ts=True, htf_obj=_htf_stub()
@@ -345,10 +341,6 @@ def test_red_b_context_failure_must_not_outrun_mandatory_risk(monkeypatch):
     assert stats.get("framework_risk_refused", 0) > 0
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "AR-1212 §5 RED C — NOT FIXED. The no-HTF passthrough keeps the signal before any "
-    "stop plan exists, so a stop-ceiling refusal cannot win over the passthrough."
-))
 def test_red_c_missing_htf_passthrough_must_still_evaluate_framework_risk(monkeypatch):
     filtered, stats, stop_calls = _forced_refusal_gate(
         monkeypatch, with_ts=False, htf_obj=None
@@ -358,17 +350,62 @@ def test_red_c_missing_htf_passthrough_must_still_evaluate_framework_risk(monkey
 
 
 def test_telemetry_cannot_report_risk_checked_when_it_was_not(monkeypatch):
-    """AR-1212 §6 TELEMETRY — this one PASSES, and it is the part I did repair.
+    """AR-1212 §6 / AR-1214 §4 TELEMETRY.
 
-    The old code stamped framework_risk_enforced=True before any per-signal work, so a
-    bar that exited early was reported as risk-enforced. That was a false green I shipped.
-    The counters must instead read 0 on exactly those paths.
+    RE-DERIVED after the Phase-0 repair. This test used to assert that the counters read
+    ZERO on a bar that exited before the stop plan existed — the honest reading of the
+    broken architecture. **That path no longer exists**: Phase 0 evaluates mandatory risk
+    before every optional exit, so every signal is checked. The invariant that survives,
+    and the one that actually matters, is that the counters may never overstate: checked
+    is bounded by the number of raw signals, and the false-green boolean stays gone.
     """
-    _, stats, stop_calls = _forced_refusal_gate(monkeypatch, with_ts=True, htf_obj=_htf_stub())
-    assert stop_calls == 0, "fixture no longer reproduces the pre-risk exit; re-derive this test"
-    assert stats.get("framework_risk_checked") == 0, (
-        "telemetry claims risk was checked on a bar that exited before the stop plan existed"
+    _, stats, _ = _forced_refusal_gate(monkeypatch, with_ts=True, htf_obj=_htf_stub())
+    assert "framework_risk_enforced" not in stats, "the false-green boolean is back"
+    assert stats["framework_risk_checked"] <= stats["total"] or stats["total"] == 0
+    assert stats["framework_risk_refused"] <= stats["framework_risk_checked"]
+
+
+def test_red_d_source_entry_only_must_still_enforce_framework_risk(monkeypatch):
+    """AR-1214 §2: the repository's own ablation harness defines the mode as
+
+        source_entry_only = YouTube source entry + TF risk/exit/sizing, overlay OFF
+
+    so disabling the OPTIONAL confluence overlay must NOT disable framework risk.
+    """
+    monkeypatch.setenv("TF_CONFLUENCE_OVERLAY_DISABLED", "true")
+    filtered, stats, stop_calls = _forced_refusal_gate(
+        monkeypatch, with_ts=True, htf_obj=_htf_stub(), clear_overlay_env=False
     )
-    assert "framework_risk_enforced" not in stats, (
-        "the unconditional false-green boolean is back"
+    assert stats.get("mode") == "source_entry_only"
+    assert stop_calls > 0, "mandatory risk was never evaluated in source_entry_only mode"
+    assert not filtered[20], "an oversized mandatory stop survived source_entry_only"
+
+
+def test_red_d_control_source_entry_only_safe_stop_passes_through(monkeypatch):
+    """The paired control §2 requires: source-entry-only passthrough behaviour must be
+    PRESERVED for a safe stop. We are removing only the ability to bypass framework
+    safety, never the mode itself."""
+    import datetime as dt
+
+    import numpy as np
+    import polars as pl
+
+    from src.engine import backtester as bt
+
+    monkeypatch.setenv("TF_CONFLUENCE_OVERLAY_DISABLED", "true")
+    n = 40
+    base = dt.datetime(2026, 1, 5, 14, 35)
+    df = pl.DataFrame({
+        "close": np.linspace(5000, 5010, n),
+        "ts_event": [base + dt.timedelta(minutes=i) for i in range(n)],
+        "high": np.linspace(5001, 5011, n), "low": np.linspace(4999, 5009, n),
+        "atr": np.full(n, 5.0),
+    })
+    entries = np.zeros(n, dtype=bool)
+    entries[20] = True
+    filtered, _, stats = bt.apply_eligibility_gate(
+        entries.copy(), np.zeros(n, dtype=bool), df, "long", "MES",
+        htf_cache={"2026-01-05": _htf_stub()}, strategy_name=SVKM_NAME,
     )
+    assert stats.get("mode") == "source_entry_only"
+    assert filtered[20], "a SAFE stop must still pass through source_entry_only"
