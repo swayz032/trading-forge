@@ -5,8 +5,14 @@ was NOT assumed and is NOT concluded.
 
 | example | verdict |
 |---|---|
-| **STOP-A** (short, `00:12:55`, frame `467de65a…b72a`) | **`CANDLE_EXTREME_CONFIRMED`** — with a stated residual |
+| **STOP-A** (short, `00:12:55`, frame `467de65a…b72a`) | ~~`CANDLE_EXTREME_CONFIRMED`~~ **SUPERSEDED** → **`VISUALLY_UNRESOLVED`** (exact object); FVG boundary REJECTED; candle-extreme family strongly favoured. See the AR-1220 addendum. |
 | **STOP-B** (buy, `00:17:14`, frame `00480d5e…edc0`) | **`VISUALLY_UNRESOLVED`** — my instrument could not isolate the candle extremes |
+
+🛑 **THE STOP-A ROW ABOVE WAS DOWNGRADED BY AR-1220 §2 AND THE DOWNGRADE IS CORRECT.** My original
+`CONFIRMED` was too strong under the exact-machine-rule standard: my own §2.2 already stated that
+no candidate matched exactly, that a residual remained, and that I had no pixel→price conversion.
+The addendum supplies that conversion and the residual is **~4 ticks** — economically real.
+Struck rather than deleted, so the record shows what was claimed and when.
 
 ⇒ **DIRECTIONAL SYMMETRY IS NOT ESTABLISHED.** AR-1218 §5 permits concluding it only if *both*
 measured examples support the same rule. One of them does not resolve, so it stays open.
