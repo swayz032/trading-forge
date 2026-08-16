@@ -28,11 +28,13 @@ THE THREE ITEMS
 
 THE SET-LEVEL GATE
     Locations are adjudicated by `span_collision.adjudicate_locations` BEFORE acceptance
-    (§6.3). Cross-role reuse fails closed as REFUSED_PENDING_ADJUDICATION; same-role reuse is
-    kept and flagged (§6.4); a clean set passes untouched.
+    (§6.3). Cross-role reuse is HELD_FOR_ADJUDICATION; same-role reuse is kept and flagged
+    (§6.4); a clean set passes untouched.
 
-    🛑 A refusal is a statement about the SET, never a semantic verdict on the quote. This
-    driver does not decide which condition (if any) rightfully owns a contested span.
+    🛑 NOTHING IS AUTO-REFUSED. AR-1228 §9.5: "manually/adjudicatively inspect any HIGH
+    collision — do not auto-refuse solely on HIGH." A HOLD removes a condition from the
+    auto-accept path and hands it to an adjudicator; it is not a verdict on the quote, and
+    this driver never decides which condition rightfully owns a contested span.
 
 NON-DETERMINISM, STATED
     The propose step is a local gemma call and is NOT deterministic. Two runs may differ. This
@@ -74,7 +76,7 @@ EXTRACTION_PIN = "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec018
 POP_DIR = os.path.join(ROOT, "docs", "replay-results", "svkm-extraction-certified")
 EXTRACTION_PATH = os.path.join(POP_DIR, f"{VIDEO_ID}.json")
 GRADE_DIR = os.path.join(POP_DIR, "grade")
-DEFAULT_OUT = os.path.join(GRADE_DIR, "locator_reissue_v2.json")
+DEFAULT_OUT = os.path.join(GRADE_DIR, "locator_reissue_v2_run2.json")
 
 # §6.1: frozen history this driver may never write.
 FROZEN_OUTPUTS = ("phase1.json", "phase1_preps.pkl", "phase2_certificate.json", "certificate.json")
@@ -163,8 +165,8 @@ def main() -> int:
         for ref, v in located.items():
             v["acceptance"] = verdicts[ref]
 
-        accepted = [r for r, v in verdicts.items() if v["status"] != sc.STATUS_REFUSED_PENDING_ADJUDICATION]
-        refused = [r for r, v in verdicts.items() if v["status"] == sc.STATUS_REFUSED_PENDING_ADJUDICATION]
+        held = [r for r, v in verdicts.items() if v["status"] == sc.STATUS_HELD_FOR_ADJUDICATION]
+        accepted = [r for r in verdicts if r not in set(held)]
 
         strategy_views.append({
             "strategy_index": si,
@@ -188,10 +190,10 @@ def main() -> int:
             ],
             "collision_summary": sc.summarise(collisions),
             "accepted_condition_refs": sorted(accepted),
-            "refused_condition_refs": sorted(refused),
+            "held_for_adjudication_condition_refs": sorted(held),
         })
         print(f"[reissue] strategy {si}: located={len(located)} unlocated={len(unanchored)} "
-              f"collisions={sc.summarise(collisions)} accepted={len(accepted)} refused={len(refused)}",
+              f"collisions={sc.summarise(collisions)} accepted={len(accepted)} held={len(held)}",
               flush=True)
 
     rollup = {
@@ -199,7 +201,7 @@ def main() -> int:
         "located": sum(v["located_count"] for v in strategy_views),
         "unlocated": sum(v["unlocated_count"] for v in strategy_views),
         "accepted": sum(len(v["accepted_condition_refs"]) for v in strategy_views),
-        "refused_pending_adjudication": sum(len(v["refused_condition_refs"]) for v in strategy_views),
+        "held_for_adjudication": sum(len(v["held_for_adjudication_condition_refs"]) for v in strategy_views),
         "collisions_high": sum(v["collision_summary"]["high"] for v in strategy_views),
         "collisions_review": sum(v["collision_summary"]["review"] for v in strategy_views),
         "propose_abstain_by_parse_failure": p1.PROPOSE_ABSTAIN_BY_PARSE_FAILURE[0],

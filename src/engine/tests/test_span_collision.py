@@ -13,7 +13,7 @@ import pathlib
 from src.engine.extraction.span_collision import (
     STATUS_ACCEPTED,
     STATUS_ACCEPTED_PENDING_REVIEW,
-    STATUS_REFUSED_PENDING_ADJUDICATION,
+    STATUS_HELD_FOR_ADJUDICATION,
     adjudicate_locations,
     detect_span_collisions,
     role_of,
@@ -83,6 +83,46 @@ def test_substantial_overlap_cannot_be_evaded_by_trimming():
     assert collisions[0].severity == "HIGH"
 
 
+def test_a_transitive_overlap_chain_cannot_walk_out_of_the_check():
+    """🛑 AR-1228 §2's chain-overlap RED, and the gap it named was REAL.
+
+    Overlap is not transitive. A~B and B~C can both clear 0.80 while A~C does not:
+
+        A 1000-1200   B 1020-1220   C 1045-1245
+        A~B 0.90      B~C 0.875     A~C 0.775   <- below threshold
+
+    Under representative grouping (each new span compared only with a group's FIRST member)
+    C was compared against A, failed, and became a singleton — so it was dropped from the
+    report entirely and its role never entered the severity decision. Here that means the
+    `stop` role vanishes and a cross-role HIGH silently degrades to a same-role REVIEW: a
+    reuse chain escapes one step at a time.
+
+    Connected-component grouping is the fix. This test fails against representative grouping.
+    """
+    collisions = detect_span_collisions({
+        "entry_sequence[0].action": (1000, 1200),
+        "entry_sequence[1].action": (1020, 1220),
+        "stop.rationale": (1045, 1245),
+    })
+    assert len(collisions) == 1, f"the chain was split into separate groups: {collisions}"
+    assert set(collisions[0].condition_refs) == {
+        "entry_sequence[0].action", "entry_sequence[1].action", "stop.rationale",
+    }, collisions[0].condition_refs
+    assert collisions[0].severity == "HIGH", (
+        "the escaped member carried the second role; without it the group reads as same-role"
+    )
+
+
+def test_the_chain_control_is_not_vacuous_the_endpoints_really_do_not_overlap():
+    """The discriminator for the test above. If A and C DID substantially overlap, the chain
+    test would pass under representative grouping too and would prove nothing."""
+    from src.engine.extraction.span_collision import _overlap
+
+    assert _overlap((1000, 1200), (1020, 1220)) >= 0.80
+    assert _overlap((1020, 1220), (1045, 1245)) >= 0.80
+    assert _overlap((1000, 1200), (1045, 1245)) < 0.80
+
+
 def test_role_extraction():
     assert role_of("entry_sequence[2].action") == "entry_sequence"
     assert role_of("stop.rationale") == "stop"
@@ -99,33 +139,36 @@ def test_summary_counts():
 # --------------------------------------------------------------------------- #
 
 
-def test_acceptance_refuses_the_real_cross_role_cluster():
-    """🛑 THE NEGATIVE CONTROL AT THE ACCEPTANCE LAYER (item 5). Detecting the cluster is not
-    enough — §6.5 says it must never PASS as independently grounded conditions. Every member
-    of the real cross-role group must come back refused."""
+def test_acceptance_holds_the_real_cross_role_cluster():
+    """🛑 THE NEGATIVE CONTROL AT THE ACCEPTANCE LAYER (AR-1226 §6.5). Detecting the cluster is
+    not enough — it must never PASS as independently grounded conditions. Every member of the
+    real cross-role group must come back HELD.
+
+    HELD, not refused: AR-1228 §9.5 forbids auto-refusing solely on HIGH. The assertion below
+    is that the cluster leaves the auto-accept path, NOT that the machine convicted it."""
     verdicts, collisions = adjudicate_locations(_real_locations())
     high = [c for c in collisions if c.severity == "HIGH"]
     assert high, "no cross-role collision found; the acceptance control is vacuous"
 
     for ref in high[0].condition_refs:
-        assert verdicts[ref]["status"] == STATUS_REFUSED_PENDING_ADJUDICATION, (ref, verdicts[ref])
+        assert verdicts[ref]["status"] == STATUS_HELD_FOR_ADJUDICATION, (ref, verdicts[ref])
         assert verdicts[ref]["collides_with"], ref
 
-    refused = [r for r, v in verdicts.items() if v["status"] == STATUS_REFUSED_PENDING_ADJUDICATION]
-    assert len(refused) >= 5, refused
-    assert {"entry_sequence", "stop", "targets"} <= {role_of(r) for r in refused}
+    held = [r for r, v in verdicts.items() if v["status"] == STATUS_HELD_FOR_ADJUDICATION]
+    assert len(held) >= 5, held
+    assert {"entry_sequence", "stop", "targets"} <= {role_of(r) for r in held}
 
 
-def test_acceptance_does_not_refuse_same_role_reuse():
-    """THE POSITIVE CONTROL AT THE ACCEPTANCE LAYER (item 4). Same-role reuse is flagged for
-    adjudication and KEPT. A gate that refuses this would condemn legitimate evidence."""
+def test_acceptance_keeps_same_role_reuse():
+    """THE POSITIVE CONTROL AT THE ACCEPTANCE LAYER (item 4). Same-role reuse is flagged and
+    KEPT on the accept path. A gate that held this would condemn legitimate evidence."""
     verdicts, _ = adjudicate_locations({
         "entry_sequence[0].action": (100, 200),
         "entry_sequence[0].rationale": (100, 200),
     })
     for ref, v in verdicts.items():
         assert v["status"] == STATUS_ACCEPTED_PENDING_REVIEW, (ref, v)
-        assert v["status"] != STATUS_REFUSED_PENDING_ADJUDICATION
+        assert v["status"] != STATUS_HELD_FOR_ADJUDICATION
 
 
 def test_acceptance_passes_a_clean_set_untouched():

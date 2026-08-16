@@ -1,0 +1,367 @@
+{
+  "artifact": "svkm-locator-reissue-v2",
+  "authority": "AR-1226 \u00a76 LANE L1 items 1/2/6 (+ item 3 gate applied at acceptance)",
+  "run_label": "authoritative-run-2-post-AR1228",
+  "stage": "LOCATOR RE-ISSUE ONLY \u2014 not a certificate, not wired into the Phase-1 or certificate route (AR-1226 \u00a77)",
+  "does_not_supersede": "docs/replay-results/svkm-extraction-certified/grade/phase1.json (frozen AR-1199/Phase-1 history, unmodified)",
+  "non_determinism": "the propose step is a local gemma call and is not deterministic; this artifact records ONE locate pass per condition",
+  "provenance": {
+    "video_id": "sVkmZklJDHI",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "transcript_char_count": 25071,
+    "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+    "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-157741d7cc760ea5",
+    "taxonomy_version": "h1-pilot-2026-07-12",
+    "locator_model": "gemma4:e4b-it-qat",
+    "locator_module": "src/engine/extraction/anchor_locator.py",
+    "literal_fence": "compile_lints.f2_coverage_gate via anchor_locator._resolves_as_anchor \u2014 unchanged (AR-1226 \u00a76.2)"
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 12,
+      "located_count": 10,
+      "unlocated_count": 2,
+      "locations": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "condition_text": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
+          "char_span": [
+            19546,
+            19757
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "4f6ec704ac58593a56f9189d9a1aa2dcae0f637c254dc94abec34c1f4dd119df",
+          "quote_char_count": 211,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[1].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale",
+              "confluences[1].description",
+              "entry_sequence[3].action",
+              "entry_sequence[0].rationale",
+              "entry_sequence[2].action",
+              "entry_sequence[3].rationale",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "condition_text": "This establishes the initial volatility range for the trading session.",
+          "char_span": [
+            19574,
+            19757
+          ],
+          "quote": "this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "1b524dcc3eaf122c69058b4c526fd55bc39b16927860f0fc041c00bc4f09426e",
+          "quote_char_count": 183,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale",
+              "confluences[1].description",
+              "entry_sequence[3].action",
+              "entry_sequence[2].action",
+              "entry_sequence[3].rationale",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "condition_text": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
+          "char_span": [
+            19546,
+            19757
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "4f6ec704ac58593a56f9189d9a1aa2dcae0f637c254dc94abec34c1f4dd119df",
+          "quote_char_count": 211,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale",
+              "confluences[1].description",
+              "entry_sequence[3].action",
+              "entry_sequence[0].rationale",
+              "entry_sequence[2].action",
+              "entry_sequence[3].rationale",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "condition_text": "The breakout confirms the market direction (up or down) for the trade.",
+          "char_span": [
+            19546,
+            19757
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "4f6ec704ac58593a56f9189d9a1aa2dcae0f637c254dc94abec34c1f4dd119df",
+          "quote_char_count": 211,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].action",
+              "stop.rationale",
+              "confluences[1].description",
+              "entry_sequence[3].action",
+              "entry_sequence[0].rationale",
+              "entry_sequence[2].action",
+              "entry_sequence[3].rationale",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "condition_text": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
+          "char_span": [
+            19574,
+            19757
+          ],
+          "quote": "this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "1b524dcc3eaf122c69058b4c526fd55bc39b16927860f0fc041c00bc4f09426e",
+          "quote_char_count": 183,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale",
+              "confluences[1].description",
+              "entry_sequence[3].action",
+              "entry_sequence[0].rationale",
+              "entry_sequence[3].rationale",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "condition_text": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
+          "char_span": [
+            19546,
+            19997
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy. So, you have to be really comfortable with the idea that trades are going to lose. But if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+          "quote_sha256": "b0a6abc6ffd0fb64e335b12dde1d6719c42c3c81389302086f627017a6e61930",
+          "quote_char_count": 451,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale",
+              "confluences[1].description",
+              "entry_sequence[0].rationale",
+              "entry_sequence[2].action",
+              "entry_sequence[3].rationale",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "condition_text": "Entering on the closure confirms the FVG structure and minimizes entry risk.",
+          "char_span": [
+            19574,
+            19757
+          ],
+          "quote": "this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "1b524dcc3eaf122c69058b4c526fd55bc39b16927860f0fc041c00bc4f09426e",
+          "quote_char_count": 183,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale",
+              "confluences[1].description",
+              "entry_sequence[3].action",
+              "entry_sequence[0].rationale",
+              "entry_sequence[2].action",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "condition_text": "The 1m candle must close outside of the initial 5m range.",
+          "char_span": [
+            19546,
+            19997
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy. So, you have to be really comfortable with the idea that trades are going to lose. But if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+          "quote_sha256": "b0a6abc6ffd0fb64e335b12dde1d6719c42c3c81389302086f627017a6e61930",
+          "quote_char_count": 451,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale",
+              "entry_sequence[3].action",
+              "entry_sequence[0].rationale",
+              "entry_sequence[2].action",
+              "entry_sequence[3].rationale",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "condition_text": "The stop is placed at the bottom of the FVG candle, including the wick, to allow room for breathing.",
+          "char_span": [
+            19546,
+            19757
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "4f6ec704ac58593a56f9189d9a1aa2dcae0f637c254dc94abec34c1f4dd119df",
+          "quote_char_count": 211,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].action",
+              "entry_sequence[1].rationale",
+              "confluences[1].description",
+              "entry_sequence[3].action",
+              "entry_sequence[0].rationale",
+              "entry_sequence[2].action",
+              "entry_sequence[3].rationale",
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "condition_text": "The strategy uses a fixed mechanical target based on a 2R risk-to-reward ratio.",
+          "char_span": [
+            19574,
+            19757
+          ],
+          "quote": "this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "1b524dcc3eaf122c69058b4c526fd55bc39b16927860f0fc041c00bc4f09426e",
+          "quote_char_count": 183,
+          "acceptance": {
+            "status": "HELD_FOR_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale",
+              "confluences[1].description",
+              "entry_sequence[3].action",
+              "entry_sequence[0].rationale",
+              "entry_sequence[2].action",
+              "entry_sequence[3].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; held for adjudication \u2014 this is a review signal, not a refusal, and not a semantic conviction"
+          }
+        }
+      ],
+      "unlocated": [
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "condition_text": "The FVG provides a high-probability entry point after the initial directional breakout.",
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "condition_text": "The trade must be initiated during the 9:30 AM ET New York session.",
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "collisions": [
+        {
+          "span": [
+            19546,
+            19757
+          ],
+          "condition_refs": [
+            "entry_sequence[0].action",
+            "entry_sequence[1].action",
+            "entry_sequence[1].rationale",
+            "stop.rationale",
+            "confluences[1].description",
+            "entry_sequence[3].action",
+            "entry_sequence[0].rationale",
+            "entry_sequence[2].action",
+            "entry_sequence[3].rationale",
+            "targets[0].rationale"
+          ],
+          "roles": [
+            "confluences",
+            "entry_sequence",
+            "stop",
+            "targets"
+          ],
+          "severity": "HIGH",
+          "detail": "one source span is the evidence for 10 conditions spanning 4 different roles ['confluences', 'entry_sequence', 'stop', 'targets'] \u2014 conditions in different roles assert different facts and cannot all rest on the same sentence"
+        }
+      ],
+      "collision_summary": {
+        "collisions": 1,
+        "high": 1,
+        "review": 0
+      },
+      "accepted_condition_refs": [],
+      "held_for_adjudication_condition_refs": [
+        "confluences[1].description",
+        "entry_sequence[0].action",
+        "entry_sequence[0].rationale",
+        "entry_sequence[1].action",
+        "entry_sequence[1].rationale",
+        "entry_sequence[2].action",
+        "entry_sequence[3].action",
+        "entry_sequence[3].rationale",
+        "stop.rationale",
+        "targets[0].rationale"
+      ]
+    }
+  ],
+  "rollup": {
+    "spine_conditions": 12,
+    "located": 10,
+    "unlocated": 2,
+    "accepted": 0,
+    "held_for_adjudication": 10,
+    "collisions_high": 1,
+    "collisions_review": 0,
+    "propose_abstain_by_parse_failure": 0
+  }
+}

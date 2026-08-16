@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `62f8eac27a924f4b48bac8e7319fc0f9533c2e26`  (worktree DIRTY at generation time)
+> Generated at commit `586b091b9afdc8e12f1f41a96191291c1e44a490`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 302 | 394 | 125583 | 1944 |
+| `src/` | Python | 302 | 394 | 125607 | 1944 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -56,7 +56,7 @@ Published so that under-inclusion is visible instead of silent.
 | Not enumerated | Count | Why |
 |---|---:|---|
 | Python class methods | 440 | one row per method would swamp the map; a method is reached through its class |
-| Python nested / inner functions | 84 | not part of any module's import surface |
+| Python nested / inner functions | 86 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
 | `src/` test files | 1119 | tests are the reference surface, never the symbol surface |
 
@@ -1068,7 +1068,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1161** `BUILT-UNREACHABLE` symbols, **617 have test coverage but no production caller**.
+Of **1161** `BUILT-UNREACHABLE` symbols, **618 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1221,10 +1221,11 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `ScreenResult` | class | `src/engine/extraction/enumeration_guard.py:58` | 1 | unique |
 | `evaluate_guard1` | function | `src/engine/extraction/enumeration_guard.py:91` | 1 | unique |
 | `screen_enumeration_count` | function | `src/engine/extraction/enumeration_guard.py:64` | 1 | unique |
-| `adjudicate_locations` | function | `src/engine/extraction/span_collision.py:119` | 1 | unique |
+| `_overlap` | function | `src/engine/extraction/span_collision.py:55` | 1 | unique |
+| `adjudicate_locations` | function | `src/engine/extraction/span_collision.py:140` | 1 | unique |
 | `detect_span_collisions` | function | `src/engine/extraction/span_collision.py:63` | 1 | unique |
 | `role_of` | function | `src/engine/extraction/span_collision.py:49` | 1 | unique |
-| `summarise` | function | `src/engine/extraction/span_collision.py:183` | 1 | unique |
+| `summarise` | function | `src/engine/extraction/span_collision.py:207` | 1 | unique |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:848` | 1 | unique |
 | `enforcement_status` | function | `src/engine/family_meta_enforcement.py:536` | 1 | unique |
 | `reset_enforcement_cache` | function | `src/engine/family_meta_enforcement.py:613` | 1 | unique |
@@ -1381,9 +1382,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `selectConfluenceThresholdFromIS` | function | `src/server/lib/replay/confluence-disagreement.ts:227` | 1 | unique |
 | `computeCorrelationBase` | function | `src/server/lib/replay/correlation-base.ts:38` | 1 | unique |
 | `MIN_CRITIQUES_FOR_FULL_ANALYSIS` | const | `src/server/lib/replay/critique-disagreement.ts:30` | 1 | unique |
-| `PaperPositionRow` | interface | `src/server/lib/replay/critique-disagreement.ts:38` | 1 | unique |
 
-_...317 more omitted from this table._
+_...318 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1651,8 +1651,8 @@ _...317 more omitted from this table._
 | `role_of` | function | `src/engine/extraction/span_collision.py:49` | defining module is not reachable from any measured entry point |
 | `_overlap` | function | `src/engine/extraction/span_collision.py:55` | defining module is not reachable from any measured entry point |
 | `detect_span_collisions` | function | `src/engine/extraction/span_collision.py:63` | defining module is not reachable from any measured entry point |
-| `adjudicate_locations` | function | `src/engine/extraction/span_collision.py:119` | defining module is not reachable from any measured entry point |
-| `summarise` | function | `src/engine/extraction/span_collision.py:183` | defining module is not reachable from any measured entry point |
+| `adjudicate_locations` | function | `src/engine/extraction/span_collision.py:140` | defining module is not reachable from any measured entry point |
+| `summarise` | function | `src/engine/extraction/span_collision.py:207` | defining module is not reachable from any measured entry point |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:848` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `materialize_ambiguous_reference` | function | `src/engine/extraction/tier2_design_report.py:93` | no non-test reference outside its own definition |
 | `class_of` | function | `src/engine/extraction/tier2_discourse.BROKEN-a52-checkpoint.py:77` | defining module is not reachable from any measured entry point |

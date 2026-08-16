@@ -33,7 +33,7 @@ __all__ = [
     "adjudicate_locations",
     "STATUS_ACCEPTED",
     "STATUS_ACCEPTED_PENDING_REVIEW",
-    "STATUS_REFUSED_PENDING_ADJUDICATION",
+    "STATUS_HELD_FOR_ADJUDICATION",
 ]
 
 
@@ -74,14 +74,35 @@ def detect_span_collisions(
     NOT mean the bindings are correct, only that this particular blindness is absent.
     """
     items = [(ref, tuple(span)) for ref, span in (locations or {}).items() if span]
-    groups: list[list] = []
-    for ref, span in sorted(items, key=lambda x: (x[1], x[0])):
-        for g in groups:
-            if _overlap(g[0][1], span) >= substantial_overlap:
-                g.append((ref, span))
-                break
-        else:
-            groups.append([(ref, span)])
+    items.sort(key=lambda x: (x[1], x[0]))
+
+    # CONNECTED COMPONENTS over the "substantially overlaps" relation (AR-1228 §2).
+    # The earlier grouping compared each span only against the FIRST member of a group, so a
+    # transitive chain A~B~C with A!~C split C into its own singleton and dropped it from the
+    # report entirely — a reuse chain could walk out of the check one step at a time. Overlap
+    # is not transitive, so membership must be by connectivity, not by a representative.
+    parent = list(range(len(items)))
+
+    def _find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    def _union(i: int, j: int) -> None:
+        ri, rj = _find(i), _find(j)
+        if ri != rj:
+            parent[max(ri, rj)] = min(ri, rj)
+
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            if _overlap(items[i][1], items[j][1]) >= substantial_overlap:
+                _union(i, j)
+
+    by_root: dict[int, list] = {}
+    for idx, item in enumerate(items):
+        by_root.setdefault(_find(idx), []).append(item)
+    groups: list[list] = [by_root[r] for r in sorted(by_root)]
 
     out: list[SpanCollision] = []
     for g in groups:
@@ -113,7 +134,7 @@ def detect_span_collisions(
 
 STATUS_ACCEPTED = "ACCEPTED"
 STATUS_ACCEPTED_PENDING_REVIEW = "ACCEPTED_PENDING_REVIEW"
-STATUS_REFUSED_PENDING_ADJUDICATION = "REFUSED_PENDING_ADJUDICATION"
+STATUS_HELD_FOR_ADJUDICATION = "HELD_FOR_ADJUDICATION"
 
 
 def adjudicate_locations(
@@ -124,20 +145,23 @@ def adjudicate_locations(
     (AR-1226 §6.3, verbatim: "Add a duplicate-span collision diagnostic before accepting a
     location set").
 
-    🛑 A refusal here is NOT a claim that the quote is semantically wrong. It says the SET
-    cannot be accepted as N independently grounded conditions without adjudication — which
-    is why the status is `REFUSED_PENDING_ADJUDICATION` and never `WRONG`. Deciding which
-    (if any) member of a cross-role group keeps the span is an adjudication this module does
-    not make (§6.3: "expose/force adjudication, not invent that universal rule").
+    🛑 NOTHING HERE IS REFUSED. AR-1228 §9.5, verbatim: "manually/adjudicatively inspect any
+    HIGH collision — DO NOT AUTO-REFUSE SOLELY ON HIGH", and §2: "HIGH is a review signal, not
+    a semantic conviction … it exposes and forces adjudication; it does not decide."
 
-    The three tiers, and the second one is the one that keeps §6.4 honest:
+    So the strongest thing this module may do is REFUSE TO AUTO-ACCEPT. A held condition is
+    not rejected, not condemned, and not scored — it is removed from the auto-accept path and
+    handed to an adjudicator. Deciding which (if any) member of a cross-role group keeps the
+    span is that adjudicator's call, never this function's.
+
+    The three tiers:
 
       no reuse        -> ACCEPTED
-      same-role reuse -> ACCEPTED_PENDING_REVIEW  (flagged, NEVER auto-refused — closely
-                         related fields may legitimately rest on one sentence)
-      cross-role reuse-> REFUSED_PENDING_ADJUDICATION  (fails closed: an entry rule, a stop
-                         rule and a target rule assert different facts, so §6.5's cluster
-                         can never silently pass as independent grounded conditions again)
+      same-role reuse -> ACCEPTED_PENDING_REVIEW  (kept and flagged — closely related fields
+                         may legitimately rest on one sentence, AR-1226 §6.4)
+      cross-role reuse-> HELD_FOR_ADJUDICATION    (not accepted, not refused; §6.5's cluster
+                         can never silently pass as independent grounded conditions, and
+                         §9.5 forbids the machine calling it wrong)
 
     Returns `(verdicts, collisions)` where `verdicts` maps every condition_ref in
     `locations` to its status record. Refs with a falsy span are absent from both — an
@@ -159,9 +183,9 @@ def adjudicate_locations(
         severity = severity_of.get(ref)
         if severity == "HIGH":
             status, reason = (
-                STATUS_REFUSED_PENDING_ADJUDICATION,
-                "span is reused across different top-level roles; the set cannot be accepted "
-                "as independently grounded conditions until adjudicated",
+                STATUS_HELD_FOR_ADJUDICATION,
+                "span is reused across different top-level roles; held for adjudication — "
+                "this is a review signal, not a refusal, and not a semantic conviction",
             )
         elif severity == "REVIEW":
             status, reason = (
