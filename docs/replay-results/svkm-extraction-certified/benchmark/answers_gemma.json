@@ -1,0 +1,271 @@
+{
+  "artifact": "svkm-locator-benchmark-candidate-answers",
+  "benchmark_version": "svkm-locator-benchmark-v1",
+  "packet_sha256": "fe6e73e1326ff50424bd905ed684c341479909e8e1482198c059b2e32d29bcd7",
+  "candidate": {
+    "provider": "local ollama",
+    "model_identity": "gemma4:e4b-it-qat",
+    "invocation": "h1_pilot_phase1.robust_propose -> anchor_locator._default_propose_fn",
+    "generation_settings": {
+      "temperature": 0.1,
+      "top_p": 0.95,
+      "top_k": 64
+    },
+    "determinism": "SAMPLED, NOT DETERMINISTIC \u2014 a non-zero temperature with top_p/top_k sampling is requested explicitly (AR-1230 \u00a74). Repeat trials measure this, they do not remove it."
+  },
+  "trials": 3,
+  "answers": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text_sha256": "0f5bdd78abd1ada6c4d9190dba399d238196af204388c118c875c16701014f4d",
+      "trial": 1,
+      "raw_output": "If you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text_sha256": "ed11a7f96041753f6a1208792fd385a437efe881de836bd07b18ab128facfa24",
+      "trial": 1,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy. So, you have to be really comfortable with the idea that trades are going to lose. But if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text_sha256": "e8329d39731195b55c500b4294bc363444320c35e3a92e037a124cf162635a21",
+      "trial": 1,
+      "raw_output": "You don't have to complicate this. You don't have to make it any more than what you've just seen there. Keep it simple.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text_sha256": "4de8dfed136c14429198063df3717b7002098fca553cc05ab6c18d9185f000a8",
+      "trial": 1,
+      "raw_output": "if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text_sha256": "dcd6f76d57833209b6dba5c989c53071ff976c2916078888bbca4f03cf121ecb",
+      "trial": 1,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text_sha256": "00d7bcb0e827f3e9c05d4abe1e5824ccd78881d084ee4cb5d2a336feef4bdbeb",
+      "trial": 1,
+      "raw_output": "You don't have to complicate this. You don't have to make it any more than what you've just seen there. Keep it simple.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text_sha256": "be92970063ceae9bbe56fb4af79876691f5366f257e6657582f609815918e244",
+      "trial": 1,
+      "raw_output": "this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text_sha256": "20344ae28880cfa5d73125b06ab349f9e854a7eedc047f242d1a5864972fc168",
+      "trial": 1,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text_sha256": "c0461ef091d7e5b1220c46a5e18ac5b1a181aebf8ecc8f7eb66097fc69869da1",
+      "trial": 1,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text_sha256": "70cfd2748209d9ccfce4ab89abece0eeb43cd5eee52a62d3480afd6186babeca",
+      "trial": 1,
+      "raw_output": "If you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text_sha256": "79b86a32baab21048d566a962382ad1d2efaff17782933e19fc28aeb59d7e727",
+      "trial": 1,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy. So, you have to be really comfortable with the idea that trades are going to lose. But if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text_sha256": "f8ccba4cadd53571b4cb08445a683572853c3cd53e347c2fb66fb0d3a4e2a705",
+      "trial": 1,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text_sha256": "0f5bdd78abd1ada6c4d9190dba399d238196af204388c118c875c16701014f4d",
+      "trial": 2,
+      "raw_output": "If you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text_sha256": "ed11a7f96041753f6a1208792fd385a437efe881de836bd07b18ab128facfa24",
+      "trial": 2,
+      "raw_output": "You don't have to complicate this. You don't have to make it any more than what you've just seen there. Keep it simple.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text_sha256": "e8329d39731195b55c500b4294bc363444320c35e3a92e037a124cf162635a21",
+      "trial": 2,
+      "raw_output": "The fair value gap is just ensuring that the high of candle one in this instance does not overlap the low of candle 3.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text_sha256": "4de8dfed136c14429198063df3717b7002098fca553cc05ab6c18d9185f000a8",
+      "trial": 2,
+      "raw_output": "This model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text_sha256": "dcd6f76d57833209b6dba5c989c53071ff976c2916078888bbca4f03cf121ecb",
+      "trial": 2,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text_sha256": "00d7bcb0e827f3e9c05d4abe1e5824ccd78881d084ee4cb5d2a336feef4bdbeb",
+      "trial": 2,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text_sha256": "be92970063ceae9bbe56fb4af79876691f5366f257e6657582f609815918e244",
+      "trial": 2,
+      "raw_output": "You don't have to complicate this. You don't have to make it any more than what you've just seen there. Keep it simple.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text_sha256": "20344ae28880cfa5d73125b06ab349f9e854a7eedc047f242d1a5864972fc168",
+      "trial": 2,
+      "raw_output": "This model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text_sha256": "c0461ef091d7e5b1220c46a5e18ac5b1a181aebf8ecc8f7eb66097fc69869da1",
+      "trial": 2,
+      "raw_output": "If you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text_sha256": "70cfd2748209d9ccfce4ab89abece0eeb43cd5eee52a62d3480afd6186babeca",
+      "trial": 2,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy. So, you have to be really comfortable with the idea that trades are going to lose. But if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text_sha256": "79b86a32baab21048d566a962382ad1d2efaff17782933e19fc28aeb59d7e727",
+      "trial": 2,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text_sha256": "f8ccba4cadd53571b4cb08445a683572853c3cd53e347c2fb66fb0d3a4e2a705",
+      "trial": 2,
+      "raw_output": "So our entry would be at the candle close. So price would be around about here. We would put our stop to the low of the fair value gap would be just there including the wick.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text_sha256": "0f5bdd78abd1ada6c4d9190dba399d238196af204388c118c875c16701014f4d",
+      "trial": 3,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text_sha256": "ed11a7f96041753f6a1208792fd385a437efe881de836bd07b18ab128facfa24",
+      "trial": 3,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text_sha256": "e8329d39731195b55c500b4294bc363444320c35e3a92e037a124cf162635a21",
+      "trial": 3,
+      "raw_output": "profit very, very quickly with this trade.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text_sha256": "4de8dfed136c14429198063df3717b7002098fca553cc05ab6c18d9185f000a8",
+      "trial": 3,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text_sha256": "dcd6f76d57833209b6dba5c989c53071ff976c2916078888bbca4f03cf121ecb",
+      "trial": 3,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text_sha256": "00d7bcb0e827f3e9c05d4abe1e5824ccd78881d084ee4cb5d2a336feef4bdbeb",
+      "trial": 3,
+      "raw_output": "This model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text_sha256": "be92970063ceae9bbe56fb4af79876691f5366f257e6657582f609815918e244",
+      "trial": 3,
+      "raw_output": "This model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text_sha256": "20344ae28880cfa5d73125b06ab349f9e854a7eedc047f242d1a5864972fc168",
+      "trial": 3,
+      "raw_output": "if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text_sha256": "c0461ef091d7e5b1220c46a5e18ac5b1a181aebf8ecc8f7eb66097fc69869da1",
+      "trial": 3,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text_sha256": "70cfd2748209d9ccfce4ab89abece0eeb43cd5eee52a62d3480afd6186babeca",
+      "trial": 3,
+      "raw_output": "this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy. So, you have to be really comfortable with the idea that trades are going to lose. But if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text_sha256": "79b86a32baab21048d566a962382ad1d2efaff17782933e19fc28aeb59d7e727",
+      "trial": 3,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy. So, you have to be really comfortable with the idea that trades are going to lose. But if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+      "abstained": false
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text_sha256": "f8ccba4cadd53571b4cb08445a683572853c3cd53e347c2fb66fb0d3a4e2a705",
+      "trial": 3,
+      "raw_output": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+      "abstained": false
+    }
+  ]
+}

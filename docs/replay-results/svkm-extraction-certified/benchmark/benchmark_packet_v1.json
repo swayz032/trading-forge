@@ -1,0 +1,102 @@
+{
+  "artifact": "svkm-locator-benchmark-v1",
+  "authority": "AR-1231 (benchmark authorized) + AR-1232 (execution corrected to a Claude Code Opus subagent; no API key, SDK, or new API spend)",
+  "stage": "FROZEN INPUT PACKET \u2014 no candidate answers, no scores",
+  "fairness_contract": {
+    "shared_prompt_origin": "src/engine/extraction/anchor_locator.py::_SYSTEM_PROMPT and _build_user_message, reused BY IMPORT and unmodified",
+    "controlled_variable": "benchmark task prompt + input packet (hashed below)",
+    "NOT_controlled": "the candidates' full hidden context. A Claude Code subagent carries platform/system context a local gemma call does not. AR-1232 \u00a73 forbids claiming byte-identical total context.",
+    "per_side_additions": "none \u2014 no candidate-specific examples, hints, synonyms, source spans, or corrective prose may be added to one side"
+  },
+  "prompt": {
+    "system_prompt": "You are an anchor locator for trading-education transcripts. You are given ONE extracted strategy condition and the FULL transcript it was extracted from. Find the literal span of transcript text that GROUNDS the condition -- the trader's own words that this condition is describing.\n\nRules:\n1. Your `quote` MUST be copied VERBATIM from the transcript -- exact wording, exact punctuation. Do not paraphrase, summarize, or correct the trader's grammar.\n2. Prefer the SHORTEST contiguous span that still grounds the condition.\n3. If you cannot find transcript text that grounds this condition, return `quote: null`. Declining is CORRECT when no grounding exists -- do not invent or approximate a quote.\n\nReturn JSON matching the schema.",
+    "system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+    "user_message_template_probe": "CONDITION:\n<CONDITION>\n\nTRANSCRIPT:\n<TRANSCRIPT>\n\nReturn the literal grounding quote, or null.",
+    "user_message_template_sha256": "e283143db97bfbaa46272bd74278233c7381c78ddf465a0b712fc096836ddae0"
+  },
+  "input": {
+    "video_id": "sVkmZklJDHI",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "transcript_char_count": 25071,
+    "transcript_path": "src/engine/extraction/fixtures/source-evidence/sVkmZklJDHI.transcript.txt",
+    "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+    "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-157741d7cc760ea5",
+    "taxonomy_version": "h1-pilot-2026-07-12"
+  },
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "strategy_index": 0,
+      "condition_text": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
+      "condition_text_sha256": "0f5bdd78abd1ada6c4d9190dba399d238196af204388c118c875c16701014f4d"
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "strategy_index": 0,
+      "condition_text": "This establishes the initial volatility range for the trading session.",
+      "condition_text_sha256": "ed11a7f96041753f6a1208792fd385a437efe881de836bd07b18ab128facfa24"
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "strategy_index": 0,
+      "condition_text": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
+      "condition_text_sha256": "e8329d39731195b55c500b4294bc363444320c35e3a92e037a124cf162635a21"
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "strategy_index": 0,
+      "condition_text": "The breakout confirms the market direction (up or down) for the trade.",
+      "condition_text_sha256": "4de8dfed136c14429198063df3717b7002098fca553cc05ab6c18d9185f000a8"
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "strategy_index": 0,
+      "condition_text": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
+      "condition_text_sha256": "dcd6f76d57833209b6dba5c989c53071ff976c2916078888bbca4f03cf121ecb"
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "strategy_index": 0,
+      "condition_text": "The FVG provides a high-probability entry point after the initial directional breakout.",
+      "condition_text_sha256": "00d7bcb0e827f3e9c05d4abe1e5824ccd78881d084ee4cb5d2a336feef4bdbeb"
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "strategy_index": 0,
+      "condition_text": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
+      "condition_text_sha256": "be92970063ceae9bbe56fb4af79876691f5366f257e6657582f609815918e244"
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "strategy_index": 0,
+      "condition_text": "Entering on the closure confirms the FVG structure and minimizes entry risk.",
+      "condition_text_sha256": "20344ae28880cfa5d73125b06ab349f9e854a7eedc047f242d1a5864972fc168"
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "strategy_index": 0,
+      "condition_text": "The trade must be initiated during the 9:30 AM ET New York session.",
+      "condition_text_sha256": "c0461ef091d7e5b1220c46a5e18ac5b1a181aebf8ecc8f7eb66097fc69869da1"
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "strategy_index": 0,
+      "condition_text": "The 1m candle must close outside of the initial 5m range.",
+      "condition_text_sha256": "70cfd2748209d9ccfce4ab89abece0eeb43cd5eee52a62d3480afd6186babeca"
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "strategy_index": 0,
+      "condition_text": "The stop is placed at the bottom of the FVG candle, including the wick, to allow room for breathing.",
+      "condition_text_sha256": "79b86a32baab21048d566a962382ad1d2efaff17782933e19fc28aeb59d7e727"
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "strategy_index": 0,
+      "condition_text": "The strategy uses a fixed mechanical target based on a 2R risk-to-reward ratio.",
+      "condition_text_sha256": "f8ccba4cadd53571b4cb08445a683572853c3cd53e347c2fb66fb0d3a4e2a705"
+    }
+  ],
+  "condition_count": 12,
+  "packet_sha256": "fe6e73e1326ff50424bd905ed684c341479909e8e1482198c059b2e32d29bcd7"
+}

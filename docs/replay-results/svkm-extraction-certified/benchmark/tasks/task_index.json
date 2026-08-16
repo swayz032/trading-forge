@@ -1,0 +1,69 @@
+{
+  "artifact": "svkm-locator-benchmark-delegation-tasks",
+  "benchmark_version": "svkm-locator-benchmark-v1",
+  "packet_sha256": "fe6e73e1326ff50424bd905ed684c341479909e8e1482198c059b2e32d29bcd7",
+  "contains": "frozen system prompt + one condition + full pinned transcript, per file",
+  "excludes": "gemma outputs, prior spans, adjudication labels, expected answers, worker commentary (AR-1232 \u00a74)",
+  "tasks": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_entry_sequence_0__action.txt",
+      "task_sha256": "b7660757ca9d27785ffd42b775301d679d3ffb3c9544265ff28db64219386bcd"
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_entry_sequence_0__rationale.txt",
+      "task_sha256": "def6539072ea927a1ecf073fea13959092a3a7a46586a28b4b52096f2fc40adc"
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_entry_sequence_1__action.txt",
+      "task_sha256": "d7db358c3226d47327131154588474e0307244c58dbcb2ce1b811858ead029c7"
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_entry_sequence_1__rationale.txt",
+      "task_sha256": "23a786f07fd2029cadd10cb75a579f0d8099304f986baad696ecbea3142fc502"
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_entry_sequence_2__action.txt",
+      "task_sha256": "3c57e4740c81487d8060f085ebb512745747a3d7995baa2c05e6414eb5ca411d"
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_entry_sequence_2__rationale.txt",
+      "task_sha256": "a91752c29ee77eea206af17acb33b07bdeccfb4c037485df5214edf31147c102"
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_entry_sequence_3__action.txt",
+      "task_sha256": "acdf2044b8a1207bb4b418627d21120fdff0be8a80a05d3d94153490536104aa"
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_entry_sequence_3__rationale.txt",
+      "task_sha256": "95599ce8784d73b4e4b9c83768530f80bff1f8f93e26191725cdb8b9afbc1fde"
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_confluences_0__description.txt",
+      "task_sha256": "cf2d192c8eadb50717b653d7f30c135d77862591d09909c2df7a5f51a8b26b99"
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_confluences_1__description.txt",
+      "task_sha256": "905cac9b90dade5f86b539088ab53b21dd4233a574202662a74f8f07ef26c4f3"
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_stop_rationale.txt",
+      "task_sha256": "f8fb2645eca0baac03496d86e871c974a391a16abf8bc8dd0ac04bfc36803540"
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "path": "docs/replay-results/svkm-extraction-certified/benchmark/tasks/task_targets_0__rationale.txt",
+      "task_sha256": "496d29683da7c4ce18cc2f9b4d8b283622a3d377d6e12b76811fde2afe42e3f4"
+    }
+  ]
+}
