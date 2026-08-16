@@ -11,11 +11,11 @@ Real ICT/SMC A+ criteria:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 from src.engine.context.bias_engine import DailyBiasState
-from src.engine.context.playbook_router import PlaybookDecision, route_playbook
+from src.engine.context.framework_refusal import evaluate_framework_risk
 from src.engine.context.location_score import LocationScore
+from src.engine.context.playbook_router import PlaybookDecision
 from src.engine.context.session_context import SessionContext
 from src.engine.context.structural_stops import StopPlan
 from src.engine.context.structural_targets import TargetPlan
@@ -25,14 +25,14 @@ from src.engine.context.structural_targets import TargetPlan
 class EligibilityDecision:
     action: str               # "TAKE" | "REDUCE" | "SKIP"
     confidence: float         # 0.0-1.0
-    reasoning: List[str]      # Human-readable reasons
-    bias_state: Optional[DailyBiasState] = None
+    reasoning: list[str]      # Human-readable reasons
+    bias_state: DailyBiasState | None = None
     location_score: int = 0
-    stop_plan: Optional[StopPlan] = None
-    target_plan: Optional[TargetPlan] = None
+    stop_plan: StopPlan | None = None
+    target_plan: TargetPlan | None = None
     playbook: str = "NO_TRADE"
-    override_stop: Optional[float] = None
-    override_targets: List[float] = field(default_factory=list)
+    override_stop: float | None = None
+    override_targets: list[float] = field(default_factory=list)
     partial_sizes: tuple = (0.33, 0.33, 0.34)
     position_size_adjustment: float = 1.0
 
@@ -81,6 +81,28 @@ def evaluate_signal(
     direction = signal.get("direction", "long")
     strategy_name = signal.get("strategy_name", "unknown")
 
+    # ─── MANDATORY FRAMEWORK RISK — runs BEFORE any optional-overlay bypass ───
+    # AR-1210 §3/§4: this block used to sit BELOW the unregistered-strategy bypass as
+    # "Check 0". Because the bypass returns TAKE, an unregistered strategy never reached
+    # it, so the structural-stop ceiling refusal was skipped for exactly the class of
+    # strategy this campaign produces — a newly certified one is unregistered by
+    # construction. MEASURED (AR-1209): `skip_trade` had exactly ONE non-test reader in
+    # all of src/, and it was this check, sitting after the bypass.
+    #
+    # The boundary, per AR-1210 §4: NEW/UNREGISTERED may bypass PLAYBOOK/CONFLUENCE
+    # OVERLAY policy; it may NEVER bypass FRAMEWORK RISK / REFUSAL policy.
+    #
+    # Ordering is now explicit rather than positional: the predicate is named, lives in
+    # its own module, and is shared by every path (framework_refusal.evaluate_framework_risk).
+    # Skip-not-clamp is preserved — nothing here modifies stop_plan.
+    _framework = evaluate_framework_risk(stop_plan)
+    if _framework.refused:
+        reasoning.append(_framework.reason)
+        return EligibilityDecision(
+            action="SKIP", confidence=0.0, reasoning=reasoning,
+            bias_state=bias_state, playbook=playbook.playbook,
+        )
+
     # ds21 (deep-scan #21 residual — paper/backtest parity): unregistered-strategy bypass.
     # Mirrors backtester.py::apply_eligibility_gate's `passthrough_strategy_unregistered` branch:
     # if strategy_name is not registered to ANY playbook (not in ALL_STRATS), the 7-layer
@@ -112,16 +134,9 @@ def evaluate_signal(
 
     # ─── Hard SKIP checks ─────────────────────────────────────
 
-    # Check 0 (deep-scan #8 2026-07-02): structural stop exceeds per-symbol ceiling.
-    # Fires BEFORE all other gate checks. A ceiling breach means the structural
-    # invalidation level is too far away — no valid stop exists for this setup.
-    # structural_stops.compute_structural_stop() sets skip_trade=True in this case.
-    if stop_plan.skip_trade:
-        reasoning.append(f"SKIP_TRADE: {stop_plan.stop_reason}")
-        return EligibilityDecision(
-            action="SKIP", confidence=0.0, reasoning=reasoning,
-            bias_state=bias_state, playbook=playbook.playbook,
-        )
+    # Check 0 (deep-scan #8 2026-07-02) MOVED — the structural-stop ceiling refusal now
+    # runs above the unregistered bypass as mandatory framework risk (AR-1210 §4). It is
+    # not duplicated here; see evaluate_framework_risk() at the top of this function.
 
     # 1. NO_TRADE playbook
     if playbook.playbook == "NO_TRADE":

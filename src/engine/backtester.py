@@ -320,11 +320,26 @@ def apply_eligibility_gate(
     strat_normalized = strategy_name.lower().replace("strategy", "").strip().replace("_", "")
     all_normalized = [s.lower().replace("_", "") for s in ALL_STRATS]
     if strat_normalized and strat_normalized not in all_normalized:
+        # AR-1210 §3/§5: this branch used to `return entry_signals` HERE — before the
+        # per-signal loop below computes structural stops and calls evaluate_signal. So an
+        # unregistered strategy skipped the structural-stop ceiling refusal in BACKTEST
+        # too, mirroring the paper/live defect. Fixing only one engine is explicitly
+        # forbidden (§7) because it would recreate backtest↔paper divergence.
+        #
+        # The repair keeps the OVERLAY bypass and drops only the early return: the loop now
+        # runs, structural stops are computed, and evaluate_signal applies MANDATORY
+        # framework risk first and then bypasses the optional overlay for this unregistered
+        # name. Both engines therefore share one canonical refusal predicate
+        # (framework_refusal.evaluate_framework_risk) rather than two that can drift.
         gate_stats["mode"] = "passthrough_strategy_unregistered"
         gate_stats["passthrough_reason"] = f"strategy_name={strategy_name!r} not in playbook_router.ALL_STRATS"
-        return entry_signals, exit_signals, gate_stats
-
-    gate_stats["mode"] = "tf_institutional_overlay"
+        # Explicit provenance (§5 LANE A): operators must be able to tell
+        # "overlay bypassed, framework risk ENFORCED" from a fully evaluated overlay run.
+        gate_stats["framework_risk_enforced"] = True
+        _overlay_bypassed = True
+    else:
+        gate_stats["mode"] = "tf_institutional_overlay"
+        _overlay_bypassed = False
 
     filtered = entry_signals.copy()
     signal_indices = np.where(entry_signals)[0]
@@ -534,11 +549,26 @@ def apply_eligibility_gate(
                     f"eligibility_gate_error bar={idx}: {exc_type_key}: {exc}",
                     file=sys.stderr,
                 )
-            # Context computation failed for this bar — skip conservatively
-            filtered[idx] = False
-            gate_stats["skip"] += 1
-            gate_stats["skip_reasons"]["context_error"] = gate_stats["skip_reasons"].get("context_error", 0) + 1
-            gate_stats["skipped_signals"].append({"bar_idx": int(idx), "reason": "context_error"})
+            # Context computation failed for this bar.
+            # AR-1210 §5: when the OPTIONAL overlay is bypassed (unregistered strategy) an
+            # overlay CONTEXT error must NOT kill the signal — the ruling requires that such
+            # a strategy "must only lose the ability to bypass framework safety", not gain
+            # the overlay's data-availability fragility. Dropping here would recreate exactly
+            # the backtest/paper divergence the bypass exists to prevent.
+            # MEASURED: without this branch, test_wave_b_intrabar_stops'
+            # unregistered-passthrough case lost all 3 signals to
+            # "AttributeError: 'object' object has no attribute 'prev_day_high'".
+            # Framework risk is unaffected — it is applied inside evaluate_signal BEFORE the
+            # overlay bypass, so a refused stop still drops the signal above.
+            if _overlay_bypassed:
+                gate_stats["skip_reasons"]["context_error_overlay_bypassed_kept"] = (
+                    gate_stats["skip_reasons"].get("context_error_overlay_bypassed_kept", 0) + 1
+                )
+            else:
+                filtered[idx] = False
+                gate_stats["skip"] += 1
+                gate_stats["skip_reasons"]["context_error"] = gate_stats["skip_reasons"].get("context_error", 0) + 1
+                gate_stats["skipped_signals"].append({"bar_idx": int(idx), "reason": "context_error"})
 
     return filtered, exit_signals, gate_stats
 
