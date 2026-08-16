@@ -1,0 +1,893 @@
+{
+  "wave": "E0",
+  "ruling": "AR-1255 §8 (GPT context-budget / model-router activation)",
+  "kind": "READ-ONLY ROUTING BASELINE — not a gate, not an activation claim",
+  "claim_contract": "AR-1255 §10 — nothing here is ROUTED, PROVEN, SAVED or ACTIVE. CONFIGURED only.",
+  "agents": {
+    "definition_dirs_found": 117,
+    "master_dir": "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\agents",
+    "distinct_agents": 41,
+    "inconsistent_routing": [
+      "accuracy-validator",
+      "autonomous-readiness",
+      "institutional-edge-researcher"
+    ],
+    "detail": [
+      {
+        "name": "accuracy-validator",
+        "copies": 106,
+        "distinct_routing": [
+          "INHERITS_PARENT",
+          "opus"
+        ],
+        "routing_consistent": false,
+        "master_model": "opus",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.wt-codex-compiler-main-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.wt-codex-compiler-view-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\codex-continuous-main-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\codex-recipe-premium-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-claude-worker2-20260815\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-codex-p0-6-identity-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-codex-p0-6-test-lane-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gpt-advisor-ar552-20260801\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gpt-reports\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-role-skills-20260808\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "anam-persona-prompt-engineer",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "anam-video-engineer",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "aspire-architect",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "aspire-policy-gate",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "aspire-rnd-engineer",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "aspire-rnd-innovator",
+        "copies": 8,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "aspire-test-engineer",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "autonomous-readiness",
+        "copies": 106,
+        "distinct_routing": [
+          "INHERITS_PARENT",
+          "sonnet"
+        ],
+        "routing_consistent": false,
+        "master_model": "INHERITS_PARENT",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.audit-ledger-e-2011e8de\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.audit-ledger-e-r496-39948d3c\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.audit-temp-ar434-f626d3cbb07b4bd0858a0cf2ecff9239\\tree\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.wt-codex-compiler-main-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.wt-codex-compiler-view-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\tf-deep-scan\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\tf-ds19-fix\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\tf-night-desk\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\tf-quantum-rl-bridge\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\agent-a82d6c3503d32baa0\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\agent-acbb95793eea6993b\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\agent-ad56341fd4078038c\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\extraction-100\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-1\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-12\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-13\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-3\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-4\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-5\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-6\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-7\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-8\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-9\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\codex-continuous-main-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\codex-recipe-premium-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\deepscan6-fixwave\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\inst-10of10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-blueprint-v4-rev4\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-buildcheck\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-member-office\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-postcutover-fixes\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-rails-p1\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-release-ci-20260723\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-transcript-backfill\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-transcript-vault\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-d78\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-ds-goalfix\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-frontend-fix\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-hmac-pairbind-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-merge-prep-20260710\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-parta\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-pine-export-fix\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-rail2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-rail3\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-scoperedo\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-stage-rules-20260712\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-trace\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-6b-wip\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-accept5-pin-a67f0997\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-accept5-r2-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-accept5-verify-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-advisor-v4adopt-20260802\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-av2-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-cert5-fb71a3ef\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-cert5b-f4e9a9d2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ci-abspath-20260729\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-claude-worker1-20260815\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-claude-worker2-20260815\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-codex-p0-6-identity-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-codex-p0-6-test-lane-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-cred-fallback-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ctl-d66e46aa\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-dod-404a3396\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-egress-chokepoint-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-eventmask-fix-20260803\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gnode-fb71a3ef\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gpt-advisor-ar552-20260801\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gpt-reports\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-accept5-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-accept5-r2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-f4\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-s6-2026-08-10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-s6-BASE-2026-08-10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-s6-seal-2026-08-10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-trigger-base\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-trigger-safety\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gradelive-f4e9a9d2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-graph-engineering-skill-20260802\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-lane2-plant-20260802\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-lane3-pfanchor-20260803\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-delivery-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-delivery-r496-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-delivery-r496b-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-delivery-r497-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-parity-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-m3-44db4eae\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-mp1-recon-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ops-experience-20260719\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-paper-notype-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-parser-sanity-20260729\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-pre6b\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-preflight-blockers-20260729\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-probe-gate-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-provenance-ruleclass-20260729\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-r3-accept5-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-r3-faithful-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ratify1-final-f3225b69\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-role-skills-20260808\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-session-refusal-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-w1-preG2-eaf20525\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "backtest-core",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "code-reviewer",
+        "copies": 1,
+        "distinct_routing": [
+          "inherit"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "context-manager",
+        "copies": 1,
+        "distinct_routing": [
+          "INHERITS_PARENT"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\n8n-mcp\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "contract-specialist",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "critic-optimizer",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "debugger",
+        "copies": 1,
+        "distinct_routing": [
+          "INHERITS_PARENT"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\n8n-mcp\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "deployment-engineer",
+        "copies": 1,
+        "distinct_routing": [
+          "INHERITS_PARENT"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\n8n-mcp\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "email-mastery-coach",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "expo-app-engineer",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "institutional-edge-researcher",
+        "copies": 106,
+        "distinct_routing": [
+          "INHERITS_PARENT",
+          "sonnet"
+        ],
+        "routing_consistent": false,
+        "master_model": "INHERITS_PARENT",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.audit-ledger-e-2011e8de\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.audit-ledger-e-r496-39948d3c\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.audit-temp-ar434-f626d3cbb07b4bd0858a0cf2ecff9239\\tree\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.wt-codex-compiler-main-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\.wt-codex-compiler-view-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\tf-deep-scan\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\tf-ds19-fix\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\tf-night-desk\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\tf-quantum-rl-bridge\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\agent-a82d6c3503d32baa0\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\agent-acbb95793eea6993b\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\agent-ad56341fd4078038c\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\extraction-100\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-1\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-12\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-13\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-3\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-4\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-5\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-6\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-7\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-8\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\wf_fa9168b1-005-9\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\codex-continuous-main-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\codex-recipe-premium-20260811\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\deepscan6-fixwave\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.worktrees\\inst-10of10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-blueprint-v4-rev4\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-buildcheck\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-member-office\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-postcutover-fixes\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-rails-p1\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-release-ci-20260723\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-transcript-backfill\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-codex-transcript-vault\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-d78\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-ds-goalfix\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-frontend-fix\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-hmac-pairbind-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-merge-prep-20260710\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-parta\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-pine-export-fix\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-rail2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-rail3\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-scoperedo\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-stage-rules-20260712\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\trading-forge\\wt-trace\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-6b-wip\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-accept5-pin-a67f0997\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-accept5-r2-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-accept5-verify-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-advisor-v4adopt-20260802\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-av2-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-cert5-fb71a3ef\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-cert5b-f4e9a9d2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ci-abspath-20260729\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-claude-worker1-20260815\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-claude-worker2-20260815\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-codex-p0-6-identity-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-codex-p0-6-test-lane-20260814\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-cred-fallback-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ctl-d66e46aa\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-dod-404a3396\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-egress-chokepoint-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-eventmask-fix-20260803\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gnode-fb71a3ef\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gpt-advisor-ar552-20260801\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gpt-reports\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-accept5-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-accept5-r2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-f4\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-s6-2026-08-10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-s6-BASE-2026-08-10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-s6-seal-2026-08-10\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-trigger-base\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-grade-trigger-safety\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-gradelive-f4e9a9d2\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-graph-engineering-skill-20260802\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-lane2-plant-20260802\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-lane3-pfanchor-20260803\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-delivery-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-delivery-r496-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-delivery-r496b-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-delivery-r497-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ledger-e-parity-20260730\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-m3-44db4eae\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-mp1-recon-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ops-experience-20260719\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-paper-notype-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-parser-sanity-20260729\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-pre6b\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-preflight-blockers-20260729\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-probe-gate-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-provenance-ruleclass-20260729\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-r3-accept5-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-r3-faithful-20260810\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-ratify1-final-f3225b69\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-role-skills-20260808\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-session-refusal-20260728\\.claude\\agents",
+          "C:\\Users\\tonio\\Projects\\wt-w1-preG2-eaf20525\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "llm-pipeline-sentinel",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "local-dev-optimizer",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "mcp-backend-engineer",
+        "copies": 1,
+        "distinct_routing": [
+          "INHERITS_PARENT"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\n8n-mcp\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "mcp-toolsmith",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "n8n-infra-orchestrator",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "n8n-mcp-tester",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "n8n-orchestration",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "observability-reliability",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "output-critic",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "paper-parity",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "pine-export",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "proof-artifacts-builder",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "quantum-challenger",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "receipt-ledger-auditor",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "release-sre",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "security-reviewer",
+        "copies": 1,
+        "distinct_routing": [
+          "sonnet"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "stripe-invoice-specialist",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "technical-researcher",
+        "copies": 1,
+        "distinct_routing": [
+          "INHERITS_PARENT"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\n8n-mcp\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "test-automator",
+        "copies": 1,
+        "distinct_routing": [
+          "INHERITS_PARENT"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": [
+          "C:\\Users\\tonio\\Projects\\trading-forge\\n8n-mcp\\.claude\\agents"
+        ]
+      },
+      {
+        "name": "trading-forge-architect",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "uiux-implementer",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      },
+      {
+        "name": "voice-pipeline-guardian",
+        "copies": 1,
+        "distinct_routing": [
+          "opus"
+        ],
+        "routing_consistent": true,
+        "master_model": "NO_MASTER_COPY",
+        "inherits_parent_in": []
+      }
+    ]
+  },
+  "non_agent_files_in_agent_dirs": [
+    {
+      "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\agents\\.claude\\agent-memory\\paper-parity\\broker-error-budget-patterns.md",
+      "declared_name": "broker-error-budget-patterns",
+      "nested_below_agents_root": true,
+      "reason": "not an agent definition — surfaced as a dispatchable agent type by a .claude/agents scan"
+    },
+    {
+      "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\agents\\.claude\\agent-memory\\paper-parity\\MEMORY.md",
+      "declared_name": "MEMORY",
+      "nested_below_agents_root": true,
+      "reason": "not an agent definition — surfaced as a dispatchable agent type by a .claude/agents scan"
+    },
+    {
+      "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\agents\\.claude\\agent-memory\\paper-parity\\payout-audit-packet-patterns.md",
+      "declared_name": "payout-audit-packet-patterns",
+      "nested_below_agents_root": true,
+      "reason": "not an agent definition — surfaced as a dispatchable agent type by a .claude/agents scan"
+    },
+    {
+      "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\agents\\.claude\\agent-memory\\paper-parity\\user-profile.md",
+      "declared_name": "user-profile",
+      "nested_below_agents_root": true,
+      "reason": "not an agent definition — surfaced as a dispatchable agent type by a .claude/agents scan"
+    }
+  ],
+  "skills": {
+    "count": 26,
+    "detail": [
+      {
+        "name": "worker-execution",
+        "ownership": "project",
+        "bytes": 42763,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\worker-execution\\SKILL.md"
+      },
+      {
+        "name": "advisor-ruling",
+        "ownership": "project",
+        "bytes": 33599,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\advisor-ruling\\SKILL.md"
+      },
+      {
+        "name": "advisor-onboarding",
+        "ownership": "project",
+        "bytes": 33033,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\advisor-onboarding\\SKILL.md"
+      },
+      {
+        "name": "worker-onboarding",
+        "ownership": "project",
+        "bytes": 28730,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\worker-onboarding\\SKILL.md"
+      },
+      {
+        "name": "n8n-skills/n8n-code-python",
+        "ownership": "user",
+        "bytes": 18719,
+        "path": "C:\\Users\\tonio\\.claude\\skills\\n8n-skills\\skills\\n8n-code-python\\SKILL.md"
+      },
+      {
+        "name": "n8n-skills/n8n-node-configuration",
+        "ownership": "user",
+        "bytes": 18138,
+        "path": "C:\\Users\\tonio\\.claude\\skills\\n8n-skills\\skills\\n8n-node-configuration\\SKILL.md"
+      },
+      {
+        "name": "n8n-skills/n8n-mcp-tools-expert",
+        "ownership": "user",
+        "bytes": 17089,
+        "path": "C:\\Users\\tonio\\.claude\\skills\\n8n-skills\\skills\\n8n-mcp-tools-expert\\SKILL.md"
+      },
+      {
+        "name": "n8n-skills/n8n-code-javascript",
+        "ownership": "user",
+        "bytes": 16809,
+        "path": "C:\\Users\\tonio\\.claude\\skills\\n8n-skills\\skills\\n8n-code-javascript\\SKILL.md"
+      },
+      {
+        "name": "n8n-skills/n8n-validation-expert",
+        "ownership": "user",
+        "bytes": 15241,
+        "path": "C:\\Users\\tonio\\.claude\\skills\\n8n-skills\\skills\\n8n-validation-expert\\SKILL.md"
+      },
+      {
+        "name": "tf-debugging",
+        "ownership": "project",
+        "bytes": 14186,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\tf-debugging\\SKILL.md"
+      },
+      {
+        "name": "n8n-skills/n8n-workflow-patterns",
+        "ownership": "user",
+        "bytes": 11922,
+        "path": "C:\\Users\\tonio\\.claude\\skills\\n8n-skills\\skills\\n8n-workflow-patterns\\SKILL.md"
+      },
+      {
+        "name": "extraction-campaign",
+        "ownership": "project",
+        "bytes": 11491,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\extraction-campaign\\SKILL.md"
+      },
+      {
+        "name": "n8n-skills/n8n-expression-syntax",
+        "ownership": "user",
+        "bytes": 10116,
+        "path": "C:\\Users\\tonio\\.claude\\skills\\n8n-skills\\skills\\n8n-expression-syntax\\SKILL.md"
+      },
+      {
+        "name": "ratify-packet",
+        "ownership": "project",
+        "bytes": 8876,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\ratify-packet\\SKILL.md"
+      },
+      {
+        "name": "worktree-session",
+        "ownership": "project",
+        "bytes": 6077,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\worktree-session\\SKILL.md"
+      },
+      {
+        "name": "migration-author",
+        "ownership": "project",
+        "bytes": 6014,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\migration-author\\SKILL.md"
+      },
+      {
+        "name": "transcript-audit",
+        "ownership": "project",
+        "bytes": 5435,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\transcript-audit\\SKILL.md"
+      },
+      {
+        "name": "grading-integrity",
+        "ownership": "project",
+        "bytes": 5380,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\grading-integrity\\SKILL.md"
+      },
+      {
+        "name": "deep-scan",
+        "ownership": "project",
+        "bytes": 5069,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\deep-scan\\SKILL.md"
+      },
+      {
+        "name": "critical-path-campaign-manager",
+        "ownership": "project",
+        "bytes": 3452,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\critical-path-campaign-manager\\SKILL.md"
+      },
+      {
+        "name": "vertical-slice-breakthrough",
+        "ownership": "project",
+        "bytes": 3143,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\vertical-slice-breakthrough\\SKILL.md"
+      },
+      {
+        "name": "source-to-engine-conformance",
+        "ownership": "project",
+        "bytes": 2946,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\source-to-engine-conformance\\SKILL.md"
+      },
+      {
+        "name": "graph-engineering",
+        "ownership": "project",
+        "bytes": 2834,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\graph-engineering\\SKILL.md"
+      },
+      {
+        "name": "batch-disposition-integrity",
+        "ownership": "project",
+        "bytes": 2671,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\batch-disposition-integrity\\SKILL.md"
+      },
+      {
+        "name": "worker-2-paper-runtime-onboarding",
+        "ownership": "project",
+        "bytes": 1839,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\worker-2-paper-runtime-onboarding\\SKILL.md"
+      },
+      {
+        "name": "worker-1-compiler-onboarding",
+        "ownership": "project",
+        "bytes": 1787,
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\skills\\worker-1-compiler-onboarding\\SKILL.md"
+      }
+    ]
+  },
+  "hooks": {
+    "detail": [
+      {
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\settings.json",
+        "present": true,
+        "events": [
+          "PreToolUse",
+          "PostToolUse"
+        ],
+        "matchers": {
+          "PreToolUse": [
+            "Write|Edit|MultiEdit",
+            "Bash"
+          ],
+          "PostToolUse": [
+            "Bash",
+            "Skill|Write|Edit|MultiEdit"
+          ]
+        }
+      },
+      {
+        "path": "C:\\Users\\tonio\\Projects\\trading-forge\\.claude\\settings.local.json",
+        "present": true,
+        "events": [],
+        "matchers": {}
+      },
+      {
+        "path": "C:\\Users\\tonio\\.claude\\settings.json",
+        "present": true,
+        "events": [],
+        "matchers": {}
+      }
+    ],
+    "session_rotation_capability": {
+      "SessionStart_configured": false,
+      "Stop_configured": false,
+      "SubagentStop_configured": false,
+      "verdict": "NOT_CONFIGURED"
+    }
+  }
+}
