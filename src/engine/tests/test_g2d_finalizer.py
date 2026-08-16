@@ -17,6 +17,7 @@ import pytest
 from src.engine.extraction import isolated_fallback_law as law
 from src.engine.extraction import opus_phase1_route as rt
 from src.engine.extraction.g2d_finalizer import (
+    APPROVED_ACTUAL_MODEL_IDENTITIES,
     FinalizationRefused,
     collect_isolated_results,
     finalize,
@@ -295,6 +296,7 @@ def _receipts(tmp_path, through="full", raw=Q_RANGE):
     )
 
     q = _queue()
+    tmp_path.mkdir(parents=True, exist_ok=True)   # callers may pass a nested per-case dir
     qp = tmp_path / "queue.json"
     qp.write_text(json.dumps(q, indent=2), encoding="utf-8")
     rd = tmp_path / "receipts"
@@ -465,7 +467,7 @@ def test_a_dispatch_with_no_attempt_is_refused(tmp_path):
         ("completion hard-codes a model its dispatch never requested", "completion",
          {"requested_model_identity": "sonnet"}, "completion claims requested model"),
         ("completion exposes a non-Opus actual model", "completion",
-         {"actual_model_identity": "claude-sonnet-5"}, "which is not Opus"),
+         {"actual_model_identity": "claude-sonnet-5"}, "EXACT member of the approved set"),
         ("completion names a different native task id", "completion",
          {"native_task_id": "task_zzz"}, "native task id mismatch"),
     ],
@@ -480,19 +482,122 @@ def test_the_dispatch_and_completion_are_joined_not_assumed(
         collect_isolated_results(qp, rd)
 
 
-def test_an_UNEXPOSED_actual_model_identity_is_accepted_as_an_honest_absence(tmp_path):
-    """Discrimination control for the actual-model check above: it must fire on a CONFLICTING
-    identity, not on the runtime declining to expose one. The Claude Code subscription runtime
-    genuinely does not surface this field, so refusing NOT_EXPOSED would refuse every real run."""
+# --------------------------------------------------------------------------- #
+# AR-1261 §5 (D1-C1) — THE ACTUAL-MODEL IDENTITY IS AN EXACT SET, NOT A SUBSTRING
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("identity", sorted(APPROVED_ACTUAL_MODEL_IDENTITIES))
+def test_POSITIVE_an_exact_authorized_opus_identity_is_accepted(tmp_path, identity):
+    _q, qp, rd, _ = _receipts(tmp_path)
+    _tamper(rd, "completion", actual_model_identity=identity)
+    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}
+
+
+def test_POSITIVE_not_exposed_is_accepted_as_honest_missing_telemetry(tmp_path):
+    """The Claude Code subscription runtime genuinely does not surface this field. Refusing the
+    honest sentinel would refuse every real run, so the check must fire on a CONFLICTING identity
+    and not on an absent one."""
     from src.engine.extraction.isolated_bridge import NOT_EXPOSED
 
     _q, qp, rd, _ = _receipts(tmp_path)
     _tamper(rd, "completion", actual_model_identity=NOT_EXPOSED)
     assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}
 
-    # ...and a VERSIONED Opus name is the family, not a conflict
-    _tamper(rd, "completion", actual_model_identity="claude-opus-5")
-    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}
+
+@pytest.mark.parametrize(
+    "identity",
+    [
+        "not-opus",                 # 🛑 plain English says NOT opus. The substring matcher passed it.
+        "opus-impostor",
+        "myopus",
+        "this-is-not-opus-model",
+        "claude-sonnet-5",          # an exact, real, NON-Opus Claude identity
+        "claude-haiku-4-5-20251001",
+        "claude-opus-5-evil-suffix",  # exact prefix of an approved id — startsWith would pass it
+        "CLAUDE-OPUS-5",            # case variant this desk has never seen exposed
+        "",
+    ],
+)
+def test_NEGATIVE_anything_outside_the_exact_set_is_refused(tmp_path, identity):
+    _q, qp, rd, _ = _receipts(tmp_path)
+    assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}, "control must pass first"
+    _tamper(rd, "completion", actual_model_identity=identity)
+    with pytest.raises(FinalizationRefused, match="EXACT member of the approved set"):
+        collect_isolated_results(qp, rd)
+
+
+def test_MUTATION_restoring_the_substring_matcher_lets_negative_controls_through(tmp_path):
+    """🛑 AR-1261 §5's required mutation control, and it is the whole point of the repair.
+
+    The AR-1260 matcher is restored verbatim. If the repair were cosmetic, the negative controls
+    would still refuse and this test would fail — so the assertion is that they WRONGLY PASS
+    under the mutation. That is what proves the exact-set check is the thing doing the work, and
+    not some other guard in the chain incidentally catching these strings.
+
+    `A CONTROL THAT CANNOT TELL THE REPAIR FROM ITS ABSENCE IS DECORATION.`
+    """
+    from src.engine.extraction import g2d_finalizer as m
+
+    def ar1260_substring_matcher(value: str) -> bool:
+        return "opus" in (value or "").lower()
+
+    attacks = ["not-opus", "opus-impostor", "myopus", "this-is-not-opus-model"]
+
+    # 1. with the REPAIR: every attack is refused.
+    for identity in attacks:
+        _q, qp, rd, _ = _receipts(tmp_path / identity)
+        _tamper(rd, "completion", actual_model_identity=identity)
+        with pytest.raises(FinalizationRefused, match="EXACT member of the approved set"):
+            collect_isolated_results(qp, rd)
+
+    # 2. with the MUTATION: the same attacks sail through — the guard has been removed.
+    original = m._actual_model_identity_is_approved
+    try:
+        m._actual_model_identity_is_approved = ar1260_substring_matcher
+        for identity in attacks:
+            _q, qp, rd, _ = _receipts(tmp_path / f"mut-{identity}")
+            _tamper(rd, "completion", actual_model_identity=identity)
+            assert collect_isolated_results(qp, rd) == {R_RANGE: Q_RANGE}, (
+                f"{identity!r} was still refused under the substring mutation, so this test is "
+                "not measuring the exact-set check at all"
+            )
+    finally:
+        m._actual_model_identity_is_approved = original
+
+    # 3. the mutation is undone — a leaked monkeypatch would silently disarm every test after it.
+    _q, qp, rd, _ = _receipts(tmp_path / "restored")
+    _tamper(rd, "completion", actual_model_identity="not-opus")
+    with pytest.raises(FinalizationRefused, match="EXACT member of the approved set"):
+        collect_isolated_results(qp, rd)
+
+
+def test_the_approved_set_is_exact_and_does_not_admit_the_bare_requested_identity():
+    """The set is deliberately SHORT. `opus` is the authorized REQUESTED identity and stays
+    strict-equality at dispatch, but the guess that a runtime echoes it back as an ACTUAL
+    identity is a hypothesis, and AR-1261 §5 forbids widening on less than evidence."""
+    from src.engine.extraction.isolated_bridge import APPROVED_MODEL_IDENTITY
+
+    assert APPROVED_MODEL_IDENTITY == "opus"
+    assert APPROVED_MODEL_IDENTITY not in APPROVED_ACTUAL_MODEL_IDENTITIES
+    assert APPROVED_ACTUAL_MODEL_IDENTITIES == {"claude-opus-5", "claude-opus-5[1m]"}
+
+
+def test_the_matcher_uses_no_substring_prefix_or_regex_machinery():
+    """AR-1261 §5: 'Do not use contains, startsWith, fuzzy matching, aliases invented after
+    seeing the answer, or regexes broad enough to admit arbitrary suffixes.'
+
+    Asserted on the FUNCTION's source only — not the module's — because the module docstring
+    legitimately quotes the old substring matcher to explain what was wrong with it, and a
+    whole-module grep would fail on that comment. (AR-1260 F-2 was exactly this mistake.)"""
+    import inspect
+
+    from src.engine.extraction import g2d_finalizer as m
+
+    src = inspect.getsource(m._actual_model_identity_is_approved)
+    for banned in (" in (", ".lower()", ".startswith", ".endswith", "re.", "fnmatch"):
+        assert banned not in src, f"the identity matcher is not an exact check: {banned}"
+    assert "in APPROVED_ACTUAL_MODEL_IDENTITIES" in src
 
 
 @pytest.mark.parametrize(

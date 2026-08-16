@@ -63,17 +63,47 @@ def _require(cond: bool, ref: str, what: str) -> None:
         raise FinalizationRefused(f"PROVENANCE REFUSED for {ref!r}: {what}")
 
 
-def _model_family_is_opus(value: str) -> bool:
-    """Does an EXPOSED model identity name the Opus family?
+ACTUAL_MODEL_IDENTITY_CONTRACT_VERSION = "g2d-actual-model-identity-v1"
 
-    ⚠️ STATED ASSUMPTION, NOT A MEASURED FACT. AR-1259 §8 C says the exposed
-    `actual_model_identity` must be Opus but does not fix the string the runtime emits, and the
-    runtime emits a versioned name (`claude-opus-5`), not the bare word. A literal `== "opus"`
-    would refuse every honest completion the runtime can actually produce, so family membership
-    is read as a case-insensitive substring. If the runtime ever exposes a name that contains
-    "opus" without being Opus, this is the line that is wrong.
+# AR-1261 §5 (D1-C1) — AN EXPLICIT, VERSIONED, EXACT ACCEPTED-IDENTITY SET.
+#
+# 🛑 THIS REPLACES A SUBSTRING CHECK, AND THE SUBSTRING CHECK WAS MINE. AR-1260 shipped
+#     `"opus" in value.lower()`, disclosed as an assumption. GPT refused the assumption and was
+#     right: a substring is not an identity. `not-opus`, `opus-impostor`, `myopus` and
+#     `this-is-not-opus-model` all PASSED it. A matcher that accepts a string whose plain English
+#     meaning is "not opus" is not a weak check, it is an inverted one.
+#
+# MEMBERSHIP RULE, and it is deliberately SHORT: an identity is a member only if this desk holds
+# documented evidence that the string names the Opus model authorized for this frozen experiment.
+# Both members below are ARTIFACT-SOURCED from the Claude Code runtime's own model declaration —
+# NOT measured from a completion receipt, because zero of the eight calls have been spent.
+#
+#   claude-opus-5       the runtime's stated model id for Opus 5
+#   claude-opus-5[1m]   the same model, 1M-context variant; the exact id this seat reports
+#
+# ⚠️ THE BARE WORD `opus` IS DELIBERATELY *NOT* A MEMBER. It is the authorized *requested*
+#    identity (`APPROVED_MODEL_IDENTITY`, still strict equality at dispatch), and the guess that
+#    a runtime might echo it back as an ACTUAL identity is a HYPOTHESIS. AR-1261 §5 forbids
+#    widening this set on anything less than evidence, and the cost of being too narrow is
+#    exactly the behaviour the ruling asks for: STOP and report, with all eight calls still
+#    unspent. The cost of being too wide is a spent call attributed to the wrong model.
+#
+# 🛑 IF A REAL RUN EVER EXPOSES AN IDENTITY THAT IS NOT IN THIS SET: STOP AND REPORT IT.
+#    Do not add it here to regain green, do not retry the one-shot call. Only a ruling adds a
+#    member — an alias invented after seeing the answer is the answer choosing its own gate.
+APPROVED_ACTUAL_MODEL_IDENTITIES = frozenset({
+    "claude-opus-5",
+    "claude-opus-5[1m]",
+})
+
+
+def _actual_model_identity_is_approved(value: str) -> bool:
+    """EXACT membership in the frozen set above. No contains, no prefix, no fuzz, no regex.
+
+    Case is significant: a model id is an identifier, not prose, and lower-casing would silently
+    admit a second spelling this desk has never seen.
     """
-    return "opus" in (value or "").lower()
+    return value in APPROVED_ACTUAL_MODEL_IDENTITIES
 
 
 def collect_isolated_results(queue_path: str, receipt_dir: str) -> dict[str, str]:
@@ -237,9 +267,13 @@ def collect_isolated_results(queue_path: str, receipt_dir: str) -> dict[str, str
                  f"the completion claims requested model {cmp_.get('requested_model_identity')!r} "
                  f"but the dispatch recorded {dsp.get('requested_model_identity')!r}")
         actual = cmp_.get("actual_model_identity")
-        _require(actual == NOT_EXPOSED or _model_family_is_opus(actual), ref,
-                 f"the completion exposes actual model identity {actual!r}, which is not Opus. "
-                 f"Only {NOT_EXPOSED} is an acceptable non-answer here")
+        _require(actual == NOT_EXPOSED or _actual_model_identity_is_approved(actual), ref,
+                 f"the completion exposes actual model identity {actual!r}, which is not an "
+                 f"EXACT member of the approved set "
+                 f"{sorted(APPROVED_ACTUAL_MODEL_IDENTITIES)} "
+                 f"({ACTUAL_MODEL_IDENTITY_CONTRACT_VERSION}). Only {NOT_EXPOSED} is an "
+                 "acceptable non-answer. An unseen identity is a STOP, not a reason to widen "
+                 "the set (AR-1261 §5)")
         d_task, c_task = dsp.get("native_task_id"), cmp_.get("native_task_id")
         if d_task not in (None, "", NOT_EXPOSED) and c_task not in (None, "", NOT_EXPOSED):
             _require(d_task == c_task, ref,
