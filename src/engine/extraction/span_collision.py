@@ -26,7 +26,15 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass
 
-__all__ = ["SpanCollision", "detect_span_collisions", "role_of"]
+__all__ = [
+    "SpanCollision",
+    "detect_span_collisions",
+    "role_of",
+    "adjudicate_locations",
+    "STATUS_ACCEPTED",
+    "STATUS_ACCEPTED_PENDING_REVIEW",
+    "STATUS_REFUSED_PENDING_ADJUDICATION",
+]
 
 
 @dataclass(frozen=True)
@@ -101,6 +109,75 @@ def detect_span_collisions(
         ))
     out.sort(key=lambda c: (c.severity != "HIGH", -len(c.condition_refs)))
     return out
+
+
+STATUS_ACCEPTED = "ACCEPTED"
+STATUS_ACCEPTED_PENDING_REVIEW = "ACCEPTED_PENDING_REVIEW"
+STATUS_REFUSED_PENDING_ADJUDICATION = "REFUSED_PENDING_ADJUDICATION"
+
+
+def adjudicate_locations(
+    locations: dict,
+    substantial_overlap: float = 0.80,
+) -> tuple[dict, list[SpanCollision]]:
+    """Apply `detect_span_collisions` to a location set BEFORE it is accepted
+    (AR-1226 §6.3, verbatim: "Add a duplicate-span collision diagnostic before accepting a
+    location set").
+
+    🛑 A refusal here is NOT a claim that the quote is semantically wrong. It says the SET
+    cannot be accepted as N independently grounded conditions without adjudication — which
+    is why the status is `REFUSED_PENDING_ADJUDICATION` and never `WRONG`. Deciding which
+    (if any) member of a cross-role group keeps the span is an adjudication this module does
+    not make (§6.3: "expose/force adjudication, not invent that universal rule").
+
+    The three tiers, and the second one is the one that keeps §6.4 honest:
+
+      no reuse        -> ACCEPTED
+      same-role reuse -> ACCEPTED_PENDING_REVIEW  (flagged, NEVER auto-refused — closely
+                         related fields may legitimately rest on one sentence)
+      cross-role reuse-> REFUSED_PENDING_ADJUDICATION  (fails closed: an entry rule, a stop
+                         rule and a target rule assert different facts, so §6.5's cluster
+                         can never silently pass as independent grounded conditions again)
+
+    Returns `(verdicts, collisions)` where `verdicts` maps every condition_ref in
+    `locations` to its status record. Refs with a falsy span are absent from both — an
+    unlocated condition has no span to collide.
+    """
+    collisions = detect_span_collisions(locations, substantial_overlap=substantial_overlap)
+
+    severity_of: dict[str, str] = {}
+    group_of: dict[str, tuple[str, ...]] = {}
+    for c in collisions:
+        for ref in c.condition_refs:
+            severity_of[ref] = c.severity
+            group_of[ref] = c.condition_refs
+
+    verdicts: dict[str, dict] = {}
+    for ref, span in (locations or {}).items():
+        if not span:
+            continue
+        severity = severity_of.get(ref)
+        if severity == "HIGH":
+            status, reason = (
+                STATUS_REFUSED_PENDING_ADJUDICATION,
+                "span is reused across different top-level roles; the set cannot be accepted "
+                "as independently grounded conditions until adjudicated",
+            )
+        elif severity == "REVIEW":
+            status, reason = (
+                STATUS_ACCEPTED_PENDING_REVIEW,
+                "span is reused within one role; legitimate for closely related fields, "
+                "flagged for adjudication but not refused",
+            )
+        else:
+            status, reason = STATUS_ACCEPTED, "span is not reused by any other condition"
+        verdicts[ref] = {
+            "status": status,
+            "collision_severity": severity,
+            "collides_with": [r for r in group_of.get(ref, ()) if r != ref],
+            "reason": reason,
+        }
+    return verdicts, collisions
 
 
 def summarise(collisions: list[SpanCollision]) -> dict:

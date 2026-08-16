@@ -1,0 +1,257 @@
+{
+  "artifact": "svkm-locator-reissue-v2",
+  "authority": "AR-1226 \u00a76 LANE L1 items 1/2/6 (+ item 3 gate applied at acceptance)",
+  "run_label": "authoritative-run-1",
+  "stage": "LOCATOR RE-ISSUE ONLY \u2014 not a certificate, not wired into the Phase-1 or certificate route (AR-1226 \u00a77)",
+  "does_not_supersede": "docs/replay-results/svkm-extraction-certified/grade/phase1.json (frozen AR-1199/Phase-1 history, unmodified)",
+  "non_determinism": "the propose step is a local gemma call and is not deterministic; this artifact records ONE locate pass per condition",
+  "provenance": {
+    "video_id": "sVkmZklJDHI",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "transcript_char_count": 25071,
+    "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+    "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-157741d7cc760ea5",
+    "taxonomy_version": "h1-pilot-2026-07-12",
+    "locator_model": "gemma4:e4b-it-qat",
+    "locator_module": "src/engine/extraction/anchor_locator.py",
+    "literal_fence": "compile_lints.f2_coverage_gate via anchor_locator._resolves_as_anchor \u2014 unchanged (AR-1226 \u00a76.2)"
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 12,
+      "located_count": 7,
+      "unlocated_count": 5,
+      "locations": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "condition_text": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
+          "char_span": [
+            19546,
+            19757
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "4f6ec704ac58593a56f9189d9a1aa2dcae0f637c254dc94abec34c1f4dd119df",
+          "quote_char_count": 211,
+          "acceptance": {
+            "status": "REFUSED_PENDING_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[1].rationale",
+              "entry_sequence[2].action",
+              "stop.rationale"
+            ],
+            "reason": "span is reused across different top-level roles; the set cannot be accepted as independently grounded conditions until adjudicated"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "condition_text": "The breakout confirms the market direction (up or down) for the trade.",
+          "char_span": [
+            19546,
+            19757
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "4f6ec704ac58593a56f9189d9a1aa2dcae0f637c254dc94abec34c1f4dd119df",
+          "quote_char_count": 211,
+          "acceptance": {
+            "status": "REFUSED_PENDING_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[2].action",
+              "stop.rationale"
+            ],
+            "reason": "span is reused across different top-level roles; the set cannot be accepted as independently grounded conditions until adjudicated"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "condition_text": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
+          "char_span": [
+            19546,
+            19757
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "4f6ec704ac58593a56f9189d9a1aa2dcae0f637c254dc94abec34c1f4dd119df",
+          "quote_char_count": 211,
+          "acceptance": {
+            "status": "REFUSED_PENDING_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].rationale",
+              "stop.rationale"
+            ],
+            "reason": "span is reused across different top-level roles; the set cannot be accepted as independently grounded conditions until adjudicated"
+          }
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "condition_text": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
+          "char_span": [
+            18462,
+            18580
+          ],
+          "quote": "The fair value gap is just ensuring that the high of candle one in this instance does not overlap the low of candle 3.",
+          "quote_sha256": "1e99d97b585327cf73e64f0079e19752d8757383071735e946d931130daf53e5",
+          "quote_char_count": 118,
+          "acceptance": {
+            "status": "REFUSED_PENDING_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "targets[0].rationale"
+            ],
+            "reason": "span is reused across different top-level roles; the set cannot be accepted as independently grounded conditions until adjudicated"
+          }
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "condition_text": "The trade must be initiated during the 9:30 AM ET New York session.",
+          "char_span": [
+            19845,
+            19997
+          ],
+          "quote": "if you use this model over time and you execute over time over a large number of trades, you will see that this model is extremely successful over time.",
+          "quote_sha256": "8e14365096a7e15671814c3746f2e7cf6bdda0498a8a65c1ab71403f440d0c06",
+          "quote_char_count": 152,
+          "acceptance": {
+            "status": "ACCEPTED",
+            "collision_severity": null,
+            "collides_with": [],
+            "reason": "span is not reused by any other condition"
+          }
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "condition_text": "The stop is placed at the bottom of the FVG candle, including the wick, to allow room for breathing.",
+          "char_span": [
+            19546,
+            19757
+          ],
+          "quote": "I do want to reiterate that this model is not perfect. You are going to lose on this model. You're going to lose on every single model, okay? Because there is no perfect entry model. There's no perfect strategy.",
+          "quote_sha256": "4f6ec704ac58593a56f9189d9a1aa2dcae0f637c254dc94abec34c1f4dd119df",
+          "quote_char_count": 211,
+          "acceptance": {
+            "status": "REFUSED_PENDING_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[0].action",
+              "entry_sequence[1].rationale",
+              "entry_sequence[2].action"
+            ],
+            "reason": "span is reused across different top-level roles; the set cannot be accepted as independently grounded conditions until adjudicated"
+          }
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "condition_text": "The strategy uses a fixed mechanical target based on a 2R risk-to-reward ratio.",
+          "char_span": [
+            18462,
+            18580
+          ],
+          "quote": "The fair value gap is just ensuring that the high of candle one in this instance does not overlap the low of candle 3.",
+          "quote_sha256": "1e99d97b585327cf73e64f0079e19752d8757383071735e946d931130daf53e5",
+          "quote_char_count": 118,
+          "acceptance": {
+            "status": "REFUSED_PENDING_ADJUDICATION",
+            "collision_severity": "HIGH",
+            "collides_with": [
+              "entry_sequence[3].action"
+            ],
+            "reason": "span is reused across different top-level roles; the set cannot be accepted as independently grounded conditions until adjudicated"
+          }
+        }
+      ],
+      "unlocated": [
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "condition_text": "This establishes the initial volatility range for the trading session.",
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "condition_text": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "condition_text": "The FVG provides a high-probability entry point after the initial directional breakout.",
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "condition_text": "Entering on the closure confirms the FVG structure and minimizes entry risk.",
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "condition_text": "The 1m candle must close outside of the initial 5m range.",
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "collisions": [
+        {
+          "span": [
+            19546,
+            19757
+          ],
+          "condition_refs": [
+            "entry_sequence[0].action",
+            "entry_sequence[1].rationale",
+            "entry_sequence[2].action",
+            "stop.rationale"
+          ],
+          "roles": [
+            "entry_sequence",
+            "stop"
+          ],
+          "severity": "HIGH",
+          "detail": "one source span is the evidence for 4 conditions spanning 2 different roles ['entry_sequence', 'stop'] \u2014 conditions in different roles assert different facts and cannot all rest on the same sentence"
+        },
+        {
+          "span": [
+            18462,
+            18580
+          ],
+          "condition_refs": [
+            "entry_sequence[3].action",
+            "targets[0].rationale"
+          ],
+          "roles": [
+            "entry_sequence",
+            "targets"
+          ],
+          "severity": "HIGH",
+          "detail": "one source span is the evidence for 2 conditions spanning 2 different roles ['entry_sequence', 'targets'] \u2014 conditions in different roles assert different facts and cannot all rest on the same sentence"
+        }
+      ],
+      "collision_summary": {
+        "collisions": 2,
+        "high": 2,
+        "review": 0
+      },
+      "accepted_condition_refs": [
+        "confluences[0].description"
+      ],
+      "refused_condition_refs": [
+        "entry_sequence[0].action",
+        "entry_sequence[1].rationale",
+        "entry_sequence[2].action",
+        "entry_sequence[3].action",
+        "stop.rationale",
+        "targets[0].rationale"
+      ]
+    }
+  ],
+  "rollup": {
+    "spine_conditions": 12,
+    "located": 7,
+    "unlocated": 5,
+    "accepted": 1,
+    "refused_pending_adjudication": 6,
+    "collisions_high": 2,
+    "collisions_review": 0,
+    "propose_abstain_by_parse_failure": 0
+  }
+}
