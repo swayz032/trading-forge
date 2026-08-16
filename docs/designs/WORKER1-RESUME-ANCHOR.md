@@ -8,8 +8,13 @@ packet boundary — it describes the CURRENT boundary only, never history.**
 LAST UPDATED    : 2026-08-16, by the AR-1258 seat, at its own session boundary
 WORKTREE        : C:\Users\tonio\Projects\wt-claude-worker1-20260815
 BRANCH          : claude/worker1-h1-20260815
-HEAD            : 3e4da82c825c496d69730de90e536547babac818   (pushed; origin == local)
-LAST GRADED     : 10c04f43  — graded PASS by AR-1259
+HEAD            : refs/heads/claude/worker1-h1-20260815 — resolve it, do NOT pin it.
+                  Committing this file moves the head it would name, so a SHA here is stale by
+                  construction, one commit behind, forever. AR-1256 §3 already paid for that loop
+                  with session_anchor.expected_head; the fix was a REF, and it is a ref here too.
+LAST GRADED     : 10c04f43  — graded PASS by AR-1259. THIS one is a real pin: it is immutable
+                  history, it is the head GPT actually inspected, and every later commit on this
+                  branch is a delta you owe an explanation for.
 NEWEST RULING   : advisor-reports/AR-1259-GPT-EXTERNAL-ADVISOR-RULING-AR1258-E0-PASS-CANONICAL-AGENT-AUTHORITY-SET-D1-REPAIR-RESUMES-2026-08-16.md
                   on origin/external-advisor/gpt-rulings
 NEXT WORKER AR  : AR-1260
