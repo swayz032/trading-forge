@@ -1,0 +1,33 @@
+{
+  "artifact": "anchor-support-adjudication",
+  "version": 2,
+  "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+  "task": "For the item below answer ONE question: does the candidate quote actually EXPRESS the extracted condition text? Judge from the quoted words themselves. Do NOT assume the extracted condition is correct - it is the thing under test, produced by an automated extractor that may overstate or add claims the speaker never made. Every clause of the condition must be supported for CONFIRMED; if some clauses are supported and others are not, that is PARTIAL and you must name the unsupported clauses.",
+  "dispositions": {
+    "CONFIRMED": "the quote expresses the whole condition, every clause",
+    "PARTIAL": "some clauses supported, others not - name which are unsupported",
+    "DENIED": "real text, but does not support the condition",
+    "UNRESOLVED": "cannot be decided from the quoted words alone"
+  },
+  "answer_format": "Return JSON: {\"<item_id>\": {\"support\": \"CONFIRMED\"|\"PARTIAL\"|\"DENIED\"|\"UNRESOLVED\", \"unsupported_clauses\": [...], \"justification\": \"one or two lines\"}}",
+  "items": [
+    {
+      "item_id": "C-1",
+      "extracted_condition_text": "The 1m candle must close outside of the initial 5m range.",
+      "candidate_quotes": [
+        {
+          "candidate_id": "C-1#0",
+          "quote": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is the candles need to close outside of this 5m minute range.",
+          "char_span": [
+            9294,
+            9512
+          ]
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "items": 1,
+    "candidate_quotes": 1
+  }
+}

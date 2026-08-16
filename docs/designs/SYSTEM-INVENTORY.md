@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `5ed1898cbbb1003b54c4b256535c4e6bbff36f77`  (worktree DIRTY at generation time)
+> Generated at commit `662b9e8addfe3ea6fa5259909e277a9f677b926b`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
