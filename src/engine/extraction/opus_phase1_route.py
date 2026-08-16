@@ -54,6 +54,7 @@ from typing import Any
 
 from . import batch_locator as bl
 from . import span_collision as sc
+from .evidence_antecedent import Span, bind_qualifier_to_antecedent
 from .evidence_relevance import evaluate_evidence_relevance
 from .source_fidelity_guard import check_condition_fidelity
 
@@ -66,6 +67,7 @@ REFUSED_NOT_LITERAL = "REFUSED_NOT_LITERAL"
 HELD_DUPLICATE_ROLE = "HELD_DUPLICATE_ROLE_AMBIGUITY"
 HELD_EVIDENCE_REUSE = "HELD_ACCIDENTAL_EVIDENCE_REUSE"
 REFUSED_RELEVANCE = "REFUSED_RELEVANCE"
+RED_ANTECEDENT_UNBOUND = "RED_ANTECEDENT_UNBOUND"
 RED_FIDELITY = "RED_SOURCE_FIDELITY"
 
 # Which dispositions earn an isolated-Opus re-query (AR-1236 §6 fallback triggers).
@@ -75,6 +77,7 @@ ESCALATES_TO_ISOLATED = frozenset({
     HELD_DUPLICATE_ROLE,     # duplicate-role ambiguity unresolved
     HELD_EVIDENCE_REUSE,     # HIGH collision unresolved
     REFUSED_RELEVANCE,       # relevance rejected or unresolved
+    RED_ANTECEDENT_UNBOUND,  # the claimed earlier defining context does not hold
     RED_FIDELITY,            # fidelity needs wider / composed evidence
 })
 
@@ -97,6 +100,12 @@ class ConditionOutcome:
     fidelity_findings: list[dict] = field(default_factory=list)
     fidelity_advisory: list[dict] = field(default_factory=list)
     collision_partners: list[str] = field(default_factory=list)
+    composition: dict | None = None
+    evidence_is_composed: bool = False
+    # The exact literal spans fidelity was given, in source order. One entry normally; two when
+    # composition bound an antecedent. Recorded so a reader never has to guess which evidence a
+    # fidelity verdict was computed against.
+    evidence_quotes: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict:
         d = dict(self.__dict__)
@@ -117,22 +126,68 @@ def _same_requirement(a: str, b: str) -> tuple[bool, float]:
     return overlap >= DUPLICATE_ROLE_JACCARD, overlap
 
 
+def _validate_composition_specs(
+    specs: Sequence[dict] | None, text_by_ref: dict[str, str]
+) -> dict[str, dict]:
+    """Reject a malformed composition request LOUDLY, before any gate runs.
+
+    AR-1243 §11: the entity/qualifier definitions are caller-supplied and *"whose authority is
+    explicit"*. So an unauthored spec is refused rather than quietly honoured — a composition
+    that nobody has to justify is exactly the per-video semantic alias the same section forbids.
+    """
+    out: dict[str, dict] = {}
+    for spec in specs or []:
+        ref = spec.get("condition_ref")
+        if ref not in text_by_ref:
+            raise ValueError(
+                f"composition spec names condition_ref {ref!r}, which is not in this run's "
+                "conditions. A spec for an absent condition is a join error, and honouring it "
+                "silently would compose evidence onto nothing."
+            )
+        if ref in out:
+            raise ValueError(
+                f"two composition specs target {ref!r}. Composition carries ONE qualifier across "
+                "ONE link; picking between two specs would be choosing the greener grade."
+            )
+        if not str(spec.get("authority") or "").strip():
+            raise ValueError(
+                f"composition spec for {ref!r} has no `authority`. AR-1243 §11 allows only "
+                "caller-supplied definitions whose authority is explicit; an unauthored spec is "
+                "an invented per-video alias wearing a parameter's clothes."
+            )
+        if not str(spec.get("qualifier") or "").strip():
+            raise ValueError(
+                f"composition spec for {ref!r} has no `qualifier` — there is nothing to carry."
+            )
+        out[ref] = spec
+    return out
+
+
 def run_route(
     transcript: str,
     conditions: Sequence[dict],
     batch_answers: Sequence[dict],
     relevance_floor: float = 0.10,
+    composition_specs: Sequence[dict] | None = None,
 ) -> dict[str, Any]:
     """Run one video's batch map through every gate, in AR-1236 §10's order.
 
     `conditions`   : [{condition_ref, condition_text}, ...] from the extraction, its own order.
     `batch_answers`: [{condition_ref, raw_output}, ...] exactly as ingested — raw, unrepaired.
+    `composition_specs`: OPTIONAL antecedent-composition requests (AR-1243 §11). Each entry:
+
+        {condition_ref, qualifier, qualifier_synonyms, entity_terms,
+         definitional_markers, antecedent_span, authority}
+
+        Supplying none is the default and leaves every disposition exactly as it was — the
+        route never decides on its own that a condition "needs earlier context".
 
     Returns the full route record. It writes nothing; the driver owns persistence and the
     frozen-artifact refusal, so this module stays source-agnostic and testable.
     """
     text_by_ref = {c["condition_ref"]: c["condition_text"] for c in conditions}
     answers_by_ref = {a["condition_ref"]: a["raw_output"] for a in batch_answers}
+    specs_by_ref = _validate_composition_specs(composition_specs, text_by_ref)
 
     missing = [c["condition_ref"] for c in conditions if c["condition_ref"] not in answers_by_ref]
     if missing:
@@ -213,16 +268,77 @@ def run_route(
         )
         rel = {"grounded": rv.grounded, "reason": rv.reason, "own_score": rv.own_score,
                "best_rival_score": rv.best_rival_score, "rival": rv.rival,
-               "shared_terms": list(rv.shared_terms)}
+               "shared_terms": list(rv.shared_terms),
+               # SCOPE, STATED: relevance runs BEFORE composition (AR-1243 §12's order), so this
+               # verdict is about the primary span alone. Without this key a reader could take a
+               # composed row's green relevance as though relevance had vetted both spans.
+               "evaluated_on": "primary_span_only"}
         if not rv.grounded:
             outcomes.append(ConditionOutcome(
                 ref, REFUSED_RELEVANCE, "evidence_relevance", rv.reason,
                 char_span=mech["char_span"], quote=mech["quote"],
-                escalate_to_isolated=True, relevance=rel))
+                escalate_to_isolated=True, relevance=rel,
+                evidence_quotes=[mech["quote"]]))
             continue
 
+        # ---- gate: antecedent composition (AR-1243 §11 / AR-1239 §3.2) --- #
+        #
+        # Reuses `evidence_antecedent.bind_qualifier_to_antecedent` BY IMPORT. AR-1239 §3.2:
+        # *"Reuse it. Do not write a second antecedent engine."* Every mechanical check —
+        # order, grounding, no intervening redefinition — stays owned by that module, so this
+        # route inherits its fixes and cannot drift a second copy of the rule.
+        #
+        # It fires ONLY on an explicit caller spec. The route never infers that a condition
+        # "needs earlier defining context": inferring it is how composition would become a
+        # search for a greener grade rather than a fact about the source.
+        #
+        # BOTH SPANS SURVIVE. The composed package handed to fidelity is a LIST of two literal
+        # spans in source order — never a merged paraphrase — which the fidelity gate already
+        # accepts natively. Their exact character positions and the binding receipt are recorded
+        # on the outcome.
+        evidence_quotes = [mech["quote"]]
+        comp_record: dict | None = None
+        spec = specs_by_ref.get(ref)
+        if spec is not None:
+            ante = spec.get("antecedent_span")
+            binding = bind_qualifier_to_antecedent(
+                transcript=transcript,
+                qualifier=spec["qualifier"],
+                qualifier_synonyms=tuple(spec.get("qualifier_synonyms") or ()),
+                referring_span=Span(*mech["char_span"]),
+                antecedent_span=Span(int(ante[0]), int(ante[1])) if ante else None,
+                entity_terms=tuple(spec.get("entity_terms") or ()),
+                definitional_markers=tuple(spec.get("definitional_markers") or ()),
+            )
+            comp_record = {
+                "attempted": True,
+                "bound": binding.bound,
+                "qualifier": binding.qualifier,
+                "reason": binding.reason,          # the helper's own words, not a paraphrase
+                "authority": spec["authority"],
+                "antecedent_span": ([binding.antecedent_span.start, binding.antecedent_span.end]
+                                    if binding.antecedent_span else None),
+                "referring_span": ([binding.referring_span.start, binding.referring_span.end]
+                                   if binding.referring_span else None),
+                "antecedent_quote": (binding.antecedent_span.text(transcript)
+                                     if binding.antecedent_span else None),
+                "intervening_redefinition": binding.intervening_redefinition,
+            }
+            if not binding.bound:
+                # FAIL CLOSED. The caller asserted this condition needs earlier context and the
+                # source does not carry it, so the condition is UNRESOLVED — not quietly reverted
+                # to the uncomposed evidence, which would silently grant the weaker package the
+                # acceptance the stronger one failed to earn.
+                outcomes.append(ConditionOutcome(
+                    ref, RED_ANTECEDENT_UNBOUND, "evidence_antecedent", binding.reason,
+                    char_span=mech["char_span"], quote=mech["quote"],
+                    escalate_to_isolated=True, relevance=rel,
+                    composition=comp_record, evidence_quotes=[mech["quote"]]))
+                continue
+            evidence_quotes = [comp_record["antecedent_quote"], mech["quote"]]
+
         # ---- gate: fidelity / inflation ---------------------------------- #
-        findings = check_condition_fidelity(cond_text, [mech["quote"]])
+        findings = check_condition_fidelity(cond_text, evidence_quotes)
         if findings:
             outcomes.append(ConditionOutcome(
                 ref, RED_FIDELITY, "source_fidelity_guard",
@@ -230,14 +346,20 @@ def run_route(
                 char_span=mech["char_span"], quote=mech["quote"],
                 escalate_to_isolated=True, relevance=rel,
                 fidelity_findings=[{"kind": f.kind, "clause": f.clause, "detail": f.detail}
-                                   for f in findings]))
+                                   for f in findings],
+                composition=comp_record,
+                evidence_is_composed=len(evidence_quotes) > 1,
+                evidence_quotes=evidence_quotes))
             continue
 
         outcomes.append(ConditionOutcome(
             ref, ACCEPTED, "all_gates",
             "literal, no unresolved collision, relevance-approved, no inflation detected — "
             "PENDING CERTIFICATION, which this route cannot issue",
-            char_span=mech["char_span"], quote=mech["quote"], relevance=rel))
+            char_span=mech["char_span"], quote=mech["quote"], relevance=rel,
+            composition=comp_record,
+            evidence_is_composed=len(evidence_quotes) > 1,
+            evidence_quotes=evidence_quotes))
 
     # ---- ADVISORY fidelity sweep — §10.6 AND §10.7, which collide on real data --------------- #
     #
@@ -260,10 +382,30 @@ def run_route(
     # for a source-truth gate. That refusal stands; this does not route around it.
     for o in outcomes:
         if o.disposition != ACCEPTED and o.quote:
-            advisory = check_condition_fidelity(text_by_ref[o.condition_ref], [o.quote])
+            advisory = check_condition_fidelity(
+                text_by_ref[o.condition_ref], o.evidence_quotes or [o.quote]
+            )
             o.fidelity_advisory = [
                 {"kind": f.kind, "clause": f.clause, "detail": f.detail} for f in advisory
             ]
+
+    # A spec whose condition was stopped by an EARLIER gate never reached composition. Say so on
+    # the row: a bare absent `composition` reads identically to "composition was not requested",
+    # and the two are different facts about what this run actually checked.
+    outcome_by_ref = {o.condition_ref: o for o in outcomes}
+    for ref, spec in specs_by_ref.items():
+        o = outcome_by_ref.get(ref)
+        if o is not None and o.composition is None:
+            o.composition = {
+                "attempted": False,
+                "bound": False,
+                "qualifier": spec.get("qualifier"),
+                "authority": spec["authority"],
+                "reason": (
+                    f"NOT_REACHED: composition was requested but the condition was already "
+                    f"stopped at gate {o.gate!r} ({o.disposition}), which runs before composition"
+                ),
+            }
 
     accepted = [o for o in outcomes if o.disposition == ACCEPTED]
     escalate = [o.condition_ref for o in outcomes if o.escalate_to_isolated]
@@ -289,8 +431,20 @@ def run_route(
             "literal_verifier (anchor_locator, by import)",
             "span_collision complete-set HOLD (before acceptance)",
             "evidence_relevance (only approvals continue)",
-            "source_fidelity_guard (relevance-approved evidence only)",
+            "evidence_antecedent composition (only on an explicit authored spec)",
+            "source_fidelity_guard (relevance-approved, possibly composed, evidence only)",
         ],
+        "composition_policy": (
+            "Antecedent composition reuses evidence_antecedent.bind_qualifier_to_antecedent by "
+            "import (AR-1239 §3.2: do not write a second antecedent engine) and fires ONLY on an "
+            "explicit caller spec carrying its own `authority`. The route never infers that a "
+            "condition needs earlier defining context. A composed package is a LIST of two "
+            "literal spans in source order with both character positions and the binding receipt "
+            "preserved — never a merged paraphrase. Any failed antecedent check leaves the "
+            "condition RED_ANTECEDENT_UNBOUND rather than falling back to the uncomposed "
+            "evidence. `relevance.evaluated_on` records that relevance ran on the primary span "
+            "alone, because composition follows it in AR-1243 §12's order."
+        ),
         "fidelity_advisory_policy": (
             "`fidelity_advisory` is computed on every literal-quoted NON-ACCEPTED condition and "
             "GATES NOTHING — it changed no disposition and cannot. It exists because AR-1236 "
