@@ -8,7 +8,12 @@ import { verifyResumeAnchor } from './resume-anchor-guard.mjs';
 import { auditPaths, decideEditPermission } from './lane-boundary-guard.mjs';
 import { evaluateScope } from './edit-scope-guard.mjs';
 import { runClaudeFinishCheck } from './claude-finish-check.mjs';
-import { loadG2Context, evaluateG2PreCall } from './g2-precall-guard.mjs';
+import {
+  loadG2Context,
+  evaluateG2PreCall,
+  loadNativeCallManifest,
+  SUBAGENT_TOOL_NAMES,
+} from './g2-precall-guard.mjs';
 
 const GUARDED_EDIT_TOOLS = new Set(['Edit', 'Write', 'NotebookEdit']);
 
@@ -152,16 +157,29 @@ export function evaluateHookEvent({ input, manifest, env = process.env }) {
     // AR-1263 §7C: the G2-D one-shot boundary sits BEFORE the model call. A subagent
     // dispatch that touches G2 surface without a valid durable pre-call permit is refused
     // here, because post-call refusal cannot un-spend an attempt.
-    if (manifest.g2_precall && manifest.g2_precall.enabled === true) {
+    // AR-1267 §6.2 scoping: the G2 artifacts are loaded ONLY for a subagent dispatch. Loading
+    // them for every Edit/Write would make an unreadable G2 artifact deny ordinary lane work —
+    // the same brick-the-seat shape as registering TaskCompleted against a receipt that does not
+    // exist yet. Fail-closed must be aimed at the thing it protects.
+    if (manifest.g2_precall && manifest.g2_precall.enabled === true
+        && SUBAGENT_TOOL_NAMES.includes(input.tool_name)) {
       try {
         const g2 = loadG2Context({
           queuePath: path.resolve(repoRoot, manifest.g2_precall.queue_path),
           receiptDir: path.resolve(repoRoot, manifest.g2_precall.receipt_dir),
         });
+        // AR-1267 §6.2: the frozen eight-row native-call identity. It is REQUIRED whenever the
+        // pre-call gate is enabled — a missing path is a denial inside the guard, never a
+        // silently unbound call, because "no expectation loaded" would otherwise be the widest
+        // hole of all.
+        const nativeCalls = loadNativeCallManifest({
+          manifestPath: path.resolve(repoRoot, manifest.g2_precall.native_call_manifest_path),
+        });
         const verdict = evaluateG2PreCall({
           toolName: input.tool_name,
           toolInput: input.tool_input,
           g2,
+          nativeCalls,
           cwd: repoRoot,
           // AR-1265 §3.2: in the dedicated eight-call session, membership is decided by the
           // session rather than by the payload, so a G2 dispatch carrying only condition prose

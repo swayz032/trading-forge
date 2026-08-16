@@ -29,9 +29,34 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 
 export const G2_PERMIT_SCHEMA = 'g2d-precall-permit-v1';
 export const APPROVED_REQUESTED_MODEL = 'opus';
+export const NATIVE_CALL_MANIFEST_SCHEMA = 'g2d-native-call-identity-v1';
+
+/**
+ * AR-1267 §6.1 — THE ACTUAL MODEL FIELD, NOT THE PERMIT'S OPINION OF IT.
+ *
+ * `[MEASURED 2026-08-16, live Agent tool schema, read WITHOUT dispatching]` the subagent tool
+ * input is `{description, prompt, subagent_type, model?, isolation?}` with
+ * `additionalProperties: false`, and `model` is an enum of {sonnet, opus, haiku, fable}. Two
+ * facts from that schema are load-bearing here and neither is guessable:
+ *
+ *   1. `model` is OPTIONAL, and omitting it inherits the parent/agent-definition model. So a
+ *      G2 call with no `model` field is NOT "probably Opus" — it is unbound, and unbound must
+ *      DENY (AR-1267 §9F: "Agent model omitted/inherited when explicit Opus is required -> deny").
+ *   2. `subagent_type: 'fork'` IGNORES `model` outright and inherits the parent's context. That
+ *      would break the isolation law and silently defeat the model binding at the same time, so
+ *      the frozen row pins the type and a fork can never match it.
+ *
+ * `additionalProperties: false` is also why the permit travels as a `G2D-PERMIT:` marker inside
+ * the prompt rather than a `g2d_permit` field: a real native call cannot carry an extra field.
+ * The frozen row therefore pins the prompt WITH its marker, which stays deterministic because
+ * the permit path is derived from the receipt dir and the condition ref.
+ */
+export const ACTUAL_MODEL_FIELD = 'model';
+export const APPROVED_ACTUAL_MODEL = 'opus';
 
 /**
  * Subagent-dispatch tools. A model call issued through any of these can spend an attempt.
@@ -86,7 +111,15 @@ export function loadG2Context({ queuePath, receiptDir }) {
 }
 
 /** A condition is spent if the durable queue records an attempt, or ANY receipt file for it
- *  already exists on disk. Either is sufficient — they are separate durable witnesses. */
+ *  already exists on disk. Either is sufficient — they are separate durable witnesses.
+ *
+ *  🛑 AR-1267 §5 — DO NOT "FIX" THIS TO IGNORE `.attempt`. It reads as if it contradicts the
+ *  durable law (which writes `.attempt` BEFORE the model runs), and under AR-1266 it genuinely
+ *  did: the caller was expected to claim first, so the guard denied the very sequence the law
+ *  mandates. The contradiction was in WHO CLAIMS, not in this predicate. Now the hook itself
+ *  performs the transition (see §10 of `evaluateG2PreCall`), so at the moment this runs the
+ *  correct state is READY with no receipts, and a pre-existing `.attempt` is exactly what it
+ *  looks like: a prior claim or a crashed call, which is denied pending desk adjudication. */
 export function conditionIsSpent(g2, conditionRef) {
   if (Object.prototype.hasOwnProperty.call(g2.attempts, conditionRef)) {
     return { spent: true, witness: 'queue.attempts records this condition' };
@@ -97,6 +130,115 @@ export function conditionIsSpent(g2, conditionRef) {
     if (fs.existsSync(p)) return { spent: true, witness: `receipt exists: ${path.basename(p)}` };
   }
   return { spent: false, witness: null };
+}
+
+/**
+ * AR-1267 §9E — FORCED CAPTURE. A `.dispatch` with no completed `.raw` + `.completion` means a
+ * call went out and its answer was never captured. Racing on to the next frozen ref would spend
+ * a second one-shot attempt while the first answer is still unrecovered — and an uncaptured
+ * answer cannot be re-obtained, because the attempt that produced it is already spent.
+ *
+ * So a crash-shaped ref STOPS THE CAMPAIGN for desk adjudication rather than being skipped.
+ * Returns the outstanding ref, or null. Read-only; it never repairs what it finds.
+ */
+export function outstandingCapture(g2) {
+  for (const ref of g2.entries.keys()) {
+    const base = safeName(ref);
+    const at = (part) => path.join(g2.receiptDir, `${base}.${part}.json`);
+    if (!fs.existsSync(at('dispatch'))) continue;
+    const missing = ['raw', 'completion'].filter((p) => !fs.existsSync(at(p)));
+    if (missing.length) {
+      return { ref, missing, witness: `${base}.dispatch.json exists but ${missing.map((m) => `${base}.${m}.json`).join(' + ')} does not` };
+    }
+  }
+  return null;
+}
+
+/**
+ * AR-1267 §6.2 — the frozen EIGHT-ROW NATIVE-CALL IDENTITY.
+ *
+ * The queue's `task_input_sha256` binds the LOGICAL task. It says nothing about the bytes that
+ * actually reach the model, so a permit for the right condition could accompany a prompt
+ * carrying batch answers, a prior winner, a GPT hint or a "correct quote" — and the guard would
+ * have seen only that the invocation text CONTAINS the condition ref.
+ *
+ * This artifact is frozen BEFORE any answer exists, derived only from the already-frozen queue
+ * and the pinned source identities, and it is what the actual call is hash-matched against.
+ */
+export function loadNativeCallManifest({ manifestPath }) {
+  if (!manifestPath || !fs.existsSync(manifestPath)) {
+    throw new Error(`frozen native-call manifest not found: ${manifestPath}`);
+  }
+  const doc = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  if (doc.schema !== NATIVE_CALL_MANIFEST_SCHEMA) {
+    throw new Error(`native-call manifest schema is not ${NATIVE_CALL_MANIFEST_SCHEMA}`);
+  }
+  const rows = new Map();
+  for (const row of doc.calls || []) rows.set(row.condition_ref, row);
+  if (rows.size === 0) throw new Error('native-call manifest contains no rows');
+  return {
+    manifestPath,
+    queueArtifactSha256: doc.queue_artifact_sha256,
+    rows,
+  };
+}
+
+/**
+ * The canonical hash over the LOAD-BEARING fields of the actual tool input.
+ *
+ * Only three fields decide what the model is and what it is asked; `description` and
+ * `isolation` are excluded on purpose, because binding a field that does not change the model's
+ * task would make the guard brittle without making it stricter. Key order is fixed by the
+ * literal, so this is deterministic across processes.
+ */
+export function canonicalNativeCallSha256(toolInput) {
+  const canonical = JSON.stringify({
+    model: typeof toolInput?.model === 'string' ? toolInput.model : null,
+    subagent_type: typeof toolInput?.subagent_type === 'string' ? toolInput.subagent_type : null,
+    prompt: typeof toolInput?.prompt === 'string' ? toolInput.prompt : null,
+  });
+  return crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
+}
+
+/**
+ * AR-1267 §5 — THE TRUSTED TRANSITION, PERFORMED INSIDE PreToolUse.
+ *
+ * The durable law writes `.attempt` BEFORE the model is invoked (`claim_attempt`), and
+ * `record_native_dispatch` permits `.dispatch` only from CLAIMED. The previous guard treated any
+ * `.attempt` as spent, so the two rules could not both be satisfied: claim first and the guard
+ * denied; do not claim and the model ran unbudgeted. The seam was procedural, so the repair is
+ * to remove the seam — the hook itself performs `claim -> dispatch` and only then returns ALLOW.
+ *
+ * This SHELLS OUT to the Python law rather than reimplementing it. A second implementation of a
+ * receipt contract is a copy that drifts and stops biting while still reporting PASS — the same
+ * reason `claude_guard_hook.mjs` is a doorway and not a second guard.
+ */
+export function defaultTransition({ repoRoot, queuePath, receiptDir, conditionRef, taskInputSha256, python }) {
+  const script = path.join(repoRoot, 'scripts', 'g2d_precall_transition.py');
+  if (!fs.existsSync(script)) {
+    return { ok: false, error: `protected transition doorway not found: ${script}` };
+  }
+  const exe = python || process.env.TF_PYTHON || 'python';
+  const res = spawnSync(exe, [
+    script,
+    '--queue', queuePath,
+    '--receipt-dir', receiptDir,
+    '--condition-ref', conditionRef,
+    '--task-input-sha256', taskInputSha256,
+  ], { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, cwd: repoRoot });
+
+  if (res.error) return { ok: false, error: `transition doorway did not execute: ${res.error.message}` };
+  const out = (res.stdout || '').trim();
+  let parsed = null;
+  try { parsed = JSON.parse(out); } catch { parsed = null; }
+  if (res.status !== 0 || !parsed || parsed.ok !== true) {
+    return {
+      ok: false,
+      error: `transition refused (exit ${res.status}): ${(parsed && parsed.error) || (res.stderr || '').trim() || out || 'no output'}`,
+      raw: parsed,
+    };
+  }
+  return { ok: true, receipts: parsed };
 }
 
 /**
@@ -154,7 +296,15 @@ const deny = (reason) => ({ allow: false, g2: true, reason });
  * Non-G2 subagent usage is untouched and remains usable under its own policy — this guard
  * exists to protect eight frozen calls, not to police ordinary work.
  */
-export function evaluateG2PreCall({ toolName, toolInput, g2, cwd = process.cwd(), strictSession = false }) {
+export function evaluateG2PreCall({
+  toolName,
+  toolInput,
+  g2,
+  cwd = process.cwd(),
+  strictSession = false,
+  nativeCalls = null,
+  transition = defaultTransition,
+}) {
   if (!SUBAGENT_TOOLS.has(toolName)) return { allow: true, g2: false, reason: 'not a subagent dispatch' };
 
   // AR-1265 §3.2 — THE CONTENT-DETECTION BYPASS.
@@ -227,9 +377,92 @@ export function evaluateG2PreCall({ toolName, toolInput, g2, cwd = process.cwd()
     return deny(`permit attempt must be 1 and within max_attempts_per_condition=${g2.maxAttemptsPerCondition}, got ${permit.attempt}`);
   }
 
+  // 7. AR-1267 §9E — nothing proceeds while an earlier answer is still uncaptured.
+  const outstanding = outstandingCapture(g2);
+  if (outstanding) {
+    return deny(
+      `a prior frozen dispatch has not been captured (${outstanding.witness}); every subsequent ` +
+      'frozen dispatch is refused until that answer is captured or the desk adjudicates it. ' +
+      'An uncaptured answer cannot be re-obtained — its attempt is already spent.',
+    );
+  }
+
+  // 8. AR-1267 §6.1 — THE ACTUAL model field, not the permit's claim about it.
+  //    Checked separately from the hash so the denial names the real reason.
+  const actualModel = toolInput ? toolInput[ACTUAL_MODEL_FIELD] : undefined;
+  if (typeof actualModel !== 'string' || actualModel.trim() === '') {
+    return deny(
+      `the actual native call sets no '${ACTUAL_MODEL_FIELD}' field, so its model is inherited ` +
+      `rather than requested; G2-D requires an explicit '${APPROVED_ACTUAL_MODEL}' route`,
+    );
+  }
+  if (actualModel !== APPROVED_ACTUAL_MODEL) {
+    return deny(
+      `the actual native call requests model '${actualModel}', not '${APPROVED_ACTUAL_MODEL}'; ` +
+      'a correct-looking permit may not accompany a call to another model',
+    );
+  }
+
+  // 9. AR-1267 §6.2 — the actual call must BE the frozen call, byte for byte.
+  if (!nativeCalls) {
+    return deny(
+      'no frozen native-call identity manifest is loaded, so the actual prompt and model cannot ' +
+      'be bound to the authorized task; refusing before the model call',
+    );
+  }
+  if (nativeCalls.queueArtifactSha256 !== g2.queueSha256) {
+    return deny(
+      `native-call manifest was frozen against queue ${nativeCalls.queueArtifactSha256} but the ` +
+      `live frozen queue is ${g2.queueSha256}`,
+    );
+  }
+  const row = nativeCalls.rows.get(permit.condition_ref);
+  if (!row) {
+    return deny(`native-call manifest has no frozen row for ${permit.condition_ref}`);
+  }
+  if (row.task_input_sha256 !== entry.task_input_sha256) {
+    return deny(`native-call row for ${permit.condition_ref} pins a task hash the frozen queue does not`);
+  }
+  if (row.subagent_type !== toolInput?.subagent_type) {
+    return deny(
+      `the actual native call uses subagent_type '${toolInput?.subagent_type}', not the frozen ` +
+      `'${row.subagent_type}'`,
+    );
+  }
+  const actualSha = canonicalNativeCallSha256(toolInput);
+  if (actualSha !== row.native_call_sha256) {
+    return deny(
+      `the actual native call does not match the frozen execution identity for ` +
+      `${permit.condition_ref}: canonical sha256 ${actualSha} != frozen ${row.native_call_sha256}. ` +
+      'A changed prompt, an added hint, a pasted batch answer or a changed model all land here.',
+    );
+  }
+
+  // 10. AR-1267 §5 — THE TRANSITION IS THE ALLOW.
+  //     `.attempt` then `.dispatch`, both create-only, through the existing Python law, and only
+  //     then does Claude get to run the model. The create-only receipt is the race arbiter, so a
+  //     concurrent pair produces at most one ALLOW. If the claim lands and the dispatch does not,
+  //     the attempt is SPENT and this denies: no cleanup, no retry (AR-1267 §5).
+  const moved = transition({
+    repoRoot: cwd,
+    queuePath: g2.queuePath,
+    receiptDir: g2.receiptDir,
+    conditionRef: permit.condition_ref,
+    taskInputSha256: entry.task_input_sha256,
+  });
+  if (!moved || moved.ok !== true) {
+    return deny(
+      `the durable claim -> dispatch transition did not complete, so the model call is refused: ` +
+      `${(moved && moved.error) || 'transition returned nothing'}`,
+    );
+  }
+
   return {
     allow: true,
     g2: true,
-    reason: `authorized G2 pre-call permit for ${permit.condition_ref} at queue ${g2.queueSha256.slice(0, 12)}`,
+    transitioned: true,
+    reason:
+      `authorized G2 pre-call permit for ${permit.condition_ref} at queue ` +
+      `${g2.queueSha256.slice(0, 12)}; durable attempt and dispatch were written before this ALLOW`,
   };
 }

@@ -16,6 +16,7 @@ import {
   sha256File,
   G2_PERMIT_SCHEMA,
   SUBAGENT_TOOL_NAMES,
+  canonicalNativeCallSha256,
 } from './g2-precall-guard.mjs';
 
 const REF_A = 'entry_sequence[0].rationale';
@@ -73,19 +74,69 @@ function writePermit(ctx, overrides = {}) {
 }
 
 // A realistic G2 dispatch: it names the condition and carries a permit pointer.
+//
+// AR-1267 §6 — the actual call now also has to BE the frozen call. `model` and `subagent_type`
+// are part of a real dispatch, and the prompt is hash-bound, so the helper composes the exact
+// shape the synthetic native-call manifest below freezes. The previous helper omitted `model`
+// entirely, and the two tests that used it went RED the moment the binding landed: the call
+// they called "authorized" was one whose model was inherited rather than requested.
+const FROZEN_SUBAGENT_TYPE = 'general-purpose';
+
+function promptFor(permitPath, ref) {
+  return `Answer the frozen condition ${ref}. G2D-PERMIT: ${permitPath}`;
+}
+
 function dispatch(permitPath, ref = REF_A, extra = {}) {
   return {
     toolName: 'Agent',
     toolInput: {
       description: 'isolated G2-D call',
-      prompt: `Answer the frozen condition ${ref}. G2D-PERMIT: ${permitPath}`,
+      prompt: promptFor(permitPath, ref),
+      subagent_type: FROZEN_SUBAGENT_TYPE,
+      model: 'opus',
       ...extra,
     },
   };
 }
 
-function run(ctx, call) {
-  return evaluateG2PreCall({ ...call, g2: ctx.g2, cwd: ctx.root });
+/** The frozen native-call identity for this synthetic ctx. COMPUTED with the guard's own
+ *  canonicaliser — a hand-copied expected hash would embalm a dead number and stop bitings. */
+function nativeCallsFor(ctx, permitPath, ref = REF_A, overrides = {}) {
+  const toolInput = dispatch(permitPath, ref).toolInput;
+  return {
+    manifestPath: '<synthetic>',
+    queueArtifactSha256: ctx.g2.queueSha256,
+    rows: new Map([[ref, {
+      condition_ref: ref,
+      task_input_sha256: ref === REF_A ? TASK_SHA_A : TASK_SHA_B,
+      model: 'opus',
+      subagent_type: FROZEN_SUBAGENT_TYPE,
+      native_call_sha256: canonicalNativeCallSha256(toolInput),
+      ...overrides,
+    }]]),
+  };
+}
+
+/** A transition stub. The real one shells out to the protected Python doorway; these controls
+ *  must never touch the real durable law, so the stub records that it was asked and what with.
+ *  `calls` is asserted on directly — "the guard allowed" and "the guard claimed first" are two
+ *  different claims and this keeps them separable. */
+function fakeTransition(outcome = { ok: true }) {
+  const fn = (args) => { fn.calls.push(args); return typeof outcome === 'function' ? outcome(args) : outcome; };
+  fn.calls = [];
+  return fn;
+}
+
+function run(ctx, call, opts = {}) {
+  const permitPath = opts.permitPath ?? null;
+  return evaluateG2PreCall({
+    ...call,
+    g2: ctx.g2,
+    cwd: ctx.root,
+    nativeCalls: opts.nativeCalls ?? (permitPath ? nativeCallsFor(ctx, permitPath, opts.ref ?? REF_A) : null),
+    transition: opts.transition ?? fakeTransition(),
+    ...opts.evaluate,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -102,10 +153,17 @@ test('POSITIVE: benign non-G2 subagent usage remains usable', () => {
 test('POSITIVE: an exact authorized permit reaches the tool boundary without spending a real condition', () => {
   const ctx = makeG2();
   const permit = writePermit(ctx);
-  const r = run(ctx, dispatch(permit));
-  assert.equal(r.allow, true);
+  const moved = fakeTransition();
+  const r = run(ctx, dispatch(permit), { permitPath: permit, transition: moved });
+  assert.equal(r.allow, true, r.reason);
   assert.equal(r.g2, true);
-  // and nothing was written into the receipt directory by the guard itself
+  // AR-1267 §5: the ALLOW is the transition. A POSITIVE WITNESS that the claim->dispatch path
+  // actually ran — "allow" alone is satisfied by a guard that skipped it.
+  assert.equal(r.transitioned, true);
+  assert.equal(moved.calls.length, 1);
+  assert.equal(moved.calls[0].conditionRef, REF_A);
+  assert.equal(moved.calls[0].taskInputSha256, TASK_SHA_A);
+  // and the GUARD itself still writes nothing into the receipt directory — the durable law does.
   assert.deepEqual(fs.readdirSync(ctx.receiptDir), ['README.md']);
 });
 
@@ -311,9 +369,10 @@ test('STRICT §3.2: the same prose-only dispatch is DENIED before the call when 
 test('STRICT §3.2: an exact permit still passes under strict mode', () => {
   const ctx = makeG2();
   const permit = writePermit(ctx);
-  const v = evaluateG2PreCall({ ...dispatch(permit), g2: ctx.g2, cwd: ctx.root, strictSession: true });
+  const v = run(ctx, dispatch(permit), { permitPath: permit, evaluate: { strictSession: true } });
   assert.equal(v.allow, true, v.reason);
   assert.equal(v.g2, true);
+  assert.equal(v.transitioned, true);
 });
 
 test('STRICT §3.2: strict mode does not weaken any permit check', () => {

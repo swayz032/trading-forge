@@ -11,12 +11,32 @@ import { fileURLToPath } from 'node:url';
 // BOOTSTRAP NOTE, deliberate: with the guard ACTIVE a worker cannot repair this toolbox.
 // That is the point — a repair is a desk-authorized packet on the toolbox authority branch
 // (as AR-1264 itself is), not something a guarded seat grants itself mid-session.
-const SELF_PROTECTED_RULES = [
+// AR-1267 §3 (F-1) — THE LIVE DOORWAY WAS REACHABLE BY THE WORKER IT GUARDS.
+// AR-1264 protected the manifest, the settings, `.claude/hooks/` and the pinned toolbox. Then
+// AR-1266 moved the EXECUTING control path into two Worker-1 files under `scripts/` — and
+// `scripts/` is an ALLOWED prefix in the Worker-1 edit scope. So the guarded worker could edit
+// the doorway that runs the guard and the activator that decides WHICH guard gets run, which is
+// a self-authorization surface however narrow the packet is.
+//   `A GUARD YOU ARE PERMITTED TO EDIT IS A GUARD YOU AUTHORED.`
+// These are `exact`, not a `scripts/` prefix, deliberately: the lane's ordinary script work must
+// stay allowed, and a prefix here would quietly convert F-1 into a lane-wide freeze.
+export const SELF_PROTECTED_RULES = [
   { kind: 'contains', value: 'hook-guard-manifest', reason: 'the worker guard manifest declares the worker\'s own permissions' },
   { kind: 'exact', value: '.claude/settings.json', reason: 'live hook registration' },
   { kind: 'exact', value: '.claude/settings.local.json', reason: 'live hook registration' },
   { kind: 'prefix', value: '.claude/hooks/', reason: 'live hook implementations' },
   { kind: 'prefix', value: 'advisor-prepared/gpt-speed-engineering-lane/tooling/', reason: 'the pinned guard toolbox' },
+  { kind: 'exact', value: 'scripts/claude_guard_hook.mjs', reason: 'the live hook doorway that executes the guard' },
+  { kind: 'exact', value: 'scripts/claude_toolbox.mjs', reason: 'the activator that selects and materializes the pinned toolbox' },
+  { kind: 'exact', value: 'scripts/g2d_precall_transition.py', reason: 'the protected claim->dispatch transition doorway' },
+  { kind: 'exact', value: 'scripts/g2d_freeze_native_calls.py', reason: 'the freezer of the native-call execution identity' },
+  // AR-1267 §6 requires a changed prompt/model/condition to DENY before the model runs. That
+  // property is only as strong as the artifact it compares against, and the artifact lives under
+  // `docs/replay-results/`, which the Worker-1 edit scope ALLOWS. An editable expectation is not
+  // an expectation. (Scoped to the file this packet introduces; see AR-1268 FINDINGS for the
+  // pre-existing sibling — the frozen QUEUE sits under the same allowed prefix and is NOT
+  // protected here, because AR-1267 §9 forbids broadening and it is not this packet's defect.)
+  { kind: 'contains', value: 'native_call_manifest', reason: 'the frozen native-call execution identity the pre-call guard matches against' },
 ];
 
 const COORDINATION_RULES = [
