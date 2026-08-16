@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `eeda148078c67b01efeca7762c2727dec449d4be`  (worktree DIRTY at generation time)
+> Generated at commit `8baabd25e6fdf983dd3822f830b1b3a87a0b4108`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 300 | 392 | 125111 | 1933 |
+| `src/` | Python | 300 | 392 | 125110 | 1933 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -3637,9 +3637,9 @@ This is the *we already have this* list.  Check it before writing anything.
 | `apply_cross_symbol_dll_to_bar` | function | `src/engine/context/cross_symbol_dll.py:90` | 0 | unique |
 | `build_cs_dll_disclosure` | function | `src/engine/context/cross_symbol_dll.py:155` | 1 | unique |
 | `apply_cross_symbol_dll_to_entries` | function | `src/engine/context/cross_symbol_dll.py:193` | 1 | unique |
-| `EligibilityDecision` | class | `src/engine/context/eligibility_gate.py:26` | 1 | unique |
-| `_kill_zone_active` | function | `src/engine/context/eligibility_gate.py:41` | 0 | unique |
-| `evaluate_signal` | function | `src/engine/context/eligibility_gate.py:46` | 4 | unique |
+| `EligibilityDecision` | class | `src/engine/context/eligibility_gate.py:25` | 1 | unique |
+| `_kill_zone_active` | function | `src/engine/context/eligibility_gate.py:40` | 0 | unique |
+| `evaluate_signal` | function | `src/engine/context/eligibility_gate.py:45` | 4 | unique |
 | `FrameworkRefusal` | class | `src/engine/context/framework_refusal.py:31` | 0 | unique |
 | `evaluate_framework_risk` | function | `src/engine/context/framework_refusal.py:45` | 1 | unique |
 | `htf_period` | function | `src/engine/context/htf_availability.py:37` | 1 | unique |
@@ -3674,7 +3674,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `PlaybookDecision` | class | `src/engine/context/playbook_router.py:50` | 1 | unique |
 | `_compute_router_hash` | function | `src/engine/context/playbook_router.py:216` | 0 | unique |
 | `_check_no_trade_conditions` | function | `src/engine/context/playbook_router.py:230` | 0 | unique |
-| `route_playbook` | function | `src/engine/context/playbook_router.py:263` | 3 | unique |
+| `route_playbook` | function | `src/engine/context/playbook_router.py:263` | 2 | unique |
 | `_to_et` | function | `src/engine/context/session_context.py:22` | 0 | unique |
 | `SessionContext` | class | `src/engine/context/session_context.py:51` | 5 | unique |
 | `_get_session` | function | `src/engine/context/session_context.py:67` | 1 | AMBIG |
