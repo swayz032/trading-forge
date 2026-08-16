@@ -1,0 +1,113 @@
+{
+  "artifact": "svkm-o1-batch-delegation-task",
+  "arm_version": "svkm-opus-batch-locator-o1-v1",
+  "authority": "AR-1234 \u00a76 (LANE O1 \u2014 batched Opus locator candidate)",
+  "topology": "ONE fresh reader per video; full transcript once; all spine conditions at once; structured map condition_ref -> literal quote | null",
+  "topology_confound": "A BATCH READER SEES EVERY CONDITION AT ONCE; THE ISOLATED BENCHMARK READER SAW ONE. The batch arm can therefore avoid re-using a passage for a reason the isolated arm never had. A LOWER COLLISION COUNT IN THE BATCH ARM IS NOT EVIDENCE OF BETTER GROUNDING -- it is partly an artefact of the topology being tested. Compare grounding on the quotes, not on the collision count.",
+  "input": {
+    "video_id": "sVkmZklJDHI",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "transcript_char_count": 25071,
+    "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+    "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-157741d7cc760ea5",
+    "taxonomy_version": "h1-pilot-2026-07-12"
+  },
+  "brief": {
+    "brief_version": "batch-locator-brief-v1",
+    "batch_brief": "You are an anchor locator for trading-education transcripts. You are given a LIST of extracted strategy conditions from ONE video and the FULL transcript they were extracted from. For EACH condition in the list, find the literal span of transcript text that GROUNDS that condition -- the trader's own words that the condition is describing.\n\nRules:\n1. Your `quote` MUST be copied VERBATIM from the transcript -- exact wording, exact punctuation. Do not paraphrase, summarize, or correct the trader's grammar.\n2. Prefer the SHORTEST contiguous span that still grounds the condition.\n3. If you cannot find transcript text that grounds this condition, return `quote: null`. Declining is CORRECT when no grounding exists -- do not invent or approximate a quote.\n\nReturn a single JSON object of exactly this shape:\n{\"answers\": [{\"condition_ref\": \"<the ref exactly as given>\", \"quote\": \"<verbatim transcript span>\"}, ...]}\nInclude EXACTLY ONE entry for EVERY condition listed, using the `condition_ref` strings exactly as given. Use `\"quote\": null` for a condition you decline. Return the JSON object and nothing else.",
+    "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+    "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+    "authored_for_batch_framing": "You are an anchor locator for trading-education transcripts. You are given a LIST of extracted strategy conditions from ONE video and the FULL transcript they were extracted from. For EACH condition in the list, find the literal span of transcript text that GROUNDS that condition -- the trader's own words that the condition is describing.",
+    "authored_for_batch_output_contract": "Return a single JSON object of exactly this shape:\n{\"answers\": [{\"condition_ref\": \"<the ref exactly as given>\", \"quote\": \"<verbatim transcript span>\"}, ...]}\nInclude EXACTLY ONE entry for EVERY condition listed, using the `condition_ref` strings exactly as given. Use `\"quote\": null` for a condition you decline. Return the JSON object and nothing else.",
+    "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+    "delta_declaration": "The numbered RULES are the production locator's own, reused byte-for-byte. The framing sentence and the output contract are AUTHORED HERE because a one-condition brief cannot express an N-condition task. This brief is therefore NOT the frozen benchmark brief and the batch arm's results are NOT admissible against the benchmark packet hash -- they are a new arm that must earn parity (AR-1234 \u00a76)."
+  },
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "strategy_index": 0,
+      "condition_text": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
+      "condition_text_sha256": "0f5bdd78abd1ada6c4d9190dba399d238196af204388c118c875c16701014f4d"
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "strategy_index": 0,
+      "condition_text": "This establishes the initial volatility range for the trading session.",
+      "condition_text_sha256": "ed11a7f96041753f6a1208792fd385a437efe881de836bd07b18ab128facfa24"
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "strategy_index": 0,
+      "condition_text": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
+      "condition_text_sha256": "e8329d39731195b55c500b4294bc363444320c35e3a92e037a124cf162635a21"
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "strategy_index": 0,
+      "condition_text": "The breakout confirms the market direction (up or down) for the trade.",
+      "condition_text_sha256": "4de8dfed136c14429198063df3717b7002098fca553cc05ab6c18d9185f000a8"
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "strategy_index": 0,
+      "condition_text": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
+      "condition_text_sha256": "dcd6f76d57833209b6dba5c989c53071ff976c2916078888bbca4f03cf121ecb"
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "strategy_index": 0,
+      "condition_text": "The FVG provides a high-probability entry point after the initial directional breakout.",
+      "condition_text_sha256": "00d7bcb0e827f3e9c05d4abe1e5824ccd78881d084ee4cb5d2a336feef4bdbeb"
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "strategy_index": 0,
+      "condition_text": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
+      "condition_text_sha256": "be92970063ceae9bbe56fb4af79876691f5366f257e6657582f609815918e244"
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "strategy_index": 0,
+      "condition_text": "Entering on the closure confirms the FVG structure and minimizes entry risk.",
+      "condition_text_sha256": "20344ae28880cfa5d73125b06ab349f9e854a7eedc047f242d1a5864972fc168"
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "strategy_index": 0,
+      "condition_text": "The trade must be initiated during the 9:30 AM ET New York session.",
+      "condition_text_sha256": "c0461ef091d7e5b1220c46a5e18ac5b1a181aebf8ecc8f7eb66097fc69869da1"
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "strategy_index": 0,
+      "condition_text": "The 1m candle must close outside of the initial 5m range.",
+      "condition_text_sha256": "70cfd2748209d9ccfce4ab89abece0eeb43cd5eee52a62d3480afd6186babeca"
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "strategy_index": 0,
+      "condition_text": "The stop is placed at the bottom of the FVG candle, including the wick, to allow room for breathing.",
+      "condition_text_sha256": "79b86a32baab21048d566a962382ad1d2efaff17782933e19fc28aeb59d7e727"
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "strategy_index": 0,
+      "condition_text": "The strategy uses a fixed mechanical target based on a 2R risk-to-reward ratio.",
+      "condition_text_sha256": "f8ccba4cadd53571b4cb08445a683572853c3cd53e347c2fb66fb0d3a4e2a705"
+    }
+  ],
+  "condition_count": 12,
+  "task_path": "docs/replay-results/svkm-extraction-certified/o1-batch/batch_task.txt",
+  "task_sha256": "eaae2c0e85c318896e6222f7f1a3f1ab0e230aa667592b878cceb6c910ae17bb",
+  "leakage_screen": {
+    "needles_checked": 72,
+    "hits": [],
+    "positive_witness": {
+      "live": true,
+      "needles_available": 72,
+      "control": "one forbidden needle appended to a COPY of the task; the screen must fire",
+      "fired_on_control": 4
+    },
+    "surface": "the brief and the condition list \u2014 NOT the transcript, which legitimately contains every sentence any candidate ever quoted"
+  }
+}

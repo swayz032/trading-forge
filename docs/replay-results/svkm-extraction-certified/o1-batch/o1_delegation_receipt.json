@@ -1,0 +1,34 @@
+{
+  "artifact": "svkm-o1-batch-delegation-receipt",
+  "authority": "AR-1234 §6 acceptance controls 11 and 12",
+  "invocation_method": "Claude Code Agent tool (subagent), model override = opus",
+  "subagent_type": "general-purpose",
+  "topology": "ONE fresh subagent per TRIAL — not per condition. Each subagent received only the path to batch_task.txt and answered all 12 conditions in one context.",
+  "agent_count": 3,
+  "conditions_per_agent": 12,
+  "model_identity_reported": "opus",
+  "model_identity_caveat": "strongest identity this execution path exposes; the exact provider build string is not available to the orchestrator and is not invented",
+  "spend": {
+    "anthropic_api_key_used": false,
+    "sdk_used": false,
+    "new_api_spend": false,
+    "path": "Claude Code subscription subagents (AR-1232 §9 correction, carried forward)"
+  },
+  "per_agent_run_evidence": [
+    { "trial": 1, "duration_ms": 14609, "subagent_tokens": 53763, "tool_uses": 1 },
+    { "trial": 2, "duration_ms": 14329, "subagent_tokens": 53757, "tool_uses": 1 },
+    { "trial": 3, "duration_ms": 13859, "subagent_tokens": 53763, "tool_uses": 1 }
+  ],
+  "cost_comparison_vs_isolated_arm": {
+    "scope": "MECHANICAL TOKEN AND WALL-CLOCK ACCOUNTING ONLY — this says nothing about answer quality",
+    "isolated_arm_agents_per_trial": 12,
+    "isolated_arm_tokens_per_agent_approx": 53000,
+    "isolated_arm_tokens_per_trial_approx": 636000,
+    "batch_arm_agents_per_trial": 1,
+    "batch_arm_tokens_per_trial_measured": [53763, 53757, 53763],
+    "reduction_factor_approx": 11.8,
+    "source_of_isolated_figures": "docs/replay-results/svkm-extraction-certified/benchmark/opus_delegation_receipt.json (per_agent_run_evidence)"
+  },
+  "isolation_note": "Each trial is a fresh subagent with no memory of the others and no access to any prior candidate's answers. The parent (Worker 1) never showed a reader another reader's output.",
+  "prompt_delivered": "the subagents were given ONLY the file path plus an instruction to follow the file's brief exactly, read no other file, and return the JSON object alone. No hint, no example, no expected answer, no prior span."
+}

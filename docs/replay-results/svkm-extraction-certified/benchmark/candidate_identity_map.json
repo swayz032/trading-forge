@@ -1,0 +1,29 @@
+{
+  "artifact": "svkm-locator-benchmark-candidate-identity-map",
+  "authority": "AR-1234 \u00a75.1",
+  "warning": "OPENING THIS FILE UNBLINDS THE BENCHMARK. Commit the score first.",
+  "blinded_results": "docs/replay-results/svkm-extraction-certified/benchmark/blinded_results.json",
+  "packet_sha256": "fe6e73e1326ff50424bd905ed684c341479909e8e1482198c059b2e32d29bcd7",
+  "candidate_identity_map": {
+    "candidate_A": {
+      "provider": "local ollama",
+      "model_identity": "gemma4:e4b-it-qat",
+      "invocation": "h1_pilot_phase1.robust_propose -> anchor_locator._default_propose_fn",
+      "generation_settings": {
+        "temperature": 0.1,
+        "top_p": 0.95,
+        "top_k": 64
+      },
+      "determinism": "SAMPLED, NOT DETERMINISTIC \u2014 a non-zero temperature with top_p/top_k sampling is requested explicitly (AR-1230 \u00a74). Repeat trials measure this, they do not remove it."
+    },
+    "candidate_B": {
+      "provider": "Claude Code subscription subagent (no Anthropic API key, SDK, or API spend)",
+      "model_identity": "opus",
+      "model_identity_limitation": "AR-1232 \u00a78: this is the strongest identity the Claude Code execution path exposes to the orchestrator \u2014 the `model: opus` override passed to the Agent tool. The exact underlying provider build string is NOT exposed here and is NOT fabricated.",
+      "invocation": "Claude Code Agent tool, subagent_type=general-purpose, model=opus, one fresh isolated subagent per condition",
+      "isolation": "one condition per subagent. Gemma answers each condition blind to the other eleven; showing one challenger all twelve would hand it cross-condition information gemma never has (AR-1232 \u00a73).",
+      "generation_settings": "not exposed by the Claude Code subagent path; not fabricated",
+      "determinism": "TESTED BY REPEAT TRIALS ONLY. The Claude Code subagent path exposes no seed or sampling controls to the orchestrator, so determinism cannot be requested or proven from settings \u2014 it is measured by re-running the identical frozen task."
+    }
+  }
+}

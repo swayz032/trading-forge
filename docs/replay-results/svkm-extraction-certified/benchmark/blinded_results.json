@@ -18,10 +18,14 @@
   },
   "scoring": "NOT SCORED HERE. AR-1232 \u00a77 reserves relevance, source fidelity, abstention quality and the verdict to the GPT external scorer. This artifact carries mechanical results only and names no winner.",
   "comparability_caveats": [
-    "TRIAL COUNTS DIFFER between candidates (see each side's `trials`). Raw literal/not-literal COUNTS are therefore NOT directly comparable across sides \u2014 compare per-trial rates, and treat any side with <2 trials as having UNTESTED reproducibility.",
-    "Collision counts are reported PER TRIAL for exactly that reason.",
+    "Trial counts are EQUAL across candidates ({'candidate_A': 3, 'candidate_B': 3}), so raw counts are comparable at equal denominators. This line is computed from the artifact, not asserted.",
+    "Collision counts are reported PER TRIAL.",
     "No semantic score is present. Topical relevance, source fidelity and abstention quality are the external scorer's (AR-1232 \u00a77)."
   ],
+  "blinding": {
+    "identity_map_location": "docs/replay-results/svkm-extraction-certified/benchmark/candidate_identity_map.json",
+    "contract": "AR-1234 \u00a75.1 \u2014 the identity map is NOT in this file. A scorer can read every answer here without learning which brand produced it. Reading the identity file is a deliberate act, and doing it before committing a score forfeits the blind."
+  },
   "candidates_blinded": [
     {
       "label": "candidate_A",
@@ -1811,27 +1815,5 @@
         "trials": 3
       }
     }
-  ],
-  "candidate_identity_map": {
-    "candidate_A": {
-      "provider": "local ollama",
-      "model_identity": "gemma4:e4b-it-qat",
-      "invocation": "h1_pilot_phase1.robust_propose -> anchor_locator._default_propose_fn",
-      "generation_settings": {
-        "temperature": 0.1,
-        "top_p": 0.95,
-        "top_k": 64
-      },
-      "determinism": "SAMPLED, NOT DETERMINISTIC \u2014 a non-zero temperature with top_p/top_k sampling is requested explicitly (AR-1230 \u00a74). Repeat trials measure this, they do not remove it."
-    },
-    "candidate_B": {
-      "provider": "Claude Code subscription subagent (no Anthropic API key, SDK, or API spend)",
-      "model_identity": "opus",
-      "model_identity_limitation": "AR-1232 \u00a78: this is the strongest identity the Claude Code execution path exposes to the orchestrator \u2014 the `model: opus` override passed to the Agent tool. The exact underlying provider build string is NOT exposed here and is NOT fabricated.",
-      "invocation": "Claude Code Agent tool, subagent_type=general-purpose, model=opus, one fresh isolated subagent per condition",
-      "isolation": "one condition per subagent. Gemma answers each condition blind to the other eleven; showing one challenger all twelve would hand it cross-condition information gemma never has (AR-1232 \u00a73).",
-      "generation_settings": "not exposed by the Claude Code subagent path; not fabricated",
-      "determinism": "TESTED BY REPEAT TRIALS ONLY. The Claude Code subagent path exposes no seed or sampling controls to the orchestrator, so determinism cannot be requested or proven from settings \u2014 it is measured by re-running the identical frozen task."
-    }
-  }
+  ]
 }

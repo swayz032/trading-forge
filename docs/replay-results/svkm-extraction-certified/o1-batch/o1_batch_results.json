@@ -1,0 +1,1976 @@
+{
+  "artifact": "svkm-o1-batch-results",
+  "arm_version": "svkm-opus-batch-locator-o1-v1",
+  "authority": "AR-1234 \u00a76",
+  "scoring": "NOT SCORED HERE. Topical relevance, source fidelity and the verdict belong to the external scorer (AR-1234 \u00a73). Every count below is EXISTENCE or AGREEMENT \u2014 none of them says a quote is correct. AR-1234 \u00a74: a located quote does NOT certify a condition.",
+  "topology_confound": "A BATCH READER SEES EVERY CONDITION AT ONCE; THE ISOLATED BENCHMARK READER SAW ONE. The batch arm can therefore avoid re-using a passage for a reason the isolated arm never had. A LOWER COLLISION COUNT IN THE BATCH ARM IS NOT EVIDENCE OF BETTER GROUNDING -- it is partly an artefact of the topology being tested. Compare grounding on the quotes, not on the collision count.",
+  "literal_fence_caveat": "LITERAL means the span is real transcript text. AR-1223 proved the fence accepts a real quote about the WRONG topic, so a high literal count is compatible with systematic mis-grounding.",
+  "task_sha256": "eaae2c0e85c318896e6222f7f1a3f1ab0e230aa667592b878cceb6c910ae17bb",
+  "input": {
+    "video_id": "sVkmZklJDHI",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "transcript_char_count": 25071,
+    "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+    "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-157741d7cc760ea5",
+    "taxonomy_version": "h1-pilot-2026-07-12"
+  },
+  "trials": [
+    1,
+    2,
+    3
+  ],
+  "mechanical_counts_by_trial": {
+    "1": {
+      "total_answers": 12,
+      "literal": 12,
+      "not_literal_substring": 0,
+      "abstained": 0
+    },
+    "2": {
+      "total_answers": 12,
+      "literal": 12,
+      "not_literal_substring": 0,
+      "abstained": 0
+    },
+    "3": {
+      "total_answers": 12,
+      "literal": 12,
+      "not_literal_substring": 0,
+      "abstained": 0
+    }
+  },
+  "stability": {
+    "summary": {
+      "status": "MEASURED",
+      "conditions_measured": 12,
+      "identical_across_trials": 6
+    },
+    "per_condition": {
+      "entry_sequence[0].action": {
+        "trials": 3,
+        "distinct_raw_outputs": 2,
+        "distinct_spans": 2,
+        "identical_across_trials": false,
+        "repeatability_measurable": true
+      },
+      "entry_sequence[0].rationale": {
+        "trials": 3,
+        "distinct_raw_outputs": 2,
+        "distinct_spans": 2,
+        "identical_across_trials": false,
+        "repeatability_measurable": true
+      },
+      "entry_sequence[1].action": {
+        "trials": 3,
+        "distinct_raw_outputs": 2,
+        "distinct_spans": 2,
+        "identical_across_trials": false,
+        "repeatability_measurable": true
+      },
+      "entry_sequence[1].rationale": {
+        "trials": 3,
+        "distinct_raw_outputs": 2,
+        "distinct_spans": 2,
+        "identical_across_trials": false,
+        "repeatability_measurable": true
+      },
+      "entry_sequence[2].action": {
+        "trials": 3,
+        "distinct_raw_outputs": 1,
+        "distinct_spans": 1,
+        "identical_across_trials": true,
+        "repeatability_measurable": true
+      },
+      "entry_sequence[2].rationale": {
+        "trials": 3,
+        "distinct_raw_outputs": 1,
+        "distinct_spans": 1,
+        "identical_across_trials": true,
+        "repeatability_measurable": true
+      },
+      "entry_sequence[3].action": {
+        "trials": 3,
+        "distinct_raw_outputs": 3,
+        "distinct_spans": 3,
+        "identical_across_trials": false,
+        "repeatability_measurable": true
+      },
+      "entry_sequence[3].rationale": {
+        "trials": 3,
+        "distinct_raw_outputs": 1,
+        "distinct_spans": 1,
+        "identical_across_trials": true,
+        "repeatability_measurable": true
+      },
+      "confluences[0].description": {
+        "trials": 3,
+        "distinct_raw_outputs": 1,
+        "distinct_spans": 1,
+        "identical_across_trials": true,
+        "repeatability_measurable": true
+      },
+      "confluences[1].description": {
+        "trials": 3,
+        "distinct_raw_outputs": 1,
+        "distinct_spans": 1,
+        "identical_across_trials": true,
+        "repeatability_measurable": true
+      },
+      "stop.rationale": {
+        "trials": 3,
+        "distinct_raw_outputs": 1,
+        "distinct_spans": 1,
+        "identical_across_trials": true,
+        "repeatability_measurable": true
+      },
+      "targets[0].rationale": {
+        "trials": 3,
+        "distinct_raw_outputs": 3,
+        "distinct_spans": 3,
+        "identical_across_trials": false,
+        "repeatability_measurable": true
+      }
+    }
+  },
+  "collisions_by_trial": {
+    "1": {
+      "summary": {
+        "collisions": 1,
+        "high": 1,
+        "review": 0
+      },
+      "groups": [
+        {
+          "span": [
+            9432,
+            9512
+          ],
+          "condition_refs": [
+            "confluences[1].description",
+            "entry_sequence[1].action"
+          ],
+          "roles": [
+            "confluences",
+            "entry_sequence"
+          ],
+          "severity": "HIGH"
+        }
+      ],
+      "held_for_adjudication": [
+        "confluences[1].description",
+        "entry_sequence[1].action"
+      ],
+      "note": "HIGH collision means HOLD/review. It is not a semantic conviction and it auto-accepts nothing (AR-1234 \u00a76 control 9)."
+    },
+    "2": {
+      "summary": {
+        "collisions": 1,
+        "high": 1,
+        "review": 0
+      },
+      "groups": [
+        {
+          "span": [
+            9294,
+            9512
+          ],
+          "condition_refs": [
+            "entry_sequence[1].action",
+            "confluences[1].description"
+          ],
+          "roles": [
+            "confluences",
+            "entry_sequence"
+          ],
+          "severity": "HIGH"
+        }
+      ],
+      "held_for_adjudication": [
+        "confluences[1].description",
+        "entry_sequence[1].action"
+      ],
+      "note": "HIGH collision means HOLD/review. It is not a semantic conviction and it auto-accepts nothing (AR-1234 \u00a76 control 9)."
+    },
+    "3": {
+      "summary": {
+        "collisions": 1,
+        "high": 1,
+        "review": 0
+      },
+      "groups": [
+        {
+          "span": [
+            9294,
+            9512
+          ],
+          "condition_refs": [
+            "entry_sequence[1].action",
+            "confluences[1].description"
+          ],
+          "roles": [
+            "confluences",
+            "entry_sequence"
+          ],
+          "severity": "HIGH"
+        }
+      ],
+      "held_for_adjudication": [
+        "confluences[1].description",
+        "entry_sequence[1].action"
+      ],
+      "note": "HIGH collision means HOLD/review. It is not a semantic conviction and it auto-accepts nothing (AR-1234 \u00a76 control 9)."
+    }
+  },
+  "parity_vs_isolated_opus_by_trial": {
+    "1": {
+      "scope": "MECHANICAL SPAN AGREEMENT ONLY -- no semantic judgment is present or implied",
+      "semantic_owner": "external scorer (AR-1234 \u00a73); the worker may not score its own arm",
+      "counts": {
+        "SAME_SPAN": 7,
+        "OVERLAPPING_SPAN": 4,
+        "DIFFERENT_SPAN": 1
+      },
+      "rows": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            8191,
+            8701
+          ],
+          "batch_quote": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+          "reference_spans": [
+            [
+              8191,
+              8701
+            ],
+            [
+              8191,
+              8701
+            ],
+            [
+              8191,
+              8701
+            ]
+          ],
+          "reference_quotes": [
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            10145,
+            10400
+          ],
+          "batch_quote": "this first 5m minute 9:30 candle that we draw gives us lots and lots of information about what the market wants to do on that day. Why? Because the 9:30 candle is when New York opens. And the New York session is the most volatile session, especially 9:30.",
+          "reference_spans": [
+            [
+              10281,
+              10400
+            ],
+            [
+              8644,
+              8701
+            ],
+            [
+              8644,
+              8797
+            ]
+          ],
+          "reference_quotes": [
+            "Because the 9:30 candle is when New York opens. And the New York session is the most volatile session, especially 9:30.",
+            "And what that now gives me is a range on the five minute.",
+            "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            9432,
+            9512
+          ],
+          "batch_quote": "What has to happen is the candles need to close outside of this 5m minute range.",
+          "reference_spans": [
+            [
+              9432,
+              9512
+            ],
+            [
+              9432,
+              9512
+            ],
+            [
+              9432,
+              9512
+            ]
+          ],
+          "reference_quotes": [
+            "What has to happen is the candles need to close outside of this 5m minute range.",
+            "What has to happen is the candles need to close outside of this 5m minute range.",
+            "What has to happen is the candles need to close outside of this 5m minute range."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            9835,
+            10068
+          ],
+          "batch_quote": "the candles have printed outside of the range on the lower side of this 5m minute time frame. Right now, this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside.",
+          "reference_spans": [
+            [
+              10482,
+              10565
+            ],
+            [
+              10482,
+              10565
+            ],
+            [
+              9835,
+              10068
+            ]
+          ],
+          "reference_quotes": [
+            "That gives us an idea of the direction in which the market wants to go for the day.",
+            "That gives us an idea of the direction in which the market wants to go for the day.",
+            "the candles have printed outside of the range on the lower side of this 5m minute time frame. Right now, this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            11531,
+            11622
+          ],
+          "batch_quote": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+          "reference_spans": [
+            [
+              11531,
+              11622
+            ],
+            [
+              11531,
+              11622
+            ],
+            [
+              11531,
+              11622
+            ]
+          ],
+          "reference_quotes": [
+            "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+            "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+            "What we are looking for is a fair value gap sequence that is printing outside of the range."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            12426,
+            12532
+          ],
+          "batch_quote": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+          "reference_spans": [
+            [
+              12426,
+              12532
+            ],
+            [
+              12426,
+              12532
+            ],
+            [
+              12426,
+              12532
+            ]
+          ],
+          "reference_quotes": [
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            13305,
+            13364
+          ],
+          "batch_quote": "my entry is going to be on the closure of that third candle",
+          "reference_spans": [
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ]
+          ],
+          "reference_quotes": [
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "agreement": "DIFFERENT_SPAN",
+          "batch_span": [
+            12574,
+            12765
+          ],
+          "batch_quote": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+          "reference_spans": [
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ]
+          ],
+          "reference_quotes": [
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle"
+          ],
+          "max_overlap_fraction": 0.0
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            7358,
+            7498
+          ],
+          "batch_quote": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+          "reference_spans": [
+            [
+              7358,
+              7431
+            ],
+            [
+              7358,
+              7431
+            ],
+            [
+              7358,
+              7431
+            ]
+          ],
+          "reference_quotes": [
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time",
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time",
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            9432,
+            9512
+          ],
+          "batch_quote": "What has to happen is the candles need to close outside of this 5m minute range.",
+          "reference_spans": [
+            [
+              9454,
+              9511
+            ],
+            [
+              9454,
+              9511
+            ],
+            [
+              9454,
+              9511
+            ]
+          ],
+          "reference_quotes": [
+            "the candles need to close outside of this 5m minute range",
+            "the candles need to close outside of this 5m minute range",
+            "the candles need to close outside of this 5m minute range"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            13869,
+            14212
+          ],
+          "batch_quote": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+          "reference_spans": [
+            [
+              13869,
+              14212
+            ],
+            [
+              13869,
+              14212
+            ],
+            [
+              13869,
+              14212
+            ]
+          ],
+          "reference_quotes": [
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            14368,
+            14516
+          ],
+          "batch_quote": "all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+          "reference_spans": [
+            [
+              14359,
+              14516
+            ],
+            [
+              14359,
+              14516
+            ],
+            [
+              14359,
+              14516
+            ]
+          ],
+          "reference_quotes": [
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two."
+          ],
+          "max_overlap_fraction": 1.0
+        }
+      ]
+    },
+    "2": {
+      "scope": "MECHANICAL SPAN AGREEMENT ONLY -- no semantic judgment is present or implied",
+      "semantic_owner": "external scorer (AR-1234 \u00a73); the worker may not score its own arm",
+      "counts": {
+        "OVERLAPPING_SPAN": 6,
+        "SAME_SPAN": 5,
+        "DIFFERENT_SPAN": 1
+      },
+      "rows": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            8191,
+            8643
+          ],
+          "batch_quote": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low.",
+          "reference_spans": [
+            [
+              8191,
+              8701
+            ],
+            [
+              8191,
+              8701
+            ],
+            [
+              8191,
+              8701
+            ]
+          ],
+          "reference_quotes": [
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            8644,
+            8797
+          ],
+          "batch_quote": "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went.",
+          "reference_spans": [
+            [
+              10281,
+              10400
+            ],
+            [
+              8644,
+              8701
+            ],
+            [
+              8644,
+              8797
+            ]
+          ],
+          "reference_quotes": [
+            "Because the 9:30 candle is when New York opens. And the New York session is the most volatile session, especially 9:30.",
+            "And what that now gives me is a range on the five minute.",
+            "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            9294,
+            9512
+          ],
+          "batch_quote": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is the candles need to close outside of this 5m minute range.",
+          "reference_spans": [
+            [
+              9432,
+              9512
+            ],
+            [
+              9432,
+              9512
+            ],
+            [
+              9432,
+              9512
+            ]
+          ],
+          "reference_quotes": [
+            "What has to happen is the candles need to close outside of this 5m minute range.",
+            "What has to happen is the candles need to close outside of this 5m minute range.",
+            "What has to happen is the candles need to close outside of this 5m minute range."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            9940,
+            10067
+          ],
+          "batch_quote": "this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside",
+          "reference_spans": [
+            [
+              10482,
+              10565
+            ],
+            [
+              10482,
+              10565
+            ],
+            [
+              9835,
+              10068
+            ]
+          ],
+          "reference_quotes": [
+            "That gives us an idea of the direction in which the market wants to go for the day.",
+            "That gives us an idea of the direction in which the market wants to go for the day.",
+            "the candles have printed outside of the range on the lower side of this 5m minute time frame. Right now, this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            11531,
+            11622
+          ],
+          "batch_quote": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+          "reference_spans": [
+            [
+              11531,
+              11622
+            ],
+            [
+              11531,
+              11622
+            ],
+            [
+              11531,
+              11622
+            ]
+          ],
+          "reference_quotes": [
+            "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+            "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+            "What we are looking for is a fair value gap sequence that is printing outside of the range."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            12426,
+            12532
+          ],
+          "batch_quote": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+          "reference_spans": [
+            [
+              12426,
+              12532
+            ],
+            [
+              12426,
+              12532
+            ],
+            [
+              12426,
+              12532
+            ]
+          ],
+          "reference_quotes": [
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            13216,
+            13365
+          ],
+          "batch_quote": "So what I'm going to do is I'm just going to go ahead and click the short tool here. And my entry is going to be on the closure of that third candle.",
+          "reference_spans": [
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ]
+          ],
+          "reference_quotes": [
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "agreement": "DIFFERENT_SPAN",
+          "batch_span": [
+            12574,
+            12765
+          ],
+          "batch_quote": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+          "reference_spans": [
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ]
+          ],
+          "reference_quotes": [
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle"
+          ],
+          "max_overlap_fraction": 0.0
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            7358,
+            7498
+          ],
+          "batch_quote": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+          "reference_spans": [
+            [
+              7358,
+              7431
+            ],
+            [
+              7358,
+              7431
+            ],
+            [
+              7358,
+              7431
+            ]
+          ],
+          "reference_quotes": [
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time",
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time",
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            9432,
+            9512
+          ],
+          "batch_quote": "What has to happen is the candles need to close outside of this 5m minute range.",
+          "reference_spans": [
+            [
+              9454,
+              9511
+            ],
+            [
+              9454,
+              9511
+            ],
+            [
+              9454,
+              9511
+            ]
+          ],
+          "reference_quotes": [
+            "the candles need to close outside of this 5m minute range",
+            "the candles need to close outside of this 5m minute range",
+            "the candles need to close outside of this 5m minute range"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            13869,
+            14212
+          ],
+          "batch_quote": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+          "reference_spans": [
+            [
+              13869,
+              14212
+            ],
+            [
+              13869,
+              14212
+            ],
+            [
+              13869,
+              14212
+            ]
+          ],
+          "reference_quotes": [
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            14359,
+            14516
+          ],
+          "batch_quote": "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+          "reference_spans": [
+            [
+              14359,
+              14516
+            ],
+            [
+              14359,
+              14516
+            ],
+            [
+              14359,
+              14516
+            ]
+          ],
+          "reference_quotes": [
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two."
+          ],
+          "max_overlap_fraction": 1.0
+        }
+      ]
+    },
+    "3": {
+      "scope": "MECHANICAL SPAN AGREEMENT ONLY -- no semantic judgment is present or implied",
+      "semantic_owner": "external scorer (AR-1234 \u00a73); the worker may not score its own arm",
+      "counts": {
+        "OVERLAPPING_SPAN": 6,
+        "SAME_SPAN": 4,
+        "DIFFERENT_SPAN": 2
+      },
+      "rows": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            8191,
+            8643
+          ],
+          "batch_quote": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low.",
+          "reference_spans": [
+            [
+              8191,
+              8701
+            ],
+            [
+              8191,
+              8701
+            ],
+            [
+              8191,
+              8701
+            ]
+          ],
+          "reference_quotes": [
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+            "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            8644,
+            8797
+          ],
+          "batch_quote": "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went.",
+          "reference_spans": [
+            [
+              10281,
+              10400
+            ],
+            [
+              8644,
+              8701
+            ],
+            [
+              8644,
+              8797
+            ]
+          ],
+          "reference_quotes": [
+            "Because the 9:30 candle is when New York opens. And the New York session is the most volatile session, especially 9:30.",
+            "And what that now gives me is a range on the five minute.",
+            "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            9294,
+            9512
+          ],
+          "batch_quote": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is the candles need to close outside of this 5m minute range.",
+          "reference_spans": [
+            [
+              9432,
+              9512
+            ],
+            [
+              9432,
+              9512
+            ],
+            [
+              9432,
+              9512
+            ]
+          ],
+          "reference_quotes": [
+            "What has to happen is the candles need to close outside of this 5m minute range.",
+            "What has to happen is the candles need to close outside of this 5m minute range.",
+            "What has to happen is the candles need to close outside of this 5m minute range."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            9940,
+            10067
+          ],
+          "batch_quote": "this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside",
+          "reference_spans": [
+            [
+              10482,
+              10565
+            ],
+            [
+              10482,
+              10565
+            ],
+            [
+              9835,
+              10068
+            ]
+          ],
+          "reference_quotes": [
+            "That gives us an idea of the direction in which the market wants to go for the day.",
+            "That gives us an idea of the direction in which the market wants to go for the day.",
+            "the candles have printed outside of the range on the lower side of this 5m minute time frame. Right now, this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            11531,
+            11622
+          ],
+          "batch_quote": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+          "reference_spans": [
+            [
+              11531,
+              11622
+            ],
+            [
+              11531,
+              11622
+            ],
+            [
+              11531,
+              11622
+            ]
+          ],
+          "reference_quotes": [
+            "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+            "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+            "What we are looking for is a fair value gap sequence that is printing outside of the range."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            12426,
+            12532
+          ],
+          "batch_quote": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+          "reference_spans": [
+            [
+              12426,
+              12532
+            ],
+            [
+              12426,
+              12532
+            ],
+            [
+              12426,
+              12532
+            ]
+          ],
+          "reference_quotes": [
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+            "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            13301,
+            13365
+          ],
+          "batch_quote": "And my entry is going to be on the closure of that third candle.",
+          "reference_spans": [
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ]
+          ],
+          "reference_quotes": [
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "agreement": "DIFFERENT_SPAN",
+          "batch_span": [
+            12574,
+            12765
+          ],
+          "batch_quote": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+          "reference_spans": [
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ],
+            [
+              13305,
+              13364
+            ]
+          ],
+          "reference_quotes": [
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle",
+            "my entry is going to be on the closure of that third candle"
+          ],
+          "max_overlap_fraction": 0.0
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            7358,
+            7498
+          ],
+          "batch_quote": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+          "reference_spans": [
+            [
+              7358,
+              7431
+            ],
+            [
+              7358,
+              7431
+            ],
+            [
+              7358,
+              7431
+            ]
+          ],
+          "reference_quotes": [
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time",
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time",
+            "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "agreement": "OVERLAPPING_SPAN",
+          "batch_span": [
+            9432,
+            9512
+          ],
+          "batch_quote": "What has to happen is the candles need to close outside of this 5m minute range.",
+          "reference_spans": [
+            [
+              9454,
+              9511
+            ],
+            [
+              9454,
+              9511
+            ],
+            [
+              9454,
+              9511
+            ]
+          ],
+          "reference_quotes": [
+            "the candles need to close outside of this 5m minute range",
+            "the candles need to close outside of this 5m minute range",
+            "the candles need to close outside of this 5m minute range"
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "agreement": "SAME_SPAN",
+          "batch_span": [
+            13869,
+            14212
+          ],
+          "batch_quote": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+          "reference_spans": [
+            [
+              13869,
+              14212
+            ],
+            [
+              13869,
+              14212
+            ],
+            [
+              13869,
+              14212
+            ]
+          ],
+          "reference_quotes": [
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+            "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe."
+          ],
+          "max_overlap_fraction": 1.0
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "agreement": "DIFFERENT_SPAN",
+          "batch_span": [
+            14701,
+            14859
+          ],
+          "batch_quote": "if you're wondering why we have a fixed return of two or two R, it's because it's important to have a mechanical approach to the way in which you take profit.",
+          "reference_spans": [
+            [
+              14359,
+              14516
+            ],
+            [
+              14359,
+              14516
+            ],
+            [
+              14359,
+              14516
+            ]
+          ],
+          "reference_quotes": [
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+            "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two."
+          ],
+          "max_overlap_fraction": 0.0
+        }
+      ]
+    }
+  },
+  "answers_by_trial": {
+    "1": [
+      {
+        "condition_ref": "entry_sequence[0].action",
+        "raw_output": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            8191,
+            8701
+          ],
+          "quote": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low. And what that now gives me is a range on the five minute.",
+          "quote_sha256": "a00929d86be7c927769cf467e02ffbe5a3237bda8a07825d87bcf4c715b0ab37"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "entry_sequence[0].rationale",
+        "raw_output": "this first 5m minute 9:30 candle that we draw gives us lots and lots of information about what the market wants to do on that day. Why? Because the 9:30 candle is when New York opens. And the New York session is the most volatile session, especially 9:30.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            10145,
+            10400
+          ],
+          "quote": "this first 5m minute 9:30 candle that we draw gives us lots and lots of information about what the market wants to do on that day. Why? Because the 9:30 candle is when New York opens. And the New York session is the most volatile session, especially 9:30.",
+          "quote_sha256": "797f9fd9cf2169a9f26a12f583b3e92438d80344100d2ef73808c1dac6b6ffb2"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "entry_sequence[1].action",
+        "raw_output": "What has to happen is the candles need to close outside of this 5m minute range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9432,
+            9512
+          ],
+          "quote": "What has to happen is the candles need to close outside of this 5m minute range.",
+          "quote_sha256": "3a2d43943e67278d7b327474cb78d5e9bcb75aef70ce3797818378fb1b1026e1"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "entry_sequence[1].rationale",
+        "raw_output": "the candles have printed outside of the range on the lower side of this 5m minute time frame. Right now, this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9835,
+            10068
+          ],
+          "quote": "the candles have printed outside of the range on the lower side of this 5m minute time frame. Right now, this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside.",
+          "quote_sha256": "1d1113032cde96071334660b8b3f5dfd15ebfddc62fe1311047bf47498637632"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "entry_sequence[2].action",
+        "raw_output": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            11531,
+            11622
+          ],
+          "quote": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+          "quote_sha256": "0b070b0d9ac0b023bd7151ef995128b5e31c665526392cd31c311aa1436a84f2"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "entry_sequence[2].rationale",
+        "raw_output": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            12426,
+            12532
+          ],
+          "quote": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+          "quote_sha256": "b18b49f5c80ee694446aaad04c64972938a2f8e4dfdc05477d2553188fc78b1b"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "entry_sequence[3].action",
+        "raw_output": "my entry is going to be on the closure of that third candle",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            13305,
+            13364
+          ],
+          "quote": "my entry is going to be on the closure of that third candle",
+          "quote_sha256": "ef326e8a7aa1cb9c16da129fea69c1d2b707b9e0b9074349dfb2aaa4099655b3"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "entry_sequence[3].rationale",
+        "raw_output": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            12574,
+            12765
+          ],
+          "quote": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+          "quote_sha256": "5a4f622f9f868048d591186cb5f50fa22a3e3e10750fa871a82600a1fe5db607"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "confluences[0].description",
+        "raw_output": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            7358,
+            7498
+          ],
+          "quote": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+          "quote_sha256": "ddb21e6e2cdbb31f27de9e9fc15f53a1a2557a10d10d804a2b198f7a54b6b2cb"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "confluences[1].description",
+        "raw_output": "What has to happen is the candles need to close outside of this 5m minute range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9432,
+            9512
+          ],
+          "quote": "What has to happen is the candles need to close outside of this 5m minute range.",
+          "quote_sha256": "3a2d43943e67278d7b327474cb78d5e9bcb75aef70ce3797818378fb1b1026e1"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "stop.rationale",
+        "raw_output": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            13869,
+            14212
+          ],
+          "quote": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+          "quote_sha256": "9d595fc9ee24816823b40819a0ba7acb1384848f82a3446e308b336a7764530d"
+        },
+        "trial": 1
+      },
+      {
+        "condition_ref": "targets[0].rationale",
+        "raw_output": "all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            14368,
+            14516
+          ],
+          "quote": "all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+          "quote_sha256": "6a9717776854248dffcfdc6d6558b35b6438059b65478208953bfdb1c347c89d"
+        },
+        "trial": 1
+      }
+    ],
+    "2": [
+      {
+        "condition_ref": "entry_sequence[0].action",
+        "raw_output": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            8191,
+            8643
+          ],
+          "quote": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low.",
+          "quote_sha256": "e79167a7232933851be5a5ae00f4e3f8c697e191eb68e0d7753a37ef3259ba1d"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "entry_sequence[0].rationale",
+        "raw_output": "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            8644,
+            8797
+          ],
+          "quote": "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went.",
+          "quote_sha256": "a8fbaa5c23e190bd3279a637d82479fc61a0dcd227a16a2652ab75fcde0cfbef"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "entry_sequence[1].action",
+        "raw_output": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is the candles need to close outside of this 5m minute range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9294,
+            9512
+          ],
+          "quote": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is the candles need to close outside of this 5m minute range.",
+          "quote_sha256": "ae7d832b7870d876d44d5e9937ba625100613184c69183be2d206b86a05def0b"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "entry_sequence[1].rationale",
+        "raw_output": "this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9940,
+            10067
+          ],
+          "quote": "this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside",
+          "quote_sha256": "ce4493e83d7c89377a617359dfeddeac134481d33c4f5bb4acafab2b55c87df4"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "entry_sequence[2].action",
+        "raw_output": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            11531,
+            11622
+          ],
+          "quote": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+          "quote_sha256": "0b070b0d9ac0b023bd7151ef995128b5e31c665526392cd31c311aa1436a84f2"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "entry_sequence[2].rationale",
+        "raw_output": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            12426,
+            12532
+          ],
+          "quote": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+          "quote_sha256": "b18b49f5c80ee694446aaad04c64972938a2f8e4dfdc05477d2553188fc78b1b"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "entry_sequence[3].action",
+        "raw_output": "So what I'm going to do is I'm just going to go ahead and click the short tool here. And my entry is going to be on the closure of that third candle.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            13216,
+            13365
+          ],
+          "quote": "So what I'm going to do is I'm just going to go ahead and click the short tool here. And my entry is going to be on the closure of that third candle.",
+          "quote_sha256": "20556178bdf9818cdf4c47311a213147233169405249d9c37e71f3e32527d829"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "entry_sequence[3].rationale",
+        "raw_output": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            12574,
+            12765
+          ],
+          "quote": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+          "quote_sha256": "5a4f622f9f868048d591186cb5f50fa22a3e3e10750fa871a82600a1fe5db607"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "confluences[0].description",
+        "raw_output": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            7358,
+            7498
+          ],
+          "quote": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+          "quote_sha256": "ddb21e6e2cdbb31f27de9e9fc15f53a1a2557a10d10d804a2b198f7a54b6b2cb"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "confluences[1].description",
+        "raw_output": "What has to happen is the candles need to close outside of this 5m minute range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9432,
+            9512
+          ],
+          "quote": "What has to happen is the candles need to close outside of this 5m minute range.",
+          "quote_sha256": "3a2d43943e67278d7b327474cb78d5e9bcb75aef70ce3797818378fb1b1026e1"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "stop.rationale",
+        "raw_output": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            13869,
+            14212
+          ],
+          "quote": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+          "quote_sha256": "9d595fc9ee24816823b40819a0ba7acb1384848f82a3446e308b336a7764530d"
+        },
+        "trial": 2
+      },
+      {
+        "condition_ref": "targets[0].rationale",
+        "raw_output": "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            14359,
+            14516
+          ],
+          "quote": "And then all we're going to do for the target is we're going to have a fixed target. And the fixed target we're looking for is a risk-to-reward ratio of two.",
+          "quote_sha256": "6011f2862ad87b9d53f08d781f26b58f86d2edd926623721044358623599abae"
+        },
+        "trial": 2
+      }
+    ],
+    "3": [
+      {
+        "condition_ref": "entry_sequence[0].action",
+        "raw_output": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            8191,
+            8643
+          ],
+          "quote": "So again, 9:30 a.m. Eastern time, go on the 5-minute candle. And what you're going to find is that first 9:30 candle, once it's printed, this is your 5minute candle, right? I'm just going to go ahead and get my horizontal raid tool here, or your trend tool, whichever one you want. I like using the horizontal ray on Trading View. And I'm just going to go ahead and mark the high of the candle here. And then I'm going to go ahead and mark out the low.",
+          "quote_sha256": "e79167a7232933851be5a5ae00f4e3f8c697e191eb68e0d7753a37ef3259ba1d"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "entry_sequence[0].rationale",
+        "raw_output": "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            8644,
+            8797
+          ],
+          "quote": "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went.",
+          "quote_sha256": "a8fbaa5c23e190bd3279a637d82479fc61a0dcd227a16a2652ab75fcde0cfbef"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "entry_sequence[1].action",
+        "raw_output": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is the candles need to close outside of this 5m minute range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9294,
+            9512
+          ],
+          "quote": "We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is the candles need to close outside of this 5m minute range.",
+          "quote_sha256": "ae7d832b7870d876d44d5e9937ba625100613184c69183be2d206b86a05def0b"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "entry_sequence[1].rationale",
+        "raw_output": "this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9940,
+            10067
+          ],
+          "quote": "this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside",
+          "quote_sha256": "ce4493e83d7c89377a617359dfeddeac134481d33c4f5bb4acafab2b55c87df4"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "entry_sequence[2].action",
+        "raw_output": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            11531,
+            11622
+          ],
+          "quote": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+          "quote_sha256": "0b070b0d9ac0b023bd7151ef995128b5e31c665526392cd31c311aa1436a84f2"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "entry_sequence[2].rationale",
+        "raw_output": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            12426,
+            12532
+          ],
+          "quote": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+          "quote_sha256": "b18b49f5c80ee694446aaad04c64972938a2f8e4dfdc05477d2553188fc78b1b"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "entry_sequence[3].action",
+        "raw_output": "And my entry is going to be on the closure of that third candle.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            13301,
+            13365
+          ],
+          "quote": "And my entry is going to be on the closure of that third candle.",
+          "quote_sha256": "e580a6346298e6a1676276db148366e7d1848bd91201c7bacf0dc1a82c1650fd"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "entry_sequence[3].rationale",
+        "raw_output": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            12574,
+            12765
+          ],
+          "quote": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed",
+          "quote_sha256": "5a4f622f9f868048d591186cb5f50fa22a3e3e10750fa871a82600a1fe5db607"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "confluences[0].description",
+        "raw_output": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            7358,
+            7498
+          ],
+          "quote": "this strategy needs to be traded at 9:30 a.m. Eastern time, New York time. Okay? That's the time in which we need to be trading at our desk.",
+          "quote_sha256": "ddb21e6e2cdbb31f27de9e9fc15f53a1a2557a10d10d804a2b198f7a54b6b2cb"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "confluences[1].description",
+        "raw_output": "What has to happen is the candles need to close outside of this 5m minute range.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            9432,
+            9512
+          ],
+          "quote": "What has to happen is the candles need to close outside of this 5m minute range.",
+          "quote_sha256": "3a2d43943e67278d7b327474cb78d5e9bcb75aef70ce3797818378fb1b1026e1"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "stop.rationale",
+        "raw_output": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            13869,
+            14212
+          ],
+          "quote": "what I want you to do for the stop loss is we're just going to put it at the bottom of the fair value candle. Really simple. If this candle had a big wick, then you would also include the wick. Don't just go to the body. Please include the wick of the candle as well because it's very essential that you give your trade enough room to breathe.",
+          "quote_sha256": "9d595fc9ee24816823b40819a0ba7acb1384848f82a3446e308b336a7764530d"
+        },
+        "trial": 3
+      },
+      {
+        "condition_ref": "targets[0].rationale",
+        "raw_output": "if you're wondering why we have a fixed return of two or two R, it's because it's important to have a mechanical approach to the way in which you take profit.",
+        "mechanical_verifier": {
+          "outcome": "LITERAL",
+          "char_span": [
+            14701,
+            14859
+          ],
+          "quote": "if you're wondering why we have a fixed return of two or two R, it's because it's important to have a mechanical approach to the way in which you take profit.",
+          "quote_sha256": "f2ba5ce7679d7b299332979fe9038f89e37ac67834cd9ebc8ddb89c96f0fae13"
+        },
+        "trial": 3
+      }
+    ]
+  },
+  "delegation_receipts": [
+    {
+      "artifact": "svkm-o1-batch-delegation-receipt",
+      "authority": "AR-1234 \u00a76 acceptance controls 11 and 12",
+      "invocation_method": "Claude Code Agent tool (subagent), model override = opus",
+      "subagent_type": "general-purpose",
+      "topology": "ONE fresh subagent per TRIAL \u2014 not per condition. Each subagent received only the path to batch_task.txt and answered all 12 conditions in one context.",
+      "agent_count": 3,
+      "conditions_per_agent": 12,
+      "model_identity_reported": "opus",
+      "model_identity_caveat": "strongest identity this execution path exposes; the exact provider build string is not available to the orchestrator and is not invented",
+      "spend": {
+        "anthropic_api_key_used": false,
+        "sdk_used": false,
+        "new_api_spend": false,
+        "path": "Claude Code subscription subagents (AR-1232 \u00a79 correction, carried forward)"
+      },
+      "per_agent_run_evidence": [
+        {
+          "trial": 1,
+          "duration_ms": 14609,
+          "subagent_tokens": 53763,
+          "tool_uses": 1
+        },
+        {
+          "trial": 2,
+          "duration_ms": 14329,
+          "subagent_tokens": 53757,
+          "tool_uses": 1
+        },
+        {
+          "trial": 3,
+          "duration_ms": 13859,
+          "subagent_tokens": 53763,
+          "tool_uses": 1
+        }
+      ],
+      "cost_comparison_vs_isolated_arm": {
+        "scope": "MECHANICAL TOKEN AND WALL-CLOCK ACCOUNTING ONLY \u2014 this says nothing about answer quality",
+        "isolated_arm_agents_per_trial": 12,
+        "isolated_arm_tokens_per_agent_approx": 53000,
+        "isolated_arm_tokens_per_trial_approx": 636000,
+        "batch_arm_agents_per_trial": 1,
+        "batch_arm_tokens_per_trial_measured": [
+          53763,
+          53757,
+          53763
+        ],
+        "reduction_factor_approx": 11.8,
+        "source_of_isolated_figures": "docs/replay-results/svkm-extraction-certified/benchmark/opus_delegation_receipt.json (per_agent_run_evidence)"
+      },
+      "isolation_note": "Each trial is a fresh subagent with no memory of the others and no access to any prior candidate's answers. The parent (Worker 1) never showed a reader another reader's output.",
+      "prompt_delivered": "the subagents were given ONLY the file path plus an instruction to follow the file's brief exactly, read no other file, and return the JSON object alone. No hint, no example, no expected answer, no prior span."
+    },
+    {
+      "artifact": "svkm-o1-batch-delegation-receipt",
+      "authority": "AR-1234 \u00a76 acceptance controls 11 and 12",
+      "invocation_method": "Claude Code Agent tool (subagent), model override = opus",
+      "subagent_type": "general-purpose",
+      "topology": "ONE fresh subagent per TRIAL \u2014 not per condition. Each subagent received only the path to batch_task.txt and answered all 12 conditions in one context.",
+      "agent_count": 3,
+      "conditions_per_agent": 12,
+      "model_identity_reported": "opus",
+      "model_identity_caveat": "strongest identity this execution path exposes; the exact provider build string is not available to the orchestrator and is not invented",
+      "spend": {
+        "anthropic_api_key_used": false,
+        "sdk_used": false,
+        "new_api_spend": false,
+        "path": "Claude Code subscription subagents (AR-1232 \u00a79 correction, carried forward)"
+      },
+      "per_agent_run_evidence": [
+        {
+          "trial": 1,
+          "duration_ms": 14609,
+          "subagent_tokens": 53763,
+          "tool_uses": 1
+        },
+        {
+          "trial": 2,
+          "duration_ms": 14329,
+          "subagent_tokens": 53757,
+          "tool_uses": 1
+        },
+        {
+          "trial": 3,
+          "duration_ms": 13859,
+          "subagent_tokens": 53763,
+          "tool_uses": 1
+        }
+      ],
+      "cost_comparison_vs_isolated_arm": {
+        "scope": "MECHANICAL TOKEN AND WALL-CLOCK ACCOUNTING ONLY \u2014 this says nothing about answer quality",
+        "isolated_arm_agents_per_trial": 12,
+        "isolated_arm_tokens_per_agent_approx": 53000,
+        "isolated_arm_tokens_per_trial_approx": 636000,
+        "batch_arm_agents_per_trial": 1,
+        "batch_arm_tokens_per_trial_measured": [
+          53763,
+          53757,
+          53763
+        ],
+        "reduction_factor_approx": 11.8,
+        "source_of_isolated_figures": "docs/replay-results/svkm-extraction-certified/benchmark/opus_delegation_receipt.json (per_agent_run_evidence)"
+      },
+      "isolation_note": "Each trial is a fresh subagent with no memory of the others and no access to any prior candidate's answers. The parent (Worker 1) never showed a reader another reader's output.",
+      "prompt_delivered": "the subagents were given ONLY the file path plus an instruction to follow the file's brief exactly, read no other file, and return the JSON object alone. No hint, no example, no expected answer, no prior span."
+    },
+    {
+      "artifact": "svkm-o1-batch-delegation-receipt",
+      "authority": "AR-1234 \u00a76 acceptance controls 11 and 12",
+      "invocation_method": "Claude Code Agent tool (subagent), model override = opus",
+      "subagent_type": "general-purpose",
+      "topology": "ONE fresh subagent per TRIAL \u2014 not per condition. Each subagent received only the path to batch_task.txt and answered all 12 conditions in one context.",
+      "agent_count": 3,
+      "conditions_per_agent": 12,
+      "model_identity_reported": "opus",
+      "model_identity_caveat": "strongest identity this execution path exposes; the exact provider build string is not available to the orchestrator and is not invented",
+      "spend": {
+        "anthropic_api_key_used": false,
+        "sdk_used": false,
+        "new_api_spend": false,
+        "path": "Claude Code subscription subagents (AR-1232 \u00a79 correction, carried forward)"
+      },
+      "per_agent_run_evidence": [
+        {
+          "trial": 1,
+          "duration_ms": 14609,
+          "subagent_tokens": 53763,
+          "tool_uses": 1
+        },
+        {
+          "trial": 2,
+          "duration_ms": 14329,
+          "subagent_tokens": 53757,
+          "tool_uses": 1
+        },
+        {
+          "trial": 3,
+          "duration_ms": 13859,
+          "subagent_tokens": 53763,
+          "tool_uses": 1
+        }
+      ],
+      "cost_comparison_vs_isolated_arm": {
+        "scope": "MECHANICAL TOKEN AND WALL-CLOCK ACCOUNTING ONLY \u2014 this says nothing about answer quality",
+        "isolated_arm_agents_per_trial": 12,
+        "isolated_arm_tokens_per_agent_approx": 53000,
+        "isolated_arm_tokens_per_trial_approx": 636000,
+        "batch_arm_agents_per_trial": 1,
+        "batch_arm_tokens_per_trial_measured": [
+          53763,
+          53757,
+          53763
+        ],
+        "reduction_factor_approx": 11.8,
+        "source_of_isolated_figures": "docs/replay-results/svkm-extraction-certified/benchmark/opus_delegation_receipt.json (per_agent_run_evidence)"
+      },
+      "isolation_note": "Each trial is a fresh subagent with no memory of the others and no access to any prior candidate's answers. The parent (Worker 1) never showed a reader another reader's output.",
+      "prompt_delivered": "the subagents were given ONLY the file path plus an instruction to follow the file's brief exactly, read no other file, and return the JSON object alone. No hint, no example, no expected answer, no prior span."
+    }
+  ]
+}

@@ -32,9 +32,14 @@ RAW OUTPUT IS SACRED (AR-1232 §6)
     verifier's result is recorded as a SEPARATE field from the raw answer, so a disagreement
     between them stays visible instead of being resolved silently.
 
-BLINDING (AR-1232 §6)
-    The published artifact labels the candidates `candidate_A` / `candidate_B` with a separate
-    identity map, so the scorer is not invited to favour a brand.
+BLINDING (AR-1232 §6, CORRECTED BY AR-1234 §5.1)
+    The published artifact labels the candidates `candidate_A` / `candidate_B`.
+
+    🛑 THE FIRST VERSION SHIPPED THE IDENTITY MAP AT THE BOTTOM OF THE SAME FILE, and AR-1234
+    §5.1 correctly ruled that once a scorer reads the whole file the blinding is gone: the score
+    it produced was an INDEPENDENT external score, not a sealed blind one. The map now goes to
+    its own file (`--identity-out`), so a scorer can read the results without reading identities.
+    That is an artifact-layout fix, not a new framework — no scoring machinery is added here.
 
 Run from repo root:
   python scripts/svkm_locator_benchmark.py freeze              # build + hash the input packet
@@ -60,11 +65,11 @@ try:
 except Exception:
     pass
 
+import h1_pilot_phase1 as p1  # noqa: E402
+
 from src.engine.extraction import anchor_locator as al  # noqa: E402
 from src.engine.extraction import pilot_conveyor as pc  # noqa: E402
 from src.engine.extraction import span_collision as sc  # noqa: E402
-
-import h1_pilot_phase1 as p1  # noqa: E402
 
 VIDEO_ID = "sVkmZklJDHI"
 TRANSCRIPT_PIN = "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc"
@@ -343,7 +348,38 @@ def _verify_one(transcript: str, raw: str | None) -> dict:
             "quote_sha256": _sha256(quote)}
 
 
-def cmd_verify(sources: list[str], out: str) -> int:
+def _comparability_caveats(blinded: list[dict]) -> list[str]:
+    """AR-1234 §5.2: the trial-count caveat was HARDCODED and went stale — it still warned that
+    trial counts differ after both sides reached 3. A caveat that describes a state the artifact
+    is not in is a false statement in an evidence file, so it is COMPUTED now and can only say
+    what the data says (`[report-table]`: fix the emitter, not the table)."""
+    counts = {s["label"]: s.get("trials", 1) for s in blinded}
+    distinct = set(counts.values())
+    caveats = []
+    if len(distinct) > 1:
+        caveats.append(
+            f"TRIAL COUNTS DIFFER between candidates ({counts}). Raw literal/not-literal COUNTS "
+            "are therefore NOT directly comparable across sides — compare per-trial rates, and "
+            "treat any side with <2 trials as having UNTESTED reproducibility."
+        )
+    else:
+        caveats.append(
+            f"Trial counts are EQUAL across candidates ({counts}), so raw counts are comparable "
+            "at equal denominators. This line is computed from the artifact, not asserted."
+        )
+    if any(v < 2 for v in counts.values()):
+        caveats.append(
+            "At least one side has <2 trials: its reproducibility is UNTESTED, not stable."
+        )
+    caveats.append("Collision counts are reported PER TRIAL.")
+    caveats.append(
+        "No semantic score is present. Topical relevance, source fidelity and abstention quality "
+        "are the external scorer's (AR-1232 §7)."
+    )
+    return caveats
+
+
+def cmd_verify(sources: list[str], out: str, identity_out: str) -> int:
     packet = _load_packet()
     transcript, _ = _load_pinned()
 
@@ -456,19 +492,30 @@ def cmd_verify(sources: list[str], out: str) -> int:
         "scoring": "NOT SCORED HERE. AR-1232 §7 reserves relevance, source fidelity, abstention "
                    "quality and the verdict to the GPT external scorer. This artifact carries "
                    "mechanical results only and names no winner.",
-        "comparability_caveats": [
-            "TRIAL COUNTS DIFFER between candidates (see each side's `trials`). Raw literal/"
-            "not-literal COUNTS are therefore NOT directly comparable across sides — compare "
-            "per-trial rates, and treat any side with <2 trials as having UNTESTED reproducibility.",
-            "Collision counts are reported PER TRIAL for exactly that reason.",
-            "No semantic score is present. Topical relevance, source fidelity and abstention "
-            "quality are the external scorer's (AR-1232 §7).",
-        ],
+        "comparability_caveats": _comparability_caveats(blinded),
+        "blinding": {
+            "identity_map_location": os.path.relpath(identity_out, ROOT).replace("\\", "/"),
+            "contract": "AR-1234 §5.1 — the identity map is NOT in this file. A scorer can read "
+                        "every answer here without learning which brand produced it. Reading the "
+                        "identity file is a deliberate act, and doing it before committing a "
+                        "score forfeits the blind.",
+        },
         "candidates_blinded": blinded,
-        "candidate_identity_map": identity_map,
     }
+    if "candidate_identity_map" in artifact:                      # belt and braces
+        raise SystemExit("[bench] ABORT: identity map leaked back into the blinded artifact.")
     _write_json(out, artifact)
+
+    _write_json(identity_out, {
+        "artifact": "svkm-locator-benchmark-candidate-identity-map",
+        "authority": "AR-1234 §5.1",
+        "warning": "OPENING THIS FILE UNBLINDS THE BENCHMARK. Commit the score first.",
+        "blinded_results": os.path.relpath(out, ROOT).replace("\\", "/"),
+        "packet_sha256": packet["packet_sha256"],
+        "candidate_identity_map": identity_map,
+    })
     print(f"[bench] wrote {out}")
+    print(f"[bench] wrote {identity_out}  (identity map SPLIT OUT — AR-1234 §5.1)")
     for side in blinded:
         print(f"[bench] {side['label']}: {json.dumps(side['mechanical_counts'])}")
     return 0
@@ -490,6 +537,8 @@ def main() -> int:
     v = sub.add_parser("verify")
     v.add_argument("sources", nargs="+")
     v.add_argument("--out", default=os.path.join(BENCH_DIR, "blinded_results.json"))
+    v.add_argument("--identity-out",
+                   default=os.path.join(BENCH_DIR, "candidate_identity_map.json"))
     args = ap.parse_args()
 
     if args.cmd == "freeze":
@@ -501,7 +550,7 @@ def main() -> int:
     if args.cmd == "ingest-opus":
         return cmd_ingest_opus(args.src, args.out, args.receipt)
     if args.cmd == "verify":
-        return cmd_verify(args.sources, args.out)
+        return cmd_verify(args.sources, args.out, args.identity_out)
     return 2
 
 
