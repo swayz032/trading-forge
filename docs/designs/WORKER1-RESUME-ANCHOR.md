@@ -5,7 +5,8 @@ session consumes a small resume packet, not the old conversation). **Overwrite t
 packet boundary — it describes the CURRENT boundary only, never history.**
 
 ```text
-LAST UPDATED    : 2026-08-16, by the AR-1270 seat, at its own session boundary
+LAST UPDATED    : 2026-08-16, by the seat that received GPT's AR-1271 ruling. That seat was again
+                  NOT guard-bound, so it ran NO Agent call and spent NOTHING (AR-1271 §10G).
 WORKTREE        : C:\Users\tonio\Projects\wt-claude-worker1-20260815
 BRANCH          : claude/worker1-h1-20260815
 HEAD            : refs/heads/claude/worker1-h1-20260815 — resolve it, do NOT pin it.
@@ -13,147 +14,187 @@ HEAD            : refs/heads/claude/worker1-h1-20260815 — resolve it, do NOT p
                   construction, one commit behind, forever.
 TOOLBOX         : claude/worker1-p1-toolbox-20260816 @ 18108039  (pin == branch, no drift)
                   bundle 1d12f61277d8d3c502df9bd7dea5dac541e64335e469fd7176187f4b02144b06, 42 files
-LAST DELIVERED  : AR-1270 — seat pin aedacf7a, toolbox pin 18108039. Published to the GPT branch at
-                  a882c700 and read back from origin against a negative control. AWAITING GRADE.
-NEWEST RULING   : advisor-reports/AR-1269A-GPT-OPERATOR-AUTHORIZATION-ONE-NON-G2-OPUS-CALIBRATION-2026-08-16.md
-                  (layered on AR-1269; both on the GPT branch — read them back from origin)
-NEWEST WORKER AR: advisor-reports/AR-1270-WORKER-F5-F6-CLOSED-FOR-CLAUDE-TOOL-SURFACE-REPINNED-CALIBRATION-UNSPENT-2026-08-16.md
-NEXT WORKER AR  : AR-1271
-G2 BUDGET       : 0/8 spent. queue 5935b1c6… · 8 ready · receipt dir README-only.
-                  RE-MEASURED AFTER the AR-1270 re-pin, not carried across it.
+LAST DELIVERED  : AR-1270 — GRADED. GPT ruled it **PASS** in AR-1271. No rework ordered.
+NEWEST RULING   : advisor-reports/AR-1271-GPT-EXTERNAL-ADVISOR-RULING-AR1270-PASS-WITH-BOUNDED-BASH-CLAIM-ONE-OPUS-CALIBRATION-NEXT-2026-08-16.md
+                  GPT branch head 9fe19a95. ⚠️ GPT TOOK THE NUMBER 1271 FOR ITS OWN RULING.
+NEWEST WORKER AR: AR-1270 (a882c700)
+NEXT WORKER AR  : **AR-1272** — and AR-1271 §10F specifies exactly what AR-1272 must contain.
+                  Do NOT publish anything else under that number.
+G2 BUDGET       : 0/8 spent. RE-MEASURED HERE at this boundary, by the field that actually bears it:
+                  queue sha 5935b1c6… · queue len 8 · excluded 4 · max_attempts_per_condition 1
+                  attempts = {}   <- THE spent-ness field. Per-item `state`/`status` DOES NOT EXIST;
+                  a guessed key returns None x8 and means nothing. Read `attempts`.
+                  receipt dir non-README = [] .
 ```
 
-## Your assignment — THERE IS NO OPEN WORK ORDER. AR-1270 is delivered and ungraded.
+## Your assignment — THERE **IS** AN OPEN WORK ORDER NOW: AR-1271 §10, the calibration packet
 
-**Do not invent the next packet.** AR-1269 §6 is executed and published; the next authorized task
-comes from GPT's ruling on AR-1270. Read that ruling first — it exists by now or it does not, and
-if it does not, the honest state is *waiting on a grade*, not *free to pick something up*.
-
-**Two questions AR-1270 explicitly asked GPT to rule on. Do not pre-empt either:**
+GPT graded AR-1270 PASS and issued the next work order in the same ruling. **Read AR-1271 §10A–§10G
+in full; it is cold-start complete.** The short form:
 
 ```text
-§3.1  the Bash fence is UNIFORM over the whole self-protected set, which is WIDER than the
-      three-shape floor AR-1269 §6B set. It therefore also denies a harmless read of a protected
-      file, and denies Bash naming the pinned toolbox dir (so running the toolbox's own tests BY
-      PATH is denied inside a guarded seat). Deliberate and disclosed. Narrowing it is one field.
-§8    HONEST RESIDUAL: the fence is REFERENCE-based. It covers commands that NAME a protected
-      surface. It does NOT cover one that reaches a protected surface WITHOUT naming it — a
-      variable holding the path, a symlink, `cd <dir>` then a bare basename absent from
-      bash_tokens. That class was not enumerated and is NOT claimed closed.
+10A  RESEAT into a session actually BOUND to this worktree. Registration-by-file-presence is NOT
+     binding. Capture session-start evidence proving you are on the Worker-1 guard path.
+10B  READ-ONLY BEFORE snapshot of the frozen control plane (path · sha · 8 ready · 0 spent ·
+     receipt listing · README-only).
+10C  Spend EXACTLY ONE benign non-G2 native Agent call, model explicitly `opus`. ONE MEANS ONE —
+     no second attempt if the first disappoints.
+10D  Witnesses: real dispatch happened · it TRAVERSED the installed PreToolUse · requested model
+     was Opus · actual model identity / task id / usage IF exposed.
+     🛑 `requested = opus` IS NOT PROOF THAT `actual = opus`. Do not infer either one.
+     Anything unexposed -> the existing repo-defined NOT_EXPOSED constant, verbatim. Never inferred.
+10E  READ-ONLY AFTER snapshot; prove the calibration created no frozen .attempt/.dispatch/.raw/
+     .completion. If it DID touch the frozen plane: STOP and report. Do not clean up — cleanup
+     destroys the evidence.
+10F  Write AR-1272 with the binding evidence, request metadata, traversal proof, before/after
+     frozen state, and whether the authorization is now spent.
+10G  HARD STOPS: no frozen G2-D call · no second calibration · no compiler · no backtest campaign ·
+     no PAPER · no broker/live · no strict-session flip · no TaskCompleted · no shell parser.
 ```
+
+🛑 **§10G's escape hatch is the one that applies if you are not bound:** *"If the fresh seat cannot
+prove the required hook traversal, do not burn the calibration there. Fix/reseat the session-binding
+problem WITHOUT running an Agent call."* **Two seats in a row have now hit exactly this.**
 
 ## 🛑 THE ONE THING THE NEXT SEAT MUST GET RIGHT: THE CALIBRATION NEEDS A **GUARD-BOUND** SEAT
 
-AR-1269A authorizes **exactly one** non-G2 Opus calibration for the §9H runtime witness. **It is
-UNSPENT.** The AR-1270 seat did not spend it, deliberately.
+AR-1269A authorizes **exactly one** non-G2 Opus calibration. GPT re-confirmed in AR-1271 §9 that it
+is **AUTHORIZED AND UNSPENT**. Neither the AR-1270 seat nor this one spent it — both deliberately.
 
 ```text
 repairing the guard  REQUIRES an UNGUARDED seat   ("a guarded seat cannot repair its own guard")
 witnessing the guard REQUIRES a   GUARDED seat    (the hook must actually be installed)
-                     -> MUTUALLY EXCLUSIVE IN ONE SESSION. AR-1270 had to be the unguarded one.
+                     -> MUTUALLY EXCLUSIVE IN ONE SESSION.
 ```
 
-`[MEASURED 2026-08-16]` the AR-1270 seat's project dir was the OUTER repo, whose PreToolUse
-matchers are `Write|Edit|MultiEdit` and `Bash`; `grep -c claude_guard_hook` = **0** across every
-settings file binding it, and no `Agent`/`Task` matcher exists there. An Agent dispatch from such a
-seat traverses **no worker-1 guard at all**, so it cannot witness the installed hook — it would
-burn the single authorization on a null result.
+`[MEASURED 2026-08-16, twice, two different seats]` a session whose project dir is the OUTER repo
+`C:\Users\tonio\Projects\trading-forge` is **NOT** guard-bound: `grep -c claude_guard_hook` = **0**
+across all three settings files that bind it (`.claude/settings.json`, `.claude/settings.local.json`,
+user-level), and its PreToolUse matchers are only `Write|Edit|MultiEdit` and `Bash` — **no `Agent`,
+no `Task`.** Positive control for those zeros: `grep -c '"hooks"'` = **5** in the same file by the
+same instrument, so the zero is a real absence and not a bad path.
 
 ⇒ **The calibration must run in a session whose project dir IS
-`C:\Users\tonio\Projects\wt-claude-worker1-20260815`, seated AFTER the re-pin so it picks up
-`18108039`.** Measure your own binding before you dispatch anything — do not assume it either way.
-Its four required witnesses: a real native `Agent` dispatch traversing the installed PreToolUse ·
-requested model Opus · actual model identity / task id / usage captured, or honestly recorded as
-`NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME` · the frozen eight untouched.
-**Calibration is NOT one of the eight. It is still gated behind F-5/F-6 being ruled green.**
+`C:\Users\tonio\Projects\wt-claude-worker1-20260815`.** That worktree's committed settings register
+`SessionStart` (`startup|resume|fork`) and `PreToolUse` (`Edit|Write|NotebookEdit|Bash|Agent|Task`)
+through `scripts/claude_guard_hook.mjs` — GPT independently confirmed this in AR-1271 §6.
+**Measure your own binding before you dispatch anything. Do not assume it in either direction.**
 
 ★ `A CAPABILITY AUTHORIZED TO A SEAT THAT CANNOT EXERCISE IT IS NOT YET AUTHORIZED.`
 
-## What AR-1270 closed, so you do not re-derive it
+## ✅ NEW AT THIS BOUNDARY — THE SEAT YOU ARE ABOUT TO TAKE IS **VERIFIED READY**
+
+AR-1270 proved its own seat was wrong. It did not prove the target seat is right. That gap is now
+closed, so the reseat should not fail on anything checkable in advance. All `[MEASURED HERE]`:
 
 ```text
-A  SELF_PROTECTED_RULES now covers the frozen queue (exact) and the receipt namespace (prefix).
-   The receipt half was the real one: outstandingCapture() reads capture off fs.existsSync, so a
-   writable receipt dir let the worker manufacture the state that clears the forced-capture stop.
-   🛑 The QUEUE half is BOUNDED — the native-call manifest pins the queue sha and the guard
-   compares it, so a queue edit already failed closed. Do NOT re-describe it as an auth bypass.
-B  a protected-surface FENCE runs BEFORE bashMutationReason() on the Bash arm. Extra distinctive
-   spellings live in a `bash_tokens` field ON THE RULE, opt-in per rule — the bare basenames of
-   `.claude/settings.json` and `.claude/hooks/` are `settings.json` and `hooks`, far too generic
-   to fence a shell command on. bashMutationReason is now EXPORTED, for the red proofs only.
-C  re-pin e0c44ca4 -> 18108039, descendant asserted. 10/10 controls through the REGISTERED
-   command. Stale-cache control still bites vs a planted pre-fix toolbox under a stamp claiming
-   the new pin. SessionStart still arms; governed dirty exception e200765c still in force.
-controls: 177/177 toolbox (was 159/159) + 10/10 registered-command. ALL LOCAL — no CI at either pin.
+ARM WITNESS   The REGISTERED command was run with a real SessionStart payload on stdin and it
+              ARMED — not inferred from its inputs, observed as its output:
+                node scripts/claude_guard_hook.mjs --manifest .claude/worker1-hook-guard-manifest.json
+                -> "GPT worker guard: anchor verified on claude/worker1-h1-20260815 at <head>.
+                    Governed dirty exception in force: docs/wave25-exit-engine-ab-report.md
+                    @ e200765c11e8 (AR-1265 §4)."
+DISCRIMINATES Same command, same payload, a scratchpad copy of the manifest with a bogus
+              _toolbox_pin -> "GPT worker guard STOP: doorway failed closed: materialized toolbox
+              pin 18108039… != manifest _toolbox_pin 0000…. Guard was not armed; do not edit."
+              ⇒ the ARM line is a DECISION, not a constant. A green with no path to red is not
+              evidence. The tampered manifest lived OUTSIDE the worktree on purpose.
+DIRTY GATE    git diff HEAD --binary -- docs/wave25-exit-engine-ab-report.md | sha256sum
+              == e200765c11e85aeb9d5f0eb6d04cb04ea3985bfffc0a33e762c9960652547170 (manifest value).
+              IDENTICAL, so SessionStart arms instead of STOPping. Untracked files: NONE
+              (untracked BLOCKS and cannot be laundered by listing it).
+TOOLBOX PIN   git cat-file -e 18108039…^{commit} succeeds, so the doorway can rematerialize.
+              Negative control: the same command on an all-zero SHA is refused.
+HOOK PAIR     Exactly TWO hooks registered — SessionStart + PreToolUse. TaskCompleted is
+              deliberately ABSENT and must stay absent (AR-1271 §10G); registering the prepared
+              fragment verbatim BRICKS the seat while finish.enabled is false.
 ```
 
-## New traps this boundary paid for
+🛑 **RE-RUN THE ARM WITNESS YOURSELF AFTER SEATING.** The witness above was taken at this
+boundary's head; a head that moves is a measurement that decays. It is one command and it is the
+cheapest thing you will do all session.
+
+## GPT's AR-1271 dispositions you must not re-litigate
 
 ```text
-harness  🛑 THE ONE TO STUDY, and it bit me THREE TIMES in one packet: a POSIX path where Windows
-         needs a Win32 one. `$PWD` as the hook's `cwd` surfaced as `spawnSync git ENOENT` — Windows
-         reports a BAD CWD AS ENOENT, so it reads as a missing binary. Then bash `${W//\//\\\\}`
-         produced invalid JSON escapes. Then POSIX paths into python's `open()`. Use `pwd -W`, and
-         build JSON with json.dumps, never shell string surgery.
-         ★ ALL THREE FAILED UNIFORMLY ACROSS EVERY CASE INCLUDING THE DISCRIMINATORS. That
-         uniformity is what identified them as harness defects. `A UNIFORM FAILURE ACCUSES THE
-         INSTRUMENT; A SELECTIVE ONE ACCUSES THE CODE.`
-parser   my control parser read EMPTY STDOUT as ALLOW — a false green in the instrument, during a
-         run whose entire purpose was checking a boundary. Empty stdout + nonzero exit is an
-         ERROR, never a pass. Never let a crash score as a verdict.
-redgreen the red proof needed INERT IMPORT SHIMS in the pre-fix tree (export the existing
-         bashMutationReason; a bashProtectedSurfaceReason returning null). Neither invents
-         behaviour — the pre-fix tree really had no fence. Without them: one collection error and
-         a blunt RED instead of 16 behaviour-judged reds. DISCLOSE the shims when you use them.
-staleness the doorway's stale-cache control is worth reproducing as a PLANT, not an assertion:
-         put the OLD permissive guard in the TEMP cache under a stamp claiming the NEW pin, then
-         run a control that must DENY. Pair it with a positive witness that rematerialization
-         actually happened (grep the cached file after), or "it denied" is consistent with the
-         tamper simply not mattering.
-headline AR-1269 §8 convicted three consecutive packets of titles wider than their mechanism.
-         AR-1270 put the SURFACE in the title ("closed for the Claude tool surface") and the scope
-         disclosure ABOVE the evidence rather than in a caveat below it. Keep doing that.
-ear      armed at ab4ddbb3 and fired within seconds — AR-1269A landed MID-TURN. It fired again on
-         my own push. An orphan ear from a dead seat (PID 27080, owner 29760 gone) was found
-         running and was NOT killed. Arm your own; a live process is not your ear.
+F-5   GREEN. Frozen queue (exact) + receipt namespace (prefix) self-protection ACCEPTED.
+      🛑 Keep the bounded framing: the QUEUE half is defence in depth, NOT a newly found auth
+      bypass — the native-call manifest already pinned the queue sha. The RECEIPT half was the
+      real integrity defect, because capture state was read off fs.existsSync.
+F-6   GREEN **FOR THE PROTECTED-REFERENCE CONTRACT ONLY.** Explicitly NOT a general filesystem
+      sandbox. GPT: "Do not silently reinterpret AR-1270 as a filesystem sandbox."
+§8    The indirect-reference residual (bound variables · symlinks · cd-then-basename) is ACCEPTED
+      as an honest scope boundary. It does NOT block the calibration. It REMAINS on the checklist
+      before the frozen eight get final GO. **Do not write a shell parser** (§10G).
+§3.1  GPT accepted AR-1270 without ordering the uniform fence narrowed to the §6B floor, so the
+      widening STANDS — by absence of a narrowing order, not by an explicit approval of it.
+      Do not narrow it on your own initiative; do not describe it as explicitly ratified either.
+re-pin / stale-cache: PASS. F-2 is NOT reopened.
+CI    NONE at either pin. GPT checked GitHub itself and found no checks and no workflow runs.
+      **Do not relabel the local suite as CI.**
+```
+
+## Traps this boundary paid for
+
+```text
+number   🛑 THE EAR EARNED ITS KEEP AGAIN. Mid-turn, while an AR-1271 worker report was being
+         drafted, GPT PUBLISHED ITS OWN AR-1271 and took the number. The banked rule fired exactly
+         as written: RE-FETCH IMMEDIATELY BEFORE BUILDING THE COMMIT OBJECT AND READ WHAT MOVED.
+         Publishing on the stale fetch would have shipped a number collision.
+         ★ `THE RULING THAT INVALIDATES YOUR REPORT ARRIVES WHILE YOU ARE WRITING IT.`
+noreport That drafted report was then DISCARDED, not renumbered. GPT's ruling had already ordered
+         the reseat, so publishing it would have restated GPT's own ruling back at GPT — banned by
+         0-CTRL.5. **A report is owed when GPT lacks something. It is not owed as ceremony.**
+field    `state`/`status` per queue item DOES NOT EXIST. A guessed key returned None x8 and I
+         nearly reported it. Dumping ALL KEYS showed spent-ness lives in top-level `attempts`.
+         ★ `THE FIELD YOU READ IS THE CLAIM.`
+tmp      Windows `python` and git-bash disagree about `/tmp`: python wrote C:\tmp\…, bash looked in
+         its own tmp, and the redirect died with "No such file". A path is an instrument too.
+         Use ONE explicit path both interpreters resolve identically — and NEVER write a scratch
+         file inside the worktree, where an untracked file BLOCKS SessionStart.
+orphan   An ear process from a dead seat was found running (parent PID gone from Win32_Process).
+         It was NOT killed — you never kill an ear you did not arm — and it was NOT counted as
+         mine, because its events reach a session that no longer exists.
+         ★ `LIVENESS != OWNERSHIP != DELIVERY.` Arm your own and see the line in YOUR chat.
 ```
 
 ## Still-open inherited items
 
 ```text
-§9H      calibration — UNSPENT, authorized by AR-1269A, blocked on seat binding (see above).
+§9H      calibration — UNSPENT, authorized (AR-1269A, reconfirmed AR-1271 §9). NOW ORDERED as the
+         AR-1272 packet. Blocked only on seat binding.
 D1-C2    actual_model_identity remains UNWITNESSED. Do NOT widen APPROVED_ACTUAL_MODEL_IDENTITIES.
-grader   no independent grade on AR-1270. Not required by AR-1269; one word and it goes out.
+grader   no independent grade on AR-1270; AR-1271 did not require one. Not owed.
 finish   claude-finish-check still carries the old structural REVIEW_REQUIRED problem. It cannot
-         bite while finish.enabled is false, and TaskCompleted stays UNREGISTERED — registering
-         the prepared fragment verbatim bricks the seat.
+         bite while finish.enabled is false, and TaskCompleted stays UNREGISTERED.
 AR-1242  canonical_regression_population.txt membership test is ALREADY RED (9 files drifted).
 AR-1259 §4-6 canonical agent authority = the version-controlled .claude/agents at the governed
          ref; local Sonnet pins are unauthorized deployment drift; 3 paper-parity payloads parked.
          Do not sweep historical worktrees, do not touch Worker-2.
 dirty    docs/wave25-exit-engine-ab-report.md stays dirty ON PURPOSE, governed by the hash
-         exception e200765c…. Verified intact at this boundary, including across a pre-commit
-         stash window. Do not sweep, clean, commit, or flip require_clean.
+         exception e200765c…. Verified intact at this boundary. Do not sweep, clean, commit, or
+         flip require_clean.
 conditionIsSpent() is CORRECT AS WRITTEN. It reads like it contradicts the durable law and it does
          not — the guard, not the caller, is what claims. Do not "fix" it.
 ```
 
-## Locks — unchanged
+## Locks — unchanged, and AR-1271 §13 restates every one of them
 
 ```text
 sVkm certification · sVkm compiler authorization · sVkm backtest campaign
 PAPER · Worker-2 runtime activation · broker / Topstep / live
-all eight real frozen G2-D calls · G2-H OPEN · CERT RED
+all eight real frozen G2-D calls (NO-GO through AR-1272) · G2-H OPEN · CERT RED
 no CI at either pin — all execution evidence is LOCAL. No G2 attempt is spent to test a guard.
 ```
 
 ## Before you touch anything
 
 1. **Arm the 2s ear** (onboarding step 2). An ear you did not see arm in *your own* chat is not
-   yours, however alive its process looks. Then backfill against the head named above.
+   yours, however alive its process looks. Then backfill against the GPT head named above.
 2. Prove the newest ruling's `CURRENT HEAD` is an ancestor of yours (`merge-base --is-ancestor`).
    Do not trust a SHA pinned in an onboarding file or in this card once the branch advances.
-3. Run the read-only preflight FIRST and confirm 8 ready / 0 spent before any work.
-4. **Measure whether YOUR session is guard-bound** — it decides which of the two open jobs you can
-   even do. `grep -c claude_guard_hook` across every settings file that binds you, and check for an
-   `Agent|Task` matcher. Do not assume it in either direction.
+3. **Measure whether YOUR session is guard-bound** — it decides whether you can do AR-1272 at all.
+   `grep -c claude_guard_hook` across every settings file that binds you, WITH a positive control,
+   and check for an `Agent|Task` matcher. Do not assume it in either direction.
+4. Re-run the ARM witness above at your own head, then take the §10B read-only snapshot, and only
+   then spend the one call.
