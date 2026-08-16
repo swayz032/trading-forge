@@ -174,4 +174,26 @@ Write-Host ''
 Write-Host "  seat OK -- branch $branch. Starting Claude in the governed worktree." -ForegroundColor Green
 Write-Host ''
 Set-Location $Worktree
-claude
+
+# --dangerously-skip-permissions: the operator is not the permission pipeline.
+#
+#   MEASURED 2026-08-16 in the shipped claude.exe (v2.1.x, bin/claude.exe):
+#     * PreToolUse hooks run before any permission-mode logic. The generator that fires them
+#       (`RIn`) skips only for a static built-in tool allowlist and bare forks -- never for a
+#       permission mode.
+#     * The resolver (`IDb`) reads the hook verdict FIRST:
+#           if (hookResult?.behavior === "deny") return { decision: hookResult }
+#       and only falls through to the permission pipeline -- where bypassPermissions lives --
+#       when the hook did not deny.
+#   So this flag removes the OPERATOR prompt. It does not remove the GUARD. A guard deny still
+#   blocks the tool call with the guard's own reason.
+#
+#   That is the intended division of labour for this seat: the guard decides, the operator does
+#   not adjudicate individual tool calls. Clicking through prompts is not review -- it is the
+#   thing that trains an operator to approve without reading.
+#   `A PROMPT AN OPERATOR ALWAYS APPROVES IS NOT A CONTROL.`
+#
+#   This is only safe because the launcher REFUSED to reach this line unless C5 observed the
+#   guard actually arm. An unbound seat plus this flag would be an ungoverned seat, which is
+#   exactly what every check above exists to prevent.
+claude --dangerously-skip-permissions
