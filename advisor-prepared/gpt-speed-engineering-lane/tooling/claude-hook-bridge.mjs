@@ -8,6 +8,7 @@ import { verifyResumeAnchor } from './resume-anchor-guard.mjs';
 import { auditPaths, decideEditPermission } from './lane-boundary-guard.mjs';
 import { evaluateScope } from './edit-scope-guard.mjs';
 import { runClaudeFinishCheck } from './claude-finish-check.mjs';
+import { loadG2Context, evaluateG2PreCall } from './g2-precall-guard.mjs';
 
 const GUARDED_EDIT_TOOLS = new Set(['Edit', 'Write', 'NotebookEdit']);
 
@@ -139,6 +140,31 @@ export function evaluateHookEvent({ input, manifest, env = process.env }) {
       return reason
         ? { ...deny(reason), _audit: { event, bash_mutation_blocked: true } }
         : { _audit: { event, bash_mutation_blocked: false } };
+    }
+
+    // AR-1263 §7C: the G2-D one-shot boundary sits BEFORE the model call. A subagent
+    // dispatch that touches G2 surface without a valid durable pre-call permit is refused
+    // here, because post-call refusal cannot un-spend an attempt.
+    if (manifest.g2_precall && manifest.g2_precall.enabled === true) {
+      try {
+        const g2 = loadG2Context({
+          queuePath: path.resolve(repoRoot, manifest.g2_precall.queue_path),
+          receiptDir: path.resolve(repoRoot, manifest.g2_precall.receipt_dir),
+        });
+        const verdict = evaluateG2PreCall({
+          toolName: input.tool_name,
+          toolInput: input.tool_input,
+          g2,
+          cwd: repoRoot,
+        });
+        if (!verdict.allow) {
+          return { ...deny(`G2 pre-call guard: ${verdict.reason}`), _audit: { event, g2: verdict } };
+        }
+        if (verdict.g2) return { _audit: { event, g2: verdict } };
+      } catch (error) {
+        // Fail closed: if the frozen artifacts cannot be read we cannot prove the budget.
+        return { ...deny(`G2 pre-call guard could not verify the frozen budget: ${error.message}`), _audit: { event, g2_error: error.message } };
+      }
     }
 
     if (!GUARDED_EDIT_TOOLS.has(input.tool_name)) return { _audit: { event, guarded: false } };
