@@ -6,8 +6,11 @@ packet boundary — it describes the CURRENT boundary only, never history.**
 
 ```text
 LAST UPDATED    : 2026-08-16, by the THIRD consecutive NOT-guard-bound seat. It ran NO Agent call
-                  and spent NOTHING (AR-1271 §10G). It did establish the ROOT CAUSE of the
-                  recurrence and de-risk the reseat — see "WHY EVERY DEFAULT SEAT IS UNBOUND".
+                  and spent NOTHING (AR-1271 §10G). It root-caused the recurrence AND, on the
+                  AR-1271A order that landed mid-turn, BUILT THE BOOTSTRAP that removes the
+                  operator from the seat-binding path. See "WHY EVERY DEFAULT SEAT IS UNBOUND".
+                  🛑 **YOU are the first seat that can be seated correctly by construction — if
+                  you arrived through the Worker-1 shortcut you are bound; MEASURE IT ANYWAY.**
 WORKTREE        : C:\Users\tonio\Projects\wt-claude-worker1-20260815
 BRANCH          : claude/worker1-h1-20260815
 HEAD            : refs/heads/claude/worker1-h1-20260815 — resolve it, do NOT pin it.
@@ -16,8 +19,11 @@ HEAD            : refs/heads/claude/worker1-h1-20260815 — resolve it, do NOT p
 TOOLBOX         : claude/worker1-p1-toolbox-20260816 @ 18108039  (pin == branch, no drift)
                   bundle 1d12f61277d8d3c502df9bd7dea5dac541e64335e469fd7176187f4b02144b06, 42 files
 LAST DELIVERED  : AR-1270 — GRADED. GPT ruled it **PASS** in AR-1271. No rework ordered.
-NEWEST RULING   : advisor-reports/AR-1271-GPT-EXTERNAL-ADVISOR-RULING-AR1270-PASS-WITH-BOUNDED-BASH-CLAIM-ONE-OPUS-CALIBRATION-NEXT-2026-08-16.md
-                  GPT branch head 9fe19a95. ⚠️ GPT TOOK THE NUMBER 1271 FOR ITS OWN RULING.
+NEWEST RULING   : advisor-reports/AR-1271A-GPT-OPERATOR-CORRECTION-USER-NOT-RESPONSIBLE-FOR-SEAT-BINDING-2026-08-16.md
+                  GPT branch head 2d873a65 (AR-1271 itself was 9fe19a95).
+                  ⚠️ GPT TOOK THE NUMBER 1271 FOR ITS OWN RULING, then added the 1271A correction.
+                  AR-1271A ORDER: build the bootstrap; do NOT make Tonio the workaround. DONE, see
+                  below. The calibration stays AUTHORIZED + UNSPENT until binding is proven.
 NEWEST WORKER AR: AR-1270 (a882c700)
 NEXT WORKER AR  : **AR-1272** — and AR-1271 §10F specifies exactly what AR-1272 must contain.
                   Do NOT publish anything else under that number.
@@ -109,16 +115,31 @@ correct the worktree's own committed settings are. **Registration lives in the w
 lives in the launch directory.** This is the same decoy that makes a bare `git ls-remote` resolve
 to nothing there (`[session-cwd-decoy-git]`) — one folder, two victims.
 
-### The remedy is a RESEAT, and it is one command
+### 🛑 THE REMEDY IS **NOT** A COMMAND FOR THE OPERATOR — AR-1271A REJECTED THAT
 
-```bash
-cd C:\Users\tonio\Projects\wt-claude-worker1-20260815
-claude
+This seat's first instinct was to hand Tonio `cd <worktree> && claude`. **GPT rejected that as an
+operating procedure in AR-1271A §1:** he is the owner, not the seat-binding technician, and a
+launch path that only works when he remembers a dated directory is not operationally complete.
+
+**The remedy is now BUILT, and it is one double-click:**
+
+```text
+Desktop\"Claude Code - Worker 1"
+  -> C:\Users\tonio\Projects\trading-forge\worker1-seat.ps1     (generated resolver)
+     -> <canonical worktree>\scripts\worker1_seat_launch.ps1    (checks, then starts Claude)
 ```
+
+The resolver finds the seat worktree through `git worktree list` by the branch pattern
+`refs/heads/claude/worker1-h1-*`, so **the next dated worktree needs no edit anywhere**; only the
+non-dated primary repo path is baked. Anything other than exactly one match refuses.
+`scripts/install_worker1_seat_shortcut.ps1` regenerates both artifacts and is re-runnable.
+🛑 **The pre-existing "Claude Code - Trading Forge" shortcut was deliberately LEFT ALONE** — it
+serves every lane, and repointing it would hijack Worker-2 and advisor sessions.
 
 `[MEASURED]` there is **no** `--project-dir`/`--cwd` flag on this CLI (`claude --help`); `--add-dir`
 only widens tool access and `--settings` would not fix `$CLAUDE_PROJECT_DIR` expansion inside the
-registered hook command. **The launch directory is the only lever.**
+registered hook command. **The launch directory is the only lever** — which is why the fix had to
+be a launcher rather than a flag.
 
 ### 🛑 `EnterWorktree` IS NOT A REMEDY — do not burn a turn discovering this again
 
@@ -137,6 +158,36 @@ is a **one-shot, non-renewable** authorization (§10C "One means one"), §10D de
 runtime witnesses, and §10A demands session-start evidence captured *before* the spend. Gambling a
 non-renewable authorization inside a nested process this seat cannot fully observe is the wrong
 trade. `[irreversible-gap]`: authorize and execute in separate motions.
+
+### BOOTSTRAP CONTROLS — all `[MEASURED HERE]`, all through the REAL entry path
+
+```text
+POSITIVE  resolver -> launcher -> "guard : ARMED  anchor verified on
+          claude/worker1-h1-20260815 at <head>" + "frozen : 8 queued / 0 spent | receipts+0"
+          -> exit 0. Re-run at the FINAL head after every commit; the witness names the head.
+NEG C1/C4 launcher on a non-repo tree  -> refuses, exit 1, names all four failing checks
+NEG C2/C3 launcher on a real repo with the wrong branch and no guard registration -> refuses
+NEG C5    observed refusing for THREE distinct real reasons during development (BOM-corrupted
+          stdin, wrong cwd, untracked files) before it ever went green -- so the ARM branch is
+          demonstrably not a constant
+NEG res-0 resolver with a glob matching 0 worktrees -> refuses, exit 1
+NEG res-2 resolver with a glob matching 2 -> refuses AND names both. This is why the glob is
+          `worker1-h1-*`: plain `worker1-*` really does also match wt-p1-toolbox-20260816.
+INSTALL   the installer refuses to install a target with parse errors or non-ASCII bytes -- and
+          that check bit on its own first run, catching the BOM that Set-Content -Encoding utf8
+          had just written into the resolver.
+```
+
+🛑 **THREE INSTRUMENT FAILURES IN THIS ONE PACKET, ALL THE SAME SHAPE — the artifact was fine and
+the measurement lied.** (1) The launcher was written UTF-8-no-BOM; PowerShell 5.1 read its
+em-dashes as CP1252, which manufactures smart double-quotes, and the parser blamed a **missing
+brace on a line whose braces were correct**. ⇒ launcher scripts are now **ASCII-only, enforced by
+the installer**. (2) Piping the probe payload prepended a BOM to stdin; `$OutputEncoding`,
+`BaseStream.Write`, and closing BaseStream instead of the writer **all failed identically** —
+`Process.StandardInput` emits the preamble when first ACCESSED. ⇒ `cmd.exe` does the redirect now,
+zero .NET writers. (3) The probe ran from the container, so the guard answered *"not a git
+repository"* — the same decoy that caused the whole defect. ⇒ the probe now `Push-Location`s the
+worktree. ★ `A UNIFORM FAILURE ACCUSES THE INSTRUMENT; A SELECTIVE ONE ACCUSES THE CODE.`
 
 ## ✅ NEW AT THIS BOUNDARY — THE SEAT YOU ARE ABOUT TO TAKE IS **VERIFIED READY**
 
