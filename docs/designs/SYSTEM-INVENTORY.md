@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `586ad8d041596b22df049f971180406c219be097`  (worktree DIRTY at generation time)
+> Generated at commit `f73bde88b701e7df51eb0d90acc5f1e3c7ab4a9e`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 310 | 404 | 128108 | 1990 |
+| `src/` | Python | 310 | 404 | 128142 | 1990 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -1073,7 +1073,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1189** `BUILT-UNREACHABLE` symbols, **641 have test coverage but no production caller**.
+Of **1189** `BUILT-UNREACHABLE` symbols, **642 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1105,7 +1105,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `getNotificationServiceStatus` | function | `src/server/services/notification-service.ts:368` | 5 | unique |
 | `stripMarkdown` | function | `src/server/services/scout-formatter.ts:89` | 5 | unique |
 | `tier1RegexFilter` | function | `src/server/services/scout-formatter.ts:40` | 5 | unique |
-| `finalize` | function | `src/engine/extraction/g2d_finalizer.py:254` | 4 | unique |
+| `finalize` | function | `src/engine/extraction/g2d_finalizer.py:288` | 4 | unique |
 | `computeSpearman` | function | `src/server/lib/replay/quantum-disagreement.ts:84` | 4 | unique |
 | `__clearAppendixCacheForTests` | function | `src/server/services/model-router.ts:942` | 4 | unique |
 | `_result` | function | `src/engine/anti_setups/regime_filter.py:156` | 3 | unique |
@@ -1243,7 +1243,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `evaluate_guard1` | function | `src/engine/extraction/enumeration_guard.py:91` | 1 | unique |
 | `screen_enumeration_count` | function | `src/engine/extraction/enumeration_guard.py:64` | 1 | unique |
 | `FinalizationRefused` | class | `src/engine/extraction/g2d_finalizer.py:47` | 1 | unique |
-| `collect_isolated_results` | function | `src/engine/extraction/g2d_finalizer.py:79` | 1 | unique |
+| `_actual_model_identity_is_approved` | function | `src/engine/extraction/g2d_finalizer.py:100` | 1 | unique |
+| `collect_isolated_results` | function | `src/engine/extraction/g2d_finalizer.py:109` | 1 | unique |
 | `bridge_report` | function | `src/engine/extraction/isolated_bridge.py:291` | 1 | unique |
 | `IsolatedDispatcher` | class | `src/engine/extraction/isolated_dispatch.py:57` | 1 | unique |
 | `preflight_real_queue` | function | `src/engine/extraction/isolated_dispatch.py:104` | 1 | unique |
@@ -1386,9 +1387,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `PlaybookRegistryReadError` | class | `src/server/lib/playbook-registration.ts:150` | 1 | unique |
 | `deriveCategoryFromArchetype` | function | `src/server/lib/playbook-registration.ts:53` | 1 | unique |
 | `deriveCategoryFromConditionSpec` | function | `src/server/lib/playbook-registration.ts:92` | 1 | unique |
-| `parseRegistry` | function | `src/server/lib/playbook-registration.ts:170` | 1 | unique |
 
-_...341 more omitted from this table._
+_...342 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1667,9 +1667,9 @@ _...341 more omitted from this table._
 | `FinalizationRefused` | class | `src/engine/extraction/g2d_finalizer.py:47` | defining module is not reachable from any measured entry point |
 | `_sha` | function | `src/engine/extraction/g2d_finalizer.py:53` | defining module is not reachable from any measured entry point |
 | `_require` | function | `src/engine/extraction/g2d_finalizer.py:61` | defining module is not reachable from any measured entry point |
-| `_model_family_is_opus` | function | `src/engine/extraction/g2d_finalizer.py:66` | defining module is not reachable from any measured entry point |
-| `collect_isolated_results` | function | `src/engine/extraction/g2d_finalizer.py:79` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `finalize` | function | `src/engine/extraction/g2d_finalizer.py:254` | no non-test reference outside its own definition; 4 test file(s) do reference it |
+| `_actual_model_identity_is_approved` | function | `src/engine/extraction/g2d_finalizer.py:100` | defining module is not reachable from any measured entry point |
+| `collect_isolated_results` | function | `src/engine/extraction/g2d_finalizer.py:109` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `finalize` | function | `src/engine/extraction/g2d_finalizer.py:288` | no non-test reference outside its own definition; 4 test file(s) do reference it |
 | `record_native_dispatch` | function | `src/engine/extraction/isolated_bridge.py:133` | no non-test reference outside its own definition; 2 test file(s) do reference it |
 | `capture_native_return` | function | `src/engine/extraction/isolated_bridge.py:192` | no non-test reference outside its own definition; 2 test file(s) do reference it |
 | `bridge_report` | function | `src/engine/extraction/isolated_bridge.py:291` | no non-test reference outside its own definition; 1 test file(s) do reference it |
