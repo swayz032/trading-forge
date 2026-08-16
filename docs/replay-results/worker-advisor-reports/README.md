@@ -45,6 +45,21 @@ campaign keeps convicting.
 `'9' > '1'`. This campaign is past AR-1200, so every comparison against a 3-digit AR would
 silently pick the wrong file while looking correctly sorted.
 
+⚠ **Corrections take the next integer AR number, not a suffix** (AR-1276 §2). The helper matches
+`AR-<integer>-…`, so a suffix form such as `AR-1275A` is invisible to it until the helper is
+deliberately extended.
+
+### Non-AR documents in this directory
+
+Files that are not `AR-<number>-…` are **ignored by the helper on purpose** — they are not worker
+reports and must never be returned as "the newest report". Current convention:
+
+| Prefix | Meaning |
+|---|---|
+| `AR-<n>-…md` | a worker report; discoverable; ranked numerically |
+| `HANDOFF-…md` | a routing brief handing a packet to a different authorized seat |
+| `README.md` | this contract |
+
 ## What this is not
 
 - Not a publisher and not a branch-crossing tool — it answers *which report is newest*, nothing more.
