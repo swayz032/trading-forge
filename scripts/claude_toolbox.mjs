@@ -61,9 +61,15 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 // RE-PINNED AGAIN 2026-08-16 by AR-1268 §G, on AR-1267 §9G ("Integrate by deliberate immutable
 // re-pin, not copy"):
 //   6a06ffae -> e0c44ca4   (AR-1268 A/C/D/E — the four pre-call boundary edges)
+// RE-PINNED AGAIN 2026-08-16 by AR-1270 §C, on AR-1269 §6C:
+//   e0c44ca4 -> 18108039   (AR-1270 A/B — the two trust-surface gaps AR-1269 §4/§5 left RED:
+//                           the G2 queue + receipt namespace become SELF_PROTECTED, and a
+//                           protected-surface fence closes Bash as a side door around the path
+//                           classifier). Member diff: 3 files, +377/-12. Descendant verified with
+//                           `git merge-base --is-ancestor e0c44ca4 18108039`.
 // A re-pin is a DELIBERATE act with a member diff behind it, which is precisely the motion the
 // comment above demands instead of silently adopting whatever a branch points at.
-const TOOLBOX_PIN = 'e0c44ca4374358e3f9717a73c5faa1f7e963aa89';
+const TOOLBOX_PIN = '18108039056a0994c1fc1be9583812b0838dba50';
 
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
