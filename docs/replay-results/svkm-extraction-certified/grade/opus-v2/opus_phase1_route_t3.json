@@ -13,9 +13,9 @@
   "condition_count": 12,
   "disposition_counts": {
     "ACCEPTED_PENDING_CERTIFICATION": 4,
-    "REFUSED_RELEVANCE": 4,
+    "REFUSED_RELEVANCE": 5,
     "HELD_DUPLICATE_ROLE_AMBIGUITY": 2,
-    "RED_SOURCE_FIDELITY": 2
+    "RED_SOURCE_FIDELITY": 1
   },
   "accepted_count": 4,
   "escalate_to_isolated": [
@@ -60,16 +60,17 @@
       "escalate_to_isolated": false,
       "relevance": {
         "grounded": true,
-        "reason": "GROUNDED: the span fits this condition (0.12) better than any rival (0.02)",
-        "own_score": 0.11698168284317303,
-        "best_rival_score": 0.021547933157431837,
-        "rival": "Wait for the 1-minute candle to close outside of the established 5-minute range (breakout).",
+        "reason": "GROUNDED: the span fits this condition (0.31) better than any rival (0.29)",
+        "own_score": 0.3149521598822397,
+        "best_rival_score": 0.2887402452619844,
+        "rival": "The 1m candle must close outside of the initial 5m range.",
         "shared_terms": [
           "candle",
           "first",
           "high",
           "low",
-          "minute"
+          "minute",
+          "tf_min_5"
         ]
       },
       "fidelity_findings": [],
@@ -91,21 +92,27 @@
         "grounded": false,
         "reason": "MISGROUNDED_BELOW_FLOOR: the span covers only 0.016 of the condition's distinctive content (floor 0.10) \u2014 it shares a word, not a subject",
         "own_score": 0.016176470588235292,
-        "best_rival_score": 0.12500912209005327,
+        "best_rival_score": 0.3211798675196739,
         "rival": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
         "shared_terms": [
           "range"
         ]
       },
       "fidelity_findings": [],
-      "fidelity_advisory": [],
+      "fidelity_advisory": [
+        {
+          "kind": "UNSUPPORTED_CERTAINTY",
+          "clause": "establishes",
+          "detail": "condition asserts 'establishes'; the source span carries no support for that certainty attached to this proposition. UNSUPPORTED, NOT DISPROVEN \u2014 the source is silent here, which is not evidence of the opposite"
+        }
+      ],
       "collision_partners": []
     },
     {
       "condition_ref": "entry_sequence[1].action",
       "disposition": "HELD_DUPLICATE_ROLE_AMBIGUITY",
       "gate": "span_collision",
-      "reason": "span reused across roles with ['confluences[1].description']; the condition texts overlap 0.80 of the smaller term set, so this is THE SAME REQUIREMENT WRITTEN TWICE UPSTREAM \u2014 recorded, never silently deduplicated (AR-1236 \u00a75)",
+      "reason": "span reused across roles with ['confluences[1].description']; the condition texts overlap 0.86 of the smaller term set, so this is THE SAME REQUIREMENT WRITTEN TWICE UPSTREAM \u2014 recorded, never silently deduplicated (AR-1236 \u00a75)",
       "char_span": [
         9294,
         9512
@@ -114,7 +121,13 @@
       "escalate_to_isolated": true,
       "relevance": null,
       "fidelity_findings": [],
-      "fidelity_advisory": [],
+      "fidelity_advisory": [
+        {
+          "kind": "UNSUPPORTED_CERTAINTY",
+          "clause": "established",
+          "detail": "condition asserts 'established'; the source span carries no support for that certainty attached to this proposition. UNSUPPORTED, NOT DISPROVEN \u2014 the source is silent here, which is not evidence of the opposite"
+        }
+      ],
       "collision_partners": [
         "confluences[1].description"
       ]
@@ -150,9 +163,9 @@
     },
     {
       "condition_ref": "entry_sequence[2].action",
-      "disposition": "RED_SOURCE_FIDELITY",
-      "gate": "source_fidelity_guard",
-      "reason": "UNSUPPORTED_QUANTITY: condition states ['5'] which the source span does not",
+      "disposition": "REFUSED_RELEVANCE",
+      "gate": "evidence_relevance",
+      "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.30 vs 0.28), so it does not ground THIS one \u2014 the signature of generic text being reused as evidence",
       "char_span": [
         11531,
         11622
@@ -160,12 +173,13 @@
       "quote": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
       "escalate_to_isolated": true,
       "relevance": {
-        "grounded": true,
-        "reason": "GROUNDED: the span fits this condition (0.15) better than any rival (0.13)",
-        "own_score": 0.15445544554455445,
-        "best_rival_score": 0.1272264631043257,
-        "rival": "The 1m candle must close outside of the initial 5m range.",
+        "grounded": false,
+        "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.30 vs 0.28), so it does not ground THIS one \u2014 the signature of generic text being reused as evidence",
+        "own_score": 0.2777070063694268,
+        "best_rival_score": 0.29685621027314896,
+        "rival": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
         "shared_terms": [
+          "eq_fair_value_gap",
           "fair",
           "gap",
           "outside",
@@ -174,13 +188,7 @@
           "value"
         ]
       },
-      "fidelity_findings": [
-        {
-          "kind": "UNSUPPORTED_QUANTITY",
-          "clause": "5",
-          "detail": "condition states ['5'] which the source span does not"
-        }
-      ],
+      "fidelity_findings": [],
       "fidelity_advisory": [
         {
           "kind": "UNSUPPORTED_QUANTITY",
@@ -237,9 +245,9 @@
       "escalate_to_isolated": false,
       "relevance": {
         "grounded": true,
-        "reason": "GROUNDED: the span fits this condition (0.28) better than any rival (0.12)",
-        "own_score": 0.28304040173476375,
-        "best_rival_score": 0.11589403973509935,
+        "reason": "GROUNDED: the span fits this condition (0.21) better than any rival (0.10)",
+        "own_score": 0.21302181755712077,
+        "best_rival_score": 0.09668508287292818,
         "rival": "Entering on the closure confirms the FVG structure and minimizes entry risk.",
         "shared_terms": [
           "candle",
@@ -255,7 +263,7 @@
       "condition_ref": "entry_sequence[3].rationale",
       "disposition": "REFUSED_RELEVANCE",
       "gate": "evidence_relevance",
-      "reason": "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it",
+      "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.39 vs 0.17), so it does not ground THIS one \u2014 the signature of generic text being reused as evidence",
       "char_span": [
         12574,
         12765
@@ -264,14 +272,27 @@
       "escalate_to_isolated": true,
       "relevance": {
         "grounded": false,
-        "reason": "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it",
-        "own_score": 0.0,
-        "best_rival_score": 0.0,
-        "rival": null,
-        "shared_terms": []
+        "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.39 vs 0.17), so it does not ground THIS one \u2014 the signature of generic text being reused as evidence",
+        "own_score": 0.16574585635359115,
+        "best_rival_score": 0.38618794021645764,
+        "rival": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
+        "shared_terms": [
+          "eq_fair_value_gap"
+        ]
       },
       "fidelity_findings": [],
-      "fidelity_advisory": [],
+      "fidelity_advisory": [
+        {
+          "kind": "UNSUPPORTED_CERTAINTY",
+          "clause": "confirms",
+          "detail": "condition asserts 'confirms'; the source span carries no support for that certainty attached to this proposition. UNSUPPORTED, NOT DISPROVEN \u2014 the source is silent here, which is not evidence of the opposite"
+        },
+        {
+          "kind": "UNSUPPORTED_RISK_BENEFIT",
+          "clause": "minimizes entry risk",
+          "detail": "condition claims a risk/safety benefit ('minimizes entry risk'); the source span carries no support for that benefit attached to this proposition. UNSUPPORTED, NOT DISPROVEN \u2014 the source may simply not discuss it"
+        }
+      ],
       "collision_partners": []
     },
     {
@@ -316,7 +337,7 @@
       "condition_ref": "confluences[1].description",
       "disposition": "HELD_DUPLICATE_ROLE_AMBIGUITY",
       "gate": "span_collision",
-      "reason": "span reused across roles with ['entry_sequence[1].action']; the condition texts overlap 0.80 of the smaller term set, so this is THE SAME REQUIREMENT WRITTEN TWICE UPSTREAM \u2014 recorded, never silently deduplicated (AR-1236 \u00a75)",
+      "reason": "span reused across roles with ['entry_sequence[1].action']; the condition texts overlap 0.86 of the smaller term set, so this is THE SAME REQUIREMENT WRITTEN TWICE UPSTREAM \u2014 recorded, never silently deduplicated (AR-1236 \u00a75)",
       "char_span": [
         9432,
         9512
@@ -349,9 +370,9 @@
       "escalate_to_isolated": false,
       "relevance": {
         "grounded": true,
-        "reason": "GROUNDED: the span fits this condition (0.19) better than any rival (0.03)",
-        "own_score": 0.18732979790741003,
-        "best_rival_score": 0.030803080308030802,
+        "reason": "GROUNDED: the span fits this condition (0.16) better than any rival (0.02)",
+        "own_score": 0.15867427461454411,
+        "best_rival_score": 0.019815994338287332,
         "rival": "Wait for a Fair Value Gap (FVG) sequence to form outside of the 5-minute range.",
         "shared_terms": [
           "bottom",

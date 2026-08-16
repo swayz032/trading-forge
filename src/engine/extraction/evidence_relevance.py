@@ -38,6 +38,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from .term_equivalence import equivalence_tokens
+
 __all__ = ["RelevanceVerdict", "evaluate_evidence_relevance"]
 
 # Function words carry no subject matter, so they cannot signal aboutness.
@@ -61,8 +63,28 @@ class RelevanceVerdict:
 
 
 def _terms(text: str) -> set[str]:
+    """Content terms for relevance comparison, PLUS canonical concept tokens.
+
+    AR-1239 §4 assigned term equivalence to relevance INPUT NORMALIZATION, and this is that
+    seam. The gap it closes was measured in AR-1225: a faithful span whose wording the
+    extractor normalised — an abbreviation on one side and its expansion on the other, or a
+    timeframe written two ways — shares zero literal content terms with its condition and is
+    refused. Six reports raised it before it had an owner.
+
+    The equivalences themselves live in `term_equivalence`, which owns them and cites where
+    each is established. None of that vocabulary appears here: this module stays free of
+    domain strings, which the suite's own hardcoding guard enforces — and which caught an
+    earlier draft of this very docstring.
+
+    🛑 CANONICAL TOKENS ARE ADDED, NEVER SUBSTITUTED. The original words all survive, so
+    normalization can only ever RAISE a comparison between two texts that genuinely name the
+    same concept — it cannot hide a term this gate was already matching on, and it cannot
+    rescue a span that is about something else. The disclaimer misgroundings still fail, and
+    that is asserted as a control rather than assumed.
+    """
     toks = re.findall(r"[a-z0-9]+", (text or "").lower())
-    return {t for t in toks if len(t) >= 3 and t not in _STOPWORDS}
+    base = {t for t in toks if len(t) >= 3 and t not in _STOPWORDS}
+    return base | equivalence_tokens(text)
 
 
 def _weights(document: str | None) -> dict:

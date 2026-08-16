@@ -265,3 +265,122 @@ def test_unrelated_certainty_elsewhere_does_not_license_certainty():
          "of the direction"],
     )
     assert "CERTAINTY_INFLATION" in _kinds(findings), findings
+
+
+# =========================================================================== #
+# AR-1239 §3.1 — UNSUPPORTED_CERTAINTY / UNSUPPORTED_RISK_BENEFIT
+#
+# The gap these close, measured on the real sVkm slice: a condition asserting certainty
+# against a source that is SILENT emitted nothing at all, because the certainty leg only
+# fired when the source actively hedged. "confirms the FVG structure and minimizes entry
+# risk" therefore passed every gate. Each control below is one AR-1239 §3.1 names.
+# =========================================================================== #
+
+_SVKM_CAUSAL_ROW = "Entering on the closure confirms the FVG structure and minimizes entry risk."
+_SVKM_QUOTE = (
+    "in order for this fair value gap to be a valid fair value gap, the fair value gap has "
+    "to actually be formed. And the way that happens is when the third candle of the "
+    "sequence has been printed"
+)
+
+
+def _kinds_for(cond, quotes):
+    return {f.kind for f in check_condition_fidelity(cond, quotes)}
+
+
+def test_ar1239_control_1_the_real_svkm_causal_risk_row_now_FAILS():
+    """CONTROL 1: the row AR-1236 §4 named and AR-1237 measured as undetected."""
+    kinds = _kinds_for(_SVKM_CAUSAL_ROW, [_SVKM_QUOTE])
+    assert "UNSUPPORTED_CERTAINTY" in kinds
+    assert "UNSUPPORTED_RISK_BENEFIT" in kinds
+
+
+def test_ar1239_control_2_a_source_that_explicitly_confirms_is_NOT_falsely_rejected():
+    """CONTROL 2: no false reject when the source really does assert the certainty."""
+    kinds = _kinds_for(
+        "Entering on the closure confirms the FVG structure.",
+        ["once that third candle closes it confirms the fair value gap structure is valid"],
+    )
+    assert "UNSUPPORTED_CERTAINTY" not in kinds
+    assert "CERTAINTY_INFLATION" not in kinds
+
+
+def test_ar1239_control_3_a_source_that_explicitly_reduces_risk_is_NOT_falsely_rejected():
+    """CONTROL 3: no false reject when the source really does offer the benefit."""
+    kinds = _kinds_for(
+        "Waiting for the close minimizes entry risk.",
+        ["waiting for the candle to close minimizes your entry risk on the trade"],
+    )
+    assert "UNSUPPORTED_RISK_BENEFIT" not in kinds
+
+
+def test_ar1239_control_4_an_unrelated_risk_or_confirm_sentence_does_not_license_it():
+    """CONTROL 4: clause attachment. A `risk`/`confirm` sentence about something ELSE may not
+    silence the finding — the AR-1206 §2.2 failure, re-proven for the new legs."""
+    kinds = _kinds_for(
+        "Entering on the closure confirms the FVG structure and minimizes entry risk.",
+        ["please confirm your broker connection before the session. manage your daily risk "
+         "limit sensibly."],
+    )
+    assert "UNSUPPORTED_CERTAINTY" in kinds
+    assert "UNSUPPORTED_RISK_BENEFIT" in kinds
+
+
+def test_ar1239_MEASURED_LIMITATION_a_comma_joined_clause_can_still_license_a_claim():
+    """A LIMITATION PINNED AS A TEST, NOT HIDDEN IN A COMMENT.
+
+    MEASURED while writing control 4: `_CLAUSE_SPLIT` breaks on `.!?;` and on
+    but/however/although/whereas/while — NOT on commas. So an unrelated marker and a
+    topic word joined by a comma land in ONE clause, and the clause-attachment screen
+    reads that as support. Below, `confirm` (about a broker connection) and `risk`
+    (about a daily limit) sit in one comma-joined clause and together silence the
+    certainty finding.
+
+    This is a property of the existing screen, whose own docstring already says it is a
+    cheap deterministic check and can be fooled by a same-topic clause. Widening the
+    splitter would change the verdict of every condition in the library, and AR-1239
+    §3.1 authorized two new outcomes — not a re-cut of clause boundaries. So it is
+    RECORDED and left alone rather than quietly widened.
+
+    If this test ever fails, the splitter changed: re-measure the whole corpus before
+    treating that as an improvement.
+    """
+    kinds = _kinds_for(
+        "Entering on the closure confirms the FVG structure and minimizes entry risk.",
+        ["please confirm your broker connection before the session, and manage your daily "
+         "risk limit sensibly"],
+    )
+    assert "UNSUPPORTED_CERTAINTY" not in kinds, (
+        "the comma-joined-clause limitation has changed — re-measure the corpus"
+    )
+
+
+def test_ar1239_control_5_source_silence_is_reported_as_UNSUPPORTED_not_as_DISPROVEN():
+    """CONTROL 5: silence is not evidence of the opposite, and the wording must say so."""
+    findings = check_condition_fidelity(_SVKM_CAUSAL_ROW, [_SVKM_QUOTE])
+    for f in findings:
+        if f.kind in ("UNSUPPORTED_CERTAINTY", "UNSUPPORTED_RISK_BENEFIT"):
+            assert "NOT DISPROVEN" in f.detail
+            for forbidden in ("false", "contradict", "disproves", "refutes"):
+                assert forbidden not in f.detail.lower()
+
+
+def test_ar1239_hedged_source_keeps_the_STRONGER_certainty_verdict():
+    """The two verdicts must stay distinct: an explicitly hedged source is a stronger finding
+    than a silent one, and collapsing them lets silence borrow a contradiction's authority."""
+    kinds = _kinds_for(
+        "The breakout confirms the market direction.",
+        ["this breakout may be telling us the market wants to go lower"],
+    )
+    assert "CERTAINTY_INFLATION" in kinds
+    assert "UNSUPPORTED_CERTAINTY" not in kinds
+
+
+def test_ar1239_the_bare_word_risk_does_not_fire_the_benefit_leg():
+    """DISCRIMINATOR: `risk` appears in almost every trading sentence. A rule that fired on the
+    bare noun would fire on everything and would therefore mean nothing."""
+    kinds = _kinds_for(
+        "The stop defines the risk on the trade.",
+        ["the stop goes at the bottom of the candle and that is your risk"],
+    )
+    assert "UNSUPPORTED_RISK_BENEFIT" not in kinds

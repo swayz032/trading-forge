@@ -106,6 +106,22 @@ _POINT_TIME = re.compile(r"\b\d{1,2}\s*[:.]\s*\d{2}\b")
 # A marker that the extraction turned an instant into a named stretch of time.
 _EXTENT_NOUN = re.compile(r"\b(session|window|period|hours?)\b", re.I)
 
+# Risk/benefit claims — AR-1239 §3.1. A condition asserting that doing the thing REDUCES
+# risk, or is safer, is claiming a benefit the source has to actually offer. Split into a
+# (verb, object) pair so `minimizes entry risk` matches while `risk` alone does not: the bare
+# noun appears in almost every trading sentence and would fire on everything.
+_RISK_BENEFIT_VERBS = r"(?:minimi[sz]\w*|reduc\w*|lower\w*|limit\w*|decreas\w*|mitigat\w*|cut\w*)"
+_RISK_BENEFIT_OBJECTS = r"(?:risk|exposure|drawdown|loss(?:es)?|danger)"
+_RISK_BENEFIT_PATTERNS = (
+    rf"\b{_RISK_BENEFIT_VERBS}\s+(?:the\s+|your\s+|our\s+|entry\s+|trade\s+)*{_RISK_BENEFIT_OBJECTS}\b",
+    r"\bsafer\b", r"\bmore\s+secure\b", r"\bprotects?\s+(?:you|us|the\s+trade|capital)\b",
+    r"\bless\s+risky\b",
+)
+# What must appear, clause-attached, in the SOURCE for such a claim to stand.
+_RISK_BENEFIT_SUPPORT = (
+    rf"(?:{_RISK_BENEFIT_VERBS}|safer|less\s+risky|protect\w*|secure\w*|{_RISK_BENEFIT_OBJECTS})"
+)
+
 # Causal assertions. AR-1206 §2.1: the declared contract named causal claims and the
 # first implementation did not check them. It does now.
 _CAUSAL_PATTERNS = (
@@ -251,6 +267,23 @@ def check_condition_fidelity(
                     f"condition asserts {cond_cert!r}; the source offers no certainty "
                     f"attached to this proposition, only a hedge ({hedge!r})",
                 ))
+            else:
+                # AR-1239 §3.1. THE GAP THIS CLOSES, MEASURED: with no hedge in the source the
+                # old code emitted NOTHING, so a condition asserting certainty against a source
+                # that is simply SILENT passed clean. That is how "confirms the FVG structure"
+                # survived every gate.
+                #
+                # 🛑 IT IS A SEPARATE, WEAKER VERDICT ON PURPOSE. `CERTAINTY_INFLATION` means the
+                # source actively hedged and the condition overrode it. This means the source said
+                # nothing either way. Collapsing them would let silence borrow the authority of a
+                # contradiction — and §3.1 explicitly forbids labelling source silence as
+                # CERTAINTY_INFLATION.
+                findings.append(FidelityFinding(
+                    "UNSUPPORTED_CERTAINTY", cond_cert,
+                    f"condition asserts {cond_cert!r}; the source span carries no support for "
+                    "that certainty attached to this proposition. UNSUPPORTED, NOT DISPROVEN — "
+                    "the source is silent here, which is not evidence of the opposite",
+                ))
 
     # 2. MODIFIER — probability/quality claim with no CLAUSE-ATTACHED support.
     for pattern, stem in _MODIFIER_CLAIMS:
@@ -276,6 +309,19 @@ def check_condition_fidelity(
                 "CAUSAL_INFLATION", cond_causal,
                 f"condition asserts causation ({cond_causal!r}); the source states no "
                 "causal relation attached to this proposition",
+            ))
+
+    # 5b. RISK / BENEFIT — condition claims the action reduces risk (AR-1239 §3.1).
+    cond_risk = next((m.group(0) for p in _RISK_BENEFIT_PATTERNS
+                      for m in [re.search(p, cond)] if m), None)
+    if cond_risk:
+        topic = _content_words(cond, exclude=_content_words(cond_risk))
+        if not _attached_support(quotes, _RISK_BENEFIT_SUPPORT, topic):
+            findings.append(FidelityFinding(
+                "UNSUPPORTED_RISK_BENEFIT", cond_risk,
+                f"condition claims a risk/safety benefit ({cond_risk!r}); the source span "
+                "carries no support for that benefit attached to this proposition. "
+                "UNSUPPORTED, NOT DISPROVEN — the source may simply not discuss it",
             ))
 
     # 3. TIMING — an instant in the source became an extent in the condition.
