@@ -5,117 +5,112 @@ session consumes a small resume packet, not the old conversation). **Overwrite t
 packet boundary — it describes the CURRENT boundary only, never history.**
 
 ```text
-LAST UPDATED    : 2026-08-16, by the AR-1262 seat, at its own session boundary
+LAST UPDATED    : 2026-08-16, by the AR-1266 seat, at its own session boundary
 WORKTREE        : C:\Users\tonio\Projects\wt-claude-worker1-20260815
 BRANCH          : claude/worker1-h1-20260815
 HEAD            : refs/heads/claude/worker1-h1-20260815 — resolve it, do NOT pin it.
                   Committing this file moves the head it would name, so a SHA here is stale by
-                  construction, one commit behind, forever. AR-1256 §3 already paid for that loop
-                  with session_anchor.expected_head; the fix was a REF, and it is a ref here too.
-LAST GRADED     : 1cc77d12 — AR-1261 graded AR-1260: D1-A/B/D PASS, D1-C PARTIAL.
-LAST DELIVERED  : 227533be — AR-1262 (D1-C1, the exact actual-model identity set), pushed.
-                  AWAITING GRADE. Evidence pin for that packet is 227533be; the work commit is
-                  f73bde88 and 227533be is the guard-ordered SYSTEM-INVENTORY regenerate.
-NEWEST RULING   : advisor-reports/AR-1261-GPT-EXTERNAL-ADVISOR-RULING-AR1260-D1-AB-D-PASS-C-MODEL-IDENTITY-NARROW-REPAIR-2026-08-16.md
-                  on origin/external-advisor/gpt-rulings
-NEWEST WORKER AR: advisor-reports/AR-1262-WORKER-D1-C1-EXACT-ACTUAL-MODEL-IDENTITY-CONTRACT-2026-08-16.md
-NEXT WORKER AR  : AR-1263
+                  construction, one commit behind, forever.
+TOOLBOX         : claude/worker1-p1-toolbox-20260816 @ 6a06ffae  (pin == branch, no drift)
+LAST DELIVERED  : AR-1266 — seat pin aae50800, toolbox pin 6a06ffae. Both pushed and verified
+                  on origin. GRADED by AR-1267: PARTIAL PASS.
+NEWEST RULING   : advisor-reports/AR-1267-GPT-EXTERNAL-ADVISOR-RULING-AR1266-P1-CONFIGURED-PARTIAL-PASS-PRECALL-STATE-MACHINE-AND-CACHE-REPAIR-REQUIRED-2026-08-16.md
+NEWEST WORKER AR: advisor-reports/AR-1266-WORKER-P1-LIVE-IN-REAL-SEAT-STRICT-G2-SESSION-EIGHT-UNSPENT-2026-08-16.md
+NEXT WORKER AR  : AR-1268
+G2 BUDGET       : 0/8 spent. queue 5935b1c6… · 8 ready · receipt dir README-only.
 ```
 
-## Your assignment
+## Your assignment — AR-1267 §9, items A–H. Read that ruling; it is the contract.
 
-🛑 **AR-1262 IS DELIVERED AND UNGRADED. Do not redo it, and do not start E1/E2.**
-**Read AR-1261's successor first — your assignment is whatever GPT rules on AR-1262.**
+Do **not** reopen D1-A/B/C1, the quartet finalizer, the exact actual-model matcher, or the dirty
+exception design. All PASS. AR-1267 §9 is deliberately narrow: *"These are the last load-bearing
+edges of the pre-call boundary, not a reason to restart G2 architecture."*
 
-If — and only if — that ruling has not landed yet, **AR-1261 §9 already names the fork**, and it
-is a genuine fork you must not resolve by guessing:
+🛑 **H IS A HARD STOP.** The non-G2 Opus calibration needs an **explicit operator utterance in
+the live session**. AR-1267 §9H: *"Do not infer authorization from this markdown ruling alone."*
+The AR-1266 seat asked and stopped; the answer had not arrived at its boundary.
+
+## What AR-1266 closed, so you do not re-derive it
 
 ```text
-IF the live G2-D subscription Opus dispatch gate is genuinely available
-   -> FRESH SESSION -> controlled real G2-D execution under the frozen 8-call law.
-      This is the reserved class. It spends an irreplaceable one-shot budget, so it is
-      NOT self-authorized by this card — GPT's ruling plus the dispatch gate, both.
-ELSE
-   -> the already-queued P1 REVIEW_REQUIRED / native-hook SOURCE repair, on the GPT
-      speed-engineering toolbox authority path. NEVER by forking the toolbox into Worker-1.
+PASS  real-seat .claude/settings.json registers SessionStart + PreToolUse, matcher
+      Edit|Write|NotebookEdit|Bash|Agent|Task, routed through scripts/claude_guard_hook.mjs.
+PASS  strict_session mechanism — in strict mode membership is a property of the SESSION, not the
+      payload, closing the prose-only bypass. Currently false: calibration is non-G2 and must
+      precede arming. Correct for this checkpoint.
+PASS  hash-pinned dirty exception. docs/wave25-exit-engine-ab-report.md allowed ONLY while its
+      `git diff HEAD --binary` bytes hash to e200765c11e85aeb9d5f0eb6d04cb04ea3985bfffc0a33e762c9960652547170.
+PASS  integration is an immutable RE-PIN, never a copy (scripts/claude_toolbox.mjs).
+      bundle e725cad4… over 40 files, COMPUTED by `node scripts/claude_toolbox.mjs materialize`.
+toolbox suite: 131/131. Real-seat registered-command matrix: 18/18. Both LOCAL — no CI.
 ```
 
-The context-budget / model-routing lane (E1–E3) stays **parked** behind the money path and P1.
-
-## What AR-1260 + AR-1262 closed, so you do not re-derive it
+## The four open findings you are inheriting (AR-1267 §3–§6)
 
 ```text
-A  the finalizer walks the COMPLETE quartet (.attempt + .dispatch + .raw + .completion), joined
-   on condition_ref / frozen task_input_sha256 / queue-artifact bytes / attempt_number == 1.
-   AR-1261 §3: PASS. Do NOT reopen this design.
-B  .raw without .completion is STRANDED_INCOMPLETE, never RAW_RETURN_CAPTURED. The completion
-   contract is validated BEFORE any file is created. No automatic retry.
-   AR-1261 §4: PASS. Do NOT reopen this design.
-C  record_native_dispatch REFUSES a non-Opus requested model (strict equality). The completion
-   JOINS the dispatch instead of restating "opus". Disagreeing exposed native task ids refuse.
-   AR-1261 §5: requested-model and task-id joins PASS.
-C1 the EXPOSED actual-model check is now an exact frozen set, not a substring —
-   APPROVED_ACTUAL_MODEL_IDENTITIES = {"claude-opus-5", "claude-opus-5[1m]"},
-   contract version g2d-actual-model-identity-v1. NOT_EXPOSED still accepted.
-   🛑 An identity outside that set is a STOP AND REPORT. Do NOT add a member to regain
-   green and do NOT retry the one-shot call — only a ruling adds one (AR-1261 §5).
-D  scripts/g2d_real_queue_preflight.py — read-only, no delete path, STOPs on any real receipt.
-   AR-1261 §6: PASS.
-   MEASURED at 227533be: queue_count 8 · claimed/dispatched/completed/crash_shaped/non-README
-   all [] · ready 8. ALL EIGHT ONE-SHOT OPUS CALLS UNSPENT.
+F-1  scripts/claude_guard_hook.mjs and scripts/claude_toolbox.mjs are the LIVE control path but
+     are NOT in SELF_PROTECTED_RULES, while the manifest allows the `scripts/` prefix. The
+     guarded worker can edit its own doorway. Add exact self-protection + mutation control.
+F-2  cachedToolbox() reuses the TEMP cache on mere EXISTENCE of .pin-stamp + runner. It never
+     compares the stamp to the manifest's expected pin/bundle, so a stale cache silently runs
+     OLD LAW while GitHub and the manifest say NEW LAW. Verify pin AND bundle before executing.
+F-3  🛑 THE MOST IMPORTANT ONE, AND IT IS A DEFECT IN WHAT AR-1266 BUILT.
+     conditionIsSpent() treats ANY .attempt as already spent — but the durable D1 law requires
+     .attempt to be written BEFORE the model is invoked (claim_attempt), so the guard denies the
+     very sequence the law mandates. Repair: the trusted PreToolUse path itself performs
+     .attempt -> .dispatch (create-only, via the existing Python semantics through a small
+     protected doorway) and only THEN returns ALLOW. Any failure = DENY, no cleanup, no retry.
+F-4  The permit is not bound to the ACTUAL Agent model field or the ACTUAL prompt bytes — only
+     to the permit's own requested_model and "invocation text contains the condition ref". Freeze
+     a deterministic eight-row native-call artifact BEFORE any answer exists, then hash-match the
+     real tool input at the boundary.
 ```
 
-## Open findings you are inheriting
+## New traps this boundary paid for
 
 ```text
-AR-1261 §7  isolated_dispatch.IsolatedDispatcher writes no .dispatch/.completion, so the
-            finalizer REFUSES anything it produces. GPT RULED: accept the fail-closed
-            deprecation. Do NOT repair that legacy path back in for compatibility. Keep it
-            test-only/deprecated unless a later packet proves a distinct legitimate use.
-            (This was AR-1260 F-3 — now SETTLED, not open.)
-AR-1260 F-4 CLOSED by AR-1262. The substring matcher is gone; see C1 above. The set is
-            deliberately SHORT and the bare word "opus" is NOT a member — it is the
-            authorized REQUESTED identity only.
-AR-1261 §8  the .claude/skills + .gitignore + resume-anchor commits on this branch are NOT
-            implicitly GPT-certified just by sitting here. Keep reporting packet base,
-            packet commits, evidence pin and documentation tail SEPARATELY. Do not roll
-            them back to make a packet look tidy.
-AR-1242     the governed canonical_regression_population.txt membership test is ALREADY RED
-            (9 files drifted out). Pre-existing disposition question, still unsettled. The
-            changed files are NOT members of that population — the blast-radius numbers are a
-            -k selection and are NOT comparable to the 35/2384 governed baseline.
-AR-1259 §4  canonical agent authority = the VERSION-CONTROLLED .claude/agents at the governed
-            GitHub ref. The outer workspace tree is a deployment/resolution surface, NOT a second
-            policy authority. Local Sonnet pins there are UNAUTHORIZED DEPLOYMENT DRIFT until
-            E1/E2 pass — do not call them a rollout, and do not let parity blindly delete them.
-AR-1259 §5  10 local accuracy-validator copies carry no model: field (canonical is model: opus).
-            DO NOT sweep historical worktrees. DO NOT touch Worker-2. The gate is: an ACTIVE seat
-            must prove effective Opus resolution before its independent grade is trusted.
-AR-1259 §6  3 paper-parity agent-memory payloads surface as dispatchable agent types.
-            PROVISIONAL LOCAL RUNTIME FINDING — parked, do not mutate.
-dirty file  docs/wave25-exit-engine-ab-report.md is a timestamp-only regeneration and is
-            DELIBERATELY still dirty. AR-1245 §9 + AR-1257 §11: do not sweep it into a packet, do
-            not clean it, and do NOT flip require_clean to false to buy a green SessionStart.
-```
-
-## Traps this branch has already paid for
-
-```text
-pre-push    the inventory-freshness hook BLOCKS the push when SYSTEM-INVENTORY.md is stale, and
-            it rolls its own regeneration back because unstaged files conflict with its stash.
-            Remedy is its own: python scripts/system_inventory.py, then
-            git commit -o docs/designs/SYSTEM-INVENTORY.md. DO NOT route around it.
-worktree    a red-proof worktree under the session scratchpad FAILS with "Filename too long".
-            Use a short path such as C:\Users\tonio\Projects\wt-rp<n>, and remove it after.
-red-proof   a bare copy of a new test file into an old tree gives ONE collection ImportError —
-            a blunt RED that proves nothing per-guard. Append the new CONSTANTS as inert shims
-            so each guard is judged on its own merit, and disclose that you did.
-message     changing an error message turns old parametrized cases RED for the WORDING, not the
-            behaviour. AR-1262: 9 negative cases went red at the old pin but only 6 were real
-            behaviour changes. MEASURE both matchers side by side; never read the pytest
-            failure list as a count of caught attacks.
+fragment    settings.fragment.json registers TaskCompleted UNCONDITIONALLY, and the bridge
+            fail-closes TaskCompleted to `block` while finish.enabled is false. Installing the
+            prepared fragment VERBATIM blocks every task completion in the seat. Register
+            SessionStart + PreToolUse only, until a real finish receipt exists.
+guarded     🛑 THIS SEAT IS NOW LIVE-GUARDED. A session opened with its project dir set to this
+            worktree gets SessionStart + PreToolUse enforcement. SessionStart STOPs on ANY dirty
+            path except the one hash-pinned exception — regenerating that report bricks it until
+            the desk re-pins. The AR-1266 seat worked from the outer trading-forge project dir
+            and was therefore NOT bound; do not assume your session is bound or unbound, check.
+bootstrap   a guarded seat CANNOT repair its own guard (SELF_PROTECTED denies regardless of
+            packet scope). After F-1 lands, the doorway and activator join that set. Sequence
+            AR-1268 accordingly: the rules live in the toolbox authority branch.
+headline    AR-1266's title said "P1 IS LIVE" while its own body said no real Agent dispatch had
+            been observed. AR-1267 §7 corrected it to REGISTERED + COMMAND-PATH HARNESS-PROVEN.
+            The body was honest and the title still over-scoped — scope the TITLE against your
+            strongest number, every time.
+shell       $TEMP interpolated into a Bash string had its backslashes eaten
+            (C:UsersonioAppData…). Resolve Windows paths INSIDE node, not in the shell.
 ear         a live gpt_branch_ear.sh process may belong to a DEAD seat and delivers to nobody.
             Only an EAR ARMED line arriving in YOUR chat counts. Never kill one you did not arm.
+            (One orphan from a previous seat was found running at this boundary and left alone.)
+pre-push    inventory-freshness BLOCKS the push when SYSTEM-INVENTORY.md is stale and rolls its
+            own regeneration back. Remedy is its own: python scripts/system_inventory.py, then
+            git commit -o docs/designs/SYSTEM-INVENTORY.md. DO NOT route around it.
+publish     the GPT branch is NOT a fast-forward — publish ONE file by plumbing, and `unset
+            GIT_INDEX_FILE` in a FRESH shell before the push or the hook blames an innocent file.
+```
+
+## Still-open inherited items (unchanged by AR-1266)
+
+```text
+D1-C2       actual_model_identity remains UNWITNESSED. Only the operator-authorized calibration
+            closes it. Do NOT widen APPROVED_ACTUAL_MODEL_IDENTITIES to regain a green.
+finish      claude-finish-check still carries the old structural REVIEW_REQUIRED problem. It
+            cannot bite while finish.enabled is false. Reported, deliberately not fixed.
+AR-1242     canonical_regression_population.txt membership test is ALREADY RED (9 files drifted).
+            Pre-existing, unsettled.
+AR-1259 §4-6 canonical agent authority = the version-controlled .claude/agents at the governed
+            ref; local Sonnet pins are unauthorized deployment drift; 3 paper-parity payloads
+            parked. Do not sweep historical worktrees, do not touch Worker-2.
+dirty file  docs/wave25-exit-engine-ab-report.md stays dirty ON PURPOSE and is now GOVERNED by
+            the hash exception. Do not sweep it, clean it, or flip require_clean to false.
 ```
 
 ## Locks — unchanged
@@ -123,14 +118,15 @@ ear         a live gpt_branch_ear.sh process may belong to a DEAD seat and deliv
 ```text
 sVkm certification · sVkm compiler authorization · sVkm backtest campaign
 PAPER · Worker-2 runtime activation · broker / Topstep / live
-real G2-D calls until GPT rules AR-1262 D1-C1 pass AND the separate live dispatch gate opens
-G2-H OPEN · CERT RED · no CI at this head — all execution evidence is LOCAL
+all eight real frozen G2-D calls · G2-H OPEN · CERT RED
+no CI at either pin — all execution evidence is LOCAL. No G2 attempt is spent to test a guard.
 ```
 
 ## Before you touch anything
 
 1. **Arm the 2s ear** (onboarding step 2). An ear you did not see arm in *your own* chat is not
-   yours. Then backfill: diff the branch against the head above and read anything newer.
-2. Prove `227533be` is an ancestor of your HEAD; if the branch moved past it, read the delta first.
-3. Do not trust a SHA pinned in an onboarding file or an old resume card — including this one once
-   the branch advances. This file is only as fresh as `LAST UPDATED`.
+   yours. Then backfill against the head named above.
+2. Prove `aae50800` is an ancestor of your HEAD; if the branch moved past it, read the delta.
+3. Run the read-only preflight FIRST and confirm 8 ready / 0 spent before any repair work.
+4. Do not trust a SHA pinned in an onboarding file or an old card — including this one once the
+   branch advances. This file is only as fresh as `LAST UPDATED`.
