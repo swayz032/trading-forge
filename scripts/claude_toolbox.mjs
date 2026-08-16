@@ -126,7 +126,13 @@ async function main() {
       const r = auditTestText({ text, critical: true, requireMutationEvidence: true, mutationEvidence: true });
       return { file: f, ...r };
     });
-    const failed = rows.filter((r) => r.hardFailures?.length);
+    // 🛑 THE FIELD IS `hard_failures`, NOT `hardFailures`. The first version of this line read the
+    // camelCase name, which is `undefined` on every row — so it reported "0 hard failures" while
+    // the tool itself was returning verdict BLOCK. A false green IN THE RUNNER, in a runner whose
+    // whole job is catching false greens. Caught only by a planted positive control, which is why
+    // a clean result from an unproven detector is worth nothing. Verdict is read too, so a future
+    // rename breaks loudly instead of silently passing.
+    const failed = rows.filter((r) => r.hard_failures?.length || r.verdict === 'BLOCK');
     console.log(JSON.stringify({
       toolbox: { ref: receipt.ref, commit: receipt.commit },
       audited: rows.length, hard_failures: failed.length, rows,
