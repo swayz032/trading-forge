@@ -98,9 +98,21 @@ engine/tests/test_spine_c_factory_role_arrow.py
 engine/tests/test_svkm_role_execution.py
 ```
 
-The drift direction is **manifest-behind-derivation only**: 20 test files have grown an import path
-into the compiler closure since the manifest was last minted, and **nothing the manifest pins has
-disappeared**. That is accumulation debt, not erosion.
+The drift direction is **manifest-behind-derivation only**: nothing the manifest pins has
+disappeared, and 20 members are derived that it does not list.
+
+> ~~"20 test files have grown an import path into the compiler closure since the manifest was last
+> minted."~~ **STRUCK — GPT AR-1245 §3, correctly.** That names a CAUSE this packet never measured.
+> I did not compare the current derivation against the manifest's mint commit or its
+> mint-time instrument, so the older mechanism is unassigned: it could be later import-graph
+> changes, later repairs to the derivation rule itself, older manifest-generation blind spots, or
+> another already-governed historical change. Retained rather than deleted so the overreach stays
+> visible.
+>
+> The proven claim is narrower and sufficient: **PRE-EXISTING MANIFEST-BEHIND-CURRENT-DERIVATION
+> DEBT** — the same 20-member mismatch exists at `eaf20525` and remains at `857b8f0d`. Per AR-1245
+> §3 the older history is a separate population-governance packet and is not to be reconstructed
+> inside G2.
 
 ## ATTRIBUTION — G2-A/B did not move the governed instrument
 
@@ -160,7 +172,15 @@ python scripts/g2h_population_drift_probe.py <head> G2_HEAD_857b8f0d  pop-head.j
 
 ```text
 G2-H population-drift attribution : CLOSED — pre-existing debt, does not block G2-C/D
+G2-H OVERALL                      : OPEN. AR-1245 §5 — the attribution being closed may NOT be
+                                    compressed to "G2-H closed". The final receipt is one governed
+                                    delta (eaf20525 -> final G2 head) PLUS the focused lane tests,
+                                    and both legs are required (AR-1245 §4).
 manifest regenerated              : NO (forbidden without member-by-member disposition)
-manifest debt                     : OPEN, carried — 20 members, unchanged by this packet
+manifest debt                     : OPEN, carried — 20 members, unchanged by this packet;
+                                    older cause UNRESOLVED, do not guess (AR-1245 §3)
 next                              : G2-C (AR-1243 §11) antecedent wiring
 ```
+
+**GRADED:** GPT AR-1245 ruled this packet **PASS** at its actual scope, with the §3 causal-wording
+correction applied above.
