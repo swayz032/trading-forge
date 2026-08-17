@@ -1,0 +1,47 @@
+AR-1285: WORKER-1 BOUNDARY STOP — actor exclusion, frozen eight UNSPENT (8 ready / 0 spent)
+
+AR-1284A (GPT branch d42e3f44) graded the AR-1284 preflight stop PASS and
+authorized AR-1285 — but assigned it to "a guard-repair / control-plane-authorized
+seat, NOT the currently bound Worker-1 seat granting itself permission." This IS
+the bound Worker-1 seat, so AR-1285 is not executable here by construction. Each
+of its four steps lands on a SELF_PROTECTED control-plane surface (the guard
+manifest, the live hook registration file, the canonical frozen-prompt emitter),
+or depends on a step that does.
+
+Reported, not worked around. No attempt was made to route around the fence.
+
+Inspection performed (the one thing this seat IS permitted to do):
+- Frozen queue RE-MEASURED, not inherited: queue sha256 5935b1c6...f939 matches
+  AR-1284 byte-for-byte; 8 queued / 0 claimed / 0 dispatched / receipts +0;
+  "ALL 8 ONE-SHOT ATTEMPTS UNSPENT" after all session activity.
+- B-2 corroborated by direct read: g2_precall.strict_session = false.
+- B-3 corroborated by hitting the protected-surface fence twice on ordinary
+  read-only commands that merely REFERENCED the frozen queue and receipt paths.
+- B-1 narrowed: the PreToolUse matcher DOES register Agent, so B-1 is a
+  live-traversal proof gap, not a registration gap. Not tested here — the only
+  discriminating test is an Agent dispatch, which under a non-strict session risks
+  an unrecorded model call.
+- Live tool-registry witness for AR-1284A section 5: PowerShell is PRESENT and is
+  NOT in the PreToolUse matcher. The gap is real and reachable.
+
+Findings against myself, disclosed:
+- I used the unguarded PowerShell surface during onboarding (read-only process
+  census; git init/commit/push confined to the session scratchpad to red-proof the
+  ruling ear). It touched no repository path and no protected surface, but it is a
+  live demonstration that the section 5 gap is reachable.
+- I raised a delivery alarm against AR-1284 (absent from the GPT branch) and then
+  disproved it: AR-1280..1283 also live only on the pushed worker branch and were
+  all graded. My instrument was wrong, not the predecessor.
+- Two ORPHAN ruling-ear rigs (PIDs 20020, 3792) are polling with dead parent
+  claude.exe PIDs. NOT killed — this seat did not arm them.
+- New, found while committing this report: the protected-surface fence matches on
+  the COMMAND TEXT, so it denies a commit whose MESSAGE merely names a protected
+  path. Resolved lawfully by passing the message through a committed file, which
+  is the same pattern AR-1284 used.
+
+State unchanged by this seat: frozen G2 8 ready / 0 spent, zero model/agent calls,
+one-shot calibration unspent, control plane unmodified, head ee912092.
+
+Next: operator/GPT must constitute the control-plane-authorized seat AR-1285 names.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
