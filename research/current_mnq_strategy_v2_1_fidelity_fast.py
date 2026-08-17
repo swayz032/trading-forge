@@ -10,6 +10,7 @@ _orig_prior = b.prior_bars
 _orig_bias = b.v2.premarket_bias
 _orig_exit = b.v2.exit_1m
 _orig_merge = b.pd.DataFrame.merge
+_orig_to_datetime = b.pd.to_datetime
 
 _cluster_cache = {}
 _fvg_cache = {}
@@ -59,6 +60,13 @@ def reporting_merge_compat(self, right, *args, **kwargs):
         self = self.rename(columns={'name':'variant'})
     return _orig_merge(self, right, *args, **kwargs)
 
+def reporting_datetime_compat(arg, *args, **kwargs):
+    # Reporting-only DST compatibility for the saved entry_time strings.
+    # Jan-Apr spans EST and EDT, so normalize this one diagnostic Series to UTC.
+    if getattr(arg, 'name', None) == 'entry_time' and 'utc' not in kwargs:
+        kwargs['utc'] = True
+    return _orig_to_datetime(arg, *args, **kwargs)
+
 if __name__=='__main__':
     b.v1.clusters=cached_clusters
     b.active_fvgs_partial=cached_fvg
@@ -67,4 +75,5 @@ if __name__=='__main__':
     b.v2.premarket_bias=cached_bias
     b.v2.exit_1m=cached_exit
     b.pd.DataFrame.merge=reporting_merge_compat
+    b.pd.to_datetime=reporting_datetime_compat
     b.main()
