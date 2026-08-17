@@ -15,6 +15,7 @@ class RealtimeSnapshot:
     account_id: int
     contract_id: str
     account_simulated: bool
+    account_balance: float
     snapshot_age_seconds: float
     quote_age_seconds: float
     user_hub_connected: bool
@@ -70,10 +71,15 @@ def read_realtime_snapshot(path: str | Path, expected_account_id: int,
     if not isinstance(account, dict) or int(account.get("id", -1)) != int(expected_account_id):
         raise RuntimeError("REALTIME_ACCOUNT_EVENT_NOT_VERIFIED")
     if account.get("simulated") is not True:
-        # Current Topstep rules prohibit automated ProjectX API trading in LFA.
         raise RuntimeError("TOPSTEP_LFA_PROJECTX_API_PROHIBITED")
     if account.get("canTrade") is not True:
         raise RuntimeError("REALTIME_ACCOUNT_CANNOT_TRADE")
+    try:
+        account_balance = float(account["balance"])
+    except Exception as exc:
+        raise RuntimeError("REALTIME_ACCOUNT_BALANCE_MISSING") from exc
+    if not account_balance > 0:
+        raise RuntimeError("REALTIME_ACCOUNT_BALANCE_INVALID")
 
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     snapshot_written = _parse_utc(data.get("snapshot_written_utc"), "snapshot_written_utc")
@@ -103,7 +109,7 @@ def read_realtime_snapshot(path: str | Path, expected_account_id: int,
 
     return RealtimeSnapshot(
         account_id=int(expected_account_id), contract_id=str(expected_contract_id),
-        account_simulated=True,
+        account_simulated=True, account_balance=account_balance,
         snapshot_age_seconds=float(snapshot_age), quote_age_seconds=float(quote_age),
         user_hub_connected=True, market_hub_connected=True,
         best_bid=bid, best_ask=ask, last_price=last_price,
