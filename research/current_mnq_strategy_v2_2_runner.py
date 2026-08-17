@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from research import current_mnq_strategy_v2_2_engine as e
+from research import current_mnq_strategy_v2_2_engine_runtime as e
 
 ROOT = Path("research/_mnq_v22")
 DATA = ROOT / "data"
@@ -40,6 +40,48 @@ def chronological_folds(ledger, days, n=4):
     return pd.DataFrame(rows)
 
 
+def tick_order_audit(ledger: pd.DataFrame, tick_raw: pd.DataFrame) -> dict:
+    if ledger.empty or tick_raw.empty:
+        return {"compared": 0, "mismatches": 0, "status": "INSUFFICIENT"}
+    compared = 0
+    mismatches = 0
+    details = []
+    for r in ledger.itertuples():
+        et = pd.Timestamp(r.entry_time)
+        xt = pd.Timestamp(r.exit_time)
+        q = tick_raw[(tick_raw.index >= et) & (tick_raw.index <= xt)]
+        if q.empty:
+            continue
+        direction = "L" if r.side == "LONG" else "S"
+        first = None
+        for ts0, b0 in q.iterrows():
+            if direction == "L":
+                hs = float(b0.low) <= float(r.stop)
+                ht = float(b0.high) >= float(r.target) + e.TICK
+            else:
+                hs = float(b0.high) >= float(r.stop)
+                ht = float(b0.low) <= float(r.target) - e.TICK
+            if hs or ht:
+                if hs and ht:
+                    outcome = "AMBIG"
+                elif hs:
+                    outcome = "STOP"
+                else:
+                    outcome = "TARGET"
+                first = (ts0, outcome)
+                break
+        if first is None:
+            continue
+        compared += 1
+        recorded = "TARGET" if "TARGET" in str(r.exit_reason) else "STOP" if "STOP" in str(r.exit_reason) else "OTHER"
+        mismatch = recorded != "OTHER" and first[1] not in (recorded, "AMBIG")
+        mismatches += int(mismatch)
+        if mismatch:
+            details.append({"session": r.session, "tick_first": first[1], "recorded": recorded, "timestamp": str(first[0])})
+    return {"compared": compared, "mismatches": mismatches, "mismatch_details": details[:20],
+            "status": "PASS" if compared and mismatches == 0 else "WARN" if compared else "INSUFFICIENT"}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest-only", action="store_true")
@@ -47,7 +89,7 @@ def main():
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
 
-    observed = e.download_pinned(DATA, include_tick=False)
+    observed = e.download_pinned(DATA, include_tick=True)
     save_json(OUT / "observed_data_manifest.json", {
         "schema": 1,
         "source_contract_policy": "single_contract_development_only",
@@ -64,6 +106,7 @@ def main():
 
     raw5 = e.load_csv(DATA / Path(e.DATA_FILES["5m"]).name)
     raw1 = e.load_csv(DATA / Path(e.DATA_FILES["1m"]).name)
+    rawtick = e.load_csv(DATA / Path(e.DATA_FILES["tick"]).name)
     dq = e.data_quality_gate(raw1, raw5)
     save_json(OUT / "data_quality.json", dq)
     if dq["status"] != "PASS":
@@ -87,6 +130,8 @@ def main():
     base_ledger.to_csv(OUT / "base_v22_ledger.csv", index=False)
     base_metrics = e.metrics(base_ledger)
     mae_risk = e.intratrade_equity_risk(base_ledger)
+    tick_audit = tick_order_audit(base_ledger, rawtick)
+    save_json(OUT / "tick_order_audit.json", tick_audit)
     folds = chronological_folds(base_ledger, days, 4)
     folds.to_csv(OUT / "base_chronological_folds.csv", index=False)
 
@@ -138,10 +183,7 @@ def main():
             "quality": dq,
         },
         "semantic": {
-            "breakout_polarity": {
-                "REV_LONG": "SUPPORT", "REV_SHORT": "RESISTANCE",
-                "BRK_LONG": "RESISTANCE", "BRK_SHORT": "SUPPORT",
-            },
+            "breakout_polarity": {"REV_LONG": "SUPPORT", "REV_SHORT": "RESISTANCE", "BRK_LONG": "RESISTANCE", "BRK_SHORT": "SUPPORT"},
             "weak_breakout_requires_new_15m_close_after_attempt": True,
             "confluence_independent_from_zone_constructor": True,
             "blockers_separate_from_destinations": True,
@@ -153,6 +195,7 @@ def main():
         },
         "base_metrics": base_metrics,
         "mae_risk": mae_risk,
+        "tick_order_audit": tick_audit,
         "robustness_family": {
             "count": int(len(variants)),
             "profitable_share": profitable_share,
