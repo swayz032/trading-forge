@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
+Updated automatically from the repo on `2026-08-17T03:50:17.372Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -16,7 +16,7 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - Current live Trading Forge n8n workflows tracked: `20`
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
-- Engine subsystems tracked: `29`
+- Engine subsystems tracked: `32`
 - Database tables tracked: `110`
 
 ### Subsystem Runtime States
@@ -56,7 +56,7 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - Registry subsystems tracked: `73`
 - Route coverage: `79/79`
 - Scheduler coverage: `108/108`
-- Engine coverage: `29/29`
+- Engine coverage: `29/32`
 - Database coverage: `110/110`
 - Autonomous subsystems with audit coverage: `64/64`
 - Autonomous subsystems with audit actions: `64/64`
@@ -95,7 +95,7 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - Failing workflow blockers: `0`
 - Source-missing workflow blockers: `0`
 - Awaiting redeploy workflow blockers: `0`
-- Stale workflow blockers: `0`
+- Stale workflow blockers: `18`
 - Runtime control blockers: `0`
 
 ### Readiness Summary
@@ -119,9 +119,9 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - `built-inactive`: `0`
 - `broken`: `0`
 - `external-non-core`: `0`
-- health `healthy`: `18`
+- health `healthy`: `0`
 - health `failing`: `0`
-- health `stale`: `0`
+- health `stale`: `18`
 - health `unknown`: `2`
 
 ### Subsystem Coverage Gaps
@@ -203,6 +203,7 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - `anti_setups` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
 - `archetypes` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
 - `backtester` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
+- `battery` owner=`unmapped` status=`drifted` state=`unmapped` gaps=missing-registry-owner
 - `compiler` owner=`research_orchestration` status=`runtime-proven` state=`active` gaps=none
 - `compliance` owner=`compliance_governance` status=`runtime-proven` state=`active` gaps=none
 - `context` owner=`context_execution` status=`runtime-proven` state=`active` gaps=none
@@ -211,6 +212,8 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - `deepar_forecaster` owner=`deepar_regime` status=`runtime-proven` state=`active` gaps=none
 - `deepar_regime_classifier` owner=`deepar_regime` status=`runtime-proven` state=`active` gaps=none
 - `exits` owner=`context_execution` status=`runtime-proven` state=`active` gaps=none
+- `extraction` owner=`unmapped` status=`drifted` state=`unmapped` gaps=missing-registry-owner
+- `forensics` owner=`unmapped` status=`drifted` state=`unmapped` gaps=missing-registry-owner
 - `governor` owner=`compliance_governance` status=`runtime-proven` state=`active` gaps=none
 - `graveyard` owner=`strategy_lifecycle` status=`runtime-proven` state=`active` gaps=none
 - `invariant_harness` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
@@ -425,6 +428,7 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - `anti_setups`
 - `archetypes`
 - `backtester`
+- `battery`
 - `compiler`
 - `compliance`
 - `context`
@@ -433,6 +437,8 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - `deepar_forecaster`
 - `deepar_regime_classifier`
 - `exits`
+- `extraction`
+- `forensics`
 - `governor`
 - `graveyard`
 - `invariant_harness`

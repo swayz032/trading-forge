@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-06T08:37:43.719Z",
+  "generatedAt": "2026-08-17T03:50:17.372Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -19,7 +19,7 @@
     "schedulerJobs": 108,
     "workflowFiles": 20,
     "canonicalWorkflows": 20,
-    "engineSubsystems": 29,
+    "engineSubsystems": 32,
     "databaseTables": 110,
     "registrySubsystems": 73
   },
@@ -273,7 +273,7 @@
         ],
         "preferredName": "10A_master_orchestration_LTH2vot3Mv9B5AHb",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T09:00:04.304Z",
         "lastFailureAt": null,
@@ -281,7 +281,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1026h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -291,7 +291,7 @@
         ],
         "preferredName": "14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T07:00:26.090Z",
         "lastFailureAt": null,
@@ -299,7 +299,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1028h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -309,7 +309,7 @@
         ],
         "preferredName": "3A_workflow_backup_5bfT33w0TylM0Hbk",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T06:00:04.767Z",
         "lastFailureAt": null,
@@ -317,7 +317,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1029h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -327,7 +327,7 @@
         ],
         "preferredName": "5A_weekly_tournament_iGjDyKYpxNFzoXCw",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T23:00:00.913Z",
         "lastFailureAt": null,
@@ -335,7 +335,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1012h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -345,7 +345,7 @@
         ],
         "preferredName": "5P_nemo_scenario_generator_0ooxmt74fCtHiTo6",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T14:00:07.710Z",
         "lastFailureAt": null,
@@ -353,7 +353,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1021h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -363,7 +363,7 @@
         ],
         "preferredName": "6D_compliance_gate_UJUSRydbOZHDq7LB",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T08:00:01.462Z",
         "lastFailureAt": null,
@@ -371,7 +371,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1027h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -381,7 +381,7 @@
         ],
         "preferredName": "7A_auto_evolution_eEt2dJrZbV6C7TRL",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T07:20:01.637Z",
         "lastFailureAt": null,
@@ -389,7 +389,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1028h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -399,7 +399,7 @@
         ],
         "preferredName": "Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-01T07:00:07.398Z",
         "lastFailureAt": null,
@@ -407,7 +407,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1124h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -417,7 +417,7 @@
         ],
         "preferredName": "Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-03T13:00:06.335Z",
         "lastFailureAt": null,
@@ -425,7 +425,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1070h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -435,7 +435,7 @@
         ],
         "preferredName": "Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-03T21:00:01.728Z",
         "lastFailureAt": null,
@@ -443,7 +443,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1062h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -453,7 +453,7 @@
         ],
         "preferredName": "Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T23:01:21.174Z",
         "lastFailureAt": null,
@@ -461,7 +461,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1012h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -471,7 +471,7 @@
         ],
         "preferredName": "Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T11:00:58.088Z",
         "lastFailureAt": null,
@@ -479,7 +479,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1024h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -489,7 +489,7 @@
         ],
         "preferredName": "Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-01T10:00:01.398Z",
         "lastFailureAt": null,
@@ -498,7 +498,7 @@
         "liveSyncStatus": "live-aligned",
         "notes": [
           "Monthly cadence (~30-day cycle) — staleAfterHours overridden to 840h (35 days) so this workflow isn't misreported as \"stale\" for ~3 weeks out of every cycle under the global 192h default.",
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1121h old, exceeding the 840h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -508,7 +508,7 @@
         ],
         "preferredName": "Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-03T21:30:04.262Z",
         "lastFailureAt": null,
@@ -516,7 +516,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1062h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -526,7 +526,7 @@
         ],
         "preferredName": "Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-03T13:15:02.151Z",
         "lastFailureAt": null,
@@ -534,7 +534,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1070h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -544,7 +544,7 @@
         ],
         "preferredName": "Pre_Session_Skip_Check_flOq70zNhT3Umemt",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-03T13:00:02.603Z",
         "lastFailureAt": null,
@@ -552,7 +552,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1070h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -581,7 +581,7 @@
         ],
         "preferredName": "TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-06T02:15:00.561Z",
         "lastFailureAt": null,
@@ -589,7 +589,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1009h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -599,7 +599,7 @@
         ],
         "preferredName": "Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-06T00:00:01.390Z",
         "lastFailureAt": null,
@@ -607,7 +607,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 1011h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       }
     ]
@@ -616,6 +616,7 @@
     "anti_setups",
     "archetypes",
     "backtester",
+    "battery",
     "compiler",
     "compliance",
     "context",
@@ -624,6 +625,8 @@
     "deepar_forecaster",
     "deepar_regime_classifier",
     "exits",
+    "extraction",
+    "forensics",
     "governor",
     "graveyard",
     "invariant_harness",
@@ -820,7 +823,11 @@
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
-    "missingEngineSubsystems": [],
+    "missingEngineSubsystems": [
+      "battery",
+      "extraction",
+      "forensics"
+    ],
     "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
@@ -952,7 +959,26 @@
       "failingWorkflowBlockers": [],
       "sourceMissingWorkflowBlockers": [],
       "redeployWorkflowBlockers": [],
-      "staleWorkflowBlockers": [],
+      "staleWorkflowBlockers": [
+        "10A_master_orchestration_LTH2vot3Mv9B5AHb",
+        "14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
+        "3A_workflow_backup_5bfT33w0TylM0Hbk",
+        "5A_weekly_tournament_iGjDyKYpxNFzoXCw",
+        "5P_nemo_scenario_generator_0ooxmt74fCtHiTo6",
+        "6D_compliance_gate_UJUSRydbOZHDq7LB",
+        "7A_auto_evolution_eEt2dJrZbV6C7TRL",
+        "Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
+        "Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
+        "Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
+        "Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
+        "Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+        "Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
+        "Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
+        "Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
+        "Pre_Session_Skip_Check_flOq70zNhT3Umemt",
+        "TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV",
+        "Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp"
+      ],
       "runtimeControlBlockers": [],
       "blockers": [
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
@@ -974,7 +1000,25 @@
         "slumhouse_users_table:manual_gate:operator",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
-        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT"
+        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:10A_master_orchestration_LTH2vot3Mv9B5AHb",
+        "workflow-stale:14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
+        "workflow-stale:3A_workflow_backup_5bfT33w0TylM0Hbk",
+        "workflow-stale:5A_weekly_tournament_iGjDyKYpxNFzoXCw",
+        "workflow-stale:5P_nemo_scenario_generator_0ooxmt74fCtHiTo6",
+        "workflow-stale:6D_compliance_gate_UJUSRydbOZHDq7LB",
+        "workflow-stale:7A_auto_evolution_eEt2dJrZbV6C7TRL",
+        "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
+        "workflow-stale:Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
+        "workflow-stale:Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
+        "workflow-stale:Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
+        "workflow-stale:Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+        "workflow-stale:Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
+        "workflow-stale:Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
+        "workflow-stale:Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
+        "workflow-stale:Pre_Session_Skip_Check_flOq70zNhT3Umemt",
+        "workflow-stale:TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV",
+        "workflow-stale:Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp"
       ]
     },
     "readiness": {
@@ -1004,7 +1048,25 @@
         "synthetic_black_swan_survival:experimental_governance",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
-        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT"
+        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:10A_master_orchestration_LTH2vot3Mv9B5AHb",
+        "workflow-stale:14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
+        "workflow-stale:3A_workflow_backup_5bfT33w0TylM0Hbk",
+        "workflow-stale:5A_weekly_tournament_iGjDyKYpxNFzoXCw",
+        "workflow-stale:5P_nemo_scenario_generator_0ooxmt74fCtHiTo6",
+        "workflow-stale:6D_compliance_gate_UJUSRydbOZHDq7LB",
+        "workflow-stale:7A_auto_evolution_eEt2dJrZbV6C7TRL",
+        "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
+        "workflow-stale:Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
+        "workflow-stale:Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
+        "workflow-stale:Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
+        "workflow-stale:Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+        "workflow-stale:Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
+        "workflow-stale:Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
+        "workflow-stale:Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
+        "workflow-stale:Pre_Session_Skip_Check_flOq70zNhT3Umemt",
+        "workflow-stale:TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV",
+        "workflow-stale:Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp"
       ],
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
@@ -7837,6 +7899,20 @@
         "coverageGaps": []
       },
       {
+        "id": "battery",
+        "ownerSubsystemId": null,
+        "ownerDomain": null,
+        "runtimeState": "unmapped",
+        "proofStatus": "drifted",
+        "manualGate": "none",
+        "learningMode": "unmapped",
+        "operatingClass": "unmapped",
+        "criticality": "unmapped",
+        "coverageGaps": [
+          "missing-registry-owner"
+        ]
+      },
+      {
         "id": "compiler",
         "ownerSubsystemId": "research_orchestration",
         "ownerDomain": "research",
@@ -7931,6 +8007,34 @@
         "operatingClass": "adaptive",
         "criticality": "critical",
         "coverageGaps": []
+      },
+      {
+        "id": "extraction",
+        "ownerSubsystemId": null,
+        "ownerDomain": null,
+        "runtimeState": "unmapped",
+        "proofStatus": "drifted",
+        "manualGate": "none",
+        "learningMode": "unmapped",
+        "operatingClass": "unmapped",
+        "criticality": "unmapped",
+        "coverageGaps": [
+          "missing-registry-owner"
+        ]
+      },
+      {
+        "id": "forensics",
+        "ownerSubsystemId": null,
+        "ownerDomain": null,
+        "runtimeState": "unmapped",
+        "proofStatus": "drifted",
+        "manualGate": "none",
+        "learningMode": "unmapped",
+        "operatingClass": "unmapped",
+        "criticality": "unmapped",
+        "coverageGaps": [
+          "missing-registry-owner"
+        ]
       },
       {
         "id": "governor",
@@ -14950,6 +15054,20 @@
       "coverageGaps": []
     },
     {
+      "id": "battery",
+      "ownerSubsystemId": null,
+      "ownerDomain": null,
+      "runtimeState": "unmapped",
+      "proofStatus": "drifted",
+      "manualGate": "none",
+      "learningMode": "unmapped",
+      "operatingClass": "unmapped",
+      "criticality": "unmapped",
+      "coverageGaps": [
+        "missing-registry-owner"
+      ]
+    },
+    {
       "id": "compiler",
       "ownerSubsystemId": "research_orchestration",
       "ownerDomain": "research",
@@ -15044,6 +15162,34 @@
       "operatingClass": "adaptive",
       "criticality": "critical",
       "coverageGaps": []
+    },
+    {
+      "id": "extraction",
+      "ownerSubsystemId": null,
+      "ownerDomain": null,
+      "runtimeState": "unmapped",
+      "proofStatus": "drifted",
+      "manualGate": "none",
+      "learningMode": "unmapped",
+      "operatingClass": "unmapped",
+      "criticality": "unmapped",
+      "coverageGaps": [
+        "missing-registry-owner"
+      ]
+    },
+    {
+      "id": "forensics",
+      "ownerSubsystemId": null,
+      "ownerDomain": null,
+      "runtimeState": "unmapped",
+      "proofStatus": "drifted",
+      "manualGate": "none",
+      "learningMode": "unmapped",
+      "operatingClass": "unmapped",
+      "criticality": "unmapped",
+      "coverageGaps": [
+        "missing-registry-owner"
+      ]
     },
     {
       "id": "governor",

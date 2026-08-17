@@ -167,9 +167,21 @@ def main() -> int:
     )
 
     # ---------------------------------------------------------------- D
-    # SYNTHETIC reachability control. This does NOT assert any real verdict --
-    # it proves the pathway CAN turn green once real control-gated tier-3
-    # verdicts exist for every residual.
+    # SYNTHETIC reachability control, SCOPE-CORRECTED BY AR-1282A §3.
+    #
+    # WHAT THIS CONTROL DOES *NOT* PROVE (graded defect, retained honestly
+    # rather than deleted): the `set(all_spans)` below DEDUPLICATES a
+    # span-keyed population. The real route carries 12 condition IDENTITIES
+    # but only 11 unique spans (entry_sequence[1].action and
+    # confluences[1].description share (9432, 9512)), so this control proves
+    # reachability for an 11-row population that has ALREADY LOST AN
+    # IDENTITY. It is therefore NOT evidence that the full 12-condition
+    # certificate path can turn green.
+    #
+    # The identity-preserving proof lives in AR-1283
+    # (`scripts/ar1283_identity_seam.py`, checks A1/A2/A3/E1) and in
+    # `src/engine/extraction/cert_identity_seam.py`, which refuses the
+    # aliasing state instead of deduplicating it.
     all_spans = [tuple(o["char_span"]) for o in route["outcomes"]]
     uniq_spans = sorted(set(all_spans))
     synth = assemble_certificate(
@@ -191,12 +203,15 @@ def main() -> int:
     )
     synth_tiers = [c["classifying_tier"] for c in synth["conditions"]]
     record(
-        "D-SYNTHETIC", "SYNTHETIC CONTROL (not a real verdict): pathway can reach "
-                       "every_condition_classified once control-gated tier-3 verdicts exist",
+        "D-SYNTHETIC", "SYNTHETIC CONTROL, SPAN-DEDUPLICATED (AR-1282A section 3): the pathway can "
+                       "reach every_condition_classified for a DEDUPLICATED span population. This is "
+                       "NOT an identity-preserving 12-condition proof -- see AR-1283.",
         all(t == 3 for t in synth_tiers) and synth["pilot_grade"] is True,
-        f"spans={len(uniq_spans)} all tier-3 -> pilot_grade={synth['pilot_grade']}, "
-        f"terminal_read_grade={synth['terminal_read_grade']}, "
-        f"certificate_grade={synth['certificate_grade']}  [SYNTHETIC -- NOT EVIDENCE OF A REAL PASS]",
+        f"identities={len(all_spans)} but unique spans={len(uniq_spans)} "
+        f"(DEDUP LOSES {len(all_spans) - len(uniq_spans)} IDENTITY); all tier-3, "
+        f"pilot_grade={synth['pilot_grade']}, terminal_read_grade={synth['terminal_read_grade']}, "
+        f"certificate_grade={synth['certificate_grade']}  "
+        "[SYNTHETIC -- NOT EVIDENCE OF A REAL PASS, AND NOT AN IDENTITY-PRESERVING PROOF]",
     )
 
     print(json.dumps({"controls": RESULTS}, indent=2))
