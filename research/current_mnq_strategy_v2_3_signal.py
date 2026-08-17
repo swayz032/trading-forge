@@ -59,8 +59,6 @@ def _completed_inputs(raw5: pd.DataFrame, raw1: pd.DataFrame, as_of: pd.Timestam
         raise RuntimeError("SIGNAL_ASOF_MUST_BE_TZ_AWARE")
     five = raw5[(raw5.index + pd.Timedelta(minutes=5)) <= as_of].copy()
     one = raw1[(raw1.index + pd.Timedelta(minutes=1)) <= as_of].copy()
-    if five.empty or one.empty:
-        return five, one
     return five, one
 
 
@@ -78,10 +76,10 @@ def _first_candidate(env: dict, dte: date, p: prod.Params, as_of: pd.Timestamp):
     full5, r5, h15 = env["full5"], env["r5"], env["h15"]
     session = r5[r5.index.date == dte]
     if session.empty:
-        return None
+        return
     open_ts = pd.Timestamp(f"{dte} 09:30", tz=core.TZ)
     if open_ts - full5.index.min() < pd.Timedelta(days=core.MIN_WARMUP_DAYS):
-        return None
+        return
     plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], env["pcm"])
     locations, _ = core.build_entry_locations(env, dte, open_ts, p)
     authorized = [x for x in locations if x.entry_authorized]
@@ -96,13 +94,12 @@ def _first_candidate(env: dict, dte: date, p: prod.Params, as_of: pd.Timestamp):
         if not np.isfinite(r.atr):
             continue
 
-        # Resolve zone state strictly BEFORE the current bar, matching the final
-        # corrected backtest semantics so a breakout bar cannot erase its own zone.
         current_locs = []
         for loc in authorized:
             if loc.zone is None:
                 current_locs.append(loc)
                 continue
+            # Before-current-bar state: current breakout bar cannot erase itself.
             zs = core.zone_state_at(loc.zone, full5, ts, p)
             if zs.active:
                 current_locs.append(replace(
@@ -141,6 +138,9 @@ def _first_candidate(env: dict, dte: date, p: prod.Params, as_of: pd.Timestamp):
                         direction, loc.id, bar_close, loc.lo, loc.hi
                     ))
 
+        # Pending weak-breakout attempts retain the ORIGINAL authorized location
+        # snapshot; the attempted break itself is allowed to mark the current zone
+        # broken without erasing the pending 15m-confirmation question.
         for key, pen in list(pending.items()):
             loc = next((x for x in authorized if x.id == pen.location_id), None)
             if loc is None:
@@ -182,14 +182,14 @@ def _historical_reference(env: dict, actionable: pd.Timestamp, direction: str, p
 
 def find_first_actionable_signal(env: dict, dte: date, p: prod.Params,
                                  as_of: pd.Timestamp,
-                                 live_reference_raw: float | None = None,
+                                 live_bid_raw: float | None = None,
+                                 live_ask_raw: float | None = None,
                                  live_freshness_seconds: float = 20.0) -> SignalDecision | None:
     """Return the earliest setup that passes location/story/room/target gates.
 
-    For an actionable setup whose bar just closed, `live_reference_raw` may bind
-    the current executable BBO reference. Older candidates use their already-known
-    next 1m historical reference only to determine whether the daily bullet was
-    previously consumed/missed; callers MUST NOT enter an old signal retroactively.
+    A fresh LONG binds to ask; a fresh SHORT binds to bid. Older candidates use
+    their already-known next-1m historical reference only to establish whether the
+    first daily A+ setup was missed. Callers MUST NOT enter old signals retroactively.
     """
     if dte not in env["contract_by_session"] or dte not in env["adjustment_by_session"]:
         raise RuntimeError("SIGNAL_SESSION_PROVENANCE_MISSING")
@@ -198,11 +198,12 @@ def find_first_actionable_signal(env: dict, dte: date, p: prod.Params,
 
     for cand, actionable, plan in _first_candidate(env, dte, p, as_of):
         age = (as_of - actionable).total_seconds()
-        use_live = live_reference_raw is not None and -1.0 <= age <= live_freshness_seconds
+        side_live = live_ask_raw if cand.direction == "L" else live_bid_raw
+        use_live = side_live is not None and -1.0 <= age <= live_freshness_seconds
         if use_live:
-            reference_analysis = float(live_reference_raw) + adjustment
+            reference_analysis = float(side_live) + adjustment
             entry_time = actionable
-            reference_source = "LIVE_BBO"
+            reference_source = "LIVE_ASK" if cand.direction == "L" else "LIVE_BID"
         else:
             hist = _historical_reference(env, actionable, cand.direction, p)
             if hist is None:
@@ -230,32 +231,19 @@ def find_first_actionable_signal(env: dict, dte: date, p: prod.Params,
             if not core.tick_valid(px):
                 raise RuntimeError(f"SIGNAL_RAW_{name.upper()}_OFF_TICK:{px}")
         return SignalDecision(
-            session=str(dte),
-            signal_time=str(cand.signal_time),
-            confirmed_time=str(cand.confirmed_time),
-            actionable_time=str(actionable),
-            side="LONG" if cand.direction == "L" else "SHORT",
-            setup=cand.setup,
-            reason=cand.reason,
-            premarket_primary=plan.primary,
-            premarket_score=float(plan.score),
-            premarket_structure=plan.pm_structure,
-            premarket_location=plan.location_state,
-            entry_location=cand.location.source,
-            location_id=cand.location.id,
-            location_quality=float(cand.location.quality),
+            session=str(dte), signal_time=str(cand.signal_time),
+            confirmed_time=str(cand.confirmed_time), actionable_time=str(actionable),
+            side="LONG" if cand.direction == "L" else "SHORT", setup=cand.setup,
+            reason=cand.reason, premarket_primary=plan.primary,
+            premarket_score=float(plan.score), premarket_structure=plan.pm_structure,
+            premarket_location=plan.location_state, entry_location=cand.location.source,
+            location_id=cand.location.id, location_quality=float(cand.location.quality),
             location_confluence=int(cand.location.confluence),
-            reference_entry=float(reference_raw),
-            stop=float(stop_raw),
-            target=float(target_raw),
+            reference_entry=float(reference_raw), stop=float(stop_raw), target=float(target_raw),
             target_points=abs(float(target_raw - reference_raw)),
-            target_source=picked.location.source,
-            target_quality=float(picked.quality),
-            path_reason=path_reason,
-            contract_id=contract_id,
-            price_adjustment=adjustment,
-            engine_version=prod.ENGINE_VERSION,
-            semantics_sha256=prod.semantics_hash(),
+            target_source=picked.location.source, target_quality=float(picked.quality),
+            path_reason=path_reason, contract_id=contract_id, price_adjustment=adjustment,
+            engine_version=prod.ENGINE_VERSION, semantics_sha256=prod.semantics_hash(),
             dataset_sha256=env["dataset_manifest"].get("dataset_sha256"),
             reference_source=reference_source,
         )
