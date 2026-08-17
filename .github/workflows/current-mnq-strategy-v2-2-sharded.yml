@@ -1,14 +1,8 @@
 name: Current MNQ Strategy v2.2 Sharded Robustness
 
+# Heavy contaminated-development P&L suite: MANUAL ONLY.
+# Do not auto-rerun this when semantic/safety code changes.
 on:
-  push:
-    branches:
-      - research/current-mnq-strategy-v2-2-robustness
-    paths:
-      - 'research/current_mnq_strategy_v2_2_*.py'
-      - 'research/current_mnq_strategy_v2_2_*.json'
-      - 'tests/test_current_mnq_strategy_v2_2*.py'
-      - '.github/workflows/current-mnq-strategy-v2-2-sharded.yml'
   workflow_dispatch:
 
 jobs:
