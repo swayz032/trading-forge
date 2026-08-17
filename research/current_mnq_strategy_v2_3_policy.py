@@ -50,6 +50,7 @@ class Evidence:
     personal_device_verified: bool = False
     realtime_user_hub_verified: bool = False
     realtime_market_hub_verified: bool = False
+    topstep_simulated_account_verified: bool = False
     broker_reconciliation_verified: bool = False
     emergency_flatten_drill_passed: bool = False
 
@@ -136,6 +137,8 @@ def shadow_gate(ev: Evidence, spec: dict | None = None) -> GateResult:
         reasons.append("USER_HUB_NOT_VERIFIED")
     if not ev.realtime_market_hub_verified:
         reasons.append("MARKET_HUB_NOT_VERIFIED")
+    if not ev.topstep_simulated_account_verified:
+        reasons.append("TOPSTEP_SIMULATED_ACCOUNT_NOT_VERIFIED")
     if not ev.broker_reconciliation_verified:
         reasons.append("BROKER_RECONCILIATION_NOT_VERIFIED")
     if not ev.emergency_flatten_drill_passed:
@@ -144,5 +147,7 @@ def shadow_gate(ev: Evidence, spec: dict | None = None) -> GateResult:
 
 
 def live_gate(ev: Evidence, spec: dict | None = None) -> GateResult:
+    spec = spec or load_spec()
     result = shadow_gate(ev, spec)
-    return GateResult(result.approved, "LIVE_ELIGIBLE", result.reasons)
+    stage = spec["deployment"].get("promotion_stage_name", "TOPSTEPX_API_AUTOMATION_ELIGIBLE")
+    return GateResult(result.approved, stage, result.reasons)
