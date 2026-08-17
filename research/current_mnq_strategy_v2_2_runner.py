@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from research import current_mnq_strategy_v2_2_engine_runtime as e
+from research import current_mnq_strategy_v2_2_engine_fast as e
 
 ROOT = Path("research/_mnq_v22")
 DATA = ROOT / "data"
