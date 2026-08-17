@@ -22,7 +22,7 @@ import {
 import {
   classifyControlPlanePath, classifyControlPlaneReadPath, classifyControlPlaneTool, classifyControlPlaneBash,
   verifySeatIdentity, IDENTITY_FIELDS, ALL_TOOLS_MATCHER, NEVER_STAGEABLE_PATHS, toRepoRelative,
-  PROTECTED_SURFACE_PATHS, ancestorOfProtectedSurface, CATEGORICAL_DENY_PREFIXES,
+  PROTECTED_SURFACE_PATHS, ancestorOfProtectedSurface, CATEGORICAL_DENY_PREFIXES, RECURSIVE_ANCESTOR_TARGETS,
 } from './control-plane-bootstrap/control-plane-guard.mjs';
 import {
   buildPlan, deriveBranch, deriveWorktreeDirName, assertClaimNamespaceDisjoint,
@@ -2225,5 +2225,111 @@ test('F29-E2E-10 the Bash authority-read exact command remains ALLOW and variant
 
 test('F29-E2E-11 the F26 user,local law is unchanged by this repair', () => {
   assert.equal(SETTING_SOURCES, 'user,local');
+});
+
+/* ==================== AR-1299 F30 — CATEGORICAL-PREFIX RECURSIVE-ANCESTOR COVERAGE ============ */
+
+/**
+ * F30-D1 THE TWO-WAY COVERAGE INVARIANT (AR-1298A §"Required controls" item 12), enforced
+ * structurally rather than by an enumerated example list, so it cannot silently narrow: every
+ * `CATEGORICAL_DENY_PREFIXES` entry is present in the exact union `ancestorOfProtectedSurface`
+ * evaluates, and every `PROTECTED_SURFACE_PATHS` entry still traces to an existing token/prefix
+ * (the direction F29-D1 already proves). Because `RECURSIVE_ANCESTOR_TARGETS` is a literal spread
+ * of both source lists, this is drift-proof by construction: there is no second, hand-maintained
+ * copy that could fall out of sync with either.
+ */
+test('F30-D1 every CATEGORICAL_DENY_PREFIXES entry is represented in the recursive-ancestor union', () => {
+  for (const prefix of CATEGORICAL_DENY_PREFIXES) {
+    assert.ok(
+      RECURSIVE_ANCESTOR_TARGETS.some((t) => t.toLowerCase() === prefix.toLowerCase()),
+      `${prefix} must be represented in RECURSIVE_ANCESTOR_TARGETS`,
+    );
+  }
+  for (const surface of PROTECTED_SURFACE_PATHS) {
+    assert.ok(
+      RECURSIVE_ANCESTOR_TARGETS.some((t) => t.toLowerCase() === surface.toLowerCase()),
+      `${surface} must be represented in RECURSIVE_ANCESTOR_TARGETS`,
+    );
+  }
+  assert.equal(RECURSIVE_ANCESTOR_TARGETS.length, PROTECTED_SURFACE_PATHS.length + CATEGORICAL_DENY_PREFIXES.length);
+});
+
+/**
+ * F30-D2 the coverage invariant proven BEHAVIOURALLY, not just as list membership: an ancestor
+ * directory one level above each categorical prefix must actually be caught by
+ * `ancestorOfProtectedSurface`, exactly the property `Grep`/`Glob` root-checking depends on.
+ */
+test('F30-D2 an ancestor directory of every CATEGORICAL_DENY_PREFIXES entry is caught', () => {
+  function parentOf(p) {
+    const trimmed = p.replace(/\/+$/, '');
+    const idx = trimmed.lastIndexOf('/');
+    return idx === -1 ? '' : `${trimmed.slice(0, idx)}/`;
+  }
+  for (const prefix of CATEGORICAL_DENY_PREFIXES) {
+    const parent = parentOf(prefix);
+    assert.equal(ancestorOfProtectedSurface(parent), true, `parent of ${prefix} (${parent}) must be caught`);
+  }
+});
+
+test('F30-A1 ancestorOfProtectedSurface("src/") is true (backtester/exits money-path surfaces)', () => {
+  assert.equal(ancestorOfProtectedSurface('src/'), true);
+});
+
+test('F30-A2 ancestorOfProtectedSurface("src/server/") is true (paper-/broker- services + production)', () => {
+  assert.equal(ancestorOfProtectedSurface('src/server/'), true);
+});
+
+test('F30-A3 ancestorOfProtectedSurface("src/server/services/") is true (paper-/broker- filename-prefix surfaces)', () => {
+  assert.equal(ancestorOfProtectedSurface('src/server/services/'), true);
+});
+
+test('F30-A4 a root above the gpt-speed-engineering-lane toolbox is caught', () => {
+  assert.equal(ancestorOfProtectedSurface('advisor-prepared/'), true);
+  assert.equal(ancestorOfProtectedSurface('advisor-prepared/gpt-speed-engineering-lane/'), true);
+});
+
+test('F30-A5 genuinely unrelated src/ siblings are NOT caught — recursive search under src/ is not disabled wholesale', () => {
+  assert.equal(ancestorOfProtectedSurface('src/agents/'), false);
+  assert.equal(ancestorOfProtectedSurface('src/dashboard/'), false);
+  assert.equal(ancestorOfProtectedSurface('src/shared/'), false);
+});
+
+/**
+ * F30 REQUIRED PROOFS (AR-1298A §"Required controls", items 1-13) — through the real production
+ * `decide()` / classifier path, not copies. Items already proven by the F29 suite (1, 5, 6, 8, 9,
+ * 10, 11) are regression-checked there unchanged; this block adds the items F29 did not cover
+ * (2, 3, 4, 7) plus the new two-way invariant (12) and the full-suite run (13, via the command in
+ * the AR-1299 report).
+ */
+test('F30-E2E-2 Grep(path="src/") DENIES — the exact example from AR-1298A', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'src/', pattern: 'x' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+test('F30-E2E-3 Glob(path="src/server/") DENIES', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { path: 'src/server/', pattern: '*' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+test('F30-E2E-4 a root above advisor-prepared/gpt-speed-engineering-lane/tooling/ DENIES', () => {
+  const grep = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'advisor-prepared/', pattern: 'x' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(grep?.hookSpecificOutput?.permissionDecision, 'deny');
+  const glob = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { path: 'advisor-prepared/gpt-speed-engineering-lane/', pattern: '*' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(glob?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+test('F30-E2E-5 direct Read of src/engine/backtester... remains DENY (regression, item 5)', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Read', tool_input: { file_path: 'src/engine/backtester.py' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+test('F30-E2E-6 direct Read of an ordinary safe file still ALLOWs (regression, item 6)', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Read', tool_input: { file_path: 'src/agents/README.md' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out, null);
+});
+
+test('F30-E2E-7 a packet-useful safe recursive root under src/ still ALLOWs — recursive search under src/ is not disabled wholesale (item 7)', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'src/dashboard/', pattern: 'x' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out, null, 'a root with no protected descendant must still ALLOW recursive search');
 });
 

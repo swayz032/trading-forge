@@ -137,16 +137,37 @@ export const PROTECTED_SURFACE_PATHS = Object.freeze([
 ]);
 
 /**
+ * AR-1299 F30 — THE COMPLETE ANCESTOR-PROTECTED UNION, NOT ONLY THE SIX TOKEN-BACKED PATHS.
+ *
+ * GPT (AR-1298A) found that F29 closed the ancestor bypass ONLY for `PROTECTED_SURFACE_PATHS` —
+ * the frozen G2 queue/receipts/native-manifest surfaces — while leaving the SAME bypass class open
+ * on `CATEGORICAL_DENY_PREFIXES` (the money/toolbox surfaces: backtester, exits, paper-/broker-
+ * services, production, the gpt-speed-engineering-lane toolbox). A direct `Read` of those prefixes
+ * already denies via `categoricalDenyReason`, but a recursive `Glob('src/')` or `Grep('src/server/')`
+ * is not a direct hit on any prefix string, so it fell through to `ancestorOfProtectedSurface`,
+ * which never looked at `CATEGORICAL_DENY_PREFIXES` at all.
+ *
+ * The fix is a UNION, not a second parallel check: every `CATEGORICAL_DENY_PREFIXES` entry is
+ * itself already a valid "surface path prefix" for the same `startsWith(root)` ancestor test the
+ * six token-backed paths use (a filename-prefix entry like `src/server/services/paper-` behaves
+ * identically to a concrete file path for this purpose — `'…paper-….ts'.startsWith('src/server/services/')`
+ * is exactly the property being tested). Folding both lists into one target set means the two-way
+ * coverage invariant (every categorical prefix is ancestor-protected, and every token-backed path
+ * still traces to an existing token/prefix) holds BY CONSTRUCTION — there is no second list to drift.
+ */
+export const RECURSIVE_ANCESTOR_TARGETS = Object.freeze([...PROTECTED_SURFACE_PATHS, ...CATEGORICAL_DENY_PREFIXES]);
+
+/**
  * True when a recursive search rooted at `relPath` (already repo-relative; `''` means the
- * repository root) could reach one of `PROTECTED_SURFACE_PATHS` as a descendant — i.e. `relPath`
+ * repository root) could reach one of `RECURSIVE_ANCESTOR_TARGETS` as a descendant — i.e. `relPath`
  * is empty, or is a `/`-bounded ancestor of one of them. Pure string comparison against the fixed
- * list above; never touches the filesystem, so this stays deterministic and cheap regardless of
+ * union above; never touches the filesystem, so this stays deterministic and cheap regardless of
  * how large the real tree is.
  */
 export function ancestorOfProtectedSurface(relPath) {
   if (relPath === '') return true;
   const root = `${relPath.replace(/\/+$/, '')}/`.toLowerCase();
-  return PROTECTED_SURFACE_PATHS.some((surface) => surface.toLowerCase().startsWith(root));
+  return RECURSIVE_ANCESTOR_TARGETS.some((surface) => surface.toLowerCase().startsWith(root));
 }
 
 /**
