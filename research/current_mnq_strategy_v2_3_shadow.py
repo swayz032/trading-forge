@@ -29,6 +29,7 @@ class ShadowEvent:
     side: str | None = None
     setup: str | None = None
     contract_id: str | None = None
+    account_simulated: bool | None = None
     feed_age_seconds: float | None = None
     user_hub_connected: bool | None = None
     market_hub_connected: bool | None = None
@@ -68,16 +69,20 @@ class ShadowJournal:
             os.close(fd)
 
     def record_snapshot(self, session: str, *, would_trade: bool, decision: dict | None,
-                        contract_id: str, feed_age_seconds: float,
-                        user_hub_connected: bool, market_hub_connected: bool,
-                        broker_position: int, working_orders: int, note: str | None = None) -> None:
+                        contract_id: str, account_simulated: bool,
+                        feed_age_seconds: float, user_hub_connected: bool,
+                        market_hub_connected: bool, broker_position: int,
+                        working_orders: int, note: str | None = None) -> None:
+        if account_simulated is not True:
+            raise RuntimeError("SHADOW_TOPSTEP_NON_SIMULATED_ACCOUNT_REFUSE")
         fp = signal_fingerprint(decision) if decision else None
         self.append(ShadowEvent(
             timestamp_utc=datetime.now(timezone.utc).isoformat(), session=session,
             semantics_sha256=semantics_hash(), event_type="DECISION",
             would_trade=would_trade, side=(decision or {}).get("side"),
             setup=(decision or {}).get("setup"), contract_id=contract_id,
-            feed_age_seconds=float(feed_age_seconds), user_hub_connected=user_hub_connected,
+            account_simulated=True, feed_age_seconds=float(feed_age_seconds),
+            user_hub_connected=user_hub_connected,
             market_hub_connected=market_hub_connected, broker_position=int(broker_position),
             working_orders=int(working_orders), signal_fingerprint=fp, note=note,
         ))
@@ -115,23 +120,28 @@ def summarize_shadow(path: str | Path) -> dict:
             "full_sessions": 0, "would_trade_sessions": 0, "rule_changes": 0,
             "duplicate_order_events": 0, "unreconciled_state_events": 0,
             "signal_parity_mismatches": 0, "user_hub_all_healthy": False,
-            "market_hub_all_healthy": False,
+            "market_hub_all_healthy": False, "simulated_account_all_verified": False,
         }
     hashes = {r.get("semantics_sha256") for r in rows}
     decisions = [r for r in rows if r.get("event_type") == "DECISION"]
     parity = [r for r in rows if r.get("event_type") == "REPLAY_PARITY"]
     sessions = {r.get("session") for r in decisions}
     traded_sessions = {r.get("session") for r in decisions if r.get("would_trade")}
-    # In shadow mode, any actual working order or nonzero broker position at the
-    # time a new decision is evaluated is an unreconciled-state event.
-    unreconciled = sum(1 for r in decisions if int(r.get("working_orders") or 0) != 0 or int(r.get("broker_position") or 0) != 0)
+    unreconciled = sum(
+        1 for r in decisions
+        if int(r.get("working_orders") or 0) != 0 or int(r.get("broker_position") or 0) != 0
+    )
     return {
         "full_sessions": len(sessions),
         "would_trade_sessions": len(traded_sessions),
         "rule_changes": max(0, len(hashes) - 1),
         "duplicate_order_events": 0,
         "unreconciled_state_events": unreconciled,
-        "signal_parity_mismatches": sum(1 for r in parity if r.get("signal_fingerprint") != r.get("replay_signal_fingerprint")),
+        "signal_parity_mismatches": sum(
+            1 for r in parity
+            if r.get("signal_fingerprint") != r.get("replay_signal_fingerprint")
+        ),
         "user_hub_all_healthy": bool(decisions) and all(bool(r.get("user_hub_connected")) for r in decisions),
         "market_hub_all_healthy": bool(decisions) and all(bool(r.get("market_hub_connected")) for r in decisions),
+        "simulated_account_all_verified": bool(decisions) and all(r.get("account_simulated") is True for r in decisions),
     }
