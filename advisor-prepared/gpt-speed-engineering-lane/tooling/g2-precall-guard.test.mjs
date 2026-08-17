@@ -17,6 +17,8 @@ import {
   G2_PERMIT_SCHEMA,
   SUBAGENT_TOOL_NAMES,
   canonicalNativeCallSha256,
+  permitPathFor,
+  materializePermitIfNeeded,
 } from './g2-precall-guard.mjs';
 
 const REF_A = 'entry_sequence[0].rationale';
@@ -253,10 +255,17 @@ test('NEGATIVE: attempt number above the one-shot law is denied', () => {
 });
 
 test('NEGATIVE: an unreadable or absent permit file is denied, not skipped', () => {
+  // AR-1304 (F29): an absent permit is no longer automatically "unreadable" — it is first
+  // offered to materialization. A path that could never be materialized (it names a file
+  // outside the receipt dir, at no derivable condition) still ends up denied before the file
+  // read, but for a different, EARLIER reason (no frozen row matches the arbitrary path). To
+  // keep testing the specific "unreadable file" branch this test names, supply a manifest so
+  // the call clears materialization and falls through to the original read.
   const ctx = makeG2();
-  const r = run(ctx, dispatch(path.join(ctx.root, 'does-not-exist.json')));
+  const missing = path.join(ctx.root, 'does-not-exist.json');
+  const r = run(ctx, dispatch(missing), { nativeCalls: nativeCallsFor(ctx, missing) });
   assert.equal(r.allow, false);
-  assert.match(r.reason, /permit unreadable/);
+  assert.match(r.reason, /frozen derivation|permit unreadable/);
 });
 
 // ---------------------------------------------------------------------------
@@ -412,4 +421,191 @@ test('STRICT §3.2: non-subagent tools are untouched by strict mode', () => {
   assert.equal(v.allow, true);
   assert.equal(v.g2, false);
   assert.match(v.reason, /not a subagent dispatch/);
+});
+
+// ---------------------------------------------------------------------------
+// AR-1304 section 5 (F29) -- HOOK-OWNED EXACT PERMIT MATERIALIZATION
+//
+// EVERY artifact here is synthetic. No control touches the real frozen queue or receipt
+// namespace, matching the discipline of every test above.
+// ---------------------------------------------------------------------------
+
+test('F29 POSITIVE: a G2-shaped call with no existing permit is materialized, then reaches ALLOW through the unchanged validation+transition path', () => {
+  const ctx = makeG2();
+  const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+  assert.equal(fs.existsSync(permitPath), false, 'precondition: no permit exists yet');
+
+  const moved = fakeTransition();
+  const nativeCalls = nativeCallsFor(ctx, permitPath, REF_A);
+  const r = run(ctx, dispatch(permitPath, REF_A), { permitPath, nativeCalls, transition: moved });
+
+  assert.equal(r.allow, true, r.reason);
+  assert.equal(r.g2, true);
+  assert.equal(r.transitioned, true, 'ALLOW must still be the transition, materialization is not a shortcut around it');
+  assert.equal(moved.calls.length, 1, 'claim->dispatch ran exactly once, AFTER materialization');
+  assert.equal(moved.calls[0].conditionRef, REF_A);
+
+  assert.equal(fs.existsSync(permitPath), true, 'the guard materialized the permit file');
+  const written = JSON.parse(fs.readFileSync(permitPath, 'utf8'));
+  assert.equal(written.schema, G2_PERMIT_SCHEMA);
+  assert.equal(written.condition_ref, REF_A);
+  assert.equal(written.queue_artifact_sha256, ctx.g2.queueSha256);
+  assert.equal(written.task_input_sha256, TASK_SHA_A);
+  assert.equal(written.requested_model, 'opus');
+  assert.equal(written.attempt, 1);
+});
+
+test('F29 POSITIVE: materialization writes exactly one permit file, nothing else in the receipt dir', () => {
+  const ctx = makeG2();
+  const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+  const nativeCalls = nativeCallsFor(ctx, permitPath, REF_A);
+  run(ctx, dispatch(permitPath, REF_A), { permitPath, nativeCalls, transition: fakeTransition() });
+  assert.deepEqual(
+    fs.readdirSync(ctx.receiptDir).sort(),
+    ['README.md', path.basename(permitPath)].sort(),
+    'the guard writes ONLY the permit; .attempt/.dispatch remain the durable law\'s job',
+  );
+});
+
+test('F29 NEGATIVE: a call whose canonical hash matches no frozen row is denied, no permit materialized', () => {
+  const ctx = makeG2();
+  const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+  const nativeCalls = nativeCallsFor(ctx, permitPath, REF_A);
+  const call = dispatch(permitPath, REF_A, { prompt: promptFor(permitPath, REF_A) + ' Also consider a second source.' });
+  const r = run(ctx, call, { permitPath, nativeCalls, transition: fakeTransition() });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /no frozen native-call row matches this exact call/);
+  assert.equal(fs.existsSync(permitPath), false, 'a call that matches no frozen row must never materialize a permit');
+});
+
+test('F29 NEGATIVE: Sonnet/Haiku requested model is denied before materialization, no permit written', () => {
+  const ctx = makeG2();
+  for (const model of ['sonnet', 'haiku']) {
+    const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+    const nativeCalls = nativeCallsFor(ctx, permitPath, REF_A, { model });
+    const call = dispatch(permitPath, REF_A, { model });
+    const r = run(ctx, call, { permitPath, nativeCalls, transition: fakeTransition() });
+    assert.equal(r.allow, false, `model '${model}' must be refused`);
+    assert.match(r.reason, /requests model '.*', not 'opus'/);
+    assert.equal(fs.existsSync(permitPath), false);
+  }
+});
+
+test('F29 NEGATIVE: wrong subagent_type is denied before materialization, no permit written', () => {
+  // subagent_type is one of the three fields canonicalNativeCallSha256 hashes, so changing it
+  // already changes the hash away from any frozen row -- the same "no frozen row matches"
+  // denial that a changed prompt produces (covered above). That IS the enforcement; the guard
+  // never reaches a state where the hash matches but subagent_type still differs.
+  const ctx = makeG2();
+  const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+  const nativeCalls = nativeCallsFor(ctx, permitPath, REF_A);
+  const call = dispatch(permitPath, REF_A, { subagent_type: 'fork' });
+  const r = run(ctx, call, { permitPath, nativeCalls, transition: fakeTransition() });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /no frozen native-call row matches this exact call/);
+  assert.equal(fs.existsSync(permitPath), false);
+});
+
+test('F29 NEGATIVE: a permit marker naming any path other than the frozen derivation is denied, no file written at either path', () => {
+  const ctx = makeG2();
+  const wrongPath = path.join(ctx.root, 'anywhere-i-like.json');
+  const nativeCalls = nativeCallsFor(ctx, wrongPath, REF_A);
+  const r = run(ctx, dispatch(wrongPath, REF_A), { permitPath: wrongPath, nativeCalls, transition: fakeTransition() });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /frozen derivation for .* is/);
+  assert.equal(fs.existsSync(wrongPath), false);
+  assert.equal(fs.existsSync(permitPathFor(ctx.receiptDir, REF_A)), false);
+});
+
+test('F29 NEGATIVE: an already-spent condition (queue witness) is denied, no permit materialized', () => {
+  const ctx = makeG2({ attempts: { [REF_A]: { attempt: 1 } } });
+  const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+  const nativeCalls = nativeCallsFor(ctx, permitPath, REF_A);
+  const r = run(ctx, dispatch(permitPath, REF_A), { permitPath, nativeCalls, transition: fakeTransition() });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /already spent\/claimed/);
+  assert.equal(fs.existsSync(permitPath), false);
+});
+
+test('F29 NEGATIVE: an already-spent condition (receipt-file witness) is denied, no permit materialized', () => {
+  const ctx = makeG2({ receipts: [`${safeName(REF_A)}.attempt.json`] });
+  const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+  const nativeCalls = nativeCallsFor(ctx, permitPath, REF_A);
+  const r = run(ctx, dispatch(permitPath, REF_A), { permitPath, nativeCalls, transition: fakeTransition() });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /already spent\/claimed/);
+  assert.equal(fs.existsSync(permitPath), false);
+});
+
+test('F29 NEGATIVE: no native-call manifest loaded means no materialization is possible', () => {
+  // NOTE: called directly, not via the run() helper -- run()'s `opts.nativeCalls ?? fallback`
+  // treats an explicit `null` the same as "not provided" and would silently substitute a real
+  // manifest, defeating exactly what this test needs to prove.
+  const ctx = makeG2();
+  const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+  const r = evaluateG2PreCall({
+    ...dispatch(permitPath, REF_A),
+    g2: ctx.g2,
+    cwd: ctx.root,
+    nativeCalls: null,
+    transition: fakeTransition(),
+  });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /no frozen native-call identity manifest is loaded/);
+  assert.equal(fs.existsSync(permitPath), false);
+});
+
+test('F29 POSITIVE: a permit that already exists is read and validated, never overwritten', () => {
+  const ctx = makeG2();
+  const permitPath = permitPathFor(ctx.receiptDir, REF_A);
+  fs.mkdirSync(path.dirname(permitPath), { recursive: true });
+  const preplaced = {
+    schema: G2_PERMIT_SCHEMA, condition_ref: REF_A, queue_artifact_sha256: ctx.g2.queueSha256,
+    task_input_sha256: TASK_SHA_A, requested_model: 'opus', attempt: 1, _preplaced_marker: 'do-not-touch',
+  };
+  fs.writeFileSync(permitPath, JSON.stringify(preplaced));
+  const beforeMtime = fs.statSync(permitPath).mtimeMs;
+
+  const nativeCalls = nativeCallsFor(ctx, permitPath, REF_A);
+  const r = run(ctx, dispatch(permitPath, REF_A), { permitPath, nativeCalls, transition: fakeTransition() });
+
+  assert.equal(r.allow, true, r.reason);
+  const after = JSON.parse(fs.readFileSync(permitPath, 'utf8'));
+  assert.equal(after._preplaced_marker, 'do-not-touch', 'a pre-existing permit must never be overwritten');
+  assert.equal(fs.statSync(permitPath).mtimeMs, beforeMtime, 'mtime unchanged -- no write occurred');
+});
+
+test('F29 MUTATION: proves the permit-path derivation check is load-bearing by first reproducing the bypass without it, then showing the real function refuses it', () => {
+  const ctx = makeG2();
+  const attackerPath = path.join(ctx.root, 'attacker-chosen.json');
+  const nativeCalls = nativeCallsFor(ctx, attackerPath, REF_A);
+
+  function materializeWithoutPathCheck({ g2, toolInput, actualModel, permitPath: reqPath, nativeCalls: nc }) {
+    if (fs.existsSync(reqPath)) return { materialized: false };
+    const actualSha = canonicalNativeCallSha256(toolInput);
+    let row = null;
+    for (const r of nc.rows.values()) { if (r.native_call_sha256 === actualSha) { row = r; break; } }
+    if (!row || actualModel !== 'opus') return { materialized: false, denyReason: 'setup' };
+    const entry = g2.entries.get(row.condition_ref);
+    fs.writeFileSync(reqPath, JSON.stringify({
+      schema: G2_PERMIT_SCHEMA, queue_artifact_sha256: g2.queueSha256, condition_ref: row.condition_ref,
+      task_input_sha256: entry.task_input_sha256, requested_model: 'opus', attempt: 1,
+    }, null, 2), { flag: 'wx' });
+    return { materialized: true };
+  }
+  const unchecked = materializeWithoutPathCheck({
+    g2: ctx.g2, toolInput: dispatch(attackerPath, REF_A).toolInput, actualModel: 'opus',
+    permitPath: attackerPath, nativeCalls,
+  });
+  assert.equal(unchecked.materialized, true, 'the unchecked stand-in DOES materialize at the attacker path (proves the scenario is reachable)');
+  assert.equal(fs.existsSync(attackerPath), true);
+
+  fs.rmSync(attackerPath);
+  const real = materializePermitIfNeeded({
+    g2: ctx.g2, toolInput: dispatch(attackerPath, REF_A).toolInput, actualModel: 'opus',
+    permitPath: attackerPath, nativeCalls,
+  });
+  assert.equal(real.materialized, false);
+  assert.match(real.denyReason, /frozen derivation/);
+  assert.equal(fs.existsSync(attackerPath), false, 'the real, checked function refuses to write at the attacker path');
 });

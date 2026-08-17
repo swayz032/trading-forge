@@ -288,6 +288,131 @@ function extractPermitPath(toolInput) {
   return null;
 }
 
+/**
+ * AR-1304 §5 (F29 repair) — THE ONLY PLACE A PERMIT PATH IS COMPUTED, NOT CHOSEN.
+ *
+ * Mirrors the existing `.attempt` / `.dispatch` / `.raw` / `.completion` naming convention
+ * (`safeName(conditionRef)` under `receiptDir`) so a permit sits beside the receipts it
+ * precedes. A caller-supplied path is never trusted as this value — see step 9 below.
+ */
+export function permitPathFor(receiptDir, conditionRef) {
+  return path.join(receiptDir, `${safeName(conditionRef)}.permit.json`);
+}
+
+/**
+ * AR-1304 §5 (F29 repair) — HOOK-OWNED EXACT PERMIT MATERIALIZATION.
+ *
+ * THE DEADLOCK THIS CLOSES: the ordinary Worker-1 lane guard categorically self-protects the
+ * entire frozen receipt namespace, so nothing with write authority can pre-create the permit
+ * file `extractPermitPath` used to require. No sanctioned permit issuer bridged that gap.
+ *
+ * THE FIX IS NARROW: when the marker names a permit path that does not exist yet, this may
+ * WRITE that exact file, create-only, but only from values already frozen elsewhere — never
+ * from anything the caller supplied. Every check below is a REFUSAL to materialize; it is not
+ * a second copy of the validation `evaluateG2PreCall` performs after reading the permit back
+ * (steps 1-9 in that function are unchanged and still run against whatever this writes).
+ *
+ * Returns `{ materialized: true }` on a successful create-only write, `{ materialized: false }`
+ * when a permit now exists at that path (this call raced a concurrent one, or one already
+ * existed) and the caller should just read it, or `{ materialized: false, denyReason }` when
+ * materialization is refused outright and the caller must deny before ever touching the model.
+ */
+export function materializePermitIfNeeded({ g2, toolInput, actualModel, permitPath, nativeCalls }) {
+  if (fs.existsSync(permitPath)) return { materialized: false };
+
+  if (!nativeCalls) {
+    return { materialized: false, denyReason: 'no frozen native-call identity manifest is loaded, so no permit can be materialized' };
+  }
+  if (nativeCalls.queueArtifactSha256 !== g2.queueSha256) {
+    return {
+      materialized: false,
+      denyReason: `native-call manifest was frozen against queue ${nativeCalls.queueArtifactSha256} but the live frozen queue is ${g2.queueSha256}`,
+    };
+  }
+
+  // AR-1304 §5 step 6 — model must be the explicit, actual 'opus' route before anything else.
+  if (actualModel !== APPROVED_ACTUAL_MODEL) {
+    return {
+      materialized: false,
+      denyReason: `cannot materialize a permit: the actual native call requests model '${actualModel}', not '${APPROVED_ACTUAL_MODEL}'`,
+    };
+  }
+
+  // AR-1304 §5 step 2/3 — resolve the ONE frozen row this exact call matches. No condition_ref
+  // is trusted from the caller anywhere in this function; it is derived solely from the byte-
+  // exact match between the actual call and the frozen manifest.
+  const actualSha = canonicalNativeCallSha256(toolInput);
+  let matchedRow = null;
+  for (const row of nativeCalls.rows.values()) {
+    if (row.native_call_sha256 === actualSha) { matchedRow = row; break; }
+  }
+  if (!matchedRow) {
+    return {
+      materialized: false,
+      denyReason: `no frozen native-call row matches this exact call (canonical sha256 ${actualSha}); refusing to materialize a permit for an unrecognized call`,
+    };
+  }
+
+  // AR-1304 §5 step 7 — subagent_type must match the frozen row. NOTE: `matchedRow` was found
+  // by an exact canonical-hash match over {model, subagent_type, prompt} (step 2/3 above), so a
+  // subagent_type mismatch is already impossible to reach this point with — the hash match
+  // itself is the enforcement. This check stays as defense-in-depth documentation of the
+  // requirement, not as reachable dead code the reader has to puzzle out.
+  if (toolInput?.subagent_type !== matchedRow.subagent_type) {
+    return {
+      materialized: false,
+      denyReason: `cannot materialize a permit: subagent_type '${toolInput?.subagent_type}' does not match the frozen '${matchedRow.subagent_type}' for ${matchedRow.condition_ref}`,
+    };
+  }
+
+  const conditionRef = matchedRow.condition_ref;
+  const entry = g2.entries.get(conditionRef);
+  if (!entry) {
+    return {
+      materialized: false,
+      denyReason: `native-call manifest row names condition_ref ${conditionRef}, which is not a member of the frozen queue`,
+    };
+  }
+
+  // AR-1304 §5 step 9 — the permit path is DERIVED, never a caller's arbitrary choice. A
+  // marker naming any other path is refused outright rather than silently redirected.
+  const expectedPath = permitPathFor(g2.receiptDir, conditionRef);
+  if (path.resolve(permitPath) !== path.resolve(expectedPath)) {
+    return {
+      materialized: false,
+      denyReason: `permit marker names ${permitPath}, but the frozen derivation for ${conditionRef} is ${expectedPath}; refusing to materialize at an arbitrary path`,
+    };
+  }
+
+  // AR-1304 §5 step 10 — only READY (never spent/claimed) may be materialized.
+  const spent = conditionIsSpent(g2, conditionRef);
+  if (spent.spent) {
+    return {
+      materialized: false,
+      denyReason: `condition ${conditionRef} is already spent/claimed (${spent.witness}); refusing to materialize a permit for it`,
+    };
+  }
+
+  const permit = {
+    schema: G2_PERMIT_SCHEMA,
+    queue_artifact_sha256: g2.queueSha256,
+    condition_ref: conditionRef,
+    task_input_sha256: entry.task_input_sha256,
+    requested_model: APPROVED_REQUESTED_MODEL,
+    attempt: 1,
+  };
+
+  try {
+    // Create-only: a concurrent materialization for the same condition can win this race, but
+    // never both — the loser falls through to read what the winner wrote, unchanged.
+    fs.writeFileSync(expectedPath, JSON.stringify(permit, null, 2), { flag: 'wx' });
+    return { materialized: true };
+  } catch (error) {
+    if (error && error.code === 'EEXIST') return { materialized: false };
+    return { materialized: false, denyReason: `permit materialization failed: ${error.message}` };
+  }
+}
+
 const deny = (reason) => ({ allow: false, g2: true, reason });
 
 /**
@@ -330,6 +455,21 @@ export function evaluateG2PreCall({
   }
 
   const absolute = path.isAbsolute(permitPath) ? permitPath : path.resolve(cwd, permitPath);
+
+  // AR-1304 §5 (F29) — materialize the exact frozen permit when it does not exist yet. This
+  // runs BEFORE the read below, and it is the only place a permit file is ever written by this
+  // guard. It either creates the file, finds one already there (never overwritten), or returns
+  // a denial reason — in every case control falls through to the SAME read-and-validate path
+  // that already existed, so nothing here shortcuts steps 1-9 below.
+  const materialize = materializePermitIfNeeded({
+    g2,
+    toolInput,
+    actualModel: toolInput ? toolInput[ACTUAL_MODEL_FIELD] : undefined,
+    permitPath: absolute,
+    nativeCalls,
+  });
+  if (materialize.denyReason) return deny(materialize.denyReason);
+
   let permit;
   try {
     permit = JSON.parse(fs.readFileSync(absolute, 'utf8'));
