@@ -1,0 +1,46 @@
+{
+ "authorization": "AR-1280A §4 (one sVkm semantic conflation judgment)",
+ "video_id": "sVkmZklJDHI",
+ "strategy_index": 0,
+ "strategy_name": "fvg_breakout_range_1m_5m",
+ "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+ "transcript_bytes": 25071,
+ "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+ "extraction_artifact": "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json",
+ "grader": {
+  "path": "src/agents/semantic-conflation-check.md",
+  "git_blob": "8b844b170f2095341b73b2af65432b441967a04b"
+ },
+ "model": "gpt-5.4",
+ "service_tier": "flex",
+ "reasoning_effort": "high",
+ "response_schema": "ConflationVerdict (strict, identical to h1_conflation_check.py)",
+ "calibration_reused": {
+  "CAL_R5L890_FUSED": {
+   "path": "docs/replay-results/h1-scripts/claude-rung-v32/conflation_grades/CAL_R5L890_FUSED.json",
+   "file_sha256": "b7d8e3b9d71dc6ab2eb9fe570cd2f6aaf4fc083b08c7e8133b8617d440c003a5",
+   "observed": "REJECT",
+   "required": "REJECT"
+  },
+  "-igpOZs8LsM__s0": {
+   "path": "docs/replay-results/h1-scripts/claude-rung-v32/conflation_grades/-igpOZs8LsM__s0.json",
+   "file_sha256": "d724c5985d2542aca2cfdc5ea027a0064f9990c2902888b4a790ec599c26e364",
+   "observed": "PASS",
+   "required": "PASS"
+  }
+ },
+ "verdict": {
+  "strategy_name": "fvg_breakout_range_1m_5m",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one mirrored breakout-FVG setup whose side is selected by context, not two co-required opposite trades: first define the 9:30 5m range, then wait for a 1m candle to close outside that range, then wait for an FVG to form outside the broken side, and enter on the third candle close as either a long or short depending on which side broke. The long/short language is therefore an alternative chosen by the breakout direction, while the rest of the logic stays the same, and the exit rule is a single consistent 2R target rather than contradictory targets. Nothing in the object's co-required conditions says one trade instance must satisfy both bullish and bearish entries at once.",
+  "fused_pair": null
+ },
+ "total_tokens": 9260,
+ "prompt_tokens": 8084,
+ "completion_tokens": 1176,
+ "measured_spend_usd": 0.02315,
+ "cap_usd": 0.05,
+ "spend_basis": "MeteredCapGuard blend 2.5 USD/Mtok (estimate, not a billed figure)",
+ "judgments_made": 1
+}
