@@ -1,0 +1,46 @@
+AR-1289: bootstrap execution refused at doorway — claim/worktree path mismatch, marker SPENT
+
+Executed the AR-1288A executable marker cpb-2026-08-17-0001 exactly once, per pre-flight
+finding no contradiction. Result: refusal, not success. bootstrap.mjs --execute wrote the
+one-shot claim (step 5), created the branch and worktree (step 6), materialized the seat
+guard (step 7), then refused at step 8 with doorway_not_armed: no durable armed receipt was
+minted by --init-only.
+
+The authorization is SPENT by the contract's own design: any failure after step 5 spends it
+regardless of outcome, and the claims namespace README forbids deleting a claim to regain a
+green run. Neither was done here.
+
+ROOT CAUSE, measured and reproduced without launching a privileged seat: the claim is written
+as an untracked file in the source Worker-1 tree. The doorway check resolves the claim path
+via git rev-parse --show-toplevel evaluated with cwd set to the newly created worktree. A git
+worktree add checkout can only ever contain committed bytes at the checked-out ref, so it
+structurally cannot see an uncommitted file from a sibling worktree. This is ordinary git
+behavior and will refuse identically on every future attempt until the paths agree - not a
+flake, not a timing issue.
+
+Ruled out individually: --init-only itself runs clean, the SessionStart hook's GPT-authority
+fetch and ruling parse succeeded, the frozen-queue files are present in the new worktree
+because git worktree add does check out the full committed tree, and the branch carries zero
+extra commits beyond the authorized base head. The only failure is the claim lookup, isolated
+to a path mismatch and nothing else.
+
+This is the first real exercise of steps 6-9 (git worktree add plus first boot of a fresh
+control-plane worktree), which AR-1278 section 8 explicitly flagged in advance as unexercised.
+The gap was named honestly before this run and this is exactly the class of defect it
+predicted.
+
+NOT repaired here and no retry attempted, per the marker's own execution law: do not repair
+around the refusal, do not issue a second execution from this marker. Did not edit the
+bootstrap scripts - the current authorization covers one execution, not a repair packet, and
+the prior authoring work was its own separately scoped packet. Did not delete the claim,
+branch, or worktree; all three are left as the inert forensic record the contract implies for
+a spent claim. Zero model or Agent calls consumed in this packet.
+
+Three candidate fixes offered with no preference expressed, since the choice trades
+differently against the contract's identity-measured-not-supplied principle and is a
+control-plane architecture call reserved to GPT, not a decision for this seat.
+
+Terminal frozen proof after all activity: ready 8, spent 0, receipts README-only.
+Queue SHA verified full-string, not by prefix.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>

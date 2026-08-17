@@ -1,0 +1,10 @@
+{
+  "authorization_id": "cpb-2026-08-17-0001",
+  "ruling_id": "AR-1288A",
+  "target_packet": "AR-1278",
+  "branch": "control-plane/ar-1278-guard-repair",
+  "worktree": "C:/Users/tonio/Projects/wt-control-plane-ar-1278",
+  "source_worker_head": "949282ae9a3865a67452cfb6beedf80015ae6433",
+  "bootstrap_bundle_sha256": "4045dd93f401f598987251e3277d257c46cc57132aa53cf7860353b8508952fb",
+  "claimed_at": "2026-08-17T05:46:01.383Z"
+}
