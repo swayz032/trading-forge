@@ -8,9 +8,17 @@ hand-authored: the verdict is read from the landed artifact and the other axis s
 are read from the landed certificate.
 
 Discriminating evidence required by AR-1280A §4.C:
-  * if PASS -> terminal_read_grade becomes CLEAN while pilot_grade REMAINS false,
-    because the frozen-eight / anchoring axis is still unresolved;
+  * if PASS -> terminal_read_grade becomes CLEAN while pilot_grade REMAINS false;
   * if REJECT -> certification is correctly rejected and the packet STOPS.
+
+AR-1282 §E REPAIR (AR-1281A §2): this script previously printed
+`CONFLATION_PASS_ONLY_FROZEN_G2_REMAINS` and labelled pilot_grade as the
+"frozen-eight/anchoring axis". BOTH were over-broad. AR-1282 measured that
+`pilot_grade` is false because ALL 12 certificate conditions are unclassified
+(`classifying_tier=None`) -- including the 4 rows the Opus route already
+dispositioned ACCEPTED_PENDING_CERTIFICATION, which classify 0/4 at tier-1.
+Resolving the frozen eight is therefore NOT sufficient to make pilot_grade
+true. PASS now means exactly one thing: CONFLATION_PASS_TERMINAL_READ_CLEAN.
 
 CONTROL (load-bearing): re-running with conflation=None must reproduce the certificate's
 RECORDED baseline (INDETERMINATE / clean=false). Without that, a harness that always
@@ -77,7 +85,7 @@ def main() -> int:
     print(f"  conflation_check   : {live['disposition']['conflation_check']}")
     print(f"  terminal_read_grade: {live['grade']}")
     print(f"  terminal_read_clean: {live['clean']}")
-    print(f"  pilot_grade        : {pilot_grade}  (UNCHANGED — frozen-eight/anchoring axis unresolved)")
+    print(f"  pilot_grade        : {pilot_grade}  (UNCHANGED — structural/classification axis unresolved)")
     print(f"  full_grade         = pilot_grade AND terminal_read.clean = {full_grade}")
     print(f"  certificate_grade  = {full_grade}  (bool alias of full_grade)")
 
@@ -86,12 +94,26 @@ def main() -> int:
         r = terminal_read_grade(lint_results, conflation_verdict=cf)
         print(f"  conflation={str(cf):<6} -> grade={r['grade']:<13} clean={r['clean']}")
 
+    # AR-1282 §E: mechanically measure the OTHER live conjunct rather than
+    # asserting it. `every_condition_classified` is what pilot_grade actually
+    # gates on (cert_assembler.py: classifying_tier in {1,3} for EVERY row).
+    conditions = cert.get("conditions", [])
+    unclassified = [c for c in conditions if c.get("classifying_tier") not in (1, 3)]
+
+    print("\nOTHER LIVE CONJUNCT — measured, not assumed (AR-1282 §E)")
+    print(f"  certificate conditions      : {len(conditions)}")
+    print(f"  unclassified (tier not 1/3) : {len(unclassified)}")
+    print(f"  every_condition_classified  : {bool(conditions) and not unclassified}")
+
     print("\nCONCLUSION")
     if actual == "PASS":
         if live["clean"]:
-            print("  CONFLATION_PASS_ONLY_FROZEN_G2_REMAINS")
-            print("  The semantic conjunct is now SATISFIED and no longer blocks certification.")
-            print("  certificate_grade stays False solely because pilot_grade is False.")
+            print("  CONFLATION_PASS_TERMINAL_READ_CLEAN")
+            print("  The SEMANTIC conjunct is satisfied and no longer blocks certification.")
+            if unclassified:
+                print(f"  This is NOT 'only frozen G2 remains': {len(unclassified)}/{len(conditions)} "
+                      "certificate conditions are still unclassified, so the")
+                print("  classification conjunct is independently unsatisfied. See AR-1282.")
         else:
             print("  PASS returned but terminal read is still not clean — another axis is unresolved.")
     else:
