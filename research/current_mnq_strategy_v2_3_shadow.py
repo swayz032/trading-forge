@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Local-only shadow journal and verification for MNQ v2.3.
 
-Shadow mode never submits an order. It records the exact production-candidate
-signal decision, broker/account reconciliation state, realtime feed health and a
-later replay-parity result. A changed semantics hash during the shadow campaign
-invalidates the campaign instead of quietly mixing versions.
+Shadow mode never submits an order. A session counts as a full proof session only
+when health/reconciliation heartbeats continuously cover the execution window.
+A single good snapshot can never masquerade as a full day.
 """
 from __future__ import annotations
 
@@ -15,8 +14,15 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pandas as pd
+
 from research.current_mnq_strategy_v2_3_local_runtime import require_personal_device
 from research.current_mnq_strategy_v2_3_policy import semantics_hash
+
+TZ = "America/New_York"
+COVERAGE_START = pd.Timestamp("09:30").time()
+COVERAGE_END = pd.Timestamp("12:00").time()
+MAX_HEARTBEAT_GAP_SECONDS = 90.0
 
 
 @dataclass(frozen=True)
@@ -37,14 +43,29 @@ class ShadowEvent:
     working_orders: int | None = None
     signal_fingerprint: str | None = None
     replay_signal_fingerprint: str | None = None
+    execution_fingerprint: str | None = None
+    replay_execution_fingerprint: str | None = None
     note: str | None = None
 
 
 def signal_fingerprint(payload: dict) -> str:
+    """Semantic/setup identity, deliberately independent of market fill price."""
     keys = (
-        "session", "signal_time", "confirmed_time", "entry_time", "side", "setup",
-        "entry_location", "entry", "stop", "target", "target_source", "contract_id",
-        "engine_version", "semantics_sha256",
+        "session", "signal_time", "confirmed_time", "actionable_time", "side", "setup",
+        "reason", "premarket_primary", "premarket_structure", "premarket_location",
+        "entry_location", "location_id", "target_source", "path_reason", "contract_id",
+        "engine_version", "semantics_sha256", "dataset_sha256",
+    )
+    normalized = {k: payload.get(k) for k in keys}
+    raw = json.dumps(normalized, sort_keys=True, separators=(",", ":"), default=str).encode()
+    return hashlib.sha256(raw).hexdigest()
+
+
+def execution_fingerprint(payload: dict) -> str:
+    """Execution binding identity; replay can match this using the recorded BBO."""
+    keys = (
+        "session", "side", "setup", "reference_entry", "stop", "target",
+        "target_points", "reference_source", "contract_id", "semantics_sha256",
     )
     normalized = {k: payload.get(k) for k in keys}
     raw = json.dumps(normalized, sort_keys=True, separators=(",", ":"), default=str).encode()
@@ -68,6 +89,24 @@ class ShadowJournal:
         finally:
             os.close(fd)
 
+    def record_heartbeat(self, session: str, *, contract_id: str,
+                         account_simulated: bool, feed_age_seconds: float,
+                         user_hub_connected: bool, market_hub_connected: bool,
+                         broker_position: int, working_orders: int,
+                         note: str | None = None) -> None:
+        if account_simulated is not True:
+            raise RuntimeError("SHADOW_TOPSTEP_NON_SIMULATED_ACCOUNT_REFUSE")
+        self.append(ShadowEvent(
+            timestamp_utc=datetime.now(timezone.utc).isoformat(), session=session,
+            semantics_sha256=semantics_hash(), event_type="HEARTBEAT",
+            contract_id=contract_id, account_simulated=True,
+            feed_age_seconds=float(feed_age_seconds),
+            user_hub_connected=bool(user_hub_connected),
+            market_hub_connected=bool(market_hub_connected),
+            broker_position=int(broker_position), working_orders=int(working_orders),
+            note=note,
+        ))
+
     def record_snapshot(self, session: str, *, would_trade: bool, decision: dict | None,
                         contract_id: str, account_simulated: bool,
                         feed_age_seconds: float, user_hub_connected: bool,
@@ -75,26 +114,36 @@ class ShadowJournal:
                         working_orders: int, note: str | None = None) -> None:
         if account_simulated is not True:
             raise RuntimeError("SHADOW_TOPSTEP_NON_SIMULATED_ACCOUNT_REFUSE")
-        fp = signal_fingerprint(decision) if decision else None
+        setup_fp = signal_fingerprint(decision) if decision else None
+        exec_fp = execution_fingerprint(decision) if decision else None
         self.append(ShadowEvent(
             timestamp_utc=datetime.now(timezone.utc).isoformat(), session=session,
             semantics_sha256=semantics_hash(), event_type="DECISION",
             would_trade=would_trade, side=(decision or {}).get("side"),
             setup=(decision or {}).get("setup"), contract_id=contract_id,
             account_simulated=True, feed_age_seconds=float(feed_age_seconds),
-            user_hub_connected=user_hub_connected,
-            market_hub_connected=market_hub_connected, broker_position=int(broker_position),
-            working_orders=int(working_orders), signal_fingerprint=fp, note=note,
+            user_hub_connected=bool(user_hub_connected),
+            market_hub_connected=bool(market_hub_connected),
+            broker_position=int(broker_position), working_orders=int(working_orders),
+            signal_fingerprint=setup_fp, execution_fingerprint=exec_fp, note=note,
         ))
 
     def record_replay_parity(self, session: str, live_fingerprint: str | None,
-                             replay_fingerprint: str | None) -> None:
+                             replay_fingerprint: str | None,
+                             live_execution_fingerprint: str | None = None,
+                             replay_execution_fingerprint: str | None = None) -> None:
         self.append(ShadowEvent(
             timestamp_utc=datetime.now(timezone.utc).isoformat(), session=session,
             semantics_sha256=semantics_hash(), event_type="REPLAY_PARITY",
             signal_fingerprint=live_fingerprint,
             replay_signal_fingerprint=replay_fingerprint,
-            note="MATCH" if live_fingerprint == replay_fingerprint else "MISMATCH",
+            execution_fingerprint=live_execution_fingerprint,
+            replay_execution_fingerprint=replay_execution_fingerprint,
+            note="MATCH" if (
+                live_fingerprint == replay_fingerprint and
+                (live_execution_fingerprint is None or
+                 live_execution_fingerprint == replay_execution_fingerprint)
+            ) else "MISMATCH",
         ))
 
 
@@ -113,6 +162,31 @@ def read_events(path: str | Path) -> list[dict]:
     return rows
 
 
+def _event_time(row: dict) -> pd.Timestamp:
+    try:
+        t = pd.Timestamp(row["timestamp_utc"])
+    except Exception as exc:
+        raise RuntimeError("SHADOW_EVENT_TIMESTAMP_INVALID") from exc
+    if t.tzinfo is None:
+        raise RuntimeError("SHADOW_EVENT_TIMESTAMP_NAIVE")
+    return t.tz_convert(TZ)
+
+
+def _session_has_full_coverage(events: list[dict]) -> bool:
+    health = [r for r in events if r.get("event_type") in {"HEARTBEAT", "DECISION"}]
+    if len(health) < 2:
+        return False
+    times = sorted(_event_time(r) for r in health)
+    first, last = times[0], times[-1]
+    if first.time() > COVERAGE_START or last.time() < COVERAGE_END:
+        return False
+    relevant = [t for t in times if COVERAGE_START <= t.time() <= COVERAGE_END]
+    if len(relevant) < 2:
+        return False
+    gaps = [(b - a).total_seconds() for a, b in zip(relevant, relevant[1:])]
+    return bool(gaps and max(gaps) <= MAX_HEARTBEAT_GAP_SECONDS)
+
+
 def summarize_shadow(path: str | Path) -> dict:
     rows = read_events(path)
     if not rows:
@@ -123,25 +197,33 @@ def summarize_shadow(path: str | Path) -> dict:
             "market_hub_all_healthy": False, "simulated_account_all_verified": False,
         }
     hashes = {r.get("semantics_sha256") for r in rows}
+    health = [r for r in rows if r.get("event_type") in {"HEARTBEAT", "DECISION"}]
     decisions = [r for r in rows if r.get("event_type") == "DECISION"]
     parity = [r for r in rows if r.get("event_type") == "REPLAY_PARITY"]
-    sessions = {r.get("session") for r in decisions}
-    traded_sessions = {r.get("session") for r in decisions if r.get("would_trade")}
+    by_session: dict[str, list[dict]] = {}
+    for r in health:
+        by_session.setdefault(str(r.get("session")), []).append(r)
+    full = {s for s, evs in by_session.items() if _session_has_full_coverage(evs)}
+    traded_sessions = {str(r.get("session")) for r in decisions if r.get("would_trade") and str(r.get("session")) in full}
     unreconciled = sum(
-        1 for r in decisions
+        1 for r in health
         if int(r.get("working_orders") or 0) != 0 or int(r.get("broker_position") or 0) != 0
     )
+    parity_mismatch = 0
+    for r in parity:
+        setup_bad = r.get("signal_fingerprint") != r.get("replay_signal_fingerprint")
+        live_exec = r.get("execution_fingerprint")
+        replay_exec = r.get("replay_execution_fingerprint")
+        exec_bad = live_exec is not None and live_exec != replay_exec
+        parity_mismatch += int(setup_bad or exec_bad)
     return {
-        "full_sessions": len(sessions),
+        "full_sessions": len(full),
         "would_trade_sessions": len(traded_sessions),
         "rule_changes": max(0, len(hashes) - 1),
         "duplicate_order_events": 0,
         "unreconciled_state_events": unreconciled,
-        "signal_parity_mismatches": sum(
-            1 for r in parity
-            if r.get("signal_fingerprint") != r.get("replay_signal_fingerprint")
-        ),
-        "user_hub_all_healthy": bool(decisions) and all(bool(r.get("user_hub_connected")) for r in decisions),
-        "market_hub_all_healthy": bool(decisions) and all(bool(r.get("market_hub_connected")) for r in decisions),
-        "simulated_account_all_verified": bool(decisions) and all(r.get("account_simulated") is True for r in decisions),
+        "signal_parity_mismatches": parity_mismatch,
+        "user_hub_all_healthy": bool(health) and all(bool(r.get("user_hub_connected")) for r in health),
+        "market_hub_all_healthy": bool(health) and all(bool(r.get("market_hub_connected")) for r in health),
+        "simulated_account_all_verified": bool(health) and all(r.get("account_simulated") is True for r in health),
     }
