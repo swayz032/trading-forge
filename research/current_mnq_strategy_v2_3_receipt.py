@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Locally signed production-promotion receipt for MNQ v2.3.
+"""Locally signed TopstepX API automation-promotion receipt for MNQ v2.3.
 
-The HMAC key is NEVER stored in GitHub. Live arming requires a receipt whose
-semantic hash, account id and evidence digest verify under a local secret. This
-is an accident/tamper guard, not a substitute for broker controls.
+The HMAC key is NEVER stored in GitHub. Automated order arming requires a receipt
+whose semantic hash, account id and evidence digests verify under a local secret.
+This does not authorize ProjectX API automation on a Topstep Live Funded Account;
+the realtime/account gate separately refuses non-simulated accounts.
 """
 from __future__ import annotations
 
@@ -16,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from research.current_mnq_strategy_v2_3_local_runtime import require_personal_device
-from research.current_mnq_strategy_v2_3_policy import Evidence, live_gate, semantics_hash
+from research.current_mnq_strategy_v2_3_policy import Evidence, live_gate, load_spec, semantics_hash
 
 KEY_ENV = "MNQ_V23_RELEASE_HMAC_KEY"
 
@@ -44,10 +45,10 @@ def file_sha256(path: str | Path) -> str:
 def create_receipt(evidence: Evidence, account_id: int, sealed_report: str | Path,
                    shadow_journal: str | Path, output: str | Path,
                    env: dict[str, str] | None = None) -> dict:
-    require_personal_device("CREATE_LIVE_PROMOTION_RECEIPT", env)
+    require_personal_device("CREATE_AUTOMATION_PROMOTION_RECEIPT", env)
     gate = live_gate(evidence)
     if not gate.approved:
-        raise RuntimeError("LIVE_PROMOTION_REFUSE:" + "|".join(gate.reasons))
+        raise RuntimeError("AUTOMATION_PROMOTION_REFUSE:" + "|".join(gate.reasons))
     payload = {
         "schema_version": 1,
         "release": "MNQ-V2.3-PC1",
@@ -67,7 +68,7 @@ def create_receipt(evidence: Evidence, account_id: int, sealed_report: str | Pat
 
 def verify_receipt(path: str | Path, account_id: int,
                    env: dict[str, str] | None = None) -> dict:
-    require_personal_device("VERIFY_LIVE_PROMOTION_RECEIPT", env)
+    require_personal_device("VERIFY_AUTOMATION_PROMOTION_RECEIPT", env)
     wrapper = json.loads(Path(path).read_text())
     payload = wrapper.get("payload")
     if not isinstance(payload, dict):
@@ -79,6 +80,7 @@ def verify_receipt(path: str | Path, account_id: int,
         raise RuntimeError("PROMOTION_RECEIPT_SEMANTICS_STALE")
     if int(payload.get("account_id", -1)) != int(account_id):
         raise RuntimeError("PROMOTION_RECEIPT_ACCOUNT_MISMATCH")
-    if payload.get("stage") != "LIVE_ELIGIBLE":
-        raise RuntimeError("PROMOTION_RECEIPT_NOT_LIVE_ELIGIBLE")
+    required_stage = load_spec()["deployment"]["promotion_stage_name"]
+    if payload.get("stage") != required_stage:
+        raise RuntimeError("PROMOTION_RECEIPT_NOT_AUTOMATION_ELIGIBLE")
     return payload
