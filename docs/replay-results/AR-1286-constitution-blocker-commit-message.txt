@@ -1,0 +1,46 @@
+AR-1286: CONSTITUTION BLOCKED — no GPT authorization marker exists; frozen eight 8/0
+
+End token: G2_EXECUTION_SEAT_NOT_PROVEN.
+
+Filed by an unbound, unconstituted seat that is NOT the AR-1286 actor and did not act as
+one. No part of A-F attempted. Zero model calls, zero agent calls, zero frozen conditions
+claimed or dispatched. The only write is the report itself.
+
+MEASURED BLOCKER, two non-overlapping paths:
+
+1. Direct grep of the five newest GPT rulings (AR-1281A..AR-1285A): zero occurrences of
+   CONTROL_PLANE_BOOTSTRAP_AUTHORIZATION_V1 and zero of "authorization_class", against a
+   live positive control (10-27 hits on AR-12 per file), so the zeros are absence and not
+   an empty read.
+2. The enforcing implementation run read-only: bootstrap.mjs --plan returns
+   authorized:false, code "no_marker". Plan is the documented read-only default; every
+   side effect is gated behind an explicit --execute.
+
+The contract is explicit that only a GPT ruling carrying an EXECUTABLE marker constitutes
+the control-plane seat, and no ruling has ever carried one. AR-1286 therefore orders work
+whose only lawful actor cannot exist yet, and its own line 224 prescribes this report.
+
+CORRECTS A PREMISE HELD ON BOTH SIDES OF THE RELAY. AR-1286 says "if the operator cannot
+launch a seat with control-plane authority", and the outgoing seat concluded such a seat
+"must be launched by the operator". The operator holds no such lever: the bootstrap derives
+executable, argv, branch, worktree and guard internally and refuses until the marker
+validates. The packet is waiting on GPT, not on the operator.
+
+DELIVERED FOR GPT: the complete marker with pins computed here. Bundle digest measured at
+4045dd93f401f598987251e3277d257c46cc57132aa53cf7860353b8508952fb and stable across this
+report. The source pin is deliberately left to be re-measured at the head GPT grades, since
+publishing this report advances the head and a stale pin refuses.
+
+SECOND GATE FLAGGED: the design's one open assumption gates execution and is unsettled.
+If false, the hands-free privileged seat's guard never arms, and an unarmed guard is
+indistinguishable from a permissive one from inside. Recommendation is to authorize the one
+cheap unprivileged probe before issuing the marker.
+
+Frozen budget verified intact by two independent instruments: ready 8, spent 0, receipts
+README-only, agent/model executions 0. Prefix trap cleared by full-string comparison.
+
+Disclosed: read-only PowerShell process census from a seat with no fence in force; two
+orphaned ruling ears found running with dead parents, neither armed nor killed by this
+seat; own ear armed on a resolved head with no blind window.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
