@@ -83,7 +83,13 @@
     "no_parameter_search_on_sealed_validation": true,
     "no_variant_promotion_from_sealed_validation": true,
     "rule_change_after_sealed_result_invalidates_that_result": true,
-    "development_2026_01_20_to_2026_04_15_is_contaminated_for_rule_selection": true
+    "contaminated_score_ranges": [
+      {
+        "start": "2026-01-20",
+        "end": "2026-04-15",
+        "reason": "Previously inspected/development-tested public MNQ sample; may exist as causal context but may not count as sealed OOS score evidence."
+      }
+    ]
   },
   "topstep_compliance": {
     "projectx_automation_requires_personal_device": true,
