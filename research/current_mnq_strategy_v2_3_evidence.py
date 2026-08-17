@@ -68,9 +68,7 @@ def build_evidence(*, architecture_receipt: str | Path | None,
         sealed_trades=int(sealed_ev.get("sealed_trades", 0)) if sealed_same_semantics else 0,
         chronological_folds=int(sealed_ev.get("chronological_folds", 0)) if sealed_same_semantics else 0,
         positive_folds=int(sealed_ev.get("positive_folds", 0)) if sealed_same_semantics else 0,
-        block_bootstrap_mean_lower_95=(
-            sealed_ev.get("block_bootstrap_mean_lower_95") if sealed_same_semantics else None
-        ),
+        block_bootstrap_mean_lower_95=(sealed_ev.get("block_bootstrap_mean_lower_95") if sealed_same_semantics else None),
         slippage_stress_net=(dict(sealed_ev.get("slippage_stress_net", {})) if sealed_same_semantics else {}),
         sealed_rules_changed_after_run=not sealed_same_semantics,
         shadow_full_sessions=int(sh.get("full_sessions", 0)),
@@ -82,6 +80,7 @@ def build_evidence(*, architecture_receipt: str | Path | None,
         personal_device_verified=bool(current_local and sh.get("full_sessions", 0) > 0),
         realtime_user_hub_verified=bool(sh.get("user_hub_all_healthy", False)),
         realtime_market_hub_verified=bool(sh.get("market_hub_all_healthy", False)),
+        topstep_simulated_account_verified=bool(sh.get("simulated_account_all_verified", False)),
         broker_reconciliation_verified=bool(drill.get("broker_reconciliation_verified", False)),
         emergency_flatten_drill_passed=bool(drill.get("emergency_flatten_drill_passed", False)),
     )
