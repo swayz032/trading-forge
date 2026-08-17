@@ -49,6 +49,7 @@ def green_evidence(**changes):
         personal_device_verified=True,
         realtime_user_hub_verified=True,
         realtime_market_hub_verified=True,
+        topstep_simulated_account_verified=True,
         broker_reconciliation_verified=True,
         emergency_flatten_drill_passed=True,
     )
@@ -59,6 +60,8 @@ def test_spec_freezes_ten_named_negative_semantics():
     spec = policy.load_spec()
     assert spec["release_id"] == "MNQ-V2.3-PC1"
     assert len(spec["negative_semantic_fixtures"]) == 10
+    assert spec["topstep_compliance"]["projectx_api_on_live_funded_account_refused"] is True
+    assert spec["deployment"]["promotion_stage_name"] == "TOPSTEPX_API_AUTOMATION_ELIGIBLE"
     assert len(policy.semantics_hash()) == 64
 
 
@@ -69,12 +72,20 @@ def test_fidelity_gate_refuses_without_real_user_no_trade_gold():
     assert "MISSING_REAL_USER_NO_TRADE_GOLD" in result.reasons
 
 
-def test_live_gate_requires_every_prior_evidence_layer():
-    assert policy.live_gate(green_evidence()).approved
+def test_automation_gate_requires_every_prior_evidence_layer():
+    result = policy.live_gate(green_evidence())
+    assert result.approved
+    assert result.stage == "TOPSTEPX_API_AUTOMATION_ELIGIBLE"
     bad = green_evidence(block_bootstrap_mean_lower_95=-0.01)
     result = policy.live_gate(bad)
     assert not result.approved
     assert "EXPECTANCY_LOWER_95_NOT_POSITIVE" in result.reasons
+
+
+def test_automation_gate_refuses_non_simulated_topstep_account():
+    result = policy.live_gate(green_evidence(topstep_simulated_account_verified=False))
+    assert not result.approved
+    assert "TOPSTEP_SIMULATED_ACCOUNT_NOT_VERIFIED" in result.reasons
 
 
 def test_runtime_refuses_github_actions_for_credentialed_operations():
@@ -248,9 +259,11 @@ def test_shadow_summary_detects_rule_change_and_parity_mismatch(tmp_path):
     p = tmp_path / "shadow.jsonl"
     rows = [
         {"event_type": "DECISION", "session": "2026-08-17", "semantics_sha256": "a", "would_trade": True,
-         "user_hub_connected": True, "market_hub_connected": True, "working_orders": 0, "broker_position": 0},
+         "account_simulated": True, "user_hub_connected": True, "market_hub_connected": True,
+         "working_orders": 0, "broker_position": 0},
         {"event_type": "DECISION", "session": "2026-08-18", "semantics_sha256": "b", "would_trade": False,
-         "user_hub_connected": True, "market_hub_connected": True, "working_orders": 0, "broker_position": 0},
+         "account_simulated": True, "user_hub_connected": True, "market_hub_connected": True,
+         "working_orders": 0, "broker_position": 0},
         {"event_type": "REPLAY_PARITY", "session": "2026-08-17", "semantics_sha256": "a",
          "signal_fingerprint": "x", "replay_signal_fingerprint": "y"},
     ]
@@ -259,15 +272,16 @@ def test_shadow_summary_detects_rule_change_and_parity_mismatch(tmp_path):
     assert s["full_sessions"] == 2
     assert s["rule_changes"] == 1
     assert s["signal_parity_mismatches"] == 1
+    assert s["simulated_account_all_verified"] is True
 
 
-def test_signed_receipt_is_account_and_semantics_bound(tmp_path):
+def test_signed_receipt_is_account_semantics_and_automation_stage_bound(tmp_path):
     sealed = tmp_path / "sealed.json"; sealed.write_text("sealed")
     journal = tmp_path / "shadow.jsonl"; journal.write_text("shadow")
     out = tmp_path / "receipt.json"
     env = {"MNQ_V23_RELEASE_HMAC_KEY": "k" * 64}
     wrapper = receipt.create_receipt(green_evidence(), 123, sealed, journal, out, env=env)
-    assert wrapper["payload"]["stage"] == "LIVE_ELIGIBLE"
+    assert wrapper["payload"]["stage"] == policy.load_spec()["deployment"]["promotion_stage_name"]
     assert receipt.verify_receipt(out, 123, env=env)["account_id"] == 123
     with pytest.raises(RuntimeError, match="ACCOUNT_MISMATCH"):
         receipt.verify_receipt(out, 124, env=env)
