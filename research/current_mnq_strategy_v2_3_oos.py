@@ -4,7 +4,8 @@
 The only allowed strategy parameter object is Params() from the frozen semantic
 build. This runner verifies dataset bytes, freezes spec+dataset hashes, executes
 once, and reports chronology/bootstrap/slippage evidence. It never promotes a
-best variant because no variants are run.
+best variant because no variants are run. Previously inspected development date
+ranges are mechanically excluded from OOS score evidence.
 """
 from __future__ import annotations
 
@@ -116,8 +117,35 @@ def _data_quality(raw1: pd.DataFrame, raw5: pd.DataFrame) -> dict:
     return e.core.data_quality_gate(raw1, raw5)
 
 
+def apply_contaminated_score_exclusions(days: list, spec: dict | None = None) -> tuple[list, dict]:
+    spec = spec or load_spec()
+    ranges = spec.get("anti_overfit", {}).get("contaminated_score_ranges", [])
+    parsed = []
+    for r in ranges:
+        start = pd.Timestamp(r["start"]).date()
+        end = pd.Timestamp(r["end"]).date()
+        if start > end:
+            raise RuntimeError(f"CONTAMINATED_RANGE_INVALID:{start}>{end}")
+        parsed.append((start, end, str(r.get("reason", ""))))
+    eligible, excluded = [], []
+    for d in sorted(days):
+        match = next(((s, e, why) for s, e, why in parsed if s <= d <= e), None)
+        if match is None:
+            eligible.append(d)
+        else:
+            s, e, why = match
+            excluded.append({"session": str(d), "range_start": str(s), "range_end": str(e), "reason": why})
+    return eligible, {
+        "candidate_sessions": len(days),
+        "eligible_sessions": len(eligible),
+        "excluded_sessions": len(excluded),
+        "declared_ranges": ranges,
+        "excluded": excluded,
+    }
+
+
 def audit_scoreable_contract_provenance(raw1: pd.DataFrame, manifest: dict, days: list) -> dict:
-    """Every scoreable session—not only trade days—must carry its exact lead contract."""
+    """Every OOS-scored session—not only trade days—must carry its exact lead contract."""
     issues = []
     rth = raw1[(raw1.index.time >= pd.Timestamp("09:30").time()) &
                (raw1.index.time <= pd.Timestamp("15:59").time())]
@@ -149,6 +177,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     if any(out.iterdir()):
         raise RuntimeError("SEALED_OUTPUT_DIR_NOT_EMPTY")
 
+    spec = load_spec()
     raw5, raw1, manifest = e.load_production_dataset(root)
     verify_dataset_bytes(root, manifest)
     seal = {
@@ -160,6 +189,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         "parameter_search_allowed": False,
         "variant_selection_allowed": False,
         "bootstrap_seed": SEED,
+        "contaminated_score_ranges": spec.get("anti_overfit", {}).get("contaminated_score_ranges", []),
     }
     (out / "SEAL.json").write_text(json.dumps(seal, indent=2, sort_keys=True))
 
@@ -167,20 +197,26 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     if dq["status"] != "PASS":
         raise RuntimeError("SEALED_DATA_QUALITY_REFUSE:" + "|".join(dq["issues"]))
     env = e.prepare(raw5, raw1, manifest)
-    days = e.scoreable_days(env)
+    candidate_days = e.scoreable_days(env)
+    days, exclusion_audit = apply_contaminated_score_exclusions(candidate_days, spec)
     if not days:
-        raise RuntimeError("SEALED_NO_SCOREABLE_DAYS")
+        raise RuntimeError("SEALED_NO_UNCONTAMINATED_SCOREABLE_DAYS")
     provenance = audit_scoreable_contract_provenance(raw1, manifest, days)
     if provenance["status"] != "PASS":
         raise RuntimeError("SEALED_CONTRACT_PROVENANCE_REFUSE:" + "|".join(provenance["issues"][:10]))
 
     ledger = e.run_backtest(env, e.Params(), days)
+    if len(ledger):
+        forbidden = {x["session"] for x in exclusion_audit["excluded"]}
+        overlap = forbidden.intersection(set(ledger.session.astype(str)))
+        if overlap:
+            raise RuntimeError(f"CONTAMINATED_SESSION_REACHED_LEDGER:{sorted(overlap)[:10]}")
     ledger.to_csv(out / "ledger.csv", index=False)
-    folds_n = int(load_spec()["evidence_policy"]["chronological_folds"])
+    folds_n = int(spec["evidence_policy"]["chronological_folds"])
     folds = chronological_folds(ledger, days, folds_n)
     folds.to_csv(out / "folds.csv", index=False)
     boot = moving_block_bootstrap_mean(ledger.net_pnl.to_numpy(float) if len(ledger) else np.array([]))
-    stress = slippage_stress(ledger, load_spec()["evidence_policy"]["slippage_stress_points"])
+    stress = slippage_stress(ledger, spec["evidence_policy"]["slippage_stress_points"])
     m = e.metrics(ledger)
 
     start = pd.Timestamp(manifest["requested_start"])
@@ -195,7 +231,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         architecture_tests_passed=int(arch.get("tests", 0)) if arch_valid else 0,
         architecture_tests_failed=int(arch.get("failures", 1)) if arch_valid else 1,
         real_user_positive_gold=pos_gold,
-        semantic_negative_fixtures=len(load_spec()["negative_semantic_fixtures"]),
+        semantic_negative_fixtures=len(spec["negative_semantic_fixtures"]),
         real_user_tempting_no_trade_gold=neg_gold,
         contract_provenance_pass=True,
         data_quality_pass=True,
@@ -212,6 +248,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     report = {
         "seal": seal,
         "data_quality": dq,
+        "contamination_exclusion": exclusion_audit,
         "contract_provenance": provenance,
         "metrics": m,
         "folds": folds.to_dict(orient="records"),
