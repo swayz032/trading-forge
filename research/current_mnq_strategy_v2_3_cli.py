@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Local operator CLI for Current MNQ v2.3 production candidate.
 
-Credentialed commands intentionally inherit the personal-device refusal. Nothing
-in this CLI can make hosted GitHub Actions a trading runtime.
+Topstep credentialed commands inherit the personal-device refusal. Historical
+validation may use Databento locally for deep explicit-contract CME history.
 """
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from pathlib import Path
 
 from research.current_mnq_strategy_v2_2_contracts import projectx_contract_id
 from research.current_mnq_strategy_v2_3_data import collect_local_projectx
+from research.current_mnq_strategy_v2_3_databento import collect_databento
 from research.current_mnq_strategy_v2_3_evidence import build_evidence, gold_counts
 from research.current_mnq_strategy_v2_3_local_runtime import inspect_runtime
 from research.current_mnq_strategy_v2_3_oos import run_sealed
@@ -41,14 +42,15 @@ def cmd_doctor(_args):
         "generic_ci": loc.generic_ci,
         "positive_user_gold": pos,
         "tempting_no_trade_user_gold": neg,
-        "live_default": "REFUSE",
+        "projectx_automation_default": "REFUSE",
+        "projectx_lfa_automation": "PROHIBITED_BY_TOPSTEP_CURRENT_RULE",
         "next_required": [
-            "local roll-correct data collection",
+            "multi-year roll-correct data collection (Databento preferred; ProjectX fallback where coverage exists)",
             "sealed OOS",
             "one real user-labeled tempting NO-TRADE gold chart",
-            "local shadow campaign",
+            "local simulated-account shadow campaign",
             "broker reconciliation + emergency flatten drills",
-            "signed LIVE_ELIGIBLE receipt",
+            "signed TOPSTEPX_API_AUTOMATION_ELIGIBLE receipt",
         ],
     })
 
@@ -57,16 +59,26 @@ def cmd_contract(args):
     _print({"session": args.session.isoformat(), "contract_id": projectx_contract_id(args.session)})
 
 
-def cmd_collect(args):
-    manifest = collect_local_projectx(args.start, args.end, args.out, warmup_days=args.warmup_days)
+def _dataset_receipt(manifest: dict, out: str) -> None:
     _print({
         "status": "DATASET_FROZEN",
+        "source": manifest.get("source"),
         "dataset_sha256": manifest["dataset_sha256"],
         "requested_start": manifest["requested_start"],
         "requested_end": manifest["requested_end"],
         "sessions": manifest["sessions"],
-        "output": str(Path(args.out).resolve()),
+        "output": str(Path(out).resolve()),
     })
+
+
+def cmd_collect_projectx(args):
+    manifest = collect_local_projectx(args.start, args.end, args.out, warmup_days=args.warmup_days)
+    _dataset_receipt(manifest, args.out)
+
+
+def cmd_collect_databento(args):
+    manifest = collect_databento(args.start, args.end, args.out, warmup_days=args.warmup_days)
+    _dataset_receipt(manifest, args.out)
 
 
 def cmd_sealed(args):
@@ -99,7 +111,7 @@ def cmd_evidence(args):
         "fidelity": research_gate(ev),
         "research": sealed_validation_gate(ev),
         "shadow": shadow_gate(ev),
-        "live": live_gate(ev),
+        "topstepx_api_automation": live_gate(ev),
     }
     _print({
         "evidence": asdict(ev),
@@ -107,23 +119,31 @@ def cmd_evidence(args):
     })
 
 
+def _add_dataset_args(c):
+    c.add_argument("--start", type=_date, required=True)
+    c.add_argument("--end", type=_date, required=True)
+    c.add_argument("--out", required=True)
+    c.add_argument("--warmup-days", type=int, default=90)
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="mnq-v23", description="Current MNQ v2.3 production-candidate operator CLI")
     sub = p.add_subparsers(dest="command", required=True)
 
-    d = sub.add_parser("doctor", help="Show current local production blockers")
+    d = sub.add_parser("doctor", help="Show current production blockers")
     d.set_defaults(func=cmd_doctor)
 
     c = sub.add_parser("contract", help="Resolve expected MNQ contract for a NY session")
     c.add_argument("--session", type=_date, required=True)
     c.set_defaults(func=cmd_contract)
 
-    c = sub.add_parser("collect", help="Collect/freeze roll-correct ProjectX history locally")
-    c.add_argument("--start", type=_date, required=True)
-    c.add_argument("--end", type=_date, required=True)
-    c.add_argument("--out", required=True)
-    c.add_argument("--warmup-days", type=int, default=90)
-    c.set_defaults(func=cmd_collect)
+    c = sub.add_parser("collect-projectx", help="Collect/freeze roll-correct ProjectX history on personal device")
+    _add_dataset_args(c)
+    c.set_defaults(func=cmd_collect_projectx)
+
+    c = sub.add_parser("collect-databento", help="Collect/freeze explicit-contract multi-year CME history")
+    _add_dataset_args(c)
+    c.set_defaults(func=cmd_collect_databento)
 
     s = sub.add_parser("sealed-validate", help="Run the frozen one-shot OOS validation")
     s.add_argument("--dataset", required=True)
@@ -135,7 +155,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--journal", required=True)
     s.set_defaults(func=cmd_shadow)
 
-    r = sub.add_parser("realtime-health", help="Validate the local dual-hub realtime snapshot")
+    r = sub.add_parser("realtime-health", help="Validate local simulated-account dual-hub realtime snapshot")
     r.add_argument("--snapshot", required=True)
     r.add_argument("--account-id", type=int, required=True)
     r.add_argument("--contract-id", required=True)
