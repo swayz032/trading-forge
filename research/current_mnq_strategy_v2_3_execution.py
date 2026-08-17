@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
-"""Production orchestration that binds v2.3 broker arming to verified realtime state."""
+"""Production orchestration binding v2.3 execution to verified realtime/account state."""
 from __future__ import annotations
 
 from pathlib import Path
 
+from research.current_mnq_strategy_v2_3_account_risk import AccountRiskStore
 from research.current_mnq_strategy_v2_3_broker import FeedHealth, V23ProjectXBroker
 from research.current_mnq_strategy_v2_3_realtime import read_realtime_snapshot
 from research.current_mnq_strategy_v2_3_state import PersistentSessionLedger
-from research.current_mnq_strategy_v2_3_topstep_risk import RiskEnvelope
 
 
 def submit_with_realtime_snapshot(
     broker: V23ProjectXBroker,
     signal: dict,
     realtime_snapshot_path: str | Path,
-    envelope: RiskEnvelope,
+    risk_store: AccountRiskStore,
     ledger: PersistentSessionLedger,
     promotion_receipt: str | Path,
     desired_qty: int = 15,
     slippage_stress_points: float = 2.0,
+    dll_remaining: float | None = None,
 ) -> dict:
     snapshot = read_realtime_snapshot(
         realtime_snapshot_path,
@@ -35,9 +36,11 @@ def submit_with_realtime_snapshot(
     return broker.submit_signal(
         signal=signal,
         health=health,
-        envelope=envelope,
+        realtime_account_balance=snapshot.account_balance,
+        risk_store=risk_store,
         ledger=ledger,
         promotion_receipt=str(promotion_receipt),
         desired_qty=desired_qty,
         slippage_stress_points=slippage_stress_points,
+        dll_remaining=dll_remaining,
     )
