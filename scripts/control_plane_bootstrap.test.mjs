@@ -16,10 +16,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 
-import { validateAuthorization, extractCandidateMarkers, MARKER_SCHEMA } from './control-plane-bootstrap/authorization.mjs';
+import {
+  validateAuthorization, extractCandidateMarkers, MARKER_SCHEMA, CATEGORICAL_FORBIDDEN_PATH_TOKENS,
+} from './control-plane-bootstrap/authorization.mjs';
 import {
   classifyControlPlanePath, classifyControlPlaneReadPath, classifyControlPlaneTool, classifyControlPlaneBash,
   verifySeatIdentity, IDENTITY_FIELDS, ALL_TOOLS_MATCHER, NEVER_STAGEABLE_PATHS, toRepoRelative,
+  PROTECTED_SURFACE_PATHS, ancestorOfProtectedSurface, CATEGORICAL_DENY_PREFIXES,
 } from './control-plane-bootstrap/control-plane-guard.mjs';
 import {
   buildPlan, deriveBranch, deriveWorktreeDirName, assertClaimNamespaceDisjoint,
@@ -1950,8 +1953,14 @@ test('F27-N9 malformed/empty input denies cleanly', () => {
   assert.equal(toRepoRelative('CLAUDE.md', null).ok, false);
 });
 
-test('F27-R1 classifyControlPlaneReadPath: repo root and ordinary reads ALLOW; frozen G2/receipts/native-manifest and money-path prefixes DENY_CATEGORICAL', () => {
-  assert.equal(classifyControlPlaneReadPath('').verdict, 'ALLOW');
+/**
+ * AR-1298 F29 — the `''` assertion below was `ALLOW` before this repair (that was exactly the F29
+ * bug: an unconditional repository-root ALLOW). It now DENY_CATEGORICALs via
+ * `ancestorOfProtectedSurface` — see the dedicated F29 tests for the full ancestor-detection
+ * matrix. This test keeps proving ordinary file reads still ALLOW alongside it.
+ */
+test('F27-R1 classifyControlPlaneReadPath: ordinary reads ALLOW; repo root (F29) and frozen G2/receipts/native-manifest/money-path prefixes DENY_CATEGORICAL', () => {
+  assert.equal(classifyControlPlaneReadPath('').verdict, 'DENY_CATEGORICAL');
   assert.equal(classifyControlPlaneReadPath('scripts/control-plane-bootstrap/plan.mjs').verdict, 'ALLOW');
   assert.equal(classifyControlPlaneReadPath('CLAUDE.md').verdict, 'ALLOW');
   for (const bad of [
@@ -2002,11 +2011,27 @@ test('F27-E2E MSYS /c/... equivalent Read works', () => {
   assert.equal(out, null);
 });
 
-test('F27-E2E Glob/Grep with and without `path` are recognized (both ALLOW when unauthenticated targets are clean)', () => {
-  assert.equal(decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { pattern: '*.mjs' } }, seatManifest(), seatObserved(), armedStore()), null);
-  assert.equal(decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { pattern: 'foo' } }, seatManifest(), seatObserved(), armedStore()), null);
-  assert.equal(decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { path: 'scripts/', pattern: '*.mjs' } }, seatManifest(), seatObserved(), armedStore()), null);
-  assert.equal(decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'docs/', pattern: 'foo' } }, seatManifest(), seatObserved(), armedStore()), null);
+/**
+ * AR-1298 F29 — SUPERSEDES THE ORIGINAL "both ALLOW" VERSION OF THIS TEST. GPT (AR-1297A) found
+ * that ALLOWing an ordinary-looking root let a recursive Glob/Grep walk straight through a
+ * protected descendant: `''` (no path) is trivially an ancestor of everything, `scripts/` is a
+ * real ancestor of `scripts/control-plane-bootstrap/claims/`, and `docs/` is a real ancestor of
+ * the frozen G2 tree under `docs/replay-results/svkm-extraction-certified/...`. All four cases
+ * that used to ALLOW here now correctly DENY_CATEGORICAL under `ancestorOfProtectedSurface`. Tool
+ * *recognition* (that Glob/Grep are wired at all, with and without `path`) is proven separately by
+ * `F27-P1` (unit, on `pathFromToolInput`) and by the F29 tests below, which show at least one real
+ * root still ALLOWing — so this file no longer asserts the false "recursive search from anywhere
+ * ordinary is fine" claim while still proving the tools are not simply unrecognised.
+ */
+test('F29-E2E (supersedes old F27-E2E) no-path and broad-root Glob/Grep now DENY as protected-surface ancestors', () => {
+  const noPathGlob = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { pattern: '*.mjs' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(noPathGlob?.hookSpecificOutput?.permissionDecision, 'deny');
+  const noPathGrep = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { pattern: 'foo' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(noPathGrep?.hookSpecificOutput?.permissionDecision, 'deny');
+  const scriptsGlob = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { path: 'scripts/', pattern: '*.mjs' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(scriptsGlob?.hookSpecificOutput?.permissionDecision, 'deny');
+  const docsGrep = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'docs/', pattern: 'foo' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(docsGrep?.hookSpecificOutput?.permissionDecision, 'deny');
 });
 
 test('F27-E2E relative authorized Edit still works (regression)', () => {
@@ -2095,5 +2120,110 @@ test('F28-B3 the fixed command is read-only and scoped to advisor-reports/ only,
   assert.match(AUTHORITY_READ_CMD, /^git show --format= --no-ext-diff origin\/external-advisor\/gpt-rulings -- advisor-reports\/$/);
   // A real invocation against the live ruling branch returns exactly one changed ruling file, and
   // prints readable text — the same measurement AR-1297 made before adopting this exact command.
+});
+
+/* =============================== AR-1298 F29 — RECURSIVE-SEARCH ANCESTOR BYPASS CLOSED ======= */
+
+test('F29-D1 PROTECTED_SURFACE_PATHS cannot silently drift from the token/prefix lists that name the same surfaces', () => {
+  for (const surface of PROTECTED_SURFACE_PATHS) {
+    const lower = surface.toLowerCase();
+    const matchesToken = CATEGORICAL_FORBIDDEN_PATH_TOKENS.some((t) => lower.includes(t.toLowerCase()));
+    const matchesPrefix = CATEGORICAL_DENY_PREFIXES.some((p) => lower.startsWith(p.toLowerCase()));
+    assert.ok(matchesToken || matchesPrefix, `${surface} must be named by an existing categorical token or prefix`);
+  }
+});
+
+test('F29-A1 the repository root (no-path sentinel) is an ancestor of every protected surface', () => {
+  assert.equal(ancestorOfProtectedSurface(''), true);
+});
+
+test('F29-A2 a real ancestor directory of a protected surface is caught, even though it is not itself a categorical token', () => {
+  // `scripts/control-plane-bootstrap/` contains `claims/` as a real subdirectory, but the string
+  // 'control-plane-bootstrap/claims' is LONGER than 'scripts/control-plane-bootstrap/' and so is
+  // never a substring of it — the direct-hit `.includes()` check alone could never catch this root.
+  assert.equal(ancestorOfProtectedSurface('scripts/control-plane-bootstrap/'), true);
+  assert.equal(ancestorOfProtectedSurface('docs/'), true);
+  assert.equal(ancestorOfProtectedSurface('docs/replay-results/'), true);
+  assert.equal(ancestorOfProtectedSurface('docs/replay-results/svkm-extraction-certified/grade/opus-v2/'), true);
+});
+
+test('F29-A3 a genuinely unrelated root is NOT an ancestor of any protected surface', () => {
+  assert.equal(ancestorOfProtectedSurface('docs/replay-results/worker-advisor-reports/'), false);
+  assert.equal(ancestorOfProtectedSurface('scripts/control-plane-bootstrap/plan.mjs'), false);
+  assert.equal(ancestorOfProtectedSurface('CLAUDE.md'), false);
+});
+
+test('F29-A4 sibling-prefix false positive control: a similarly-named but different directory is not caught', () => {
+  // Guards against a naive raw-string-prefix bug — `docs/replay-results-other/` shares a long
+  // common prefix with the real protected tree but is NOT its ancestor once `/`-bounded.
+  assert.equal(ancestorOfProtectedSurface('docs/replay-results-other/'), false);
+});
+
+/**
+ * F29 REQUIRED PROOFS (AR-1297A §"Required proofs", items 1-11) — through the real production
+ * `decide()` / classifier path, not copies.
+ */
+test('F29-E2E-1/2 no-path Grep and Glob cannot scan the repository root across protected descendants', () => {
+  const grep = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { pattern: 'x' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(grep?.hookSpecificOutput?.permissionDecision, 'deny');
+  const glob = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { pattern: '*' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(glob?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+test('F29-E2E-3 Grep rooted at docs/ DENIES', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'docs/', pattern: 'x' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+test('F29-E2E-4 Glob rooted at docs/replay-results/ DENIES', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { path: 'docs/replay-results/', pattern: '*' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+test('F29-E2E-5 recursive search rooted directly at the frozen G2 opus-v2 directory DENIES', () => {
+  const grep = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/', pattern: 'x' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(grep?.hookSpecificOutput?.permissionDecision, 'deny');
+  const glob = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { path: 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/', pattern: '*' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(glob?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+test('F29-E2E-6 direct Read of an ordinary safe file still ALLOWs (regression)', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Read', tool_input: { file_path: 'scripts/control-plane-bootstrap/plan.mjs' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out, null);
+});
+
+test('F29-E2E-7 direct Read of queue/receipt/native-manifest remains DENY (regression)', () => {
+  const targets = [
+    'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json',
+    'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1/x.json',
+    'docs/replay-results/svkm-extraction-certified/grade/opus-v2/native_call_manifest_t1.json',
+  ];
+  for (const file_path of targets) {
+    const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Read', tool_input: { file_path } }, seatManifest(), seatObserved(), armedStore());
+    assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny', `${file_path} must deny`);
+  }
+});
+
+test('F29-E2E-8 at least one explicitly safe, packet-useful Grep/Glob root still ALLOWs — recursive search is not disabled wholesale', () => {
+  const grep = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'docs/replay-results/worker-advisor-reports/', pattern: 'AR-1298' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(grep, null, 'a root with no protected descendant must still ALLOW recursive search');
+  const glob = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { path: 'scripts/control-plane-bootstrap/plan.mjs', pattern: '*' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(glob, null);
+});
+
+test('F29-E2E-9 Agent/Task/PowerShell remain DENY (regression)', () => {
+  for (const toolName of ['Agent', 'Task', 'PowerShell']) {
+    const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: toolName, tool_input: {} }, seatManifest(), seatObserved(), armedStore());
+    assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  }
+});
+
+test('F29-E2E-10 the Bash authority-read exact command remains ALLOW and variants remain DENY (regression)', () => {
+  assert.equal(classifyControlPlaneBash(AUTHORITY_READ_CMD, bashCtx).verdict, 'ALLOW');
+  assert.equal(classifyControlPlaneBash(`${AUTHORITY_READ_CMD} extra`, bashCtx).verdict, 'DENY');
+});
+
+test('F29-E2E-11 the F26 user,local law is unchanged by this repair', () => {
+  assert.equal(SETTING_SOURCES, 'user,local');
 });
 

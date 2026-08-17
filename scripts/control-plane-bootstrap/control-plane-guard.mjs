@@ -115,6 +115,41 @@ export function classifyControlPlanePath(rawPath, allowedPaths) {
 }
 
 /**
+ * AR-1298 F29 — THE REAL PATHS BEHIND THE FROZEN-SURFACE TOKENS, FOR ANCESTOR DETECTION ONLY.
+ *
+ * `CATEGORICAL_FORBIDDEN_PATH_TOKENS` are matched via `.includes()` — they catch a DIRECT hit
+ * anywhere in a candidate path, but say nothing about whether a shorter, ordinary-looking root is
+ * an ANCESTOR of one of them. That gap is exactly what a recursive Glob/Grep can walk through: a
+ * no-path search at the repository root, or a search rooted at `docs/` or `docs/replay-results/`,
+ * never directly targets the frozen queue file — it just recurses INTO it. This is the small, fixed,
+ * explicit list of the real relative paths those tokens name, used ONLY to answer "would recursing
+ * from this root reach a protected surface?" — no filesystem access, ever. `F29-D1` in the test
+ * suite asserts every one of these paths actually contains its corresponding token, so the two
+ * lists cannot silently drift apart.
+ */
+export const PROTECTED_SURFACE_PATHS = Object.freeze([
+  'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json',
+  'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1',
+  'docs/replay-results/svkm-extraction-certified/grade/opus-v2/native_call_manifest_t1.json',
+  '.claude/settings.local.json',
+  '.claude/control-plane-guard-manifest.json',
+  'scripts/control-plane-bootstrap/claims',
+]);
+
+/**
+ * True when a recursive search rooted at `relPath` (already repo-relative; `''` means the
+ * repository root) could reach one of `PROTECTED_SURFACE_PATHS` as a descendant — i.e. `relPath`
+ * is empty, or is a `/`-bounded ancestor of one of them. Pure string comparison against the fixed
+ * list above; never touches the filesystem, so this stays deterministic and cheap regardless of
+ * how large the real tree is.
+ */
+export function ancestorOfProtectedSurface(relPath) {
+  if (relPath === '') return true;
+  const root = `${relPath.replace(/\/+$/, '')}/`.toLowerCase();
+  return PROTECTED_SURFACE_PATHS.some((surface) => surface.toLowerCase().startsWith(root));
+}
+
+/**
  * AR-1296A F27 — THE READ-ONLY POLICY. Distinct from `classifyControlPlanePath` above on purpose:
  * that function decides the narrow WRITE allowlist a ruling authorizes; this one decides ordinary
  * repository-contained READS, which the packet needs far more broadly to inspect itself, the ruling,
@@ -124,11 +159,15 @@ export function classifyControlPlanePath(rawPath, allowedPaths) {
  * through `classifyControlPlanePath` and the ruling's narrow `allowed_paths`.
  *
  * `rawPath` must already be a repo-relative path (run it through `toRepoRelative` first), or the
- * literal `''` sentinel meaning "no path was supplied" (Glob/Grep at the repository root).
+ * literal `''` sentinel meaning "no path was supplied" (Glob/Grep with no `path` argument).
+ *
+ * AR-1298 F29 — `''` is no longer an automatic ALLOW. A no-path recursive Glob/Grep is, by
+ * definition, an ancestor of every protected surface, so it now falls through to the SAME
+ * ancestor check every other root does (`ancestorOfProtectedSurface` returns `true` immediately
+ * for `''`) rather than a bespoke early-return that skipped the check entirely.
  */
 export function classifyControlPlaneReadPath(rawPath) {
   const path = normalizeRepoPath(rawPath);
-  if (path === '') return { path, verdict: 'ALLOW', reason: 'repository root' };
 
   if (path.startsWith('/') || /^[A-Za-z]:/.test(path) || path.split('/').includes('..')) {
     return { path, verdict: 'DENY', reason: 'path escapes the repository' };
@@ -137,6 +176,16 @@ export function classifyControlPlaneReadPath(rawPath) {
   const lower = path.toLowerCase();
   const catReason = categoricalDenyReason(lower);
   if (catReason) return { path, verdict: 'DENY_CATEGORICAL', reason: catReason };
+
+  if (ancestorOfProtectedSurface(path)) {
+    return {
+      path,
+      verdict: 'DENY_CATEGORICAL',
+      reason: path === ''
+        ? 'recursive search from the repository root can reach every protected surface'
+        : 'recursive search root is an ancestor of a protected surface',
+    };
+  }
 
   return { path, verdict: 'ALLOW', reason: 'repository-contained read' };
 }
