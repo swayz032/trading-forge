@@ -19,15 +19,18 @@ import { createHash } from 'node:crypto';
 import { validateAuthorization, extractCandidateMarkers, MARKER_SCHEMA } from './control-plane-bootstrap/authorization.mjs';
 import {
   classifyControlPlanePath, classifyControlPlaneTool, classifyControlPlaneBash,
-  verifySeatIdentity, IDENTITY_FIELDS,
+  verifySeatIdentity, IDENTITY_FIELDS, ALL_TOOLS_MATCHER,
 } from './control-plane-bootstrap/control-plane-guard.mjs';
 import {
   buildPlan, deriveBranch, deriveWorktreeDirName, assertClaimNamespaceDisjoint,
-  LAUNCH_EXECUTABLE, LAUNCH_ARGV, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL,
+  LAUNCH_EXECUTABLE, LAUNCH_ARGV, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL, buildPacketPrompt,
 } from './control-plane-bootstrap/plan.mjs';
 import { run, seatSettingsFor, rulingIdFromFilename } from './control-plane-bootstrap/bootstrap.mjs';
 import { computeBundle, BUNDLE_FILES } from './control-plane-bootstrap/bundle.mjs';
-import { decide, measureObservedIdentity, receiptMatchesLive } from './control-plane-bootstrap/control-plane-seat-hook.mjs';
+import { decide, measureObservedIdentity, receiptMatchesLive, verifyAuthorityIndependently } from './control-plane-bootstrap/control-plane-seat-hook.mjs';
+
+/** SessionStart requires an independently verified authority; tests that only exercise identity use this. */
+const OK_AUTHORITY = { ok: true, marker: {}, measured: {} };
 
 const QUEUE_SHA = '5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939';
 /** The trap hash from AR-1276 §F: same 17-char prefix, different string. */
@@ -170,6 +173,46 @@ test('N17 the seat may not launch an Agent/subagent instead of top-level Claude'
   assert.equal(plan.planned_process.is_subagent, false);
 });
 
+/* =============================== AR-1278A F-12  CLOSED TOOL ALLOWLIST ===================== */
+
+test('C12 the tool policy is a CLOSED allowlist, and the registration is truly all-tools', () => {
+  // Allowed: the read tools, the inspected write tools, and Bash (itself separately constrained).
+  for (const tool of ['Read', 'Glob', 'Grep', 'Edit', 'Write', 'NotebookEdit', 'Bash']) {
+    assert.equal(classifyControlPlaneTool(tool).verdict, 'ALLOW', `${tool} should be allowed`);
+  }
+  // Explicitly denied, including the two that would stop and ask the operator a question.
+  for (const tool of ['Agent', 'Task', 'PowerShell', 'AskUserQuestion', 'ExitPlanMode']) {
+    assert.equal(classifyControlPlaneTool(tool).verdict, 'DENY', `${tool} must be denied`);
+  }
+  // MCP and anything unknown/future.
+  for (const tool of ['mcp__whatever__do_thing', 'SomeFutureTool', 'WebFetch', '', undefined]) {
+    assert.equal(classifyControlPlaneTool(tool).verdict, 'DENY', `${tool} must be denied`);
+  }
+
+  // 🛑 THE PART THAT WAS THE FALSE GREEN: the REGISTRATION, not just the decision function.
+  // A matcher that enumerates tools cannot be default-deny, because unlisted tools never arrive.
+  const pre = seatSettingsFor().hooks.PreToolUse[0];
+  assert.equal(pre.matcher, ALL_TOOLS_MATCHER, 'PreToolUse must be registered for ALL tools');
+  assert.equal(pre.matcher, '*');
+  assert.ok(!pre.matcher.includes('|'), 'an enumerated matcher is not all-tools');
+});
+
+test('C12b a synthetic UNKNOWN tool reaching the guard is DENIED end-to-end', () => {
+  // Registration sends every tool through; this is what the guard does when one arrives.
+  const out = decide(
+    { hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'TotallyNewTool2027', tool_input: { anything: true } },
+    seatManifest(), seatObserved(), armedStore(),
+  );
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(out.hookSpecificOutput.permissionDecisionReason, /default deny/);
+});
+
+test('C11b the immutable Local settings explicitly carry disableAllHooks:false (F-11)', () => {
+  const s = seatSettingsFor();
+  assert.equal(s.disableAllHooks, false,
+    'without this, project settings can set disableAllHooks:true and quiet the seat guard — MEASURED live in C9/C9b');
+});
+
 test('N18 (§10.12 preserved) the AR-1276C example block REFUSES as non-executable', () => {
   const AR1276C_EXAMPLE = ['```json', JSON.stringify({
     schema: MARKER_SCHEMA,
@@ -274,8 +317,27 @@ test('C3c the small allowed set still works, and staging respects the path bound
   }
   assert.equal(classifyControlPlaneBash('git add CLAUDE.md', bashCtx).verdict, 'ALLOW');
   assert.equal(classifyControlPlaneBash('git add docs/other.md', bashCtx).verdict, 'DENY');
-  assert.equal(classifyControlPlaneBash(`git push origin ${BRANCH}`, bashCtx).verdict, 'ALLOW');
+  // The terminal finalize path is the ONLY commit+push route, and it takes no arguments.
+  assert.equal(classifyControlPlaneBash('node scripts/control-plane-bootstrap/cp-finalize.mjs', bashCtx).verdict, 'ALLOW');
+  assert.equal(classifyControlPlaneBash('node scripts/control-plane-bootstrap/cp-finalize.mjs --branch main', bashCtx).verdict, 'DENY');
+});
+
+test('C15 the test runner is EXACT, not a wildcard (F-15)', () => {
+  // A test file is executable code; `.test.mjs` is a filename, not a permission.
+  assert.equal(classifyControlPlaneBash('node --test scripts/control_plane_bootstrap.test.mjs', bashCtx).verdict, 'ALLOW');
+  for (const cmd of [
+    'node --test scripts/anything_else.test.mjs',
+    'node --test scripts/../src/evil.test.mjs',
+    'node --test src/engine/tests/whatever.test.mjs',
+  ]) {
+    assert.equal(classifyControlPlaneBash(cmd, bashCtx).verdict, 'DENY', `must deny: ${cmd}`);
+  }
+});
+
+test('C14b raw git push is NOT in the allowlist — finalization is the only publish path', () => {
+  assert.equal(classifyControlPlaneBash(`git push origin ${BRANCH}`, bashCtx).verdict, 'DENY');
   assert.equal(classifyControlPlaneBash('git push origin main', bashCtx).verdict, 'DENY');
+  assert.equal(classifyControlPlaneBash('git commit -m x', bashCtx).verdict, 'DENY');
 });
 
 /* =============================== §10.4 / §10.5  SELF-DISARM vs REPAIR ===================== */
@@ -300,9 +362,8 @@ test('C5 project-settings-edit control: the repairable file IS still repairable'
   assert.notEqual(SEAT_SETTINGS_REL, '.claude/settings.json');
   const s = seatSettingsFor();
   assert.match(s.hooks.PreToolUse[0].hooks[0].command, /control-plane-seat-hook\.mjs/);
-  for (const tool of ['Edit', 'Write', 'Bash', 'Agent', 'Task', 'PowerShell']) {
-    assert.ok(s.hooks.PreToolUse[0].matcher.includes(tool), `matcher must cover ${tool}`);
-  }
+  // The matcher is all-tools now (F-12); per-tool coverage is asserted in C12.
+  assert.equal(s.hooks.PreToolUse[0].matcher, ALL_TOOLS_MATCHER);
 });
 
 /* =============================== §10.1 / §10.2 / §10.11  LIVE IDENTITY =================== */
@@ -379,6 +440,9 @@ test('C2 real-measurement control: observed identity comes from the ENVIRONMENT,
   assert.equal(observed.worktree, '/real/worktree');
   assert.equal(observed.branch, 'some/other-branch', 'branch must come from git, not the manifest');
   assert.equal(observed.head, 'd'.repeat(40), 'head must come from git, not the manifest');
+  // AR-1278A F-8: the bundle is recomputed from real bytes, never accepted from the caller.
+  assert.equal(observed.bundleSha256, computeBundle(io.readFileBytes).bundle_sha256);
+  assert.notEqual(observed.bundleSha256, 'whatever-the-manifest-said');
 });
 
 test('C1 manifest-lie negative: a lying manifest cannot make the live hook pass', () => {
@@ -435,7 +499,7 @@ test('C10 durable start receipt: SessionStart writes it, PreToolUse refuses with
   assert.match(before.hookSpecificOutput.permissionDecisionReason, /no armed receipt/);
 
   // SessionStart arms it durably.
-  const armed = decide({ hook_event_name: 'SessionStart', session_id: 's1' }, seatManifest(), seatObserved(), store);
+  const armed = decide({ hook_event_name: 'SessionStart', session_id: 's1' }, seatManifest(), seatObserved(), store, OK_AUTHORITY);
   assert.match(armed.hookSpecificOutput.additionalContext, /CONTROL-PLANE SEAT ARMED/);
   assert.ok(store.readReceipt('s1'), 'a durable receipt must exist after SessionStart');
 
@@ -469,9 +533,87 @@ test('C10b a stale receipt (seat moved since arming) DENIES', () => {
 
 test('SessionStart without identity does NOT arm', () => {
   const store = armedStore(false);
-  const out = decide({ hook_event_name: 'SessionStart', session_id: 's1' }, seatManifest(), seatObserved({ branch: 'main' }), store);
+  const out = decide({ hook_event_name: 'SessionStart', session_id: 's1' }, seatManifest(), seatObserved({ branch: 'main' }), store, OK_AUTHORITY);
   assert.match(out.hookSpecificOutput.additionalContext, /NOT ARMED/);
   assert.equal(store.readReceipt('s1'), null, 'a refused SessionStart must not leave a receipt');
+});
+
+test('C8b SessionStart does NOT arm when GPT authority fails to verify (F-8)', () => {
+  const store = armedStore(false);
+  for (const authority of [
+    null,
+    { ok: false, code: 'no_marker_in_current_authority', detail: 'AR-9999 carries no executable marker' },
+    { ok: false, code: 'manifest_allowed_paths_mismatch', detail: 'authority and manifest disagree' },
+    { ok: false, code: 'wrong_origin', detail: 'origin is someone-else/fork' },
+    { ok: false, code: 'no_claim', detail: 'no durable claim' },
+  ]) {
+    const out = decide({ hook_event_name: 'SessionStart', session_id: 's1' }, seatManifest(), seatObserved(), store, authority);
+    assert.match(out.hookSpecificOutput.additionalContext, /NOT ARMED/);
+    assert.equal(store.readReceipt('s1'), null, 'an unverified authority must mint no receipt');
+  }
+  // CONTROL: with authority verified, the same call arms.
+  const armed = decide({ hook_event_name: 'SessionStart', session_id: 's1' }, seatManifest(), seatObserved(), store, OK_AUTHORITY);
+  assert.match(armed.hookSpecificOutput.additionalContext, /ARMED/);
+  assert.ok(store.readReceipt('s1'));
+});
+
+test('C8c the seat re-verifies authority against the LIVE ruling, not the manifest (F-8/F-9)', () => {
+  const bundleOf = (readFileBytes) => computeBundle(readFileBytes).bundle_sha256;
+  const queueJson = JSON.stringify({ queue: new Array(8).fill({}), attempts: {} });
+  const reader = (rel) => (BUNDLE_FILES.includes(rel) ? fakeBundleReader(rel) : Buffer.from(queueJson));
+  const qSha = createHash('sha256').update(Buffer.from(queueJson)).digest('hex');
+
+  const marker = {
+    ...baselineMarker(),
+    frozen_queue_sha256: qSha,
+    bootstrap_bundle_sha256: bundleOf(reader),
+  };
+  const manifest = {
+    ...seatManifest(),
+    ruling_id: marker.ruling_id,
+    target_packet: marker.target_packet,
+    authorization_id: marker.authorization_id,
+    bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256,
+    allowed_paths: [...marker.allowed_paths],
+  };
+  const mkIo = (over = {}) => ({
+    git: (...a) => {
+      const k = a.join(' ');
+      if (k === 'config --get remote.origin.url') return over.remote ?? 'git@github.com:swayz032/trading-forge.git';
+      if (k.startsWith('fetch')) return '';
+      if (k === 'rev-parse origin/external-advisor/gpt-rulings') return 'abc123';
+      if (k.startsWith('show --name-only')) return over.rulingFile ?? 'advisor-reports/AR-1281-X.md';
+      if (k.startsWith('show ')) return over.rulingText ?? ['```json', JSON.stringify(marker), '```'].join('\n');
+      if (k === 'rev-parse HEAD') return HEAD;
+      return '';
+    },
+    readFileBytes: reader,
+    listDir: () => ['README.md'],
+    realpath: (p) => p,
+    readClaim: () => over.claim === null ? null : (over.claim ?? {
+      ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256,
+    }),
+  });
+
+  // CONTROL: everything agrees -> verified.
+  assert.equal(verifyAuthorityIndependently(mkIo(), manifest).ok, true);
+
+  // F-9: a copied repo with a different origin refuses, even though the marker says Trading Forge.
+  assert.equal(verifyAuthorityIndependently(mkIo({ remote: 'git@github.com:someone-else/fork.git' }), manifest).code, 'wrong_origin');
+
+  // The manifest must agree with the LIVE ruling on every load-bearing field.
+  assert.equal(verifyAuthorityIndependently(mkIo(), { ...manifest, authorization_id: 'other-id' }).code, 'manifest_authorization_mismatch');
+  assert.equal(verifyAuthorityIndependently(mkIo(), { ...manifest, ruling_id: 'AR-9999' }).code, 'manifest_ruling_mismatch');
+  assert.equal(verifyAuthorityIndependently(mkIo(), { ...manifest, target_packet: 'AR-9999' }).code, 'manifest_packet_mismatch');
+  assert.equal(verifyAuthorityIndependently(mkIo(), { ...manifest, bootstrap_bundle_sha256: 'f'.repeat(64) }).code, 'manifest_bundle_mismatch');
+  assert.equal(verifyAuthorityIndependently(mkIo(), { ...manifest, allowed_paths: [...manifest.allowed_paths, 'extra.md'] }).code, 'manifest_allowed_paths_mismatch');
+
+  // The durable one-shot claim must exist and describe this authorization.
+  assert.equal(verifyAuthorityIndependently(mkIo({ claim: null }), manifest).code, 'no_claim');
+  assert.equal(verifyAuthorityIndependently(mkIo({ claim: { ruling_id: 'AR-0001', target_packet: 'AR-0001', bootstrap_bundle_sha256: 'x' } }), manifest).code, 'claim_mismatch');
+
+  // A ruling that carries no marker at all.
+  assert.equal(verifyAuthorityIndependently(mkIo({ rulingText: 'prose only' }), manifest).code, 'no_marker_in_current_authority');
 });
 
 /* =============================== SEAT GUARD: DEFAULT DENY ================================= */
@@ -519,8 +661,13 @@ test('C6 claim-first control: no mutating step precedes the claim', () => {
   const claim = plan.planned_operations.find((o) => o.op === 'write_claim');
   const mutatingBefore = plan.planned_operations.filter((o) => o.mutating === true && o.step < claim.step);
   assert.deepEqual(mutatingBefore, [], 'the claim must be the FIRST mutation');
-  assert.ok(plan.planned_operations.find((o) => o.op === 'launch_seat').step > claim.step);
+  assert.ok(plan.planned_operations.find((o) => o.op === 'launch_seat_supervised').step > claim.step);
   assert.ok(plan.planned_operations.find((o) => o.op === 'create_branch_and_worktree').step > claim.step);
+  // The init-only doorway proof sits between materialization and launch, and is itself read-only.
+  const doorway = plan.planned_operations.find((o) => o.op === 'prove_doorway_init_only');
+  assert.equal(doorway.mutating, false);
+  assert.ok(doorway.step < plan.planned_operations.find((o) => o.op === 'launch_seat_supervised').step);
+  assert.ok(plan.planned_operations.find((o) => o.op === 'verify_completion_receipt'));
 });
 
 test('GREEN: the replay-claim namespace is disjoint from the frozen G2 receipt namespace', () => {
@@ -600,6 +747,60 @@ test('LIVE C9: Claude Code invokes a LOCAL-source SessionStart hook even when pr
   }
 });
 
+/**
+ * MUTATION CONTROL for the test above. Proving "the hook fired" is not the same as proving
+ * `disableAllHooks:false` is what made it fire — without this, the explicit field could be
+ * decorative and nobody would know. Same fixture, one field removed from the Local source.
+ *
+ * Whatever the outcome, it is RECORDED rather than asserted in one direction: if the project's
+ * `disableAllHooks:true` does NOT suppress the hook, then Local precedence alone is doing the work
+ * and the explicit `false` is belt-and-braces. Both worlds are safe; only an unmeasured guess is not.
+ */
+test('LIVE C9b MUTATION: is the explicit disableAllHooks:false load-bearing?', async (t) => {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+
+  const dir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-initonly-mut-'));
+  try {
+    fs.mkdirSync(pathMod.join(dir, '.claude'), { recursive: true });
+    const witness = pathMod.join(dir, 'HOOK_FIRED.txt').replaceAll('\\', '/');
+    const hookScript = pathMod.join(dir, 'hook.mjs').replaceAll('\\', '/');
+    fs.writeFileSync(hookScript, `import fs from 'node:fs';\nfs.writeFileSync(${JSON.stringify(witness)}, 'fired');\nprocess.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'SessionStart',additionalContext:'probe'}}));\n`);
+    fs.writeFileSync(pathMod.join(dir, '.claude', 'settings.json'), JSON.stringify({ disableAllHooks: true }, null, 2));
+    // THE MUTATION: Local registers the hook but does NOT override disableAllHooks.
+    fs.writeFileSync(pathMod.join(dir, '.claude', 'settings.local.json'), JSON.stringify({
+      hooks: { SessionStart: [{ matcher: 'startup|resume|fork', hooks: [{ type: 'command', command: `node "${hookScript}"`, timeout: 30 }] }] },
+    }, null, 2));
+
+    const childEnv = { ...process.env };
+    delete childEnv.CLAUDECODE;
+    delete childEnv.CLAUDE_CODE_SSE_PORT;
+    delete childEnv.CLAUDE_CODE_ENTRYPOINT;
+
+    let failure = null;
+    try {
+      cp.execFileSync('claude', ['--init-only', '--setting-sources', 'user,project,local'], {
+        cwd: dir, encoding: 'utf8', timeout: 120000, stdio: 'pipe', env: childEnv,
+      });
+    } catch (error) {
+      failure = `${error.status ?? error.code} ${String(error.stderr || error.message).slice(0, 300)}`;
+    }
+    if (failure) {
+      t.skip(`--init-only could not run: ${failure}`);
+      return;
+    }
+
+    const fired = fs.existsSync(witness);
+    // eslint-disable-next-line no-console
+    console.error(`[C9b MEASURED] without explicit disableAllHooks:false in Local, hook fired = ${fired}`);
+    assert.equal(typeof fired, 'boolean');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 /* =============================== END-TO-END, ZERO EFFECTS ================================= */
 
 /**
@@ -640,8 +841,16 @@ function recordingEffects() {
     writeClaim: (...a) => calls.push(['writeClaim', ...a]),
     createBranchAndWorktree: (...a) => calls.push(['createBranchAndWorktree', ...a]),
     writeSeatGuard: (...a) => calls.push(['writeSeatGuard', ...a]),
-    proveDoorway: (...a) => { calls.push(['proveDoorway', ...a]); return 'CONTROL-PLANE SEAT ARMED: ok'; },
-    launchSeat: (...a) => { calls.push(['launchSeat', ...a]); return 4242; },
+    proveDoorwayInitOnly: (...a) => { calls.push(['proveDoorwayInitOnly', ...a]); return { ok: true, receipts: ['tf-control-plane-armed-x.json'] }; },
+    launchSeatSupervised: (...a) => { calls.push(['launchSeatSupervised', ...a]); return { ok: true, output: 'done' }; },
+    readCompletionReceipt: (...a) => {
+      calls.push(['readCompletionReceipt', ...a]);
+      return {
+        schema: 'CONTROL_PLANE_COMPLETION_RECEIPT_V1',
+        authorization_id: 'cpb-2026-08-16-0001', ruling_id: 'AR-1281', target_packet: 'AR-1279',
+        commit_sha: 'deadbeef', changed_paths: ['CLAUDE.md'], pushed: true,
+      };
+    },
   };
 }
 
@@ -662,12 +871,67 @@ test('C14 END-TO-END: refusal paths request ZERO effects', () => {
   }
 });
 
-test('C6b END-TO-END: on the authorized path the FIRST effect is the claim', () => {
+test('C6b END-TO-END: on the authorized path the FIRST effect is the claim, and launch is supervised', () => {
   const effects = recordingEffects();
   const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
   assert.equal(result.authorized, true, JSON.stringify(result.refusal));
   assert.equal(effects.calls[0][0], 'writeClaim', 'the claim must be the first effect requested');
-  assert.deepEqual(effects.calls.map((c) => c[0]), ['writeClaim', 'createBranchAndWorktree', 'writeSeatGuard', 'proveDoorway', 'launchSeat']);
+  assert.deepEqual(effects.calls.map((c) => c[0]), [
+    'writeClaim', 'createBranchAndWorktree', 'writeSeatGuard',
+    'proveDoorwayInitOnly', 'launchSeatSupervised', 'readCompletionReceipt',
+  ]);
+  assert.equal(result.completion_verified, true, 'the supervisor must verify the trusted completion receipt');
+
+  // F-13: the launch argv is hands-free (-p with a marker-derived prompt), not an interactive seat.
+  const argv = effects.calls.find((c) => c[0] === 'launchSeatSupervised')[2];
+  assert.ok(argv.includes('-p'), 'the seat must be started with a task, not left waiting for a human');
+  assert.ok(argv.includes('--dangerously-skip-permissions'));
+  const prompt = argv[argv.indexOf('-p') + 1];
+  assert.match(prompt, /AR-1279/);
+  assert.match(prompt, /cp-finalize\.mjs/);
+  assert.match(prompt, /never ask the operator a question/);
+});
+
+test('C13b the packet prompt is DERIVED from the marker — no caller-supplied text', () => {
+  const p = buildPacketPrompt(baselineMarker());
+  assert.match(p, /AR-1279/);
+  assert.match(p, /AR-1281/);
+  assert.match(p, /cpb-2026-08-16-0001/);
+  for (const allowed of baselineMarker().allowed_paths) assert.ok(p.includes(allowed), `prompt must name ${allowed}`);
+  assert.match(p, /never dispatch an Agent or subagent/);
+});
+
+test('C10c a completion receipt for a DIFFERENT authorization does not verify', () => {
+  const effects = recordingEffects();
+  effects.readCompletionReceipt = (...a) => {
+    effects.calls.push(['readCompletionReceipt', ...a]);
+    return { authorization_id: 'someone-elses', ruling_id: 'AR-1281', target_packet: 'AR-1279' };
+  };
+  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  assert.equal(result.completion_verified, false);
+});
+
+test('C9c wrong ORIGIN refuses at the bootstrap, before any effect (F-9)', () => {
+  const effects = recordingEffects();
+  const io = fakeIo({ rulingText: validRuling() });
+  const inner = io.git;
+  io.git = (...a) => (a.join(' ') === 'config --get remote.origin.url' ? 'git@github.com:someone-else/fork.git' : inner(...a));
+  const result = run({ mode: 'execute', io, effects });
+  assert.equal(result.authorized, false);
+  assert.equal(result.refusal.code, 'wrong_origin');
+  assert.deepEqual(effects.calls, [], 'a wrong-origin repo must request no effects at all');
+});
+
+test('C7c a doorway that mints no armed receipt REFUSES to launch', () => {
+  const effects = recordingEffects();
+  effects.proveDoorwayInitOnly = (...a) => {
+    effects.calls.push(['proveDoorwayInitOnly', ...a]);
+    return { ok: false, detail: 'no durable armed receipt was minted by --init-only' };
+  };
+  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  assert.equal(result.executed, false);
+  assert.equal(result.refusal.code, 'doorway_not_armed');
+  assert.ok(!effects.calls.some((c) => c[0] === 'launchSeatSupervised'), 'must not start a conversation on an unarmed doorway');
 });
 
 test('C7 crash-shaped replay control: a claimed authorization is never reusable', () => {
@@ -684,11 +948,3 @@ test('C7 crash-shaped replay control: a claimed authorization is never reusable'
   assert.deepEqual(effects.calls, [], 'a replay must request no effects at all');
 });
 
-test('C7b a doorway that does not arm REFUSES to launch (claim already spent, by design)', () => {
-  const effects = recordingEffects();
-  effects.proveDoorway = (...a) => { effects.calls.push(['proveDoorway', ...a]); return 'CONTROL-PLANE GUARD NOT ARMED: whatever'; };
-  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
-  assert.equal(result.executed, false);
-  assert.equal(result.refusal.code, 'doorway_not_armed');
-  assert.ok(!effects.calls.some((c) => c[0] === 'launchSeat'), 'must not launch on an unarmed doorway');
-});

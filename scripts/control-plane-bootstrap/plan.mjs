@@ -34,6 +34,38 @@ export const LAUNCH_EXECUTABLE = 'claude';
  */
 export const LAUNCH_ARGV = Object.freeze(['--dangerously-skip-permissions', '--setting-sources', 'user,project,local']);
 
+/**
+ * AR-1278A F-13 — HANDS-FREE MEANS THE MACHINE STARTS THE WORK, NOT JUST THE SEAT.
+ *
+ * Bare `claude` opens an interactive session, so the previous design could open a privileged seat
+ * and then sit there waiting for a human to type the task. Tonio is not the prompt relay. The seat
+ * is launched with `-p` and a prompt DERIVED MECHANICALLY from the validated marker — no model text,
+ * no operator text, nothing a caller can choose. `-p` is still a top-level process, not a subagent.
+ */
+export function buildPacketPrompt(marker) {
+  const paths = marker.allowed_paths.map((p) => `  - ${p}`).join('\n');
+  return [
+    `You are the top-level control-plane / guard-repair seat for packet ${marker.target_packet}.`,
+    `Your authority is ruling ${marker.ruling_id} on origin/external-advisor/gpt-rulings, authorization ${marker.authorization_id}.`,
+    '',
+    'Do exactly this, in order, and nothing else:',
+    `1. Read ${marker.ruling_id} from origin/external-advisor/gpt-rulings and re-verify the packet scope for yourself.`,
+    '2. Make only the changes that ruling authorizes, only within these paths:',
+    paths,
+    '3. Run the bounded tests the ruling names.',
+    `4. Write the ${marker.target_packet} report to docs/replay-results/worker-advisor-reports/.`,
+    '5. Finalize with exactly: node scripts/control-plane-bootstrap/cp-finalize.mjs',
+    '',
+    'Hard rules: never dispatch an Agent or subagent; never use PowerShell; never touch the frozen G2',
+    'queue, receipts or native-call manifest; never ask the operator a question — he is not part of',
+    'this loop. If you cannot proceed, write the reason into your report and finalize anyway.',
+  ].join('\n');
+}
+
+export function buildLaunchArgv(marker) {
+  return [...LAUNCH_ARGV, '-p', buildPacketPrompt(marker)];
+}
+
 /** Passed explicitly so the local source's loading is stated, not inherited from a default. */
 export const SETTING_SOURCES = 'user,project,local';
 
@@ -131,10 +163,13 @@ export function buildPlan(marker, measured) {
 
     planned_process: {
       executable: LAUNCH_EXECUTABLE,
-      argv: [...LAUNCH_ARGV],
+      argv: buildLaunchArgv(marker),
       cwd: worktreePath,
       top_level: true,
       is_subagent: false,
+      supervised: true,
+      interactive: false,
+      _note: 'launched with -p so the machine starts the work; the bootstrap waits for exit and verifies the completion receipt',
     },
 
     // Ordered exactly as execution performs them. AR-1278 F-4: every read-only check completes
@@ -149,8 +184,12 @@ export function buildPlan(marker, measured) {
       { step: 5, op: 'write_claim', detail: `O_EXCL ${CLAIM_DIR}/${marker.authorization_id}.json — FIRST mutation`, mutating: true },
       { step: 6, op: 'create_branch_and_worktree', detail: `${branch} from ${measured.workerHead} at ${worktreePath}`, mutating: true },
       { step: 7, op: 'materialize_seat_guard', detail: `${SEAT_SETTINGS_REL} + ${SEAT_MANIFEST_REL} (immutable to the seat)`, mutating: true },
-      { step: 8, op: 'prove_doorway', detail: 'run the seat hook with a synthetic SessionStart; zero model calls; refuse to launch unless it reports ARMED', mutating: false },
-      { step: 9, op: 'launch_seat', detail: `${LAUNCH_EXECUTABLE} ${LAUNCH_ARGV.join(' ')} (cwd=${worktreePath})`, mutating: true },
+      // AR-1278A §1: `claude --init-only` runs Setup + SessionStart hooks and EXITS without a
+      // conversation, so it proves Claude Code itself discovered and invoked the Local hook — which
+      // a direct node call to the doorway can never show. Zero model calls.
+      { step: 8, op: 'prove_doorway_init_only', detail: 'claude --init-only on the new worktree; require the durable armed receipt before any conversation', mutating: false },
+      { step: 9, op: 'launch_seat_supervised', detail: `${LAUNCH_EXECUTABLE} -p <marker-derived packet prompt> (cwd=${worktreePath}); wait for exit`, mutating: true },
+      { step: 10, op: 'verify_completion_receipt', detail: 'read the trusted completion receipt written by cp-finalize.mjs under the git dir', mutating: false },
     ],
 
     executed: false,

@@ -29,12 +29,13 @@
 import fsReal from 'node:fs';
 import pathReal from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
-import { extractCandidateMarkers, validateAuthorization, GPT_AUTHORITY_REF } from './authorization.mjs';
+import { extractCandidateMarkers, validateAuthorization, GPT_AUTHORITY_REF, EXPECTED_REPO } from './authorization.mjs';
 import { computeBundle } from './bundle.mjs';
+import { ALL_TOOLS_MATCHER } from './control-plane-guard.mjs';
 import {
-  buildPlan, CLAIM_DIR, LAUNCH_ARGV, LAUNCH_EXECUTABLE, SETTING_SOURCES,
+  buildPlan, buildLaunchArgv, CLAIM_DIR, LAUNCH_EXECUTABLE, SETTING_SOURCES,
   deriveBranch, deriveWorktreeDirName, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL,
 } from './plan.mjs';
 
@@ -162,10 +163,20 @@ export function resolveAuthorization(measured) {
 
 export function makeRealEffects(repoRoot) {
   return {
-    /** FIRST mutation, and it is atomic: `wx` fails if the id was ever claimed (AR-1278 F-4). */
+    /**
+     * THE FIRST MUTATION, and it is a single atomic act.
+     *
+     * AR-1278A F-10: the previous version called `mkdirSync(..., {recursive:true})` first, so a
+     * failure between the directory creation and the claim write left external state changed while
+     * the authorization was still reusable. The parent directory is now COMMITTED in the repository
+     * (see CLAIM_DIR/README.md), so the critical section is exactly one `wx` write: it either makes
+     * the authorization non-reusable or it changes nothing at all.
+     */
     writeClaim(authorizationId, body) {
       const dir = pathReal.join(repoRoot, CLAIM_DIR);
-      fsReal.mkdirSync(dir, { recursive: true });
+      if (!fsReal.existsSync(dir)) {
+        throw new Error(`claim directory ${CLAIM_DIR} must pre-exist; refusing to create it inside the one-shot critical section`);
+      }
       fsReal.writeFileSync(pathReal.join(dir, `${authorizationId}.json`), `${JSON.stringify(body, null, 2)}\n`, { flag: 'wx' });
     },
     createBranchAndWorktree(branch, worktreePath, base) {
@@ -177,21 +188,64 @@ export function makeRealEffects(repoRoot) {
       fsReal.writeFileSync(pathReal.join(worktreePath, SEAT_MANIFEST_REL), `${JSON.stringify(manifest, null, 2)}\n`);
     },
     /**
-     * Run the seat's own doorway with a synthetic SessionStart, exactly as the Worker-1 launcher's
-     * C5 arm-witness does. Zero model calls: this observes the guard decide rather than inferring
-     * it from its inputs. `A GUARD WHOSE REFUSAL PATH HAS NEVER BEEN OBSERVED IS NOT AN INSTRUMENT.`
+     * AR-1278A §1 — `claude --init-only` runs Setup + SessionStart hooks and EXITS without starting
+     * a conversation, so this proves CLAUDE CODE ITSELF discovered and invoked the Local-source hook.
+     * A direct `node` call to the doorway could only ever prove the doorway works when called; it
+     * could never prove the runtime would call it. Zero model conversation.
+     *
+     * Returns the armed receipt the seat's SessionStart minted, or null. The caller refuses to
+     * launch without it.
      */
-    proveDoorway(worktreePath) {
-      const payload = JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', session_id: 'cp-armprobe' });
-      const out = execFileSync(process.execPath, [
-        pathReal.join(worktreePath, 'scripts/control-plane-bootstrap/control-plane-seat-hook.mjs'),
-        '--manifest', pathReal.join(worktreePath, SEAT_MANIFEST_REL),
-      ], { input: payload, encoding: 'utf8', cwd: worktreePath });
-      return out;
+    proveDoorwayInitOnly(worktreePath) {
+      // Claude Code refuses to launch inside another Claude Code session and names the bypass; this
+      // is a separate top-level process running hooks and exiting, which is exactly the sanctioned
+      // mode. Only the nesting markers are scrubbed.
+      const env = { ...process.env };
+      delete env.CLAUDECODE;
+      delete env.CLAUDE_CODE_SSE_PORT;
+      delete env.CLAUDE_CODE_ENTRYPOINT;
+      try {
+        execFileSync(LAUNCH_EXECUTABLE, ['--init-only', '--setting-sources', SETTING_SOURCES], {
+          cwd: worktreePath, encoding: 'utf8', timeout: 180000, stdio: 'pipe', env,
+        });
+      } catch (error) {
+        return { ok: false, detail: `--init-only failed: ${String(error.stderr || error.message).slice(0, 400)}` };
+      }
+      const gitDir = execFileSync('git', ['-C', worktreePath, 'rev-parse', '--absolute-git-dir'], { encoding: 'utf8' }).trim();
+      const found = fsReal.readdirSync(gitDir).filter((f) => f.startsWith('tf-control-plane-armed-'));
+      if (found.length === 0) {
+        return { ok: false, detail: 'no durable armed receipt was minted by --init-only; the Local hook did not arm' };
+      }
+      return { ok: true, receipts: found };
     },
-    launchSeat(worktreePath) {
-      const child = spawn(LAUNCH_EXECUTABLE, [...LAUNCH_ARGV], { cwd: worktreePath, stdio: 'inherit' });
-      return child.pid ?? null;
+
+    /**
+     * AR-1278A F-13 — SUPERVISED AND HANDS-FREE. `-p` with a marker-derived prompt means the machine
+     * starts the work instead of opening a seat that waits for a human to type. The call is
+     * synchronous so the bootstrap can inspect exit status and then verify the completion receipt,
+     * rather than spawning a terminal and walking away. `-p` is a top-level process, not a subagent.
+     */
+    launchSeatSupervised(worktreePath, argv) {
+      const env = { ...process.env };
+      delete env.CLAUDECODE;
+      delete env.CLAUDE_CODE_SSE_PORT;
+      delete env.CLAUDE_CODE_ENTRYPOINT;
+      try {
+        const out = execFileSync(LAUNCH_EXECUTABLE, argv, { cwd: worktreePath, encoding: 'utf8', stdio: 'pipe', env });
+        return { ok: true, output: String(out).slice(-2000) };
+      } catch (error) {
+        return { ok: false, detail: String(error.stderr || error.message).slice(0, 800) };
+      }
+    },
+
+    /** The trusted completion receipt cp-finalize.mjs writes under the git dir. */
+    readCompletionReceipt(worktreePath) {
+      try {
+        const gitDir = execFileSync('git', ['-C', worktreePath, 'rev-parse', '--absolute-git-dir'], { encoding: 'utf8' }).trim();
+        return JSON.parse(fsReal.readFileSync(pathReal.join(gitDir, 'tf-control-plane-completion.json'), 'utf8'));
+      } catch {
+        return null;
+      }
     },
   };
 }
@@ -206,9 +260,20 @@ export function seatSettingsFor() {
   const cmd = `node "$CLAUDE_PROJECT_DIR"/${doorway} --manifest "$CLAUDE_PROJECT_DIR"/${SEAT_MANIFEST_REL}`;
   return {
     $comment: 'CONTROL-PLANE SEAT GUARD — materialized by scripts/control-plane-bootstrap. Immutable to the seat.',
+    /**
+     * AR-1278A F-11, and it is MEASURED, not defensive decoration. `claude --init-only` in a scratch
+     * fixture showed that with project settings carrying `disableAllHooks:true`, a Local-registered
+     * SessionStart hook FIRES when Local carries `disableAllHooks:false` and DOES NOT FIRE when Local
+     * omits it. So without this line the privileged seat could disarm its own guard by editing only
+     * the tracked `.claude/settings.json` — which is a file its packet must edit.
+     *   `PRECEDENCE YOU RELY ON BUT DO NOT STATE IS A DEFAULT SOMEBODY ELSE CAN CHANGE.`
+     */
+    disableAllHooks: false,
     hooks: {
-      SessionStart: [{ matcher: 'startup|resume|fork', hooks: [{ type: 'command', command: cmd, timeout: 30 }] }],
-      PreToolUse: [{ matcher: 'Edit|Write|NotebookEdit|Bash|Agent|Task|PowerShell', hooks: [{ type: 'command', command: cmd, timeout: 15 }] }],
+      SessionStart: [{ matcher: 'startup|resume|fork', hooks: [{ type: 'command', command: cmd, timeout: 60 }] }],
+      // AR-1278A F-12: ALL tools, not a name list. A matcher that enumerates tools cannot be
+      // default-deny, because an unlisted tool never reaches the guard at all.
+      PreToolUse: [{ matcher: ALL_TOOLS_MATCHER, hooks: [{ type: 'command', command: cmd, timeout: 15 }] }],
     },
   };
 }
@@ -217,6 +282,23 @@ export function seatSettingsFor() {
 
 export function run({ mode = 'plan', io, effects, now = null } = {}) {
   const measured = measureState(io);
+
+  // AR-1278A F-9 — BIND THE REAL ORIGIN BEFORE ANYTHING ELSE.
+  // The marker declares `repo: swayz032/trading-forge`, but the previous version never compared
+  // that to the ACTUAL remote — and then wrote `manifest.repo = measured.repoRemote`, so a copied
+  // repository with a different origin became internally self-consistent while the marker still
+  // said Trading Forge. A marker's claim about where it is running is not evidence of where it is
+  // running. The receiving seat repeats this check independently.
+  if (measured.repoRemote !== EXPECTED_REPO) {
+    return {
+      mode,
+      authorized: false,
+      refusal: { ok: false, code: 'wrong_origin', detail: `origin is ${measured.repoRemote}, this bootstrap only serves ${EXPECTED_REPO}` },
+      measured: summarize(measured),
+      executed: false,
+    };
+  }
+
   const auth = resolveAuthorization(measured);
 
   if (!auth.ok) {
@@ -260,14 +342,38 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
 
   effects.createBranchAndWorktree(branch, worktreePath, measured.workerHead);
   effects.writeSeatGuard(worktreePath, seatSettingsFor(), manifest);
-  const doorway = effects.proveDoorway(worktreePath);
-  if (!/CONTROL-PLANE SEAT ARMED/.test(String(doorway)) || /NOT ARMED/.test(String(doorway))) {
-    // The claim is already spent by design. Refusing to launch is still correct.
-    return { mode: 'execute', authorized: true, plan, measured: summarize(measured), executed: false, doorway, refusal: { ok: false, code: 'doorway_not_armed', detail: String(doorway).slice(0, 400) } };
-  }
-  const pid = effects.launchSeat(worktreePath);
 
-  return { mode: 'execute', authorized: true, plan: { ...plan, executed: true }, measured: summarize(measured), executed: true, pid, doorway };
+  // The gate: Claude Code must itself discover and invoke the Local hook, and that hook must mint a
+  // durable armed receipt. No receipt, no conversation. The claim is already spent by design —
+  // refusing to launch is still the correct outcome, and it is reported as a refusal, not a success.
+  const doorway = effects.proveDoorwayInitOnly(worktreePath);
+  if (!doorway?.ok) {
+    return {
+      mode: 'execute', authorized: true, plan, measured: summarize(measured), executed: false, doorway,
+      refusal: { ok: false, code: 'doorway_not_armed', detail: doorway?.detail ?? 'unknown' },
+    };
+  }
+
+  const launch = effects.launchSeatSupervised(worktreePath, buildLaunchArgv(auth.marker));
+  const completion = effects.readCompletionReceipt(worktreePath);
+  const completionOk = Boolean(
+    completion
+    && completion.authorization_id === auth.marker.authorization_id
+    && completion.ruling_id === auth.marker.ruling_id
+    && completion.target_packet === auth.marker.target_packet,
+  );
+
+  return {
+    mode: 'execute',
+    authorized: true,
+    plan: { ...plan, executed: true },
+    measured: summarize(measured),
+    executed: true,
+    doorway,
+    launch,
+    completion,
+    completion_verified: completionOk,
+  };
 }
 
 function summarize(m) {

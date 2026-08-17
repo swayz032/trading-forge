@@ -32,8 +32,24 @@ export const CATEGORICAL_DENY_PREFIXES = Object.freeze([
   'advisor-prepared/gpt-speed-engineering-lane/tooling/',
 ]);
 
-/** Tools the control-plane seat may not use at all during its packet. */
-export const DENIED_TOOLS = Object.freeze(['Agent', 'Task', 'PowerShell']);
+/**
+ * AR-1278A F-12 — A CLOSED TOOL ALLOWLIST, BECAUSE THE MATCHER WAS THE REAL BOUNDARY.
+ *
+ * The previous version denied unknown tools inside `decide()` and had a unit test proving it — but
+ * the MATERIALIZED settings registered PreToolUse only for `Edit|Write|NotebookEdit|Bash|Agent|
+ * Task|PowerShell`, so an unlisted tool never reached `decide()` at all. The unit test was green and
+ * the installed registration was not default-deny. That is the second registration-level false green
+ * in this campaign, and it is the same lesson as the fence scanner:
+ *   `A DECISION FUNCTION IS ONLY AS DEFAULT-DENY AS THE EVENTS THAT REACH IT.`
+ * The seat now registers ALL_TOOLS_MATCHER and decides here, from a closed allowlist.
+ */
+export const ALLOWED_TOOLS = Object.freeze(['Read', 'Glob', 'Grep', 'Edit', 'Write', 'NotebookEdit', 'Bash']);
+
+/** Named explicitly so their denial is visible in the code, not merely implied by absence. */
+export const DENIED_TOOLS = Object.freeze(['Agent', 'Task', 'PowerShell', 'AskUserQuestion', 'ExitPlanMode']);
+
+/** Documented all-tools matcher: `*` runs the hook for every tool, built-ins and MCP included. */
+export const ALL_TOOLS_MATCHER = '*';
 
 /**
  * Shell metacharacters that turn one command into several, or redirect its output. Any of these
@@ -79,15 +95,26 @@ export function classifyControlPlanePath(rawPath, allowedPaths) {
 }
 
 export function classifyControlPlaneTool(toolName) {
+  if (typeof toolName !== 'string' || toolName === '') {
+    return { verdict: 'DENY', reason: 'unreadable tool name' };
+  }
   if (DENIED_TOOLS.includes(toolName)) {
     return {
       verdict: 'DENY',
       reason:
-        `${toolName} is denied for the control-plane seat: Agent/subagent dispatch is forbidden for ` +
-        'this packet, and PowerShell is the uncovered surface the packet exists to close',
+        `${toolName} is explicitly denied for the control-plane seat: Agent/Task dispatch is forbidden, ` +
+        'PowerShell is the uncovered surface the packet exists to close, and a scripted privileged ' +
+        'seat must never stop to ask the operator a question',
     };
   }
-  return { verdict: 'ALLOW', reason: 'tool is not on the control-plane denial list' };
+  if (toolName.startsWith('mcp__')) {
+    return { verdict: 'DENY', reason: `MCP tool ${toolName} is not authorized for the control-plane seat` };
+  }
+  if (!ALLOWED_TOOLS.includes(toolName)) {
+    // The default-deny line. Every future/unknown tool lands here.
+    return { verdict: 'DENY', reason: `tool ${toolName} is not in the closed control-plane allowlist — default deny` };
+  }
+  return { verdict: 'ALLOW', reason: `${toolName} is in the closed control-plane allowlist` };
 }
 
 /* ------------------------------------------------------------------ Bash policy -------------- */
@@ -105,10 +132,17 @@ export const BASH_ALLOWED_SHAPES = Object.freeze([
   { id: 'git-log', re: /^git log --oneline -\d{1,2}$/ },
   { id: 'git-diff-stat', re: /^git diff --stat$/ },
   { id: 'git-diff-cached-stat', re: /^git diff --cached --stat$/ },
-  { id: 'node-focused-test', re: /^node --test (scripts\/[A-Za-z0-9._\/-]+\.test\.mjs)$/, pathArg: 1, readOnly: true },
+  // AR-1278A F-15: EXACT test commands, never a wildcard. The previous shape allowed
+  // `node --test scripts/<anything>.test.mjs`, and a test file is executable code — `readOnly:true`
+  // described the Bash shape, not what the JavaScript inside it could do. A privileged seat does not
+  // get to run arbitrary repository programs because their filename ends in `.test.mjs`.
+  { id: 'test-bootstrap-suite', re: /^node --test scripts\/control_plane_bootstrap\.test\.mjs$/ },
+  { id: 'test-lifecycle-suite', re: /^node --test scripts\/control-plane-bootstrap\/lifecycle\.test\.mjs$/ },
   { id: 'git-add', re: /^git add ([A-Za-z0-9._\/-]+)$/, pathArg: 1 },
   { id: 'cp-commit', re: /^node scripts\/control-plane-bootstrap\/cp-commit\.mjs --msg-file scripts\/control-plane-bootstrap\/\.cp-commit-msg\.tmp$/ },
-  { id: 'git-push', re: /^git push origin (control-plane\/[a-z0-9.-]+)$/, branchArg: 1 },
+  // AR-1278A F-14: the ONE terminal finalize path. It takes no arguments at all, so there is
+  // nothing for model text to choose.
+  { id: 'cp-finalize', re: /^node scripts\/control-plane-bootstrap\/cp-finalize\.mjs$/ },
 ]);
 
 /**
