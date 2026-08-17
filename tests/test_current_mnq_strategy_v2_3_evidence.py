@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import json
 from datetime import date
 
 import pandas as pd
 
 from research.current_mnq_strategy_v2_3_evidence import build_evidence, gold_counts
-from research.current_mnq_strategy_v2_3_oos import audit_scoreable_contract_provenance
+from research.current_mnq_strategy_v2_3_oos import (
+    apply_contaminated_score_exclusions,
+    audit_scoreable_contract_provenance,
+)
 from research.current_mnq_strategy_v2_3_policy import research_gate, semantics_hash
 
 
@@ -27,6 +29,22 @@ def test_missing_receipts_and_shadow_fail_closed_in_derived_evidence():
     assert ev.architecture_tests_passed == 0
     assert ev.architecture_tests_failed == 1
     assert not research_gate(ev).approved
+
+
+def test_previously_inspected_2026_window_is_mechanically_excluded_from_oos_scores():
+    days = [
+        date(2026, 1, 19),
+        date(2026, 1, 20),
+        date(2026, 3, 16),
+        date(2026, 4, 15),
+        date(2026, 4, 16),
+    ]
+    eligible, audit = apply_contaminated_score_exclusions(days)
+    assert eligible == [date(2026, 1, 19), date(2026, 4, 16)]
+    assert audit["excluded_sessions"] == 3
+    assert {x["session"] for x in audit["excluded"]} == {
+        "2026-01-20", "2026-03-16", "2026-04-15"
+    }
 
 
 def _rth_day(day: str, contract: str) -> pd.DataFrame:
