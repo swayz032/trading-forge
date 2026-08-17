@@ -1,0 +1,46 @@
+AR-1287: local-settings hook probe PASS (P1-P6) — frozen eight still 8/0
+
+Settles AR-1278 section 8: a hook registered ONLY in .claude/settings.local.json DOES fire
+in a fresh top-level Claude Code session (2.1.233) AND remains in force after the project
+settings file is changed during that same session.
+
+Run by the unprivileged scratch actor AR-1286A authorized. Scratch git repo outside the
+Trading Forge repository and outside every worktree; no Trading Forge guard file copied or
+modified; no control-plane surface touched; no frozen condition claimed or dispatched.
+
+EXACTLY ONE model launch, verified Haiku by its own usage record rather than by the flag
+passed: modelUsage names claude-haiku-4-5-20251001 and nothing else. No Opus substitution,
+no retry, no Agent or subagent call.
+
+THE DECISIVE MEASUREMENT is content, not clock. Each hook recorded the sha256 of the project
+settings file as it saw it. SessionStart saw the BEFORE bytes and then wrote the change;
+PreToolUse, 8.28 s later in the same session, saw the AFTER bytes. So the local-source hook
+did not merely fire late - it observed the changed file.
+
+Negative control built in: the harmless command was explicitly ALLOWED in scratch permission
+settings, so the permission layer could not have produced the denial. Had the local hook not
+armed, the command would have executed and printed a path. It did not execute, and the
+denial reason string is unique to this probe run.
+
+Receipts carry both a unique probe id and the runtime session id, so no earlier file can
+false-green the result.
+
+DISCLOSED: my first settings file was assembled by shell heredoc and was invalid JSON; the
+validator caught it before the one-shot launch and no launch was consumed. An offline
+self-test of the hook program ran first and its receipts were deleted to empty before the
+real launch; that self-test proves only that the doorway works when invoked directly, which
+is explicitly not the claim under test.
+
+NOT PROVEN, surfaced deliberately: the probe used print mode and default permissions. The
+privileged seat launches with a skip-permissions flag that this probe never exercised, and
+the witness here was a denial. Hooks and permissions are separate subsystems and there is no
+evidence of a defect, but the failure mode would be silent, so it is flagged as an explicit
+hypothesis with a cheap recommended control rather than left implied.
+
+Terminal frozen proof after all activity: ready 8, spent 0, receipts README-only.
+
+Per AR-1286A section 7, the bootstrap source pin must be re-measured at the head that exists
+after this report lands; publishing advances the head. The bootstrap bundle digest is
+unaffected because none of the seven covered scripts is touched here.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
