@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from datetime import date
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -45,6 +44,7 @@ def green_evidence(**changes):
         shadow_rule_changes=0,
         shadow_duplicate_order_events=0,
         shadow_unreconciled_state_events=0,
+        shadow_missed_first_signal_events=0,
         shadow_signal_parity_mismatches=0,
         personal_device_verified=True,
         realtime_user_hub_verified=True,
@@ -88,9 +88,15 @@ def test_automation_gate_refuses_non_simulated_topstep_account():
     assert "TOPSTEP_SIMULATED_ACCOUNT_NOT_VERIFIED" in result.reasons
 
 
+def test_automation_gate_refuses_missed_first_a_plus():
+    result = policy.live_gate(green_evidence(shadow_missed_first_signal_events=1))
+    assert not result.approved
+    assert "SHADOW_MISSED_FIRST_A_PLUS_SIGNAL" in result.reasons
+
+
 def test_runtime_refuses_github_actions_for_credentialed_operations():
     with pytest.raises(RuntimeError, match="REMOTE_RUNTIME_REFUSE"):
-        locality.require_personal_device("LIVE", {"GITHUB_ACTIONS": "true"})
+        locality.require_personal_device("AUTOMATION", {"GITHUB_ACTIONS": "true"})
     assert locality.require_personal_device("LOCAL", {}).personal_device_candidate
 
 
@@ -150,7 +156,7 @@ def test_contract_windows_cross_march_2026_roll_with_overlap():
 
 
 def _minute_fixture(contract: str, day: str, offset: float) -> pd.DataFrame:
-    idx = pd.date_range(f"{day} 19:30:00+00:00", periods=30, freq="1min")  # 15:30 ET in EDT
+    idx = pd.date_range(f"{day} 19:30:00+00:00", periods=30, freq="1min")
     base = np.arange(30, dtype=float) * 0.25 + 20000.0 + offset
     return pd.DataFrame({
         "datetime": idx, "open": base, "high": base + 0.25, "low": base - 0.25,
@@ -255,46 +261,82 @@ def test_client_tag_is_deterministic_and_changes_with_signal():
     assert broker.client_tag(a) != broker.client_tag(b)
 
 
-def test_shadow_summary_detects_rule_change_and_parity_mismatch(tmp_path):
+def test_partial_shadow_snapshots_do_not_count_as_full_session(tmp_path):
     p = tmp_path / "shadow.jsonl"
     rows = [
-        {"event_type": "DECISION", "session": "2026-08-17", "semantics_sha256": "a", "would_trade": True,
+        {"timestamp_utc": "2026-08-17T14:00:00+00:00", "event_type": "DECISION",
+         "session": "2026-08-17", "semantics_sha256": "a", "would_trade": True,
          "account_simulated": True, "user_hub_connected": True, "market_hub_connected": True,
          "working_orders": 0, "broker_position": 0},
-        {"event_type": "DECISION", "session": "2026-08-18", "semantics_sha256": "b", "would_trade": False,
+        {"timestamp_utc": "2026-08-18T14:00:00+00:00", "event_type": "DECISION",
+         "session": "2026-08-18", "semantics_sha256": "b", "would_trade": False,
          "account_simulated": True, "user_hub_connected": True, "market_hub_connected": True,
          "working_orders": 0, "broker_position": 0},
-        {"event_type": "REPLAY_PARITY", "session": "2026-08-17", "semantics_sha256": "a",
+        {"timestamp_utc": "2026-08-18T20:00:00+00:00", "event_type": "REPLAY_PARITY",
+         "session": "2026-08-17", "semantics_sha256": "a",
          "signal_fingerprint": "x", "replay_signal_fingerprint": "y"},
     ]
     p.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
     s = shadow.summarize_shadow(p)
-    assert s["full_sessions"] == 2
+    assert s["full_sessions"] == 0
     assert s["rule_changes"] == 1
     assert s["signal_parity_mismatches"] == 1
     assert s["simulated_account_all_verified"] is True
 
 
-def test_signed_receipt_is_account_semantics_and_automation_stage_bound(tmp_path):
-    sealed = tmp_path / "sealed.json"; sealed.write_text("sealed")
-    journal = tmp_path / "shadow.jsonl"; journal.write_text("shadow")
+def _signed_test_wrapper(account_id: int, env: dict[str, str]):
+    payload = {
+        "schema_version": 2,
+        "release": "MNQ-V2.3-PC1",
+        "stage": policy.load_spec()["deployment"]["promotion_stage_name"],
+        "account_id": account_id,
+        "semantics_sha256": policy.semantics_hash(),
+        "architecture_receipt_sha256": "a" * 64,
+        "sealed_report_sha256": "b" * 64,
+        "shadow_journal_sha256": "c" * 64,
+        "operations_drill_receipt_sha256": "d" * 64,
+        "evidence": {},
+        "created_utc": "2026-08-17T22:00:00+00:00",
+    }
+    return {"payload": payload, "hmac_sha256": receipt._sign_payload(payload, env)}
+
+
+def test_receipt_verification_is_account_semantics_and_automation_stage_bound(tmp_path):
     out = tmp_path / "receipt.json"
     env = {"MNQ_V23_RELEASE_HMAC_KEY": "k" * 64}
-    wrapper = receipt.create_receipt(green_evidence(), 123, sealed, journal, out, env=env)
-    assert wrapper["payload"]["stage"] == policy.load_spec()["deployment"]["promotion_stage_name"]
+    out.write_text(json.dumps(_signed_test_wrapper(123, env)))
     assert receipt.verify_receipt(out, 123, env=env)["account_id"] == 123
     with pytest.raises(RuntimeError, match="ACCOUNT_MISMATCH"):
         receipt.verify_receipt(out, 124, env=env)
 
 
-def test_signed_receipt_tamper_is_detected(tmp_path):
-    sealed = tmp_path / "sealed.json"; sealed.write_text("sealed")
-    journal = tmp_path / "shadow.jsonl"; journal.write_text("shadow")
+def test_receipt_tamper_is_detected(tmp_path):
     out = tmp_path / "receipt.json"
     env = {"MNQ_V23_RELEASE_HMAC_KEY": "z" * 64}
-    receipt.create_receipt(green_evidence(), 123, sealed, journal, out, env=env)
-    w = json.loads(out.read_text())
-    w["payload"]["account_id"] = 999
-    out.write_text(json.dumps(w))
+    wrapper = _signed_test_wrapper(123, env)
+    wrapper["payload"]["account_id"] = 999
+    out.write_text(json.dumps(wrapper))
     with pytest.raises(RuntimeError, match="SIGNATURE_INVALID"):
         receipt.verify_receipt(out, 999, env=env)
+
+
+def test_public_receipt_creation_cannot_accept_hand_constructed_green_evidence(tmp_path):
+    assert not hasattr(receipt, "create_receipt")
+    arch = tmp_path / "arch.json"
+    sealed = tmp_path / "sealed.json"
+    journal = tmp_path / "shadow.jsonl"
+    drill = tmp_path / "drill.json"
+    arch.write_text(json.dumps({
+        "semantics_sha256": policy.semantics_hash(), "tests": 999, "failures": 0
+    }))
+    sealed.write_text(json.dumps({"seal": {"semantics_sha256": policy.semantics_hash()}, "evidence": {}}))
+    journal.write_text("")
+    drill.write_text(json.dumps({
+        "broker_reconciliation_verified": True, "emergency_flatten_drill_passed": True
+    }))
+    with pytest.raises(RuntimeError, match="AUTOMATION_PROMOTION_REFUSE"):
+        receipt.create_receipt_from_artifacts(
+            account_id=123, architecture_receipt=arch, sealed_report=sealed,
+            shadow_journal=journal, operations_drill_receipt=drill,
+            output=tmp_path / "nope.json", env={"MNQ_V23_RELEASE_HMAC_KEY": "q" * 64},
+        )
