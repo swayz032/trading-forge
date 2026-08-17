@@ -1,14 +1,7 @@
 name: Current MNQ Strategy v2.2 Robustness
 
+# Legacy single-process contaminated-development P&L suite: MANUAL ONLY.
 on:
-  push:
-    branches:
-      - research/current-mnq-strategy-v2-2-robustness
-    paths:
-      - 'research/current_mnq_strategy_v2_2_*.py'
-      - 'research/current_mnq_strategy_v2_2_*.json'
-      - 'tests/test_current_mnq_strategy_v2_2*.py'
-      - '.github/workflows/current-mnq-strategy-v2-2.yml'
   workflow_dispatch:
 
 jobs:
