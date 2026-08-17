@@ -7,7 +7,15 @@ on:
     paths:
       - 'research/current_mnq_strategy_v2_3_*.py'
       - 'research/current_mnq_strategy_v2_3_*.json'
-      - 'tests/test_current_mnq_strategy_v2_3_production.py'
+      - 'tests/test_current_mnq_strategy_v2_3*.py'
+      - '.github/workflows/current-mnq-strategy-v2-3-production-gates.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'research/current_mnq_strategy_v2_3_*.py'
+      - 'research/current_mnq_strategy_v2_3_*.json'
+      - 'tests/test_current_mnq_strategy_v2_3*.py'
       - '.github/workflows/current-mnq-strategy-v2-3-production-gates.yml'
   workflow_dispatch:
 
@@ -31,7 +39,7 @@ jobs:
             tests/test_current_mnq_strategy_v2_2_gold_lifecycle.py \
             tests/test_current_mnq_strategy_v2_2_risk_metrics.py \
             tests/test_current_mnq_strategy_v2_2_engine_final.py \
-            tests/test_current_mnq_strategy_v2_3_production.py \
+            tests/test_current_mnq_strategy_v2_3*.py \
             --junitxml=/tmp/mnq_v23_junit.xml
       - name: Prove CI cannot be used as live broker runtime
         run: |
@@ -48,16 +56,16 @@ jobs:
       - name: Write architecture evidence receipt
         run: |
           PYTHONPATH=. python - <<'PY'
-          import hashlib, json, xml.etree.ElementTree as ET
+          import json, xml.etree.ElementTree as ET
           from pathlib import Path
           from research.current_mnq_strategy_v2_3_policy import semantics_hash, load_spec
           root=ET.parse('/tmp/mnq_v23_junit.xml').getroot()
-          suites=root if root.tag=='testsuites' else [root]
           if root.tag=='testsuites':
               tests=sum(int(x.attrib.get('tests',0)) for x in root)
               failures=sum(int(x.attrib.get('failures',0))+int(x.attrib.get('errors',0)) for x in root)
           else:
-              tests=int(root.attrib.get('tests',0)); failures=int(root.attrib.get('failures',0))+int(root.attrib.get('errors',0))
+              tests=int(root.attrib.get('tests',0))
+              failures=int(root.attrib.get('failures',0))+int(root.attrib.get('errors',0))
           out=Path('research/_mnq_v23_architecture'); out.mkdir(parents=True,exist_ok=True)
           spec=load_spec()
           receipt={
