@@ -35,17 +35,32 @@ Place this as a fenced ```json block in the ruling that authorizes execution. It
     "AGENT-LOGS.md",
     ".claude/rules/",
     "docs/history/"
-  ]
+  ],
+  "bootstrap_source_sha": "<the Worker-1 HEAD you reviewed, 40 hex>",
+  "bootstrap_bundle_sha256": "<the bundle digest at that head, 64 hex>"
 }
 ```
 
-### The three fields that differ from AR-1276C §7's example, and why
+### The fields that differ from AR-1276C §7's example, and why
 
 | field | why it exists |
 |---|---|
 | `authorization_class` | **The discriminator.** AR-1276C §7 prints a complete marker and then says it must be refused. Keying on the schema name alone would execute the ruling that forbade it. The example lacks this field, so its refusal is structural — not prose-recognition. |
-| `authorization_id` | **Replay identity.** One authorization is one execution; the id is claimed on disk before launch. |
-| `ruling_id` + `repo` | **Binding.** The marker is bound to the ruling that carried it, so it cannot be lifted from a graded ruling into a later one, and to one repository. |
+| `authorization_id` | **Replay identity.** One authorization is one execution; the id is claimed O_EXCL **before the first mutation**. |
+| `ruling_id` + `repo` | **Binding.** The marker is bound to the ruling that carried it and to one repository, so it cannot be lifted from a graded ruling into a later one. |
+| `bootstrap_source_sha` + `bootstrap_bundle_sha256` | **AR-1277A F-5.** The authorization pins the exact code that will run. The SHA alone is insufficient (a dirty tree at the right HEAD runs different bytes); the bundle alone is insufficient (it says nothing about ancestry). Both, or neither. |
+
+### How to obtain the two pins
+
+```
+$ node scripts/control-plane-bootstrap/bootstrap.mjs      # --plan is the default, read-only
+  "worker_head":              <- bootstrap_source_sha
+  "bootstrap_bundle_sha256":  <- bootstrap_bundle_sha256
+```
+
+The bundle covers `authorization.mjs`, `bootstrap.mjs`, `bundle.mjs`, `control-plane-guard.mjs`,
+`control-plane-seat-hook.mjs`, `plan.mjs` and `cp-commit.mjs`. One byte in any of them changes the
+digest and the authorization refuses — a test proves this for each covered file individually.
 
 `allowed_paths` is the exact protected-edit allowlist for AR-1278 (AR-1276C §9). The seat's guard is
 **default-deny**: anything not listed is refused. Adjust the list to AR-1278's real scope before
@@ -79,36 +94,71 @@ Model text names none of these. All are computed from `target_packet` plus fixed
 ```
 branch        control-plane/<target_packet lowercased>-guard-repair
 worktree      <repo parent>/wt-control-plane-<target_packet lowercased>
-settings      <worktree>/.claude/settings.json
+seat guard    <worktree>/.claude/settings.local.json          <- immutable to the seat
+seat manifest <worktree>/.claude/control-plane-guard-manifest.json
+repairable    <worktree>/.claude/settings.json                 <- what the packet may fix
 executable    claude                      (fixed; no parameter exists)
-argv          --dangerously-skip-permissions   (fixed)
+argv          --dangerously-skip-permissions --setting-sources user,project,local
 claim         docs/replay-results/control-plane-bootstrap/claims/<authorization_id>.json
 ```
 
 The claim namespace is asserted disjoint from the frozen G2 receipt namespace at plan time, and a
 test proves the assertion bites.
 
+## 3a. EXECUTION ORDER — THE CLAIM IS THE FIRST MUTATION (AR-1277A F-4)
+
+```
+1 verify GPT authority          read-only
+2 verify frozen state           read-only
+3 verify source sha + bundle    read-only
+4 verify no replay              read-only
+5 write claim  (O_EXCL)         <- FIRST MUTATION
+6 create branch + worktree
+7 materialize immutable seat guard
+8 prove doorway (synthetic SessionStart, zero model calls; refuse to launch unless ARMED)
+9 launch once
+```
+
+A failure after step 5 leaves the authorization **SPENT** and needing a new GPT decision. That is
+deliberate: a one-shot that survives a crash is not a one-shot.
+
 ---
 
 ## 4. HOW THE SEAT IS GUARDED — AND THE ONE THING THAT COULD NOT BE PROVEN
 
 The privileged seat is **hands-free but not unguarded**. Its guard binds the way this repository's
-Worker-1 guard demonstrably binds: **from the launch directory**. The bootstrap materializes
-`.claude/settings.json` into the new worktree and launches `claude` with that worktree as cwd.
+Worker-1 guard demonstrably binds: **from the launch directory**. The bootstrap materializes the
+guard into the new worktree's **local** settings source and launches `claude` with that worktree as
+cwd and `--setting-sources user,project,local`.
 
 `--settings` is deliberately **not** relied upon. Whether hooks supplied through it register
-identically cannot be proven without launching a privileged seat, and AR-1276C §8 forbids guessing —
-so the design does not depend on the unproven mechanism. **See the AR-1277 report §"unresolved" for
-the assumptions that remain open.**
+identically cannot be proven without launching a privileged seat, and guessing is forbidden — so the
+design does not depend on it. **The one assumption that remains open is stated in the AR-1278 report
+§8 and must be settled before execution is authorized.**
 
 The seat's guard (`control-plane-guard.mjs` + `control-plane-seat-hook.mjs`) is **default-deny**:
 
 - `Agent`, `Task`, `PowerShell` — denied outright;
+- `Bash` — **default-denied**, with a closed set of exact shapes (read-only git inspection, the
+  focused test runner, `git add <path>` which re-enters the path classifier, the fixed commit helper,
+  and a push restricted to the seat's own branch). Shell composition, redirection, substitution and
+  arbitrary `node -e` / `python -c` / `sh -c` / `npx` are refused before matching;
 - writes — allowed only if they match `allowed_paths`;
-- frozen G2 paths and money-path prefixes — denied categorically, allowlist or not;
+- frozen G2 paths, the seat's own guard registration, the claim namespace, money-path and toolbox
+  prefixes — denied categorically, allowlist or not;
 - unrecognised tool — denied (no fallthrough);
 - identity mismatch, missing manifest, internal error — denied;
-- `SessionStart` emits the start receipt AR-1276C §8 requires.
+- **`SessionStart` writes a durable armed receipt into the worktree's git directory, and every
+  PreToolUse requires it and re-checks it against freshly measured identity.** The git dir is outside
+  the working tree, so no Edit/Write (absolute paths are refused as escaping) and no allowed Bash
+  shape can reach it.
+
+### Identity is MEASURED, never taken from the manifest
+
+The manifest supplies only the **expected** side. Observed values come from `git` and the filesystem:
+repo remote, worktree realpath, branch, HEAD, plus the live frozen-queue digest and receipt state.
+The first implementation built both sides from the manifest — so the check compared a file to itself
+and could never fail (AR-1277A F-1). That is fixed, and a manifest-lie negative proves it.
 
 ---
 

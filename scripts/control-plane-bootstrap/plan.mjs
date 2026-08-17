@@ -32,7 +32,19 @@ export const LAUNCH_EXECUTABLE = 'claude';
  * PreToolUse hooks run BEFORE permission-mode logic and a hook `deny` short-circuits the resolver,
  * so this flag removes the OPERATOR prompt and not the GUARD.
  */
-export const LAUNCH_ARGV = Object.freeze(['--dangerously-skip-permissions']);
+export const LAUNCH_ARGV = Object.freeze(['--dangerously-skip-permissions', '--setting-sources', 'user,project,local']);
+
+/** Passed explicitly so the local source's loading is stated, not inherited from a default. */
+export const SETTING_SOURCES = 'user,project,local';
+
+/**
+ * AR-1278 F-3 — the seat's guard is registered in the LOCAL settings source, and the manifest sits
+ * beside it. Both are in `CATEGORICAL_FORBIDDEN_PATH_TOKENS`, so the seat cannot rewrite what
+ * governs it, while the TRACKED `.claude/settings.json` stays freely repairable — which is the
+ * whole point of the packet.
+ */
+export const SEAT_SETTINGS_REL = '.claude/settings.local.json';
+export const SEAT_MANIFEST_REL = '.claude/control-plane-guard-manifest.json';
 
 export const CLAIM_DIR = 'docs/replay-results/control-plane-bootstrap/claims';
 
@@ -87,12 +99,19 @@ export function buildPlan(marker, measured) {
     proposed_target_worktree: worktreePath,
 
     settings_guard_template: {
-      // Materialized INTO the new worktree. Never an edit of this worktree's own settings.
-      settings_path: `${worktreePath}/.claude/settings.json`,
+      // Materialized INTO the new worktree, in the LOCAL source the seat may not write (F-3).
+      settings_path: `${worktreePath}/${SEAT_SETTINGS_REL}`,
+      manifest_path: `${worktreePath}/${SEAT_MANIFEST_REL}`,
+      repairable_project_settings: `${worktreePath}/.claude/settings.json`,
       hook_doorway: 'scripts/control-plane-bootstrap/control-plane-seat-hook.mjs',
       guard_module: 'scripts/control-plane-bootstrap/control-plane-guard.mjs',
-      binding_mechanism: 'launch-directory cwd (AR-1271A §4 measured); --settings is NOT relied upon',
+      binding_mechanism: 'launch-directory cwd (AR-1271A §4 measured), setting-sources user,project,local',
     },
+
+    bootstrap_source_sha_required: marker.bootstrap_source_sha,
+    bootstrap_source_sha_measured: measured.workerHead,
+    bootstrap_bundle_sha256_required: marker.bootstrap_bundle_sha256,
+    bootstrap_bundle_sha256_measured: measured.bootstrapBundleSha256,
 
     gpt_authority_branch: GPT_AUTHORITY_REF,
     gpt_authority_head: measured.gptAuthorityHead,
@@ -118,19 +137,20 @@ export function buildPlan(marker, measured) {
       is_subagent: false,
     },
 
-    // Ordered exactly as execution would perform them, so a reviewer can check the sequence and
-    // not merely the set. The claim is written BEFORE the launch: a crash after spawning must not
-    // leave the authorization reusable.
+    // Ordered exactly as execution performs them. AR-1278 F-4: every read-only check completes
+    // FIRST, then the O_EXCL claim, and only then the first external mutation. A crash after the
+    // claim leaves the authorization SPENT and needing a new GPT decision — deliberately, because a
+    // reusable one-shot is not a one-shot.
     planned_operations: [
-      { step: 1, op: 'verify_gpt_authority', detail: `fetch ${GPT_AUTHORITY_REF}, confirm newest ruling carries this authorization_id` },
-      { step: 2, op: 'verify_frozen_state', detail: 'queue sha256 + 8 READY + 0 SPENT + receipts README-only' },
-      { step: 3, op: 'verify_no_replay', detail: `no claim exists at ${CLAIM_DIR}/${marker.authorization_id}.json` },
-      { step: 4, op: 'create_branch', detail: `${branch} from ${measured.workerHead}` },
-      { step: 5, op: 'create_worktree', detail: worktreePath },
-      { step: 6, op: 'materialize_seat_guard', detail: `${worktreePath}/.claude/settings.json + control-plane manifest` },
-      { step: 7, op: 'arm_witness', detail: 'run the seat hook directly with a synthetic payload; zero model calls' },
-      { step: 8, op: 'write_claim', detail: `${CLAIM_DIR}/${marker.authorization_id}.json` },
-      { step: 9, op: 'launch_seat', detail: `${LAUNCH_EXECUTABLE} ${LAUNCH_ARGV.join(' ')} (cwd=${worktreePath})` },
+      { step: 1, op: 'verify_gpt_authority', detail: `fetch ${GPT_AUTHORITY_REF}, confirm newest ruling carries this authorization_id`, mutating: false },
+      { step: 2, op: 'verify_frozen_state', detail: 'queue sha256 + 8 READY + 0 SPENT + receipts README-only', mutating: false },
+      { step: 3, op: 'verify_bootstrap_identity', detail: 'worker HEAD equals pinned source sha; recomputed bundle equals pinned bundle', mutating: false },
+      { step: 4, op: 'verify_no_replay', detail: `no claim exists at ${CLAIM_DIR}/${marker.authorization_id}.json`, mutating: false },
+      { step: 5, op: 'write_claim', detail: `O_EXCL ${CLAIM_DIR}/${marker.authorization_id}.json — FIRST mutation`, mutating: true },
+      { step: 6, op: 'create_branch_and_worktree', detail: `${branch} from ${measured.workerHead} at ${worktreePath}`, mutating: true },
+      { step: 7, op: 'materialize_seat_guard', detail: `${SEAT_SETTINGS_REL} + ${SEAT_MANIFEST_REL} (immutable to the seat)`, mutating: true },
+      { step: 8, op: 'prove_doorway', detail: 'run the seat hook with a synthetic SessionStart; zero model calls; refuse to launch unless it reports ARMED', mutating: false },
+      { step: 9, op: 'launch_seat', detail: `${LAUNCH_EXECUTABLE} ${LAUNCH_ARGV.join(' ')} (cwd=${worktreePath})`, mutating: true },
     ],
 
     executed: false,

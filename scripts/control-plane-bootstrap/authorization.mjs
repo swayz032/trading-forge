@@ -55,16 +55,30 @@ export const MARKER_FIELDS = Object.freeze([
   'require_agent_model_executions_before_launch',
   'hands_free',
   'allowed_paths',
+  // AR-1278 F-5: the authorization is pinned to the exact bootstrap code GPT reviewed.
+  'bootstrap_source_sha',
+  'bootstrap_bundle_sha256',
 ]);
 
-/** Paths the control-plane seat may NEVER be authorized to touch, whatever a ruling says. */
+/**
+ * Paths the control-plane seat may NEVER be authorized to touch, whatever a ruling says.
+ *
+ * AR-1278 F-3 adds the guard's own registration surface and its receipt store. The seat's job is to
+ * repair the TRACKED `.claude/settings.json`; the file that registers the seat's OWN guard must sit
+ * outside everything it can write, or the first thing a compromised packet does is disarm itself.
+ *   `A SEAT THAT CAN EDIT ITS OWN REGISTRATION HAS A GUARD ONLY UNTIL IT DISAGREES WITH ONE.`
+ */
 export const CATEGORICAL_FORBIDDEN_PATH_TOKENS = Object.freeze([
   'isolated_fallback_queue_t1.json',
   'isolated-receipts-t1',
   'native_call_manifest_t1.json',
+  'settings.local.json',
+  'control-plane-guard-manifest.json',
+  'control-plane-bootstrap/claims',
 ]);
 
 const HEX64 = /^[0-9a-f]{64}$/;
+const HEX40 = /^[0-9a-f]{40}$/;
 // The optional trailing letter is not cosmetic: AR-1276, AR-1276A, AR-1276B and AR-1276C are four
 // distinct rulings. A pattern that stops at the digits collapses them into one identity.
 const PACKET = /^AR-\d{3,5}[A-Z]?$/;
@@ -231,6 +245,27 @@ export function validateAuthorization(marker, measured) {
         return refuse('forbidden_g2_path', `allowed_paths may never reference the frozen G2 plane: ${p}`);
       }
     }
+  }
+
+  // --- AR-1278 F-5: the code that would run is pinned, not "whatever HEAD is later" -----------
+  if (typeof marker.bootstrap_source_sha !== 'string' || !HEX40.test(marker.bootstrap_source_sha)) {
+    return refuse('bad_bootstrap_source_sha', 'bootstrap_source_sha must be a 40-char lowercase git sha');
+  }
+  if (marker.bootstrap_source_sha !== measured.workerHead) {
+    return refuse(
+      'bootstrap_source_sha_mismatch',
+      `authorization pins ${marker.bootstrap_source_sha}, worker HEAD is ${measured.workerHead}`,
+    );
+  }
+  if (typeof marker.bootstrap_bundle_sha256 !== 'string' || !HEX64.test(marker.bootstrap_bundle_sha256)) {
+    return refuse('bad_bootstrap_bundle', 'bootstrap_bundle_sha256 must be 64 lowercase hex chars');
+  }
+  if (marker.bootstrap_bundle_sha256 !== measured.bootstrapBundleSha256) {
+    // A right-HEAD-but-dirty tree, or an edited covered file, lands here.
+    return refuse(
+      'bootstrap_bundle_mismatch',
+      `authorization pins bundle ${marker.bootstrap_bundle_sha256}, measured ${measured.bootstrapBundleSha256}`,
+    );
   }
 
   // --- replay ---------------------------------------------------------------------------------
