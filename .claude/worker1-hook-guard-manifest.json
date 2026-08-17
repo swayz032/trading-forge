@@ -44,13 +44,13 @@
 
   "g2_precall": {
     "enabled": true,
-    "strict_session": false,
+    "strict_session": true,
     "queue_path": "docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json",
     "receipt_dir": "docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1",
     "native_call_manifest_path": "docs/replay-results/svkm-extraction-certified/grade/opus-v2/native_call_manifest_t1.json",
     "_why_a_native_call_manifest": "AR-1267 §6.2. The queue's task_input_sha256 binds the LOGICAL task; it says nothing about the bytes that reach the model, so a permit for the right condition could accompany a prompt carrying a batch answer, a prior winner or a GPT hint. This artifact was frozen BEFORE any answer exists, derived only from the frozen queue, the frozen benchmark packet and the pinned transcript, and the pre-call guard hash-matches the ACTUAL Agent tool input against it. It is an EXECUTION-layer artifact: it does not select, reorder, add to or remove from the eight-condition queue.",
     "_why_enabled_now": "AR-1265 §5.4. With PreToolUse now registering Agent/Task, a G2-shaped subagent dispatch without a valid durable pre-call permit is refused BEFORE the model call. Post-call refusal cannot un-spend a one-shot attempt.",
-    "_why_strict_session_is_false_here": "AR-1265 §3.2 arms strict mode for the DEDICATED eight-call execution session only, where every Agent/Task dispatch requires a permit and ordinary helper work is simply not allowed. This packet is not that session, and the non-G2 calibration must run BEFORE strict mode is armed rather than as an exemption carved inside it. Flipping this to true is a deliberate act for the execution session, not a default."
+    "_why_strict_session_is_true_now": "AR-1299A §4 authorizes cpb-2026-08-17-0004 for packet AR-1278, the dedicated G2 execution packet. strict_session=true means every Agent/Task dispatch requires a valid frozen-queue permit — no unguarded model calls. Armed by the Phase 1 control-plane seat as the final configuration step before the G2 execution session begins."
   },
 
   "finish": {
