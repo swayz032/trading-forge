@@ -52,10 +52,17 @@ export const LAUNCH_ARGV = Object.freeze(['--dangerously-skip-permissions', '--s
  * finalizer requires (F-17). Every step below is either a fixed command or a path drawn from
  * `marker.allowed_paths` — nothing here is text the model chooses.
  */
+/**
+ * AR-1291A F20 — the ONE fixed path for the transient commit-message file. Exported (not a local
+ * const inside buildPacketPrompt) so control-plane-guard.mjs can categorically refuse staging it
+ * without hand-duplicating the literal string a second place it could drift out of sync.
+ */
+export const COMMIT_MSG_FILE_REL = 'scripts/control-plane-bootstrap/.cp-commit-msg.tmp';
+
 export function buildPacketPrompt(marker) {
   const paths = marker.allowed_paths.map((p) => `  - ${p}`).join('\n');
   const reportDir = 'docs/replay-results/worker-advisor-reports/';
-  const msgFile = 'scripts/control-plane-bootstrap/.cp-commit-msg.tmp';
+  const msgFile = COMMIT_MSG_FILE_REL;
   const transportCmd = 'python scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py';
   return [
     `You are the top-level control-plane / guard-repair seat for packet ${marker.target_packet}, PHASE 1 ONLY.`,
@@ -70,6 +77,9 @@ export function buildPacketPrompt(marker) {
     `5. Write one closeout report for ${marker.target_packet} under ${reportDir} — this is the only report path you may write to.`,
     `6. Write the fixed commit message into ${msgFile} — this is the only commit-message path that exists for you.`,
     '7. Stage only the paths this authorization allows, one at a time, through: git add <path>',
+    `   NEVER stage ${msgFile} itself — it is writable so you can create it, but it must never be`,
+    '   staged; cp-finalize.mjs reads and deletes it directly. The guard refuses that stage attempt',
+    '   categorically, whether or not it is named in allowed_paths.',
     '8. Finalize with exactly: node scripts/control-plane-bootstrap/cp-finalize.mjs',
     '9. Exit. Do not start a conversation, a question, or any further step after finalize returns.',
     '',

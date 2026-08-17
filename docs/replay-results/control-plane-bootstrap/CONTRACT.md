@@ -178,9 +178,11 @@ The seat's guard (`control-plane-guard.mjs` + `control-plane-seat-hook.mjs`) is 
 
 - `Agent`, `Task`, `PowerShell` — denied outright;
 - `Bash` — **default-denied**, with a closed set of exact shapes (read-only git inspection, the
-  focused test runner, `git add <path>` which re-enters the path classifier, the fixed commit helper,
-  and a push restricted to the seat's own branch). Shell composition, redirection, substitution and
-  arbitrary `node -e` / `python -c` / `sh -c` / `npx` are refused before matching;
+  focused test runner, the fixed prompt-transport helper, `git add <path>` which re-enters the path
+  classifier **except the one transient commit-message path, categorically refused for staging even
+  though it is writable (AR-1291A F20)**, the fixed commit helper, and a push restricted to the
+  seat's own branch). Shell composition, redirection, substitution and arbitrary `node -e` /
+  `python -c` / `sh -c` / `npx` are refused before matching;
 - writes — allowed only if they match `allowed_paths`;
 - frozen G2 paths, the seat's own guard registration, the claim namespace, money-path and toolbox
   prefixes — denied categorically, allowlist or not;
@@ -233,6 +235,27 @@ command that did not exist, and left one seat doing two mutually exclusive jobs.
 None of `bootstrap.mjs`, `authorization.mjs`, `cp-finalize.mjs`, `cp-commit.mjs`, `claim-store.mjs`
 or `control-plane-seat-hook.mjs` needed to change to close F-16..F-19 — every fix is a marker-scope
 addition, a prompt-content change, or one new file.
+
+## 4b. AR-1292 — F20/F21: TWO CLOSEOUT-INTEGRITY DEFECTS AR-1290A'S PRE-EXECUTION REVIEW FOUND
+
+- **F20 (transient commit-message file was stageable)** — `.cp-commit-msg.tmp` being in
+  `allowed_paths` (required so Edit/Write can create it) also made `git add
+  scripts/control-plane-bootstrap/.cp-commit-msg.tmp` a legal Bash command, and `cp-finalize.mjs`
+  deleting the working-tree copy does not unstage an already-staged addition — so the transient file
+  could ride into the final commit on a literal reading of "stage the allowed paths." Fixed
+  categorically in the `git-add` Bash shape only (`control-plane-guard.mjs:NEVER_STAGEABLE_PATHS`):
+  the exact path is still writable (Edit/Write unaffected) but can never be staged, whatever
+  `allowed_paths` says. The generated prompt now says so explicitly.
+- **F21 (a failed push could still verify as complete)** — the supervising bootstrap checked only
+  `authorization_id`/`ruling_id`/`target_packet` on the completion receipt, never `pushed`,
+  `commit_sha` shape, `branch`, or whether the supervised launch itself succeeded. A local-only
+  commit (network blip, auth failure, wrong remote) could therefore report `completion_verified:
+  true` while the repair sat unreachable in a worktree nobody reads, on an authorization already
+  permanently spent. Fixed with one pure function, `bootstrap.mjs:verifyCompletion`, requiring launch
+  success, receipt identity match, the derived branch, a real 40-hex commit SHA shape, and
+  `pushed === true` — all conjunctive. `run()`'s result now also carries
+  `completion_failure_reason` so `executed: true` can never be read as success on its own (G4); the
+  CLI reports a distinct non-zero exit when execution happened but verification did not.
 
 ---
 

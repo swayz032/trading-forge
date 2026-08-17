@@ -19,13 +19,14 @@ import { createHash } from 'node:crypto';
 import { validateAuthorization, extractCandidateMarkers, MARKER_SCHEMA } from './control-plane-bootstrap/authorization.mjs';
 import {
   classifyControlPlanePath, classifyControlPlaneTool, classifyControlPlaneBash,
-  verifySeatIdentity, IDENTITY_FIELDS, ALL_TOOLS_MATCHER,
+  verifySeatIdentity, IDENTITY_FIELDS, ALL_TOOLS_MATCHER, NEVER_STAGEABLE_PATHS,
 } from './control-plane-bootstrap/control-plane-guard.mjs';
 import {
   buildPlan, deriveBranch, deriveWorktreeDirName, assertClaimNamespaceDisjoint,
   LAUNCH_EXECUTABLE, LAUNCH_ARGV, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL, buildPacketPrompt,
+  COMMIT_MSG_FILE_REL,
 } from './control-plane-bootstrap/plan.mjs';
-import { run, seatSettingsFor, rulingIdFromFilename } from './control-plane-bootstrap/bootstrap.mjs';
+import { run, seatSettingsFor, rulingIdFromFilename, verifyCompletion } from './control-plane-bootstrap/bootstrap.mjs';
 import { computeBundle, BUNDLE_FILES } from './control-plane-bootstrap/bundle.mjs';
 import { decide, measureObservedIdentity, receiptMatchesLive, verifyAuthorityIndependently } from './control-plane-bootstrap/control-plane-seat-hook.mjs';
 
@@ -882,10 +883,14 @@ function recordingEffects() {
     launchSeatSupervised: (...a) => { calls.push(['launchSeatSupervised', ...a]); return { ok: true, output: 'done' }; },
     readCompletionReceipt: (...a) => {
       calls.push(['readCompletionReceipt', ...a]);
+      // AR-1291A F21/G3: a POSITIVE control must be a genuinely valid receipt — real branch, real
+      // 40-hex commit SHA, pushed:true — not merely present. 'deadbeef' and no branch used to pass
+      // only because the old check never looked at either; that was the false green F21 named.
       return {
         schema: 'CONTROL_PLANE_COMPLETION_RECEIPT_V1',
         authorization_id: 'cpb-2026-08-16-0001', ruling_id: 'AR-1281', target_packet: 'AR-1279',
-        commit_sha: 'deadbeef', changed_paths: ['CLAUDE.md'], pushed: true,
+        branch: deriveBranch('AR-1279', 'cpb-2026-08-16-0001'),
+        commit_sha: 'a'.repeat(40), changed_paths: ['CLAUDE.md'], pushed: true,
       };
     },
   };
@@ -1412,4 +1417,108 @@ test('AR1291-E8 the transport helper never writes into the frozen queue/manifest
 /* AR1291-E13: the prior 65 bootstrap controls above this section are unchanged and re-run as part
  * of this same `node --test scripts/control_plane_bootstrap.test.mjs` invocation — there is no
  * separate suite to keep green, so there is nothing further to assert here. */
+
+/* =============================== AR-1292 G1-G6 — F20/F21 CLOSURE PROOFS ===================== */
+
+test('AR1292-G1 the transient commit-message path is writable but never stageable', () => {
+  // Edit/Write must still ALLOW — the seat has to be able to create the file.
+  const writeVerdict = classifyControlPlanePath(COMMIT_MSG_FILE_REL, [COMMIT_MSG_FILE_REL]);
+  assert.equal(writeVerdict.verdict, 'ALLOW', 'Edit/Write must still allow creating the message file');
+
+  // The exact same path, staged via the git-add Bash shape, must DENY — categorically, not merely
+  // because it happens to be absent from allowedPaths (it is present here, and still denied).
+  const stageVerdict = classifyControlPlaneBash(`git add ${COMMIT_MSG_FILE_REL}`, { allowedPaths: [COMMIT_MSG_FILE_REL] });
+  assert.equal(stageVerdict.verdict, 'DENY');
+  assert.match(stageVerdict.reason, /may never be staged/);
+
+  // An ORDINARY authorized Phase-1 output must still stage normally through the same shape — the
+  // negative bites the one transient path, not `git add` as a whole.
+  const ordinaryVerdict = classifyControlPlaneBash('git add CLAUDE.md', { allowedPaths: ['CLAUDE.md'] });
+  assert.equal(ordinaryVerdict.verdict, 'ALLOW');
+
+  assert.ok(NEVER_STAGEABLE_PATHS.includes(COMMIT_MSG_FILE_REL), 'the constant list must name the exact path the prompt uses');
+});
+
+test('AR1292-G2 the generated prompt states the commit-message file is never staged', () => {
+  const p = buildPacketPrompt(baselineMarker());
+  assert.match(p, /NEVER stage/);
+  assert.match(p, /\.cp-commit-msg\.tmp itself/);
+});
+
+test('AR1292-G3 verifyCompletion is conjunctive: launch + identity + branch + real SHA + pushed, ALL required', () => {
+  const marker = { authorization_id: 'auth-1', ruling_id: 'AR-1', target_packet: 'AR-1' };
+  const branch = 'control-plane/ar-1-guard-repair/auth-1';
+  const validReceipt = () => ({
+    authorization_id: 'auth-1', ruling_id: 'AR-1', target_packet: 'AR-1',
+    branch, commit_sha: 'a'.repeat(40), pushed: true,
+  });
+
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: validReceipt(), marker, branch }), true,
+    'a fully correct receipt with a successful launch must verify TRUE');
+
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: { ...validReceipt(), pushed: false }, marker, branch }), false,
+    'pushed:false must refuse — this is F21\'s exact defect');
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: { ...validReceipt(), pushed: undefined }, marker, branch }), false,
+    'a receipt missing pushed entirely must refuse, not default to true');
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: { ...validReceipt(), commit_sha: 'deadbeef' }, marker, branch }), false,
+    'a non-hex/short commit_sha must refuse');
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: { ...validReceipt(), commit_sha: undefined }, marker, branch }), false,
+    'a missing commit_sha must refuse');
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: { ...validReceipt(), branch: 'wrong-branch' }, marker, branch }), false,
+    'a receipt naming the wrong branch must refuse');
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: { ...validReceipt(), authorization_id: 'someone-elses' }, marker, branch }), false);
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: { ...validReceipt(), ruling_id: 'AR-2' }, marker, branch }), false);
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: { ...validReceipt(), target_packet: 'AR-2' }, marker, branch }), false);
+  assert.equal(verifyCompletion({ launch: { ok: false }, completion: validReceipt(), marker, branch }), false,
+    'a launch failure must refuse regardless of an otherwise-perfect receipt');
+  assert.equal(verifyCompletion({ launch: null, completion: validReceipt(), marker, branch }), false,
+    'a missing launch result must refuse');
+  assert.equal(verifyCompletion({ launch: { ok: true }, completion: null, marker, branch }), false,
+    'a missing completion receipt must refuse');
+});
+
+test('AR1292-G3b END-TO-END: run() surfaces a failed-push completion as unverified, with a reason', () => {
+  const effects = recordingEffects();
+  effects.readCompletionReceipt = (...a) => {
+    effects.calls.push(['readCompletionReceipt', ...a]);
+    return {
+      authorization_id: 'cpb-2026-08-16-0001', ruling_id: 'AR-1281', target_packet: 'AR-1279',
+      branch: deriveBranch('AR-1279', 'cpb-2026-08-16-0001'), commit_sha: 'a'.repeat(40),
+      pushed: false, push_detail: 'remote rejected: non-fast-forward',
+    };
+  };
+  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  assert.equal(result.executed, true, 'the one-shot was attempted — the claim is already spent');
+  assert.equal(result.completion_verified, false, 'a failed push must never verify, even with everything else correct');
+  assert.equal(result.completion_failure_reason, 'completion_receipt_did_not_verify');
+});
+
+test('AR1292-G3c END-TO-END: run() surfaces a launch failure as unverified, distinctly from a bad receipt', () => {
+  const effects = recordingEffects();
+  effects.launchSeatSupervised = (...a) => { effects.calls.push(['launchSeatSupervised', ...a]); return { ok: false, detail: 'claude exited 1' }; };
+  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  assert.equal(result.completion_verified, false);
+  assert.equal(result.completion_failure_reason, 'launch_failed');
+});
+
+test('AR1292-G4 a fully correct end-to-end run verifies TRUE and carries no failure reason', () => {
+  const effects = recordingEffects();
+  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  assert.equal(result.executed, true);
+  assert.equal(result.completion_verified, true);
+  assert.equal(result.completion_failure_reason, null);
+});
+
+test('AR1292-G5 regression: prior end-to-end and identity controls remain green under the stricter check', () => {
+  // Re-assert the exact claim C6b makes, now that recordingEffects()'s default receipt had to
+  // become a genuinely valid one (real branch, real SHA) to keep passing under verifyCompletion —
+  // this is the discriminating proof that the fixture upgrade did not just paper over F21.
+  const effects = recordingEffects();
+  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  assert.equal(result.completion_verified, true);
+  assert.deepEqual(effects.calls.map((c) => c[0]), [
+    'writeClaim', 'createBranchAndWorktree', 'writeSeatGuard',
+    'proveDoorwayInitOnly', 'launchSeatSupervised', 'readCompletionReceipt',
+  ]);
+});
 

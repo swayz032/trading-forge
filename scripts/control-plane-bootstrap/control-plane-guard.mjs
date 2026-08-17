@@ -22,6 +22,23 @@
  */
 
 import { CATEGORICAL_FORBIDDEN_PATH_TOKENS } from './authorization.mjs';
+import { COMMIT_MSG_FILE_REL } from './plan.mjs';
+
+/**
+ * AR-1291A F20 — WRITABLE DOES NOT MEAN STAGEABLE.
+ *
+ * `.cp-commit-msg.tmp` must be in `allowed_paths` so Edit/Write can create it (cp-finalize.mjs
+ * requires it to exist) — but `classifyControlPlanePath` is the SAME function both Edit/Write and
+ * the `git add <path>` Bash shape go through, so putting it in `allowed_paths` also made
+ * `git add scripts/control-plane-bootstrap/.cp-commit-msg.tmp` a legal Bash command. `cp-finalize.mjs`
+ * measures staged paths, then deletes the WORKING-TREE copy of the message file — deleting the file
+ * does not unstage an already-staged addition, so the transient file could ride into the final
+ * commit on a literal reading of "stage the allowed paths," no malicious behaviour required.
+ *
+ * The fix is categorical and specific to the git-add SHAPE, not to the path classifier every other
+ * caller shares — Edit/Write must keep ALLOWing this exact path.
+ */
+export const NEVER_STAGEABLE_PATHS = Object.freeze([COMMIT_MSG_FILE_REL]);
 
 export const CATEGORICAL_DENY_PREFIXES = Object.freeze([
   'src/engine/backtester',
@@ -173,6 +190,15 @@ export function classifyControlPlaneBash(command, ctx = {}) {
 
     if (shape.pathArg) {
       const target = m[shape.pathArg];
+      // AR-1291A F20: this bites ONLY the git-add shape and ONLY the one transient path — an
+      // ordinary authorized path staged through the same shape falls through unaffected.
+      if (shape.id === 'git-add') {
+        const normalizedTarget = normalizeRepoPath(target).toLowerCase();
+        const isNeverStageable = NEVER_STAGEABLE_PATHS.some((p) => normalizeRepoPath(p).toLowerCase() === normalizedTarget);
+        if (isNeverStageable) {
+          return { verdict: 'DENY', reason: `${target} is the transient commit-message file and may never be staged` };
+        }
+      }
       const v = classifyControlPlanePath(target, ctx.allowedPaths);
       // A read-only shape still may not READ into a categorically protected surface.
       if (shape.readOnly && v.verdict === 'ALLOW') return { verdict: 'ALLOW', reason: `${shape.id} on ${target}` };

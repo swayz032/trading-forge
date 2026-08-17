@@ -148,6 +148,36 @@ export function measureState(io) {
   };
 }
 
+/**
+ * AR-1291A F21 — A COMPLETION RECEIPT THAT DID NOT PUSH IS NOT A COMPLETION.
+ *
+ * The prior check compared only `authorization_id`/`ruling_id`/`target_packet`. `cp-finalize.mjs`
+ * already records `pushed`/`commit_sha`/`branch` correctly and exits non-zero on a push failure —
+ * but nothing here required `pushed === true`, so a receipt written after a LOCAL-only commit
+ * (network blip, auth failure, wrong remote) could still verify. That strands the repair in a
+ * worktree nobody reads while the supervisor reports success, on a one-shot authorization that is
+ * already permanently spent. A launch failure must also refuse: `launch.ok` gates everything below
+ * it, so a crashed/refused seat can never reach `completion_verified: true` merely because a stale
+ * receipt happens to sit on disk from an earlier attempt.
+ *
+ * A pure function, not inlined in `run()`, so it is testable without the process/git/fs plumbing —
+ * exactly the class of thing this file's own doc comment says the bootstrap must not require
+ * launching to prove.
+ */
+const COMMIT_SHA40 = /^[0-9a-f]{40}$/;
+
+export function verifyCompletion({ launch, completion, marker, branch }) {
+  if (!launch || launch.ok !== true) return false;
+  if (!completion || typeof completion !== 'object') return false;
+  if (completion.authorization_id !== marker.authorization_id) return false;
+  if (completion.ruling_id !== marker.ruling_id) return false;
+  if (completion.target_packet !== marker.target_packet) return false;
+  if (completion.branch !== branch) return false;
+  if (typeof completion.commit_sha !== 'string' || !COMMIT_SHA40.test(completion.commit_sha)) return false;
+  if (completion.pushed !== true) return false;
+  return true;
+}
+
 function safeRemote(io) {
   try {
     const remote = io.git('config', '--get', 'remote.origin.url');
@@ -373,12 +403,19 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
 
   const launch = effects.launchSeatSupervised(worktreePath, buildLaunchArgv(auth.marker));
   const completion = effects.readCompletionReceipt(worktreePath);
-  const completionOk = Boolean(
-    completion
-    && completion.authorization_id === auth.marker.authorization_id
-    && completion.ruling_id === auth.marker.ruling_id
-    && completion.target_packet === auth.marker.target_packet,
-  );
+  const completionOk = verifyCompletion({ launch, completion, marker: auth.marker, branch });
+
+  // AR-1291A G4 — `executed: true` truthfully means the one-shot execution was ATTEMPTED (the claim
+  // is already spent regardless of outcome); it must never be read as "succeeded." A caller that
+  // only checks `executed` would treat a launch crash or a failed push as a clean closeout, so a
+  // failure here is surfaced as its own field rather than folded into silence.
+  const completionFailureReason = completionOk
+    ? null
+    : !launch?.ok
+      ? 'launch_failed'
+      : !completion
+        ? 'no_completion_receipt'
+        : 'completion_receipt_did_not_verify';
 
   return {
     mode: 'execute',
@@ -390,6 +427,7 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
     launch,
     completion,
     completion_verified: completionOk,
+    completion_failure_reason: completionFailureReason,
   };
 }
 
@@ -425,5 +463,13 @@ if (process.argv[1] && process.argv[1].endsWith('bootstrap.mjs')) {
   if (!result.authorized) {
     process.stderr.write('\nCONTROL-PLANE BOOTSTRAP REFUSED. Expected until a GPT ruling carries an EXECUTABLE marker.\n');
     process.exitCode = 3;
+  } else if (result.executed && !result.completion_verified) {
+    // AR-1291A G4: never let `executed: true` read as success on its own. The authorization is
+    // already permanently spent at this point — this is a report of a stranded repair, not a retry.
+    process.stderr.write(
+      `\nCONTROL-PLANE BOOTSTRAP EXECUTED BUT NOT VERIFIED COMPLETE (${result.completion_failure_reason}). ` +
+      'The authorization is spent. This requires a new GPT decision, not a silent retry.\n',
+    );
+    process.exitCode = 4;
   }
 }
