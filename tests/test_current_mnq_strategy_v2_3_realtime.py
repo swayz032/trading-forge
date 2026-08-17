@@ -9,13 +9,15 @@ from research.current_mnq_strategy_v2_3_realtime import read_realtime_snapshot
 
 
 def write_snapshot(path, *, now, account=123, contract="CON.F.US.MNQ.U26",
-                   user=True, market=True, quote_age=1.0, snapshot_age=0.5,
+                   simulated=True, can_trade=True, user=True, market=True,
+                   quote_age=1.0, snapshot_age=0.5,
                    bid=23000.0, ask=23000.25):
     payload = {
         "schema_version": 1,
         "pid": 99,
         "account_id": account,
         "contract_id": contract,
+        "account": {"id": account, "canTrade": can_trade, "simulated": simulated},
         "snapshot_written_utc": (now - timedelta(seconds=snapshot_age)).isoformat(),
         "user_hub_connected": user,
         "market_hub_connected": market,
@@ -27,12 +29,13 @@ def write_snapshot(path, *, now, account=123, contract="CON.F.US.MNQ.U26",
     path.write_text(json.dumps(payload))
 
 
-def test_realtime_snapshot_requires_fresh_correct_dual_hub_state(tmp_path):
+def test_realtime_snapshot_requires_fresh_correct_dual_hub_simulated_state(tmp_path):
     now = datetime(2026, 8, 17, 22, 0, tzinfo=timezone.utc)
     p = tmp_path / "rt.json"
     write_snapshot(p, now=now)
     s = read_realtime_snapshot(p, 123, "CON.F.US.MNQ.U26", now=now)
     assert s.user_hub_connected and s.market_hub_connected
+    assert s.account_simulated is True
     assert s.feed_age_seconds == pytest.approx(1.0)
     assert s.best_bid == 23000.0 and s.best_ask == 23000.25
 
@@ -60,6 +63,33 @@ def test_realtime_snapshot_binds_exact_account_and_contract(tmp_path):
         read_realtime_snapshot(p, 124, "CON.F.US.MNQ.U26", now=now)
     with pytest.raises(RuntimeError, match="CONTRACT_MISMATCH"):
         read_realtime_snapshot(p, 123, "CON.F.US.MNQ.Z26", now=now)
+
+
+def test_realtime_snapshot_refuses_live_funded_non_simulated_account(tmp_path):
+    now = datetime(2026, 8, 17, 22, 0, tzinfo=timezone.utc)
+    p = tmp_path / "rt.json"
+    write_snapshot(p, now=now, simulated=False)
+    with pytest.raises(RuntimeError, match="TOPSTEP_LFA_PROJECTX_API_PROHIBITED"):
+        read_realtime_snapshot(p, 123, "CON.F.US.MNQ.U26", now=now)
+
+
+def test_realtime_snapshot_refuses_account_without_trade_permission(tmp_path):
+    now = datetime(2026, 8, 17, 22, 0, tzinfo=timezone.utc)
+    p = tmp_path / "rt.json"
+    write_snapshot(p, now=now, can_trade=False)
+    with pytest.raises(RuntimeError, match="REALTIME_ACCOUNT_CANNOT_TRADE"):
+        read_realtime_snapshot(p, 123, "CON.F.US.MNQ.U26", now=now)
+
+
+def test_realtime_snapshot_refuses_missing_account_event(tmp_path):
+    now = datetime(2026, 8, 17, 22, 0, tzinfo=timezone.utc)
+    p = tmp_path / "rt.json"
+    write_snapshot(p, now=now)
+    payload = json.loads(p.read_text())
+    payload["account"] = None
+    p.write_text(json.dumps(payload))
+    with pytest.raises(RuntimeError, match="REALTIME_ACCOUNT_EVENT_NOT_VERIFIED"):
+        read_realtime_snapshot(p, 123, "CON.F.US.MNQ.U26", now=now)
 
 
 def test_realtime_snapshot_refuses_bad_or_off_tick_bbo(tmp_path):
