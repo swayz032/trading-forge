@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from research import current_mnq_strategy_v2_2_engine as e
+from research import current_mnq_strategy_v2_2_engine_runtime as e
 
 
 def ts(s):
@@ -82,6 +82,18 @@ def test_f07_broken_support_is_not_active_support():
     zz = e.zone_state_at(z, bars, ts("2026-03-25 09:15"), p)
     assert zz.state in (e.ZoneState.BROKEN, e.ZoneState.FLIPPED_RETEST)
     assert zz.state != e.ZoneState.ACTIVE_SUPPORT
+
+
+def test_f07_role_flip_changes_side_after_retest():
+    p = e.Params()
+    z = e.Zone("z", "S", 99, 101, 100, 2, .5, .8, .8, .8, .8, .8, .8,
+               ts("2026-03-25 09:00"), ts("2026-03-25 08:00"), state=e.ZoneState.ACTIVE_SUPPORT)
+    idx = pd.DatetimeIndex([ts("2026-03-25 09:05"), ts("2026-03-25 09:10"), ts("2026-03-25 09:15")])
+    bars = pd.DataFrame({"open": [100, 98, 99.5], "high": [100.5, 99, 100.5], "low": [97.5, 97, 98.5],
+                         "close": [98, 98, 99], "atr": [10, 10, 10]}, index=idx)
+    zz = e.zone_state_at(z, bars, ts("2026-03-25 09:20"), p)
+    assert zz.state == e.ZoneState.FLIPPED_RETEST
+    assert zz.side == "R"
 
 
 def test_f08_warmup_blocks_first_60_days():
