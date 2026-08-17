@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "status": "BLOCKING_REAL_USER_NEGATIVE_GOLD_REGISTER",
+  "privacy": "Do not commit private image bytes. Store a SHA256 plus the user-approved semantic reason for rejecting the setup.",
+  "fixtures": [],
+  "required_minimum": 1,
+  "known_gap": "No real user-labeled tempting-but-NO-TRADE chart has been supplied yet. Synthetic negative semantic tests do not satisfy this gate."
+}
