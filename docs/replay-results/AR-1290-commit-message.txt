@@ -1,0 +1,19 @@
+AR-1290: model boundary stop — top-level seat is Opus, packet requires Sonnet 5
+
+AR-1289A authorizes AR-1290 on Sonnet 5 HIGH, explicitly disallows Opus for this packet, and
+explicitly forbids Agent/subagent delegation, which rules out routing the work to a Sonnet
+subagent as a workaround. The ruling's own text names the compliant response for this exact
+situation: stop and report the model boundary rather than silently consuming Opus.
+
+This top-level seat is Opus 5 and has no tool to switch its own model; that is a /model action
+only the operator can take. No implementation attempted, zero files touched, frozen eight
+unchanged (ready 8, spent 0, receipts README-only).
+
+Remaining pre-flight questions are all clean: authorized files exist, prohibited list is
+understood, required proofs are mechanical with no model launch needed for the tests
+themselves, nothing has already landed, no metric/grade mix.
+
+AR-1290 remains authorized to this seat. This is a hold, not a handoff or reassignment; it
+resumes once the top-level model is Sonnet 5.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
