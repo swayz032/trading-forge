@@ -15,7 +15,7 @@
     "stop_points": 17.25,
     "tick_size": 0.25,
     "point_value_usd": 2.0,
-    "live_risk_overlay_may_reduce_size": true,
+    "execution_risk_overlay_may_reduce_size": true,
     "signal_semantics_must_not_change_when_size_is_reduced": true
   },
   "entry_semantics": {
@@ -30,11 +30,7 @@
     "breakout_short": "support_failure_and_acceptance",
     "strong_breakout_confirmation": "completed_5m_displacement_acceptance",
     "weak_breakout_confirmation": "new_completed_15m_close_after_specific_attempt",
-    "candle_story": [
-      "APPROACH",
-      "FIGHT",
-      "DECISION"
-    ],
+    "candle_story": ["APPROACH", "FIGHT", "DECISION"],
     "mixed_two_sided_control": "NO_TRADE",
     "chronology": "first_setup_that_reaches_frozen_A_plus_gate",
     "hindsight_best_of_day_selection": false
@@ -89,11 +85,20 @@
     "rule_change_after_sealed_result_invalidates_that_result": true,
     "development_2026_01_20_to_2026_04_15_is_contaminated_for_rule_selection": true
   },
+  "topstep_compliance": {
+    "projectx_automation_requires_personal_device": true,
+    "vpn_vps_remote_server_refused": true,
+    "projectx_api_on_live_funded_account_refused": true,
+    "realtime_account_must_report_simulated_true": true,
+    "orders_are_final_and_system_must_fail_closed": true
+  },
   "deployment": {
     "default_mode": "SHADOW",
-    "live_requires_signed_promotion_receipt": true,
-    "live_requires_personal_device": true,
-    "remote_server_live_trading_refused": true,
-    "broker_state_must_reconcile_before_each_submission": true
+    "automation_requires_signed_promotion_receipt": true,
+    "automation_requires_personal_device": true,
+    "remote_server_automation_refused": true,
+    "broker_state_must_reconcile_before_each_submission": true,
+    "promotion_stage_name": "TOPSTEPX_API_AUTOMATION_ELIGIBLE",
+    "live_funded_account_stage": "MANUAL_OR_OTHER_TOPSTEP_PERMITTED_EXECUTION_ONLY"
   }
 }
