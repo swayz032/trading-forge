@@ -43,19 +43,41 @@ export const LAUNCH_ARGV = Object.freeze(['--dangerously-skip-permissions', '--s
  * is launched with `-p` and a prompt DERIVED MECHANICALLY from the validated marker — no model text,
  * no operator text, nothing a caller can choose. `-p` is still a top-level process, not a subagent.
  */
+/**
+ * AR-1290A §C — PHASE 1 ONLY. F-18 split the closeout into a privileged Phase 1 (this seat,
+ * Agent/Task categorically denied) and an ordinary Phase 2 (a fresh Worker-1 seat, after GPT
+ * grades Phase 1). This prompt must say so, and must give the seat a completable protocol: the
+ * old five-step version told it to write a report into a directory the marker never authorized
+ * (F-16) and finalize without ever being told how to create the fixed commit-message file the
+ * finalizer requires (F-17). Every step below is either a fixed command or a path drawn from
+ * `marker.allowed_paths` — nothing here is text the model chooses.
+ */
 export function buildPacketPrompt(marker) {
   const paths = marker.allowed_paths.map((p) => `  - ${p}`).join('\n');
+  const reportDir = 'docs/replay-results/worker-advisor-reports/';
+  const msgFile = 'scripts/control-plane-bootstrap/.cp-commit-msg.tmp';
+  const transportCmd = 'python scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py';
   return [
-    `You are the top-level control-plane / guard-repair seat for packet ${marker.target_packet}.`,
+    `You are the top-level control-plane / guard-repair seat for packet ${marker.target_packet}, PHASE 1 ONLY.`,
     `Your authority is ruling ${marker.ruling_id} on origin/external-advisor/gpt-rulings, authorization ${marker.authorization_id}.`,
     '',
     'Do exactly this, in order, and nothing else:',
     `1. Read ${marker.ruling_id} from origin/external-advisor/gpt-rulings and re-verify the packet scope for yourself.`,
     '2. Make only the changes that ruling authorizes, only within these paths:',
     paths,
-    '3. Run the bounded tests the ruling names.',
-    `4. Write the ${marker.target_packet} report to docs/replay-results/worker-advisor-reports/.`,
-    '5. Finalize with exactly: node scripts/control-plane-bootstrap/cp-finalize.mjs',
+    `3. Run the fixed prompt-transport helper, exactly: ${transportCmd}`,
+    '4. Run the bounded tests the ruling names.',
+    `5. Write one closeout report for ${marker.target_packet} under ${reportDir} — this is the only report path you may write to.`,
+    `6. Write the fixed commit message into ${msgFile} — this is the only commit-message path that exists for you.`,
+    '7. Stage only the paths this authorization allows, one at a time, through: git add <path>',
+    '8. Finalize with exactly: node scripts/control-plane-bootstrap/cp-finalize.mjs',
+    '9. Exit. Do not start a conversation, a question, or any further step after finalize returns.',
+    '',
+    'PHASE 2 IS NOT YOURS. The one cheap Agent traversal calibration and the remaining zero-model G2',
+    'controls belong to a fresh, ordinary Worker-1 seat, launched only after GPT grades this Phase 1',
+    'closeout. You are the privileged seat: Agent and Task are categorically denied to you for that',
+    'exact reason, and running the live traversal calibration yourself would require weakening the',
+    'boundary this packet exists to hold.',
     '',
     'Hard rules: never dispatch an Agent or subagent; never use PowerShell; never touch the frozen G2',
     'queue, receipts or native-call manifest; never ask the operator a question — he is not part of',

@@ -139,6 +139,10 @@ export const BASH_ALLOWED_SHAPES = Object.freeze([
   { id: 'test-bootstrap-suite', re: /^node --test scripts\/control_plane_bootstrap\.test\.mjs$/ },
   { id: 'test-lifecycle-suite', re: /^node --test scripts\/control-plane-bootstrap\/lifecycle\.test\.mjs$/ },
   { id: 'git-add', re: /^git add ([A-Za-z0-9._\/-]+)$/, pathArg: 1 },
+  // AR-1291 §A/B — the ONE fixed transport command. No condition, no path, no argument at all:
+  // the regex is a literal, so `... .py foo`, `python -c ...` and any other variant fall through
+  // to the default deny below, exactly like every other exact-shape entry in this table.
+  { id: 'g2-prompt-transport', re: /^python scripts\/control-plane-bootstrap\/materialize-g2-prompt-transport\.py$/ },
   { id: 'cp-commit', re: /^node scripts\/control-plane-bootstrap\/cp-commit\.mjs --msg-file scripts\/control-plane-bootstrap\/\.cp-commit-msg\.tmp$/ },
   // AR-1278A F-14: the ONE terminal finalize path. It takes no arguments at all, so there is
   // nothing for model text to choose.

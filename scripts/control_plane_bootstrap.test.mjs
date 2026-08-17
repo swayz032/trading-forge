@@ -1181,3 +1181,235 @@ test('AR1290-C3 repository isolation: a different repository must not see or acc
   }
 });
 
+/* =============================== AR-1291 E1-E13 — F-16..F-19 CLOSURE PROOFS ================= */
+
+test('AR1291-E1 report path authorized when named; unrelated replay-result paths denied', () => {
+  const allowed = ['docs/replay-results/worker-advisor-reports/'];
+  const ok = classifyControlPlanePath('docs/replay-results/worker-advisor-reports/AR-1291-report.md', allowed);
+  assert.equal(ok.verdict, 'ALLOW');
+  const bad = classifyControlPlanePath('docs/replay-results/some-other-dir/file.md', allowed);
+  assert.equal(bad.verdict, 'DENY');
+});
+
+test('AR1291-E2 fixed commit-message temp path authorized; sibling scripts remain denied for writes', () => {
+  const allowed = ['scripts/control-plane-bootstrap/.cp-commit-msg.tmp'];
+  const ok = classifyControlPlanePath('scripts/control-plane-bootstrap/.cp-commit-msg.tmp', allowed);
+  assert.equal(ok.verdict, 'ALLOW');
+  const sibling = classifyControlPlanePath('scripts/control-plane-bootstrap/bootstrap.mjs', allowed);
+  assert.equal(sibling.verdict, 'DENY');
+});
+
+test('AR1291-E3 fixed transport helper command allowed; variants denied', () => {
+  const cmd = 'python scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py';
+  assert.equal(classifyControlPlaneBash(cmd, {}).verdict, 'ALLOW');
+  assert.equal(classifyControlPlaneBash(`${cmd} foo`, {}).verdict, 'DENY');
+  assert.equal(classifyControlPlaneBash('python -c "print(1)"', {}).verdict, 'DENY');
+  assert.equal(classifyControlPlaneBash('python scripts/other_script.py', {}).verdict, 'DENY');
+  assert.equal(classifyControlPlaneBash(`${cmd} > out.txt`, {}).verdict, 'DENY');
+});
+
+test('AR1291-E9 generated packet prompt contains report + message + staging + finalize sequence', () => {
+  const p = buildPacketPrompt(baselineMarker());
+  assert.match(p, /docs\/replay-results\/worker-advisor-reports\//);
+  assert.match(p, /\.cp-commit-msg\.tmp/);
+  assert.match(p, /git add <path>/);
+  assert.match(p, /cp-finalize\.mjs/);
+  assert.match(p, /materialize-g2-prompt-transport\.py/);
+});
+
+test('AR1291-E10 generated packet prompt explicitly forbids Agent/Task calibration in Phase 1', () => {
+  const p = buildPacketPrompt(baselineMarker());
+  assert.match(p, /PHASE 2 IS NOT YOURS/);
+  assert.match(p, /Agent and Task are categorically denied/);
+  assert.match(p, /never dispatch an Agent or subagent/);
+});
+
+test('AR1291-E11 control-plane Agent/Task/PowerShell DENY regression remains green', () => {
+  for (const tool of ['Agent', 'Task', 'PowerShell']) {
+    assert.equal(classifyControlPlaneTool(tool).verdict, 'DENY', `${tool} must remain denied`);
+  }
+});
+
+test('AR1291-E12 bundle covers the new transport helper, asserted from the live export', () => {
+  assert.ok(BUNDLE_FILES.includes('scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py'),
+    'the fixed transport helper decides what the seat may read/verify/write and MUST be pinned');
+  const mutated = (rel) => (rel === 'scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py'
+    ? Buffer.concat([fakeBundleReader(rel), Buffer.from('.')])
+    : fakeBundleReader(rel));
+  assert.notEqual(computeBundle(mutated).bundle_sha256, BUNDLE_SHA);
+});
+
+/**
+ * E4-E8 exercise the REAL Python transport helper against a REAL, disposable fixture repository —
+ * copies of the actual bootstrap files plus minimal stub leaves for the two symbols
+ * `g2d_freeze_native_calls.py` imports by name, so nothing here retypes the canonical construction
+ * and nothing here touches the real Trading Forge tree (AR-1290A §E: disposable fixtures only).
+ */
+async function buildG2Fixture() {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+
+  const dir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-g2transport-'));
+  const sha = (s) => createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
+
+  const SYSTEM_PROMPT = 'FIXTURE SYSTEM PROMPT — AR-1291 disposable fixture, not the real locator prompt.';
+  const buildUserMessage = (transcript, condition) => `TRANSCRIPT:${transcript}\nCONDITION:${condition}`;
+  const templateProbe = buildUserMessage('<TRANSCRIPT>', '<CONDITION>');
+  const transcript = 'FIXTURE TRANSCRIPT BODY.';
+
+  const mk = (rel) => {
+    const abs = pathMod.join(dir, rel);
+    fs.mkdirSync(pathMod.dirname(abs), { recursive: true });
+    return abs;
+  };
+  const write = (rel, content) => fs.writeFileSync(mk(rel), content, 'utf8');
+
+  // Real bootstrap files, copied unmodified — proves the helper reuses the REAL construction path.
+  fs.mkdirSync(pathMod.join(dir, 'scripts', 'control-plane-bootstrap'), { recursive: true });
+  fs.copyFileSync(
+    pathMod.join(process.cwd(), 'scripts', 'g2d_freeze_native_calls.py'),
+    mk('scripts/g2d_freeze_native_calls.py'),
+  );
+  fs.copyFileSync(
+    pathMod.join(process.cwd(), 'scripts', 'control-plane-bootstrap', 'materialize-g2-prompt-transport.py'),
+    mk('scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py'),
+  );
+
+  // Minimal stub leaves for the two symbols g2d_freeze_native_calls.py imports BY NAME — not the
+  // real (heavy) locator, the same role this suite's fakeIo plays for git elsewhere.
+  write('src/__init__.py', '');
+  write('src/engine/__init__.py', '');
+  write('src/engine/extraction/__init__.py', '');
+  write(
+    'src/engine/extraction/anchor_locator.py',
+    `_SYSTEM_PROMPT = ${JSON.stringify(SYSTEM_PROMPT)}\n\n\ndef _build_user_message(transcript, condition_text):\n    return f"TRANSCRIPT:{transcript}\\nCONDITION:{condition_text}"\n`,
+  );
+  write(
+    'src/engine/extraction/isolated_attempt_receipt.py',
+    'import re\n\n\ndef _safe_name(condition_ref):\n    return re.sub(r"[^A-Za-z0-9_.-]", "_", condition_ref)\n',
+  );
+
+  write('docs/replay-results/fixture-transcript.txt', transcript);
+
+  const queue = {
+    law_version: 'fixture-v1',
+    input_route_version: 'fixture-v1',
+    pinned_inputs: { transcript_sha256: sha(transcript) },
+    queue: [
+      { condition_ref: 'cond_a', condition_text: 'Condition A text.', task_input_sha256: 'a'.repeat(64) },
+      { condition_ref: 'cond_b', condition_text: 'Condition B text.', task_input_sha256: 'b'.repeat(64) },
+    ],
+  };
+  const queueRel = 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json';
+  write(queueRel, JSON.stringify(queue, null, 2));
+
+  const bench = {
+    packet_sha256: 'fixture',
+    prompt: { system_prompt_sha256: sha(SYSTEM_PROMPT), user_message_template_sha256: sha(templateProbe) },
+    input: { transcript_path: 'docs/replay-results/fixture-transcript.txt', transcript_sha256: sha(transcript) },
+  };
+  write('docs/replay-results/svkm-extraction-certified/benchmark/benchmark_packet_v1.json', JSON.stringify(bench, null, 2));
+
+  const runPython = (args) => {
+    try {
+      const out = cp.execFileSync('python', args, { cwd: dir, encoding: 'utf8' });
+      return { status: 0, stdout: out, stderr: '' };
+    } catch (error) {
+      return { status: error.status ?? 1, stdout: error.stdout ?? '', stderr: error.stderr ?? String(error.message) };
+    }
+  };
+
+  // Generate the manifest FOR REAL via the real (copied) emitter — never hand-typed.
+  const freeze = runPython(['scripts/g2d_freeze_native_calls.py', '--write']);
+  if (freeze.status !== 0) {
+    throw new Error(`fixture setup: g2d_freeze_native_calls.py --write failed: ${freeze.stderr || freeze.stdout}`);
+  }
+
+  const manifestRel = 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/native_call_manifest_t1.json';
+  return { dir, fs, pathMod, runPython, manifestRel, queueRel, expectedRefs: ['cond_a', 'cond_b'] };
+}
+
+test('AR1291-E4/E5 the transport helper materializes exactly N outputs + index, each hashed to the frozen manifest', async () => {
+  const { dir, fs, pathMod, runPython, manifestRel, expectedRefs } = await buildG2Fixture();
+  try {
+    const result = runPython(['scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py']);
+    assert.equal(result.status, 0, `expected success, got: ${result.stderr || result.stdout}`);
+
+    const manifest = JSON.parse(fs.readFileSync(pathMod.join(dir, manifestRel), 'utf8'));
+    const outDir = pathMod.join(dir, 'docs/replay-results/g2d-prompt-transport');
+    const indexPath = pathMod.join(outDir, 'index.json');
+    assert.ok(fs.existsSync(indexPath), 'index.json must be written');
+    const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    assert.equal(index.row_count, expectedRefs.length);
+
+    const files = fs.readdirSync(outDir).filter((f) => f.endsWith('.prompt.txt'));
+    assert.equal(files.length, expectedRefs.length, 'exactly one prompt file per frozen condition, no more');
+
+    for (const row of manifest.calls) {
+      const indexRow = index.rows.find((r) => r.condition_ref === row.condition_ref);
+      assert.ok(indexRow, `index must carry ${row.condition_ref}`);
+      const bytes = fs.readFileSync(pathMod.join(outDir, indexRow.filename));
+      const gotSha = createHash('sha256').update(bytes).digest('hex');
+      assert.equal(gotSha, row.native_prompt_sha256, `${row.condition_ref} prompt bytes must hash to the frozen native_prompt_sha256`);
+      assert.equal(bytes.toString('utf8').length, row.native_prompt_char_count, `${row.condition_ref} char count must match the frozen value`);
+    }
+
+    // Idempotent rerun: byte-identical inputs, still success, nothing refused.
+    const rerun = runPython(['scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py']);
+    assert.equal(rerun.status, 0, 'a rerun against unchanged inputs must succeed idempotently');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('AR1291-E6 mutation of one frozen prompt hash is detected and refuses — nothing partial is written', async () => {
+  const { dir, fs, pathMod, runPython, manifestRel } = await buildG2Fixture();
+  try {
+    const manifestPath = pathMod.join(dir, manifestRel);
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest.calls[0].native_prompt_sha256 = 'f'.repeat(64);
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+
+    const result = runPython(['scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py']);
+    assert.notEqual(result.status, 0, 'a mutated frozen hash must refuse, not silently materialize');
+    const outDir = pathMod.join(dir, 'docs/replay-results/g2d-prompt-transport');
+    assert.ok(!fs.existsSync(outDir), 'a refusal must write NOTHING — not even the unaffected row');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('AR1291-E7 missing native-call manifest refuses before any output', async () => {
+  const { dir, fs, pathMod, runPython, manifestRel } = await buildG2Fixture();
+  try {
+    fs.rmSync(pathMod.join(dir, manifestRel));
+    const result = runPython(['scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py']);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /refused/);
+    const outDir = pathMod.join(dir, 'docs/replay-results/g2d-prompt-transport');
+    assert.ok(!fs.existsSync(outDir));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('AR1291-E8 the transport helper never writes into the frozen queue/manifest namespaces', async () => {
+  const { dir, fs, pathMod, runPython, manifestRel, queueRel } = await buildG2Fixture();
+  try {
+    const hashOf = (rel) => createHash('sha256').update(fs.readFileSync(pathMod.join(dir, rel))).digest('hex');
+    const before = { queue: hashOf(queueRel), manifest: hashOf(manifestRel) };
+    const result = runPython(['scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py']);
+    assert.equal(result.status, 0, `expected success, got: ${result.stderr}`);
+    const after = { queue: hashOf(queueRel), manifest: hashOf(manifestRel) };
+    assert.deepEqual(after, before, 'the frozen queue and manifest bytes must be byte-identical after a run');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* AR1291-E13: the prior 65 bootstrap controls above this section are unchanged and re-run as part
+ * of this same `node --test scripts/control_plane_bootstrap.test.mjs` invocation — there is no
+ * separate suite to keep green, so there is nothing further to assert here. */
+

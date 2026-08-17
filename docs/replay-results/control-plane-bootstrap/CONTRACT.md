@@ -34,7 +34,10 @@ Place this as a fenced ```json block in the ruling that authorizes execution. It
     "CLAUDE.md",
     "AGENT-LOGS.md",
     ".claude/rules/",
-    "docs/history/"
+    "docs/history/",
+    "docs/replay-results/g2d-prompt-transport/",
+    "docs/replay-results/worker-advisor-reports/",
+    "scripts/control-plane-bootstrap/.cp-commit-msg.tmp"
   ],
   "bootstrap_source_sha": "<the Worker-1 HEAD you reviewed, 40 hex>",
   "bootstrap_bundle_sha256": "<the bundle digest at that head, 64 hex>"
@@ -60,11 +63,11 @@ $ node scripts/control-plane-bootstrap/bootstrap.mjs      # --plan is the defaul
 
 🛑 **This prose has gone stale twice already (AR-1288A §2 caught the first drift) — the definitive
 list is `BUNDLE_FILES` in `scripts/control-plane-bootstrap/bundle.mjs`, never this paragraph.** As
-of AR-1290 it covers nine files: `authorization.mjs`, `bootstrap.mjs`, `bundle.mjs`,
-`claim-store.mjs`, `control-plane-guard.mjs`, `control-plane-seat-hook.mjs`, `plan.mjs`,
-`cp-commit.mjs` and `cp-finalize.mjs`. One byte in any of them changes the digest and the
-authorization refuses — a test proves this for each covered file individually, generated from the
-live export rather than hand-counted (`AR1290-C8`, `C9`).
+of AR-1291 it covers ten files: `authorization.mjs`, `bootstrap.mjs`, `bundle.mjs`,
+`claim-store.mjs`, `control-plane-guard.mjs`, `control-plane-seat-hook.mjs`,
+`materialize-g2-prompt-transport.py`, `plan.mjs`, `cp-commit.mjs` and `cp-finalize.mjs`. One byte in
+any of them changes the digest and the authorization refuses — a test proves this for each covered
+file individually, generated from the live export rather than hand-counted (`AR1290-C8`, `C9`).
 
 `allowed_paths` is the exact protected-edit allowlist for AR-1278 (AR-1276C §9). The seat's guard is
 **default-deny**: anything not listed is refused. Adjust the list to AR-1278's real scope before
@@ -194,6 +197,42 @@ The manifest supplies only the **expected** side. Observed values come from `git
 repo remote, worktree realpath, branch, HEAD, plus the live frozen-queue digest and receipt state.
 The first implementation built both sides from the manifest — so the check compared a file to itself
 and could never fail (AR-1277A F-1). That is fixed, and a manifest-lie negative proves it.
+
+---
+
+## 4a. AR-1291 — WHAT MADE THE PLAN EXECUTABLE (F-16..F-19)
+
+AR-1290A's pre-execution review found the plan the privileged seat would receive could not
+actually be completed even after the AR-1289A claim-store repair: it told the seat to write a
+report and a commit-message file into paths no marker authorized, told it to run a prompt-transport
+command that did not exist, and left one seat doing two mutually exclusive jobs.
+
+- **F-16 (report path)** — `buildPacketPrompt()` now names `docs/replay-results/worker-advisor-reports/`
+  explicitly as the one report path, and that path is in the marker template above. The mechanism
+  is the ordinary one: `classifyControlPlanePath` allows a write only when it matches
+  `marker.allowed_paths` — nothing new was added to the guard itself.
+- **F-17 (commit-message path)** — same mechanism, same fix: `scripts/control-plane-bootstrap/.cp-commit-msg.tmp`
+  is now in the marker template, and the prompt tells the seat to write it as its own numbered step
+  before staging.
+- **F-18 (privileged seat vs. Agent traversal)** — architecturally resolved by GPT, not by this
+  packet: the closeout is two phases. **Phase 1** (this privileged seat: repair/arm, run the fixed
+  transport helper, materialize the report, finalize, exit — Agent/Task remain categorically denied)
+  and **Phase 2** (a fresh *ordinary* Worker-1 seat, launched only after GPT grades Phase 1: the one
+  cheap non-G2 Agent traversal calibration, the remaining zero-model G2 controls, re-check
+  frozen 8/0, report back). `buildPacketPrompt()` states this split explicitly so the model does not
+  have to infer it.
+- **F-19 (exact prompt transport)** — `scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py`
+  is the one fixed, no-argument CLI the guard allows (`control-plane-guard.mjs` BASH_ALLOWED_SHAPES,
+  id `g2-prompt-transport`). It reuses `g2d_freeze_native_calls.py`'s canonical prompt construction
+  BY IMPORT — `_SYSTEM_PROMPT`, `_build_user_message`, `PROMPT_JOINER` — never retypes a template,
+  re-verifies every row against the frozen `native_call_manifest_t1.json` before any byte is
+  written, and writes only under `docs/replay-results/g2d-prompt-transport/` (also now in the marker
+  template). It is transport, not authority: it cannot select a condition, cannot accept a caller
+  path, and refuses closed — before any output — on a missing/mismatched manifest row.
+
+None of `bootstrap.mjs`, `authorization.mjs`, `cp-finalize.mjs`, `cp-commit.mjs`, `claim-store.mjs`
+or `control-plane-seat-hook.mjs` needed to change to close F-16..F-19 — every fix is a marker-scope
+addition, a prompt-content change, or one new file.
 
 ---
 
