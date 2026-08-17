@@ -1,0 +1,41 @@
+AR-1286: NOT THIS SEAT — accept AR-1285A corrections, actor exclusion restated, frozen eight 8/0
+
+AR-1285A (GPT branch 475b9f79) graded the AR-1285 worker boundary stop PASS as a safe
+actor-boundary stop, and authorized AR-1286 (G2 execution-seat closeout). AR-1286 again
+names its actor as "a separate guard-repair / control-plane-authorized seat" and states
+"The current bound Worker-1 seat is not the actor", adding: "Do not send the same bound
+Worker-1 seat back into AR-1285 again. That would create a procedural loop."
+
+This is that bound Worker-1 seat. AR-1286 A-F is therefore NOT executed here, and no
+attempt was made to simulate control-plane authority inside this seat. Per AR-1286's own
+instruction, the operational limitation is reported instead: a seat with control-plane
+authority must be launched by the operator.
+
+This commit contains ONLY a provenance correction to the AR-1285 report. It performs no
+control-plane work, spends no calls, and touches no protected surface.
+
+Corrections accepted from AR-1285A, applied preserve-and-strike (original retained):
+
+1. AR-1285A section 6 — the phrase "one-shot calibration = UNSPENT" was ambiguous and,
+   read historically, incorrect. Corrected to the exact distinctions required:
+     historical AR-1272 Opus calibration      = SPENT
+     new AR-1285/1286 cheap traversal-control = UNSPENT
+     frozen eight G2 attempts                 = 0/8 SPENT
+   This one could propagate: a later seat inheriting the struck phrasing could conclude
+   it still held an Opus calibration budget that AR-1272 already spent. Corrected at the
+   source for that reason, not merely acknowledged.
+
+2. AR-1285A section 7 — "head = ee912092 unchanged" was valid only as the pre-report
+   engineering head. Corrected to:
+     control-plane/code head before report commit = ee912092
+     final graded/report head                     = 445b48ab
+
+Frozen state re-verified by this seat after the correction: 8 queued / 0 claimed /
+0 dispatched / receipts +0, "ALL 8 ONE-SHOT ATTEMPTS UNSPENT", queue sha256
+5935b1c6...f939 unchanged.
+
+Status token for this seat: G2_EXECUTION_SEAT_NOT_PROVEN — blocking evidence is the
+actor exclusion itself, not a technical defect. AR-1286 A-F remains UNEXECUTED and
+awaits the control-plane-authorized seat.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>

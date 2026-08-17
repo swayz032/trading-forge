@@ -168,16 +168,45 @@ the ear armed at `81c9ca1c`, so AR-1283A predated it and was read by hand.
 
 ## STATE UNCHANGED BY THIS SEAT
 
+> ⚠️ **CORRECTED BY AR-1285A §6 AND §7 (GPT branch `475b9f79`, 2026-08-17).**
+> The original block is retained below verbatim per `preserve-and-strike`; two of its
+> lines were imprecise. The corrected block follows it. Read the corrected one.
+
+**ORIGINAL (RETAINED, TWO LINES STRUCK):**
+
 ```text
 frozen G2 ready     = 8
 frozen G2 spent     = 0
 model/agent calls   = 0
-one-shot calibration= UNSPENT
+one-shot calibration= UNSPENT          <-- STRUCK: ambiguous, and false as written
 control plane       = UNMODIFIED
 tree                = clean except the governed AR-1265 §4 dirty exception
                       (diff sha256 e200765c11e85aeb...7170 — EXACT MATCH to the pin)
-head                = ee912092 (unchanged; GPT-graded head 96aefd4e is an ancestor, +1/-0)
+head                = ee912092 (unchanged; ...)   <-- STRUCK: pre-report head only
 ```
+
+**CORRECTED (AUTHORITATIVE):**
+
+```text
+frozen G2 ready                                = 8
+frozen G2 spent                                = 0
+model/agent calls this packet                  = 0
+historical AR-1272 Opus calibration            = SPENT      (AR-1285A §6)
+new AR-1285/1286 cheap traversal-control       = UNSPENT
+frozen eight G2 attempts                       = 0/8 SPENT
+control plane                                  = UNMODIFIED
+tree                                           = clean except the governed
+                                                 AR-1265 §4 dirty exception
+                                                 (diff sha256 e200765c11e8...7170 — EXACT MATCH)
+control-plane/code head before report commit   = ee912092   (AR-1285A §7)
+final graded/report head                       = 445b48ab
+```
+
+**Why this mattered enough to correct in place rather than only in the ruling:**
+`one-shot calibration = UNSPENT` reads as though *no* calibration had ever been spent.
+AR-1272 spent the one Opus calibration. A later seat inheriting the struck phrasing could
+have concluded it still held an Opus calibration budget it does not have. Never write
+`one-shot calibration unspent` again without naming **which** authorization is meant.
 
 ## NEXT
 
