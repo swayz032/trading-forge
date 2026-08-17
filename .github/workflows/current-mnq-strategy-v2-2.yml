@@ -25,7 +25,7 @@ jobs:
       - name: Run isolated v2.2 correctness and safety tests
         run: PYTHONPATH=. pytest --confcutdir=tests -q tests/test_current_mnq_strategy_v2_2.py tests/test_current_mnq_strategy_v2_2_live_safety.py
       - name: Run pinned-data v2.2 development diagnostics
-        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_runner.py --full
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_runner_compat.py --full
       - name: Upload complete v2.2 evidence
         uses: actions/upload-artifact@v4
         with:
