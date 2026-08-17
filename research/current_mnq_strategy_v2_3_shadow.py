@@ -3,7 +3,8 @@
 
 Shadow mode never submits an order. A session counts as a full proof session only
 when health/reconciliation heartbeats continuously cover the execution window.
-A single good snapshot can never masquerade as a full day.
+Each would-trade decision preserves the contemporaneous BBO + decision payload so
+end-of-day replay can reproduce the exact causal question without future bars.
 """
 from __future__ import annotations
 
@@ -41,20 +42,23 @@ class ShadowEvent:
     market_hub_connected: bool | None = None
     broker_position: int | None = None
     working_orders: int | None = None
+    best_bid: float | None = None
+    best_ask: float | None = None
     signal_fingerprint: str | None = None
     replay_signal_fingerprint: str | None = None
     execution_fingerprint: str | None = None
     replay_execution_fingerprint: str | None = None
+    decision_payload: dict | None = None
     note: str | None = None
 
 
 def signal_fingerprint(payload: dict) -> str:
-    """Semantic/setup identity, deliberately independent of market fill price."""
+    """Semantic/setup identity, independent of BBO fill and evolving dataset hash."""
     keys = (
         "session", "signal_time", "confirmed_time", "actionable_time", "side", "setup",
         "reason", "premarket_primary", "premarket_structure", "premarket_location",
         "entry_location", "location_id", "target_source", "path_reason", "contract_id",
-        "engine_version", "semantics_sha256", "dataset_sha256",
+        "engine_version", "semantics_sha256",
     )
     normalized = {k: payload.get(k) for k in keys}
     raw = json.dumps(normalized, sort_keys=True, separators=(",", ":"), default=str).encode()
@@ -62,7 +66,7 @@ def signal_fingerprint(payload: dict) -> str:
 
 
 def execution_fingerprint(payload: dict) -> str:
-    """Execution binding identity; replay can match this using the recorded BBO."""
+    """Execution binding identity; replay matches it using the recorded BBO."""
     keys = (
         "session", "side", "setup", "reference_entry", "stop", "target",
         "target_points", "reference_source", "contract_id", "semantics_sha256",
@@ -93,6 +97,7 @@ class ShadowJournal:
                          account_simulated: bool, feed_age_seconds: float,
                          user_hub_connected: bool, market_hub_connected: bool,
                          broker_position: int, working_orders: int,
+                         best_bid: float | None = None, best_ask: float | None = None,
                          note: str | None = None) -> None:
         if account_simulated is not True:
             raise RuntimeError("SHADOW_TOPSTEP_NON_SIMULATED_ACCOUNT_REFUSE")
@@ -104,14 +109,16 @@ class ShadowJournal:
             user_hub_connected=bool(user_hub_connected),
             market_hub_connected=bool(market_hub_connected),
             broker_position=int(broker_position), working_orders=int(working_orders),
-            note=note,
+            best_bid=best_bid, best_ask=best_ask, note=note,
         ))
 
     def record_snapshot(self, session: str, *, would_trade: bool, decision: dict | None,
                         contract_id: str, account_simulated: bool,
                         feed_age_seconds: float, user_hub_connected: bool,
                         market_hub_connected: bool, broker_position: int,
-                        working_orders: int, note: str | None = None) -> None:
+                        working_orders: int, best_bid: float | None = None,
+                        best_ask: float | None = None,
+                        note: str | None = None) -> None:
         if account_simulated is not True:
             raise RuntimeError("SHADOW_TOPSTEP_NON_SIMULATED_ACCOUNT_REFUSE")
         setup_fp = signal_fingerprint(decision) if decision else None
@@ -125,7 +132,9 @@ class ShadowJournal:
             user_hub_connected=bool(user_hub_connected),
             market_hub_connected=bool(market_hub_connected),
             broker_position=int(broker_position), working_orders=int(working_orders),
-            signal_fingerprint=setup_fp, execution_fingerprint=exec_fp, note=note,
+            best_bid=best_bid, best_ask=best_ask,
+            signal_fingerprint=setup_fp, execution_fingerprint=exec_fp,
+            decision_payload=dict(decision) if decision else None, note=note,
         ))
 
     def record_replay_parity(self, session: str, live_fingerprint: str | None,
@@ -204,7 +213,10 @@ def summarize_shadow(path: str | Path) -> dict:
     for r in health:
         by_session.setdefault(str(r.get("session")), []).append(r)
     full = {s for s, evs in by_session.items() if _session_has_full_coverage(evs)}
-    traded_sessions = {str(r.get("session")) for r in decisions if r.get("would_trade") and str(r.get("session")) in full}
+    traded_sessions = {
+        str(r.get("session")) for r in decisions
+        if r.get("would_trade") and str(r.get("session")) in full
+    }
     unreconciled = sum(
         1 for r in health
         if int(r.get("working_orders") or 0) != 0 or int(r.get("broker_position") or 0) != 0
