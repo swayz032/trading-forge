@@ -62,9 +62,11 @@ def reporting_merge_compat(self, right, *args, **kwargs):
 
 def reporting_datetime_compat(arg, *args, **kwargs):
     # Reporting-only DST compatibility for the saved entry_time strings.
-    # Jan-Apr spans EST and EDT, so normalize this one diagnostic Series to UTC.
+    # Normalize EST/EDT offsets to UTC, then convert back to New York so the
+    # 09:45 / 12:00 diagnostics are evaluated in the user's actual clock time.
     if getattr(arg, 'name', None) == 'entry_time' and 'utc' not in kwargs:
-        kwargs['utc'] = True
+        parsed = _orig_to_datetime(arg, *args, utc=True, **kwargs)
+        return parsed.dt.tz_convert(b.v1.TZ)
     return _orig_to_datetime(arg, *args, **kwargs)
 
 if __name__=='__main__':
