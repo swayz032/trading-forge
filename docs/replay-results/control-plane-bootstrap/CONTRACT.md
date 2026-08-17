@@ -88,6 +88,14 @@ hands_free_not_true · bad_allowed_paths · escaping_allowed_path · forbidden_g
 replayed_authorization
 ```
 
+Two further refusal codes are returned by `run()` itself (in `bootstrap.mjs`), not by
+`validateAuthorization` — both are still pre-mutation refusals except where §3a says otherwise:
+
+```
+branch_namespace_collision   AR-1295 F24, pre-claim, see §3a
+doorway_not_armed            post-claim, see §4
+```
+
 The field set is **closed**: a marker carrying `executable`, `settings_path`, `worktree_path` or any
 other key is refused as `unknown_field` rather than silently ignored. That is what makes
 AR-1276C §9's "no arbitrary executable / settings path / worktree path" structural.
@@ -100,7 +108,7 @@ Model text names none of these. All are computed from `target_packet` **and `aut
 plus fixed constants:
 
 ```
-branch        control-plane/<target_packet lowercased>-guard-repair/<authorization_id>
+branch        control-plane/<target_packet lowercased>-guard-repair-<authorization_id>
 worktree      <repo parent>/wt-control-plane-<target_packet lowercased>-<authorization_id>
 seat guard    <worktree>/.claude/settings.local.json          <- immutable to the seat
 seat manifest <worktree>/.claude/control-plane-guard-manifest.json
@@ -117,6 +125,28 @@ collided with the failed attempt's names, and cleaning up a spent attempt to mak
 forbidden. Both derivations now take the authorization id too (`scripts/control-plane-bootstrap/
 plan.mjs:deriveBranch/deriveWorktreeDirName`): same packet + same id -> byte-identical names; same
 packet + different id -> different names; the old failed attempt never needs deleting.
+
+🛑 **AR-1295 F23/F24 — "DIFFERENT NAME" IS NOT "NO COLLISION". Bootstrap authorization #2**
+(`cpb-2026-08-17-0002`) proved this the expensive way: `deriveBranch` used to join the
+authorization id with `/` — `control-plane/ar-1278-guard-repair/<auth-id>` — and Git's ref storage
+cannot hold a ref at `refs/heads/X` and a second ref at `refs/heads/X/Y` at once, so the moment
+authorization #1's preserved forensic branch occupies the bare `control-plane/ar-1278-guard-repair`
+name, EVERY later authorization for that packet nests underneath it and refuses with
+`fatal: cannot lock ref`. "Same packet + different id -> different names" was true and did not
+help; the names were different strings that still collided as Git refs. Two changes closed this:
+
+1. **The separator is now `-`, not `/`** — every derived branch is a flat sibling under
+   `control-plane/`, never nested under another real branch's own name (`control-plane/` itself is
+   never a branch, only ever a namespace prefix — that invariant is what makes the flat form safe).
+2. **A read-only pre-claim check, `branchNamespaceCollision` (`plan.mjs`) fed by
+   `measured.existingControlPlaneBranches` (`bootstrap.mjs:measureState`, scoped to
+   `refs/heads/control-plane/*` only — not a repo-wide ref scan)**, refuses `branch_namespace_collision`
+   BEFORE `write_claim` whenever the derived branch would exact-match, nest under, or be nested
+   under by any existing `control-plane/*` ref. This is deliberately general — it does not merely
+   special-case the one bare-prefix pattern that has bitten twice; it holds for any future naming
+   scheme this file might grow.
+
+The old forensic branch/worktree are never renamed or deleted to make room — that stays forbidden.
 
 🛑 **AR-1289A §3 — THE CLAIM LIVES IN THE SHARED GIT COMMON DIRECTORY, NOT ANY WORKING TREE.**
 AR-1289 found the defect: the claim used to be written as an *uncommitted* file inside the source
@@ -146,19 +176,30 @@ test proves the assertion bites.
 ## 3a. EXECUTION ORDER — THE CLAIM IS THE FIRST MUTATION (AR-1277A F-4)
 
 ```
-1 verify GPT authority          read-only
-2 verify frozen state           read-only
-3 verify source sha + bundle    read-only
-4 verify no replay              read-only
-5 write claim  (O_EXCL)         <- FIRST MUTATION
-6 create branch + worktree
-7 materialize immutable seat guard
-8 prove doorway (synthetic SessionStart, zero model calls; refuse to launch unless ARMED)
-9 launch once
+1 verify GPT authority                  read-only
+2 verify frozen state                   read-only
+3 verify source sha + bundle            read-only
+4 verify no replay                      read-only
+5 verify branch namespace available     read-only   <- AR-1295 F24
+6 write claim  (O_EXCL)                 <- FIRST MUTATION
+7 create branch + worktree
+8 materialize immutable seat guard
+9 prove doorway (synthetic SessionStart, zero model calls; refuse to launch unless ARMED)
+10 launch once
 ```
 
-A failure after step 5 leaves the authorization **SPENT** and needing a new GPT decision. That is
+A failure after step 6 leaves the authorization **SPENT** and needing a new GPT decision. That is
 deliberate: a one-shot that survives a crash is not a one-shot.
+
+🛑 **AR-1295 F25 — A SPENT AUTHORIZATION MUST NEVER CRASH INSTEAD OF REPORTING.** Steps 7-10 are
+each wrapped individually (`bootstrap.mjs:runStage`); an exception from any one of them — the exact
+shape `git worktree add`'s ref-namespace failure took against bootstrap #2 — is caught and returned
+as a structured result, never left to crash the process: `authorized:true, authorization_spent:true,
+executed:false, post_claim_failure_stage:"<the op that threw>", completion_verified:false,
+completion_failure_reason:"post_claim_exception"`. Every return path from step 6 onward — this new
+shape, the pre-existing `doorway_not_armed` refusal, and the final completion-verification result —
+now carries `authorization_spent:true` unconditionally, and the CLI exit-code check keys on that
+field (not `executed`) so a spent-but-unverified authorization can no longer exit 0.
 
 ---
 

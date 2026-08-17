@@ -47,6 +47,9 @@ const QUEUE_PATH = 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/
 const RECEIPT_DIR = 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1';
 const ADVISOR_REPORT_DIR = 'advisor-reports';
 
+/** AR-1295 F25 — the one reason string every post-claim exception is converted into. */
+const POST_CLAIM_FAILURE_REASON = 'post_claim_exception';
+
 /* ------------------------------------------------------------------ real IO ------------------ */
 
 export function makeRealIo(repoRoot) {
@@ -124,6 +127,15 @@ export function measureState(io) {
   // AR-1278 F-5: the identity of the code that would actually run.
   const bundle = computeBundle(io.readFileBytes);
 
+  // AR-1295 F24 — MEASURED, not derived from a claim file or prompt text: every existing branch
+  // under the `control-plane/` prefix, scoped narrowly (this repo carries hundreds of unrelated
+  // branches; a bare `for-each-ref refs/heads/` would measure all of them for nothing).
+  const existingControlPlaneBranches = io
+    .git('for-each-ref', '--format=%(refname:short)', 'refs/heads/control-plane/')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   return {
     workerBranch: io.git('rev-parse', '--abbrev-ref', 'HEAD'),
     workerHead: io.git('rev-parse', 'HEAD'),
@@ -143,6 +155,7 @@ export function measureState(io) {
     gitCommonDirAbs: commonDirAbs,
     bootstrapBundleSha256: bundle.bundle_sha256,
     bootstrapBundleFiles: bundle.files,
+    existingControlPlaneBranches,
     // 0 by CONSTRUCTION, not by scanning history: this process dispatches no Agent/subagent.
     agentModelExecutions: 0,
   };
@@ -176,6 +189,44 @@ export function verifyCompletion({ launch, completion, marker, branch }) {
   if (typeof completion.commit_sha !== 'string' || !COMMIT_SHA40.test(completion.commit_sha)) return false;
   if (completion.pushed !== true) return false;
   return true;
+}
+
+/**
+ * AR-1295 F25 — the boundary a mutating post-claim effect call runs inside. `fn` is the effect
+ * call; `stage` is the exact `planned_operations[].op` name it corresponds to, so a caught
+ * exception can name precisely where it happened. Returns `{ok:true, value}` on success or
+ * `{ok:false, stage, detail}` on ANY thrown error — never lets the exception itself propagate.
+ */
+export function runStage(stage, fn) {
+  try {
+    return { ok: true, stage, value: fn() };
+  } catch (error) {
+    return { ok: false, stage, detail: String(error?.message ?? error).slice(0, 800) };
+  }
+}
+
+/**
+ * AR-1295 F25 — the one shape every post-claim exception becomes. `executed:false` is honest here
+ * (the seat was never necessarily launched — createBranchAndWorktree or writeSeatGuard may have
+ * failed before launch was even attempted), but `authorization_spent:true` is unconditional and is
+ * the field that matters: whatever this function returns, a NEW authorization is required next,
+ * not a retry of this one. Mirrors, and is deliberately distinguishable from, the pre-existing
+ * `doorway_not_armed` / `completion_receipt_did_not_verify` refusal shapes below, which are
+ * ORDINARY negative results (an effect returned `{ok:false}`), not caught exceptions.
+ */
+function postClaimFailure(mode, plan, measured, stage, detail) {
+  return {
+    mode,
+    authorized: true,
+    authorization_spent: true,
+    plan,
+    measured: summarize(measured),
+    executed: false,
+    post_claim_failure_stage: stage,
+    completion_verified: false,
+    completion_failure_reason: POST_CLAIM_FAILURE_REASON,
+    post_claim_error_detail: detail,
+  };
 }
 
 function safeRemote(io) {
@@ -361,6 +412,22 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
   const branch = deriveBranch(auth.marker.target_packet, auth.marker.authorization_id);
   const worktreePath = `${measured.repoParentDir}/${deriveWorktreeDirName(auth.marker.target_packet, auth.marker.authorization_id)}`;
 
+  // AR-1295 F24 — reuses `plan.branch_namespace_conflict` (buildPlan already computed it from the
+  // SAME `branch` value above, against measured live refs) so the plan the caller can read and the
+  // gate that protects the claim can never disagree. Must run and refuse BEFORE writeClaim — this
+  // is exactly the check whose absence let cpb-2026-08-17-0002 spend itself on a foreseeable
+  // `git worktree add` failure.
+  if (plan.branch_namespace_conflict.collision) {
+    return {
+      mode: 'execute', authorized: true, plan, measured: summarize(measured), executed: false,
+      refusal: {
+        ok: false,
+        code: 'branch_namespace_collision',
+        detail: `target branch ${branch} collides with existing ref refs/heads/${plan.branch_namespace_conflict.with} (${plan.branch_namespace_conflict.kind})`,
+      },
+    };
+  }
+
   effects.writeClaim(auth.marker.authorization_id, {
     authorization_id: auth.marker.authorization_id,
     ruling_id: auth.marker.ruling_id,
@@ -387,22 +454,37 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
     allowed_paths: [...auth.marker.allowed_paths],
   };
 
-  effects.createBranchAndWorktree(branch, worktreePath, measured.workerHead);
-  effects.writeSeatGuard(worktreePath, seatSettingsFor(), manifest);
+  // ---- AR-1295 F25 — POST-CLAIM. The authorization is spent from here on regardless of outcome,
+  // so no exception from any of these calls may escape run() uncaught (that is precisely how
+  // cpb-2026-08-17-0002's branch/worktree failure was reported: a raw Node crash instead of a
+  // result a caller could read). Each stage is named after its `planned_operations[].op` value.
+
+  const branchStage = runStage('create_branch_and_worktree', () => effects.createBranchAndWorktree(branch, worktreePath, measured.workerHead));
+  if (!branchStage.ok) return postClaimFailure(mode, plan, measured, branchStage.stage, branchStage.detail);
+
+  const guardStage = runStage('materialize_seat_guard', () => effects.writeSeatGuard(worktreePath, seatSettingsFor(), manifest));
+  if (!guardStage.ok) return postClaimFailure(mode, plan, measured, guardStage.stage, guardStage.detail);
 
   // The gate: Claude Code must itself discover and invoke the Local hook, and that hook must mint a
   // durable armed receipt. No receipt, no conversation. The claim is already spent by design —
   // refusing to launch is still the correct outcome, and it is reported as a refusal, not a success.
-  const doorway = effects.proveDoorwayInitOnly(worktreePath);
+  const doorwayStage = runStage('prove_doorway_init_only', () => effects.proveDoorwayInitOnly(worktreePath));
+  if (!doorwayStage.ok) return postClaimFailure(mode, plan, measured, doorwayStage.stage, doorwayStage.detail);
+  const doorway = doorwayStage.value;
   if (!doorway?.ok) {
     return {
-      mode: 'execute', authorized: true, plan, measured: summarize(measured), executed: false, doorway,
+      mode: 'execute', authorized: true, authorization_spent: true, plan, measured: summarize(measured), executed: false, doorway,
       refusal: { ok: false, code: 'doorway_not_armed', detail: doorway?.detail ?? 'unknown' },
     };
   }
 
-  const launch = effects.launchSeatSupervised(worktreePath, buildLaunchArgv(auth.marker));
-  const completion = effects.readCompletionReceipt(worktreePath);
+  const launchStage = runStage('launch_seat_supervised', () => effects.launchSeatSupervised(worktreePath, buildLaunchArgv(auth.marker)));
+  if (!launchStage.ok) return postClaimFailure(mode, plan, measured, launchStage.stage, launchStage.detail);
+  const launch = launchStage.value;
+
+  const receiptStage = runStage('verify_completion_receipt', () => effects.readCompletionReceipt(worktreePath));
+  if (!receiptStage.ok) return postClaimFailure(mode, plan, measured, receiptStage.stage, receiptStage.detail);
+  const completion = receiptStage.value;
   const completionOk = verifyCompletion({ launch, completion, marker: auth.marker, branch });
 
   // AR-1291A G4 — `executed: true` truthfully means the one-shot execution was ATTEMPTED (the claim
@@ -420,6 +502,7 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
   return {
     mode: 'execute',
     authorized: true,
+    authorization_spent: true,
     plan: { ...plan, executed: true },
     measured: summarize(measured),
     executed: true,
@@ -463,9 +546,14 @@ if (process.argv[1] && process.argv[1].endsWith('bootstrap.mjs')) {
   if (!result.authorized) {
     process.stderr.write('\nCONTROL-PLANE BOOTSTRAP REFUSED. Expected until a GPT ruling carries an EXECUTABLE marker.\n');
     process.exitCode = 3;
-  } else if (result.executed && !result.completion_verified) {
-    // AR-1291A G4: never let `executed: true` read as success on its own. The authorization is
-    // already permanently spent at this point — this is a report of a stranded repair, not a retry.
+  } else if (result.authorization_spent === true && !result.completion_verified) {
+    // AR-1291A G4 + AR-1295 F25: never let a spent-but-unverified authorization exit 0. Checking
+    // `authorization_spent` rather than `executed` closes a gap the old condition had: the
+    // pre-existing `doorway_not_armed` refusal (and the new post-claim-exception shape) both set
+    // `executed: false` on a genuinely spent authorization, so the old `result.executed && ...`
+    // check silently fell through to the default exit code (0 — success) on exactly the outcomes
+    // this message exists to flag. `authorization_spent` is the field that is true on every
+    // post-claim path, so it is the one this check must key on.
     process.stderr.write(
       `\nCONTROL-PLANE BOOTSTRAP EXECUTED BUT NOT VERIFIED COMPLETE (${result.completion_failure_reason}). ` +
       'The authorization is spent. This requires a new GPT decision, not a silent retry.\n',

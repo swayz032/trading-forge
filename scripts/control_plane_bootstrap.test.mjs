@@ -24,9 +24,9 @@ import {
 import {
   buildPlan, deriveBranch, deriveWorktreeDirName, assertClaimNamespaceDisjoint,
   LAUNCH_EXECUTABLE, LAUNCH_ARGV, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL, buildPacketPrompt,
-  COMMIT_MSG_FILE_REL,
+  COMMIT_MSG_FILE_REL, branchNamespaceCollision,
 } from './control-plane-bootstrap/plan.mjs';
-import { run, seatSettingsFor, rulingIdFromFilename, verifyCompletion } from './control-plane-bootstrap/bootstrap.mjs';
+import { run, seatSettingsFor, rulingIdFromFilename, verifyCompletion, runStage } from './control-plane-bootstrap/bootstrap.mjs';
 import { computeBundle, BUNDLE_FILES } from './control-plane-bootstrap/bundle.mjs';
 import { decide, measureObservedIdentity, receiptMatchesLive, verifyAuthorityIndependently } from './control-plane-bootstrap/control-plane-seat-hook.mjs';
 
@@ -144,7 +144,10 @@ test('N13 arbitrary settings path cannot be supplied', () => {
 test('N14 arbitrary worktree path cannot be supplied — it is DERIVED', () => {
   refusesWith((m) => { m.worktree_path = 'C:/anywhere'; }, 'unknown_field');
   // AR-1289A §4: identity is target_packet + authorization_id, not target_packet alone.
-  assert.equal(deriveBranch('AR-1279', 'cpb-2026-08-16-0001'), 'control-plane/ar-1279-guard-repair/cpb-2026-08-16-0001');
+  // AR-1295 F23: the separator before the authorization id is now `-`, not `/` — a `/` nests the
+  // branch under `control-plane/ar-1279-guard-repair`, which Git's ref storage refuses to coexist
+  // with a same-named branch at that exact path (see the dedicated F23/F24 tests below).
+  assert.equal(deriveBranch('AR-1279', 'cpb-2026-08-16-0001'), 'control-plane/ar-1279-guard-repair-cpb-2026-08-16-0001');
   assert.equal(deriveWorktreeDirName('AR-1279', 'cpb-2026-08-16-0001'), 'wt-control-plane-ar-1279-cpb-2026-08-16-0001');
 });
 
@@ -844,7 +847,7 @@ const FAKE_QUEUE_SHA = createHash('sha256').update(Buffer.from(FAKE_QUEUE_JSON))
 const FAKE_REPO_ROOT = 'C:/Users/tonio/Projects/wt-claude-worker1-20260815';
 const FAKE_COMMON_DIR = `${FAKE_REPO_ROOT}/.git`;
 
-function fakeIo({ rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md', claimed = [], newStoreClaimed = [] }) {
+function fakeIo({ rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md', claimed = [], newStoreClaimed = [], existingControlPlaneBranches = [] }) {
   const queue = FAKE_QUEUE_JSON;
   return {
     repoRoot: FAKE_REPO_ROOT,
@@ -861,6 +864,8 @@ function fakeIo({ rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md',
       if (a === 'config --get remote.origin.url') return 'git@github.com:swayz032/trading-forge.git';
       // AR-1289A §3: measureState resolves the shared claim store from this every run.
       if (a === 'rev-parse --git-common-dir') return '.git';
+      // AR-1295 F24: measureState's scoped, read-only branch-namespace measurement.
+      if (a === "for-each-ref --format=%(refname:short) refs/heads/control-plane/") return existingControlPlaneBranches.join('\n');
       return '';
     },
     readFile: () => queue,
@@ -1544,5 +1549,214 @@ test('AR1293-H3 the generated Phase-1 prompt instructs cp-finalize.mjs and never
   const p = buildPacketPrompt(baselineMarker());
   assert.match(p, /cp-finalize\.mjs/);
   assert.doesNotMatch(p, /cp-commit\.mjs/, 'the prompt must never point the seat at the retired commit-only route');
+});
+
+/* =============================== AR-1295 F23/F24/F25 — BOOTSTRAP #2 FAIL-CLOSED REPAIR ======= */
+
+/**
+ * F23 — the exact failure `cpb-2026-08-17-0002` hit: `deriveBranch` used to join with `/`, nesting
+ * every fresh authorization's branch under the packet's bare-prefix name. Authorization #1's
+ * preserved forensic claim records ITS OWN branch as exactly that bare prefix
+ * (`control-plane/ar-1278-guard-repair` — see `docs/replay-results/control-plane-bootstrap/claims/
+ * cpb-2026-08-17-0001.json`), so any later `/`-joined derivation collides with a real, undeletable
+ * ref. `AR1290-C6` (above) only ever asserted `notEqual` between the fresh and stale names, which
+ * is exactly why it did not catch this: two DIFFERENT strings can still be the same ref's parent
+ * and child.
+ */
+test('K1 F23 flat branch naming: the real forensic branch from authorization #1 no longer nests a fresh authorization', () => {
+  const staleForensicBranch = 'control-plane/ar-1278-guard-repair'; // the ACTUAL branch, not a fixture
+  const fresh3 = deriveBranch('AR-1278', 'cpb-2026-08-17-0003');
+  assert.notEqual(fresh3, staleForensicBranch);
+  assert.equal(
+    branchNamespaceCollision([staleForensicBranch], fresh3).collision, false,
+    'the flat name must not collide with the real stale branch that caused the original failure',
+  );
+  // determinism and distinctness survive the separator change.
+  assert.equal(deriveBranch('AR-1278', 'cpb-2026-08-17-0003'), deriveBranch('AR-1278', 'cpb-2026-08-17-0003'));
+  assert.notEqual(deriveBranch('AR-1278', 'cpb-2026-08-17-0003'), deriveBranch('AR-1278', 'cpb-2026-08-17-0004'));
+});
+
+test('K1b branchNamespaceCollision: exact duplicate, existing-is-ancestor, target-is-ancestor, flat sibling', () => {
+  const target = 'control-plane/ar-1278-guard-repair-cpb-x';
+  assert.deepEqual(branchNamespaceCollision([target], target), { collision: true, kind: 'exact_duplicate', with: target });
+  assert.equal(branchNamespaceCollision(['control-plane/ar-1278-guard-repair'], 'control-plane/ar-1278-guard-repair/cpb-x').collision, true);
+  assert.equal(branchNamespaceCollision(['control-plane/ar-1278-guard-repair'], 'control-plane/ar-1278-guard-repair/cpb-x').kind, 'existing_is_ancestor');
+  assert.equal(branchNamespaceCollision(['control-plane/ar-1278-guard-repair-x/deeper'], 'control-plane/ar-1278-guard-repair-x').collision, true);
+  assert.equal(branchNamespaceCollision(['control-plane/ar-1278-guard-repair-x/deeper'], 'control-plane/ar-1278-guard-repair-x').kind, 'target_is_ancestor');
+  assert.equal(branchNamespaceCollision(['control-plane/ar-1278-guard-repair'], target).collision, false, 'a flat sibling must pass');
+  assert.equal(branchNamespaceCollision([], target).collision, false, 'no existing refs at all must pass');
+});
+
+/**
+ * K2 — a disposable Git fixture, mirroring the AR1290-C1/C2/C3 pattern: real `git`, real temp
+ * directory, removed afterwards. RED reproduces the OLD nested naming's exact failure against a
+ * branch shaped like authorization #1's real forensic branch; GREEN proves the NEW flat naming
+ * coexists in the SAME repository, with the old branch left completely untouched (never renamed,
+ * never deleted — AR-1293A §7 / AR-1295's own forbidden list).
+ */
+test('K2 disposable Git fixture: RED (old nested naming cannot be created) then GREEN (new flat naming coexists)', async () => {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+  const gitAt = (dir, ...args) => cp.execFileSync('git', ['-C', dir, ...args], { encoding: 'utf8' }).trim();
+
+  const dir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-branchns-k2-'));
+  try {
+    gitAt(dir, 'init', '-q');
+    gitAt(dir, 'config', 'user.email', 'test@test');
+    gitAt(dir, 'config', 'user.name', 'test');
+    fs.writeFileSync(pathMod.join(dir, 'seed.txt'), 'seed');
+    gitAt(dir, 'add', 'seed.txt');
+    gitAt(dir, 'commit', '-q', '-m', 'seed');
+    const base = gitAt(dir, 'rev-parse', 'HEAD');
+
+    // Reproduce authorization #1's real forensic branch shape in THIS disposable repo only.
+    const staleBranch = 'control-plane/ar-1278-guard-repair';
+    gitAt(dir, 'branch', staleBranch, base);
+
+    // RED — the OLD (pre-AR-1295) join, reproduced inline so the control exercises the actual
+    // regressed behaviour, not a description of it.
+    const oldNestedBranch = `${staleBranch}/cpb-fixture-0002`;
+    assert.throws(
+      () => gitAt(dir, 'worktree', 'add', '-b', oldNestedBranch, pathMod.join(dir, '..', 'wt-old'), base),
+      /cannot lock ref|already exists/i,
+      'the old nested naming must reproduce the exact Git ref failure bootstrap #2 hit',
+    );
+
+    // Confirm the pre-claim check would have refused this BEFORE any Git call, for the same input.
+    assert.equal(branchNamespaceCollision([staleBranch], oldNestedBranch).collision, true);
+
+    // GREEN — the NEW flat naming, in the SAME repo, alongside the SAME untouched stale branch.
+    const freshFlatBranch = deriveBranch('AR-1278', 'cpb-fixture-0003');
+    assert.equal(branchNamespaceCollision([staleBranch], freshFlatBranch).collision, false);
+    const worktreeDir = pathMod.join(dir, '..', 'wt-new');
+    gitAt(dir, 'worktree', 'add', '-b', freshFlatBranch, worktreeDir, base);
+    try {
+      assert.ok(fs.existsSync(worktreeDir), 'the flat-named worktree must actually have been created');
+      // The stale branch must still exist, unrenamed and undeleted.
+      const branches = gitAt(dir, 'for-each-ref', '--format=%(refname:short)', 'refs/heads/');
+      assert.ok(branches.split('\n').includes(staleBranch), 'the old forensic branch must remain untouched');
+      assert.ok(branches.split('\n').includes(freshFlatBranch), 'the new flat branch must exist alongside it');
+    } finally {
+      gitAt(dir, 'worktree', 'remove', '--force', worktreeDir);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/**
+ * K3 — the pre-claim gate wired into `run()`, via the SAME mocked `io`/`effects` harness every
+ * other end-to-end test in this file uses. Proves REFUSE for all three collision kinds, PASS for a
+ * flat sibling, and — the load-bearing assertion — that a refusal requests ZERO effects, exactly
+ * like every other pre-claim refusal in `C14`.
+ */
+test('K3 pre-claim branch-namespace check: REFUSE before writeClaim on collision, PASS on a flat sibling', () => {
+  const freshBranch = deriveBranch('AR-1279', 'cpb-2026-08-16-0001');
+  const cases = [
+    ['exact duplicate', [freshBranch]],
+    // `target_packet`/`authorization_id` can never contain `/` (both are regex-validated in
+    // authorization.mjs), so the ONLY existing-is-ancestor case reachable against a REAL
+    // deriveBranch output is the pathological bare `control-plane` branch — anything shaped like
+    // authorization #1's actual stale branch (`control-plane/ar-1279-guard-repair`, no trailing
+    // slash) is a flat sibling under the new naming and correctly does NOT collide (that is the
+    // fix); the generic three-kind classification itself is exercised directly in K1b.
+    ['existing is ancestor (pathological bare prefix)', ['control-plane']],
+    ['target is ancestor', [`${freshBranch}/deeper`]],
+  ];
+  for (const [label, existingControlPlaneBranches] of cases) {
+    const effects = recordingEffects();
+    const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling(), existingControlPlaneBranches }), effects, now: 'T' });
+    assert.equal(result.authorized, true, `${label}: the marker itself is still valid`);
+    assert.equal(result.executed, false, `${label}: must not execute`);
+    assert.equal(result.refusal?.code, 'branch_namespace_collision', `${label}: must refuse with the F24 code`);
+    assert.deepEqual(effects.calls, [], `${label}: a namespace collision must request ZERO effects — no claim written`);
+  }
+
+  // PASS — a flat sibling of an unrelated existing branch must proceed exactly as before.
+  const effects = recordingEffects();
+  const result = run({
+    mode: 'execute',
+    io: fakeIo({ rulingText: validRuling(), existingControlPlaneBranches: ['control-plane/some-other-packet-guard-repair-cpb-x'] }),
+    effects, now: 'T',
+  });
+  assert.equal(result.authorized, true);
+  assert.equal(result.executed, true);
+  assert.equal(effects.calls[0][0], 'writeClaim', 'a sibling namespace must still claim first, as usual');
+});
+
+/**
+ * K4 — F25. Two independent injection points prove the exception boundary is general, not special-
+ * cased to one call site. In BOTH cases: the claim was already written (it is the first effect
+ * recorded), no later stage runs, and the returned result is the structured shape — never a thrown
+ * error escaping `run()`.
+ */
+test('K4a post-claim exception at createBranchAndWorktree is caught and returned structured, never thrown', () => {
+  const effects = recordingEffects();
+  effects.createBranchAndWorktree = (...a) => {
+    effects.calls.push(['createBranchAndWorktree', ...a]);
+    throw new Error("cannot lock ref 'refs/heads/x': 'refs/heads/x' exists");
+  };
+  let threw = false;
+  let result;
+  try {
+    result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  } catch {
+    threw = true;
+  }
+  assert.equal(threw, false, 'run() must never let a post-claim exception escape uncaught');
+  assert.equal(result.authorized, true);
+  assert.equal(result.authorization_spent, true, 'the claim was already written — the authorization is spent regardless');
+  assert.equal(result.executed, false);
+  assert.equal(result.post_claim_failure_stage, 'create_branch_and_worktree');
+  assert.equal(result.completion_verified, false);
+  assert.equal(result.completion_failure_reason, 'post_claim_exception');
+  assert.match(result.post_claim_error_detail, /cannot lock ref/);
+  assert.deepEqual(effects.calls.map((c) => c[0]), ['writeClaim', 'createBranchAndWorktree'],
+    'the claim must have been written, and nothing after the failing stage may have been attempted');
+});
+
+test('K4b post-claim exception at writeSeatGuard is caught and returned structured, distinctly staged', () => {
+  const effects = recordingEffects();
+  effects.writeSeatGuard = (...a) => {
+    effects.calls.push(['writeSeatGuard', ...a]);
+    throw new Error('EACCES: permission denied');
+  };
+  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  assert.equal(result.authorization_spent, true);
+  assert.equal(result.post_claim_failure_stage, 'materialize_seat_guard');
+  assert.equal(result.completion_failure_reason, 'post_claim_exception');
+  assert.deepEqual(effects.calls.map((c) => c[0]), ['writeClaim', 'createBranchAndWorktree', 'writeSeatGuard']);
+  assert.ok(!effects.calls.some((c) => c[0] === 'proveDoorwayInitOnly' || c[0] === 'launchSeatSupervised'),
+    'a failure at seat-guard materialization must never reach the doorway or launch');
+});
+
+test('K4c runStage itself: success carries the value through; failure never throws', () => {
+  assert.deepEqual(runStage('x', () => 42), { ok: true, stage: 'x', value: 42 });
+  const failed = runStage('y', () => { throw new Error('boom'); });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.stage, 'y');
+  assert.match(failed.detail, /boom/);
+});
+
+test('K5 regression: the normal successful fake end-to-end path is unaffected by the new gate and boundary', () => {
+  const effects = recordingEffects();
+  const result = run({ mode: 'execute', io: fakeIo({ rulingText: validRuling() }), effects, now: 'T' });
+  assert.equal(result.executed, true);
+  assert.equal(result.authorization_spent, true);
+  assert.equal(result.completion_verified, true);
+  assert.equal(result.completion_failure_reason, null);
+  assert.deepEqual(effects.calls.map((c) => c[0]), [
+    'writeClaim', 'createBranchAndWorktree', 'writeSeatGuard',
+    'proveDoorwayInitOnly', 'launchSeatSupervised', 'readCompletionReceipt',
+  ]);
+});
+
+test('K5b regression: --plan mode reports branch namespace availability without spending anything', () => {
+  const plan = buildPlan(baselineMarker(), { ...baselineMeasured(), existingControlPlaneBranches: ['control-plane/ar-1279-guard-repair'] });
+  assert.equal(plan.branch_namespace_conflict.collision, false, 'baselineMarker uses AR-1279, whose flat branch does not nest under the bare AR-1279 prefix name used here');
+  const collidingPlan = buildPlan(baselineMarker(), { ...baselineMeasured(), existingControlPlaneBranches: [plan.proposed_target_branch] });
+  assert.equal(collidingPlan.branch_namespace_conflict.collision, true, 'an exact-duplicate existing ref must be visible in plan output too');
 });
 
