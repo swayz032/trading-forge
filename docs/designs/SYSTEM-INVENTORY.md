@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `cc1743fa6fefe2311134f9334dd05de1446ae2ef`
+> Generated at commit `0c49dca24870b8f334343dd4134405edab021d01`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -42,10 +42,10 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
 | `src/` | 1904 | 773 |
-| `scripts/` | 245 | 243 |
+| `scripts/` | 246 | 244 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2184** | **1016** |
+| **TOTAL** | **2185** | **1017** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -86,9 +86,9 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **196**.  Modules reachable from them: **749** of **2184** parsed files.
+Total entry points: **197**.  Modules reachable from them: **750** of **2185** parsed files.
 
-<details><summary>All 196 entry points and why each was counted</summary>
+<details><summary>All 197 entry points and why each was counted</summary>
 
 | Entry point | Discovered because |
 |---|---|
@@ -118,6 +118,7 @@ Total entry points: **196**.  Modules reachable from them: **749** of **2184** p
 | `scripts/composition-gating-fidelity.py` | has `__main__` guard (runnable module) |
 | `scripts/composition-paired-delta.py` | has `__main__` guard (runnable module) |
 | `scripts/confluence-overlay-ablation.py` | has `__main__` guard (runnable module) |
+| `scripts/control-plane-bootstrap/materialize-g2-prompt-transport.py` | has `__main__` guard (runnable module) |
 | `scripts/corpus-approximation-inventory.py` | has `__main__` guard (runnable module) |
 | `scripts/corpus-fdr-report.py` | has `__main__` guard (runnable module) |
 | `scripts/corpus-fidelity-score.py` | has `__main__` guard (runnable module) |
@@ -303,8 +304,8 @@ table below it.**
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3751 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1173 |
 | C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.3% of 4980 rows |
-| C5 | server entry point discovered | PASS | entry points discovered=196 |
-| C6 | a registered route module is reachable | PASS | modules reachable=749 |
+| C5 | server entry point discovered | PASS | entry points discovered=197 |
+| C6 | a registered route module is reachable | PASS | modules reachable=750 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
@@ -316,7 +317,7 @@ table below it.**
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=415 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
-| C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=196 |
+| C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=197 |
 | C18 | `export { X as Y }` binding form is enumerated | PASS | alertRoutes enumerated=True |
 
 **19 / 19 controls pass.**
@@ -3206,33 +3207,33 @@ This is the *we already have this* list.  Check it before writing anything.
 | `detect_roll_dates` | function | `src/data/scripts/adjust_continuous.py:22` | 0 | unique |
 | `ratio_adjust` | function | `src/data/scripts/adjust_continuous.py:62` | 0 | unique |
 | `panama_adjust` | function | `src/data/scripts/adjust_continuous.py:96` | 0 | unique |
-| `main` | function | `src/data/scripts/adjust_continuous.py:128` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/adjust_continuous.py:128` | 213 | AMBIG |
 | `get_client` | function | `src/data/scripts/crisis_data_download.py:53` | 4 | AMBIG |
 | `check_cost` | function | `src/data/scripts/crisis_data_download.py:62` | 1 | AMBIG |
 | `download_period` | function | `src/data/scripts/crisis_data_download.py:78` | 0 | unique |
 | `run_pipeline_step` | function | `src/data/scripts/crisis_data_download.py:108` | 0 | unique |
 | `process_file` | function | `src/data/scripts/crisis_data_download.py:128` | 0 | unique |
-| `main` | function | `src/data/scripts/crisis_data_download.py:188` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/crisis_data_download.py:188` | 213 | AMBIG |
 | `run_step` | function | `src/data/scripts/crisis_pipeline.py:27` | 0 | unique |
-| `main` | function | `src/data/scripts/crisis_pipeline.py:40` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/crisis_pipeline.py:40` | 213 | AMBIG |
 | `get_cache_dir` | function | `src/data/scripts/databento_definition_pull.py:80` | 1 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_definition_pull.py:85` | 4 | AMBIG |
 | `pull_definition` | function | `src/data/scripts/databento_definition_pull.py:92` | 0 | unique |
 | `check_against_expected` | function | `src/data/scripts/databento_definition_pull.py:179` | 0 | unique |
 | `save_to_cache` | function | `src/data/scripts/databento_definition_pull.py:213` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/databento_definition_pull.py:231` | 213 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_download.py:48` | 4 | AMBIG |
 | `check_cost` | function | `src/data/scripts/databento_download.py:56` | 1 | AMBIG |
 | `download` | function | `src/data/scripts/databento_download.py:72` | 1 | unique |
-| `main` | function | `src/data/scripts/databento_download.py:115` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/databento_download.py:115` | 213 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_imbalance_pull.py:64` | 4 | AMBIG |
 | `et_to_utc_window` | function | `src/data/scripts/databento_imbalance_pull.py:72` | 0 | unique |
 | `pull_imbalance_for_date` | function | `src/data/scripts/databento_imbalance_pull.py:98` | 0 | unique |
 | `get_trading_dates` | function | `src/data/scripts/databento_imbalance_pull.py:185` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_imbalance_pull.py:197` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/databento_imbalance_pull.py:197` | 213 | AMBIG |
 | `get_client` | function | `src/data/scripts/databento_statistics_pull.py:66` | 4 | AMBIG |
 | `pull_statistics` | function | `src/data/scripts/databento_statistics_pull.py:74` | 0 | unique |
-| `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/databento_statistics_pull.py:177` | 213 | AMBIG |
 | `get_cache_dir` | function | `src/data/scripts/refresh_local_cache.py:93` | 1 | AMBIG |
 | `get_parquet_path` | function | `src/data/scripts/refresh_local_cache.py:98` | 0 | unique |
 | `_migrate_legacy_flat_cache` | function | `src/data/scripts/refresh_local_cache.py:106` | 0 | unique |
@@ -3242,15 +3243,15 @@ This is the *we already have this* list.  Check it before writing anything.
 | `atomic_write_parquet` | function | `src/data/scripts/refresh_local_cache.py:283` | 0 | unique |
 | `_write_refresh_sidecar` | function | `src/data/scripts/refresh_local_cache.py:291` | 0 | unique |
 | `refresh_symbol_timeframe` | function | `src/data/scripts/refresh_local_cache.py:319` | 0 | unique |
-| `main` | function | `src/data/scripts/refresh_local_cache.py:608` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/refresh_local_cache.py:608` | 213 | AMBIG |
 | `resample` | function | `src/data/scripts/resample_timeframes.py:30` | 3 | unique |
-| `main` | function | `src/data/scripts/resample_timeframes.py:46` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/resample_timeframes.py:46` | 213 | AMBIG |
 | `run_script` | function | `src/data/scripts/run_pipeline.py:22` | 0 | unique |
-| `main` | function | `src/data/scripts/run_pipeline.py:46` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/run_pipeline.py:46` | 213 | AMBIG |
 | `get_s3_client` | function | `src/data/scripts/upload_to_s3.py:23` | 1 | unique |
 | `upload_partitioned` | function | `src/data/scripts/upload_to_s3.py:32` | 1 | unique |
 | `upload_json` | function | `src/data/scripts/upload_to_s3.py:81` | 0 | unique |
-| `main` | function | `src/data/scripts/upload_to_s3.py:89` | 212 | AMBIG |
+| `main` | function | `src/data/scripts/upload_to_s3.py:89` | 213 | AMBIG |
 
 </details>
 
@@ -3379,7 +3380,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_get_archetype_class_map` | function | `src/engine/archetype_evaluator.py:100` | 0 | unique |
 | `_build_synthetic_df` | function | `src/engine/archetype_evaluator.py:191` | 0 | unique |
 | `evaluate_archetype` | function | `src/engine/archetype_evaluator.py:262` | 0 | unique |
-| `main` | function | `src/engine/archetype_evaluator.py:374` | 212 | AMBIG |
+| `main` | function | `src/engine/archetype_evaluator.py:374` | 213 | AMBIG |
 | `_emit_error` | function | `src/engine/archetype_evaluator.py:453` | 0 | unique |
 
 </details>
@@ -3466,7 +3467,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_rescore_with_crisis` | function | `src/engine/backtester.py:9617` | 0 | unique |
 | `_candidate_refusal_envelope` | function | `src/engine/backtester.py:9688` | 0 | unique |
 | `resolve_candidate_authority` | function | `src/engine/backtester.py:9727` | 0 | unique |
-| `main` | function | `src/engine/backtester.py:9888` | 212 | AMBIG |
+| `main` | function | `src/engine/backtester.py:9888` | 213 | AMBIG |
 
 </details>
 
@@ -3740,7 +3741,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_bars` | function | `src/engine/context_runner.py:25` | 1 | unique |
 | `run_bias` | function | `src/engine/context_runner.py:35` | 0 | unique |
 | `run_evaluate` | function | `src/engine/context_runner.py:141` | 0 | unique |
-| `main` | function | `src/engine/context_runner.py:317` | 212 | AMBIG |
+| `main` | function | `src/engine/context_runner.py:317` | 213 | AMBIG |
 
 </details>
 
@@ -3850,7 +3851,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_load_parquet_data` | function | `src/engine/deepar_forecaster.py:147` | 0 | unique |
 | `_prepare_series` | function | `src/engine/deepar_forecaster.py:195` | 0 | unique |
 | `DeepARForecaster` | class | `src/engine/deepar_forecaster.py:291` | 0 | unique |
-| `main` | function | `src/engine/deepar_forecaster.py:571` | 212 | AMBIG |
+| `main` | function | `src/engine/deepar_forecaster.py:571` | 213 | AMBIG |
 
 </details>
 
@@ -3866,7 +3867,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_vol_regime_from_prob` | function | `src/engine/deepar_regime_classifier.py:252` | 0 | unique |
 | `_trend_label` | function | `src/engine/deepar_regime_classifier.py:264` | 0 | unique |
 | `_stress_label` | function | `src/engine/deepar_regime_classifier.py:274` | 0 | unique |
-| `main` | function | `src/engine/deepar_regime_classifier.py:286` | 212 | AMBIG |
+| `main` | function | `src/engine/deepar_regime_classifier.py:286` | 213 | AMBIG |
 
 </details>
 
@@ -3979,7 +3980,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
 | `AnchorResult` | class | `src/engine/extraction/anchor_locator.py:76` | 1 | unique |
-| `_build_user_message` | function | `src/engine/extraction/anchor_locator.py:126` | 4 | AMBIG |
+| `_build_user_message` | function | `src/engine/extraction/anchor_locator.py:126` | 5 | AMBIG |
 | `_default_propose_fn` | function | `src/engine/extraction/anchor_locator.py:134` | 5 | unique |
 | `_propose_quote` | function | `src/engine/extraction/anchor_locator.py:161` | 0 | unique |
 | `_normalize_with_spans` | function | `src/engine/extraction/anchor_locator.py:174` | 0 | unique |
@@ -4005,7 +4006,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `parse_spec_id` | function | `src/engine/extraction/compile_certified_record.py:142` | 0 | unique |
 | `_load_record` | function | `src/engine/extraction/compile_certified_record.py:176` | 0 | unique |
 | `compile_record_to_artifact` | function | `src/engine/extraction/compile_certified_record.py:193` | 0 | unique |
-| `main` | function | `src/engine/extraction/compile_certified_record.py:250` | 212 | AMBIG |
+| `main` | function | `src/engine/extraction/compile_certified_record.py:250` | 213 | AMBIG |
 | `SpineCondition` | class | `src/engine/extraction/compile_lints.py:117` | 2 | unique |
 | `CompiledSpine` | class | `src/engine/extraction/compile_lints.py:135` | 2 | unique |
 | `LintResult` | class | `src/engine/extraction/compile_lints.py:165` | 1 | unique |
@@ -4037,16 +4038,16 @@ This is the *we already have this* list.  Check it before writing anything.
 | `save_extraction` | function | `src/engine/extraction/extractor_bridge.py:343` | 3 | unique |
 | `get_or_extract` | function | `src/engine/extraction/extractor_bridge.py:368` | 1 | unique |
 | `run_dry_run_real_extractor` | function | `src/engine/extraction/extractor_bridge.py:414` | 0 | unique |
-| `main` | function | `src/engine/extraction/extractor_bridge.py:490` | 212 | AMBIG |
+| `main` | function | `src/engine/extraction/extractor_bridge.py:490` | 213 | AMBIG |
 | `AttemptRefused` | class | `src/engine/extraction/isolated_attempt_receipt.py:50` | 2 | unique |
 | `_sha_bytes` | function | `src/engine/extraction/isolated_attempt_receipt.py:55` | 1 | unique |
-| `_safe_name` | function | `src/engine/extraction/isolated_attempt_receipt.py:59` | 3 | unique |
+| `_safe_name` | function | `src/engine/extraction/isolated_attempt_receipt.py:59` | 4 | unique |
 | `DurableAttemptLedger` | class | `src/engine/extraction/isolated_attempt_receipt.py:71` | 5 | unique |
 | `_dispatch_path` | function | `src/engine/extraction/isolated_bridge.py:103` | 0 | unique |
 | `_completion_path` | function | `src/engine/extraction/isolated_bridge.py:107` | 0 | unique |
 | `state_of` | function | `src/engine/extraction/isolated_bridge.py:111` | 1 | unique |
 | `record_native_dispatch` | function | `src/engine/extraction/isolated_bridge.py:133` | 1 | unique |
-| `_sha` | function | `src/engine/extraction/isolated_fallback_law.py:71` | 3 | AMBIG |
+| `_sha` | function | `src/engine/extraction/isolated_fallback_law.py:71` | 4 | AMBIG |
 | `FrozenQueue` | class | `src/engine/extraction/isolated_fallback_law.py:76` | 0 | unique |
 | `freeze_isolated_queue` | function | `src/engine/extraction/isolated_fallback_law.py:100` | 1 | unique |
 | `ConditionOutcome` | class | `src/engine/extraction/opus_phase1_route.py:91` | 0 | unique |
@@ -4086,7 +4087,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_synthetic_dry_run_propose_fn` | function | `src/engine/extraction/pilot_conveyor.py:1794` | 1 | unique |
 | `run_dry_run_synthetic` | function | `src/engine/extraction/pilot_conveyor.py:1811` | 0 | unique |
 | `write_dry_run_artifact` | function | `src/engine/extraction/pilot_conveyor.py:1869` | 0 | unique |
-| `main` | function | `src/engine/extraction/pilot_conveyor.py:1882` | 212 | AMBIG |
+| `main` | function | `src/engine/extraction/pilot_conveyor.py:1882` | 213 | AMBIG |
 | `ArtifactsMissingError` | class | `src/engine/extraction/sealed_read_driver.py:166` | 0 | unique |
 | `ExtractionSourceMissing` | class | `src/engine/extraction/sealed_read_driver.py:176` | 0 | unique |
 | `ReaderIdentityMismatch` | class | `src/engine/extraction/sealed_read_driver.py:182` | 1 | unique |
@@ -4234,7 +4235,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `run_layer_reliability` | function | `src/engine/extraction/tier1_coverage_report.py:142` | 0 | unique |
 | `precision_spotcheck` | function | `src/engine/extraction/tier1_coverage_report.py:169` | 0 | unique |
 | `build_report` | function | `src/engine/extraction/tier1_coverage_report.py:192` | 2 | AMBIG |
-| `main` | function | `src/engine/extraction/tier1_coverage_report.py:237` | 212 | AMBIG |
+| `main` | function | `src/engine/extraction/tier1_coverage_report.py:237` | 213 | AMBIG |
 | `Tier1Detection` | class | `src/engine/extraction/tier1_detectors.py:54` | 5 | unique |
 | `Tier1FallThrough` | class | `src/engine/extraction/tier1_detectors.py:76` | 4 | unique |
 | `Tier1Result` | class | `src/engine/extraction/tier1_detectors.py:87` | 1 | unique |
@@ -4264,12 +4265,12 @@ This is the *we already have this* list.  Check it before writing anything.
 | `llm_margin_agreement` | function | `src/engine/extraction/tier2_design_report.py:285` | 0 | unique |
 | `build_report` | function | `src/engine/extraction/tier2_design_report.py:322` | 2 | AMBIG |
 | `_print_summary` | function | `src/engine/extraction/tier2_design_report.py:357` | 1 | AMBIG |
-| `main` | function | `src/engine/extraction/tier2_design_report.py:394` | 212 | AMBIG |
+| `main` | function | `src/engine/extraction/tier2_design_report.py:394` | 213 | AMBIG |
 | `class_of` | function | `src/engine/extraction/tier2_discourse.py:84` | 2 | AMBIG |
 | `Tier2Decision` | class | `src/engine/extraction/tier2_discourse.py:89` | 1 | AMBIG |
 | `segment_frame` | function | `src/engine/extraction/tier2_discourse.py:238` | 2 | AMBIG |
 | `is_rule_or_exclusion_frame` | function | `src/engine/extraction/tier2_discourse.py:269` | 2 | AMBIG |
-| `_build_user_message` | function | `src/engine/extraction/tier2_discourse.py:389` | 4 | AMBIG |
+| `_build_user_message` | function | `src/engine/extraction/tier2_discourse.py:389` | 5 | AMBIG |
 | `_derive_label` | function | `src/engine/extraction/tier2_discourse.py:405` | 1 | AMBIG |
 | `gemma_classify_call` | function | `src/engine/extraction/tier2_discourse.py:438` | 2 | AMBIG |
 | `classify_item` | function | `src/engine/extraction/tier2_discourse.py:481` | 2 | AMBIG |
@@ -4450,7 +4451,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `cluster_graveyard` | function | `src/engine/graveyard/cluster.py:19` | 0 | unique |
 | `_aggregate_failure_modes` | function | `src/engine/graveyard/cluster.py:97` | 0 | unique |
 | `_aggregate_categories` | function | `src/engine/graveyard/cluster.py:106` | 0 | unique |
-| `main` | function | `src/engine/graveyard/cluster.py:119` | 212 | AMBIG |
+| `main` | function | `src/engine/graveyard/cluster.py:119` | 213 | AMBIG |
 | `embed_strategy` | function | `src/engine/graveyard/embedder.py:21` | 2 | unique |
 | `embed_text` | function | `src/engine/graveyard/embedder.py:71` | 0 | unique |
 | `FailureTag` | class | `src/engine/graveyard/failure_tagger.py:22` | 0 | unique |
@@ -4752,7 +4753,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_sample_paths` | function | `src/engine/monte_carlo.py:1426` | 0 | unique |
 | `_compute_risk_metrics` | function | `src/engine/monte_carlo.py:1448` | 0 | unique |
 | `run_monte_carlo` | function | `src/engine/monte_carlo.py:1467` | 4 | unique |
-| `main` | function | `src/engine/monte_carlo.py:2219` | 212 | AMBIG |
+| `main` | function | `src/engine/monte_carlo.py:2219` | 213 | AMBIG |
 
 </details>
 
@@ -5209,7 +5210,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `fit_hmm_regime` | function | `src/engine/regime.py:187` | 0 | unique |
 | `_compute_avg_duration` | function | `src/engine/regime.py:259` | 0 | unique |
 | `_compute_regime_persistence` | function | `src/engine/regime.py:275` | 0 | unique |
-| `main` | function | `src/engine/regime.py:293` | 212 | AMBIG |
+| `main` | function | `src/engine/regime.py:293` | 213 | AMBIG |
 
 </details>
 
@@ -5267,7 +5268,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_result_to_db_row` | function | `src/engine/replay/survival_twin_replay.py:427` | 1 | AMBIG |
 | `replay_survival_on_backtest` | function | `src/engine/replay/survival_twin_replay.py:496` | 0 | unique |
 | `replay_survival_on_all_backtests` | function | `src/engine/replay/survival_twin_replay.py:583` | 0 | unique |
-| `main` | function | `src/engine/replay/survival_twin_replay.py:640` | 212 | AMBIG |
+| `main` | function | `src/engine/replay/survival_twin_replay.py:640` | 213 | AMBIG |
 
 </details>
 
@@ -5463,7 +5464,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_build_feature_vector` | function | `src/engine/skip_engine/weight_trainer.py:95` | 0 | unique |
 | `_coeff_to_multiplier` | function | `src/engine/skip_engine/weight_trainer.py:120` | 0 | unique |
 | `train_weights` | function | `src/engine/skip_engine/weight_trainer.py:145` | 0 | unique |
-| `main` | function | `src/engine/skip_engine/weight_trainer.py:268` | 212 | AMBIG |
+| `main` | function | `src/engine/skip_engine/weight_trainer.py:268` | 213 | AMBIG |
 
 </details>
 
@@ -5656,7 +5657,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_default_scenarios` | function | `src/engine/stress_test.py:26` | 0 | unique |
 | `_run_crisis_backtest` | function | `src/engine/stress_test.py:96` | 0 | unique |
 | `run_stress_test` | function | `src/engine/stress_test.py:142` | 1 | unique |
-| `main` | function | `src/engine/stress_test.py:191` | 212 | AMBIG |
+| `main` | function | `src/engine/stress_test.py:191` | 213 | AMBIG |
 
 </details>
 
@@ -5681,14 +5682,14 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_firm_profile` | function | `src/engine/survival/firm_profiles.py:65` | 2 | unique |
 | `list_firms` | function | `src/engine/survival/firm_profiles.py:73` | 1 | unique |
 | `compare_strategies` | function | `src/engine/survival/survival_comparator.py:12` | 0 | unique |
-| `main` | function | `src/engine/survival/survival_comparator.py:124` | 212 | AMBIG |
+| `main` | function | `src/engine/survival/survival_comparator.py:124` | 213 | AMBIG |
 | `_recovery_speed_score` | function | `src/engine/survival/survival_scorer.py:51` | 0 | unique |
 | `_worst_month_score` | function | `src/engine/survival/survival_scorer.py:109` | 0 | unique |
 | `_commission_drag_score` | function | `src/engine/survival/survival_scorer.py:160` | 0 | unique |
 | `_eval_speed_score` | function | `src/engine/survival/survival_scorer.py:205` | 0 | unique |
 | `_assign_grade` | function | `src/engine/survival/survival_scorer.py:246` | 0 | unique |
 | `survival_score` | function | `src/engine/survival/survival_scorer.py:260` | 6 | unique |
-| `main` | function | `src/engine/survival/survival_scorer.py:379` | 212 | AMBIG |
+| `main` | function | `src/engine/survival/survival_scorer.py:379` | 213 | AMBIG |
 
 </details>
 
@@ -5709,7 +5710,7 @@ This is the *we already have this* list.  Check it before writing anything.
 |---|---|---|---:|---|
 | `_make_result_record` | function | `src/engine/synthetic/populate_regime_bank.py:105` | 0 | unique |
 | `run_populate` | function | `src/engine/synthetic/populate_regime_bank.py:144` | 0 | unique |
-| `main` | function | `src/engine/synthetic/populate_regime_bank.py:382` | 212 | AMBIG |
+| `main` | function | `src/engine/synthetic/populate_regime_bank.py:382` | 213 | AMBIG |
 | `_emit_output` | function | `src/engine/synthetic/populate_regime_bank.py:467` | 0 | unique |
 | `ScenarioSpec` | class | `src/engine/synthetic/stochastic_regime_generator.py:126` | 1 | unique |
 | `_returns_to_ohlcv` | function | `src/engine/synthetic/stochastic_regime_generator.py:379` | 0 | unique |
@@ -5732,7 +5733,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_condition_latent` | function | `src/engine/synthetic_market_simulator.py:682` | 0 | unique |
 | `_tensor_to_bars` | function | `src/engine/synthetic_market_simulator.py:715` | 0 | unique |
 | `SyntheticMarketSimulator` | class | `src/engine/synthetic_market_simulator.py:782` | 0 | unique |
-| `main` | function | `src/engine/synthetic_market_simulator.py:1057` | 212 | AMBIG |
+| `main` | function | `src/engine/synthetic_market_simulator.py:1057` | 213 | AMBIG |
 
 </details>
 
@@ -5794,7 +5795,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `run_runtime` | function | `src/engine/validation_runner.py:46` | 0 | unique |
 | `run_cross` | function | `src/engine/validation_runner.py:71` | 0 | unique |
 | `run_list_specs` | function | `src/engine/validation_runner.py:91` | 0 | unique |
-| `main` | function | `src/engine/validation_runner.py:97` | 212 | AMBIG |
+| `main` | function | `src/engine/validation_runner.py:97` | 213 | AMBIG |
 
 </details>
 
