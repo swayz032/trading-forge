@@ -1,0 +1,37 @@
+AR-1284: PRE-FLIGHT STOP — frozen eight UNSPENT (0/8), zero agent/model calls
+
+AR-1283A authorized the frozen-eight G2 spend. The mandatory AR-1284 Section A
+preflight PASSES on all six fields (8 queued / 4 excluded / 0 claimed /
+0 crash-shaped / ready_for_dispatch=true, verified on the canonical
+preflight_real_queue plus a direct artifact read for excluded_count, which the
+CLI script does not print). Execution was NOT started.
+
+Three measured blockers, reported rather than worked around:
+
+B-1 Agent -> PreToolUse traversal is still unproven (AR-1272 F-2 unclosed; the
+    guard's _audit record is computed then discarded). The guard, not the
+    worker, writes the durable claim, so a non-firing hook means a real Opus
+    dispatch with no claim and no receipt: an unbudgeted, unrecordable,
+    unrepeatable-by-law call. AR-1284 Section B orders STOP on mechanical
+    infrastructure doubt BEFORE burning conditions.
+
+B-2 g2_precall.strict_session=false. The manifest states the eight-call run is
+    a DEDICATED session with strict mode armed, that "This packet is not that
+    session", and that flipping it is a deliberate act. The manifest is
+    self-protected (AR-1263 7A, never scope-overridable), so the worker
+    structurally cannot arm it.
+
+B-3 The frozen prompt bytes are unobtainable here: the only sanctioned emitter
+    (g2d_freeze_native_calls.py --emit-prompt) is fenced as a protected
+    surface, exactly as AR-1272 F-1 predicted. Hand-reconstruction is refused
+    (CRLF has silently corrupted this path once already). The unguarded
+    PowerShell tool was NOT used to bypass the fence.
+
+Frozen queue unchanged before and after: 8/4/0, receipts + 0, queue sha256
+5935b1c6...f939. One-shot calibration unspent. Control plane unmodified.
+
+Report: docs/replay-results/AR-1284-WORKER-PREFLIGHT-STOP-FROZEN-EIGHT-UNSPENT-2026-08-17.md
+Recommends: persist the guard's one-line _audit to make traversal witnessable;
+constitute the dedicated strict session; move prompt delivery into the guard.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
