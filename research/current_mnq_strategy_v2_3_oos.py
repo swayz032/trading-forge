@@ -17,13 +17,27 @@ import numpy as np
 import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as e
+from research.current_mnq_strategy_v2_2_contracts import projectx_contract_id
 from research.current_mnq_strategy_v2_3_data import sha256_file
+from research.current_mnq_strategy_v2_3_evidence import gold_counts
 from research.current_mnq_strategy_v2_3_policy import Evidence, load_spec, sealed_validation_gate, semantics_hash
 
 SEED = 20260817
 BASELINE_TOTAL_SLIPPAGE_POINTS = 0.50
 POINT_VALUE = 2.0
 CONTRACTS = 15
+
+
+def _json_if_present(path: str | Path | None) -> dict:
+    if path is None:
+        return {}
+    p = Path(path)
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text())
+    except Exception as exc:
+        raise RuntimeError(f"ARCHITECTURE_RECEIPT_CORRUPT:{p}") from exc
 
 
 def verify_dataset_bytes(root: str | Path, manifest: dict) -> None:
@@ -99,12 +113,36 @@ def slippage_stress(ledger: pd.DataFrame, points: list[float]) -> dict[str, floa
 
 
 def _data_quality(raw1: pd.DataFrame, raw5: pd.DataFrame) -> dict:
-    # The production 5m stream is derived from the exact 1m stream. Re-run the
-    # existing invariant/parity gate anyway so a damaged artifact cannot pass.
     return e.core.data_quality_gate(raw1, raw5)
 
 
-def run_sealed(dataset_root: str | Path, out_dir: str | Path) -> dict:
+def audit_scoreable_contract_provenance(raw1: pd.DataFrame, manifest: dict, days: list) -> dict:
+    """Every scoreable session—not only trade days—must carry its exact lead contract."""
+    issues = []
+    rth = raw1[(raw1.index.time >= pd.Timestamp("09:30").time()) &
+               (raw1.index.time <= pd.Timestamp("15:59").time())]
+    for d in days:
+        expected = projectx_contract_id(d)
+        declared = manifest.get("contract_sessions", {}).get(str(d))
+        if declared != expected:
+            issues.append(f"MANIFEST_CONTRACT:{d}:{declared}!={expected}")
+            continue
+        g = rth[rth.index.date == d]
+        if g.empty:
+            issues.append(f"RTH_SESSION_MISSING:{d}")
+            continue
+        observed = sorted(set(str(x) for x in g.get("contract_id", pd.Series(dtype=str)).dropna()))
+        if observed != [expected]:
+            issues.append(f"BAR_CONTRACT:{d}:{observed}!={[expected]}")
+    return {
+        "status": "PASS" if not issues else "REFUSE",
+        "scoreable_sessions": len(days),
+        "issues": issues[:100],
+    }
+
+
+def run_sealed(dataset_root: str | Path, out_dir: str | Path,
+               architecture_receipt: str | Path | None = None) -> dict:
     root = Path(dataset_root)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -132,9 +170,12 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path) -> dict:
     days = e.scoreable_days(env)
     if not days:
         raise RuntimeError("SEALED_NO_SCOREABLE_DAYS")
+    provenance = audit_scoreable_contract_provenance(raw1, manifest, days)
+    if provenance["status"] != "PASS":
+        raise RuntimeError("SEALED_CONTRACT_PROVENANCE_REFUSE:" + "|".join(provenance["issues"][:10]))
+
     ledger = e.run_backtest(env, e.Params(), days)
     ledger.to_csv(out / "ledger.csv", index=False)
-
     folds_n = int(load_spec()["evidence_policy"]["chronological_folds"])
     folds = chronological_folds(ledger, days, folds_n)
     folds.to_csv(out / "folds.csv", index=False)
@@ -145,21 +186,18 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path) -> dict:
     start = pd.Timestamp(manifest["requested_start"])
     end = pd.Timestamp(manifest["requested_end"])
     years = max(0.0, (end - start).days / 365.25)
-    contract_ok = True
-    if len(ledger):
-        for _, r in ledger.iterrows():
-            exp = manifest["contract_sessions"].get(str(r["session"]))
-            if exp != r["contract_id"]:
-                contract_ok = False
-                break
+    arch = _json_if_present(architecture_receipt)
+    arch_valid = bool(arch) and arch.get("semantics_sha256") == semantics_hash()
+    pos_gold, neg_gold = gold_counts()
+
     ev = Evidence(
         semantics_sha256=semantics_hash(),
-        architecture_tests_passed=1,
-        architecture_tests_failed=0,
-        real_user_positive_gold=5,
+        architecture_tests_passed=int(arch.get("tests", 0)) if arch_valid else 0,
+        architecture_tests_failed=int(arch.get("failures", 1)) if arch_valid else 1,
+        real_user_positive_gold=pos_gold,
         semantic_negative_fixtures=len(load_spec()["negative_semantic_fixtures"]),
-        real_user_tempting_no_trade_gold=0,
-        contract_provenance_pass=contract_ok,
+        real_user_tempting_no_trade_gold=neg_gold,
+        contract_provenance_pass=True,
         data_quality_pass=True,
         sealed_calendar_years=years,
         sealed_sessions=len(days),
@@ -174,6 +212,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path) -> dict:
     report = {
         "seal": seal,
         "data_quality": dq,
+        "contract_provenance": provenance,
         "metrics": m,
         "folds": folds.to_dict(orient="records"),
         "block_bootstrap_mean_trade": boot,
