@@ -1,0 +1,63 @@
+{
+  "schema": "g2d-prompt-transport-index-v1",
+  "source_manifest": "docs/replay-results/svkm-extraction-certified/grade/opus-v2/native_call_manifest_t1.json",
+  "row_count": 8,
+  "rows": [
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "filename": "entry_sequence_0_.rationale.74936600cfe8.prompt.txt",
+      "byte_length": 25948,
+      "sha256": "def6539072ea927a1ecf073fea13959092a3a7a46586a28b4b52096f2fc40adc",
+      "native_call_sha256": "a4f06b01aeef41c071262f7d3e54a9cde0b8615efb80826f6314ac3b96289039"
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "filename": "entry_sequence_1_.action.772948a5e9bd.prompt.txt",
+      "byte_length": 25969,
+      "sha256": "d7db358c3226d47327131154588474e0307244c58dbcb2ce1b811858ead029c7",
+      "native_call_sha256": "ff8e95a3688228093c930f130363a6ced95f1017c0ea894239df75570a8cd6fc"
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "filename": "entry_sequence_1_.rationale.fdda699d03f8.prompt.txt",
+      "byte_length": 25948,
+      "sha256": "23a786f07fd2029cadd10cb75a579f0d8099304f986baad696ecbea3142fc502",
+      "native_call_sha256": "b705e4091698f71468166daec23d30b7a4f8630e193d49d9ace2d61b5aea7ff6"
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "filename": "entry_sequence_2_.action.c93f25926694.prompt.txt",
+      "byte_length": 25957,
+      "sha256": "3c57e4740c81487d8060f085ebb512745747a3d7995baa2c05e6414eb5ca411d",
+      "native_call_sha256": "666235bd70e257bde2f50846ea59e9aa7edfde652a2b7d6774f413f84c271205"
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "filename": "entry_sequence_2_.rationale.b4a5470ddf98.prompt.txt",
+      "byte_length": 25965,
+      "sha256": "a91752c29ee77eea206af17acb33b07bdeccfb4c037485df5214edf31147c102",
+      "native_call_sha256": "22278a8f3fe92121e0a03133597a0e983596c1e554327fbdf0896ad9b10f57a6"
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "filename": "entry_sequence_3_.rationale.952f94d75996.prompt.txt",
+      "byte_length": 25954,
+      "sha256": "95599ce8784d73b4e4b9c83768530f80bff1f8f93e26191725cdb8b9afbc1fde",
+      "native_call_sha256": "e8295cde9647e0933f99c0af608d62f97b21074c77b93b817be167b3b511837e"
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "filename": "confluences_0_.description.0093d68738e7.prompt.txt",
+      "byte_length": 25945,
+      "sha256": "cf2d192c8eadb50717b653d7f30c135d77862591d09909c2df7a5f51a8b26b99",
+      "native_call_sha256": "678b0e82e7c29124d6d6e714d4da2917fcd94975553b70f4bccee9ccb023a59f"
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "filename": "confluences_1_.description.40c64b18289a.prompt.txt",
+      "byte_length": 25935,
+      "sha256": "905cac9b90dade5f86b539088ab53b21dd4233a574202662a74f8f07ef26c4f3",
+      "native_call_sha256": "a650c158aeb712e656053da4b0bf110979d5cfb2e1e1b527ade54205ade62145"
+    }
+  ]
+}

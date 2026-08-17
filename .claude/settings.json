@@ -34,7 +34,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Edit|Write|NotebookEdit|Bash|Agent|Task",
+        "matcher": "Edit|Write|NotebookEdit|Bash|Agent|Task|PowerShell",
         "hooks": [
           {
             "type": "command",
