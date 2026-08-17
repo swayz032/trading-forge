@@ -1522,3 +1522,27 @@ test('AR1292-G5 regression: prior end-to-end and identity controls remain green 
   ]);
 });
 
+/* =============================== AR-1293 H1-H3 — F22: RETIRE THE LEGACY COMMIT-ONLY ROUTE ==== */
+
+test('AR1293-H1 the retired cp-commit.mjs Bash shape is no longer executable by the privileged seat', () => {
+  const cmd = 'node scripts/control-plane-bootstrap/cp-commit.mjs --msg-file scripts/control-plane-bootstrap/.cp-commit-msg.tmp';
+  const v = classifyControlPlaneBash(cmd, bashCtx);
+  assert.equal(v.verdict, 'DENY');
+  // Must bite because the shape is gone, not because Bash is broken wholesale.
+  assert.match(v.reason, /not in the control-plane allowlist/);
+});
+
+test('AR1293-H2 cp-finalize.mjs remains the ONE valid commit/push route; raw git and cp-commit variants all DENY', () => {
+  assert.equal(classifyControlPlaneBash('node scripts/control-plane-bootstrap/cp-finalize.mjs', bashCtx).verdict, 'ALLOW');
+  assert.equal(classifyControlPlaneBash('node scripts/control-plane-bootstrap/cp-finalize.mjs --anything', bashCtx).verdict, 'DENY');
+  assert.equal(classifyControlPlaneBash('git commit -m x', bashCtx).verdict, 'DENY');
+  assert.equal(classifyControlPlaneBash('git push origin main', bashCtx).verdict, 'DENY');
+  assert.equal(classifyControlPlaneBash('git add CLAUDE.md', bashCtx).verdict, 'ALLOW', 'ordinary authorized staging must still work');
+});
+
+test('AR1293-H3 the generated Phase-1 prompt instructs cp-finalize.mjs and never instructs cp-commit.mjs', () => {
+  const p = buildPacketPrompt(baselineMarker());
+  assert.match(p, /cp-finalize\.mjs/);
+  assert.doesNotMatch(p, /cp-commit\.mjs/, 'the prompt must never point the seat at the retired commit-only route');
+});
+

@@ -180,9 +180,13 @@ The seat's guard (`control-plane-guard.mjs` + `control-plane-seat-hook.mjs`) is 
 - `Bash` — **default-denied**, with a closed set of exact shapes (read-only git inspection, the
   focused test runner, the fixed prompt-transport helper, `git add <path>` which re-enters the path
   classifier **except the one transient commit-message path, categorically refused for staging even
-  though it is writable (AR-1291A F20)**, the fixed commit helper, and a push restricted to the
-  seat's own branch). Shell composition, redirection, substitution and arbitrary `node -e` /
-  `python -c` / `sh -c` / `npx` are refused before matching;
+  though it is writable (AR-1291A F20)**, and the terminal finalize path — commit, push and the
+  trusted completion receipt in one act. **The older commit-only `cp-commit.mjs` shape is RETIRED
+  from this allowlist (AR-1292A F22): it commits locally but never pushes and never writes the
+  completion receipt, so a legally-invoked commit-only route could strand a one-shot authorization
+  in a local-only state. The file still exists (conservative/historical, still in `BUNDLE_FILES`);
+  only its privileged Bash route is gone.** Shell composition, redirection, substitution and
+  arbitrary `node -e` / `python -c` / `sh -c` / `npx` are refused before matching;
 - writes — allowed only if they match `allowed_paths`;
 - frozen G2 paths, the seat's own guard registration, the claim namespace, money-path and toolbox
   prefixes — denied categorically, allowlist or not;

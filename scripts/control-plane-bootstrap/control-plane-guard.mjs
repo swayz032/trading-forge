@@ -160,7 +160,13 @@ export const BASH_ALLOWED_SHAPES = Object.freeze([
   // the regex is a literal, so `... .py foo`, `python -c ...` and any other variant fall through
   // to the default deny below, exactly like every other exact-shape entry in this table.
   { id: 'g2-prompt-transport', re: /^python scripts\/control-plane-bootstrap\/materialize-g2-prompt-transport\.py$/ },
-  { id: 'cp-commit', re: /^node scripts\/control-plane-bootstrap\/cp-commit\.mjs --msg-file scripts\/control-plane-bootstrap\/\.cp-commit-msg\.tmp$/ },
+  // AR-1292A F22 — cp-commit.mjs's Bash shape is RETIRED, not the file. It commits locally but
+  // never pushes and never writes the trusted completion receipt, so a legally-invoked cp-commit
+  // could advance HEAD, delete the message file, and strand the one-shot authorization in a
+  // local-only state the terminal finalizer exists to prevent — exactly the class of thing F21 just
+  // closed on the OTHER side of this same seam. The file stays in the repo (and in BUNDLE_FILES) as
+  // historical/conservative bundled code; only its privileged Bash route is gone. Do not re-add an
+  // entry for it here without a fresh ruling.
   // AR-1278A F-14: the ONE terminal finalize path. It takes no arguments at all, so there is
   // nothing for model text to choose.
   { id: 'cp-finalize', re: /^node scripts\/control-plane-bootstrap\/cp-finalize\.mjs$/ },
