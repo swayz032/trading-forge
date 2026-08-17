@@ -146,6 +146,42 @@ function transitionSpy(outcome = { ok: true }) {
   return fn;
 }
 
+/**
+ * AR-1305A F33/F34 — this file predates the global interlock and plants receipt files by hand
+ * to exercise it (the "E:" section below). `evaluateG2PreCall` now always calls a `stateReport`
+ * to enforce that interlock, so this fake re-reads the SAME fixture files these tests already
+ * plant, live at call time, and classifies them the same way `isolated_bridge.state_of` does.
+ * This is test-fixture code reflecting what the test itself just wrote to disk — not a second
+ * implementation of the production state law, which still lives only in Python and is read via
+ * the real `g2d_bridge_report.py` doorway everywhere outside this synthetic harness.
+ */
+function liveFakeStateReport(rig) {
+  return () => {
+    const refs = [...rig.g2.entries.keys()];
+    const states = {};
+    for (const ref of refs) {
+      const base = safeName(ref);
+      const at = (part) => path.join(rig.receiptDir, `${base}.${part}.json`);
+      const hasRaw = fs.existsSync(at('raw'));
+      const hasCompletion = fs.existsSync(at('completion'));
+      if (hasRaw && hasCompletion) states[ref] = 'RAW_RETURN_CAPTURED';
+      else if (hasRaw || hasCompletion) states[ref] = 'STRANDED_INCOMPLETE';
+      else if (fs.existsSync(at('dispatch'))) states[ref] = 'NATIVE_TASK_DISPATCHED';
+      else if (fs.existsSync(at('attempt'))) states[ref] = 'CLAIMED';
+      else states[ref] = 'READY';
+    }
+    return {
+      ok: true,
+      queue_order: refs,
+      states,
+      stranded_mid_handoff: refs.filter((r) => states[r] === 'CLAIMED' || states[r] === 'NATIVE_TASK_DISPATCHED'),
+      stranded_incomplete: refs.filter((r) => states[r] === 'STRANDED_INCOMPLETE'),
+      complete: refs.filter((r) => states[r] === 'RAW_RETURN_CAPTURED'),
+      unstarted: refs.filter((r) => states[r] === 'READY'),
+    };
+  };
+}
+
 function gate(rig, toolInput, opts = {}) {
   const transition = opts.transition ?? transitionSpy();
   const verdict = evaluateG2PreCall({
@@ -155,6 +191,7 @@ function gate(rig, toolInput, opts = {}) {
     cwd: rig.root,
     nativeCalls: opts.nativeCalls === undefined ? rig.nativeCalls : opts.nativeCalls,
     transition,
+    stateReport: opts.stateReport ?? liveFakeStateReport(rig),
     strictSession: opts.strictSession ?? true,
   });
   return { verdict, transition };
@@ -305,10 +342,17 @@ test('F-4 DISCRIMINATES: the unmutated authorized call still passes', () => {
 test('E: a dispatch outstanding without raw+completion denies the NEXT ref', () => {
   // REF2 is dispatched and uncaptured; the call under test is for REF. Racing on would spend a
   // second one-shot attempt while the first answer is unrecoverable.
+  //
+  // AR-1305A F33/F34: the denial this control checks now comes from the global sequential
+  // interlock (globalInterlockDenyReason), which supersedes the narrower outstandingCapture()
+  // this test originally exercised alone -- outstandingCapture() itself is unchanged and still
+  // covered by the DISCRIMINATES control below, but evaluateG2PreCall's own step 7 now reads
+  // the wider check. The property under test (a stuck row anywhere denies every other row) is
+  // identical; only the wording changed.
   const rig = makeRig({ receipts: [`${safeName(REF2)}.dispatch.json`] });
   const { verdict, transition } = gate(rig, rig.authorized);
   assert.equal(verdict.allow, false);
-  assert.match(verdict.reason, /has not been captured/);
+  assert.match(verdict.reason, /stuck at NATIVE_TASK_DISPATCHED|has not been captured/);
   assert.equal(transition.calls.length, 0);
 });
 

@@ -15,7 +15,7 @@ import {
   extractRawResponseText,
   defaultCapture,
 } from './g2-postcall-capture.mjs';
-import { loadG2Context, safeName, canonicalNativeCallSha256 } from './g2-precall-guard.mjs';
+import { loadG2Context, safeName, canonicalNativeCallSha256, SUBAGENT_TOOL_NAMES } from './g2-precall-guard.mjs';
 
 const REF_A = 'entry_sequence[0].rationale';
 const REF_B = 'entry_sequence[1].action';
@@ -81,19 +81,24 @@ function fakeCapture(outcome = { ok: true, receipt: { state: 'RAW_RETURN_CAPTURE
 }
 
 // ---------------------------------------------------------------------------
-// extractRawResponseText — the honestly-flagged schema-guess boundary
+// extractRawResponseText — AR-1305A: `tool_response` is a CONFIRMED field name (found verbatim
+// in the shipped Claude Code binary's own embedded hook docs), but its Agent-tool sub-shape is
+// not, so nothing here guesses a sub-field: the whole value is preserved losslessly.
 // ---------------------------------------------------------------------------
 
 test('extractRawResponseText: a plain string passes through unchanged', () => {
   assert.equal(extractRawResponseText('hello'), 'hello');
 });
 
-test('extractRawResponseText: an object with a text field extracts the text', () => {
-  assert.equal(extractRawResponseText({ text: 'the answer' }), 'the answer');
+test('extractRawResponseText: an object is preserved WHOLE as canonical JSON, never a cherry-picked sub-field (a naive text-key guess would have silently dropped everything else)', () => {
+  const out = extractRawResponseText({ text: 'the answer', extra_field_a_guess_would_drop: 'do-not-lose-me' });
+  assert.match(out, /"text":"the answer"/);
+  assert.match(out, /"extra_field_a_guess_would_drop":"do-not-lose-me"/);
 });
 
-test('extractRawResponseText: a content-block array joins its text parts', () => {
-  assert.equal(extractRawResponseText({ content: [{ text: 'a' }, { text: 'b' }] }), 'ab');
+test('extractRawResponseText: a content-block array is preserved WHOLE, not joined/flattened by a guessed convention', () => {
+  const out = extractRawResponseText({ content: [{ text: 'a' }, { text: 'b' }] });
+  assert.equal(out, JSON.stringify({ content: [{ text: 'a' }, { text: 'b' }] }));
 });
 
 test('extractRawResponseText: an unrecognized shape is serialized, never dropped', () => {
@@ -234,6 +239,166 @@ test('MUTATION: without the dispatch-existence check, an undispatched row would 
   });
   assert.equal(real.captured, false);
   assert.equal(cap.calls.length, 0, 'the real, checked gate never invokes capture for an undispatched row');
+});
+
+// ---------------------------------------------------------------------------
+// AR-1305A F35 — STRICT-SESSION FAIL-CLOSED SEMANTICS
+//
+// Outside strict G2, an unresolvable PostToolUse event is ordinary unrelated Agent use and
+// stays untouched (handled:false). Inside strict G2, the identical unresolvable event is an
+// anomaly that must not silently pass through. Once a call IS resolved to a frozen row, every
+// remaining anomaly is block:true unconditionally -- strict or not, because the match itself is
+// the proof of G2-ness.
+// ---------------------------------------------------------------------------
+
+test('F35 NON-STRICT: no manifest loaded stays handled:false (unrelated Agent use untouched)', () => {
+  const ctx = makeG2();
+  const r = evaluatePostCallCapture({
+    toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: null, strictSession: false,
+  });
+  assert.equal(r.handled, false);
+  assert.equal(r.block, undefined);
+});
+
+test('F35 STRICT: the IDENTICAL no-manifest event becomes handled:true, block:true, captured:false', () => {
+  const ctx = makeG2();
+  const r = evaluatePostCallCapture({
+    toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: null, strictSession: true,
+  });
+  assert.equal(r.handled, true);
+  assert.equal(r.captured, false);
+  assert.equal(r.block, true);
+  assert.match(r.reason, /strict G2 session/);
+});
+
+test('F35 NON-STRICT: a queue-mismatched manifest stays handled:false', () => {
+  const ctx = makeG2();
+  const nc = nativeCallsFor(ctx, REF_A);
+  nc.queueArtifactSha256 = 'f'.repeat(64);
+  const r = evaluatePostCallCapture({
+    toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nc, strictSession: false,
+  });
+  assert.equal(r.handled, false);
+});
+
+test('F35 STRICT: a queue-mismatched manifest becomes block:true', () => {
+  const ctx = makeG2();
+  const nc = nativeCallsFor(ctx, REF_A);
+  nc.queueArtifactSha256 = 'f'.repeat(64);
+  const r = evaluatePostCallCapture({
+    toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nc, strictSession: true,
+  });
+  assert.equal(r.handled, true);
+  assert.equal(r.block, true);
+});
+
+test('F35 NON-STRICT: a call matching no frozen row (ordinary Agent use) stays handled:false', () => {
+  const ctx = makeG2();
+  const r = evaluatePostCallCapture({
+    toolName: 'Agent', toolInput: { prompt: 'summarize the README' }, toolResponse: 'x',
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), strictSession: false,
+  });
+  assert.equal(r.handled, false);
+});
+
+test('F35 STRICT: the IDENTICAL unmatched call becomes block:true (every Agent/Task return inside the dedicated session must join to one of the eight)', () => {
+  const ctx = makeG2();
+  const r = evaluatePostCallCapture({
+    toolName: 'Agent', toolInput: { prompt: 'summarize the README' }, toolResponse: 'x',
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), strictSession: true,
+  });
+  assert.equal(r.handled, true);
+  assert.equal(r.captured, false);
+  assert.equal(r.block, true);
+});
+
+test('F35: once resolved to a frozen row, "no prior dispatch" is block:true REGARDLESS of strict mode', () => {
+  const ctx = makeG2(); // no plantDispatch
+  for (const strictSession of [true, false]) {
+    const r = evaluatePostCallCapture({
+      toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
+      g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), strictSession,
+    });
+    assert.equal(r.handled, true, `strictSession=${strictSession}`);
+    assert.equal(r.block, true, `strictSession=${strictSession}`);
+  }
+});
+
+test('F35: once resolved to a frozen row, a successful capture is block:false REGARDLESS of strict mode', () => {
+  const ctx = makeG2();
+  plantDispatch(ctx, REF_A);
+  for (const strictSession of [true, false]) {
+    const cap = fakeCapture();
+    const r = evaluatePostCallCapture({
+      toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
+      g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), strictSession, capture: cap,
+    });
+    assert.equal(r.captured, true, `strictSession=${strictSession}`);
+    assert.equal(r.block, false, `strictSession=${strictSession}`);
+    fs.rmSync(path.join(ctx.receiptDir, `${safeName(REF_A)}.raw.json`), { force: true }); // reset for next loop iter's fresh plantDispatch state check (dispatch remains, no raw before this iter's call)
+  }
+});
+
+test('F35 MUTATION: a bridge that ignored the strict-session upgrade would treat an unresolvable event as handled:false even inside strict G2; the real gate refuses to stay silent', () => {
+  const ctx = makeG2();
+  // Unchecked stand-in: identical to evaluatePostCallCapture's shape but WITHOUT the strict
+  // upgrade -- exactly the pre-F35 behaviour.
+  function withoutStrictUpgrade({ nativeCalls: nc }) {
+    if (!nc) return { handled: false, reason: 'no frozen native-call identity manifest is loaded' };
+    return { handled: true };
+  }
+  const naive = withoutStrictUpgrade({ nativeCalls: null });
+  assert.equal(naive.handled, false, 'the naive stand-in silently passes an unresolvable event through even conceptually inside strict G2');
+
+  const real = evaluatePostCallCapture({
+    toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: null, strictSession: true,
+  });
+  assert.equal(real.handled, true);
+  assert.equal(real.block, true, 'the real, strict-aware gate refuses to stay silent');
+});
+
+// =========================================================================================
+// AR-1305A F32 item 6 — REGISTRATION PARITY for the NEW PostToolUse route.
+//
+// Mirrors the existing PreToolUse parity control in g2-precall-guard.test.mjs exactly: a
+// correct evaluatePostCallCapture() that the installed PostToolUse matcher never routes to is
+// not a guard, and every synthetic test above would still pass while the real handshake stayed
+// broken -- the exact "two green halves are not a handshake" shape AR-1305A convicted.
+// =========================================================================================
+
+test('REGISTRATION PARITY: every subagent tool the post-call gate covers appears in the PostToolUse matcher', () => {
+  const fragmentPath = path.resolve(import.meta.dirname, '..', 'claude-hooks', 'settings.fragment.json');
+  const fragment = JSON.parse(fs.readFileSync(fragmentPath, 'utf8'));
+  const postToolUse = fragment.hooks.PostToolUse;
+  assert.ok(postToolUse, 'no PostToolUse registration exists in the settings fragment at all -- F30/F35 code exists with no route to reach it');
+  assert.equal(postToolUse.length, 1, 'expected exactly one PostToolUse registration to reason about');
+
+  const matcher = postToolUse[0].matcher;
+  const registered = new Set(matcher.split('|'));
+
+  for (const tool of SUBAGENT_TOOL_NAMES) {
+    assert(
+      registered.has(tool),
+      `the post-call gate covers subagent tool '${tool}' but the installed PostToolUse matcher (${matcher}) does not register it -- the gate would never see the return`,
+    );
+  }
+});
+
+test('MUTATION: narrowing the PostToolUse matcher to drop Task makes the parity control RED', () => {
+  const fragmentPath = path.resolve(import.meta.dirname, '..', 'claude-hooks', 'settings.fragment.json');
+  const fragment = JSON.parse(fs.readFileSync(fragmentPath, 'utf8'));
+  const narrowedMatcher = fragment.hooks.PostToolUse[0].matcher.split('|').filter((t) => t !== 'Task').join('|');
+  const registered = new Set(narrowedMatcher.split('|'));
+  let caught = false;
+  for (const tool of SUBAGENT_TOOL_NAMES) {
+    if (!registered.has(tool)) { caught = true; break; }
+  }
+  assert.equal(caught, true, 'narrowing the matcher must be something the parity control would actually notice');
 });
 
 // ---------------------------------------------------------------------------

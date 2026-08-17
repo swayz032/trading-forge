@@ -14,6 +14,7 @@ import {
   loadNativeCallManifest,
   SUBAGENT_TOOL_NAMES,
 } from './g2-precall-guard.mjs';
+import { evaluatePostCallCapture } from './g2-postcall-capture.mjs';
 import { mintGuardSession, revokeGuardSession, verifyGuardSession } from './guard-session-marker.mjs';
 
 // Re-exported for the lifecycle red proofs: those controls must be able to place a marker where
@@ -294,6 +295,47 @@ export function evaluateHookEvent({ input, manifest }) {
     return { _audit: { event, paths, lane, scope, decision } };
   }
 
+  // AR-1305A F32 — the PostToolUse half of the G2-D handshake. F29/F30 already prove the two
+  // Python doorways in isolation; this is the wire between them and the real runner/bridge
+  // process boundary that "two green halves are not a handshake" convicted as missing.
+  if (event === 'PostToolUse') {
+    const session = armedSession(input, manifest, repoRoot);
+    if (!session.ok) {
+      return { ...block(`worker session is not armed: ${session.reason}`), _audit: { event, anchor_verified: false, session } };
+    }
+
+    if (manifest.g2_precall && manifest.g2_precall.enabled === true
+        && SUBAGENT_TOOL_NAMES.includes(input.tool_name)) {
+      try {
+        const g2 = loadG2Context({
+          queuePath: path.resolve(repoRoot, manifest.g2_precall.queue_path),
+          receiptDir: path.resolve(repoRoot, manifest.g2_precall.receipt_dir),
+        });
+        const nativeCalls = loadNativeCallManifest({
+          manifestPath: path.resolve(repoRoot, manifest.g2_precall.native_call_manifest_path),
+        });
+        const verdict = evaluatePostCallCapture({
+          toolName: input.tool_name,
+          toolInput: input.tool_input,
+          toolResponse: input.tool_response,
+          g2,
+          nativeCalls,
+          cwd: repoRoot,
+          strictSession: manifest.g2_precall.strict_session === true,
+        });
+        if (verdict.block) {
+          return { ...block(`G2 post-call guard: ${verdict.reason}`), _audit: { event, g2_postcall: verdict } };
+        }
+        if (verdict.handled) return { _audit: { event, g2_postcall: verdict } };
+      } catch (error) {
+        // Fail closed: if the frozen artifacts cannot be read, the return cannot be verified.
+        return { ...block(`G2 post-call guard could not verify the frozen budget: ${error.message}`), _audit: { event, g2_postcall_error: error.message } };
+      }
+    }
+
+    return { _audit: { event, guarded: false } };
+  }
+
   if (event === 'TaskCompleted') {
     const session = armedSession(input, manifest, repoRoot);
     if (!session.ok) {
@@ -350,7 +392,7 @@ function main() {
       try { return JSON.parse(fs.readFileSync(0, 'utf8')).hook_event_name; } catch { return null; }
     })();
     if (event === 'PreToolUse') process.stdout.write(`${JSON.stringify(deny(`GPT worker guard internal error: ${error.message}`))}\n`);
-    else if (event === 'TaskCompleted') process.stdout.write(`${JSON.stringify(block(`GPT worker guard internal error: ${error.message}`))}\n`);
+    else if (event === 'TaskCompleted' || event === 'PostToolUse') process.stdout.write(`${JSON.stringify(block(`GPT worker guard internal error: ${error.message}`))}\n`);
     else process.stderr.write(`claude-hook-bridge: ${error.message}\n`);
   }
 }

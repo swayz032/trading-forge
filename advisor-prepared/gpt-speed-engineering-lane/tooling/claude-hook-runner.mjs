@@ -43,7 +43,7 @@ try {
 } catch (error) {
   const reason = `GPT worker guard internal error: ${error.message}`;
   if (input?.hook_event_name === 'PreToolUse') emit(deny(reason));
-  else if (input?.hook_event_name === 'TaskCompleted') emit(block(reason));
+  else if (input?.hook_event_name === 'TaskCompleted' || input?.hook_event_name === 'PostToolUse') emit(block(reason));
   else if (input?.hook_event_name === 'SessionStart') {
     emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: `${reason}. Guard was not armed; do not edit.` } });
   } else {

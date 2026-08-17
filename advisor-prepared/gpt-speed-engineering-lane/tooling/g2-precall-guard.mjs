@@ -300,6 +300,79 @@ export function permitPathFor(receiptDir, conditionRef) {
 }
 
 /**
+ * AR-1305A F33/F34 — GLOBAL SEQUENTIAL INTERLOCK, READ FROM THE EXISTING DURABLE STATE LAW.
+ *
+ * THE GAP THIS CLOSES: `outstandingCapture()` only ever detects a row with `.dispatch` but no
+ * `.raw`/`.completion` — the NATIVE_TASK_DISPATCHED crash shape. It never looks at a row that
+ * claimed and then failed its dispatch transition (`.attempt` with no `.dispatch` — CLAIMED,
+ * per the Python state law), nor at `.raw` without `.completion` (STRANDED_INCOMPLETE). Any of
+ * those three states on ANY row must stop every other row cold: a claimed-but-undispatched
+ * attempt is already SPENT and can never be redone, so racing ahead to a different row would
+ * both violate the one-shot law and make the stuck row impossible to reconcile later.
+ *
+ * `report` is the JSON `g2d_bridge_report.py` returns — the EXISTING `bridge_report()` /
+ * `state_of()` Python law, read-only, never reimplemented here. This function adds no state
+ * logic beyond interpreting that report's own buckets and the frozen queue's own order.
+ */
+export function nextEligibleRef(report) {
+  const completeSet = new Set(report.complete);
+  for (const ref of report.queue_order) {
+    if (!completeSet.has(ref)) return ref;
+  }
+  return null;
+}
+
+export function globalInterlockDenyReason(report, conditionRef) {
+  if (report.stranded_mid_handoff.length > 0) {
+    const stuck = report.stranded_mid_handoff[0];
+    return (
+      `global one-shot interlock: prior row ${stuck} is stuck at ${report.states[stuck]} ` +
+      'and never reached a captured return; every subsequent dispatch is refused until it is ' +
+      'captured or the desk adjudicates it — a claimed-or-dispatched attempt is already spent ' +
+      'and cannot be redone by racing ahead to a different row'
+    );
+  }
+  if (report.stranded_incomplete.length > 0) {
+    const stuck = report.stranded_incomplete[0];
+    return (
+      `global one-shot interlock: prior row ${stuck} is STRANDED_INCOMPLETE (a half-written ` +
+      'final commit); every subsequent dispatch is refused until the desk adjudicates it'
+    );
+  }
+  const next = nextEligibleRef(report);
+  if (next === null) {
+    return 'global one-shot interlock: every frozen row is already complete; no further dispatch is eligible';
+  }
+  if (conditionRef !== next) {
+    return (
+      `frozen row order violation: ${conditionRef} was requested but ${next} is the next ` +
+      'eligible row in frozen queue order; no batching, no reordering, no skipping'
+    );
+  }
+  return null;
+}
+
+/** Shells out to the read-only bridge-report doorway. Never reimplements state_of/bridge_report. */
+export function defaultStateReport({ repoRoot, queuePath, receiptDir, python }) {
+  const script = path.join(repoRoot, 'scripts', 'g2d_bridge_report.py');
+  if (!fs.existsSync(script)) {
+    return { ok: false, error: `protected bridge-report doorway not found: ${script}` };
+  }
+  const exe = python || process.env.TF_PYTHON || 'python';
+  const res = spawnSync(exe, [script, '--queue', queuePath, '--receipt-dir', receiptDir], {
+    encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, cwd: repoRoot,
+  });
+  if (res.error) return { ok: false, error: `bridge-report doorway did not execute: ${res.error.message}` };
+  const out = (res.stdout || '').trim();
+  let parsed = null;
+  try { parsed = JSON.parse(out); } catch { parsed = null; }
+  if (res.status !== 0 || !parsed || parsed.ok !== true) {
+    return { ok: false, error: `bridge-report refused (exit ${res.status}): ${(parsed && parsed.error) || (res.stderr || '').trim() || out || 'no output'}` };
+  }
+  return parsed;
+}
+
+/**
  * AR-1304 §5 (F29 repair) — HOOK-OWNED EXACT PERMIT MATERIALIZATION.
  *
  * THE DEADLOCK THIS CLOSES: the ordinary Worker-1 lane guard categorically self-protects the
@@ -317,7 +390,7 @@ export function permitPathFor(receiptDir, conditionRef) {
  * existed) and the caller should just read it, or `{ materialized: false, denyReason }` when
  * materialization is refused outright and the caller must deny before ever touching the model.
  */
-export function materializePermitIfNeeded({ g2, toolInput, actualModel, permitPath, nativeCalls }) {
+export function materializePermitIfNeeded({ g2, toolInput, actualModel, permitPath, nativeCalls, report }) {
   if (fs.existsSync(permitPath)) return { materialized: false };
 
   if (!nativeCalls) {
@@ -372,6 +445,21 @@ export function materializePermitIfNeeded({ g2, toolInput, actualModel, permitPa
       materialized: false,
       denyReason: `native-call manifest row names condition_ref ${conditionRef}, which is not a member of the frozen queue`,
     };
+  }
+
+  // AR-1305A F33/F34 — the global interlock runs BEFORE anything is written. A row-B call must
+  // never materialize a permit while row A is stuck (CLAIMED/NATIVE_TASK_DISPATCHED/
+  // STRANDED_INCOMPLETE anywhere in the queue), and never out of frozen queue order, even if
+  // every other check above it would otherwise pass.
+  if (!report || report.ok !== true) {
+    return {
+      materialized: false,
+      denyReason: `could not read the global durable state report, so the one-shot interlock cannot be proven: ${(report && report.error) || 'no report supplied'}`,
+    };
+  }
+  const interlockDeny = globalInterlockDenyReason(report, conditionRef);
+  if (interlockDeny) {
+    return { materialized: false, denyReason: interlockDeny };
   }
 
   // AR-1304 §5 step 9 — the permit path is DERIVED, never a caller's arbitrary choice. A
@@ -429,6 +517,7 @@ export function evaluateG2PreCall({
   strictSession = false,
   nativeCalls = null,
   transition = defaultTransition,
+  stateReport = defaultStateReport,
 }) {
   if (!SUBAGENT_TOOLS.has(toolName)) return { allow: true, g2: false, reason: 'not a subagent dispatch' };
 
@@ -456,6 +545,11 @@ export function evaluateG2PreCall({
 
   const absolute = path.isAbsolute(permitPath) ? permitPath : path.resolve(cwd, permitPath);
 
+  // AR-1305A F33/F34 — read the global durable state ONCE per evaluation, from the existing
+  // Python state law, and use it both for materialization (below) and for the existing-permit
+  // path (step 7 below). One read, two consumers — never two competing views of the same state.
+  const report = stateReport({ repoRoot: cwd, queuePath: g2.queuePath, receiptDir: g2.receiptDir });
+
   // AR-1304 §5 (F29) — materialize the exact frozen permit when it does not exist yet. This
   // runs BEFORE the read below, and it is the only place a permit file is ever written by this
   // guard. It either creates the file, finds one already there (never overwritten), or returns
@@ -467,6 +561,7 @@ export function evaluateG2PreCall({
     actualModel: toolInput ? toolInput[ACTUAL_MODEL_FIELD] : undefined,
     permitPath: absolute,
     nativeCalls,
+    report,
   });
   if (materialize.denyReason) return deny(materialize.denyReason);
 
@@ -517,14 +612,18 @@ export function evaluateG2PreCall({
     return deny(`permit attempt must be 1 and within max_attempts_per_condition=${g2.maxAttemptsPerCondition}, got ${permit.attempt}`);
   }
 
-  // 7. AR-1267 §9E — nothing proceeds while an earlier answer is still uncaptured.
-  const outstanding = outstandingCapture(g2);
-  if (outstanding) {
-    return deny(
-      `a prior frozen dispatch has not been captured (${outstanding.witness}); every subsequent ` +
-      'frozen dispatch is refused until that answer is captured or the desk adjudicates it. ' +
-      'An uncaptured answer cannot be re-obtained — its attempt is already spent.',
-    );
+  // 7. AR-1267 §9E, extended by AR-1305A F33/F34 — nothing proceeds while an earlier answer is
+  //    still uncaptured, ANY row is stuck (CLAIMED/NATIVE_TASK_DISPATCHED/STRANDED_INCOMPLETE),
+  //    or this row is out of frozen queue order. Superseding the narrower `outstandingCapture()`
+  //    (kept exported below for direct testing/back-compat) with the report already read above,
+  //    which sees every row's real state from the existing Python law, not just this one
+  //    dispatch-file check.
+  if (!report || report.ok !== true) {
+    return deny(`could not read the global durable state report, so the one-shot interlock cannot be proven: ${(report && report.error) || 'no report supplied'}`);
+  }
+  const interlockDeny = globalInterlockDenyReason(report, permit.condition_ref);
+  if (interlockDeny) {
+    return deny(interlockDeny);
   }
 
   // 8. AR-1267 §6.1 — THE ACTUAL model field, not the permit's claim about it.

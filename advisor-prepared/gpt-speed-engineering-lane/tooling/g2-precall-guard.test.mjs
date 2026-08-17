@@ -129,6 +129,28 @@ function fakeTransition(outcome = { ok: true }) {
   return fn;
 }
 
+/** AR-1305A F33/F34 — a stub for the read-only global-state-report doorway. The real one shells
+ *  out to g2d_bridge_report.py; these controls must never touch it. Defaults to a CLEAN report
+ *  (nothing stranded, nothing complete, REF_A first in queue order) so every pre-existing test
+ *  that predates F33/F34 keeps exercising exactly the property it always did, without silently
+ *  becoming a test of the interlock instead. Tests that need a DIRTY report pass one explicitly. */
+function fakeStateReport(overrides = {}) {
+  const fn = () => ({
+    ok: true,
+    queue_order: [REF_A, REF_B],
+    states: {},
+    by_state: {},
+    stranded_mid_handoff: [],
+    stranded_incomplete: [],
+    complete: [],
+    unstarted: [REF_A, REF_B],
+    ...overrides,
+  });
+  fn.calls = 0;
+  const wrapped = (...args) => { wrapped.calls += 1; return fn(...args); };
+  return wrapped;
+}
+
 function run(ctx, call, opts = {}) {
   const permitPath = opts.permitPath ?? null;
   return evaluateG2PreCall({
@@ -137,6 +159,7 @@ function run(ctx, call, opts = {}) {
     cwd: ctx.root,
     nativeCalls: opts.nativeCalls ?? (permitPath ? nativeCallsFor(ctx, permitPath, opts.ref ?? REF_A) : null),
     transition: opts.transition ?? fakeTransition(),
+    stateReport: opts.stateReport ?? fakeStateReport(),
     ...opts.evaluate,
   });
 }
@@ -603,9 +626,202 @@ test('F29 MUTATION: proves the permit-path derivation check is load-bearing by f
   fs.rmSync(attackerPath);
   const real = materializePermitIfNeeded({
     g2: ctx.g2, toolInput: dispatch(attackerPath, REF_A).toolInput, actualModel: 'opus',
-    permitPath: attackerPath, nativeCalls,
+    permitPath: attackerPath, nativeCalls, report: fakeStateReport()(),
   });
   assert.equal(real.materialized, false);
   assert.match(real.denyReason, /frozen derivation/);
   assert.equal(fs.existsSync(attackerPath), false, 'the real, checked function refuses to write at the attacker path');
+});
+
+// ---------------------------------------------------------------------------
+// AR-1305A F33/F34 -- GLOBAL SEQUENTIAL INTERLOCK (CLAIMED-only crash shape + frozen row order)
+//
+// EVERY artifact here is synthetic; stateReport is always a fake -- these controls never shell
+// out to the real g2d_bridge_report.py doorway (that doorway's own real-subprocess proof lives
+// in test_g2d_bridge_report.py on the Python side).
+// ---------------------------------------------------------------------------
+
+test('F33 NEGATIVE: row A CLAIMED-only (attempt exists, no dispatch -- outstandingCapture() cannot see this) blocks row B before permit/claim/transition', () => {
+  const ctx = makeG2();
+  const permitPathB = permitPathFor(ctx.receiptDir, REF_B);
+  const nativeCallsB = nativeCallsFor(ctx, permitPathB, REF_B);
+  const dirtyReport = fakeStateReport({
+    states: { [REF_A]: 'CLAIMED' },
+    stranded_mid_handoff: [REF_A],
+    complete: [],
+  });
+  const moved = fakeTransition();
+  const r = run(ctx, dispatch(permitPathB, REF_B), {
+    permitPath: permitPathB, nativeCalls: nativeCallsB, transition: moved, stateReport: dirtyReport,
+  });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /prior row .* is stuck at CLAIMED/);
+  // POSITIVE WITNESS this is a REAL block, not a lucky-looking deny: nothing was written or invoked.
+  assert.equal(fs.existsSync(permitPathB), false, 'row B never got a materialized permit');
+  assert.equal(moved.calls.length, 0, 'the row-B transition callback was never invoked');
+});
+
+test('F33 NEGATIVE: row A STRANDED_INCOMPLETE blocks row B', () => {
+  const ctx = makeG2();
+  const permitPathB = permitPathFor(ctx.receiptDir, REF_B);
+  const nativeCallsB = nativeCallsFor(ctx, permitPathB, REF_B);
+  const dirtyReport = fakeStateReport({
+    states: { [REF_A]: 'STRANDED_INCOMPLETE' },
+    stranded_incomplete: [REF_A],
+  });
+  const moved = fakeTransition();
+  const r = run(ctx, dispatch(permitPathB, REF_B), {
+    permitPath: permitPathB, nativeCalls: nativeCallsB, transition: moved, stateReport: dirtyReport,
+  });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /STRANDED_INCOMPLETE/);
+  assert.equal(fs.existsSync(permitPathB), false);
+  assert.equal(moved.calls.length, 0);
+});
+
+test('F33 POSITIVE: an all-clean report and row A next-in-order allows row A through to materialization', () => {
+  const ctx = makeG2();
+  const permitPathA = permitPathFor(ctx.receiptDir, REF_A);
+  const nativeCallsA = nativeCallsFor(ctx, permitPathA, REF_A);
+  const moved = fakeTransition();
+  const r = run(ctx, dispatch(permitPathA, REF_A), {
+    permitPath: permitPathA, nativeCalls: nativeCallsA, transition: moved,
+    stateReport: fakeStateReport(), // default clean report, REF_A first
+  });
+  assert.equal(r.allow, true, r.reason);
+  assert.equal(fs.existsSync(permitPathA), true);
+});
+
+test('F34 NEGATIVE: row 2 submitted while row 1 is still READY (all-clean report, row 1 not yet complete) is denied by frozen row order', () => {
+  const ctx = makeG2();
+  const permitPathB = permitPathFor(ctx.receiptDir, REF_B);
+  const nativeCallsB = nativeCallsFor(ctx, permitPathB, REF_B);
+  const moved = fakeTransition();
+  const r = run(ctx, dispatch(permitPathB, REF_B), {
+    permitPath: permitPathB, nativeCalls: nativeCallsB, transition: moved,
+    stateReport: fakeStateReport(), // clean, but REF_A (not REF_B) is next-eligible
+  });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /frozen row order violation/);
+  assert.match(r.reason, /entry_sequence\[1\]\.action.*entry_sequence\[0\]\.rationale/s);
+  assert.equal(fs.existsSync(permitPathB), false, 'row B never got a materialized permit');
+  assert.equal(moved.calls.length, 0, 'the row-B transition callback was never invoked');
+});
+
+test('F34 POSITIVE: row 2 is eligible once row 1 has reached RAW_RETURN_CAPTURED (complete)', () => {
+  const ctx = makeG2();
+  const permitPathB = permitPathFor(ctx.receiptDir, REF_B);
+  const nativeCallsB = nativeCallsFor(ctx, permitPathB, REF_B);
+  const moved = fakeTransition();
+  const r = run(ctx, dispatch(permitPathB, REF_B), {
+    permitPath: permitPathB, nativeCalls: nativeCallsB, transition: moved,
+    stateReport: fakeStateReport({ complete: [REF_A], unstarted: [REF_B] }),
+  });
+  assert.equal(r.allow, true, r.reason);
+  assert.equal(fs.existsSync(permitPathB), true);
+});
+
+test('F34 NEGATIVE: row 1 complete but row B is requested while a THIRD row would actually be next (row 1 complete does not license skipping straight to any later row)', () => {
+  // A three-row queue where row 1 is complete: the next eligible ref is row 2, so a request for
+  // row 2 while the report still lists row 1 as the only complete member must succeed, but this
+  // control proves the interlock reads queue_order strictly -- constructing a report where
+  // complete=[REF_A] but queue_order is unexpectedly [REF_A, REF_B] and requesting REF_B is the
+  // POSITIVE case already covered above; here we prove requesting the WRONG later ref (REF_A,
+  // already complete) a second time is denied as "every frozen row already handled up to here /
+  // out of order", not silently re-allowed because REF_A was once valid.
+  const ctx = makeG2();
+  const permitPathA = permitPathFor(ctx.receiptDir, REF_A);
+  const nativeCallsA = nativeCallsFor(ctx, permitPathA, REF_A);
+  const moved = fakeTransition();
+  const r = run(ctx, dispatch(permitPathA, REF_A), {
+    permitPath: permitPathA, nativeCalls: nativeCallsA, transition: moved,
+    stateReport: fakeStateReport({ complete: [REF_A] }), // REF_A already complete; next is REF_B
+  });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /frozen row order violation/);
+  assert.equal(moved.calls.length, 0);
+});
+
+test('F33 NEGATIVE: row A NATIVE_TASK_DISPATCHED (the shape outstandingCapture() DID already catch) still blocks row B under the new unified check', () => {
+  const ctx = makeG2();
+  const permitPathB = permitPathFor(ctx.receiptDir, REF_B);
+  const nativeCallsB = nativeCallsFor(ctx, permitPathB, REF_B);
+  const dirtyReport = fakeStateReport({
+    states: { [REF_A]: 'NATIVE_TASK_DISPATCHED' },
+    stranded_mid_handoff: [REF_A],
+  });
+  const moved = fakeTransition();
+  const r = run(ctx, dispatch(permitPathB, REF_B), {
+    permitPath: permitPathB, nativeCalls: nativeCallsB, transition: moved, stateReport: dirtyReport,
+  });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /prior row .* is stuck at NATIVE_TASK_DISPATCHED/);
+  assert.equal(fs.existsSync(permitPathB), false);
+  assert.equal(moved.calls.length, 0);
+});
+
+test('F34 NEGATIVE: a three-row queue with row 1 complete does not license jumping straight to row 3, skipping row 2', () => {
+  const REF_C = 'confluences[2].description';
+  const ctx = makeG2();
+  const ctxWithThird = {
+    ...ctx,
+    g2: { ...ctx.g2, entries: new Map([...ctx.g2.entries, [REF_C, { task_input_sha256: 'c'.repeat(64) }]]) },
+  };
+  const permitPathC = permitPathFor(ctxWithThird.receiptDir, REF_C);
+  const nativeCallsC = {
+    manifestPath: '<synthetic>', queueArtifactSha256: ctxWithThird.g2.queueSha256,
+    rows: new Map([[REF_C, {
+      condition_ref: REF_C, task_input_sha256: 'c'.repeat(64), model: 'opus', subagent_type: FROZEN_SUBAGENT_TYPE,
+      native_call_sha256: canonicalNativeCallSha256(dispatch(permitPathC, REF_C).toolInput),
+    }]]),
+  };
+  const moved = fakeTransition();
+  const r = run(ctxWithThird, dispatch(permitPathC, REF_C), {
+    permitPath: permitPathC, nativeCalls: nativeCallsC, transition: moved,
+    stateReport: fakeStateReport({
+      queue_order: [REF_A, REF_B, REF_C], complete: [REF_A], // row 2 (REF_B) is next, not row 3
+    }),
+  });
+  assert.equal(r.allow, false);
+  assert.match(r.reason, /frozen row order violation/);
+  assert.match(r.reason, /confluences\[2\]\.description.*entry_sequence\[1\]\.action/s);
+  assert.equal(fs.existsSync(permitPathC), false);
+  assert.equal(moved.calls.length, 0);
+});
+
+test('F33/F34 MUTATION: removing the global interlock call lets row B through while row A is stuck -- proves the check is load-bearing', () => {
+  const ctx = makeG2();
+  const permitPathB = permitPathFor(ctx.receiptDir, REF_B);
+  const nativeCallsB = nativeCallsFor(ctx, permitPathB, REF_B);
+  const dirtyReport = fakeStateReport({ states: { [REF_A]: 'CLAIMED' }, stranded_mid_handoff: [REF_A] });
+
+  // Unchecked stand-in: everything materializePermitIfNeeded does, MINUS the interlock call.
+  function materializeWithoutInterlock({ g2, toolInput, actualModel, permitPath: reqPath, nativeCalls: nc }) {
+    if (fs.existsSync(reqPath)) return { materialized: false };
+    const actualSha = canonicalNativeCallSha256(toolInput);
+    let row = null;
+    for (const r of nc.rows.values()) { if (r.native_call_sha256 === actualSha) { row = r; break; } }
+    if (!row || actualModel !== 'opus') return { materialized: false, denyReason: 'setup' };
+    const entry = g2.entries.get(row.condition_ref);
+    fs.writeFileSync(reqPath, JSON.stringify({
+      schema: G2_PERMIT_SCHEMA, queue_artifact_sha256: g2.queueSha256, condition_ref: row.condition_ref,
+      task_input_sha256: entry.task_input_sha256, requested_model: 'opus', attempt: 1,
+    }, null, 2), { flag: 'wx' });
+    return { materialized: true };
+  }
+  const unchecked = materializeWithoutInterlock({
+    g2: ctx.g2, toolInput: dispatch(permitPathB, REF_B).toolInput, actualModel: 'opus',
+    permitPath: permitPathB, nativeCalls: nativeCallsB,
+  });
+  assert.equal(unchecked.materialized, true, 'the unchecked stand-in DOES materialize row B while row A is stuck');
+  fs.rmSync(permitPathB);
+
+  // The REAL function, identical inputs plus the dirty report: refuses.
+  const real = materializePermitIfNeeded({
+    g2: ctx.g2, toolInput: dispatch(permitPathB, REF_B).toolInput, actualModel: 'opus',
+    permitPath: permitPathB, nativeCalls: nativeCallsB, report: dirtyReport(),
+  });
+  assert.equal(real.materialized, false);
+  assert.match(real.denyReason, /stuck at CLAIMED/);
+  assert.equal(fs.existsSync(permitPathB), false);
 });
