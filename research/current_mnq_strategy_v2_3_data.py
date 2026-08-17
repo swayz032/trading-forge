@@ -16,16 +16,14 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, time, timedelta, timezone
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from typing import Iterable
 
 import numpy as np
 import pandas as pd
 
-from research.current_mnq_strategy_v2_2_contracts import (
-    cme_equity_roll_date,
-    projectx_contract_id,
-)
+from research.current_mnq_strategy_v2_2_contracts import projectx_contract_id
 from research.current_mnq_strategy_v2_2_projectx_history import (
     HistoryRequest,
     ProjectXHistory,
@@ -86,6 +84,15 @@ def canonical_hash(obj: dict) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def quantize_to_tick(value: float, tick: float = TICK) -> float:
+    if not np.isfinite(value) or tick <= 0:
+        raise RuntimeError("ROLL_BRIDGE_NONFINITE_OR_INVALID_TICK")
+    v = Decimal(str(float(value)))
+    t = Decimal(str(float(tick)))
+    ticks = (v / t).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    return float(ticks * t)
+
+
 def _daily_contract_map(start: date, end: date) -> dict[date, str]:
     out: dict[date, str] = {}
     d = start
@@ -116,10 +123,6 @@ def contract_windows(start: date, end: date, overlap_days: int = 7) -> list[Cont
         ContractWindow(cid, s - timedelta(days=overlap_days), e + timedelta(days=overlap_days))
         for cid, s, e in groups
     ]
-
-
-def _as_utc(dt: datetime) -> datetime:
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def normalize_1m(df: pd.DataFrame, contract_id: str) -> pd.DataFrame:
@@ -153,8 +156,7 @@ def transition_dates(start: date, end: date) -> list[date]:
     """Dates on which the frozen CME customary lead contract changes."""
     mapping = _daily_contract_map(start - timedelta(days=1), end)
     out = []
-    prev_d = start - timedelta(days=1)
-    prev = mapping[prev_d]
+    prev = mapping[start - timedelta(days=1)]
     d = start
     while d <= end:
         cur = mapping[d]
@@ -167,7 +169,13 @@ def transition_dates(start: date, end: date) -> list[date]:
 
 def compute_roll_bridge(old_df: pd.DataFrame, new_df: pd.DataFrame, roll_date: date,
                         min_shared: int = 10) -> RollBridge:
-    """Use the last 30 RTH minutes of the prior Friday; median basis is robust."""
+    """Use the last 30 RTH minutes of the prior Friday; median basis is robust.
+
+    The raw old/new contract closes are both on the MNQ tick grid. With an even
+    number of observations, however, the statistical median can land halfway
+    between ticks. Quantizing the bridge itself to the 0.25 grid preserves valid
+    futures prices throughout the forward-adjusted analysis stream.
+    """
     old = normalize_1m(old_df, str(old_df.contract_id.iloc[0]) if len(old_df) and "contract_id" in old_df else "OLD")
     new = normalize_1m(new_df, str(new_df.contract_id.iloc[0]) if len(new_df) and "contract_id" in new_df else "NEW")
     old_id = str(old.contract_id.iloc[0])
@@ -185,9 +193,7 @@ def compute_roll_bridge(old_df: pd.DataFrame, new_df: pd.DataFrame, roll_date: d
     if len(joined) < min_shared:
         raise RuntimeError(f"ROLL_BRIDGE_INSUFFICIENT_OVERLAP:{roll_date}:{len(joined)}")
     gaps = joined["new"] - joined["old"]
-    gap = float(gaps.median())
-    if not np.isfinite(gap):
-        raise RuntimeError("ROLL_BRIDGE_NONFINITE")
+    gap = quantize_to_tick(float(gaps.median()))
     return RollBridge(
         roll_date=str(roll_date), old_contract=old_id, new_contract=new_id,
         anchor_start=str(start_local), anchor_end=str(end_local),
@@ -233,10 +239,8 @@ def forward_adjust(lead: pd.DataFrame, bridges: Iterable[RollBridge]) -> pd.Data
     adjustment_by_contract[first_contract] = 0.0
     for br in bridges:
         if br.old_contract not in adjustment_by_contract:
-            # A requested window may start after an earlier roll. Anchor whatever
-            # first observed chain exists at zero without inventing a basis.
             adjustment_by_contract[br.old_contract] = 0.0
-        adjustment_by_contract[br.new_contract] = (
+        adjustment_by_contract[br.new_contract] = quantize_to_tick(
             adjustment_by_contract[br.old_contract] - float(br.raw_gap_new_minus_old)
         )
     x["price_adjustment"] = x.contract_id.map(adjustment_by_contract)
@@ -246,6 +250,10 @@ def forward_adjust(lead: pd.DataFrame, bridges: Iterable[RollBridge]) -> pd.Data
     for c in ("open", "high", "low", "close"):
         x[f"raw_{c}"] = x[c]
         x[c] = x[c] + x["price_adjustment"]
+    off_tick = ((x[["open", "high", "low", "close"]] / TICK).round() -
+                (x[["open", "high", "low", "close"]] / TICK)).abs().max(axis=1) > 1e-8
+    if off_tick.any():
+        raise RuntimeError(f"ROLL_ADJUSTED_OFF_TICK:{int(off_tick.sum())}")
     return x
 
 
@@ -318,9 +326,7 @@ def collect_local_projectx(start: date, end: date, out_dir: str | Path,
     continuous1.to_csv(one_path, index=False, compression="gzip")
     continuous5.to_csv(five_path, index=False, compression="gzip")
 
-    contract_sessions = {
-        str(k): str(v) for k, v in _daily_contract_map(warmup_start, end).items()
-    }
+    contract_sessions = {str(k): str(v) for k, v in _daily_contract_map(warmup_start, end).items()}
     manifest = DatasetManifest(
         schema_version=1,
         requested_start=str(start), requested_end=str(end), warmup_start=str(warmup_start),
