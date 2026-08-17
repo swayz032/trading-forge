@@ -80,6 +80,17 @@ export function normalizeRepoPath(raw) {
   return raw.replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/{2,}/g, '/');
 }
 
+/** Shared by the write and read classifiers so the two categorical lists cannot drift apart. */
+function categoricalDenyReason(lower) {
+  for (const token of CATEGORICAL_FORBIDDEN_PATH_TOKENS) {
+    if (lower.includes(token.toLowerCase())) return `protected surface: ${token}`;
+  }
+  for (const prefix of CATEGORICAL_DENY_PREFIXES) {
+    if (lower.startsWith(prefix.toLowerCase())) return `money-path/toolbox surface: ${prefix}`;
+  }
+  return null;
+}
+
 export function classifyControlPlanePath(rawPath, allowedPaths) {
   const path = normalizeRepoPath(rawPath);
   if (path === '') return { path, verdict: 'DENY', reason: 'unreadable path' };
@@ -89,16 +100,8 @@ export function classifyControlPlanePath(rawPath, allowedPaths) {
   }
 
   const lower = path.toLowerCase();
-  for (const token of CATEGORICAL_FORBIDDEN_PATH_TOKENS) {
-    if (lower.includes(token.toLowerCase())) {
-      return { path, verdict: 'DENY_CATEGORICAL', reason: `protected surface: ${token}` };
-    }
-  }
-  for (const prefix of CATEGORICAL_DENY_PREFIXES) {
-    if (lower.startsWith(prefix.toLowerCase())) {
-      return { path, verdict: 'DENY_CATEGORICAL', reason: `money-path/toolbox surface: ${prefix}` };
-    }
-  }
+  const catReason = categoricalDenyReason(lower);
+  if (catReason) return { path, verdict: 'DENY_CATEGORICAL', reason: catReason };
 
   if (!Array.isArray(allowedPaths) || allowedPaths.length === 0) {
     return { path, verdict: 'DENY', reason: 'no authorization allowlist in force' };
@@ -109,6 +112,101 @@ export function classifyControlPlanePath(rawPath, allowedPaths) {
     if (isPrefix) return { path, verdict: 'ALLOW', reason: `matches authorized path ${a}` };
   }
   return { path, verdict: 'DENY', reason: 'not in the authorized control-plane allowlist' };
+}
+
+/**
+ * AR-1296A F27 — THE READ-ONLY POLICY. Distinct from `classifyControlPlanePath` above on purpose:
+ * that function decides the narrow WRITE allowlist a ruling authorizes; this one decides ordinary
+ * repository-contained READS, which the packet needs far more broadly to inspect itself, the ruling,
+ * and its own source — while still categorically refusing the frozen G2 queue, the isolated receipt
+ * namespace, and the native-call manifest, exactly like the write path does. Reading a path this
+ * function ALLOWs never grants Edit/Write/NotebookEdit/staging on that same path — those still go
+ * through `classifyControlPlanePath` and the ruling's narrow `allowed_paths`.
+ *
+ * `rawPath` must already be a repo-relative path (run it through `toRepoRelative` first), or the
+ * literal `''` sentinel meaning "no path was supplied" (Glob/Grep at the repository root).
+ */
+export function classifyControlPlaneReadPath(rawPath) {
+  const path = normalizeRepoPath(rawPath);
+  if (path === '') return { path, verdict: 'ALLOW', reason: 'repository root' };
+
+  if (path.startsWith('/') || /^[A-Za-z]:/.test(path) || path.split('/').includes('..')) {
+    return { path, verdict: 'DENY', reason: 'path escapes the repository' };
+  }
+
+  const lower = path.toLowerCase();
+  const catReason = categoricalDenyReason(lower);
+  if (catReason) return { path, verdict: 'DENY_CATEGORICAL', reason: catReason };
+
+  return { path, verdict: 'ALLOW', reason: 'repository-contained read' };
+}
+
+/**
+ * AR-1296A F27 — THE ONE NORMALIZATION BOUNDARY, RUN BEFORE ANY CLASSIFICATION.
+ *
+ * `pathFromToolInput` in `control-plane-seat-hook.mjs` previously handed raw tool paths straight to
+ * `classifyControlPlanePath`, which refuses EVERY absolute path unconditionally — so a legitimate
+ * in-worktree absolute path (which Claude tool payloads commonly carry, and which Windows/MSYS can
+ * spell three different ways for the identical file) was indistinguishable from a real escape.
+ *
+ * `worktreeRoot` MUST be measured from the live environment (`observed.worktree`) — never supplied
+ * by model text; a caller that resolves against anything else has rebuilt the exact hole F-1/F-8
+ * already closed one layer up. This function has no I/O and performs no filesystem resolution: it is
+ * pure string classification of the three known-equivalent spellings against that trusted root.
+ *
+ * Recognises: a relative path (already repo-relative); `C:\root\file` / `C:/root/file` (Windows,
+ * either slash direction); `/c/root/file` (MSYS). All three resolve to the SAME repo-relative
+ * result when they name the same in-worktree file. A worktree `C:/repo` does NOT accept the sibling
+ * `C:/repo-evil/x` — the boundary is `/`-delimited, never a raw string prefix. The Windows drive
+ * letter compares case-insensitively (`c:` and `C:` are the same drive); every path segment past it
+ * compares case-sensitively on both Windows and POSIX — this function must never silently make a
+ * POSIX path case-insensitive. `..` denies, before and after the boundary strip.
+ */
+export function toRepoRelative(rawPath, worktreeRoot) {
+  if (typeof rawPath !== 'string' || rawPath === '') return { ok: false, reason: 'unreadable path' };
+  if (typeof worktreeRoot !== 'string' || worktreeRoot === '') {
+    return { ok: false, reason: 'no worktree root to resolve against' };
+  }
+
+  const slashify = (s) => s.replaceAll('\\', '/');
+  let p = slashify(rawPath);
+  const root = slashify(worktreeRoot).replace(/\/+$/, '');
+
+  // MSYS spelling of a Windows drive path: `/c/...` -> `C:/...`. The capture is exactly one letter
+  // so this never misfires on a genuine multi-letter POSIX path such as `/etc/passwd`.
+  const msys = /^\/([A-Za-z])\/(.*)$/.exec(p);
+  if (msys) p = `${msys[1].toUpperCase()}:/${msys[2]}`;
+
+  const isAbsolute = p.startsWith('/') || /^[A-Za-z]:\//.test(p);
+  if (!isAbsolute) {
+    const rel = p.replace(/^\.\//, '');
+    if (rel.split('/').includes('..')) return { ok: false, reason: 'path escapes the repository' };
+    return { ok: true, relPath: rel };
+  }
+
+  const driveOf = (s) => {
+    const m = /^([A-Za-z]):\/(.*)$/.exec(s);
+    return m ? { drive: m[1].toUpperCase(), rest: `/${m[2]}` } : null;
+  };
+  const pDrive = driveOf(p);
+  const rootDrive = driveOf(root);
+
+  let pCanon = p;
+  let rootCanon = root;
+  if (pDrive || rootDrive) {
+    if (!pDrive || !rootDrive || pDrive.drive !== rootDrive.drive) {
+      return { ok: false, reason: 'path escapes the repository' };
+    }
+    pCanon = pDrive.rest;
+    rootCanon = rootDrive.rest;
+  }
+
+  if (pCanon === rootCanon) return { ok: true, relPath: '' };
+  const boundary = rootCanon.endsWith('/') ? rootCanon : `${rootCanon}/`;
+  if (!pCanon.startsWith(boundary)) return { ok: false, reason: 'path escapes the repository' };
+  const rel = pCanon.slice(boundary.length);
+  if (rel.split('/').includes('..')) return { ok: false, reason: 'path escapes the repository' };
+  return { ok: true, relPath: rel };
 }
 
 export function classifyControlPlaneTool(toolName) {
@@ -149,6 +247,12 @@ export const BASH_ALLOWED_SHAPES = Object.freeze([
   { id: 'git-log', re: /^git log --oneline -\d{1,2}$/ },
   { id: 'git-diff-stat', re: /^git diff --stat$/ },
   { id: 'git-diff-cached-stat', re: /^git diff --cached --stat$/ },
+  // AR-1296A F28 — the ONE fixed, read-only authority-read command. A literal, exactly like
+  // `g2-prompt-transport` and `cp-finalize` below: no condition, no path, no argument, no ref the
+  // model can choose. Any other `git show` invocation — a different ref, an extra path, a redirect,
+  // a pipe — falls through to the default deny at the bottom of this table, same as every other
+  // shape here.
+  { id: 'authority-read', re: /^git show --format= --no-ext-diff origin\/external-advisor\/gpt-rulings -- advisor-reports\/$/ },
   // AR-1278A F-15: EXACT test commands, never a wildcard. The previous shape allowed
   // `node --test scripts/<anything>.test.mjs`, and a test file is executable code — `readOnly:true`
   // described the Bash shape, not what the JavaScript inside it could do. A privileged seat does not

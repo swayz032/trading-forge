@@ -28,12 +28,28 @@ import { claimFileName, LEGACY_CLAIM_DIR } from './claim-store.mjs';
 export const LAUNCH_EXECUTABLE = 'claude';
 
 /**
+ * AR-1296A F26 — THE ONE SOURCE OF TRUTH FOR SETTING SOURCES, SO THE DOORWAY AND THE `-p` LAUNCH
+ * CANNOT DRIFT APART.
+ *
+ * `user,project,local` was measured (AR-1296A) to make a fresh control-plane worktree load BOTH the
+ * privileged local guard AND whatever `.claude/settings.json` it checked out — which, cut from the
+ * pinned Worker-1 head, is the Worker-1 project guard. That guard is correct for Worker-1 and wrong
+ * for a `control-plane/*` branch by construction: the two actor classes can never be the same
+ * branch. The privileged seat therefore loads `user,local` only — `project` is never a source, so
+ * the repairable tracked `.claude/settings.json` is never READ for hooks by this seat, only edited
+ * by it. `SETTING_SOURCES` was previously duplicated as a separate literal inside `LAUNCH_ARGV`;
+ * that duplication is exactly how the doorway and the launch could disagree without either failing
+ * loudly. There is now exactly one place this value is written.
+ */
+export const SETTING_SOURCES = 'user,local';
+
+/**
  * The one argv. `--dangerously-skip-permissions` is PRESERVED deliberately (AR-1276C §8: hands-free
  * remains required) and is safe here for the same measured reason the Worker-1 launcher documents:
  * PreToolUse hooks run BEFORE permission-mode logic and a hook `deny` short-circuits the resolver,
  * so this flag removes the OPERATOR prompt and not the GUARD.
  */
-export const LAUNCH_ARGV = Object.freeze(['--dangerously-skip-permissions', '--setting-sources', 'user,project,local']);
+export const LAUNCH_ARGV = Object.freeze(['--dangerously-skip-permissions', '--setting-sources', SETTING_SOURCES]);
 
 /**
  * AR-1278A F-13 — HANDS-FREE MEANS THE MACHINE STARTS THE WORK, NOT JUST THE SEAT.
@@ -59,6 +75,26 @@ export const LAUNCH_ARGV = Object.freeze(['--dangerously-skip-permissions', '--s
  */
 export const COMMIT_MSG_FILE_REL = 'scripts/control-plane-bootstrap/.cp-commit-msg.tmp';
 
+/**
+ * AR-1296A F28 — THE ONE FIXED, READ-ONLY AUTHORITY-READ COMMAND.
+ *
+ * The generated prompt used to tell the seat to "Read <ruling_id> from origin/external-advisor/
+ * gpt-rulings" — an abstract action with no legal tool path: the control-plane worktree is cut from
+ * the Worker branch, so the ruling file is not present in that checkout; the Bash allowlist carried
+ * no `git show` authority-reading shape; and MCP tools are categorically denied. Step 1 was
+ * therefore impossible through the guard's own legal tool surface, even after F26/F27.
+ *
+ * This is the ONLY authority-read shape the seat's Bash allowlist admits (see
+ * `BASH_ALLOWED_SHAPES` in `control-plane-guard.mjs`, id `authority-read`): a fixed authority ref
+ * (never a model-chosen one), scoped to `advisor-reports/`, no extra args/path/redirect/pipe/
+ * substitution/composition, read-only. `--format=` suppresses the commit header and `--no-ext-diff`
+ * avoids invoking an external diff tool; MEASURED (AR-1297) to print the one current ruling's full
+ * text as a unified diff against `origin/external-advisor/gpt-rulings`, scoped to `advisor-reports/`.
+ * The SessionStart guard has already independently verified this same authority before arming — this
+ * command is for the model to READ that already-verified text, not to establish authorization.
+ */
+export const AUTHORITY_READ_CMD = 'git show --format= --no-ext-diff origin/external-advisor/gpt-rulings -- advisor-reports/';
+
 export function buildPacketPrompt(marker) {
   const paths = marker.allowed_paths.map((p) => `  - ${p}`).join('\n');
   const reportDir = 'docs/replay-results/worker-advisor-reports/';
@@ -69,7 +105,9 @@ export function buildPacketPrompt(marker) {
     `Your authority is ruling ${marker.ruling_id} on origin/external-advisor/gpt-rulings, authorization ${marker.authorization_id}.`,
     '',
     'Do exactly this, in order, and nothing else:',
-    `1. Read ${marker.ruling_id} from origin/external-advisor/gpt-rulings and re-verify the packet scope for yourself.`,
+    `1. Run exactly: ${AUTHORITY_READ_CMD}`,
+    `   This displays the current ${marker.ruling_id} ruling text. Read it and re-verify the packet`,
+    '   scope for yourself. Do not run any other form of this command.',
     '2. Make only the changes that ruling authorizes, only within these paths:',
     paths,
     `3. Run the fixed prompt-transport helper, exactly: ${transportCmd}`,
@@ -98,9 +136,6 @@ export function buildPacketPrompt(marker) {
 export function buildLaunchArgv(marker) {
   return [...LAUNCH_ARGV, '-p', buildPacketPrompt(marker)];
 }
-
-/** Passed explicitly so the local source's loading is stated, not inherited from a default. */
-export const SETTING_SOURCES = 'user,project,local';
 
 /**
  * AR-1278 F-3 — the seat's guard is registered in the LOCAL settings source, and the manifest sits
@@ -229,7 +264,7 @@ export function buildPlan(marker, measured) {
       repairable_project_settings: `${worktreePath}/.claude/settings.json`,
       hook_doorway: 'scripts/control-plane-bootstrap/control-plane-seat-hook.mjs',
       guard_module: 'scripts/control-plane-bootstrap/control-plane-guard.mjs',
-      binding_mechanism: 'launch-directory cwd (AR-1271A §4 measured), setting-sources user,project,local',
+      binding_mechanism: `launch-directory cwd (AR-1271A §4 measured), setting-sources ${SETTING_SOURCES}`,
     },
 
     // AR-1289A §3 — outside every working tree, so the seat cannot reach it through Edit/Write.

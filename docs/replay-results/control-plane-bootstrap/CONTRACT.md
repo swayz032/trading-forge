@@ -114,7 +114,7 @@ seat guard    <worktree>/.claude/settings.local.json          <- immutable to th
 seat manifest <worktree>/.claude/control-plane-guard-manifest.json
 repairable    <worktree>/.claude/settings.json                 <- what the packet may fix
 executable    claude                      (fixed; no parameter exists)
-argv          --dangerously-skip-permissions --setting-sources user,project,local
+argv          --dangerously-skip-permissions --setting-sources user,local  (AR-1296A F26)
 claim         <git common dir>/tf-control-plane-claim-<authorization_id>.json
 ```
 
@@ -208,7 +208,10 @@ field (not `executed`) so a spent-but-unverified authorization can no longer exi
 The privileged seat is **hands-free but not unguarded**. Its guard binds the way this repository's
 Worker-1 guard demonstrably binds: **from the launch directory**. The bootstrap materializes the
 guard into the new worktree's **local** settings source and launches `claude` with that worktree as
-cwd and `--setting-sources user,project,local`.
+cwd and `--setting-sources user,local` (AR-1296A F26 — `project` was dropped from the sources list:
+a fresh control-plane worktree checked out from the pinned Worker-1 head carries the tracked
+Worker-1 project guard in its own `.claude/settings.json`, and `user,project,local` loaded it
+alongside the privileged local guard. `user,local` never loads that project source at all).
 
 `--settings` is deliberately **not** relied upon. Whether hooks supplied through it register
 identically cannot be proven without launching a privileged seat, and guessing is forbidden — so the

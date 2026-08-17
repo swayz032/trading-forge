@@ -34,7 +34,9 @@ import { execFileSync } from 'node:child_process';
 import {
   classifyControlPlaneBash,
   classifyControlPlanePath,
+  classifyControlPlaneReadPath,
   classifyControlPlaneTool,
+  toRepoRelative,
   verifySeatIdentity,
 } from './control-plane-guard.mjs';
 import { extractCandidateMarkers, validateAuthorization, EXPECTED_REPO } from './authorization.mjs';
@@ -165,9 +167,28 @@ function sessionContext(text) {
   return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: text } };
 }
 
+/** Read/Glob/Grep are read-only (`classifyControlPlaneReadPath`); the rest are the write allowlist. */
+export const READ_ONLY_PATH_TOOLS = Object.freeze(['Read', 'Glob', 'Grep']);
+
+/**
+ * AR-1296A F27 — extended from Edit/Write/NotebookEdit to also recognise Read/Glob/Grep.
+ * `ALLOWED_TOOLS` in control-plane-guard.mjs has always claimed these three read tools are usable;
+ * this function previously returned `null` for all three, which `decide()` then fell through to the
+ * final default-deny line for — the tool was "allowed" and denied every call, unconditionally.
+ *
+ * Glob/Grep may legitimately omit `path` (search from the repository root); that case returns the
+ * literal `''` sentinel rather than `null`, so `decide()` still runs it through the read policy
+ * instead of treating it as "this tool carries no path at all."
+ */
 export function pathFromToolInput(toolName, toolInput) {
-  if (!toolInput || typeof toolInput !== 'object') return null;
-  if (['Edit', 'Write', 'NotebookEdit'].includes(toolName)) return toolInput.file_path ?? null;
+  if (['Edit', 'Write', 'NotebookEdit', 'Read'].includes(toolName)) {
+    if (!toolInput || typeof toolInput !== 'object') return null;
+    return toolInput.file_path ?? null;
+  }
+  if (toolName === 'Glob' || toolName === 'Grep') {
+    if (!toolInput || typeof toolInput !== 'object') return '';
+    return typeof toolInput.path === 'string' && toolInput.path !== '' ? toolInput.path : '';
+  }
   return null;
 }
 
@@ -341,7 +362,20 @@ export function decide(input, manifest, observed, store, authority = null) {
 
   const target = pathFromToolInput(toolName, input?.tool_input);
   if (target !== null) {
-    const v = classifyControlPlanePath(target, manifest.allowed_paths);
+    // AR-1296A F27: the empty-string sentinel is Glob/Grep with no `path` — a legitimate
+    // repository-root scan, not a path to resolve against the worktree.
+    if (target === '' && READ_ONLY_PATH_TOOLS.includes(toolName)) {
+      const v = classifyControlPlaneReadPath('');
+      if (v.verdict !== 'ALLOW') return deny(`${v.verdict} ${v.path}: ${v.reason}`);
+      return null;
+    }
+    // One normalization boundary for every path-bearing tool, BEFORE classification, resolved
+    // against the MEASURED worktree — never against anything the model supplied.
+    const norm = toRepoRelative(target, observed.worktree);
+    if (!norm.ok) return deny(`path DENY ${target}: ${norm.reason}`);
+    const v = READ_ONLY_PATH_TOOLS.includes(toolName)
+      ? classifyControlPlaneReadPath(norm.relPath)
+      : classifyControlPlanePath(norm.relPath, manifest.allowed_paths);
     if (v.verdict !== 'ALLOW') return deny(`${v.verdict} ${v.path}: ${v.reason}`);
     return null;
   }

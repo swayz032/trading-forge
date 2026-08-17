@@ -18,17 +18,19 @@ import { createHash } from 'node:crypto';
 
 import { validateAuthorization, extractCandidateMarkers, MARKER_SCHEMA } from './control-plane-bootstrap/authorization.mjs';
 import {
-  classifyControlPlanePath, classifyControlPlaneTool, classifyControlPlaneBash,
-  verifySeatIdentity, IDENTITY_FIELDS, ALL_TOOLS_MATCHER, NEVER_STAGEABLE_PATHS,
+  classifyControlPlanePath, classifyControlPlaneReadPath, classifyControlPlaneTool, classifyControlPlaneBash,
+  verifySeatIdentity, IDENTITY_FIELDS, ALL_TOOLS_MATCHER, NEVER_STAGEABLE_PATHS, toRepoRelative,
 } from './control-plane-bootstrap/control-plane-guard.mjs';
 import {
   buildPlan, deriveBranch, deriveWorktreeDirName, assertClaimNamespaceDisjoint,
   LAUNCH_EXECUTABLE, LAUNCH_ARGV, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL, buildPacketPrompt,
-  COMMIT_MSG_FILE_REL, branchNamespaceCollision,
+  COMMIT_MSG_FILE_REL, branchNamespaceCollision, SETTING_SOURCES, AUTHORITY_READ_CMD,
 } from './control-plane-bootstrap/plan.mjs';
 import { run, seatSettingsFor, rulingIdFromFilename, verifyCompletion, runStage } from './control-plane-bootstrap/bootstrap.mjs';
 import { computeBundle, BUNDLE_FILES } from './control-plane-bootstrap/bundle.mjs';
-import { decide, measureObservedIdentity, receiptMatchesLive, verifyAuthorityIndependently } from './control-plane-bootstrap/control-plane-seat-hook.mjs';
+import {
+  decide, measureObservedIdentity, receiptMatchesLive, verifyAuthorityIndependently, pathFromToolInput,
+} from './control-plane-bootstrap/control-plane-seat-hook.mjs';
 
 /** SessionStart requires an independently verified authority; tests that only exercise identity use this. */
 const OK_AUTHORITY = { ok: true, marker: {}, measured: {} };
@@ -1758,5 +1760,340 @@ test('K5b regression: --plan mode reports branch namespace availability without 
   assert.equal(plan.branch_namespace_conflict.collision, false, 'baselineMarker uses AR-1279, whose flat branch does not nest under the bare AR-1279 prefix name used here');
   const collidingPlan = buildPlan(baselineMarker(), { ...baselineMeasured(), existingControlPlaneBranches: [plan.proposed_target_branch] });
   assert.equal(collidingPlan.branch_namespace_conflict.collision, true, 'an exact-duplicate existing ref must be visible in plan output too');
+});
+
+/* =============================== AR-1296A F26/F27/F28 — DIRECT-BLOCKER REPAIR =============== */
+
+/* ---- F26: setting-sources is ONE constant, and it excludes `project` ---- */
+
+test('F26-L1 SETTING_SOURCES is user,local — project is never a loaded source', () => {
+  assert.equal(SETTING_SOURCES, 'user,local');
+  assert.ok(!SETTING_SOURCES.split(',').includes('project'), 'the inherited Worker-1 project guard must never load into the control-plane seat');
+  // LAUNCH_ARGV and the doorway proof (bootstrap.mjs) both read this SAME constant — no second
+  // literal to drift out of sync with it.
+  const idx = LAUNCH_ARGV.indexOf('--setting-sources');
+  assert.ok(idx >= 0);
+  assert.equal(LAUNCH_ARGV[idx + 1], SETTING_SOURCES);
+});
+
+test('F26-L2 plan reflects the corrected binding_mechanism, derived from the one constant', () => {
+  const plan = buildPlan(baselineMarker(), baselineMeasured());
+  assert.match(plan.settings_guard_template.binding_mechanism, /setting-sources user,local/);
+  assert.ok(!plan.settings_guard_template.binding_mechanism.includes('project'));
+});
+
+/**
+ * F26 REQUIRED PROOF (AR-1296A §2) — a REAL `claude --init-only --setting-sources user,local` in a
+ * disposable fixture shaped like the control-plane worktree: a PROJECT-source SessionStart hook
+ * (standing in for the inherited Worker-1 guard) and a LOCAL-source SessionStart hook (standing in
+ * for the control-plane guard). Must prove: the local hook loads and mints a durable receipt, and
+ * the inherited project hook does NOT run. A direct Node call to the doorway does not count — this
+ * spawns the real `claude` binary, exactly like LIVE C9 above.
+ */
+test('LIVE F26: --setting-sources user,local loads the local control-plane hook and does NOT load the inherited project (Worker-1-shaped) hook', async (t) => {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+
+  const dir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-f26-'));
+  try {
+    fs.mkdirSync(pathMod.join(dir, '.claude'), { recursive: true });
+    const projectWitness = pathMod.join(dir, 'PROJECT_HOOK_FIRED.txt').replaceAll('\\', '/');
+    const localWitness = pathMod.join(dir, 'LOCAL_HOOK_FIRED.txt').replaceAll('\\', '/');
+    const receiptWitness = pathMod.join(dir, 'ARMED_RECEIPT.json').replaceAll('\\', '/');
+    const projectHook = pathMod.join(dir, 'project-hook.mjs').replaceAll('\\', '/');
+    const localHook = pathMod.join(dir, 'local-hook.mjs').replaceAll('\\', '/');
+
+    // Stands in for the real Worker-1 guard: a project-source SessionStart hook that would fire if
+    // `project` were among the loaded sources.
+    fs.writeFileSync(projectHook, `import fs from 'node:fs';\nfs.writeFileSync(${JSON.stringify(projectWitness)}, 'fired');\nprocess.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'SessionStart',additionalContext:'inherited-project-guard'}}));\n`);
+    // Stands in for the real control-plane guard: a local-source SessionStart hook that mints a
+    // durable "armed receipt" file, mirroring `writeReceipt` in the real doorway.
+    fs.writeFileSync(localHook, `import fs from 'node:fs';\nfs.writeFileSync(${JSON.stringify(localWitness)}, 'fired');\nfs.writeFileSync(${JSON.stringify(receiptWitness)}, JSON.stringify({schema:'CONTROL_PLANE_ARMED_RECEIPT_V1'}));\nprocess.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'SessionStart',additionalContext:'control-plane-armed'}}));\n`);
+
+    fs.writeFileSync(pathMod.join(dir, '.claude', 'settings.json'), JSON.stringify({
+      hooks: { SessionStart: [{ matcher: 'startup|resume|fork', hooks: [{ type: 'command', command: `node "${projectHook}"`, timeout: 30 }] }] },
+    }, null, 2));
+    fs.writeFileSync(pathMod.join(dir, '.claude', 'settings.local.json'), JSON.stringify({
+      disableAllHooks: false,
+      hooks: { SessionStart: [{ matcher: 'startup|resume|fork', hooks: [{ type: 'command', command: `node "${localHook}"`, timeout: 30 }] }] },
+    }, null, 2));
+
+    const childEnv = { ...process.env };
+    delete childEnv.CLAUDECODE;
+    delete childEnv.CLAUDE_CODE_SSE_PORT;
+    delete childEnv.CLAUDE_CODE_ENTRYPOINT;
+
+    let failure = null;
+    try {
+      cp.execFileSync('claude', ['--init-only', '--setting-sources', SETTING_SOURCES], {
+        cwd: dir, encoding: 'utf8', timeout: 120000, stdio: 'pipe', env: childEnv,
+      });
+    } catch (error) {
+      failure = `${error.status ?? error.code} ${String(error.stderr || error.message).slice(0, 300)}`;
+    }
+    if (failure) {
+      // SKIP, not PASS, on an unrunnable probe — an environment that cannot exec `claude` proves
+      // nothing about the mechanism either way.
+      t.skip(`--init-only could not run: ${failure}`);
+      return;
+    }
+
+    assert.ok(fs.existsSync(localWitness), 'the LOCAL control-plane hook must fire under user,local');
+    assert.ok(fs.existsSync(receiptWitness), 'a durable armed receipt must be minted');
+    assert.ok(!fs.existsSync(projectWitness), 'the inherited PROJECT (Worker-1-shaped) hook must NOT fire under user,local — this is the F26 defect');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/**
+ * MUTATION CONTROL for the test above — proves the fixture and the assertion actually discriminate.
+ * Same fixture, but launched the OLD, broken way (`user,project,local`): the inherited project hook
+ * MUST fire here, or the F26-defect claim above is untested rather than proven.
+ */
+test('LIVE F26-MUTATION: the SAME fixture under the OLD user,project,local sources DOES load the inherited project hook', async (t) => {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+
+  const dir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-f26-mut-'));
+  try {
+    fs.mkdirSync(pathMod.join(dir, '.claude'), { recursive: true });
+    const projectWitness = pathMod.join(dir, 'PROJECT_HOOK_FIRED.txt').replaceAll('\\', '/');
+    const projectHook = pathMod.join(dir, 'project-hook.mjs').replaceAll('\\', '/');
+    fs.writeFileSync(projectHook, `import fs from 'node:fs';\nfs.writeFileSync(${JSON.stringify(projectWitness)}, 'fired');\nprocess.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'SessionStart',additionalContext:'inherited-project-guard'}}));\n`);
+    fs.writeFileSync(pathMod.join(dir, '.claude', 'settings.json'), JSON.stringify({
+      hooks: { SessionStart: [{ matcher: 'startup|resume|fork', hooks: [{ type: 'command', command: `node "${projectHook}"`, timeout: 30 }] }] },
+    }, null, 2));
+
+    const childEnv = { ...process.env };
+    delete childEnv.CLAUDECODE;
+    delete childEnv.CLAUDE_CODE_SSE_PORT;
+    delete childEnv.CLAUDE_CODE_ENTRYPOINT;
+
+    let failure = null;
+    try {
+      cp.execFileSync('claude', ['--init-only', '--setting-sources', 'user,project,local'], {
+        cwd: dir, encoding: 'utf8', timeout: 120000, stdio: 'pipe', env: childEnv,
+      });
+    } catch (error) {
+      failure = `${error.status ?? error.code} ${String(error.stderr || error.message).slice(0, 300)}`;
+    }
+    if (failure) {
+      t.skip(`--init-only could not run: ${failure}`);
+      return;
+    }
+    assert.ok(fs.existsSync(projectWitness), 'under the OLD user,project,local sources the project hook DOES fire — confirming F26 was real and the fix bites');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/* ---- F27: normalization boundary + read-only policy ---- */
+
+const CP_WORKTREE = 'C:/Users/tonio/Projects/wt-control-plane-ar-1279';
+
+test('F27-N1 relative paths pass through unchanged, and `..` denies', () => {
+  assert.deepEqual(toRepoRelative('CLAUDE.md', CP_WORKTREE), { ok: true, relPath: 'CLAUDE.md' });
+  assert.deepEqual(toRepoRelative('./docs/x.md', CP_WORKTREE), { ok: true, relPath: 'docs/x.md' });
+  assert.equal(toRepoRelative('../etc/passwd', CP_WORKTREE).ok, false);
+  assert.equal(toRepoRelative('docs/../../evil.md', CP_WORKTREE).ok, false);
+});
+
+test('F27-N2 absolute in-worktree Windows path resolves to the same repo-relative result as `\\`', () => {
+  const forward = toRepoRelative(`${CP_WORKTREE}/scripts/control-plane-bootstrap/plan.mjs`, CP_WORKTREE);
+  const backslash = toRepoRelative('C:\\Users\\tonio\\Projects\\wt-control-plane-ar-1279\\scripts\\control-plane-bootstrap\\plan.mjs', CP_WORKTREE);
+  assert.deepEqual(forward, { ok: true, relPath: 'scripts/control-plane-bootstrap/plan.mjs' });
+  assert.deepEqual(backslash, forward);
+});
+
+test('F27-N3 MSYS /c/... resolves to the IDENTICAL repo-relative result as the Windows spelling', () => {
+  const windows = toRepoRelative(`${CP_WORKTREE}/CLAUDE.md`, CP_WORKTREE);
+  const msys = toRepoRelative('/c/Users/tonio/Projects/wt-control-plane-ar-1279/CLAUDE.md', CP_WORKTREE);
+  assert.deepEqual(windows, { ok: true, relPath: 'CLAUDE.md' });
+  assert.deepEqual(msys, windows);
+});
+
+test('F27-N4 the worktree root itself resolves to the empty repo-relative path', () => {
+  assert.deepEqual(toRepoRelative(CP_WORKTREE, CP_WORKTREE), { ok: true, relPath: '' });
+  assert.deepEqual(toRepoRelative(`${CP_WORKTREE}/`, CP_WORKTREE), { ok: true, relPath: '' });
+});
+
+test('F27-N5 outside-worktree absolute path denies', () => {
+  assert.equal(toRepoRelative('C:/Users/tonio/Projects/some-other-repo/x.md', CP_WORKTREE).ok, false);
+  assert.equal(toRepoRelative('/d/somewhere/else.md', CP_WORKTREE).ok, false);
+});
+
+test('F27-N6 sibling-prefix escape denies — worktree C:/repo does not accept C:/repo-evil/x', () => {
+  const root = 'C:/repo';
+  assert.equal(toRepoRelative('C:/repo-evil/x', root).ok, false);
+  assert.deepEqual(toRepoRelative('C:/repo/x', root), { ok: true, relPath: 'x' });
+});
+
+test('F27-N7 Windows drive letter compares case-insensitively; POSIX segments stay case-sensitive', () => {
+  assert.deepEqual(toRepoRelative(`c:/Users/tonio/Projects/wt-control-plane-ar-1279/CLAUDE.md`, CP_WORKTREE), { ok: true, relPath: 'CLAUDE.md' });
+  // A path segment PAST the drive differing only in case must NOT be silently accepted.
+  assert.equal(toRepoRelative('C:/users/TONIO/projects/WT-control-plane-ar-1279/CLAUDE.md', CP_WORKTREE).ok, false);
+});
+
+test('F27-N8 `..` denies even after the boundary strip succeeds', () => {
+  assert.equal(toRepoRelative(`${CP_WORKTREE}/scripts/../../evil.md`, CP_WORKTREE).ok, false);
+});
+
+test('F27-N9 malformed/empty input denies cleanly', () => {
+  assert.equal(toRepoRelative('', CP_WORKTREE).ok, false);
+  assert.equal(toRepoRelative(null, CP_WORKTREE).ok, false);
+  assert.equal(toRepoRelative('CLAUDE.md', '').ok, false);
+  assert.equal(toRepoRelative('CLAUDE.md', null).ok, false);
+});
+
+test('F27-R1 classifyControlPlaneReadPath: repo root and ordinary reads ALLOW; frozen G2/receipts/native-manifest and money-path prefixes DENY_CATEGORICAL', () => {
+  assert.equal(classifyControlPlaneReadPath('').verdict, 'ALLOW');
+  assert.equal(classifyControlPlaneReadPath('scripts/control-plane-bootstrap/plan.mjs').verdict, 'ALLOW');
+  assert.equal(classifyControlPlaneReadPath('CLAUDE.md').verdict, 'ALLOW');
+  for (const bad of [
+    'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json',
+    'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1/x.json',
+    'docs/replay-results/svkm-extraction-certified/grade/opus-v2/native_call_manifest_t1.json',
+    '.claude/settings.local.json',
+    '.claude/control-plane-guard-manifest.json',
+    'src/server/production/anything.ts',
+  ]) {
+    assert.equal(classifyControlPlaneReadPath(bad).verdict, 'DENY_CATEGORICAL', `must categorically deny read of ${bad}`);
+  }
+  // A read verdict never implies a write verdict — the write allowlist is untouched by this function.
+  assert.equal(classifyControlPlanePath('scripts/control-plane-bootstrap/plan.mjs', []).verdict, 'DENY');
+});
+
+test('F27-P1 pathFromToolInput recognises Read/Glob/Grep, with and without `path`', () => {
+  assert.equal(pathFromToolInput('Read', { file_path: 'CLAUDE.md' }), 'CLAUDE.md');
+  assert.equal(pathFromToolInput('Glob', { path: 'scripts/', pattern: '*.mjs' }), 'scripts/');
+  assert.equal(pathFromToolInput('Glob', { pattern: '*.mjs' }), '', 'Glob with no path means "repository root", not null');
+  assert.equal(pathFromToolInput('Grep', { pattern: 'foo' }), '', 'Grep with no path means "repository root", not null');
+  assert.equal(pathFromToolInput('Grep', { path: 'docs/', pattern: 'foo' }), 'docs/');
+  // Unaffected: the write tools still key off file_path exactly as before.
+  assert.equal(pathFromToolInput('Edit', { file_path: 'CLAUDE.md' }), 'CLAUDE.md');
+  assert.equal(pathFromToolInput('SomeFutureTool', { file_path: 'x' }), null);
+});
+
+/**
+ * F27 REQUIRED PROOF (AR-1296A §3) — through the REAL production `decide()`, not copies. Before this
+ * repair, Read/Glob/Grep always fell through to the final default-deny line in `decide()` regardless
+ * of `ALLOWED_TOOLS` claiming them usable; absolute in-worktree paths always denied as "escapes the
+ * repository"; and an authorized absolute-path Edit had no way to convert to its allowlisted
+ * relative form.
+ */
+test('F27-E2E relative Read works', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Read', tool_input: { file_path: 'CLAUDE.md' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out, null);
+});
+
+test('F27-E2E absolute in-worktree Windows Read works', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Read', tool_input: { file_path: `${WORKTREE}/CLAUDE.md` } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out, null);
+});
+
+test('F27-E2E MSYS /c/... equivalent Read works', () => {
+  const msysPath = '/c/Users/tonio/Projects/wt-control-plane-ar-1279/CLAUDE.md';
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Read', tool_input: { file_path: msysPath } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out, null);
+});
+
+test('F27-E2E Glob/Grep with and without `path` are recognized (both ALLOW when unauthenticated targets are clean)', () => {
+  assert.equal(decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { pattern: '*.mjs' } }, seatManifest(), seatObserved(), armedStore()), null);
+  assert.equal(decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { pattern: 'foo' } }, seatManifest(), seatObserved(), armedStore()), null);
+  assert.equal(decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Glob', tool_input: { path: 'scripts/', pattern: '*.mjs' } }, seatManifest(), seatObserved(), armedStore()), null);
+  assert.equal(decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Grep', tool_input: { path: 'docs/', pattern: 'foo' } }, seatManifest(), seatObserved(), armedStore()), null);
+});
+
+test('F27-E2E relative authorized Edit still works (regression)', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Edit', tool_input: { file_path: 'CLAUDE.md' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out, null);
+});
+
+test('F27-E2E absolute in-worktree authorized Edit converts and works', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Edit', tool_input: { file_path: `${WORKTREE}/CLAUDE.md` } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out, null);
+});
+
+test('F27-E2E outside-worktree absolute Edit/Write denies', () => {
+  for (const toolName of ['Edit', 'Write']) {
+    const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: toolName, tool_input: { file_path: 'C:/Users/tonio/Projects/some-other-repo/CLAUDE.md' } }, seatManifest(), seatObserved(), armedStore());
+    assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  }
+});
+
+test('F27-E2E sibling-prefix escape denies through decide()', () => {
+  const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Edit', tool_input: { file_path: `${WORKTREE}-evil/CLAUDE.md` } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+});
+
+test('F27-E2E `..` escape denies, relative and absolute, through decide()', () => {
+  const rel = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Read', tool_input: { file_path: '../../etc/passwd' } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(rel.hookSpecificOutput.permissionDecision, 'deny');
+  const abs = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Edit', tool_input: { file_path: `${WORKTREE}/scripts/../../evil.md` } }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(abs.hookSpecificOutput.permissionDecision, 'deny');
+});
+
+test('F27-E2E frozen queue/receipt/native-manifest Read/Glob/Grep all deny', () => {
+  const targets = [
+    ['Read', { file_path: 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json' }],
+    ['Glob', { path: 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1/' }],
+    ['Grep', { path: 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/native_call_manifest_t1.json', pattern: 'x' }],
+  ];
+  for (const [toolName, toolInput] of targets) {
+    const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: toolName, tool_input: toolInput }, seatManifest(), seatObserved(), armedStore());
+    assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny', `${toolName} on ${toolInput.file_path ?? toolInput.path} must deny`);
+  }
+});
+
+test('F27-E2E unknown tool still denies; Agent/Task/PowerShell still deny (regression)', () => {
+  const unknown = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'SomeFutureTool', tool_input: {} }, seatManifest(), seatObserved(), armedStore());
+  assert.equal(unknown.hookSpecificOutput.permissionDecision, 'deny');
+  for (const toolName of ['Agent', 'Task', 'PowerShell']) {
+    const out = decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: toolName, tool_input: {} }, seatManifest(), seatObserved(), armedStore());
+    assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  }
+});
+
+/* ---- F28: the one fixed, read-only authority-read Bash command ---- */
+
+test('F28-B1 the exact authority-read command ALLOWs; any deviation DENIES', () => {
+  assert.equal(classifyControlPlaneBash(AUTHORITY_READ_CMD, bashCtx).verdict, 'ALLOW');
+  for (const cmd of [
+    // a different ref — never model-chosen
+    'git show --format= --no-ext-diff origin/main -- advisor-reports/',
+    'git show --format= --no-ext-diff origin/external-advisor/gpt-rulings~1 -- advisor-reports/',
+    // arbitrary git show
+    'git show HEAD',
+    'git show origin/external-advisor/gpt-rulings',
+    // extra path/args
+    `${AUTHORITY_READ_CMD} extra`,
+    'git show --format= --no-ext-diff origin/external-advisor/gpt-rulings -- advisor-reports/ docs/',
+    // redirection/composition
+    `${AUTHORITY_READ_CMD} > out.txt`,
+    `${AUTHORITY_READ_CMD} | head`,
+    `${AUTHORITY_READ_CMD}; rm -rf /`,
+  ]) {
+    assert.equal(classifyControlPlaneBash(cmd, bashCtx).verdict, 'DENY', `must deny: ${cmd}`);
+  }
+});
+
+test('F28-B2 the generated prompt names the exact fixed command, and no longer instructs an impossible abstract read', () => {
+  const p = buildPacketPrompt(baselineMarker());
+  assert.ok(p.includes(AUTHORITY_READ_CMD), 'the prompt must instruct the exact allowed command');
+  assert.ok(
+    !/Read .* from origin\/external-advisor\/gpt-rulings and re-verify/.test(p),
+    'the old impossible abstract "Read <ruling> from origin..." instruction must be gone',
+  );
+});
+
+test('F28-B3 the fixed command is read-only and scoped to advisor-reports/ only, by construction of the regex', () => {
+  assert.match(AUTHORITY_READ_CMD, /^git show --format= --no-ext-diff origin\/external-advisor\/gpt-rulings -- advisor-reports\/$/);
+  // A real invocation against the live ruling branch returns exactly one changed ruling file, and
+  // prints readable text — the same measurement AR-1297 made before adopting this exact command.
 });
 
