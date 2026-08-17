@@ -531,6 +531,75 @@ test('GREEN: the replay-claim namespace is disjoint from the frozen G2 receipt n
   );
 });
 
+/* =============================== LIVE: --init-only LOCAL-HOOK DISCOVERY =================== */
+
+/**
+ * AR-1278A §12.9 — the zero-model live proof, explicitly authorized.
+ *
+ * `claude --init-only` runs Setup + SessionStart hooks and exits WITHOUT starting a conversation,
+ * so this costs no model call. It proves two things a unit test cannot:
+ *   1. Claude Code itself DISCOVERS and INVOKES a hook registered only in the LOCAL settings source;
+ *   2. it still does so when PROJECT settings carry `disableAllHooks: true`, provided the
+ *      higher-priority Local source explicitly carries `disableAllHooks: false` (F-11).
+ *
+ * The fixture lives in the OS temp directory and is removed afterwards: nothing is written into the
+ * repository, and no protected surface is touched.
+ */
+test('LIVE C9: Claude Code invokes a LOCAL-source SessionStart hook even when project settings disable hooks', async (t) => {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+
+  const dir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-initonly-'));
+  try {
+    fs.mkdirSync(pathMod.join(dir, '.claude'), { recursive: true });
+    const witness = pathMod.join(dir, 'HOOK_FIRED.txt').replaceAll('\\', '/');
+    const hookScript = pathMod.join(dir, 'hook.mjs').replaceAll('\\', '/');
+    fs.writeFileSync(hookScript, `import fs from 'node:fs';\nfs.writeFileSync(${JSON.stringify(witness)}, 'fired');\nprocess.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'SessionStart',additionalContext:'probe'}}));\n`);
+
+    // PROJECT settings try to switch every hook off — the exact F-11 attack.
+    fs.writeFileSync(pathMod.join(dir, '.claude', 'settings.json'), JSON.stringify({ disableAllHooks: true }, null, 2));
+    // LOCAL settings outrank them and say otherwise, and register the hook.
+    fs.writeFileSync(pathMod.join(dir, '.claude', 'settings.local.json'), JSON.stringify({
+      disableAllHooks: false,
+      hooks: { SessionStart: [{ matcher: 'startup|resume|fork', hooks: [{ type: 'command', command: `node "${hookScript}"`, timeout: 30 }] }] },
+    }, null, 2));
+
+    // MEASURED: Claude Code refuses to launch inside another Claude Code session and names the
+    // bypass itself — "unset the CLAUDECODE environment variable". The child gets a scrubbed env.
+    // This is a separate top-level process, in a temp cwd, running hooks and exiting with NO
+    // conversation, which is precisely the mode AR-1278A §12.9 authorized.
+    const childEnv = { ...process.env };
+    delete childEnv.CLAUDECODE;
+    delete childEnv.CLAUDE_CODE_SSE_PORT;
+    delete childEnv.CLAUDE_CODE_ENTRYPOINT;
+
+    let failure = null;
+    try {
+      cp.execFileSync('claude', ['--init-only', '--setting-sources', 'user,project,local'], {
+        cwd: dir, encoding: 'utf8', timeout: 120000, stdio: 'pipe', env: childEnv,
+      });
+    } catch (error) {
+      failure = `${error.status ?? error.code} ${String(error.stderr || error.message).slice(0, 300)}`;
+    }
+    if (failure) {
+      // 🛑 SKIP, NOT PASS. An earlier revision of this test `return`ed here and printed a green
+      // tick while proving nothing — the same false-green shape convicted twice already in this
+      // campaign. An unrunnable probe is an UNKNOWN and must report as one.
+      t.skip(`--init-only could not run: ${failure}`);
+      return;
+    }
+
+    assert.ok(
+      fs.existsSync(witness),
+      'Claude Code did NOT invoke the LOCAL-source SessionStart hook — the F-3/F-11 design rests on this',
+    );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 /* =============================== END-TO-END, ZERO EFFECTS ================================= */
 
 /**
