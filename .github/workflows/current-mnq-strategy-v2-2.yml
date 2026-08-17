@@ -12,9 +12,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  manifest-and-tests:
+  full-v22:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -24,11 +24,11 @@ jobs:
         run: python -m pip install --disable-pip-version-check pandas numpy scipy pytest
       - name: Run isolated v2.2 correctness and safety tests
         run: PYTHONPATH=. pytest --confcutdir=tests -q tests/test_current_mnq_strategy_v2_2.py tests/test_current_mnq_strategy_v2_2_live_safety.py
-      - name: Capture pinned data manifest only
-        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_runner.py --manifest-only
-      - name: Upload pre-PnL manifest evidence
+      - name: Run pinned-data v2.2 development diagnostics
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_runner.py --full
+      - name: Upload complete v2.2 evidence
         uses: actions/upload-artifact@v4
         with:
-          name: mnq-v2-2-manifest-evidence
+          name: mnq-v2-2-complete-results
           path: research/_mnq_v22/results/
           if-no-files-found: error
