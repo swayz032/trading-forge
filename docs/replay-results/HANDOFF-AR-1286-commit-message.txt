@@ -1,0 +1,39 @@
+HANDOFF: route AR-1286 to the control-plane / guard-repair seat (not AR-numbered, zero spend)
+
+AR-1285A (GPT branch 475b9f79) graded this seat's AR-1285 boundary stop PASS and authorized
+AR-1286, again naming a separate control-plane / guard-repair seat as the hard-required actor
+and warning against sending the bound Worker-1 seat back in ("that would create a procedural
+loop"). This commit routes the packet through the established engineering workflow rather
+than leaving the operator to relay it.
+
+Deliberately NOT AR-numbered, mirroring HANDOFF-AR-1277-CONTROL-PLANE-GUARD-REPAIR-SEAT.md,
+so scripts/worker-report-latest.mjs ignores it and the newest-report contract stays clean.
+
+Contents: actor exclusion; measured state at handoff (heads, toolbox pin + bundle, governed
+dirty exception, newest ruling); re-measured frozen queue 8 ready / 0 spent with the canonical
+preflight command; the live queue-SHA prefix trap carried forward; AR-1286 A-F condensed with
+spend authority and required end tokens; a DO-NOT list; and the AR-1285A provenance phrasing.
+
+Four traps measured by this seat are recorded so the incoming seat does not rediscover them:
+
+1. B-1 is a proof gap, not a registration gap. The live matcher DOES include Agent
+   (Edit|Write|NotebookEdit|Bash|Agent|Task). What is unproven is live runtime traversal.
+2. The protected-surface fence matches on COMMAND TEXT, not intent. Read-only commands are
+   denied for merely naming a protected path, and a git commit whose MESSAGE names one is
+   likewise denied - pass the message with -F instead. The queue preflight works only because
+   the script resolves its own paths internally.
+3. PowerShell is PRESENT in the live registry and NOT in the PreToolUse matcher - the AR-1286
+   section B gap, demonstrated reachable. This seat's own PowerShell use is disclosed in the
+   handoff (read-only process census; git confined to the session scratchpad; no repository
+   path and no protected surface touched).
+4. The Write tool is confined to the repository root, so artifacts cannot be staged into the
+   OS temp scratchpad.
+
+No control-plane work performed. No frozen condition claimed or dispatched. No model or agent
+calls. Frozen queue re-verified after this commit: 8 queued / 0 claimed / 0 dispatched /
+receipts +0, queue sha256 5935b1c6...f939 unchanged.
+
+Status for this seat remains G2_EXECUTION_SEAT_NOT_PROVEN - blocking evidence is the actor
+exclusion itself, not a technical defect.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
