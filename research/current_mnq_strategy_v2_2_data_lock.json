@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "source_contract_policy": "single_contract_development_only",
+  "files": {
+    "5m": {
+      "source_repo": "axb0306/cme-futures-ohlc",
+      "source_commit": "60abd3fb6369c6ce0b6a4a65b0f2562fc96b1264",
+      "source_path": "MNQ/MNQ_5min_20260120_20260415.csv",
+      "sha256": "1e42bc9a8a682c19e7cd460ab003b522b8643bda23b70e5f8235633d1ccf08f4",
+      "bytes": 994134,
+      "rows": 16818,
+      "first_timestamp": "2026-01-20T13:25:00",
+      "last_timestamp": "2026-04-15T23:25:00",
+      "contract_id": "CON.F.US.MNQ.M26",
+      "contract_note": "Pinned source updater identifies MNQ as M26. This development sample is therefore treated as a single-contract M26 research sample, NOT a then-active front-month series."
+    },
+    "1m": {
+      "source_repo": "axb0306/cme-futures-ohlc",
+      "source_commit": "60abd3fb6369c6ce0b6a4a65b0f2562fc96b1264",
+      "source_path": "MNQ/MNQ_1min_20260120_20260415.csv",
+      "sha256": "129623f45308a98a1a345473ac5fe4d03d5d53f7dd177a608d946eb3d3d6ea99",
+      "bytes": 4904282,
+      "rows": 84077,
+      "first_timestamp": "2026-01-20T13:27:00",
+      "last_timestamp": "2026-04-15T23:29:00",
+      "contract_id": "CON.F.US.MNQ.M26",
+      "contract_note": "Pinned source updater identifies MNQ as M26. This development sample is therefore treated as a single-contract M26 research sample, NOT a then-active front-month series."
+    },
+    "tick": {
+      "source_repo": "axb0306/cme-futures-ohlc",
+      "source_commit": "60abd3fb6369c6ce0b6a4a65b0f2562fc96b1264",
+      "source_path": "MNQ/MNQ_tick_20260309_20260415.csv",
+      "sha256": "0db60ca733f6d47c69230485b0ecb0d3f250c50e19f762fcd544d22fbb30a244",
+      "bytes": 29979112,
+      "rows": 528939,
+      "first_timestamp": "2026-03-09T17:11:55",
+      "last_timestamp": "2026-04-15T23:30:02",
+      "contract_id": "CON.F.US.MNQ.M26",
+      "contract_note": "Pinned source updater identifies MNQ as M26. This development sample is therefore treated as a single-contract M26 research sample, NOT a then-active front-month series."
+    }
+  }
+}
