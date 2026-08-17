@@ -22,6 +22,7 @@
  */
 
 import { EXPECTED_ACTOR, EXPECTED_REPO, GPT_AUTHORITY_REF } from './authorization.mjs';
+import { claimFileName, LEGACY_CLAIM_DIR } from './claim-store.mjs';
 
 /** The one executable this package may ever launch. No caller may substitute it. */
 export const LAUNCH_EXECUTABLE = 'claude';
@@ -78,17 +79,32 @@ export const SETTING_SOURCES = 'user,project,local';
 export const SEAT_SETTINGS_REL = '.claude/settings.local.json';
 export const SEAT_MANIFEST_REL = '.claude/control-plane-guard-manifest.json';
 
-export const CLAIM_DIR = 'docs/replay-results/control-plane-bootstrap/claims';
+/**
+ * LEGACY, immutable, forensic only (AR-1289A §3). Never written to by new authorizations — those go
+ * through the shared git-common-dir store in claim-store.mjs. Re-exported here under its historical
+ * name so existing importers (bootstrap.mjs, the test suite) are unaffected.
+ */
+export const CLAIM_DIR = LEGACY_CLAIM_DIR;
 
 /** The G2 receipt namespace the claim directory must never collide with (AR-1276C §9). */
 export const G2_RECEIPT_DIR = 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1';
 
-export function deriveBranch(targetPacket) {
-  return `control-plane/${targetPacket.toLowerCase()}-guard-repair`;
+/**
+ * AR-1289A §4 — ATTEMPT IDENTITY MUST INCLUDE THE AUTHORIZATION, NOT JUST THE PACKET.
+ *
+ * AR-1289's spent attempt left a `control-plane/ar-1278-guard-repair` branch and a
+ * `wt-control-plane-ar-1278` worktree behind — both derived from `target_packet` ALONE. A fresh
+ * authorization for the SAME packet would therefore collide with the failed attempt's names, and
+ * the ruling forbids cleaning up the old one to make room. So both derivations now take the
+ * authorization id too: same packet + same id -> byte-identical names (replay-safe); same packet +
+ * different id -> different names (collision-safe); nothing here needs the old attempt deleted.
+ */
+export function deriveBranch(targetPacket, authorizationId) {
+  return `control-plane/${targetPacket.toLowerCase()}-guard-repair/${authorizationId}`;
 }
 
-export function deriveWorktreeDirName(targetPacket) {
-  return `wt-control-plane-${targetPacket.toLowerCase()}`;
+export function deriveWorktreeDirName(targetPacket, authorizationId) {
+  return `wt-control-plane-${targetPacket.toLowerCase()}-${authorizationId}`;
 }
 
 /**
@@ -108,14 +124,18 @@ export function assertClaimNamespaceDisjoint(claimDir = CLAIM_DIR, g2Dir = G2_RE
 /**
  * @param marker   a marker that ALREADY passed validateAuthorization
  * @param measured { workerBranch, workerHead, repoParentDir, queueSha256, ready, spent,
- *                   receiptsReadmeOnly, gptAuthorityHead }
+ *                   receiptsReadmeOnly, gptAuthorityHead, gitCommonDirAbs }
  */
 export function buildPlan(marker, measured) {
   assertClaimNamespaceDisjoint();
 
-  const branch = deriveBranch(marker.target_packet);
-  const worktreeDir = deriveWorktreeDirName(marker.target_packet);
+  // AR-1289A §4: identity is target_packet + authorization_id, so a fresh authorization for the
+  // same packet never collides with a prior spent attempt's branch/worktree.
+  const branch = deriveBranch(marker.target_packet, marker.authorization_id);
+  const worktreeDir = deriveWorktreeDirName(marker.target_packet, marker.authorization_id);
   const worktreePath = `${measured.repoParentDir}/${worktreeDir}`;
+  // AR-1289A §3: the claim lives in the shared Git common directory, not any working tree.
+  const claimPath = `${measured.gitCommonDirAbs}/${claimFileName(marker.authorization_id)}`;
 
   return {
     schema: 'CONTROL_PLANE_BOOTSTRAP_PLAN_V1',
@@ -138,6 +158,14 @@ export function buildPlan(marker, measured) {
       hook_doorway: 'scripts/control-plane-bootstrap/control-plane-seat-hook.mjs',
       guard_module: 'scripts/control-plane-bootstrap/control-plane-guard.mjs',
       binding_mechanism: 'launch-directory cwd (AR-1271A §4 measured), setting-sources user,project,local',
+    },
+
+    // AR-1289A §3 — outside every working tree, so the seat cannot reach it through Edit/Write.
+    claim_store: {
+      path: claimPath,
+      git_common_dir: measured.gitCommonDirAbs,
+      legacy_fallback_dir: LEGACY_CLAIM_DIR,
+      _note: 'both bootstrap.mjs and the receiving seat independently derive this path from Git; nothing supplies it',
     },
 
     bootstrap_source_sha_required: marker.bootstrap_source_sha,
@@ -180,8 +208,8 @@ export function buildPlan(marker, measured) {
       { step: 1, op: 'verify_gpt_authority', detail: `fetch ${GPT_AUTHORITY_REF}, confirm newest ruling carries this authorization_id`, mutating: false },
       { step: 2, op: 'verify_frozen_state', detail: 'queue sha256 + 8 READY + 0 SPENT + receipts README-only', mutating: false },
       { step: 3, op: 'verify_bootstrap_identity', detail: 'worker HEAD equals pinned source sha; recomputed bundle equals pinned bundle', mutating: false },
-      { step: 4, op: 'verify_no_replay', detail: `no claim exists at ${CLAIM_DIR}/${marker.authorization_id}.json`, mutating: false },
-      { step: 5, op: 'write_claim', detail: `O_EXCL ${CLAIM_DIR}/${marker.authorization_id}.json — FIRST mutation`, mutating: true },
+      { step: 4, op: 'verify_no_replay', detail: `no claim for this id in the shared store (${claimPath}) or the legacy store (${LEGACY_CLAIM_DIR}/)`, mutating: false },
+      { step: 5, op: 'write_claim', detail: `O_EXCL ${claimPath} — FIRST mutation`, mutating: true },
       { step: 6, op: 'create_branch_and_worktree', detail: `${branch} from ${measured.workerHead} at ${worktreePath}`, mutating: true },
       { step: 7, op: 'materialize_seat_guard', detail: `${SEAT_SETTINGS_REL} + ${SEAT_MANIFEST_REL} (immutable to the seat)`, mutating: true },
       // AR-1278A §1: `claude --init-only` runs Setup + SessionStart hooks and EXITS without a

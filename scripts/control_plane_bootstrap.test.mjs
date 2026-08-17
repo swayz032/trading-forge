@@ -142,8 +142,36 @@ test('N13 arbitrary settings path cannot be supplied', () => {
 
 test('N14 arbitrary worktree path cannot be supplied — it is DERIVED', () => {
   refusesWith((m) => { m.worktree_path = 'C:/anywhere'; }, 'unknown_field');
-  assert.equal(deriveBranch('AR-1279'), 'control-plane/ar-1279-guard-repair');
-  assert.equal(deriveWorktreeDirName('AR-1279'), 'wt-control-plane-ar-1279');
+  // AR-1289A §4: identity is target_packet + authorization_id, not target_packet alone.
+  assert.equal(deriveBranch('AR-1279', 'cpb-2026-08-16-0001'), 'control-plane/ar-1279-guard-repair/cpb-2026-08-16-0001');
+  assert.equal(deriveWorktreeDirName('AR-1279', 'cpb-2026-08-16-0001'), 'wt-control-plane-ar-1279-cpb-2026-08-16-0001');
+});
+
+/* =============================== AR-1290 C5 — ATTEMPT-IDENTITY REPAIR (AR-1289A §4) ========== */
+
+test('AR1290-C5 attempt identity: same packet + different authorization -> different branch/worktree', () => {
+  const a = deriveBranch('AR-1278', 'cpb-2026-08-17-0001');
+  const b = deriveBranch('AR-1278', 'cpb-2026-08-17-0002');
+  assert.notEqual(a, b);
+  assert.notEqual(deriveWorktreeDirName('AR-1278', 'cpb-2026-08-17-0001'), deriveWorktreeDirName('AR-1278', 'cpb-2026-08-17-0002'));
+});
+
+test('AR1290-C5b attempt identity: same packet + same authorization -> byte-identical names, twice', () => {
+  assert.equal(deriveBranch('AR-1278', 'cpb-2026-08-17-0001'), deriveBranch('AR-1278', 'cpb-2026-08-17-0001'));
+  assert.equal(deriveWorktreeDirName('AR-1278', 'cpb-2026-08-17-0001'), deriveWorktreeDirName('AR-1278', 'cpb-2026-08-17-0001'));
+});
+
+test('AR1290-C6 stale spent attempt does not block a fresh plan — no caller path parameter exists either', () => {
+  // The AR-1289 fixture: an old target-only-derived pair left behind by the spent attempt.
+  const staleBranch = 'control-plane/ar-1278-guard-repair';
+  const staleWorktree = 'wt-control-plane-ar-1278';
+  const freshBranch = deriveBranch('AR-1278', 'cpb-2026-08-17-0002');
+  const freshWorktree = deriveWorktreeDirName('AR-1278', 'cpb-2026-08-17-0002');
+  assert.notEqual(freshBranch, staleBranch);
+  assert.notEqual(freshWorktree, staleWorktree);
+  // Neither derivation function takes anything beyond packet+id — no caller/model/operator path.
+  assert.equal(deriveBranch.length, 2);
+  assert.equal(deriveWorktreeDirName.length, 2);
 });
 
 test('N15 replayed authorization identity', () => {
@@ -812,10 +840,15 @@ test('LIVE C9b MUTATION: is the explicit disableAllHooks:false load-bearing?', a
 const FAKE_QUEUE_JSON = JSON.stringify({ queue: new Array(8).fill({}), attempts: {} });
 const FAKE_QUEUE_SHA = createHash('sha256').update(Buffer.from(FAKE_QUEUE_JSON)).digest('hex');
 
-function fakeIo({ rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md', claimed = [] }) {
+const FAKE_REPO_ROOT = 'C:/Users/tonio/Projects/wt-claude-worker1-20260815';
+const FAKE_COMMON_DIR = `${FAKE_REPO_ROOT}/.git`;
+
+function fakeIo({ rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md', claimed = [], newStoreClaimed = [] }) {
   const queue = FAKE_QUEUE_JSON;
   return {
-    repoRoot: 'C:/Users/tonio/Projects/wt-claude-worker1-20260815',
+    repoRoot: FAKE_REPO_ROOT,
+    cwd: FAKE_REPO_ROOT,
+    realpath: (p) => p,
     git: (...args) => {
       const a = args.join(' ');
       if (a.startsWith('fetch')) return '';
@@ -825,11 +858,15 @@ function fakeIo({ rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md',
       if (a === 'rev-parse --abbrev-ref HEAD') return 'claude/worker1-h1-20260815';
       if (a === 'rev-parse HEAD') return HEAD;
       if (a === 'config --get remote.origin.url') return 'git@github.com:swayz032/trading-forge.git';
+      // AR-1289A §3: measureState resolves the shared claim store from this every run.
+      if (a === 'rev-parse --git-common-dir') return '.git';
       return '';
     },
     readFile: () => queue,
     readFileBytes: (rel) => (BUNDLE_FILES.includes(rel) ? fakeBundleReader(rel) : Buffer.from(queue)),
     listDir: (rel) => (String(rel).includes('claims') ? claimed.map((c) => `${c}.json`) : ['README.md']),
+    // The shared store's directory listing, keyed by the resolved common-dir path (not a repo-relative rel).
+    listDirAbs: (dir) => (dir === FAKE_COMMON_DIR ? newStoreClaimed.map((c) => `tf-control-plane-claim-${c}.json`) : []),
     exists: () => true,
   };
 }
@@ -946,5 +983,201 @@ test('C7 crash-shaped replay control: a claimed authorization is never reusable'
   assert.equal(result.refusal.code, 'all_markers_refused');
   assert.match(result.refusal.detail, /replayed_authorization/);
   assert.deepEqual(effects.calls, [], 'a replay must request no effects at all');
+});
+
+test('AR1290-C4 legacy replay remains spent: the NEW store is empty, only the LEGACY store has the id, still refuses', () => {
+  const effects = recordingEffects();
+  // newStoreClaimed defaults to [] — proves the legacy id alone, with nothing in the new store,
+  // is sufficient to refuse. Deleting/ignoring the new-store path cannot un-spend a legacy claim.
+  const result = run({
+    mode: 'execute',
+    io: fakeIo({ rulingText: validRuling(), claimed: ['cpb-2026-08-16-0001'], newStoreClaimed: [] }),
+    effects,
+  });
+  assert.equal(result.authorized, false);
+  assert.equal(result.refusal.code, 'all_markers_refused');
+  assert.match(result.refusal.detail, /replayed_authorization/);
+  assert.deepEqual(effects.calls, [], 'a legacy-only replay must still request no effects');
+});
+
+test('AR1290-C4b new-store replay also refuses, symmetrically — union, not either store alone', () => {
+  const effects = recordingEffects();
+  const result = run({
+    mode: 'execute',
+    io: fakeIo({ rulingText: validRuling(), claimed: [], newStoreClaimed: ['cpb-2026-08-16-0001'] }),
+    effects,
+  });
+  assert.equal(result.authorized, false);
+  assert.equal(result.refusal.code, 'all_markers_refused');
+  assert.match(result.refusal.detail, /replayed_authorization/);
+  assert.deepEqual(effects.calls, [], 'a new-store-only replay must still request no effects');
+});
+
+/* =============================== AR-1290 C8 — BUNDLE COVERAGE, GENERATED NOT HAND-TYPED ===== */
+
+test('AR1290-C8 claim-store.mjs is covered by BUNDLE_FILES, asserted from the live export', () => {
+  // "Generate/list it from the actual BUNDLE_FILES source" — no hand-typed count or literal array.
+  assert.ok(BUNDLE_FILES.includes('scripts/control-plane-bootstrap/claim-store.mjs'),
+    'claim-store.mjs decides claim resolution and MUST be in the pinned bundle');
+  // One byte in it must move the digest, exactly like every other covered file (mirrors C9).
+  const mutated = (rel) => (rel === 'scripts/control-plane-bootstrap/claim-store.mjs'
+    ? Buffer.concat([fakeBundleReader(rel), Buffer.from('.')])
+    : fakeBundleReader(rel));
+  assert.notEqual(computeBundle(mutated).bundle_sha256, BUNDLE_SHA);
+});
+
+/* =============================== AR-1290 C1/C2/C3 — REAL GIT FIXTURES, NO MODEL LAUNCH ====== */
+
+/**
+ * These exercise the REAL claim-store.mjs IO against REAL git worktrees/repositories — the exact
+ * class of thing AR-1289 found broken and unit tests with fake IO cannot demonstrate. No Claude
+ * process is ever launched; only `git init` / `git worktree add` / plain file IO.
+ */
+import { gitCommonDirAbs as realGitCommonDirAbs, writeClaimExclusive, readClaimFromNewStore, readClaimEitherStoreReal, listNewStoreFilenamesReal } from './control-plane-bootstrap/claim-store.mjs';
+
+test('AR1290-C1 first mutation still the claim: O_EXCL in the shared store; a repeat write refuses', async () => {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+  const gitAt = (dir, ...args) => cp.execFileSync('git', ['-C', dir, ...args], { encoding: 'utf8' }).trim();
+
+  const dir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-claimstore-c1-'));
+  try {
+    gitAt(dir, 'init', '-q');
+    gitAt(dir, 'config', 'user.email', 'test@test');
+    gitAt(dir, 'config', 'user.name', 'test');
+    fs.writeFileSync(pathMod.join(dir, 'seed.txt'), 'seed');
+    gitAt(dir, 'add', 'seed.txt');
+    gitAt(dir, 'commit', '-q', '-m', 'seed');
+
+    const io = { git: (...a) => gitAt(dir, ...a), cwd: dir, realpath: (p) => fs.realpathSync(p).replaceAll('\\', '/') };
+    const common = realGitCommonDirAbs(io);
+    assert.ok(fs.existsSync(common), 'the git common directory must already exist — no mkdir needed');
+
+    const path1 = writeClaimExclusive(common, 'cpb-c1-test-0001', { authorization_id: 'cpb-c1-test-0001', claimed_at: 'T1' });
+    assert.ok(fs.existsSync(path1));
+
+    // O_EXCL: a second write for the SAME id must refuse, not overwrite.
+    assert.throws(() => writeClaimExclusive(common, 'cpb-c1-test-0001', { authorization_id: 'cpb-c1-test-0001', claimed_at: 'T2' }));
+    const stillOriginal = JSON.parse(fs.readFileSync(path1, 'utf8'));
+    assert.equal(stillOriginal.claimed_at, 'T1', 'the refused repeat must not have mutated the existing claim');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('AR1290-C2 real sibling-worktree visibility: the claim written from the source worktree IS read from a freshly created sibling — and the OLD per-worktree mechanism would have missed it', async () => {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+  const gitAt = (dir, ...args) => cp.execFileSync('git', ['-C', dir, ...args], { encoding: 'utf8' }).trim();
+
+  const root = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-claimstore-c2-'));
+  const mainDir = pathMod.join(root, 'main');
+  const siblingDir = pathMod.join(root, 'sibling');
+  try {
+    fs.mkdirSync(mainDir, { recursive: true });
+    gitAt(mainDir, 'init', '-q');
+    gitAt(mainDir, 'config', 'user.email', 'test@test');
+    gitAt(mainDir, 'config', 'user.name', 'test');
+    fs.writeFileSync(pathMod.join(mainDir, 'seed.txt'), 'seed');
+    gitAt(mainDir, 'add', 'seed.txt');
+    gitAt(mainDir, 'commit', '-q', '-m', 'seed');
+    const base = gitAt(mainDir, 'rev-parse', 'HEAD');
+
+    // Write the claim from the SOURCE (main) worktree — mirrors bootstrap.mjs's writeClaim.
+    const mainIo = { git: (...a) => gitAt(mainDir, ...a), cwd: mainDir, realpath: (p) => fs.realpathSync(p).replaceAll('\\', '/') };
+    const mainCommon = realGitCommonDirAbs(mainIo);
+    const written = writeClaimExclusive(mainCommon, 'cpb-c2-test-0001', {
+      authorization_id: 'cpb-c2-test-0001', branch: 'control-plane/ar-c2-guard-repair/cpb-c2-test-0001',
+      worktree: siblingDir.replaceAll('\\', '/'), source_worker_head: base, claimed_at: 'T1',
+    });
+    const writtenBytes = fs.readFileSync(written);
+
+    // THEN create the sibling worktree — mirrors bootstrap.mjs's createBranchAndWorktree, AFTER the claim.
+    gitAt(mainDir, 'worktree', 'add', '-b', 'control-plane/ar-c2-guard-repair/cpb-c2-test-0001', siblingDir, base);
+
+    // Read from the SIBLING's own independently-resolved common dir — mirrors the seat hook.
+    const sibIo = { git: (...a) => gitAt(siblingDir, ...a), cwd: siblingDir, realpath: (p) => fs.realpathSync(p).replaceAll('\\', '/') };
+    const sibCommon = realGitCommonDirAbs(sibIo);
+
+    // C2 core assertion: both worktrees resolve to the SAME physical common directory.
+    assert.equal(sibCommon, mainCommon, 'main and sibling worktrees of one repository must share one common dir');
+
+    const readBack = readClaimFromNewStore(sibCommon, 'cpb-c2-test-0001');
+    assert.ok(readBack, 'the sibling worktree must be able to read the claim the source worktree wrote');
+    assert.deepEqual(Buffer.from(JSON.stringify(readBack, null, 2) + '\n'), writtenBytes, 'exact same bytes, not merely a truthy read');
+
+    // NEGATIVE CONTROL #1 — proves the control bites: the OLD, broken mechanism (claim inside the
+    // LEGACY repo-relative directory, uncommitted) is NOT visible from the sibling's own checkout.
+    // This is exactly the AR-1289 defect; reproducing its absence here is the discriminating proof.
+    const legacyStyleUncommittedClaim = pathMod.join(mainDir, 'docs/replay-results/control-plane-bootstrap/claims/cpb-c2-test-0001.json');
+    fs.mkdirSync(pathMod.dirname(legacyStyleUncommittedClaim), { recursive: true });
+    fs.writeFileSync(legacyStyleUncommittedClaim, '{}');
+    const oldStylePathInSibling = pathMod.join(siblingDir, 'docs/replay-results/control-plane-bootstrap/claims/cpb-c2-test-0001.json');
+    assert.ok(!fs.existsSync(oldStylePathInSibling),
+      'CONTROL: an UNCOMMITTED file in the source worktree must NOT appear in a sibling checkout — this is the exact bug AR-1289 found; the shared-common-dir fix sidesteps it entirely');
+
+    // NEGATIVE CONTROL #2 (AR-1290 C2's literal requirement) — mutate the READER back to the OLD
+    // `--show-toplevel`-relative lookup and prove it CANNOT find the claim the NEW writer produced.
+    // This is the pre-fix `readClaim` shape from control-plane-seat-hook.mjs, reproduced inline so
+    // the control exercises the actual regressed behaviour, not a description of it.
+    const oldStyleReadClaim = (worktreeCwd, authorizationId) => {
+      const root = gitAt(worktreeCwd, 'rev-parse', '--show-toplevel');
+      try {
+        return JSON.parse(fs.readFileSync(pathMod.join(root, 'docs/replay-results/control-plane-bootstrap/claims', `${authorizationId}.json`), 'utf8'));
+      } catch {
+        return null;
+      }
+    };
+    assert.equal(oldStyleReadClaim(siblingDir, 'cpb-c2-test-0001'), null,
+      'MUTATION CONTROL: the pre-fix show-toplevel reader must NOT find the claim written by the NEW shared-store writer — proving the fix, not merely the absence of the old bug');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('AR1290-C3 repository isolation: a different repository must not see or accept the same authorization id', async () => {
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const pathMod = await import('node:path');
+  const cp = await import('node:child_process');
+  const gitAt = (dir, ...args) => cp.execFileSync('git', ['-C', dir, ...args], { encoding: 'utf8' }).trim();
+
+  const root = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'cp-claimstore-c3-'));
+  const repoA = pathMod.join(root, 'repo-a');
+  const repoB = pathMod.join(root, 'repo-b');
+  try {
+    for (const dir of [repoA, repoB]) {
+      fs.mkdirSync(dir, { recursive: true });
+      gitAt(dir, 'init', '-q');
+      gitAt(dir, 'config', 'user.email', 'test@test');
+      gitAt(dir, 'config', 'user.name', 'test');
+      fs.writeFileSync(pathMod.join(dir, 'seed.txt'), 'seed');
+      gitAt(dir, 'add', 'seed.txt');
+      gitAt(dir, 'commit', '-q', '-m', 'seed');
+    }
+
+    const ioA = { git: (...a) => gitAt(repoA, ...a), cwd: repoA, realpath: (p) => fs.realpathSync(p).replaceAll('\\', '/') };
+    const ioB = { git: (...a) => gitAt(repoB, ...a), cwd: repoB, realpath: (p) => fs.realpathSync(p).replaceAll('\\', '/') };
+    const commonA = realGitCommonDirAbs(ioA);
+    const commonB = realGitCommonDirAbs(ioB);
+    assert.notEqual(commonA, commonB, 'two distinct repositories must resolve to two distinct common directories');
+
+    // Claim the SAME authorization id, only in repo A.
+    writeClaimExclusive(commonA, 'cpb-c3-shared-id', { authorization_id: 'cpb-c3-shared-id', repo: 'repo-a' });
+
+    assert.ok(readClaimFromNewStore(commonA, 'cpb-c3-shared-id'), 'repo A must see its own claim');
+    assert.equal(readClaimFromNewStore(commonB, 'cpb-c3-shared-id'), null,
+      'repo B must NOT see repo A\'s claim merely because the authorization id string matches');
+    assert.equal(readClaimEitherStoreReal(commonB, repoB, 'cpb-c3-shared-id'), null,
+      'the combined legacy+new lookup in repo B must also be null — no cross-repository bleed');
+    assert.deepEqual(listNewStoreFilenamesReal(commonB).filter((f) => f.startsWith('tf-control-plane-claim-')), [],
+      'repo B\'s own store must be empty of claim files');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 

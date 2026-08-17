@@ -38,6 +38,10 @@ import {
   buildPlan, buildLaunchArgv, CLAIM_DIR, LAUNCH_EXECUTABLE, SETTING_SOURCES,
   deriveBranch, deriveWorktreeDirName, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL,
 } from './plan.mjs';
+import {
+  gitCommonDirAbs, writeClaimExclusive, listNewStoreFilenamesReal,
+  listNewStoreClaimedIds, listLegacyClaimedIds,
+} from './claim-store.mjs';
 
 const QUEUE_PATH = 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json';
 const RECEIPT_DIR = 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1';
@@ -49,7 +53,9 @@ export function makeRealIo(repoRoot) {
   const git = (...args) => execFileSync('git', ['-C', repoRoot, ...args], { encoding: 'utf8' }).trim();
   return {
     repoRoot,
+    cwd: repoRoot,
     git,
+    realpath: (p) => fsReal.realpathSync(p).replaceAll('\\', '/'),
     readFile: (rel) => fsReal.readFileSync(pathReal.join(repoRoot, rel), 'utf8'),
     readFileBytes: (rel) => fsReal.readFileSync(pathReal.join(repoRoot, rel)),
     listDir: (rel) => {
@@ -59,6 +65,9 @@ export function makeRealIo(repoRoot) {
         return [];
       }
     },
+    // Absolute-path listing, distinct from listDir (repo-relative): the shared claim store lives
+    // in the Git common directory, outside repoRoot (AR-1289A §3).
+    listDirAbs: (absPath) => listNewStoreFilenamesReal(absPath),
     exists: (rel) => fsReal.existsSync(pathReal.join(repoRoot, rel)),
   };
 }
@@ -103,9 +112,14 @@ export function measureState(io) {
     rulingId = rulingIdFromFilename(pathReal.basename(changed[0]));
   }
 
-  const claimedAuthorizationIds = new Set(
-    io.listDir(CLAIM_DIR).filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, '')),
-  );
+  // AR-1289A §3/C4 — REPLAY MUST CHECK BOTH STORES. New authorizations claim in the shared Git
+  // common directory; the legacy committed directory (docs/replay-results/control-plane-bootstrap/
+  // claims/) holds forensic history and must keep refusing its old ids even after the storage
+  // mechanism changed. Neither store alone is the truth; the union is.
+  const commonDirAbs = gitCommonDirAbs(io);
+  const newStoreIds = listNewStoreClaimedIds(io.listDirAbs(commonDirAbs));
+  const legacyIds = listLegacyClaimedIds(io.listDir(CLAIM_DIR));
+  const claimedAuthorizationIds = new Set([...newStoreIds, ...legacyIds]);
 
   // AR-1278 F-5: the identity of the code that would actually run.
   const bundle = computeBundle(io.readFileBytes);
@@ -124,6 +138,9 @@ export function measureState(io) {
     rulingText,
     isNewestRuling: rulingId !== null,
     claimedAuthorizationIds,
+    // AR-1289A §3 — threaded through to buildPlan and writeClaim so both name the exact same
+    // location the measurement above already checked. Never re-resolved at write time.
+    gitCommonDirAbs: commonDirAbs,
     bootstrapBundleSha256: bundle.bundle_sha256,
     bootstrapBundleFiles: bundle.files,
     // 0 by CONSTRUCTION, not by scanning history: this process dispatches no Agent/subagent.
@@ -166,18 +183,16 @@ export function makeRealEffects(repoRoot) {
     /**
      * THE FIRST MUTATION, and it is a single atomic act.
      *
-     * AR-1278A F-10: the previous version called `mkdirSync(..., {recursive:true})` first, so a
-     * failure between the directory creation and the claim write left external state changed while
-     * the authorization was still reusable. The parent directory is now COMMITTED in the repository
-     * (see CLAIM_DIR/README.md), so the critical section is exactly one `wx` write: it either makes
-     * the authorization non-reusable or it changes nothing at all.
+     * AR-1289A §3: writes into the SHARED Git common directory, not the legacy per-worktree
+     * committed directory — that is precisely what AR-1289 found broken (a sibling worktree cut
+     * from `git worktree add` cannot see an uncommitted file in a different worktree). The common
+     * directory pre-exists by construction (git itself created it), so this remains exactly one
+     * `wx` write: it either makes the authorization non-reusable or it changes nothing at all.
+     * `gitCommonDirAbs` is the SAME value `measureState` already used for the replay check —
+     * threaded through, never re-resolved, so the two can never disagree about the location.
      */
-    writeClaim(authorizationId, body) {
-      const dir = pathReal.join(repoRoot, CLAIM_DIR);
-      if (!fsReal.existsSync(dir)) {
-        throw new Error(`claim directory ${CLAIM_DIR} must pre-exist; refusing to create it inside the one-shot critical section`);
-      }
-      fsReal.writeFileSync(pathReal.join(dir, `${authorizationId}.json`), `${JSON.stringify(body, null, 2)}\n`, { flag: 'wx' });
+    writeClaim(authorizationId, body, gitCommonDirAbsForClaim) {
+      return writeClaimExclusive(gitCommonDirAbsForClaim, authorizationId, body);
     },
     createBranchAndWorktree(branch, worktreePath, base) {
       execFileSync('git', ['-C', repoRoot, 'worktree', 'add', '-b', branch, worktreePath, base], { stdio: 'inherit' });
@@ -311,8 +326,10 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
   }
 
   // ---- everything above this line is READ-ONLY. The claim is the first mutation. -------------
-  const branch = deriveBranch(auth.marker.target_packet);
-  const worktreePath = `${measured.repoParentDir}/${deriveWorktreeDirName(auth.marker.target_packet)}`;
+  // AR-1289A §4: branch/worktree identity includes the authorization id, so a fresh authorization
+  // for the same packet never collides with a prior spent attempt's names.
+  const branch = deriveBranch(auth.marker.target_packet, auth.marker.authorization_id);
+  const worktreePath = `${measured.repoParentDir}/${deriveWorktreeDirName(auth.marker.target_packet, auth.marker.authorization_id)}`;
 
   effects.writeClaim(auth.marker.authorization_id, {
     authorization_id: auth.marker.authorization_id,
@@ -323,7 +340,7 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
     source_worker_head: measured.workerHead,
     bootstrap_bundle_sha256: measured.bootstrapBundleSha256,
     claimed_at: now,
-  });
+  }, measured.gitCommonDirAbs);
 
   const manifest = {
     schema: 'CONTROL_PLANE_SEAT_MANIFEST_V1',
@@ -391,6 +408,7 @@ function summarize(m) {
     receipts_readme_only: m.receiptsReadmeOnly,
     agent_model_executions: m.agentModelExecutions,
     claimed_authorization_ids: [...m.claimedAuthorizationIds],
+    git_common_dir: m.gitCommonDirAbs,
     setting_sources_at_launch: SETTING_SOURCES,
   };
 }

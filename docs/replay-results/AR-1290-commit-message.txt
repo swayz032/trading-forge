@@ -1,19 +1,35 @@
-AR-1290: model boundary stop — top-level seat is Opus, packet requires Sonnet 5
+AR-1290: bootstrap retry-safety repair — shared claim store + attempt identity, C1-C10 closed
 
-AR-1289A authorizes AR-1290 on Sonnet 5 HIGH, explicitly disallows Opus for this packet, and
-explicitly forbids Agent/subagent delegation, which rules out routing the work to a Sonnet
-subagent as a workaround. The ruling's own text names the compliant response for this exact
-situation: stop and report the model boundary rather than silently consuming Opus.
+Repairs both defects AR-1289 found. The claim now lives in the Git common directory shared by
+every worktree of a repository (new file claim-store.mjs), so a sibling worktree created by
+git worktree add can see a claim the bootstrap wrote in the source worktree without any commit,
+checkout, or channel through the marker/manifest/model prompt/env. The legacy committed claim
+directory stays untouched and immutable; replay refusal is now a union of both stores, so
+retiring the old storage mechanism cannot un-spend an old authorization.
 
-This top-level seat is Opus 5 and has no tool to switch its own model; that is a /model action
-only the operator can take. No implementation attempted, zero files touched, frozen eight
-unchanged (ready 8, spent 0, receipts README-only).
+Branch and worktree derivation now takes the authorization id alongside the target packet, so a
+fresh authorization for the same packet never collides with a prior spent attempt's names, and
+the spent attempt never needs deleting to make room.
 
-Remaining pre-flight questions are all clean: authorized files exist, prohibited list is
-understood, required proofs are mechanical with no model launch needed for the tests
-themselves, nothing has already landed, no metric/grade mix.
+Three new tests exercise the actual fix against real git worktrees and repositories rather than
+fakes: claim-store writes and reads across a freshly created sibling worktree, a repository
+isolation control, and an O_EXCL replay control. One of the sibling-worktree tests reproduces the
+pre-fix reader shape inline and proves it would have missed the claim, satisfying the literal
+requirement that the control fail under a reversion to the old storage.
 
-AR-1290 remains authorized to this seat. This is a hold, not a handoff or reassignment; it
-resumes once the top-level model is Sonnet 5.
+All 65 tests pass: 56 pre-existing unchanged, 9 new. The production bundle grew from eight files
+to nine (claim-store.mjs added, since its bytes decide claim resolution) and the stale
+seven-file count in CONTRACT.md is corrected in the same pass, since this packet is the one
+actively invalidating it further.
 
-Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Authoring and testing only, per this packet's authorization: zero bootstrap executions against
+the real repository, zero privileged seat launches, zero Agent or subagent calls, zero frozen G2
+spend. The spent cpb-2026-08-17-0001 claim, branch, and worktree from AR-1289 are left exactly as
+found - not touched, not cleaned up. Terminal frozen proof: ready 8, spent 0, receipts
+README-only.
+
+Run on Sonnet 5 per the operator's model switch, following this packet's own required stop when
+this session was still Opus. Disclosed: the session has no way to introspect its own running
+model, so the switch is relayed, not independently measured.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

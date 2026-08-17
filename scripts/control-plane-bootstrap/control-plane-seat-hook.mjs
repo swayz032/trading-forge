@@ -40,6 +40,7 @@ import {
 import { extractCandidateMarkers, validateAuthorization, EXPECTED_REPO } from './authorization.mjs';
 import { computeBundle } from './bundle.mjs';
 import { rulingIdFromFilename } from './bootstrap.mjs';
+import { gitCommonDirAbs, readClaimEitherStoreReal } from './claim-store.mjs';
 
 /**
  * AR-1278A F-8 / F-9 — THE RECEIVING SEAT VERIFIES GPT AUTHORITY FOR ITSELF.
@@ -361,8 +362,10 @@ export function decide(input, manifest, observed, store, authority = null) {
 
 export function makeRealIo(cwd) {
   const git = (...args) => execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim();
+  const realpath = (p) => fs.realpathSync(p).replaceAll('\\', '/');
   return {
     git,
+    cwd,
     readFileBytes: (rel) => fs.readFileSync(path.join(git('rev-parse', '--show-toplevel'), rel)),
     listDir: (rel) => {
       try {
@@ -371,14 +374,18 @@ export function makeRealIo(cwd) {
         return [];
       }
     },
-    realpath: (p) => fs.realpathSync(p).replaceAll('\\', '/'),
+    realpath,
+    /**
+     * AR-1289A §3/C2 — reads the SAME shared Git-common-dir location the bootstrap wrote to, from
+     * THIS worktree's own `git rev-parse --git-common-dir` (which resolves to the same physical
+     * directory as every other worktree of this one repository — that is the entire fix). Falls
+     * back to the legacy, per-checkout committed store (C4) so an old spent id is still recognised
+     * even though new authorizations no longer land there.
+     */
     readClaim: (authorizationId) => {
-      try {
-        const root = git('rev-parse', '--show-toplevel');
-        return JSON.parse(fs.readFileSync(path.join(root, 'docs/replay-results/control-plane-bootstrap/claims', `${authorizationId}.json`), 'utf8'));
-      } catch {
-        return null;
-      }
+      const commonDir = gitCommonDirAbs({ git, cwd, realpath });
+      const repoRoot = git('rev-parse', '--show-toplevel');
+      return readClaimEitherStoreReal(commonDir, repoRoot, authorizationId);
     },
   };
 }

@@ -58,9 +58,13 @@ $ node scripts/control-plane-bootstrap/bootstrap.mjs      # --plan is the defaul
   "bootstrap_bundle_sha256":  <- bootstrap_bundle_sha256
 ```
 
-The bundle covers `authorization.mjs`, `bootstrap.mjs`, `bundle.mjs`, `control-plane-guard.mjs`,
-`control-plane-seat-hook.mjs`, `plan.mjs` and `cp-commit.mjs`. One byte in any of them changes the
-digest and the authorization refuses — a test proves this for each covered file individually.
+🛑 **This prose has gone stale twice already (AR-1288A §2 caught the first drift) — the definitive
+list is `BUNDLE_FILES` in `scripts/control-plane-bootstrap/bundle.mjs`, never this paragraph.** As
+of AR-1290 it covers nine files: `authorization.mjs`, `bootstrap.mjs`, `bundle.mjs`,
+`claim-store.mjs`, `control-plane-guard.mjs`, `control-plane-seat-hook.mjs`, `plan.mjs`,
+`cp-commit.mjs` and `cp-finalize.mjs`. One byte in any of them changes the digest and the
+authorization refuses — a test proves this for each covered file individually, generated from the
+live export rather than hand-counted (`AR1290-C8`, `C9`).
 
 `allowed_paths` is the exact protected-edit allowlist for AR-1278 (AR-1276C §9). The seat's guard is
 **default-deny**: anything not listed is refused. Adjust the list to AR-1278's real scope before
@@ -89,18 +93,49 @@ AR-1276C §9's "no arbitrary executable / settings path / worktree path" structu
 
 ## 3. WHAT IS DERIVED, NEVER SUPPLIED
 
-Model text names none of these. All are computed from `target_packet` plus fixed constants:
+Model text names none of these. All are computed from `target_packet` **and `authorization_id`**
+plus fixed constants:
 
 ```
-branch        control-plane/<target_packet lowercased>-guard-repair
-worktree      <repo parent>/wt-control-plane-<target_packet lowercased>
+branch        control-plane/<target_packet lowercased>-guard-repair/<authorization_id>
+worktree      <repo parent>/wt-control-plane-<target_packet lowercased>-<authorization_id>
 seat guard    <worktree>/.claude/settings.local.json          <- immutable to the seat
 seat manifest <worktree>/.claude/control-plane-guard-manifest.json
 repairable    <worktree>/.claude/settings.json                 <- what the packet may fix
 executable    claude                      (fixed; no parameter exists)
 argv          --dangerously-skip-permissions --setting-sources user,project,local
-claim         docs/replay-results/control-plane-bootstrap/claims/<authorization_id>.json
+claim         <git common dir>/tf-control-plane-claim-<authorization_id>.json
 ```
+
+🛑 **AR-1289A §4 — ATTEMPT IDENTITY, NOT JUST PACKET IDENTITY.** AR-1289's spent attempt left a
+`control-plane/ar-1278-guard-repair` branch and a `wt-control-plane-ar-1278` worktree behind, both
+derived from `target_packet` alone — so a fresh authorization for the same packet would have
+collided with the failed attempt's names, and cleaning up a spent attempt to make room is
+forbidden. Both derivations now take the authorization id too (`scripts/control-plane-bootstrap/
+plan.mjs:deriveBranch/deriveWorktreeDirName`): same packet + same id -> byte-identical names; same
+packet + different id -> different names; the old failed attempt never needs deleting.
+
+🛑 **AR-1289A §3 — THE CLAIM LIVES IN THE SHARED GIT COMMON DIRECTORY, NOT ANY WORKING TREE.**
+AR-1289 found the defect: the claim used to be written as an *uncommitted* file inside the source
+worktree's own tracked tree, but the receiving seat reads its claim from **its own**
+`git rev-parse --show-toplevel` — a brand-new `git worktree add` checkout, which can only ever
+contain committed bytes at the ref it was cut from. An uncommitted file in a sibling worktree is
+structurally invisible to it; repeating the claim would not have fixed this.
+
+Every worktree of **one** repository shares exactly one Git *common* directory
+(`git rev-parse --git-common-dir` resolves to the same physical folder from any of them — this is
+the entire mechanism). `scripts/control-plane-bootstrap/claim-store.mjs` is the single place both
+the bootstrap (writer, running in the source worktree) and the receiving seat (reader, running in a
+brand-new sibling worktree) independently derive this path from Git itself — nothing passes it
+through the marker, manifest, model prompt, environment variable, operator input, or any caller
+parameter. The common directory already exists (git created it), so writing the claim there remains
+exactly one `wx`/O_EXCL act — no `mkdir` reintroduces the AR-1278A F-10 window.
+
+**The legacy committed directory (`docs/replay-results/control-plane-bootstrap/claims/`) is
+immutable forensic history, never written to again.** `cpb-2026-08-17-0001.json` stays committed
+there forever and stays recognised as spent — the replay check is a **union** of both stores
+(`claim-store.mjs:unionClaimedIds`), so retiring the old storage mechanism can never silently
+un-spend an old authorization.
 
 The claim namespace is asserted disjoint from the frozen G2 receipt namespace at plan time, and a
 test proves the assertion bites.
