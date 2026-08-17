@@ -46,6 +46,7 @@ class Evidence:
     shadow_rule_changes: int = 1
     shadow_duplicate_order_events: int = 1
     shadow_unreconciled_state_events: int = 1
+    shadow_missed_first_signal_events: int = 1
     shadow_signal_parity_mismatches: int = 1
     personal_device_verified: bool = False
     realtime_user_hub_verified: bool = False
@@ -129,6 +130,8 @@ def shadow_gate(ev: Evidence, spec: dict | None = None) -> GateResult:
         reasons.append("SHADOW_DUPLICATE_ORDER_EVENT")
     if ev.shadow_unreconciled_state_events != int(req["shadow_unreconciled_state_events_allowed"]):
         reasons.append("SHADOW_UNRECONCILED_STATE")
+    if ev.shadow_missed_first_signal_events != 0:
+        reasons.append("SHADOW_MISSED_FIRST_A_PLUS_SIGNAL")
     if ev.shadow_signal_parity_mismatches != 0:
         reasons.append("SHADOW_SIGNAL_PARITY_MISMATCH")
     if not ev.personal_device_verified:
