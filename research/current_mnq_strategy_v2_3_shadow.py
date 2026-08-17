@@ -24,6 +24,7 @@ TZ = "America/New_York"
 COVERAGE_START = pd.Timestamp("09:30").time()
 COVERAGE_END = pd.Timestamp("12:00").time()
 MAX_HEARTBEAT_GAP_SECONDS = 90.0
+MISSED_FIRST_NOTE = "MISSED_FIRST_A_PLUS_SIGNAL"
 
 
 @dataclass(frozen=True)
@@ -202,8 +203,9 @@ def summarize_shadow(path: str | Path) -> dict:
         return {
             "full_sessions": 0, "would_trade_sessions": 0, "rule_changes": 0,
             "duplicate_order_events": 0, "unreconciled_state_events": 0,
-            "signal_parity_mismatches": 0, "user_hub_all_healthy": False,
-            "market_hub_all_healthy": False, "simulated_account_all_verified": False,
+            "missed_first_signal_events": 0, "signal_parity_mismatches": 0,
+            "user_hub_all_healthy": False, "market_hub_all_healthy": False,
+            "simulated_account_all_verified": False,
         }
     hashes = {r.get("semantics_sha256") for r in rows}
     health = [r for r in rows if r.get("event_type") in {"HEARTBEAT", "DECISION"}]
@@ -221,6 +223,7 @@ def summarize_shadow(path: str | Path) -> dict:
         1 for r in health
         if int(r.get("working_orders") or 0) != 0 or int(r.get("broker_position") or 0) != 0
     )
+    missed_first = sum(1 for r in decisions if r.get("note") == MISSED_FIRST_NOTE)
     parity_mismatch = 0
     for r in parity:
         setup_bad = r.get("signal_fingerprint") != r.get("replay_signal_fingerprint")
@@ -234,6 +237,7 @@ def summarize_shadow(path: str | Path) -> dict:
         "rule_changes": max(0, len(hashes) - 1),
         "duplicate_order_events": 0,
         "unreconciled_state_events": unreconciled,
+        "missed_first_signal_events": missed_first,
         "signal_parity_mismatches": parity_mismatch,
         "user_hub_all_healthy": bool(health) and all(bool(r.get("user_hub_connected")) for r in health),
         "market_hub_all_healthy": bool(health) and all(bool(r.get("market_hub_connected")) for r in health),
