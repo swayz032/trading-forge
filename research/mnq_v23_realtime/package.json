@@ -3,7 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
-    "@microsoft/signalr": "^8.0.17"
+    "@microsoft/signalr": "10.0.0"
   }
 }
