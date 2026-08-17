@@ -1,0 +1,40 @@
+FINDING: newest-report contract is blind to AR-1284 and AR-1285 (stale false-green)
+
+scripts/worker-report-latest.mjs answers AR-1283 while AR-1284 and AR-1285 both exist and
+have both been independently graded by GPT.
+
+Measured:
+  $ node scripts/worker-report-latest.mjs
+  docs/replay-results/worker-advisor-reports/AR-1283-WORKER1-IDENTITY-PRESERVING-...md
+
+Cause: the script declares one canonical scan root and documents it as the single source of
+truth (line 36, WORKER_REPORT_DIR = docs/replay-results/worker-advisor-reports), but the two
+newest reports landed one level above it, directly in docs/replay-results/.
+
+  worker-advisor-reports/AR-1280 .. AR-1283   canonical, seen
+  docs/replay-results/AR-1284-...             NOT seen
+  docs/replay-results/AR-1285-...             NOT seen
+
+Correction against this seat: the AR-1285 report dismissed that placement as "cosmetic;
+flagged only so the location is not read as significance." That was wrong. Placement decides
+whether a report exists as far as the canonical relay is concerned, and the tool answers
+confidently while stale - a false-green shape.
+
+Impact is bounded but not zero: GPT graded AR-1284 and AR-1285 by direct GitHub inspection,
+so no ruling was made on stale input. The exposure is any consumer that trusts this tool to
+name the newest worker report.
+
+Deliberately NOT repaired here. AR-1284A section 1 and AR-1285A section 1 both cite those
+artifacts at their current top-level paths, so relocating graded artifacts would break the
+rulings' own citations. Three options are recorded in the handoff for the desk to choose:
+relocate and accept citation churn; widen the tool to scan recursively; or leave as-is (not
+recommended, since the tool asserts single-source-of-truth in its own source).
+
+Recorded in section 7 of HANDOFF-AR-1286-CONTROL-PLANE-G2-EXECUTION-SEAT.md, with an
+instruction to the incoming seat to land the AR-1286 report in the canonical directory and
+not to infer "no newer report exists" from this tool until resolved.
+
+No control-plane work. No frozen condition claimed or dispatched. No model or agent calls.
+Frozen queue unchanged: 8 ready / 0 spent.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>

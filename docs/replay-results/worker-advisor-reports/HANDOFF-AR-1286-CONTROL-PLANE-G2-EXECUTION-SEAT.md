@@ -166,3 +166,57 @@ frozen eight G2 attempts                       = 0/8 SPENT
 Never write `one-shot calibration unspent` without naming **which** authorization is meant — the
 unqualified phrase reads as though no calibration had ever been spent, and AR-1272 already spent the
 Opus one.
+
+---
+
+## 7. 🛑 DEFECT FOUND WHILE FILING THIS HANDOFF — THE NEWEST-REPORT CONTRACT IS STALE
+
+**`scripts/worker-report-latest.mjs` cannot see the two most recent worker reports.** It answers
+`AR-1283` while `AR-1284` and `AR-1285` both exist and have both been independently graded.
+
+Measured:
+
+```bash
+$ node scripts/worker-report-latest.mjs
+docs/replay-results/worker-advisor-reports/AR-1283-WORKER1-IDENTITY-PRESERVING-CERTIFICATION-SEAM-G2-RELEASE-READY-2026-08-16.md
+```
+
+Cause — the script declares one canonical scan root and calls it the single source of truth:
+
+```
+scripts/worker-report-latest.mjs:36
+export const WORKER_REPORT_DIR = 'docs/replay-results/worker-advisor-reports';
+```
+
+but the two newest reports landed one level **above** it:
+
+```
+docs/replay-results/worker-advisor-reports/AR-1280 … AR-1283   <- canonical, seen
+docs/replay-results/AR-1284-WORKER-PREFLIGHT-STOP-…            <- NOT seen
+docs/replay-results/AR-1285-WORKER1-BOUNDARY-STOP-…            <- NOT seen
+```
+
+**Correction against this seat:** the AR-1285 report called that placement *"cosmetic; flagged only so
+the location is not read as significance."* **That was wrong.** The placement is load-bearing: it
+silently decides whether a report exists as far as the canonical relay is concerned. This is a
+false-green shape — the tool answers confidently and its answer is stale.
+
+**Impact is bounded, not zero.** GPT graded AR-1284 and AR-1285 by direct GitHub inspection, so no
+ruling was made on stale input. The exposure is any consumer that trusts this tool to name the newest
+worker report.
+
+**Deliberately NOT repaired here.** Both AR-1284A §1 and AR-1285A §1 cite those artifacts at their
+current top-level paths; relocating graded artifacts would break the rulings' own citations. The fix
+is a desk decision between:
+
+```
+(a) relocate AR-1284/AR-1285 into the canonical dir and accept the citation churn
+(b) widen the tool to scan docs/replay-results/ recursively, keeping the canonical dir as the
+    preferred landing spot
+(c) leave as-is and treat the canonical dir as advisory  <- NOT recommended; the tool asserts
+                                                            "single source of truth" in its own source
+```
+
+**For the incoming seat:** land the AR-1286 report in `docs/replay-results/worker-advisor-reports/`
+so it is visible to the contract, and do not infer "no newer report exists" from this tool until the
+above is resolved.
