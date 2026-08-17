@@ -142,6 +142,20 @@ closures) are therefore vacuous this packet — reported as vacuous rather than 
    `Win32_Process` + parent walk and forbids `TaskList`. It executed with zero guard interposition —
    the same AR-1274 §4 gap AR-1275 finding 3 recorded. Disclosed rather than omitted.
 
+7. **I could NOT independently reproduce the guard's governed-dirty pin — stating it rather than
+   letting it read as verified.** The SessionStart line pins
+   `docs/wave25-exit-engine-ab-report.md @ e200765c11e8`. Measured: that string is **not a git object
+   in this repo** (`git cat-file -t e200765c11e8` -> `fatal: Not a valid object name`); the path's
+   committed/index blob is `ebcedd0221…`, its working-tree blob is `cb7df8c735…`, and its content
+   sha256 is `300b9ecb7e…`. **None matches.** My first comparison was itself the wrong instrument
+   (git blob hash against what is evidently neither a blob nor a plain content sha256) — logging that
+   against myself. **Positive witness that this is benign, not drift:** `PreToolUse` is fail-closed
+   without a valid anchor, and the guard kept authorizing Bash calls throughout this packet
+   *including after* the pre-push hook's stash/restore cycle ("Restored changes from … patch1786933429"),
+   so by the guard's own continuously-re-evaluated measure the exception still holds. **What is
+   unproven: the pin's hash semantics are opaque to an outside reader**, so no third party can verify
+   the dirty-file exception independently. Recommend the guard emit the algorithm alongside the digest.
+
 ## STEP 5 — POST-G2 CONTINUATION PATH (prepared, not executed)
 
 If the frozen eight are later authorized, results flow in **without an architecture detour**, but the
