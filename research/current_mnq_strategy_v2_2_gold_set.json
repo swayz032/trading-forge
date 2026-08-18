@@ -65,6 +65,40 @@
       "must_have": ["push_above_upper_zone", "failure_to_accept", "reclaim_back_below", "bearish_control_transfer"],
       "must_not_do": ["permanently_flip_resistance_to_support_on_first_failed_breach"],
       "note": "A failed breakout must be distinguishable from true acceptance."
+    },
+    {
+      "id": "G06_FIRST_REACTION_CLUSTER_BEFORE_FVG",
+      "source_name": "User TP example screenshot batch — 2026-08-18",
+      "source_kind": "user_trade_screenshot_batch",
+      "sha256": "bd8f5ef59eefbaedeffc916cc564385ccbe093df06da2e8ad73c9f662edc1b3c",
+      "source_files": [
+        {
+          "name": "Screenshot 2026-08-17 231223.png",
+          "sha256": "6742bbdbf7172b56dcdb810a2dcbe8e938dd784fdc1d5a696bfe489a9de7d2fe"
+        },
+        {
+          "name": "Screenshot 2026-08-18 014126.png",
+          "sha256": "fe3cd9c23c4503af546ad444539112b4644c75e4e50135456216bad67e64af80"
+        },
+        {
+          "name": "Screenshot 2026-08-18 015356.png",
+          "sha256": "be9b7dd251eeff9b21d6ea9a8e7fc5a393ffec2f5dae14b369d81b75de529006"
+        }
+      ],
+      "chart_timeframe": "5m_execution_with_15m_FVG_context",
+      "expected_family": "TP_FIRST_REACTION_SELECTION",
+      "must_have": [
+        "valid_trade_already_in_progress",
+        "meaningful_5m_liquidity_cluster_ahead",
+        "farther_active_15m_FVG",
+        "cluster_near_edge_precedes_fvg_near_edge",
+        "tp_set_at_nearer_cluster"
+      ],
+      "must_not_do": [
+        "skip_nearer_meaningful_liquidity_cluster_to_target_farther_FVG"
+      ],
+      "trader_label": "Target the FVG or liquidity cluster zone whichever comes first. In this example the cluster was in front of the FVG, so the cluster was the first reaction zone and owned TP.",
+      "note": "This fixture binds the user's physical first-reaction TP hierarchy. It does not identify which image in the supplied batch carries the annotation; the batch hash binds the exact evidence set without inventing that detail."
     }
   ],
   "video_sources": [
@@ -79,5 +113,5 @@
       "semantic_role": "failed upper breakout/rejection followed by large bearish takeover candle"
     }
   ],
-  "known_gap": "No immutable user-labeled NO-TRADE screenshot has yet been identified; live promotion remains blocked until tempting rejected examples are added."
+  "known_gap": "The separate current_mnq_strategy_v2_3_no_trade_gold.json register still requires at least one real user-labeled tempting NO-TRADE example before the fidelity gate can pass."
 }
