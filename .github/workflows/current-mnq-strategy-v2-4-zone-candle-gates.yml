@@ -1,0 +1,38 @@
+name: Current MNQ Strategy v2.4 Zone + Candle Gates
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v2-4-zone-first-candles
+    paths:
+      - 'research/current_mnq_strategy_v2_4_*.py'
+      - 'research/current_mnq_strategy_v2_4_*.json'
+      - 'tests/test_current_mnq_strategy_v2_4*.py'
+      - '.github/workflows/current-mnq-strategy-v2-4-zone-candle-gates.yml'
+  workflow_dispatch:
+
+jobs:
+  zone-candle-fidelity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+      - name: Install frozen research dependencies
+        run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
+      - name: Run v2.4 semantic gates
+        run: |
+          PYTHONPATH=. pytest --confcutdir=tests -q \
+            tests/test_current_mnq_strategy_v2_4*.py
+      - name: Prove v2.3 sealed evidence is not inherited as v2.4 final proof
+        run: |
+          python - <<'PY'
+          import json
+          p=json.load(open('research/current_mnq_strategy_v2_4_spec.json'))
+          assert p['zone_gate']['mandatory'] is True
+          assert p['zone_gate']['pattern_without_zone_interaction']=='NO_TRADE'
+          assert p['anti_overfit']['v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4'] is True
+          print('PASS: v2.4 semantic correction requires fresh validation')
+          PY
