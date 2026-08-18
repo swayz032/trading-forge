@@ -10,6 +10,7 @@ import pandas as pd
 from research import current_mnq_strategy_v2_4_engine as prod
 from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates
 from research.current_mnq_strategy_v2_4_policy import semantics_hash
+from research.current_mnq_strategy_v2_4_targets import build_and_classify
 
 core = prod.core
 
@@ -101,12 +102,10 @@ def find_first_actionable_signal(env: dict, dte: date, p: prod.Params,
                 continue
             entry_time, reference_analysis, reference_source = hist
 
-        targets = core.build_target_locations(
+        picked, path_reason = build_and_classify(
             env["piv5"], env["full5"], env["h15"], entry_time, p,
             env["pdm"], env["pwm"], dte,
-        )
-        picked, path_reason = core.classify_path_and_destination(
-            targets, reference_analysis, cand.direction, cand.setup, p,
+            reference_analysis, cand.direction, cand.setup,
             cand.setup == "BRK5",
         )
         if picked is None:
