@@ -68,6 +68,8 @@ NO FIXTURE-SPECIFIC STRING LIVES HERE (AR-1321A §6.3)
 """
 from __future__ import annotations
 
+import hashlib
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -79,7 +81,7 @@ from .evidence_relevance import evaluate_evidence_relevance
 from .opus_phase1_route import _same_requirement, _validate_composition_specs
 from .source_fidelity_guard import check_condition_fidelity
 
-PROJECTION_VERSION = "source-graph-projection-v1"
+PROJECTION_VERSION = "source-graph-projection-v2"
 
 ACCEPTED = "ACCEPTED_PENDING_CERTIFICATION"
 ALIAS_OF_CANONICAL = "ALIAS_OF_CANONICAL"
@@ -94,6 +96,13 @@ class AliasSpec:
 
 
 @dataclass(frozen=True)
+class GraphEdge:
+    from_ref: str
+    to_ref: str
+    edge_type: str
+
+
+@dataclass(frozen=True)
 class ProjectionSpec:
     canonical_refs: tuple[str, ...]
     alias_specs: tuple[AliasSpec, ...]
@@ -101,6 +110,23 @@ class ProjectionSpec:
     # {condition_ref: {"disposition": ..., "reason": ..., "history": ...}} -- verbatim caller
     # data for every preserved_metadata_ref; not computed by this module.
     preserved_metadata_records: dict[str, dict]
+    # AR-1322A F50: {condition_ref: {"original_condition_text": str, "authority": str}} for every
+    # ref whose PROJECTED text (in `conditions`) differs from what the pinned extraction
+    # originally said. A ref with no entry here is asserted unchanged from the original
+    # extraction. This module computes and embeds the original/projected SHA-256 pair itself
+    # (never trusts a caller-supplied hash) so the receipt is self-verifying.
+    correction_ledger: dict[str, dict] = None  # type: ignore[assignment]
+    # AR-1322A F51: explicit dependency/order edges over EITHER canonical or alias refs. Opaque
+    # to this module -- edge_type strings are fixture vocabulary the generic module never
+    # inspects; only ref existence, acyclicity, and reachability are checked structurally.
+    graph_edges: tuple[GraphEdge, ...] = ()
+    # Refs from which every canonical node must be reachable via graph_edges (structural
+    # completeness check, AR-1322A F51 "complete reachability of all nine canonical nodes").
+    graph_roots: tuple[str, ...] = ()
+
+    def __post_init__(self):
+        if self.correction_ledger is None:
+            object.__setattr__(self, "correction_ledger", {})
 
 
 def _claim_role(condition_ref: str) -> str:
@@ -110,9 +136,108 @@ def _claim_role(condition_ref: str) -> str:
     confluences[N].description            -> "description"
     stop.rationale                        -> "rationale"
     targets[N].rationale                  -> "rationale"
+
+    🛑 THIS FUNCTION ANSWERS "what claim role is this?", NOT "is this eligible to be excluded
+    as non-executable metadata?" `stop.rationale` and `targets[N].rationale` share the string
+    "rationale" with `entry_sequence[N].rationale` under this parse, but they are the trade's
+    stop and target attachments -- never eligible for silent exclusion from the executable
+    denominator. AR-1322A F49: a caller that checked `_claim_role(ref) == "rationale"` for
+    metadata eligibility could exclude a stop or target ref and this function would agree.
+    Use `_ENTRY_SEQUENCE_RATIONALE_RE` / `_eligible_for_preserved_metadata` for that decision
+    instead -- deliberately a NARROWER, separate predicate so the two questions can never be
+    silently conflated again.
     """
     tail = condition_ref.rsplit(".", 1)[-1]
     return tail
+
+
+_ENTRY_SEQUENCE_RATIONALE_RE = re.compile(r"^entry_sequence\[\d+\]\.rationale$")
+
+
+def _eligible_for_preserved_metadata(condition_ref: str) -> bool:
+    """ONLY an `entry_sequence[N].rationale` ref may ever be preserved as non-executable
+    metadata under this versioned contract (AR-1321A §7.6, AR-1322A F49 repair). An action, a
+    confluence description, the stop rationale, or a target rationale is NEVER eligible --
+    regardless of what `_claim_role` returns for it -- because each of those is a distinct
+    source-owned executable attachment (entry trigger, timing confluence, stop geometry, profit
+    target), never mere extractor commentary. This is a narrow allow-list, not a role check, so
+    it cannot silently widen if a future ref shape happens to end in the word "rationale"."""
+    return bool(_ENTRY_SEQUENCE_RATIONALE_RE.match(condition_ref))
+
+
+def _sha256(text: str) -> str:
+    return hashlib.sha256((text or "").encode("utf-8")).hexdigest()
+
+
+def validate_graph_edges(
+    edges: Sequence[GraphEdge], valid_refs: set[str], root_refs: Sequence[str],
+    required_reachable: set[str],
+) -> dict:
+    """Structural-only validation (AR-1322A F51). This function has NO knowledge of what an
+    `edge_type` string means -- it only checks:
+
+        1. every `from_ref`/`to_ref` names a real ref in this run;
+        2. the edge set is a DAG (no cycles) -- a dependency graph that cycles cannot express an
+           order at all;
+        3. every ref in `required_reachable` is reachable from at least one `root_refs` entry by
+           following edges forward.
+
+    Raises ValueError on (1) or (2) -- those are malformed-graph errors, not diagnostic findings.
+    Returns a dict reporting (3), since incomplete reachability is a real, reportable finding
+    about THIS graph's completeness, not a schema error.
+    """
+    for e in edges:
+        if e.from_ref not in valid_refs:
+            raise ValueError(f"graph edge references unknown from_ref {e.from_ref!r}")
+        if e.to_ref not in valid_refs:
+            raise ValueError(f"graph edge references unknown to_ref {e.to_ref!r}")
+    for r in root_refs:
+        if r not in valid_refs:
+            raise ValueError(f"graph root {r!r} is not a valid ref in this run")
+
+    adjacency: dict[str, list[str]] = {}
+    for e in edges:
+        adjacency.setdefault(e.from_ref, []).append(e.to_ref)
+
+    # Cycle check: DFS with a recursion-stack set.
+    WHITE, GREY, BLACK = 0, 1, 2
+    color = {r: WHITE for r in valid_refs}
+    cycle_found: list[str] = []
+
+    def _dfs(node: str, path: list[str]) -> None:
+        color[node] = GREY
+        for nxt in adjacency.get(node, []):
+            if color[nxt] == GREY:
+                cycle_found.append(" -> ".join(path + [nxt]))
+                return
+            if color[nxt] == WHITE:
+                _dfs(nxt, path + [nxt])
+        color[node] = BLACK
+
+    for r in sorted(valid_refs):
+        if color[r] == WHITE:
+            _dfs(r, [r])
+        if cycle_found:
+            raise ValueError(f"GRAPH_CYCLE_DETECTED: {cycle_found[0]}")
+
+    reachable: set[str] = set()
+    frontier = list(root_refs)
+    while frontier:
+        node = frontier.pop()
+        if node in reachable:
+            continue
+        reachable.add(node)
+        frontier.extend(adjacency.get(node, []))
+
+    unreachable = sorted(required_reachable - reachable)
+    return {
+        "edge_count": len(edges),
+        "root_refs": list(root_refs),
+        "required_reachable_count": len(required_reachable),
+        "reachable_count": len(required_reachable & reachable),
+        "unreachable_refs": unreachable,
+        "complete": not unreachable,
+    }
 
 
 def _validate_projection_spec(
@@ -180,17 +305,18 @@ def _validate_projection_spec(
                 "clothes (same rule AR-1243 §11 applies to composition specs)"
             )
 
-    # Preserved-metadata mutation control (AR-1321A §7.6): only a "rationale"-role ref may ever
-    # be excluded as non-executable metadata. An action, description, stop, or target ref can
-    # never be silently excluded this way.
+    # Preserved-metadata mutation control (AR-1321A §7.6, narrowed by AR-1322A F49): only an
+    # `entry_sequence[N].rationale` ref is eligible. NOT `_claim_role(r) == "rationale"` -- that
+    # check also matches `stop.rationale` and `targets[N].rationale`, which must NEVER be
+    # excludable this way (F49 fail-open finding).
     for r in preserved:
-        role = _claim_role(r)
-        if role != "rationale":
+        if not _eligible_for_preserved_metadata(r):
             raise ValueError(
-                f"PRESERVED_METADATA_REFUSED: {r!r} has claim-role {role!r}, not 'rationale'. "
-                "Only a rationale may be preserved as non-executable metadata; an action, "
-                "description, stop, or target ref may never be excluded from the executable "
-                "denominator this way."
+                f"PRESERVED_METADATA_REFUSED: {r!r} is not an entry_sequence[N].rationale ref. "
+                "Only that exact shape is eligible for preserved non-executable metadata; an "
+                "action, a confluence description, the stop rationale, or a target rationale "
+                "may never be excluded from the executable denominator this way, even though "
+                "some of them share the claim-role string 'rationale'."
             )
         if r not in spec.preserved_metadata_records:
             raise ValueError(
@@ -225,6 +351,27 @@ def run_projection(
     answers_by_ref = {a["condition_ref"]: a["raw_output"] for a in batch_answers}
     _validate_projection_spec(projection, conditions, text_by_ref)
     specs_by_ref = _validate_composition_specs(composition_specs, text_by_ref)
+
+    def _provenance(ref: str) -> dict:
+        """AR-1322A F50: self-verifying original/projected text ledger entry for ANY ref. This
+        module computes both hashes itself from the actual texts in play -- never trusts a
+        caller-supplied hash -- so the receipt cannot silently drift from what was really used."""
+        ledger_entry = projection.correction_ledger.get(ref)
+        projected = text_by_ref[ref]
+        if ledger_entry is not None:
+            original = ledger_entry["original_condition_text"]
+            authority = ledger_entry.get("authority", "")
+        else:
+            original = projected
+            authority = "unchanged from pinned extraction"
+        return {
+            "original_condition_text": original,
+            "original_condition_text_sha256": _sha256(original),
+            "projected_condition_text": projected,
+            "projected_condition_text_sha256": _sha256(projected),
+            "text_changed": original != projected,
+            "correction_authority": authority,
+        }
 
     canonical_set = set(projection.canonical_refs)
     role_pool: dict[str, list[str]] = {}
@@ -369,6 +516,13 @@ def run_projection(
         canonical_outcome = outcomes[a.canonical_ref]
         alias_answer = answers_by_ref.get(a.alias_ref)
         alias_mech = bl.verify_answer(transcript, alias_answer) if alias_answer else None
+        if alias_mech is None or alias_mech.get("outcome") != bl.OUTCOME_LITERAL:
+            raise ValueError(
+                f"ALIAS_EVIDENCE_REFUSED: {a.alias_ref!r} has no literal-verified evidence "
+                "of its own -- an alias must be mechanically literal and non-null before it "
+                "may inherit its canonical ref's disposition (AR-1322A §3.E)"
+            )
+        alias_quote = alias_mech["quote"]
         outcomes[a.alias_ref] = {
             "condition_ref": a.alias_ref, "disposition": ALIAS_OF_CANONICAL,
             "gate": "source_graph_projection_alias",
@@ -380,10 +534,9 @@ def run_projection(
             "alias_of": a.canonical_ref,
             "inherited_disposition": canonical_outcome["disposition"],
             "original_condition_text": text_by_ref[a.alias_ref],
-            "original_quote": alias_mech["quote"] if alias_mech else None,
-            "original_char_span": (
-                list(alias_mech["char_span"]) if alias_mech and alias_mech["char_span"] else None
-            ),
+            "original_quote": alias_quote,
+            "original_quote_sha256": _sha256(alias_quote),
+            "original_char_span": list(alias_mech["char_span"]),
         }
 
     for ref in projection.preserved_metadata_refs:
@@ -393,24 +546,47 @@ def run_projection(
         rec["excluded_from_denominator"] = True
         outcomes[ref] = rec
 
+    # AR-1322A F50: embed self-verifying original/projected-text provenance and evidence-quote
+    # hashes on EVERY outcome, not only canonical ones -- the receipt must be reconstructible
+    # without reading the temporary fixture driver.
+    for ref, o in outcomes.items():
+        o["provenance"] = _provenance(ref)
+        if o.get("quote") is not None:
+            o["quote_sha256"] = _sha256(o["quote"])
+        if o.get("evidence_quotes"):
+            o["evidence_quote_sha256"] = [_sha256(q) for q in o["evidence_quotes"]]
+        comp = o.get("composition")
+        if comp and comp.get("antecedent_quote"):
+            comp["antecedent_quote_sha256"] = _sha256(comp["antecedent_quote"])
+
     canonical_accepted = [
         r for r in projection.canonical_refs if outcomes[r]["disposition"] == ACCEPTED
     ]
+
+    graph_report = validate_graph_edges(
+        edges=list(projection.graph_edges),
+        valid_refs=set(text_by_ref) | {a.alias_ref for a in projection.alias_specs},
+        root_refs=list(projection.graph_roots),
+        required_reachable=canonical_set,
+    )
+
     grade = (
         "GREEN_PENDING_CERTIFICATION"
-        if len(canonical_accepted) == len(projection.canonical_refs)
+        if len(canonical_accepted) == len(projection.canonical_refs) and graph_report["complete"]
         else "RED"
     )
 
     return {
         "projection_version": PROJECTION_VERSION,
-        "authority": "AR-1321A section 4-6 (versioned source-graph certification projection)",
+        "authority": "AR-1321A section 4-6 / AR-1322A section 3 (v2 receipt/guard/evidence repair)",
         "grade": grade,
         "grade_meaning": (
             "GREEN_PENDING_CERTIFICATION means every CANONICAL node cleared every mechanical, "
-            "role-bounded-relevance, and fidelity gate. It is NOT a certificate; certification "
-            "remains external. Alias and preserved-metadata refs are conserved but do not enter "
-            "this denominator by design."
+            "role-bounded-relevance, and fidelity gate, AND the declared graph is a complete "
+            "DAG in which every canonical node is reachable from a declared root. It is NOT a "
+            "certificate; certification remains external. Determinism, the negative/mutation "
+            "controls, and the neighboring test suites are verified OUTSIDE this function's "
+            "return value -- this grade covers only what a single run can check about itself."
         ),
         "conservation": {
             "input_ref_count": len(conditions),
@@ -420,5 +596,12 @@ def run_projection(
         },
         "canonical_refs": list(projection.canonical_refs),
         "canonical_accepted_count": len(canonical_accepted),
+        "graph": {
+            "edges": [
+                {"from": e.from_ref, "to": e.to_ref, "type": e.edge_type}
+                for e in projection.graph_edges
+            ],
+            **graph_report,
+        },
         "outcomes": [outcomes[c["condition_ref"]] for c in conditions],
     }

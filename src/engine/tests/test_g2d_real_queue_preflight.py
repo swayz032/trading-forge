@@ -37,13 +37,34 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture
 def sandbox(tmp_path):
-    """A byte-copy of the real artifacts. The point of copying rather than synthesising is that
-    the preflight is then exercised against the SAME queue it will meet in production — a
-    hand-built fixture would test a queue that never existed (`worker-execution` §2a)."""
+    """The frozen QUEUE is byte-copied from the real committed artifact — the point of copying
+    rather than synthesising is that the preflight is exercised against the SAME queue it will
+    meet in production, not a hand-built one that never existed (`worker-execution` §2a).
+
+    🛑 AR-1322A F53 REPAIR (2026-08-18): the RECEIPTS directory is deliberately NOT
+    `shutil.copytree`'d from the real one anymore. This test suite is a POSITIVE/NEGATIVE control
+    pair for the VIRGIN state (8 ready, 0 spent) plus planted-violation STOP paths — that was true
+    of the real receipts directory when this fixture was written, but the real directory has since
+    LEGITIMATELY and PERMANENTLY accumulated the 8 completed one-shot receipts from the real
+    AR-1311/1312 dispatch (AR-1320A: "the frozen eight remain history... do NOT delete or modify
+    the existing isolated receipts"). Continuing to copy that real, now-spent directory into a
+    fixture whose assertions hard-code the virgin 8-ready/0-spent expectation stopped testing what
+    it says it tests — it silently started testing the spent-state behaviour under a
+    positive-control test that has never been updated to expect it. This is the SAME hermeticity
+    hole the copied-full-directory design was never meant to have: the fixture's job is to exercise
+    the preflight against the real queue's SHAPE plus a known, reconstructible receipts-directory
+    STATE, not against whatever the real receipts directory happens to contain at test-run time.
+    The synthetic receipts directory below reproduces the exact real README.md byte-for-byte (read
+    once from the real directory, not regenerated from memory) so the shape stays real; only the
+    ambient "what has been spent so far" state is now controlled by the test instead of drifting
+    with production history. The real receipts directory itself is never written to, copied wholesale,
+    deleted, or reconciled by this fixture or by anything in this file.
+    """
     q = tmp_path / "queue.json"
     shutil.copyfile(REAL_QUEUE, q)
     rd = tmp_path / "receipts"
-    shutil.copytree(REAL_RECEIPTS, rd)
+    rd.mkdir()
+    shutil.copyfile(os.path.join(REAL_RECEIPTS, "README.md"), rd / "README.md")
     return str(q), str(rd)
 
 

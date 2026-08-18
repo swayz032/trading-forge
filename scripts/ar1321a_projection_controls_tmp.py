@@ -69,29 +69,36 @@ def main() -> int:
     # Item 6 -- mutation control: excluding an ACTION as "preserved non-executable metadata"
     # must be REFUSED.
     # ------------------------------------------------------------------ #
-    bad_preserved_projection = ProjectionSpec(
-        canonical_refs=tuple(
-            r for r in [c["condition_ref"] for c in conditions]
-            if r not in ("entry_sequence[0].action", "entry_sequence[2].rationale",
-                         "confluences[1].description")
-        ),
-        alias_specs=(),
-        preserved_metadata_refs=("entry_sequence[0].action", "entry_sequence[2].rationale",
-                                  "confluences[1].description"),
-        preserved_metadata_records={
-            "entry_sequence[0].action": {"reason": "MUTATION TEST -- must refuse, this is an action"},
-            "entry_sequence[2].rationale": {"reason": "control scaffolding"},
-            "confluences[1].description": {"reason": "MUTATION TEST -- must refuse, this is a description"},
-        },
-    )
-    try:
-        run_projection(transcript, conditions, answers["answers"], bad_preserved_projection)
-        results["item6_bad_preserved_refused"] = False
-        print("ITEM 6 FAIL: excluding an action/description as metadata was NOT refused")
-    except ValueError as e:
-        ok = "PRESERVED_METADATA_REFUSED" in str(e)
-        results["item6_bad_preserved_refused"] = ok
-        print(f"ITEM 6 {'PASS' if ok else 'FAIL (wrong error)'}: {e}")
+    # AR-1322A F49 repair: FOUR INDEPENDENT mutations, one ref at a time, each its own isolated
+    # projection -- not one shared mutation that stops at the first exception and never actually
+    # exercises stop.rationale / targets[0].rationale (both of which share `_claim_role() ==
+    # "rationale"` with the genuinely-eligible entry_sequence[N].rationale refs -- exactly the
+    # fail-open shape F49 named).
+    all_refs = [c["condition_ref"] for c in conditions]
+    item6_targets = [
+        ("entry_sequence[0].action", "an entry action"),
+        ("confluences[0].description", "a confluence description"),
+        ("stop.rationale", "the stop rationale"),
+        ("targets[0].rationale", "a target rationale"),
+    ]
+    item6_all_ok = True
+    for bad_ref, label in item6_targets:
+        proj = ProjectionSpec(
+            canonical_refs=tuple(r for r in all_refs if r != bad_ref),
+            alias_specs=(),
+            preserved_metadata_refs=(bad_ref,),
+            preserved_metadata_records={bad_ref: {"reason": f"MUTATION TEST -- must refuse, this is {label}"}},
+        )
+        try:
+            run_projection(transcript, conditions, answers["answers"], proj)
+            item6_all_ok = False
+            print(f"ITEM 6 FAIL: excluding {bad_ref!r} ({label}) as metadata was NOT refused")
+        except ValueError as e:
+            ok = "PRESERVED_METADATA_REFUSED" in str(e)
+            item6_all_ok = item6_all_ok and ok
+            print(f"ITEM 6 [{bad_ref}] {'PASS' if ok else 'FAIL (wrong error)'}: {e}")
+    results["item6_bad_preserved_refused"] = item6_all_ok
+    print(f"ITEM 6 OVERALL {'PASS' if item6_all_ok else 'FAIL'}: all 4 independent metadata-exclusion mutations refused")
 
     # ------------------------------------------------------------------ #
     # Item 7 -- the char-19546 disclaimer must be rejected for EVERY canonical node under the
