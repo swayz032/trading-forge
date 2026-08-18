@@ -2,7 +2,35 @@
 
 Status: research evidence for the user's current MNQ discretionary translation.
 
+## Source-role correction from trader
+
+The trader explicitly clarified that the **candlestick video pack also teaches the key-level rules**. Therefore these videos are not split into a "candle source" bucket and a separate "key-level source" bucket. They are joint evidence for the complete decision process:
+
+`KEY LEVEL QUALITY -> PRICE REACHES LEVEL -> REJECT / RECLAIM / BREAK / RETEST -> CANDLE STORY -> BUYER/SELLER CONTROL -> TRADE / WAIT`
+
+A candlestick pattern may not be interpreted independently of the level context in which the source teaches it. Likewise, a level touch may not be promoted into a trade without the price-action/candlestick/control evidence taught alongside it.
+
 Critical policy: a video rule is NOT automatically part of the user's strategy. It may be adopted only when it agrees with the trader's own stated process or the trader explicitly confirms it. Creator-specific timeframes, news-event levels, indicators, entries, sizing, or targets are research context only unless confirmed by the trader.
+
+## Cross-video key-level principles confirmed for v2.4
+
+The candlestick/key-level research pack is now treated as supporting these shared principles:
+
+1. **Location comes before pattern.** A candle pattern away from an authorized key level has zero entry authority.
+2. **Repeated rejection matters.** Multiple independent reactions/wicks strengthen a key level.
+3. **Strong displacement away from a swing matters.** A major swing high/low followed by decisive displacement can create a meaningful candidate level even before many later retests exist.
+4. **Zones, not magic ticks.** Nearby wick highs/lows and repeated reactions can define a bounded reaction area rather than a single exact line.
+5. **A level is an inflection point, not a prediction.** The same area can reject, reclaim, break, accept, or later flip role.
+6. **Support/resistance role can flip only after evidence.** A transient wick through a level does not permanently change polarity; durable acceptance and/or a valid retest is required.
+7. **Reclaim requires defense/control.** A sweep below support and immediate close back above is not automatically a long. Buyers must show hold/defense/control. The mirror applies at resistance.
+8. **Breakout requires acceptance.** Strong 5m displacement can earn fast confirmation; a weak attempt requires a new completed 15m acceptance witness.
+9. **Break-and-retest is a valid zone interaction.** A broken resistance accepted and retested as support can become a long location; the mirror applies for support -> resistance.
+10. **Nearby meaningful levels matter more than chart clutter.** The active execution map should focus on relevant current-price inflection areas while preserving farther levels that remain meaningful destinations/targets.
+11. **Price action at the level is the decision.** The bot must read rejection, wick behavior, body strength, compression/expansion, failed push, reclaim, engulfing/inside relationships, displacement and follow-through at the level.
+12. **Next meaningful level is part of the trade.** A strong nearby opposing blocker can invalidate an entry; the next meaningful reaction/liquidity area is the natural destination rather than a fixed-R target.
+13. **All zone maintenance is causal.** Historical and live zone updates may use only bars completed at that time; hindsight redrawing is forbidden.
+
+---
 
 ## Verified source 6 — key-level validation transcript supplied by trader
 
@@ -77,7 +105,7 @@ The user's currently confirmed map remains centered on their own premarket analy
 
 The v2.4 signal engine must enforce this order:
 
-`PREMARKET -> CAUSAL ZONE MAP -> PRICE REACHES ZONE -> CLASSIFY REJECT / RECLAIM / BREAK / RETEST -> CANDLE STORY + CONTROL -> ROOM TO NEXT MEANINGFUL DESTINATION -> FIRST A+ ONLY`
+`PREMARKET -> CAUSAL KEY-LEVEL MAP -> PRICE REACHES ZONE -> CLASSIFY REJECT / RECLAIM / BREAK / RETEST -> CANDLE STORY + CONTROL -> ROOM TO NEXT MEANINGFUL DESTINATION -> FIRST A+ ONLY`
 
 Explicit refusals:
 
