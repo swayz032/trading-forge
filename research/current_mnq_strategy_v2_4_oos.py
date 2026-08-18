@@ -4,6 +4,11 @@
 The prior v2.3 result is deliberately not inherited. This runner binds the seal to
 the v2.4 semantic hash and executes only Params() through the shared zone+candle
 candidate kernel. No parameter search or variant selection exists here.
+
+A second anti-overfit boundary is enforced: any date range whose aggregate MNQ
+strategy performance was already inspected before the v2.4 equation freeze is
+mechanically excluded from CLEAN OOS scoring. Such data may still be used by the
+separate development diagnostic, but never relabeled as fresh final proof.
 """
 from __future__ import annotations
 
@@ -25,6 +30,7 @@ from research.current_mnq_strategy_v2_3_oos import (
     slippage_stress,
     verify_dataset_bytes,
 )
+from research.current_mnq_strategy_v2_4_edge import build_edge_certificate, load_edge_spec
 from research.current_mnq_strategy_v2_4_policy import (
     Evidence, load_spec, sealed_validation_gate, semantics_hash,
 )
@@ -39,8 +45,23 @@ def _json_if_present(path: str | Path | None) -> dict:
     return json.loads(p.read_text())
 
 
-def apply_contaminated_score_exclusions(days: list, spec: dict) -> tuple[list, dict]:
-    ranges = spec.get("anti_overfit", {}).get("contaminated_score_ranges", [])
+def _all_contaminated_ranges(spec: dict, edge_spec: dict) -> list[dict]:
+    ranges = list(spec.get("anti_overfit", {}).get("contaminated_score_ranges", []))
+    ranges += list(edge_spec.get("anti_overfit", {}).get("known_seen_performance_ranges", []))
+    # Exact duplicate ranges are harmless but make audit output noisy.
+    unique = []
+    seen = set()
+    for r in ranges:
+        key = (str(r["start"]), str(r["end"]), str(r.get("reason", "")))
+        if key not in seen:
+            seen.add(key); unique.append(dict(r))
+    return unique
+
+
+def apply_contaminated_score_exclusions(days: list, spec: dict,
+                                        edge_spec: dict | None = None) -> tuple[list, dict]:
+    edge_spec = edge_spec or load_edge_spec()
+    ranges = _all_contaminated_ranges(spec, edge_spec)
     parsed = []
     for r in ranges:
         start = pd.Timestamp(r["start"]).date(); end = pd.Timestamp(r["end"]).date()
@@ -62,6 +83,12 @@ def apply_contaminated_score_exclusions(days: list, spec: dict) -> tuple[list, d
     }
 
 
+def _eligible_calendar_years(days: list) -> float:
+    if len(days) < 2:
+        return 0.0
+    return max(0.0, (max(days) - min(days)).days / 365.25)
+
+
 def run_sealed(dataset_root: str | Path, out_dir: str | Path,
                architecture_receipt: str | Path | None = None) -> dict:
     root = Path(dataset_root); out = Path(out_dir)
@@ -69,11 +96,11 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     if any(out.iterdir()):
         raise RuntimeError("SEALED_OUTPUT_DIR_NOT_EMPTY")
 
-    spec = load_spec()
+    spec = load_spec(); edge_spec = load_edge_spec()
     raw5, raw1, manifest = e.load_production_dataset(root)
     verify_dataset_bytes(root, manifest)
     seal = {
-        "schema_version": 1,
+        "schema_version": 2,
         "strategy_release": e.ENGINE_VERSION,
         "sealed_utc": datetime.now(timezone.utc).isoformat(),
         "semantics_sha256": semantics_hash(),
@@ -83,7 +110,8 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         "variant_selection_allowed": False,
         "bootstrap_seed": SEED,
         "v2_3_result_inherited": False,
-        "contaminated_score_ranges": spec["anti_overfit"].get("contaminated_score_ranges", []),
+        "edge_equation": edge_spec["equation"],
+        "contaminated_score_ranges": _all_contaminated_ranges(spec, edge_spec),
     }
     (out / "SEAL.json").write_text(json.dumps(seal, indent=2, sort_keys=True))
 
@@ -92,9 +120,9 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         raise RuntimeError("SEALED_DATA_QUALITY_REFUSE:" + "|".join(dq["issues"]))
     env = e.prepare(raw5, raw1, manifest)
     candidate_days = e.scoreable_days(env)
-    days, exclusion_audit = apply_contaminated_score_exclusions(candidate_days, spec)
+    days, exclusion_audit = apply_contaminated_score_exclusions(candidate_days, spec, edge_spec)
     if not days:
-        raise RuntimeError("SEALED_NO_UNCONTAMINATED_SCOREABLE_DAYS")
+        raise RuntimeError("SEALED_NO_CLEAN_SCOREABLE_DAYS")
     provenance = audit_scoreable_contract_provenance(raw1, manifest, days)
     if provenance["status"] != "PASS":
         raise RuntimeError("SEALED_CONTRACT_PROVENANCE_REFUSE:" + "|".join(provenance["issues"][:10]))
@@ -114,11 +142,20 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     stress = slippage_stress(ledger, spec["evidence_policy"]["slippage_stress_points"])
     m = e.metrics(ledger)
 
-    start = pd.Timestamp(manifest["requested_start"]); end = pd.Timestamp(manifest["requested_end"])
-    years = max(0.0, (end - start).days / 365.25)
+    years = _eligible_calendar_years(days)
     arch = _json_if_present(architecture_receipt)
     arch_valid = bool(arch) and arch.get("semantics_sha256") == semantics_hash()
     pos_gold, neg_gold = gold_counts()
+
+    edge = build_edge_certificate(
+        ledger=ledger, score_sessions=len(days), folds=folds,
+        bootstrap_lcb95=boot["lower_95"], slippage_stress_net=stress,
+        data_clean=True, edge_spec=edge_spec,
+    )
+    (out / "edge_certificate.json").write_text(
+        json.dumps(edge.to_dict(), indent=2, sort_keys=True, allow_nan=False)
+    )
+
     ev = Evidence(
         semantics_sha256=semantics_hash(),
         architecture_tests_passed=int(arch.get("tests", 0)) if arch_valid else 0,
@@ -130,6 +167,11 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         sealed_calendar_years=years, sealed_sessions=len(days), sealed_trades=len(ledger),
         chronological_folds=folds_n, positive_folds=int((folds.net_pnl > 0).sum()),
         block_bootstrap_mean_lower_95=boot["lower_95"], slippage_stress_net=stress,
+        robust_edge_expectancy=edge.robust_edge_expectancy,
+        detailed_expectancy=edge.detailed_expectancy,
+        leave_best_month_out_expectancy=edge.leave_best_month_out_expectancy,
+        break_even_margin=edge.break_even_margin,
+        data_clean_oos=edge.data_clean,
         sealed_rules_changed_after_run=False,
     )
     gate = sealed_validation_gate(ev)
@@ -138,7 +180,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         "contract_provenance": provenance, "metrics": m,
         "folds": folds.to_dict(orient="records"),
         "block_bootstrap_mean_trade": boot, "slippage_stress_net": stress,
-        "evidence": asdict(ev),
+        "edge_certificate": edge.to_dict(), "evidence": asdict(ev),
         "promotion_gate": {"approved": gate.approved, "stage": gate.stage, "reasons": list(gate.reasons)},
     }
     (out / "report.json").write_text(json.dumps(report, indent=2, sort_keys=True, default=str, allow_nan=False))
