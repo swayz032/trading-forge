@@ -1,0 +1,45 @@
+{
+  "schema": "gpt-claude-hook-guard-v1",
+  "worker": "worker-2",
+  "_authority": "Ports the AR-1265/1266/1268/1270/1271A native hook guard (Worker-1) to Worker-2, per operator order 2026-08-18 Phase D. Prefer A (reuse) confirmed: claude-hook-bridge.mjs / lane-boundary-guard.mjs already hardcode WORKER_1_RULES and WORKER_2_RULES symmetrically, and manifest.worker already accepts 'worker-1' or 'worker-2' -- zero changes made to the pinned toolbox. This file is the smallest Worker-2-specific adaptation (Option B): session_anchor + edit_scope data only.",
+  "_what_this_is": "The manifest the pinned toolbox's claude-hook-runner.mjs requires. It does NOT restate the lane rules -- those live in lane-boundary-guard.mjs::classifyPath inside the pinned toolbox (shared, unmodified). edit_scope NARROWS this packet on top of that.",
+  "_toolbox_pin": "bbf2e6c2e9ae39a7f0f2be182c9046165eb4b198",
+  "_toolbox_bundle_sha256": "ca0b3a708d90017018aa4ac9f4ee1aca205469fbabc418bbbf3f599959da7167",
+  "_toolbox_pin_history": "SAME pin as Worker-1's current manifest (AR-1319 / AR-1318A, cpb-2026-08-18-0007). No re-pin performed. Materializing this exact pin from Worker-2's own worktree reproduced the identical bundle_sha256, measured 2026-08-18.",
+  "_doorway_note": "scripts/claude_guard_hook.mjs and scripts/claude_toolbox.mjs are copied byte-for-byte from claude/worker1-h1-20260815 (sha256 verified equal on both files). Their internal comments/error strings still say 'Worker-1' in a few places -- this is a known cosmetic mislabel, not a policy difference; the manifest's own worker:'worker-2' field is what the shared bridge actually keys on.",
+
+  "session_anchor": {
+    "expected_branch": "claude/worker2-runtime-20260815",
+    "expected_head": "claude/worker2-runtime-20260815",
+    "require_clean": true,
+    "allowed_dirty": [],
+    "_expected_head_is_a_ref_on_purpose": "Same reasoning as Worker-1's manifest: resume-anchor-guard resolves expected_head with `rev-parse <x>^{commit}`, so a REF NAME works and a pinned SHA would go stale on the next commit."
+  },
+
+  "edit_scope": {
+    "allowed_prefixes": [
+      "src/server/services/paper-",
+      "docs/replay-results/",
+      ".claude/skills/worker-2-paper-runtime-onboarding/",
+      "scripts/"
+    ],
+    "allowed_exact": [
+      "src/server/routes/paper.ts",
+      "src/server/services/lifecycle-service.ts",
+      "src/server/scheduler.ts",
+      "src/server/services/paper-trading-stream.ts",
+      "src/server/services/paper-signal-service.ts"
+    ],
+    "_source": "claude-worker-2-ar1155-card.md 'Primary production paths', the only currently-authorized packet. Deliberately does NOT include a broad src/server/services/ or src/server/ prefix.",
+    "_lifecycle_and_scheduler_are_not_self_scoping": "lifecycle-service.ts and scheduler.ts are NOT in the pinned toolbox's WORKER_2_RULES lane-match list and are NOT in its COORDINATION_RULES either, so lane-boundary-guard classifies them REVIEW_REQUIRED -- allowed only because this scope explicitly lists them, per AR-1155's own authorization. ownership-collision-matrix.yaml (outside this repo, doctrine only) additionally requires Claude-Lead reservation before editing them; the mechanical guard does not enforce that reservation step -- it only proves the edit is inside this packet's authorized scope.",
+    "_not_listed_is_not_allowed": "Compiler, Strategy Factory, decision-atom, atomize-transcript, and any Worker-1 lane surface are absent deliberately. WORKER_1_RULES in the pinned toolbox denies them regardless of this scope.",
+    "_claude_prefix_is_not_authority_over_the_guard": "AR-1263 SS7A self-protection (guard manifest, .claude/settings*.json, .claude/hooks/, the pinned toolbox doorway files) is evaluated FIRST and is never scope-overridable, exactly as for Worker-1 -- confirmed by reading lane-boundary-guard.mjs, not assumed."
+  },
+
+  "finish": {
+    "enabled": false,
+    "_why_disabled": "No packet has been executed and finished yet -- AR-1155 has not started. Mirrors Worker-1's manifest before it had real work: an enabled finish check with nothing to check is the false-green shape this desk keeps convicting.",
+    "receipt_file": null,
+    "base": "b3101ed16203984f1e60a6e94f94cd5b8507fe61"
+  }
+}
