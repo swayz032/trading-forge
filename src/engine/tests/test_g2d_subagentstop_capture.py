@@ -258,10 +258,30 @@ def test_extract_subagent_stop_fields_refuses_missing_agent_id():
         extract_subagent_stop_fields(payload)
 
 
-def test_extract_subagent_stop_fields_refuses_unknown_stop_reason():
-    payload = _real_subagent_stop_payload(stop_reason="some_future_reason_not_yet_documented")
-    with pytest.raises(ValueError, match="unrecognized stop_reason"):
-        extract_subagent_stop_fields(payload)
+def test_extract_subagent_stop_fields_accepts_unrecognized_stop_reason_value():
+    """F36-A repair (AR-1314A): stop_reason is NOT part of the currently documented SubagentStop
+    contract at all (verified live 2026-08-18 against
+    https://code.claude.com/docs/en/hooks#subagentstop -- no stop_reason field is documented for
+    this event). An unrecognized value in an undocumented field is not grounds for refusal; only
+    the one documented non-terminal signal this code defensively recognizes ("tool_use") is
+    treated specially, and only when a caller actually sends it."""
+    agent_id, message, reason = extract_subagent_stop_fields(
+        _real_subagent_stop_payload(stop_reason="some_future_reason_not_yet_documented"))
+    assert agent_id == "subagent_01ABC123"
+    assert message == "I've completed the review."
+    assert reason == "some_future_reason_not_yet_documented"
+
+
+def test_extract_subagent_stop_fields_accepts_payload_with_no_stop_reason_field():
+    """F36-A repair (AR-1314A): the currently documented SubagentStop payload has no stop_reason
+    field at all. A payload shaped exactly like the documented contract must be accepted, not
+    rejected for a missing field this code has no authoritative basis to require."""
+    payload = _real_subagent_stop_payload()
+    del payload["stop_reason"]
+    agent_id, message, reason = extract_subagent_stop_fields(payload)
+    assert agent_id == "subagent_01ABC123"
+    assert message == "I've completed the review."
+    assert reason is None
 
 
 def test_extract_subagent_stop_fields_refuses_terminal_event_with_no_final_message():
@@ -318,3 +338,54 @@ def test_capture_subagent_stop_event_duplicate_terminal_event_refused(rig):
     capture_subagent_stop_event(_led(rig), REF1, payload)
     with pytest.raises(AttemptRefused, match="already has a recorded terminal SubagentStop event"):
         capture_subagent_stop_event(_led(rig), REF1, payload)
+
+
+# --------------------------------------------------------------------------- #
+# 9. F36-B REGRESSION WITNESS (AR-1314A) — a wrong-agent terminal event must
+#    never strand the row against the correct agent's later, valid completion.
+# --------------------------------------------------------------------------- #
+
+
+def test_mismatched_event_does_not_strand_the_row_for_the_correct_later_event(rig):
+    """RED on the pre-AR-1314A ordering: capture_subagent_stop_event() wrote the one-shot
+    `.subagent_stop_event.json` receipt BEFORE the identity check ran (identity was only
+    verified inside the downstream capture_subagent_stop_final() call). A wrong-agent_id
+    terminal event therefore permanently occupied the row's one-shot event slot even though it
+    was refused -- and the correctly-launched agent's LATER valid completion was then rejected
+    as a "duplicate terminal event" despite nothing valid ever having been captured, stranding
+    the row forever. GREEN after F36-B: identity is validated against the recorded launch ack
+    BEFORE any receipt capable of blocking the row is written.
+    """
+    _dispatch(rig, REF1)
+    record_async_launch_ack(_led(rig), REF1, agent_id="agent-A")
+
+    # 3. wrong-agent terminal event: must be refused
+    wrong_payload = _real_subagent_stop_payload(agent_id="agent-WRONG")
+    with pytest.raises(AttemptRefused, match="mismatched identity is never trusted"):
+        capture_subagent_stop_event(_led(rig), REF1, wrong_payload)
+
+    # 4. the rejected event created NO blocking receipt and no final capture
+    led = _led(rig)
+    assert not os.path.exists(
+        os.path.join(led.receipt_dir, f"{_safe_name(REF1)}.subagent_stop_event.json"))
+    assert not os.path.exists(led.raw_path(REF1))
+    assert state_of(led, REF1) == NATIVE_TASK_DISPATCHED
+
+    # 5. the correct, later, valid terminal event for the SAME row
+    valid_payload = _real_subagent_stop_payload(
+        agent_id="agent-A", last_assistant_message="the real final answer")
+    capture_subagent_stop_event(_led(rig), REF1, valid_payload)
+
+    # 6. reaches RAW_RETURN_CAPTURED exactly once, with the valid text
+    led = _led(rig)
+    assert state_of(led, REF1) == RAW_RETURN_CAPTURED
+    with open(led.raw_path(REF1), encoding="utf-8") as fh:
+        stored = json.load(fh)
+    assert stored["raw_output"] == "the real final answer"
+
+    # 7. a later duplicate valid event still cannot overwrite the first capture
+    with pytest.raises(AttemptRefused, match="already has a recorded terminal SubagentStop event"):
+        capture_subagent_stop_event(_led(rig), REF1, valid_payload)
+    with open(_led(rig).raw_path(REF1), encoding="utf-8") as fh:
+        stored2 = json.load(fh)
+    assert stored2["raw_output"] == "the real final answer"  # untouched by the rejected duplicate
