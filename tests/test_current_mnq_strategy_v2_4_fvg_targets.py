@@ -106,6 +106,39 @@ def test_wide_fvg_is_ranked_by_near_edge_not_midpoint(monkeypatch):
     assert out[0].target_raw == 130.0
 
 
+def test_meaningful_15m_reaction_zone_can_block_target_without_authorizing_entry(monkeypatch):
+    p = tgt.core.Params()
+    created = pd.Timestamp("2026-08-10 10:45", tz="America/New_York")
+    z = tgt.core.Zone(
+        id="REACTION_ONLY", side="R", lo=120.0, hi=124.0, mid=122.0,
+        touches=2, wick_quality=.4, close_away=.7, displacement=.8,
+        compactness=.8, independence=.8, recency=.8, quality=.60,
+        created=created, last_event=created - pd.Timedelta(minutes=45),
+        source="WICK_ZONE", confluence=0,
+        state=tgt.core.ZoneState.ACTIVE_RESISTANCE,
+    )
+    # It is meaningful structure but fails the stricter fresh-entry rule because
+    # it has neither confluence nor high_zone_quality.
+    assert tgt.core.valid_location(z, p) is False
+    monkeypatch.setattr(tgt, "active_15m_fvgs", lambda *a, **k: [])
+    monkeypatch.setattr(tgt.core, "build_zones", lambda *a, **k: [])
+    monkeypatch.setattr(tgt.core, "enrich_confluence", lambda z, *a, **k: z)
+    monkeypatch.setattr(tgt.core, "zone_locations", lambda z: [])
+    monkeypatch.setattr(tgt, "build_entry_locations_v24", lambda *a, **k: ([], [z]))
+    dummy = h15([(100, 101, 99, 100)] * 5)
+    out = tgt.build_reaction_destinations(
+        pd.DataFrame(), pd.DataFrame(), dummy,
+        pd.Timestamp("2026-08-17 10:30", tz="America/New_York"),
+        p, {}, {}, pd.Timestamp("2026-08-17").date(), 100.0, "L",
+        piv15=pd.DataFrame(),
+    )
+    assert len(out) == 1
+    assert out[0].kind == "KEY_ZONE_15M"
+    assert out[0].location.id == "REACTION_ONLY"
+    assert out[0].location.entry_authorized is False
+    assert out[0].meaningful is True
+
+
 def test_semantics_hash_changes_if_fvg_contract_changes(tmp_path):
     from research.current_mnq_strategy_v2_4_policy import semantics_hash
     spec = tmp_path / "spec.json"; spec.write_text("{}")
