@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Causal key-level map for Current MNQ v2.4.
 
-Two and only two structural paths can create an executable 15m zone:
-
-1. ESTABLISHED: the existing multi-rejection quality engine.
+Two structural paths can create an executable 15m zone:
+1. ESTABLISHED: the multi-rejection quality engine.
 2. EXCEPTIONAL_SINGLE_SWING: one confirmed pivot whose rejection wick is valid
-   and whose displacement is exceptional versus the recent same-side regime.
+   and whose displacement was exceptional versus the same-side regime that
+   existed BEFORE that pivot confirmed.
 
-The second path implements the trader/video rule that a swing high/low followed by
-an unusually drastic move-away can be a valid level before multiple retests exist.
+Later pivots may never retroactively redefine whether an older swing was dramatic.
 No PnL appears anywhere in the equation.
 """
 from __future__ import annotations
@@ -60,17 +59,14 @@ def _pivot_close_away(h15: pd.DataFrame, row) -> float:
         return 0.5
 
 
-def _quality(row, threshold: float, same_side_disp: np.ndarray,
+def _quality(row, threshold: float, prior_same_side_disp: np.ndarray,
              asof: pd.Timestamp, p: core.Params, close_away: float) -> tuple[float, float, float]:
     wick_q = float(np.clip((float(row.wick) - float(p.min_wick)) /
                            max(1.0 - float(p.min_wick), 1e-9), 0.0, 1.0))
-    disp_rank = _empirical_rank(same_side_disp, float(row.disp))
+    disp_rank = _empirical_rank(prior_same_side_disp, float(row.disp))
     disp_strength = float(np.clip(float(row.disp) / max(float(threshold) * 1.5, 1e-9), 0.0, 1.0))
     days = max(0.0, (asof - row.confirm).total_seconds() / 86400.0)
     recency = float(math.exp(-math.log(2.0) * days / max(float(p.recency_half_life_days), 1e-9)))
-    # Geometry-first descriptive score. Passing the exceptional-swing equation is
-    # the authorization gate; this score is only ranking/context and counter-bias
-    # evidence, so a borderline single pivot is not treated like a mature zone.
     quality = float(np.clip(
         0.35 * disp_rank + 0.25 * disp_strength +
         0.15 * wick_q + 0.15 * recency + 0.10 * float(close_away),
@@ -115,9 +111,12 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
         side_q = q[q.side == side].sort_values(["confirm", "t", "price"])
         if side_q.empty:
             continue
-        threshold = _reference_threshold(side_q, floor_atr, percentile, min_refs)
-        same_disp = pd.to_numeric(side_q.disp, errors="coerce").dropna().to_numpy(float)
         for row in side_q.itertuples():
+            # Formation-causal regime reference. No pivot confirmed at or after
+            # this candidate may decide whether the candidate was exceptional.
+            prior = side_q[side_q.confirm < row.confirm]
+            threshold = _reference_threshold(prior, floor_atr, percentile, min_refs)
+            prior_disp = pd.to_numeric(prior.disp, errors="coerce").dropna().to_numpy(float)
             if not np.isfinite(float(row.disp)) or float(row.disp) < threshold:
                 continue
             atr = max(float(row.atr), core.TICK)
@@ -125,14 +124,12 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
             center = float(row.price)
             lo, hi = center - half, center + half
 
-            # If the same neighborhood already has multi-rejection evidence, the
-            # mature established zone is the authority. Never double-count it.
             if any(core.overlap(lo, hi, float(x.lo), float(x.hi), 0.0) for x in established):
                 continue
 
             close_away = _pivot_close_away(h15, row)
             quality, wick_q, recency = _quality(
-                row, threshold, same_disp, asof, p, close_away,
+                row, threshold, prior_disp, asof, p, close_away,
             )
             confluence = int(any(lo <= float(x) <= hi for x in refs))
             confluence += int(any(core.overlap(lo, hi, float(f.lo), float(f.hi), 0.0)
@@ -157,8 +154,6 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
                 confluence=zone.confluence, entry_authorized=True, zone=zone,
             ))
 
-    # Deterministic dedupe among exceptional swings. If same-side single-swing
-    # zones overlap, keep the stronger one; this avoids recreating clutter.
     chosen: list[core.Location] = []
     for loc in sorted(out, key=lambda x: (-x.quality, -x.confluence, x.mid, x.id)):
         if any(x.side == loc.side and core.overlap(x.lo, x.hi, loc.lo, loc.hi, 0.0) for x in chosen):
@@ -171,7 +166,6 @@ def build_entry_locations_v24(env: dict, dte, open_ts: pd.Timestamp,
                               p: core.Params) -> tuple[list[core.Location], list[core.Zone]]:
     """Build the frozen pre-open v2.4 entry map with native 15m FVG confluence."""
     h15, piv15, full5 = env["h15"], env["piv15"], env["full5"]
-
     established_zones = core.build_zones(piv15, h15, open_ts, p, look_days=40)
     established_zones = [core.zone_state_at(z, full5, open_ts, p) for z in established_zones]
     a15 = h15[h15.index + pd.Timedelta(minutes=15) <= open_ts].atr.tail(20).median()
@@ -183,8 +177,6 @@ def build_entry_locations_v24(env: dict, dte, open_ts: pd.Timestamp,
     if env["pwm"].get(dte):
         refs += list(env["pwm"][dte])
 
-    # Recompute confluence with the repo-native FVG detector. The v2.4 entry map
-    # no longer depends on the older research-only partial-FVG implementation.
     established_zones = core.enrich_confluence(established_zones, refs, native_fvgs, atr15, p)
     established = [
         loc for loc in core.zone_locations(established_zones)
