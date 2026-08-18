@@ -1,0 +1,26 @@
+{
+  "attempt_number": 1,
+  "authority": "AR-1249 \u00a75 (durable pre-call one-shot receipt)",
+  "condition_ref": "confluences[1].description",
+  "disposition_that_earned_escalation": "HELD_DUPLICATE_ROLE_AMBIGUITY",
+  "input_route_version": "opus-phase1-route-v2",
+  "invocation_path": "fresh Claude Code subscription subagent",
+  "law_version": "isolated-fallback-law-v1",
+  "pinned_inputs": {
+    "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823",
+    "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-157741d7cc760ea5",
+    "raw_return_sha256": "cd7e572912a5213fc66c04056b64675c7969fd6596382745f71a421038395468",
+    "source_trial": "1",
+    "task_sha256": "eaae2c0e85c318896e6222f7f1a3f1ab0e230aa667592b878cceb6c910ae17bb",
+    "taxonomy_version": "h1-pilot-2026-07-12",
+    "transcript_char_count": "25071",
+    "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+    "video_id": "sVkmZklJDHI"
+  },
+  "queue_artifact_path": "isolated_fallback_queue_t1.json",
+  "queue_artifact_sha256": "5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939",
+  "requested_model_identity": "opus",
+  "status": "ATTEMPT_CLAIMED_BEFORE_INVOCATION",
+  "substitution_rule_sha256": "6fc9af3587be490430e3b9c0c169aed8a2ab2f833f342999d5c8bd23ac5e57f6",
+  "task_input_sha256": "a0f8a7e028d369ac3ac5994f84cd73783b93cbcd9cc1985fc7d9f9a80cf23ba6"
+}

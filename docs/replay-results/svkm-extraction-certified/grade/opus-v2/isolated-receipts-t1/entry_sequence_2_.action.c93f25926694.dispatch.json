@@ -1,0 +1,11 @@
+{
+  "authority": "AR-1254 \u00a74 (durable native handoff)",
+  "condition_ref": "entry_sequence[2].action",
+  "invocation_path": "fresh Claude Code subscription subagent",
+  "native_task_id": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "note": "Records that a dispatch was issued. This module does not and cannot dispatch a subagent itself; this is evidence, not execution.",
+  "queue_artifact_sha256": "5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939",
+  "requested_model_identity": "opus",
+  "state": "NATIVE_TASK_DISPATCHED",
+  "task_input_sha256": "389d94a9d97d49407d35e9e6059d3b4a814c9d5e4f6faed15baf5671be461a2a"
+}

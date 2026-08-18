@@ -1,0 +1,8 @@
+{
+  "schema": "g2d-precall-permit-v1",
+  "queue_artifact_sha256": "5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939",
+  "condition_ref": "confluences[0].description",
+  "task_input_sha256": "22373bdfab5415c573a370f3f6ce7e416361214e674b4383c54b2e6976bacf8f",
+  "requested_model": "opus",
+  "attempt": 1
+}

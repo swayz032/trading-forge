@@ -1,0 +1,18 @@
+worker-1: G2D isolated-fallback 8/8 execution results (sVkm extraction re-grading)
+
+Per AR-1311A, dispatched all 8 frozen isolated-fallback conditions for the
+sVkm strategy extraction as sequential Agent tool calls (model=opus,
+subagent_type=general-purpose), each gated by the pre-call guard against
+the pinned frozen call manifest.
+
+8/8 completed, durable receipts present for every condition. One disclosed
+anomaly: the first row-1 dispatch was refused pre-claim by the guard due to
+a hand-transcription drop of the prompt's trailing line; verified zero
+attempts were spent before retrying with the byte-verified prompt (all 8
+ledger attempt numbers = 1).
+
+Full results, raw-return hashes, and what this report does NOT decide
+(substitution/grading is a downstream pipeline step, not this worker's
+call) are in the committed results markdown file.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

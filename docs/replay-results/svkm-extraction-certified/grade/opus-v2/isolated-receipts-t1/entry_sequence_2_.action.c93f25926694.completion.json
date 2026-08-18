@@ -1,0 +1,18 @@
+{
+  "actual_model_identity": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "authority": "AR-1254 \u00a75 (invocation completion metadata)",
+  "condition_ref": "entry_sequence[2].action",
+  "determinism_note": "Timestamps and token counts live HERE, in evidence, and are deliberately absent from the semantic route record so identical semantic reruns stay byte-identical.",
+  "dispatch_native_task_id": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "input_tokens": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "invocation_ended_at": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "invocation_started_at": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "native_task_id": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "output_tokens": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "queue_artifact_sha256": "5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939",
+  "raw_output_sha256": "2128ccd82edcfc8e34f088a7836df72e7c88b4b2738f7b4bfad11ddf17b8ebf8",
+  "requested_model_identity": "opus",
+  "state": "RAW_RETURN_CAPTURED",
+  "task_input_sha256": "389d94a9d97d49407d35e9e6059d3b4a814c9d5e4f6faed15baf5671be461a2a",
+  "telemetry_policy": "A field recorded as NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME means the Claude Code subscription runtime does not surface it. That is a fact about the runtime, recorded as one \u2014 never an invented number, and never a reason to block on telemetry that is not on offer."
+}

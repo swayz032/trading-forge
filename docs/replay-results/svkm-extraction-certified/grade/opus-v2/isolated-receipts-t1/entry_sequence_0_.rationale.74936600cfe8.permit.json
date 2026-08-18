@@ -1,0 +1,8 @@
+{
+  "schema": "g2d-precall-permit-v1",
+  "queue_artifact_sha256": "5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939",
+  "condition_ref": "entry_sequence[0].rationale",
+  "task_input_sha256": "3f43ec665f18308c159bef681affcbdaaa67600895b0c112974d8cd51b259241",
+  "requested_model": "opus",
+  "attempt": 1
+}

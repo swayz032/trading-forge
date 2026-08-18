@@ -1,0 +1,11 @@
+{
+  "authority": "AR-1254 \u00a74 (durable native handoff)",
+  "condition_ref": "confluences[0].description",
+  "invocation_path": "fresh Claude Code subscription subagent",
+  "native_task_id": "NOT_EXPOSED_BY_CLAUDE_CODE_SUBSCRIPTION_RUNTIME",
+  "note": "Records that a dispatch was issued. This module does not and cannot dispatch a subagent itself; this is evidence, not execution.",
+  "queue_artifact_sha256": "5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939",
+  "requested_model_identity": "opus",
+  "state": "NATIVE_TASK_DISPATCHED",
+  "task_input_sha256": "22373bdfab5415c573a370f3f6ce7e416361214e674b4383c54b2e6976bacf8f"
+}
