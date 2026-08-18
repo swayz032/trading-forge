@@ -3,7 +3,8 @@
 
 Candidate formation comes only from current_mnq_strategy_v2_4_kernel so sealed
 validation and live/shadow signal formation cannot silently use different entry
-semantics.
+semantics. Target formation comes only from current_mnq_strategy_v2_4_targets so
+historical and live paths share the same first-reaction/FVG semantics.
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ import pandas as pd
 from research import current_mnq_strategy_v2_3_engine as v23
 from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates
 from research.current_mnq_strategy_v2_4_policy import semantics_hash
+from research.current_mnq_strategy_v2_4_targets import build_and_classify
 
 core = v23.core
 TZ = v23.TZ
@@ -45,12 +47,10 @@ def _analysis_run_day(env: dict, dte, p: Params):
         if entry_time.time() > core.LAST_ENTRY:
             continue
 
-        targets = core.build_target_locations(
+        picked, path_reason = build_and_classify(
             env["piv5"], full5, h15, entry_time, p,
             env["pdm"], env["pwm"], dte,
-        )
-        picked, path_reason = core.classify_path_and_destination(
-            targets, entry, cand.direction, cand.setup, p,
+            entry, cand.direction, cand.setup,
             cand.setup == "BRK5",
         )
         if picked is None:
