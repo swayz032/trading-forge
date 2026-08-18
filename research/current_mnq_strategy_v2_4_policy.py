@@ -86,6 +86,7 @@ class Evidence:
     real_user_positive_gold: int = 0
     semantic_negative_fixtures: int = 0
     real_user_tempting_no_trade_gold: int = 0
+    gold_manifest_integrity_pass: bool = False
     contract_provenance_pass: bool = False
     data_quality_pass: bool = False
     sealed_calendar_years: float = 0.0
@@ -136,6 +137,7 @@ def research_gate(ev: Evidence, spec: dict | None = None) -> GateResult:
     if ev.real_user_positive_gold < int(req["real_user_positive_gold_min"]): reasons.append("INSUFFICIENT_POSITIVE_GOLD")
     if ev.semantic_negative_fixtures < int(req["semantic_negative_fixture_min"]): reasons.append("INSUFFICIENT_NEGATIVE_SEMANTIC_FIXTURES")
     if ev.real_user_tempting_no_trade_gold < int(req["real_user_tempting_no_trade_gold_min"]): reasons.append("MISSING_REAL_USER_NO_TRADE_GOLD")
+    if not ev.gold_manifest_integrity_pass: reasons.append("GOLD_MANIFEST_INTEGRITY_NOT_PROVEN")
     return GateResult(not reasons, "FIDELITY", tuple(reasons))
 
 
