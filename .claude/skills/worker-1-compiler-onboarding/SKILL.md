@@ -85,11 +85,18 @@ the thing to act on. Re-install it with `scripts/install_worker1_seat_shortcut.p
    assignment from the **newest GPT ruling on `origin/external-advisor/gpt-rulings`** (its
    `NEXT WORKER AR` / work-order section), never from the oldest card on disk. Assignment is still
    never inferred from a bigger AR number alone — read the ruling and see who it addresses.
-7. Report the canonical skill path, manifest, overlay, worktree, branch, head, **the armed ear and
-   its baseline SHA**, and `worker_2_default_inbox_loaded=false`.
-8. Execute exactly one authorized Worker 1 packet, commit/push/report, then stop for GPT grading.
-   A completed packet is a **fresh-session boundary** (AR-1255 §3.1) — do not start the next
-   packet in the spent session.
+7. 🛑 **PEER SESSION HANDSHAKE — REQUIRED, canonical `worker-onboarding/SKILL.md` §2b.** Mint a
+   new `session_instance_id`, send `WORKER_SESSION_START_HELLO` to `worker-2` on your own branch,
+   fetch+read `worker-2`'s branch for a matching `WORKER_SESSION_START_ACK`, validate it with
+   `scripts/peer-handshake-guard.mjs`. State is `STARTUP_WAITING_FOR_PEER_ACK` until it matches.
+   Do not copy the recipe here — follow §2b.
+8. Report the canonical skill path, manifest, overlay, worktree, branch, head, **the armed ear and
+   its baseline SHA**, `worker_2_default_inbox_loaded=false`, and the handshake fields §2b
+   requires (`session_instance_id`, `peer_worker_id`, `peer_session_instance_id`, `hello_commit`,
+   `ack_commit`, `peer_session_rotated`, `messaging_startup_verified`, `intended_packet`).
+9. Execute exactly one authorized Worker 1 packet **only if `messaging_startup_verified=true`**,
+   commit/push/report, then stop for GPT grading. A completed packet is a **fresh-session
+   boundary** (AR-1255 §3.1) — do not start the next packet in the spent session.
 
 The preserved dirty checkout at `C:\Users\tonio\Projects\wt-h1-wave4-20260712` is read-only evidence. Never clean, reset, copy over, or work from it.
 

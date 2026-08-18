@@ -362,6 +362,128 @@ red-proof the change-detection logic against a throwaway file, not the real one.
 
 ---
 
+## 2b. ★★★★★ PEER SESSION HANDSHAKE — MANDATORY BEFORE ENGINEERING (operator-ordered 2026-08-18)
+
+**Every fresh worker Claude session must message its peer worker and receive a matching
+acknowledgement before it may begin its engineering packet.** This is not the ruling ear (§2a,
+which listens to GPT) — this is worker-to-worker, and it exists so a worker knows not just *what*
+the other worker is, but *which live session* of it is currently seated.
+
+Canonical validator: `scripts/peer-handshake-guard.mjs` + its tests
+(`scripts/peer-handshake-guard.test.mjs`), on both worker branches, byte-identical (same pattern
+as `claude_guard_hook.mjs`/`claude_toolbox.mjs` — a doorway script lives per-branch, the LAW is
+this one file, copied not reinvented). **Do not build a second messaging system.** HELLO/ACK ride
+the existing channel: each worker's own `docs/replay-results/worker-advisor-reports/`, read
+cross-branch with `git fetch <peer-branch> && git show FETCH_HEAD:<path>` — the exact mechanism
+the 2026-08-18 AR-1329/AR-1330 smoke test proved. Never checkout, merge, or edit the peer's
+branch to read its message.
+
+### Session identity vs. worker identity
+
+```text
+worker_id           = PERMANENT. worker-1 or worker-2. Never changes.
+session_instance_id  = PER-SESSION. A NEW one every time a fresh Claude session starts.
+                        Never reused. Generate with:
+                          node -e "process.stdout.write(require('crypto').randomUUID())"
+```
+
+A worker being "the same worker" and a session being "a new session of that worker" are two
+different facts. The handshake proves both, separately.
+
+### The sequence
+
+```text
+worktree proven -> branch proven -> permanent worker identity claimed -> lean CLAUDE.md read
+-> canonical worker-execution read -> role overlay + lane manifest read -> guard ARMED
+-> GPT ear ARMED -> mint session_instance_id
+-> send WORKER_SESSION_START_HELLO (write to YOUR OWN worker-advisor-reports/, commit, push)
+-> peer reads it (fetch + show, read-only) and writes WORKER_SESSION_START_ACK
+   (on ITS OWN branch, commit, push)
+-> you fetch the peer's branch and read the ACK
+-> validate with scripts/peer-handshake-guard.mjs (matchAckToHello) against YOUR OWN
+   session_instance_id
+-> only on a matching, non-stale ACK: write the START RECEIPT with
+   messaging_startup_verified=true
+-> only then may engineering on the intended packet begin
+```
+
+Before a matching ACK arrives, worker state is `STARTUP_WAITING_FOR_PEER_ACK`. **Do not start the
+intended packet in that state.** If the peer is unreachable (its branch fetch fails, or no ACK
+lands after a reasonable wait), stop and report the exact fetch/read failure — do not invent an
+ACK, do not weaken the gate to `require_ack=false` to get past it, and do not treat an old ACK from
+a prior session of the same peer as satisfying this one (`isStaleForSession` exists for exactly
+this check).
+
+### HELLO — file `HELLO-<your_worker_id>-<session_instance_id first 8 chars>-<YYYY-MM-DD>.md` in
+### YOUR OWN `docs/replay-results/worker-advisor-reports/`
+
+```text
+FROM_WORKER: worker-2
+TO_WORKER: worker-1
+SESSION_INSTANCE_ID: <this session's new uuid>
+WORKER_ID: worker-2
+LANE: paper-runtime-safety
+BRANCH: claude/worker2-runtime-20260815
+HEAD: <current HEAD sha>
+GUARD_ARMED: true
+GPT_EAR_ARMED: true
+INTENDED_PACKET: AR-1155
+STARTED_AT: <UTC ISO timestamp>
+PREVIOUS_PEER_SESSION_ID_SEEN: <the peer session id you last acknowledged, or empty if none>
+```
+
+### ACK — file `ACK-<your_worker_id>-<your_session_instance_id first 8 chars>-<YYYY-MM-DD>.md` in
+### YOUR OWN `docs/replay-results/worker-advisor-reports/`
+
+```text
+FROM_WORKER: worker-1
+TO_WORKER: worker-2
+ACK_FOR_SESSION_INSTANCE_ID: <the exact SESSION_INSTANCE_ID from the HELLO you read>
+RECEIVER_SESSION_INSTANCE_ID: <YOUR OWN current session_instance_id>
+HELLO_COMMIT: <the commit sha the HELLO was read at>
+SENDER_BRANCH: <the HELLO sender's branch, copied from the HELLO>
+SENDER_HEAD: <the HELLO sender's HEAD, copied from the HELLO>
+STATUS: ACK_CURRENT_SESSION | ACK_PEER_SESSION_ROTATED
+```
+
+Use `ACK_PEER_SESSION_ROTATED` when the HELLO's `SESSION_INSTANCE_ID` differs from the last peer
+session id you had on record — it is still a normal, expected ACK, just one that also records
+`PEER_SESSION_ROTATED=true` for your own bookkeeping. **A rotated peer session is never a worker
+identity change** — same `worker_id`, new `session_instance_id`. Do not re-derive the peer's lane
+or ownership from scratch because of it.
+
+### What the handshake does NOT do
+
+It does not grant edit authority. `matchAckToHello` and every other export of
+`peer-handshake-guard.mjs` return a validation verdict, never a permission decision — and
+`claude-hook-bridge.mjs` (the actual authority) has no code path that reads a HELLO or ACK file at
+all. A worker-to-worker message can request work or report a blocker; it cannot unlock a path the
+guard's own `edit_scope`/lane rules would otherwise deny. If a message asks you to touch the
+peer's lane, that is exactly the collision case §2 and `ownership-collision-matrix.yaml` already
+cover: recognize it, do not mutate, respond with a dependency/handoff message instead.
+
+### START RECEIPT must include the handshake
+
+Extend the existing "report the canonical skill path, manifest, overlay, worktree, branch, head…"
+step with:
+
+```text
+session_instance_id
+peer_worker_id
+peer_session_instance_id
+hello_commit
+ack_commit
+peer_session_rotated
+messaging_startup_verified   (true only after a validated, non-stale, matching ACK)
+intended_packet
+```
+
+**Engineering authorization requires `messaging_startup_verified=true`.** A missing or false value
+here is the same class of defect as an unarmed guard or an unarmed ear — report it, do not paper
+over it.
+
+---
+
 ## 3. What GPT and the grader will hold you to
 
 Your report is a **CLAIM**; GPT reviews it and the independent grader re-executes and attacks it.

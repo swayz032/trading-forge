@@ -58,7 +58,14 @@ reports and must never be returned as "the newest report". Current convention:
 |---|---|
 | `AR-<n>-…md` | a worker report; discoverable; ranked numerically |
 | `HANDOFF-…md` | a routing brief handing a packet to a different authorized seat |
+| `HELLO-<worker_id>-<session_instance_id8>-<date>.md` | peer session handshake opener — worker-onboarding SS2b |
+| `ACK-<worker_id>-<session_instance_id8>-<date>.md` | peer session handshake acknowledgement — worker-onboarding SS2b |
 | `README.md` | this contract |
+
+HELLO/ACK are deliberately non-AR: they fire every fresh session, not every engineering result, and
+numbering them into the AR sequence would interleave routine protocol noise with substantive
+reports. `scripts/peer-handshake-guard.mjs` validates their content; this directory only carries
+the files.
 
 ## What this is not
 
