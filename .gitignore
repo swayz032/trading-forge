@@ -19,9 +19,17 @@ __pycache__/
 *.parquet
 # .claude/ ephemeral subdirs (worktrees, session state, projects).
 # .claude/agents/ IS tracked (specialist agent definitions document the workflow).
+# .claude/skills/ IS tracked as of 2026-08-16 on claude/worker1-h1-20260815, for the SAME stated
+#   reason as agents/ -- the directory now holds the campaign's operating doctrine (worker-
+#   execution, worker-onboarding, advisor-ruling, the two worker onboardings), not ephemeral
+#   session state. Ported here 2026-08-18: this branch was cut before that fix landed, so its own
+#   worker-2-paper-runtime-onboarding skill was silently absent from `/worker-2-paper-runtime-
+#   onboarding` discovery in this worktree until this line was removed.
+# WARNING: this creates a SECOND copy alongside the runtime surface Claude actually loads from
+#   C:\Users\tonio\Projects\trading-forge\.claude\skills -- they can drift (AR-1258 F-2). The
+#   deploy/sync + parity law that closes that is owed under AR-1259 SS4.2 and is not established here.
 .claude/worktrees/
 .claude/projects/
-.claude/skills/
 .claude/local/
 .claude/cache/
 .claude/sessions/
