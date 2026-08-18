@@ -1,12 +1,13 @@
 {
-  "schema_version": 3,
-  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-3",
+  "schema_version": 4,
+  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-4",
   "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, validation/data plumbing or ProjectX execution chain invalidates prior evidence even when semantic prose is unchanged.",
   "contract_files": [
     "research/current_mnq_strategy_v2_4_spec.json",
     "research/current_mnq_strategy_v2_4_fvg_semantics.json",
     "research/current_mnq_strategy_v2_4_edge_semantics.json",
     "research/current_mnq_strategy_v2_4_key_level_semantics.json",
+    "research/current_mnq_strategy_v2_4_premarket_semantics.json",
     "research/current_mnq_strategy_v2_4_build_contract.json"
   ],
   "strategy_and_edge_source_files": [
@@ -27,6 +28,7 @@
     "research/current_mnq_strategy_v2_4_fvg.py",
     "research/current_mnq_strategy_v2_4_zone_lifecycle.py",
     "research/current_mnq_strategy_v2_4_levels.py",
+    "research/current_mnq_strategy_v2_4_premarket.py",
     "research/current_mnq_strategy_v2_4_kernel.py",
     "research/current_mnq_strategy_v2_4_targets.py",
     "research/current_mnq_strategy_v2_4_engine.py",
