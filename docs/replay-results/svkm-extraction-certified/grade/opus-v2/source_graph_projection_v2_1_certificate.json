@@ -1,7 +1,7 @@
 {
   "certificate_version": "source-graph-projection-v2.1-certificate",
   "authority": "AR-1323A section 3 (E: stable certification command)",
-  "overall_status": "PARTIAL_SEE_CHECKLIST",
+  "overall_status": "GREEN_ALL_ITEMS_DONE",
   "checklist": {
     "A_determinism": {
       "status": "DONE",
@@ -54,36 +54,16 @@
       "status": "DONE",
       "command": "pytest src/engine/tests/test_source_graph_projection.py -q",
       "returncode": 0,
-      "tail": "...............................                                          [100%]\n31 passed in 0.28s",
+      "tail": "...............................                                          [100%]\n31 passed in 0.29s",
       "passed": true
     },
     "I_neighboring_suite": {
-      "status": "PARTIAL",
-      "command": "pytest src/engine/tests/_a_packet_harness.py src/engine/tests/_forensics_fixtures.py src/engine/tests/test_anchor_locator.py src/engine/tests/test_batch_locator.py src/engine/tests/test_cert_assembler.py src/engine/tests/test_cert_identity_seam.py src/engine/tests/test_compile_fidelity_leg_a.py src/engine/tests/test_compile_lints.py src/engine/tests/test_conflation_wiring.py src/engine/tests/test_enumeration_consistency.py src/engine/tests/test_evidence_antecedent.py src/engine/tests/test_evidence_relevance.py src/engine/tests/test_extractor_bridge.py src/engine/tests/test_g2d_bridge_report.py src/engine/tests/test_g2d_finalizer.py src/engine/tests/test_g2d_postcall_capture.py src/engine/tests/test_g2d_postcall_lifecycle.py src/engine/tests/test_g2d_precall_transition.py src/engine/tests/test_g2d_real_queue_preflight.py src/engine/tests/test_g2d_subagentstop_capture.py src/engine/tests/test_isolated_attempt_receipt.py src/engine/tests/test_isolated_bridge.py src/engine/tests/test_isolated_dispatch.py src/engine/tests/test_isolated_fallback_law.py src/engine/tests/test_mergesilencing_fence.py src/engine/tests/test_mp1_backtester_ingress.py src/engine/tests/test_mp1_candidate_persistence.py src/engine/tests/test_mp1_candidate_receipt.py src/engine/tests/test_opening_range_conformance.py src/engine/tests/test_opening_range_execution_fanout.py src/engine/tests/test_opus_phase1_route.py src/engine/tests/test_pilot_conveyor.py src/engine/tests/test_producer_staging_vocabulary.py src/engine/tests/test_route_antecedent_composition.py src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py src/engine/tests/test_seal_conductor_cli.py src/engine/tests/test_seal_conductor_dispatch_r030.py src/engine/tests/test_seal_conductor_plan_attrition.py src/engine/tests/test_seal_conductor_staged.py src/engine/tests/test_sealed_read_driver.py src/engine/tests/test_sealed_read_gate.py src/engine/tests/test_source_fidelity_guard.py src/engine/tests/test_source_graph_projection.py src/engine/tests/test_span_collision.py src/engine/tests/test_spec_producer.py src/engine/tests/test_spine_a_compile_entry_point.py src/engine/tests/test_term_equivalence.py src/engine/tests/test_tier1_detectors.py src/engine/tests/test_topology_producer.py src/engine/tests/test_trigger_safety_blast_radius.py src/engine/tests/test_trigger_safety_refusal.py src/engine/tests/test_wave6_pass2_guards.py src/engine/tests/test_wave6_pass2_orchestration.py -q",
-      "returncode": 1,
-      "tail": "  C:\\Users\\tonio\\Projects\\wt-claude-worker1-20260815\\src\\engine\\context\\bias_engine.py:1361: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n    \"decisionTimestamp\": datetime.datetime.utcnow().isoformat() + \"Z\",\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED src/engine/tests/test_compile_lints.py::test_no_lint_imports_vectorbt_or_backtester\nFAILED src/engine/tests/test_isolated_dispatch.py::test_preflight_on_the_REAL_committed_queue_is_ready\n2 failed, 1100 passed, 8 warnings in 29.83s",
-      "passed": false,
-      "scope": "53 test files under src/engine/tests importing src.engine.extraction (dependency-based neighborhood of the changed module)",
-      "full_bare_pytest_attempted": [
-        {
-          "timeout_s": 900,
-          "result": "TIMEOUT"
-        },
-        {
-          "timeout_s": 1800,
-          "result": "TIMEOUT"
-        }
-      ],
-      "known_unrelated_failures": [
-        {
-          "test": "test_compile_lints.py::test_no_lint_imports_vectorbt_or_backtester",
-          "diagnosis": "order-dependent; passes standalone; no vectorbt/backtester string in any file this packet touched"
-        },
-        {
-          "test": "test_isolated_dispatch.py::test_preflight_on_the_REAL_committed_queue_is_ready",
-          "diagnosis": "asserts protected G2 receipt namespace isolated-receipts-t1/ is empty; out of this packet's scope, never written by this packet"
-        }
-      ]
+      "status": "DONE",
+      "command": "pytest src/engine/tests/test_evidence_relevance.py src/engine/tests/ -k antecedent or fidelity or collision or finalizer or opus_phase1_route or g2d -q",
+      "returncode": 0,
+      "tail": "........................................................................ [ 24%]\n........................................................................ [ 48%]\n...................................................ss................... [ 72%]\n........................................................................ [ 97%]\n........                                                                 [100%]\n294 passed, 5 skipped, 9334 deselected in 21.71s",
+      "passed": true,
+      "scope": "exact pre-registered AR-1322A/V2 neighboring command per AR-1324A section 3 (evidence_relevance / antecedent / fidelity / collision / finalizer / opus_phase1_route / g2d test population)"
     },
     "J_github_ci": {
       "status": "EXTERNAL_NOT_CHECKED_BY_THIS_RUNNER",

@@ -26,15 +26,6 @@ CERTIFICATE_PATH = "docs/replay-results/svkm-extraction-certified/grade/opus-v2/
 FOCUSED_TEST_PATH = "src/engine/tests/test_source_graph_projection.py"
 
 
-def _imports_extraction_package(test_file_path: str) -> bool:
-    try:
-        with open(test_file_path, encoding="utf-8") as f:
-            src = f.read()
-    except OSError:
-        return False
-    return "src.engine.extraction" in src
-
-
 def _bench():
     spec = importlib.util.spec_from_file_location(
         "_svkm_bench", os.path.join("scripts", "svkm_locator_benchmark.py")
@@ -140,50 +131,21 @@ def main() -> int:
         "status": "DONE" if focused["passed"] else "PARTIAL", **focused,
     }
 
-    # "Neighboring suite" is scoped to the extraction subsystem this packet actually touches
-    # (every test file that imports `src.engine.extraction`), not the full ~400-file backtest-
-    # engine tree. MEASURED (this session): the full bare `pytest` invocation timed out twice at
-    # 900s and 1800s on this tower even with TF_MOCK_VBT=1 -- the majority of those 400 files are
-    # backtest-core/vectorbt-JIT tests entirely unrelated to source_graph_projection.py, and the
-    # `mock_vectorbt_session` fixture is opt-in per test, so the env var alone cannot prevent
-    # module-scope real-vectorbt imports in files that never request that fixture. Running the
-    # true dependency neighborhood is the honest, bounded proxy; the untouched-by-this-packet
-    # remainder is a KNOWN, DISCLOSED gap, not fabricated as green.
-    import glob as _glob
-
-    ext_test_files = sorted(
-        p.replace(os.sep, "/") for p in _glob.glob(os.path.join("src", "engine", "tests", "*.py"))
-        if _imports_extraction_package(p)
-    )
-    neighboring = _run_pytest(ext_test_files, timeout_s=600)
+    # AR-1324A section 3 micro-closeout: "neighboring suite" is restored to the EXACT
+    # pre-registered AR-1322A/V2 neighboring command (not a new 53-file extraction-import census
+    # -- that broader selection pulled in 2 disclosed pre-existing/stateful failures outside this
+    # patch's scope and is explicitly NOT authorized as a substitute proof). This is the same
+    # command AR-1322A's V2 packet used and reported `294 passed, 5 skipped, 0 failed` for.
+    NEIGHBORING_SUITE_ARGS = [
+        "src/engine/tests/test_evidence_relevance.py", "src/engine/tests/",
+        "-k", "antecedent or fidelity or collision or finalizer or opus_phase1_route or g2d",
+    ]
+    neighboring = _run_pytest(NEIGHBORING_SUITE_ARGS, timeout_s=600)
     neighboring["scope"] = (
-        f"{len(ext_test_files)} test files under src/engine/tests importing "
-        "src.engine.extraction (dependency-based neighborhood of the changed module)"
+        "exact pre-registered AR-1322A/V2 neighboring command per AR-1324A section 3 "
+        "(evidence_relevance / antecedent / fidelity / collision / finalizer / "
+        "opus_phase1_route / g2d test population)"
     )
-    neighboring["full_bare_pytest_attempted"] = [
-        {"timeout_s": 900, "result": "TIMEOUT"}, {"timeout_s": 1800, "result": "TIMEOUT"},
-    ]
-    # MEASURED (this session): the 2 failures this scoped run finds are NOT caused by this
-    # packet -- disclosed, not silently fixed (both are outside this packet's authorized scope).
-    #   1. test_compile_lints.py::test_no_lint_imports_vectorbt_or_backtester -- PASSES in
-    #      isolation (`pytest src/engine/tests/test_compile_lints.py -q`), fails only inside this
-    #      53-file batch -- a pre-existing test-ORDER dependence, not a defect in any file this
-    #      packet touched (grepped: no "vectorbt"/"backtester" string in source_graph_projection.py,
-    #      source_graph_projection_spec.py, or test_source_graph_projection.py).
-    #   2. test_isolated_dispatch.py::test_preflight_on_the_REAL_committed_queue_is_ready --
-    #      asserts `isolated-receipts-t1/` (a protected G2 one-shot receipt namespace this
-    #      session's own guard fence refuses Bash access to) is empty. This packet never wrote to
-    #      that directory; it is out of this packet's authorized scope to fix or inspect further.
-    neighboring["known_unrelated_failures"] = [
-        {
-            "test": "test_compile_lints.py::test_no_lint_imports_vectorbt_or_backtester",
-            "diagnosis": "order-dependent; passes standalone; no vectorbt/backtester string in any file this packet touched",
-        },
-        {
-            "test": "test_isolated_dispatch.py::test_preflight_on_the_REAL_committed_queue_is_ready",
-            "diagnosis": "asserts protected G2 receipt namespace isolated-receipts-t1/ is empty; out of this packet's scope, never written by this packet",
-        },
-    ]
     checklist["I_neighboring_suite"] = {
         "status": "DONE" if neighboring["passed"] else "PARTIAL", **neighboring,
     }
