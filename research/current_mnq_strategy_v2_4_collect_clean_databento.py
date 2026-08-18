@@ -6,10 +6,11 @@ sealed P&L runner. The frozen clean scope is genuine MNQ from CME launch
 2019-05-06 through 2021-12-31, using explicit H/M/U/Z raw symbols and the
 predeclared causal roll bridge logic.
 
-Credential resolution follows Trading Forge's existing sources in this order:
+Credential resolution follows Trading Forge/local Windows sources in this order:
 1) current process environment,
-2) project/parent .env,
-3) Trading Forge Bitwarden CLI vault when configured and unlocked.
+2) project/parent .env variants,
+3) Windows persistent User/Machine environment variables,
+4) Trading Forge Bitwarden CLI vault when configured and already unlocked.
 Credential values are never printed or written to the dataset manifest.
 """
 from __future__ import annotations
@@ -30,6 +31,11 @@ if str(REPO_ROOT) not in sys.path:
 CLEAN_START = date(2019, 5, 6)
 CLEAN_END = date(2021, 12, 31)
 OUT_DIR = REPO_ROOT / "data" / "mnq_v24_clean_2019_2021"
+ENV_NAMES = (".env", ".env.local", ".env.production", ".env.development")
+
+
+def _valid_key(value: str | None) -> bool:
+    return bool(value and value.strip() and value.strip() != "your-databento-api-key")
 
 
 def _load_project_dotenv() -> str | None:
@@ -38,15 +44,47 @@ def _load_project_dotenv() -> str | None:
     except ImportError:
         return None
     seen: set[Path] = set()
-    candidates = [REPO_ROOT, Path.cwd().resolve(), *Path.cwd().resolve().parents]
+    candidates = [REPO_ROOT, REPO_ROOT.parent, Path.cwd().resolve(), *Path.cwd().resolve().parents]
     for base in candidates:
         if base in seen:
             continue
         seen.add(base)
-        candidate = base / ".env"
-        if candidate.exists():
+        for name in ENV_NAMES:
+            candidate = base / name
+            if not candidate.exists():
+                continue
             load_dotenv(candidate, override=False)
-            return str(candidate)
+            if _valid_key(os.environ.get("DATABENTO_API_KEY")):
+                return str(candidate)
+    return None
+
+
+def _load_windows_persistent_env() -> str | None:
+    """Read Windows persistent env storage without printing any secret value."""
+    if os.name != "nt":
+        return None
+    try:
+        import winreg
+    except ImportError:
+        return None
+
+    locations = (
+        (winreg.HKEY_CURRENT_USER, r"Environment", "windows-user-env"),
+        (
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+            "windows-machine-env",
+        ),
+    )
+    for hive, subkey, label in locations:
+        try:
+            with winreg.OpenKey(hive, subkey) as key:
+                value, _ = winreg.QueryValueEx(key, "DATABENTO_API_KEY")
+        except OSError:
+            continue
+        if isinstance(value, str) and _valid_key(value):
+            os.environ["DATABENTO_API_KEY"] = value.strip()
+            return label
     return None
 
 
@@ -61,12 +99,12 @@ def _extract_key_from_bw_items(items: Any) -> str | None:
             for field in fields:
                 if isinstance(field, dict) and field.get("name") == "DATABENTO_API_KEY":
                     value = field.get("value")
-                    if isinstance(value, str) and value.strip():
+                    if isinstance(value, str) and _valid_key(value):
                         return value.strip()
         login = item.get("login")
         if isinstance(login, dict) and login.get("username") == "DATABENTO_API_KEY":
             value = login.get("password")
-            if isinstance(value, str) and value.strip():
+            if isinstance(value, str) and _valid_key(value):
                 return value.strip()
         notes = item.get("notes")
         if isinstance(notes, str) and notes.strip():
@@ -76,14 +114,12 @@ def _extract_key_from_bw_items(items: Any) -> str | None:
                 payload = None
             if isinstance(payload, dict):
                 value = payload.get("DATABENTO_API_KEY")
-                if isinstance(value, str) and value.strip():
+                if isinstance(value, str) and _valid_key(value):
                     return value.strip()
     return None
 
 
 def _load_databento_from_bitwarden() -> bool:
-    # Match Trading Forge's existing credential-loader contract. Never ask for,
-    # print, or persist the secret. We only use an already-unlocked CLI session.
     if shutil.which("bw") is None:
         return False
     bw_session = os.environ.get("BW_SESSION", "").strip()
@@ -119,24 +155,25 @@ def _load_databento_from_bitwarden() -> bool:
 
 
 def _require_databento_key() -> str:
-    key = os.environ.get("DATABENTO_API_KEY", "").strip()
-    if key and key != "your-databento-api-key":
+    key = os.environ.get("DATABENTO_API_KEY", "")
+    if _valid_key(key):
         return "environment"
 
     env_path = _load_project_dotenv()
-    key = os.environ.get("DATABENTO_API_KEY", "").strip()
-    if key and key != "your-databento-api-key":
+    if _valid_key(os.environ.get("DATABENTO_API_KEY")):
         return f"dotenv:{env_path}" if env_path else "dotenv"
+
+    windows_source = _load_windows_persistent_env()
+    if windows_source and _valid_key(os.environ.get("DATABENTO_API_KEY")):
+        return windows_source
 
     if _load_databento_from_bitwarden():
         return "bitwarden"
 
     raise RuntimeError(
-        "DATABENTO_API_KEY_NOT_FOUND: Trading Forge could not resolve the existing key from "
-        "the current environment, project/parent .env, or an already-unlocked Bitwarden CLI "
-        "session. Do not paste the key into chat. If Trading Forge uses Bitwarden, unlock it "
-        "in this PowerShell session first; otherwise expose the existing key to this shell using "
-        "your normal local credential method."
+        "DATABENTO_API_KEY_NOT_FOUND: no usable key was found in the current process, "
+        "project/parent .env variants, Windows persistent User/Machine environment, or an "
+        "already-unlocked Trading Forge Bitwarden session. No secret value was printed."
     )
 
 
