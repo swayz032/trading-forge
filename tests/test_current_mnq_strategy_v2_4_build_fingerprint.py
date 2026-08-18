@@ -1,24 +1,29 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
 from research.current_mnq_strategy_v2_4_policy import (
-    BUILD_CONTRACT_PATH,
     fingerprinted_files,
     load_build_contract,
     semantics_hash,
 )
 
 
-def test_production_build_contract_covers_strategy_edge_and_execution_boundaries():
+def test_production_build_contract_covers_transitive_strategy_edge_data_and_execution_boundaries():
     b = load_build_contract()
     files = set(fingerprinted_files())
     required = {
         "research/current_mnq_strategy_v2_4_build_contract.json",
+        "research/current_mnq_strategy_v1_fast.py",
+        "research/current_mnq_strategy_v2_ab.py",
         "research/current_mnq_strategy_v2_2_engine.py",
+        "research/current_mnq_strategy_v2_2_engine_final.py",
+        "research/current_mnq_strategy_v2_2_engine_runtime.py",
+        "research/current_mnq_strategy_v2_2_gold_lifecycle.py",
+        "research/current_mnq_strategy_v2_3_engine.py",
+        "research/current_mnq_strategy_v2_3_databento.py",
         "src/engine/indicators/fvg_native.py",
         "research/current_mnq_strategy_v2_4_zone_lifecycle.py",
         "research/current_mnq_strategy_v2_4_levels.py",
@@ -27,17 +32,18 @@ def test_production_build_contract_covers_strategy_edge_and_execution_boundaries
         "research/current_mnq_strategy_v2_4_edge.py",
         "research/current_mnq_strategy_v2_4_oos.py",
         "research/current_mnq_strategy_v2_4_policy.py",
+        "research/current_mnq_strategy_v2_3_broker.py",
+        "research/current_mnq_strategy_v2_2_projectx_broker.py",
         "research/current_mnq_strategy_v2_4_broker.py",
         "research/current_mnq_strategy_v2_4_automation_runtime.py",
     }
     assert required.issubset(files)
     assert len(files) == len(fingerprinted_files())
-    assert b["schema_version"] == 1
+    assert b["schema_version"] == 3
 
 
 def test_strategy_fingerprint_is_deterministic_on_unchanged_bytes():
-    a = semantics_hash()
-    b = semantics_hash()
+    a = semantics_hash(); b = semantics_hash()
     assert a == b
     assert len(a) == 64
 
