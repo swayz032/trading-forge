@@ -13,7 +13,7 @@ from research.current_mnq_strategy_v2_3_policy import research_gate, semantics_h
 
 
 def test_gold_counts_are_read_from_real_manifests_not_constants():
-    assert gold_counts() == (5, 0)
+    assert gold_counts() == (6, 1)
 
 
 def test_missing_receipts_and_shadow_fail_closed_in_derived_evidence():
@@ -24,8 +24,8 @@ def test_missing_receipts_and_shadow_fail_closed_in_derived_evidence():
         operations_drill_receipt=None,
     )
     assert ev.semantics_sha256 == semantics_hash()
-    assert ev.real_user_positive_gold == 5
-    assert ev.real_user_tempting_no_trade_gold == 0
+    assert ev.real_user_positive_gold == 6
+    assert ev.real_user_tempting_no_trade_gold == 1
     assert ev.architecture_tests_passed == 0
     assert ev.architecture_tests_failed == 1
     assert not research_gate(ev).approved
