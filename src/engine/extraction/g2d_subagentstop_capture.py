@@ -35,22 +35,66 @@ WHAT THIS MODULE DOES, AND WHAT IT DELIBERATELY DOES NOT DO
     privileged propagation decision wires a live doorway to call it -- that decision is
     explicitly NOT made here (AR-1313A: "NOT AUTHORIZED IN THIS RULING").
 
-UNVERIFIED, DISCLOSED, NOT GUESSED INTO THE CONTRACT
-    The exact JSON field names Claude Code's `SubagentStop` hook event actually exposes
-    (candidate names from the ruling: `agent_id`, `agent_transcript_path`,
-    `last_assistant_message`) were NOT found in any locally available authoritative source
-    during this repair pass (searched: this repo's own hook doorway `scripts/claude_guard_hook.mjs`,
-    which only reads `hook_event_name`; the installed `@anthropic-ai/claude-code` npm package's
-    `README.md` and `sdk-tools.d.ts`, which document tool schemas, not the hook event contract).
-    Per AR-1313A ("prove the event/schema from the implementation or authoritative local
-    contract before wiring it; do not guess field names"), this module therefore takes
-    `agent_id` and `raw_output`/`completion` as OPAQUE CALLER-SUPPLIED ARGUMENTS rather than
-    parsing a specific hook JSON shape itself. The state-machine correctness this module exists
-    to prove (async ack != final, identity-bound finalization, no duplicate overwrite,
-    sequential interlock) is therefore verified independent of that open field-name question.
-    A future privileged-propagation packet must supply the real hook-JSON-to-(agent_id,
-    raw_output) extraction as a thin, separately-reviewable adapter at the live doorway --
-    building that adapter is explicitly out of scope for this off-live packet.
+THE REAL SubagentStop SCHEMA — VERIFIED, NOT GUESSED (2026-08-18)
+    The first version of this module (AR-1313A packet) found no local authoritative source and
+    therefore treated `agent_id`/`raw_output` as opaque caller-supplied arguments. That gap is
+    now closed: fetched LIVE from Anthropic's own Claude Code documentation
+    (`https://code.claude.com/docs/en/hooks#subagentstop`), quoted verbatim, not paraphrased
+    from training memory:
+
+        {
+          "session_id": "abc123",
+          "transcript_path": "/home/user/.claude/projects/.../transcript.jsonl",
+          "cwd": "/home/user/my-project",
+          "permission_mode": "default",
+          "hook_event_name": "SubagentStop",
+          "agent_id": "subagent_01ABC123...",
+          "agent_type": "security-reviewer",
+          "last_assistant_message": "I've completed the security review...",
+          "stop_reason": "end_turn"
+        }
+
+    `agent_id` and `last_assistant_message` are both real, documented fields — confirming the
+    ruling's assumption. One thing the ruling's framing did NOT account for: `stop_reason` is
+    documented as one of `"end_turn"`, `"max_tokens"`, `"stop_sequence"`, `"tool_use"` —
+    `"tool_use"` means *"subagent called a tool and stopped awaiting the result"*, i.e. the
+    subagent is NOT actually finished; a SubagentStop event with that reason fires mid-flow, not
+    at true completion. Treating every SubagentStop as terminal would reintroduce a variant of
+    F36 (premature capture) one layer up. `extract_subagent_stop_fields()` below refuses to
+    treat a `"tool_use"` event as final; only `"end_turn"` / `"max_tokens"` / `"stop_sequence"`
+    are accepted as terminal.
+
+WHAT THIS MODULE DOES, AND WHAT IT DELIBERATELY DOES NOT DO
+    It adds four call boundaries and one check, all built ON TOP of the existing trusted doorway
+    (`isolated_bridge.capture_native_return`), which stays completely unchanged:
+
+        record_async_launch_ack()        -- PostToolUse(Agent) lands here. Launch telemetry
+                                             ONLY. Never creates `.raw`/`.completion`. Row stays
+                                             NATIVE_TASK_DISPATCHED.
+        extract_subagent_stop_fields()    -- schema-verified parse of a real SubagentStop JSON
+                                             payload into (agent_id, last_assistant_message,
+                                             stop_reason). Raises SubagentStopNotTerminal on a
+                                             `"tool_use"` (non-final) event; raises ValueError on
+                                             a malformed/wrong-event payload. Guesses nothing.
+        capture_subagent_stop_event()     -- the real live-shaped entry point. Runs the payload
+                                             through extract_subagent_stop_fields(), records the
+                                             full raw event as audit evidence, then delegates to:
+        capture_subagent_stop_final()     -- binds by `agent_id` to the launch ack already on
+                                             file for this exact row, THEN calls
+                                             `capture_native_return()` unchanged -- so duplicate-
+                                             finalization protection is inherited for free, not
+                                             reimplemented.
+        assert_sequential_interlock()     -- every queue row strictly before `ref`, in the
+                                             queue's own frozen order, must already be
+                                             RAW_RETURN_CAPTURED. A launched-but-unfinalized
+                                             predecessor blocks every row after it by
+                                             construction.
+
+    It does NOT reimplement the durable receipt law, does NOT touch `capture_native_return` or
+    `record_native_dispatch`, and does NOT wire into any live `.claude/` hook, the pinned guard
+    toolbox, or any file that path currently invokes. This module is inert until a future
+    privileged propagation decision wires a live doorway to call it -- that decision is
+    explicitly NOT made here (AR-1313A: "NOT AUTHORIZED IN THIS RULING").
 """
 from __future__ import annotations
 
@@ -68,9 +112,25 @@ from .isolated_bridge import (
 
 __all__ = [
     "record_async_launch_ack",
+    "SubagentStopNotTerminal",
+    "extract_subagent_stop_fields",
+    "capture_subagent_stop_event",
     "capture_subagent_stop_final",
     "assert_sequential_interlock",
 ]
+
+# Verbatim from https://code.claude.com/docs/en/hooks#subagentstop, fetched live 2026-08-18.
+SUBAGENT_STOP_TERMINAL_REASONS = frozenset({"end_turn", "max_tokens", "stop_sequence"})
+SUBAGENT_STOP_NONTERMINAL_REASONS = frozenset({"tool_use"})
+SUBAGENT_STOP_KNOWN_REASONS = SUBAGENT_STOP_TERMINAL_REASONS | SUBAGENT_STOP_NONTERMINAL_REASONS
+
+
+class SubagentStopNotTerminal(RuntimeError):
+    """Raised when a SubagentStop event's `stop_reason` is `"tool_use"`: the subagent paused
+    awaiting a tool result and has not actually finished. This is a NORMAL, expected outcome —
+    not a failure of this row's one-shot attempt. The caller should simply wait for a LATER
+    SubagentStop event bearing the same `agent_id` with a terminal `stop_reason`; it must NOT
+    retry the dispatch, spend a new call, or treat this as the row's answer."""
 
 
 def _launch_ack_path(ledger: DurableAttemptLedger, ref: str) -> str:
@@ -130,6 +190,94 @@ def _read_launch_ack(ledger: DurableAttemptLedger, ref: str) -> dict | None:
         return None
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
+
+
+def extract_subagent_stop_fields(hook_payload: dict) -> tuple[str, str, str]:
+    """Schema-verified extraction from a real `SubagentStop` hook JSON payload.
+
+    Returns `(agent_id, last_assistant_message, stop_reason)`. Raises `SubagentStopNotTerminal`
+    when `stop_reason == "tool_use"` — the subagent is still working; this event must NOT be
+    used to finalize anything. Raises `ValueError` on a payload that is not actually a
+    `SubagentStop` event, that lacks a recorded `agent_id`, that carries an unrecognized
+    `stop_reason`, or a terminal event with no `last_assistant_message` — every case refuses
+    rather than guesses.
+    """
+    if hook_payload.get("hook_event_name") != "SubagentStop":
+        raise ValueError(
+            f"expected hook_event_name 'SubagentStop', got "
+            f"{hook_payload.get('hook_event_name')!r}. Refusing to treat a differently-named "
+            "event as a subagent completion."
+        )
+    agent_id = hook_payload.get("agent_id")
+    if not agent_id:
+        raise ValueError(
+            "SubagentStop payload carries no agent_id. Per the documented schema every "
+            "SubagentStop event names the agent that stopped; an absent one cannot be bound to "
+            "any launch ack and must not be guessed."
+        )
+    stop_reason = hook_payload.get("stop_reason")
+    if stop_reason in SUBAGENT_STOP_NONTERMINAL_REASONS:
+        raise SubagentStopNotTerminal(
+            f"agent {agent_id!r} stopped with stop_reason={stop_reason!r}: it is awaiting a "
+            "tool result, not finished. A later SubagentStop for the same agent_id is expected; "
+            "this event must not finalize the row."
+        )
+    if stop_reason not in SUBAGENT_STOP_TERMINAL_REASONS:
+        raise ValueError(
+            f"agent {agent_id!r} SubagentStop carries an unrecognized stop_reason "
+            f"{stop_reason!r}. The documented values are {sorted(SUBAGENT_STOP_KNOWN_REASONS)}; "
+            "an unknown value is refused rather than assumed terminal."
+        )
+    last_assistant_message = hook_payload.get("last_assistant_message")
+    if not last_assistant_message:
+        raise ValueError(
+            f"agent {agent_id!r} SubagentStop with terminal stop_reason={stop_reason!r} carries "
+            "no last_assistant_message. A terminal event with no final text is a data-integrity "
+            "problem, not an answer to capture."
+        )
+    return agent_id, last_assistant_message, stop_reason
+
+
+def _subagent_stop_event_path(ledger: DurableAttemptLedger, ref: str) -> str:
+    return os.path.join(ledger.receipt_dir, f"{_safe_name(ref)}.subagent_stop_event.json")
+
+
+def capture_subagent_stop_event(
+    ledger: DurableAttemptLedger, ref: str, hook_payload: dict,
+) -> dict:
+    """The real live-shaped entry point. Takes an actual `SubagentStop` hook JSON payload,
+    extracts `(agent_id, last_assistant_message, stop_reason)` via the schema-verified
+    `extract_subagent_stop_fields()`, records the full raw event as audit evidence (kept
+    separate from `capture_native_return`'s fixed `COMPLETION_FIELDS` contract, which stays
+    unchanged), and only then delegates to `capture_subagent_stop_final()`.
+
+    A `SubagentStopNotTerminal` (`stop_reason == "tool_use"`) or malformed-payload `ValueError`
+    propagates to the caller BEFORE any receipt is written — a non-terminal or invalid event
+    leaves the row exactly as it found it.
+    """
+    agent_id, last_assistant_message, stop_reason = extract_subagent_stop_fields(hook_payload)
+
+    event_path = _subagent_stop_event_path(ledger, ref)
+    if os.path.exists(event_path):
+        raise AttemptRefused(
+            f"{ref!r} already has a recorded terminal SubagentStop event. A second terminal "
+            "event for the same row is not re-audited even if capture_native_return would also "
+            "refuse it — the audit trail itself is one-shot."
+        )
+    DurableAttemptLedger._create_only(
+        event_path,
+        {
+            "condition_ref": ref,
+            "agent_id": agent_id,
+            "stop_reason": stop_reason,
+            "raw_hook_payload": hook_payload,
+            "authority": "F36 (AR-1311B / AR-1312B / AR-1313A) — schema verified live from "
+                          "https://code.claude.com/docs/en/hooks#subagentstop, 2026-08-18",
+        },
+        what="subagent stop event audit receipt",
+        extra=f"{ref!r} already has a recorded terminal SubagentStop event.",
+    )
+    return capture_subagent_stop_final(ledger, ref, agent_id, last_assistant_message)
 
 
 def capture_subagent_stop_final(

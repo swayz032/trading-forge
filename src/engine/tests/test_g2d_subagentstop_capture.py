@@ -7,16 +7,24 @@ Synthetic queues and synthetic events only. Zero Agent/Task/model calls anywhere
 from __future__ import annotations
 
 import json
+import os
 
 import pytest
 
 from src.engine.extraction import isolated_fallback_law as law
 from src.engine.extraction.g2d_subagentstop_capture import (
+    SubagentStopNotTerminal,
     assert_sequential_interlock,
+    capture_subagent_stop_event,
     capture_subagent_stop_final,
+    extract_subagent_stop_fields,
     record_async_launch_ack,
 )
-from src.engine.extraction.isolated_attempt_receipt import AttemptRefused, DurableAttemptLedger
+from src.engine.extraction.isolated_attempt_receipt import (
+    AttemptRefused,
+    DurableAttemptLedger,
+    _safe_name,
+)
 from src.engine.extraction.isolated_bridge import (
     NATIVE_TASK_DISPATCHED,
     RAW_RETURN_CAPTURED,
@@ -194,3 +202,119 @@ def test_mutation_control_old_bug_would_have_finalized_on_the_ack_new_path_does_
     _dispatch(rig, REF2, native_task_id="task_2")
     record_async_launch_ack(_led(rig), REF2, agent_id="agent-B", raw_ack_payload=ASYNC_ACK_PAYLOAD)
     assert state_of(_led(rig), REF2) == NATIVE_TASK_DISPATCHED   # NOT captured — the fix holds
+
+
+# --------------------------------------------------------------------------- #
+# 7. REAL SCHEMA-SHAPED SubagentStop PAYLOADS — fields verbatim from
+#    https://code.claude.com/docs/en/hooks#subagentstop (fetched live 2026-08-18)
+# --------------------------------------------------------------------------- #
+
+
+def _real_subagent_stop_payload(agent_id="subagent_01ABC123", stop_reason="end_turn",
+                                 last_assistant_message="I've completed the review."):
+    return {
+        "session_id": "abc123",
+        "transcript_path": "/home/user/.claude/projects/x/transcript.jsonl",
+        "cwd": "/home/user/my-project",
+        "permission_mode": "default",
+        "hook_event_name": "SubagentStop",
+        "agent_id": agent_id,
+        "agent_type": "security-reviewer",
+        "last_assistant_message": last_assistant_message,
+        "stop_reason": stop_reason,
+    }
+
+
+def test_extract_subagent_stop_fields_on_a_real_shaped_terminal_payload():
+    agent_id, message, reason = extract_subagent_stop_fields(_real_subagent_stop_payload())
+    assert agent_id == "subagent_01ABC123"
+    assert message == "I've completed the review."
+    assert reason == "end_turn"
+
+
+@pytest.mark.parametrize("reason", ["end_turn", "max_tokens", "stop_sequence"])
+def test_extract_subagent_stop_fields_accepts_every_documented_terminal_reason(reason):
+    _, _, got = extract_subagent_stop_fields(_real_subagent_stop_payload(stop_reason=reason))
+    assert got == reason
+
+
+def test_extract_subagent_stop_fields_refuses_tool_use_as_nonterminal():
+    payload = _real_subagent_stop_payload(stop_reason="tool_use")
+    with pytest.raises(SubagentStopNotTerminal, match="awaiting a tool result"):
+        extract_subagent_stop_fields(payload)
+
+
+def test_extract_subagent_stop_fields_refuses_wrong_event_name():
+    payload = _real_subagent_stop_payload()
+    payload["hook_event_name"] = "Stop"
+    with pytest.raises(ValueError, match="expected hook_event_name 'SubagentStop'"):
+        extract_subagent_stop_fields(payload)
+
+
+def test_extract_subagent_stop_fields_refuses_missing_agent_id():
+    payload = _real_subagent_stop_payload()
+    payload["agent_id"] = None
+    with pytest.raises(ValueError, match="carries no agent_id"):
+        extract_subagent_stop_fields(payload)
+
+
+def test_extract_subagent_stop_fields_refuses_unknown_stop_reason():
+    payload = _real_subagent_stop_payload(stop_reason="some_future_reason_not_yet_documented")
+    with pytest.raises(ValueError, match="unrecognized stop_reason"):
+        extract_subagent_stop_fields(payload)
+
+
+def test_extract_subagent_stop_fields_refuses_terminal_event_with_no_final_message():
+    payload = _real_subagent_stop_payload(last_assistant_message="")
+    with pytest.raises(ValueError, match="carries no last_assistant_message"):
+        extract_subagent_stop_fields(payload)
+
+
+# --------------------------------------------------------------------------- #
+# 8. THE REAL LIVE-SHAPED ENTRY POINT — capture_subagent_stop_event()
+# --------------------------------------------------------------------------- #
+
+
+def test_capture_subagent_stop_event_end_to_end_with_a_real_shaped_payload(rig):
+    _dispatch(rig, REF1)
+    record_async_launch_ack(_led(rig), REF1, agent_id="subagent_01ABC123")
+    payload = _real_subagent_stop_payload(
+        agent_id="subagent_01ABC123", last_assistant_message="the grounded quote, verbatim")
+    capture_subagent_stop_event(_led(rig), REF1, payload)
+    assert state_of(_led(rig), REF1) == RAW_RETURN_CAPTURED
+    with open(_led(rig).raw_path(REF1), encoding="utf-8") as fh:
+        stored = json.load(fh)
+    assert stored["raw_output"] == "the grounded quote, verbatim"
+
+
+def test_capture_subagent_stop_event_tool_use_does_not_finalize_and_row_stays_dispatched(rig):
+    _dispatch(rig, REF1)
+    record_async_launch_ack(_led(rig), REF1, agent_id="subagent_01ABC123")
+    payload = _real_subagent_stop_payload(agent_id="subagent_01ABC123", stop_reason="tool_use")
+    with pytest.raises(SubagentStopNotTerminal):
+        capture_subagent_stop_event(_led(rig), REF1, payload)
+    # non-terminal: row is exactly where it was, and no audit/raw/completion receipt exists
+    led = _led(rig)
+    assert state_of(led, REF1) == NATIVE_TASK_DISPATCHED
+    assert not os.path.exists(led.raw_path(REF1))
+    assert not os.path.exists(os.path.join(led.receipt_dir, f"{_safe_name(REF1)}.completion.json"))
+    assert not os.path.exists(
+        os.path.join(led.receipt_dir, f"{_safe_name(REF1)}.subagent_stop_event.json"))
+
+
+def test_capture_subagent_stop_event_mismatched_agent_id_fails_closed(rig):
+    _dispatch(rig, REF1)
+    record_async_launch_ack(_led(rig), REF1, agent_id="subagent_01ABC123")
+    payload = _real_subagent_stop_payload(agent_id="subagent_DIFFERENT_AGENT")
+    with pytest.raises(AttemptRefused, match="mismatched identity is never trusted"):
+        capture_subagent_stop_event(_led(rig), REF1, payload)
+    assert state_of(_led(rig), REF1) == NATIVE_TASK_DISPATCHED
+
+
+def test_capture_subagent_stop_event_duplicate_terminal_event_refused(rig):
+    _dispatch(rig, REF1)
+    record_async_launch_ack(_led(rig), REF1, agent_id="subagent_01ABC123")
+    payload = _real_subagent_stop_payload(agent_id="subagent_01ABC123")
+    capture_subagent_stop_event(_led(rig), REF1, payload)
+    with pytest.raises(AttemptRefused, match="already has a recorded terminal SubagentStop event"):
+        capture_subagent_stop_event(_led(rig), REF1, payload)

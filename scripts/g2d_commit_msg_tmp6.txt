@@ -1,0 +1,43 @@
+worker-1: F36 -- wire the real SubagentStop schema, fetched live and verified
+
+Closes the one open item from the prior F36 off-live packet: "the exact
+SubagentStop payload schema is unverified locally." Rather than guess,
+fetched Anthropic's own live documentation (docs.claude.com/.../hooks ->
+redirects to code.claude.com/docs/en/hooks#subagentstop) and quoted the
+schema verbatim.
+
+Confirmed real fields: agent_id, last_assistant_message, hook_event_name,
+stop_reason (one of end_turn/max_tokens/stop_sequence/tool_use). The
+ruling's original field-name assumption was correct.
+
+One thing the ruling's framing missed that this catches before any live
+wiring: stop_reason can be "tool_use" -- the subagent paused awaiting a
+tool result, not actually finished. SubagentStop is not guaranteed to fire
+only once at true completion. Treating every SubagentStop as terminal
+would reintroduce a variant of F36 one layer up. New
+extract_subagent_stop_fields() treats only end_turn/max_tokens/
+stop_sequence as terminal and raises a distinct SubagentStopNotTerminal
+(not a generic failure) on tool_use.
+
+Added to src/engine/extraction/g2d_subagentstop_capture.py (existing
+record_async_launch_ack/capture_subagent_stop_final/
+assert_sequential_interlock left byte-identical):
+- extract_subagent_stop_fields() -- schema-verified parser, refuses wrong
+  event name / missing agent_id / unknown stop_reason / empty terminal
+  message.
+- capture_subagent_stop_event() -- the real live-shaped entry point: runs
+  a payload through the extractor, writes a new audit receipt
+  (.subagent_stop_event.json, separate from capture_native_return's fixed
+  schema), then delegates to capture_subagent_stop_final() unchanged.
+- SubagentStopNotTerminal exception type.
+
+13 new tests (24 total in the file, up from 11), all green. Full affected
+regression suite: 179 passed, 3 skipped, 0 failed (was 166).
+
+Still zero new Agent/Task/model calls (WebFetch fetched two doc pages,
+nothing else). Still no live guard propagation -- .claude/, the pinned
+toolbox, and both live doorway scripts remain untouched. Only a
+schema-shaped synthetic payload was tested, not a real fired event --
+that remains the one thing only a future privileged live run can confirm.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

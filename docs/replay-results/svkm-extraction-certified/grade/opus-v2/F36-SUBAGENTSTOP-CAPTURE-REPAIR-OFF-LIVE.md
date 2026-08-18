@@ -1,5 +1,15 @@
 # F36 — Async-Launch-Ack vs True-Final-Completion Repair (Off-Live)
 
+> **UPDATE (preserve-and-strike, not a rewrite) — see `F36-SCHEMA-VERIFICATION-UPDATE.md` in this
+> same directory.** The "Disclosed, unresolved" section below is **SUPERSEDED**: the real
+> `SubagentStop` payload schema was fetched live from Anthropic's own documentation
+> (`https://code.claude.com/docs/en/hooks#subagentstop`) and wired in. `agent_id` and
+> `last_assistant_message` are both confirmed real fields — the ruling's original assumption was
+> correct. `extract_subagent_stop_fields()` and `capture_subagent_stop_event()` now perform the
+> real hook-JSON-to-`(agent_id, raw_output)` extraction this document originally said was out of
+> scope. 13 new tests added (24 total in the file), all green. This document is retained verbatim
+> below for the historical record of what was and was not known at the time.
+
 **Ruling followed:** AR-1313A, "F36 OFF-LIVE NEXT." **Zero new Agent/Task/model calls** — synthetic queues and synthetic events only, throughout. **No live guard propagation** — nothing under `.claude/`, no pinned toolbox file, and neither of the two live doorway scripts (`scripts/g2d_precall_transition.py`, `scripts/g2d_postcall_capture.py`) was touched.
 
 ## Files changed
