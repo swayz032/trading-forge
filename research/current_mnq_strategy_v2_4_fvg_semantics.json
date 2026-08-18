@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC1",
   "source": "Trader-provided FVG transcript plus explicit trader TP clarification on 2026-08-17",
   "detector_authority": {
@@ -26,7 +26,10 @@
     "nearby_strong_key_zone_before_both": "TARGET_OR_BLOCK_AT_THAT_NEARER_REACTION_AREA",
     "tiny_weak_shelf": "may be skipped only when it fails the existing meaningful-reaction quality gate",
     "insufficient_room_to_first_meaningful_reaction": "NO_TRADE",
-    "fixed_R_target": false
+    "fixed_R_target": false,
+    "reaction_significance_is_distinct_from_entry_authorization": true,
+    "target_only_15m_zone_rule": "An active established 15m zone with at least 2 independent rejections and quality>=min_zone_quality remains a meaningful TP/blocker even when it lacks the confluence or high_zone_quality required to authorize a fresh entry.",
+    "target_only_zone_can_create_entry": false
   },
   "video_entry_filters": {
     "knowledge_recorded": [
