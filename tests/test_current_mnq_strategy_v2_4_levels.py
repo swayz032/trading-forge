@@ -154,6 +154,9 @@ def test_key_level_contract_contains_no_pnl_optimizer_and_forbids_later_pivots()
     rule = spec["exceptional_single_swing_path"]
     assert rule["recent_displacement_percentile"] == .75
     assert rule["absolute_displacement_floor_atr"] == 1.0
+    assert rule["lookback_anchor"] == "candidate_confirmation_time"
+    assert rule["current_asof_may_not_rewindow_candidate_reference_history"] is True
     assert rule["reference_pivots_must_confirm_before_candidate"] is True
     assert rule["candidate_itself_excluded_from_reference_distribution"] is True
     assert rule["later_pivots_forbidden_from_retroactive_classification"] is True
+    assert rule["older_reference_pivots_aging_out_of_current_map_may_not_reclassify_candidate"] is True
