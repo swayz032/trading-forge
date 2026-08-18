@@ -1,4 +1,4 @@
-name: Current MNQ Strategy v2.4 Zone + Candle Gates
+name: Current MNQ Strategy v2.4 Zone + Candle Production Gates
 
 on:
   push:
@@ -7,6 +7,9 @@ on:
     paths:
       - 'research/current_mnq_strategy_v2_4_*.py'
       - 'research/current_mnq_strategy_v2_4_*.json'
+      - 'research/current_mnq_strategy_v2_3_*.py'
+      - 'research/mnq_v23_realtime/**'
+      - 'research/mnq_v23_requirements.txt'
       - 'tests/test_current_mnq_strategy_v2_4*.py'
       - '.github/workflows/current-mnq-strategy-v2-4-zone-candle-gates.yml'
   pull_request:
@@ -15,32 +18,122 @@ on:
     paths:
       - 'research/current_mnq_strategy_v2_4_*.py'
       - 'research/current_mnq_strategy_v2_4_*.json'
+      - 'research/current_mnq_strategy_v2_3_*.py'
+      - 'research/mnq_v23_realtime/**'
+      - 'research/mnq_v23_requirements.txt'
       - 'tests/test_current_mnq_strategy_v2_4*.py'
       - '.github/workflows/current-mnq-strategy-v2-4-zone-candle-gates.yml'
   workflow_dispatch:
 
 jobs:
-  zone-candle-fidelity:
+  production-architecture:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.13'
-      - name: Install frozen research dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+      - name: Install pinned isolated research dependencies
         run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
-      - name: Run v2.4 semantic gates
+      - name: Compile all v2.4 modules
+        run: python -m py_compile research/current_mnq_strategy_v2_4_*.py
+      - name: Run inherited production safety plus v2.4 fidelity gates
         run: |
           PYTHONPATH=. pytest --confcutdir=tests -q \
-            tests/test_current_mnq_strategy_v2_4*.py
-      - name: Prove v2.3 sealed evidence is not inherited as v2.4 final proof
+            tests/test_current_mnq_strategy_v2_2_contracts.py \
+            tests/test_current_mnq_strategy_v2_2_projectx_history.py \
+            tests/test_current_mnq_strategy_v2_2_projectx_broker.py \
+            tests/test_current_mnq_strategy_v2_2_gold_lifecycle.py \
+            tests/test_current_mnq_strategy_v2_2_risk_metrics.py \
+            tests/test_current_mnq_strategy_v2_2_engine_final.py \
+            tests/test_current_mnq_strategy_v2_3_account_risk.py \
+            tests/test_current_mnq_strategy_v2_3_broker_risk.py \
+            tests/test_current_mnq_strategy_v2_3_databento.py \
+            tests/test_current_mnq_strategy_v2_3_device.py \
+            tests/test_current_mnq_strategy_v2_3_evidence.py \
+            tests/test_current_mnq_strategy_v2_3_live_data.py \
+            tests/test_current_mnq_strategy_v2_3_operations_drill.py \
+            tests/test_current_mnq_strategy_v2_3_production.py \
+            tests/test_current_mnq_strategy_v2_3_promotion.py \
+            tests/test_current_mnq_strategy_v2_3_realtime.py \
+            tests/test_current_mnq_strategy_v2_3_roll_tick.py \
+            tests/test_current_mnq_strategy_v2_3_shadow_coverage.py \
+            tests/test_current_mnq_strategy_v2_3_signal.py \
+            tests/test_current_mnq_strategy_v2_4*.py \
+            --junitxml=/tmp/mnq_v24_junit.xml
+      - name: Prove corrected semantic contract
         run: |
-          python - <<'PY'
-          import json
-          p=json.load(open('research/current_mnq_strategy_v2_4_spec.json'))
+          PYTHONPATH=. python - <<'PY'
+          from research.current_mnq_strategy_v2_4_policy import load_spec
+          p=load_spec()
           assert p['zone_gate']['mandatory'] is True
           assert p['zone_gate']['pattern_without_zone_interaction']=='NO_TRADE'
+          assert p['zone_gate']['mere_approach_without_touch']=='NO_TRADE'
+          assert p['zone_gate']['mid_range_pattern']=='NO_TRADE'
+          assert p['candlestick_semantics']['role']=='CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL'
           assert p['anti_overfit']['v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4'] is True
-          print('PASS: v2.4 semantic correction requires fresh validation')
+          print('PASS: v2.4 = premarket -> zone -> reject/break -> candles/control -> A+')
           PY
+      - name: Verify read-only SignalR sidecar and hosted-runtime refusal
+        working-directory: research/mnq_v23_realtime
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node --check sidecar.mjs
+          set +e
+          output=$(node sidecar.mjs 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          test "$code" -ne 0
+          echo "$output" | grep 'REMOTE_RUNTIME_REFUSE:PROJECTX_REALTIME'
+      - name: Prove hosted Python cannot submit ProjectX orders
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          from research.current_mnq_strategy_v2_3_local_runtime import require_personal_device
+          try:
+              require_personal_device('PROJECTX_ORDER_SUBMISSION')
+          except RuntimeError as e:
+              assert 'REMOTE_RUNTIME_REFUSE' in str(e)
+              print('PASS: hosted runner refused for ProjectX automation')
+          else:
+              raise SystemExit('FAIL: hosted runner was not refused')
+          PY
+      - name: Write v2.4 architecture evidence receipt
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import json, xml.etree.ElementTree as ET
+          from pathlib import Path
+          from research.current_mnq_strategy_v2_3_evidence import gold_counts
+          from research.current_mnq_strategy_v2_4_policy import semantics_hash, load_spec
+          root=ET.parse('/tmp/mnq_v24_junit.xml').getroot()
+          suites=list(root) if root.tag=='testsuites' else [root]
+          tests=sum(int(x.attrib.get('tests',0)) for x in suites)
+          failures=sum(int(x.attrib.get('failures',0))+int(x.attrib.get('errors',0)) for x in suites)
+          spec=load_spec(); pos,neg=gold_counts()
+          receipt={
+              'release_id':spec['release_id'],
+              'semantics_sha256':semantics_hash(),
+              'tests':tests, 'failures':failures,
+              'positive_user_gold_count':pos,
+              'negative_semantic_fixture_count':len(spec['negative_semantic_fixtures']),
+              'real_user_tempting_no_trade_gold_count':neg,
+              'zone_gate_mandatory':True,
+              'patterns_away_from_zone_refused':True,
+              'shared_historical_live_candidate_kernel':True,
+              'signalr_sidecar_ci_automation_refused':True,
+              'automation_approved':False,
+              'reason':'v2.4 software architecture only; fresh sealed OOS + real no-trade gold + local shadow/drills still required'
+          }
+          out=Path('research/_mnq_v24_architecture'); out.mkdir(parents=True,exist_ok=True)
+          (out/'architecture_receipt.json').write_text(json.dumps(receipt,indent=2,sort_keys=True))
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-4-zone-candle-production-architecture-evidence
+          path: research/_mnq_v24_architecture/
+          if-no-files-found: error
