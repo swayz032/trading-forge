@@ -47,7 +47,7 @@ def test_databento_collector_refuses_synthetic_prelaunch_mnq(tmp_path):
 
 def test_edge_equation_2_records_impossible_legacy_calendar_gate_reason_before_clean_pnl():
     spec = edge_spec()
-    assert spec["release_id"] == "MNQ-V2.4-EDGE-EQUATION-2"
+    assert spec["release_id"] == "MNQ-V2.4-EDGE-EQUATION-2-DQ1"
     assert spec["clean_historical_scope"]["instrument_launch_date"] == "2019-05-06"
     assert spec["clean_historical_scope"]["require_full_available_pre_contamination_history"] is True
     assert spec["anti_overfit"]["gate_change_reason_must_predate_clean_result"] is True
