@@ -113,6 +113,10 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
     for w in windows:
         symbol = databento_raw_symbol(w.contract_id)
         request_start = max(MNQ_LAUNCH, w.start)
+        # We only need one vendor definition record to verify that the explicit
+        # raw symbol resolves to the expected contract metadata. Streaming every
+        # definition update across the full contract window adds no evidence and
+        # needlessly enlarges the HTTP stream, so keep this request bounded.
         definition = _databento_get_range(
             db,
             client,
@@ -123,6 +127,7 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
             stype_in="raw_symbol",
             start=str(request_start),
             end=str(min(w.end + timedelta(days=1), end + timedelta(days=8))),
+            limit=1,
         ).to_df()
         if definition.empty:
             raise RuntimeError(f"DATABENTO_DEFINITION_EMPTY:{symbol}:{w.contract_id}")
