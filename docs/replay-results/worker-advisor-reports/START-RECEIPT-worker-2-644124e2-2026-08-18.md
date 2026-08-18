@@ -116,7 +116,24 @@ intended_packet: AR-1155 (docs/advisor-rulings/AR-1155-GPT-STATIC-AUDIT-PAPER-QU
    manifest is widened to authorize this file and the pin is applied, or (b) GPT/operator directs
    otherwise.
 
+## Follow-up on Finding 1 (posted same session, preserve-and-strike, not silently amended)
+
+Mid-receipt, this session found an UNCOMMITTED local edit already sitting in the worktree at
+seating time (predecessor session's unfinished work) that reverted `--dangerously-skip-permissions`
+on the grounds that AR-1331A forbids it. This session began completing that revert. The operator
+interrupted live ("NO IT GOT ADDED BACL") and, independently of this session, pushed commit
+`fcd3ec60` ("worker-2: restore --dangerously-skip-permissions, operator override of AR-1331A"),
+whose message states the override was confirmed twice by the operator on the operator's own
+authority, disclosed in the launcher header comment rather than hidden. Working tree is clean at
+`fcd3ec60` (no stray unstaged/uncommitted state remains on this file). Finding 1 is therefore
+RESOLVED, not open: the flag's presence is a knowing, disclosed operator override of AR-1331A S3,
+per SS0-CTRL "the operator holds the keys." Nothing further required from this seat on this point;
+recorded for GPT's awareness only, per the "surface every load-bearing change" duty, not as a stop.
+
 ## State
 
 worker_2_state: STARTUP RECEIPT COMPLETE — AR-1155 IMPLEMENTATION STILL LOCKED PENDING GPT REVIEW.
 No AR-1155 production edits attempted this session. No cross-lane file touched.
+head_at_receipt superseded: fcd3ec601131140f53170f49848d5fbc1e8fb487 (operator's override commit,
+landed after this receipt's original head; this receipt's own identity/handshake/ear facts above
+are unaffected by it).
