@@ -7,11 +7,15 @@
   arm-witnesses it the same way Worker-1's does: observe the guard actually decide, do not infer
   it from its inputs.
 
-  Deliberately still NOT passing --dangerously-skip-permissions. Worker-1 only carries that flag
-  because its guard has been through ~90 GPT-reviewed rulings of adversarial repair. Worker-2's
-  guard was ported and control-tested in one pass today (2 positive / 6 negative controls, see the
-  2026-08-18 activation report) -- real, but not yet battle-tested to the same bar. The operator
-  permission prompt stays on until GPT reviews this port.
+  UPDATED 2026-08-18 (operator decision): now passes --dangerously-skip-permissions, same as
+  Worker-1. The underlying guard mechanism is byte-identical to Worker-1's (zero changes to the
+  pinned toolbox, bbf2e6c2e9ae39a7f0f2be182c9046165eb4b198) -- only the manifest (session_anchor +
+  edit_scope data) is new to this branch, and it was control-tested before this flag was added:
+  arm witness + 2 positive + 6 negative controls (Worker-1-owned-path BLOCK, unarmed-session DENY,
+  out-of-scope-in-lane DENY, self-protected-surface DENY, wrong-branch STOP, wrong-worktree STOP),
+  all correct. Same division of labour as Worker-1: this flag removes the OPERATOR prompt, it does
+  not remove the GUARD -- a guard deny still blocks the tool call with the guard's own reason, and
+  this launcher still REFUSES to reach the launch line unless C5 observed the guard actually arm.
 
   This script assumes only its own location, same as Worker-1's launcher.
 #>
@@ -115,4 +119,8 @@ Write-Host "  seat OK -- branch $branch. Starting Claude in the governed worktre
 Write-Host '  Run /worker-2-paper-runtime-onboarding once seated.' -ForegroundColor Green
 Write-Host ''
 Set-Location $Worktree
-claude
+
+# --dangerously-skip-permissions: the operator is not the permission pipeline. This is only safe
+# because the launcher REFUSED to reach this line unless C5 observed the guard actually arm --
+# same reasoning as worker1_seat_launch.ps1, same underlying guard code.
+claude --dangerously-skip-permissions
