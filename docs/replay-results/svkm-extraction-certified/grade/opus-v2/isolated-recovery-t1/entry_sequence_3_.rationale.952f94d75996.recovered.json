@@ -1,0 +1,14 @@
+{
+  "condition_ref": "entry_sequence[3].rationale",
+  "original_stem": "entry_sequence_3_.rationale.952f94d75996",
+  "agent_id": "acf287199179e1f54",
+  "attempt_index": 1,
+  "task_input_sha256": "37884f7b6199dbceafbd8b240ba5b92f8b8817433556bde802436ae9ddd25aae",
+  "recovery_source": "task-notification event delivered synchronously by the harness to the dispatching worker session for this exact agent_id, received and read before the next row was dispatched. Independent re-verification via the recorded output_file path was attempted for all 8 agent_ids and found EMPTY (0 bytes) for every one -- see G2D-RECOVERY-AR1312.md. This recovery artifact therefore rests on a single retrieval path, not two independent ones; that limitation is disclosed, not hidden.",
+  "recovered_raw_text": "```json\n{\n  \"quote\": \"my entry is going to be on the closure of that third candle\",\n  \"found\": true,\n  \"notes\": \"Grounds the 'entering on the closure' clause verbatim. The adjacent lines -- 'in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed. And the way that happens is when the third candle of the sequence has been printed' and 'As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade' -- ground the 'confirms the FVG structure' rationale. The 'minimizes entry risk' clause has NO grounding anywhere in the transcript; it is extractor-added rationale, not the trader's words.\"\n}\n```\n\nAnchor located. The condition is partially grounded: the mechanical part (enter at the third candle's close) and the confirmation rationale are both the trader's own words; the \"minimizes entry risk\" justification is not present in the transcript and appears to be interpolated by the extractor.",
+  "recovered_raw_sha256": "4009b732edd78816231522e201aacc5bef14bfd6228a78198649c8c7697674a6",
+  "duration_ms": 11289,
+  "subagent_tokens": 125099,
+  "tool_uses": 0,
+  "new_agent_task_or_model_calls_used_for_recovery": 0
+}

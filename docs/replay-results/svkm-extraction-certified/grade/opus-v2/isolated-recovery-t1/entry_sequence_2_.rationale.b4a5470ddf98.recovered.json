@@ -1,0 +1,14 @@
+{
+  "condition_ref": "entry_sequence[2].rationale",
+  "original_stem": "entry_sequence_2_.rationale.b4a5470ddf98",
+  "agent_id": "acc27212dab25d035",
+  "attempt_index": 1,
+  "task_input_sha256": "f8ec398d88c594b22cdcb22d01a1e6e3c3dbe7f4bb03281808bec6e16148f27d",
+  "recovery_source": "task-notification event delivered synchronously by the harness to the dispatching worker session for this exact agent_id, received and read before the next row was dispatched. Independent re-verification via the recorded output_file path was attempted for all 8 agent_ids and found EMPTY (0 bytes) for every one -- see G2D-RECOVERY-AR1312.md. This recovery artifact therefore rests on a single retrieval path, not two independent ones; that limitation is disclosed, not hidden.",
+  "recovered_raw_text": "```json\n{\n  \"quote\": \"As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.\"\n}\n```\n\n**Grounding notes:** The condition has two parts -- (a) the FVG is the entry, and (b) it comes after the directional break of the 9:30 5-minute range. The quoted span grounds both: \"this gap\" = the fair value gap, \"printed outside of the range\" = after the breakout, \"then we can enter the trade\" = entry point. Verified verbatim against the transcript (it appears immediately after \"What's important for us to recognize is that the fair value gap has been printed outside of the range.\").\n\nThe \"high-probability\" framing is the extractor's editorializing -- the trader never claims a probability or win rate for the FVG entry (he explicitly says \"this model is not perfect... You are going to lose on this model\"). The quote grounds the mechanical entry rule, not the probability claim.",
+  "recovered_raw_sha256": "180936d8b947d750790edd6439995891a17e195528a4ca9ed65932afe3fc04c7",
+  "duration_ms": 9507,
+  "subagent_tokens": 125095,
+  "tool_uses": 0,
+  "new_agent_task_or_model_calls_used_for_recovery": 0
+}

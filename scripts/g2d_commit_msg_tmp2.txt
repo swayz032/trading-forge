@@ -1,0 +1,24 @@
+worker-1: AR-1312 zero-call recovery of the eight G2D Opus outputs (F36)
+
+Per AR-1311B: the prior G2D receipt layer captured an async-launch
+acknowledgement rather than the true final Opus answer for all 8 frozen
+rows (F36). Independently corroborated: the Agent tool's synchronous
+return is a launch ACK; the real answer arrives later as a separate
+notification event.
+
+Lane A (zero new Agent/Task/model calls) executed: checked each recorded
+agent's output_file for independent recovery (all 8 found empty/0 bytes,
+disclosed as a limitation), then recovered all 8 final answers from the
+single available source -- the notification events already delivered to
+this session and used to gate each next dispatch -- into a new
+isolated-recovery-t1/ namespace, bound to condition_ref + agent_id +
+frozen task_input_sha256, without touching the original (receipt-layer-
+defective, launch-evidence-valid) isolated-receipts-t1/ files.
+
+Original execution results file corrected via preserve-and-strike notice
+(not rewritten) pointing to this recovery report.
+
+Lane B (narrow F36 capture-semantics repair) intentionally not started
+this pass -- flagged as the next candidate item.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

@@ -1,0 +1,14 @@
+{
+  "condition_ref": "confluences[1].description",
+  "original_stem": "confluences_1_.description.40c64b18289a",
+  "agent_id": "aa42cdd8132370188",
+  "attempt_index": 1,
+  "task_input_sha256": "a0f8a7e028d369ac3ac5994f84cd73783b93cbcd9cc1985fc7d9f9a80cf23ba6",
+  "recovery_source": "task-notification event delivered synchronously by the harness to the dispatching worker session for this exact agent_id, received and read before the next row was dispatched. Independent re-verification via the recorded output_file path was attempted for all 8 agent_ids and found EMPTY (0 bytes) for every one -- see G2D-RECOVERY-AR1312.md. This recovery artifact therefore rests on a single retrieval path, not two independent ones; that limitation is disclosed, not hidden.",
+  "recovered_raw_text": "```json\n{\n  \"quote\": \"the candles need to close outside of this 5m minute range\"\n}\n```\n\nGrounding located in the strategy-explanation section, immediately after the trader marks the 9:30 5-minute candle's high/low and switches to the 1-minute chart. Full surrounding context: \"We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is **the candles need to close outside of this 5m minute range**.\"\n\nThe chosen span is the shortest contiguous verbatim text that grounds both halves of the condition (1m candle + close outside the initial 5m range); the \"one minute time frame candles\" attribution comes from the sentence directly preceding it.",
+  "recovered_raw_sha256": "fea5704607bf8af295855ad19925b316da0b4a2226ae63c1c79d67fea688c030",
+  "duration_ms": 7110,
+  "subagent_tokens": 125092,
+  "tool_uses": 0,
+  "new_agent_task_or_model_calls_used_for_recovery": 0
+}

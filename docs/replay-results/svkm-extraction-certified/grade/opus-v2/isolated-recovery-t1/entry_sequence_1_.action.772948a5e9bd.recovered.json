@@ -1,0 +1,14 @@
+{
+  "condition_ref": "entry_sequence[1].action",
+  "original_stem": "entry_sequence_1_.action.772948a5e9bd",
+  "agent_id": "af026925433dc73d7",
+  "attempt_index": 1,
+  "task_input_sha256": "01d44c2dcd03caf54f348108ce79ca70762df2578494d5ed0d8478ad29d30d21",
+  "recovery_source": "task-notification event delivered synchronously by the harness to the dispatching worker session for this exact agent_id, received and read before the next row was dispatched. Independent re-verification via the recorded output_file path was attempted for all 8 agent_ids and found EMPTY (0 bytes) for every one -- see G2D-RECOVERY-AR1312.md. This recovery artifact therefore rests on a single retrieval path, not two independent ones; that limitation is disclosed, not hidden.",
+  "recovered_raw_text": "```json\n{\n  \"quote\": \"the candles need to close outside of this 5m minute range\"\n}\n```\n\nGrounding found at the step where the trader defines the breakout trigger. Full surrounding context in the transcript: \"We are essentially waiting for the one minute time frame candles to print into one of these sides of the range. Now, what does that mean? What has to happen is the candles need to close outside of this 5m minute range.\" The quoted span is the shortest contiguous text that grounds the close-outside-the-range condition; the 1-minute timeframe attribution comes from the immediately preceding sentence.",
+  "recovered_raw_sha256": "4554bbda9bca743abe216d8eb2aecaeb72b550268b2ecd07c88943a314be955a",
+  "duration_ms": 7649,
+  "subagent_tokens": 125101,
+  "tool_uses": 0,
+  "new_agent_task_or_model_calls_used_for_recovery": 0
+}

@@ -1,0 +1,14 @@
+{
+  "condition_ref": "confluences[0].description",
+  "original_stem": "confluences_0_.description.0093d68738e7",
+  "agent_id": "a2420621665543cd5",
+  "attempt_index": 1,
+  "task_input_sha256": "22373bdfab5415c573a370f3f6ce7e416361214e674b4383c54b2e6976bacf8f",
+  "recovery_source": "task-notification event delivered synchronously by the harness to the dispatching worker session for this exact agent_id, received and read before the next row was dispatched. Independent re-verification via the recorded output_file path was attempted for all 8 agent_ids and found EMPTY (0 bytes) for every one -- see G2D-RECOVERY-AR1312.md. This recovery artifact therefore rests on a single retrieval path, not two independent ones; that limitation is disclosed, not hidden.",
+  "recovered_raw_text": "{\"quote\": \"this strategy needs to be traded at 9:30 a.m. Eastern time, New York time\"}",
+  "recovered_raw_sha256": "d5e92c16a669f11c5b1e12d8332dcf91c718910173d8f160a760eba60a5a6303",
+  "duration_ms": 2616,
+  "subagent_tokens": 125091,
+  "tool_uses": 0,
+  "new_agent_task_or_model_calls_used_for_recovery": 0
+}

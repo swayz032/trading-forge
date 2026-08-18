@@ -1,0 +1,14 @@
+{
+  "condition_ref": "entry_sequence[2].action",
+  "original_stem": "entry_sequence_2_.action.c93f25926694",
+  "agent_id": "a0d21183e70186611",
+  "attempt_index": 1,
+  "task_input_sha256": "389d94a9d97d49407d35e9e6059d3b4a814c9d5e4f6faed15baf5671be461a2a",
+  "recovery_source": "task-notification event delivered synchronously by the harness to the dispatching worker session for this exact agent_id, received and read before the next row was dispatched. Independent re-verification via the recorded output_file path was attempted for all 8 agent_ids and found EMPTY (0 bytes) for every one -- see G2D-RECOVERY-AR1312.md. This recovery artifact therefore rests on a single retrieval path, not two independent ones; that limitation is disclosed, not hidden.",
+  "recovered_raw_text": "```json\n{\n  \"quote\": \"What we are looking for is a fair value gap sequence that is printing outside of the range.\"\n}\n```\n\n**Grounding:** The condition is directly and literally stated in the transcript at the point where the speaker transitions from identifying the 5-minute range break to defining the entry trigger. The quote is copied verbatim (exact wording and punctuation) from the passage that follows the discussion of price breaking out of the 5-minute range and precedes the definition of what a fair value gap sequence is (\"A fair value gap is when you get a three candle pattern where the low of candle one does not overlap the high of candle three\").\n\n**Note on the \"5-minute\" qualifier:** the quote says \"the range\" rather than \"the 5-minute range\" -- but the referent is unambiguous in context, since the range was established earlier in the same passage (\"what that now gives me is a range on the five minute\"). A near-alternative supporting span exists a few sentences later (\"What's important for us to recognize is that the fair value gap has been printed outside of the range\"), but the returned quote is the shorter, more direct statement of the *waiting-for* condition rather than the confirmation restatement.",
+  "recovered_raw_sha256": "ba40261536b9068229254d1bc184d9fc2e456d2c37b889381114019c7c739cd0",
+  "duration_ms": 10162,
+  "subagent_tokens": 125105,
+  "tool_uses": 0,
+  "new_agent_task_or_model_calls_used_for_recovery": 0
+}

@@ -1,0 +1,14 @@
+{
+  "condition_ref": "entry_sequence[1].rationale",
+  "original_stem": "entry_sequence_1_.rationale.fdda699d03f8",
+  "agent_id": "a76ef7696fa2e863b",
+  "attempt_index": 1,
+  "task_input_sha256": "154a24d1a9aec620efd4bedbffb25b0d634b22c909d24ac4a9f44b8083e248d8",
+  "recovery_source": "task-notification event delivered synchronously by the harness to the dispatching worker session for this exact agent_id, received and read before the next row was dispatched. Independent re-verification via the recorded output_file path was attempted for all 8 agent_ids and found EMPTY (0 bytes) for every one -- see G2D-RECOVERY-AR1312.md. This recovery artifact therefore rests on a single retrieval path, not two independent ones; that limitation is disclosed, not hidden.",
+  "recovered_raw_text": "```json\n{\n  \"quote\": \"the candles have printed outside of the range on the lower side of this 5m minute time frame. Right now, this is pretty much what we're looking for because what it's telling us is that price may be looking for a move to the downside\"\n}\n```\n\nGrounding note: this span is the transcript's own statement that the break of the 9:30 5-minute range in a given direction is what tells the trader which way the market is going for that trade. Adjacent supporting text (not needed, and longer) includes \"That gives us an idea of the direction in which the market wants to go for the day.\" and \"if we have traded into the downside of this range, it means that the price is going down. So, we want to be taking a short\" (down case) and \"So we have our break to the upside.\" -> \"we can go ahead and get this one ready for a buy\" (up case). The returned quote is the shortest contiguous span that states the break-direction -> market-direction inference directly.",
+  "recovered_raw_sha256": "a5c7306165fc80b2b34c62cb653b1a62168565f62cc48bd25ad91d06eede96e3",
+  "duration_ms": 16150,
+  "subagent_tokens": 125094,
+  "tool_uses": 0,
+  "new_agent_task_or_model_calls_used_for_recovery": 0
+}

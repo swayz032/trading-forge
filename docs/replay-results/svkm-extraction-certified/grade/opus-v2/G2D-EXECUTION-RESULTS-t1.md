@@ -1,5 +1,18 @@
 # G2D Isolated-Fallback Execution Results — t1
 
+> **CORRECTION NOTICE (preserve-and-strike, not a rewrite) — see AR-1311B + `G2D-RECOVERY-AR1312.md`.**
+> GPT ruling AR-1311B (2026-08-17) found that the `.raw.json` / `.completion.json` receipts this
+> report's provenance claims rested on are an **async-launch acknowledgement misclassified as the
+> final answer (F36)** — the guard's `PostToolUse` capture fires on Agent-tool dispatch return, not
+> on the later async completion event. **The "quote returned" table below is UNAFFECTED** — those
+> values were hand-transcribed from the actual `task-notification` completion events I received and
+> used to gate each next dispatch (i.e. the real final answers), not from the defective receipts.
+> But the report's framing implicitly treated the receipt layer as sound; it was not.
+> `G2D-RECOVERY-AR1312.md` in this same directory carries the corrected receipt-layer analysis,
+> the zero-new-call recovery binding each answer to its recorded `agentId`, and the disclosed
+> single-source-only limitation (the `output_file` independent-recovery path was checked and found
+> empty for all 8 agents). This report is retained verbatim below, struck only by this notice.
+
 **Ruling followed:** AR-1311A, "FRESH WORKER-1 PRODUCTION PROOF — THEN THE EIGHT CALLS" (`origin/external-advisor/gpt-rulings`, `advisor-reports/AR-1311A-...md`).
 **Worker:** worker-1 (compiler-factory lane). **Pin:** `claude/worker1-h1-20260815` @ `d5273312e7dec656a5f611a4445535db8b60173b` (branch head at execution start; unchanged through the run — no commits made mid-batch).
 **Queue:** `isolated_fallback_queue_t1.json`, `queue_artifact_sha256 = 5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa939` (matches `native_call_manifest_t1.json.queue_artifact_sha256` and the ruling's stated `frozen_queue_sha256` — cross-checked byte-for-byte across all three sources).
