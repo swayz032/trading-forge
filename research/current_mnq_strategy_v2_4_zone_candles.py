@@ -28,16 +28,12 @@ def zone_interaction(last_row, zone_side: str, zone_lo: float, zone_hi: float,
         return Interaction.NONE
 
     if zone_side == "S":
-        # Support failure is a close BELOW support. Trading above the top of the
-        # support after touching it is rejection/reclaim, not a breakout signal.
         if g.close < lo:
             return Interaction.BREAK_CLOSE_DOWN
         if g.low < lo and g.close >= lo:
             return Interaction.SWEEP_RECLAIM_UP
         return Interaction.TOUCH
 
-    # Resistance failure is a close ABOVE resistance. Trading below resistance
-    # after testing it is rejection/reclaim, not a downside breakout signal.
     if g.close > hi:
         return Interaction.BREAK_CLOSE_UP
     if g.high > hi and g.close <= hi:
@@ -60,12 +56,11 @@ def evaluate_at_zone(bars: pd.DataFrame, zone_side: str, zone_lo: float,
         )
 
     last = geometry(bars.iloc[-1])
-    bull_control = ev.bullish_reversal or ev.bullish_momentum
-    bear_control = ev.bearish_reversal or ev.bearish_momentum
+    # Expansion alone is not control when the closing candle is a doji/spinning
+    # top. Directional reversal geometry may still count (e.g. dragonfly/hammer).
+    bull_control = ev.bullish_reversal or (ev.bullish_momentum and not ev.indecision)
+    bear_control = ev.bearish_reversal or (ev.bearish_momentum and not ev.indecision)
 
-    # A sweep/reclaim is a Fight-state fact, not sufficient by itself. The candle
-    # story must still show directional buyer/seller control. This prevents a
-    # long-legged doji sweep from being promoted into a trade without takeover.
     rev_long = (
         zone_side == "S"
         and interaction in {Interaction.TOUCH, Interaction.SWEEP_RECLAIM_UP}
@@ -83,6 +78,7 @@ def evaluate_at_zone(bars: pd.DataFrame, zone_side: str, zone_lo: float,
     brk_long = (
         zone_side == "R"
         and interaction == Interaction.BREAK_CLOSE_UP
+        and not ev.indecision
         and (
             ev.bullish_momentum
             or (last.bullish and last.body_frac >= 0.55 and last.close_loc >= 0.70)
@@ -91,6 +87,7 @@ def evaluate_at_zone(bars: pd.DataFrame, zone_side: str, zone_lo: float,
     brk_short = (
         zone_side == "S"
         and interaction == Interaction.BREAK_CLOSE_DOWN
+        and not ev.indecision
         and (
             ev.bearish_momentum
             or (last.bearish and last.body_frac >= 0.55 and last.close_loc <= 0.30)
