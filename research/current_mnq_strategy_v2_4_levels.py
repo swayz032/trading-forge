@@ -8,7 +8,10 @@ Two structural paths can create an executable 15m zone:
    existed BEFORE that pivot confirmed.
 
 Later pivots may never retroactively redefine whether an older swing was dramatic.
-All zone roles use the v2.4 reclaim/break/retest lifecycle. No PnL appears here.
+The reference window is anchored to each candidate's own confirmation time, so
+older comparison pivots aging out of the *current* premarket window cannot silently
+reclassify a previously-known swing. All zone roles use the v2.4 reclaim/break/
+retest lifecycle. No PnL appears here.
 """
 from __future__ import annotations
 
@@ -39,6 +42,23 @@ def _reference_threshold(q: pd.DataFrame, floor_atr: float,
     if len(disp) < int(min_refs):
         return float(floor_atr)
     return float(max(float(floor_atr), float(np.quantile(disp.to_numpy(float), percentile))))
+
+
+def _candidate_prior_reference_set(history: pd.DataFrame, side: str,
+                                   candidate_confirm: pd.Timestamp,
+                                   look_days: int) -> pd.DataFrame:
+    """Return only information that existed in the candidate's own lookback window.
+
+    This deliberately anchors the window at candidate_confirm rather than the
+    current `asof`. Therefore classification cannot change merely because old
+    reference pivots later age out of today's 40-day map window.
+    """
+    start = candidate_confirm - pd.Timedelta(days=int(look_days))
+    return history[
+        (history.side == side) &
+        (history.confirm < candidate_confirm) &
+        (history.t >= start)
+    ].copy()
 
 
 def _empirical_rank(values: np.ndarray, x: float) -> float:
@@ -99,11 +119,14 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
     refs = refs or []
     native_fvgs = native_fvgs or []
 
-    q = piv15[
+    # `history` contains all wick-valid pivots knowable by asof. Candidate map
+    # membership uses today's lookback, but candidate grading below uses a
+    # separate window anchored to each candidate's confirmation timestamp.
+    history = piv15[
         (piv15.confirm <= asof) &
-        (piv15.t >= asof - pd.Timedelta(days=look)) &
         (pd.to_numeric(piv15.wick, errors="coerce") >= float(p.min_wick))
     ].copy()
+    q = history[history.t >= asof - pd.Timedelta(days=look)].copy()
     if q.empty:
         return []
 
@@ -113,7 +136,7 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
         if side_q.empty:
             continue
         for row in side_q.itertuples():
-            prior = side_q[side_q.confirm < row.confirm]
+            prior = _candidate_prior_reference_set(history, side, row.confirm, look)
             threshold = _reference_threshold(prior, floor_atr, percentile, min_refs)
             prior_disp = pd.to_numeric(prior.disp, errors="coerce").dropna().to_numpy(float)
             if not np.isfinite(float(row.disp)) or float(row.disp) < threshold:
