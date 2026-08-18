@@ -1,8 +1,24 @@
 {
-  "schema_version": 1,
-  "status": "BLOCKING_REAL_USER_NEGATIVE_GOLD_REGISTER",
+  "schema_version": 2,
+  "status": "REAL_USER_NEGATIVE_GOLD_REGISTER_SATISFIED",
   "privacy": "Do not commit private image bytes. Store a SHA256 plus the user-approved semantic reason for rejecting the setup.",
-  "fixtures": [],
+  "fixtures": [
+    {
+      "id": "NT01_RANGE_ON_KEY_LEVEL_WAIT_FOR_MOMENTUM_BREAKOUT",
+      "instrument": "MNQ",
+      "timeframe": "5m",
+      "image_sha256": "ce93a80a4a83a49eed4238eea0c20bae466854a894ac560ad3fdcd0171907381",
+      "user_label": "NO_TRADE_WHILE_RANGING_ON_KEY_LEVEL",
+      "user_reason_verbatim": "when price starts ranging on the key level zone i wait for momentum candleas a a breakout",
+      "normalized_semantics": "When price is ranging/chopping on an authorized key-level zone, the zone touch alone is not an entry. Wait for a decisive momentum/displacement breakout candle to establish directional control before a breakout trade can qualify.",
+      "existing_rule_alignment": [
+        "zone_gate.touch_without_directional_control=WAIT_OR_NO_TRADE",
+        "zone_gate.valid_breakout_interactions includes strong_5m_displacement_close_through_zone",
+        "candlestick_semantics.mixed_or_indecisive_control=WAIT_OR_NO_TRADE"
+      ],
+      "supplied_before_clean_v2_4_pnl": true
+    }
+  ],
   "required_minimum": 1,
-  "known_gap": "No real user-labeled tempting-but-NO-TRADE chart has been supplied yet. Synthetic negative semantic tests do not satisfy this gate."
+  "known_gap": null
 }
