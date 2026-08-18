@@ -1,0 +1,74 @@
+{
+  "$comment": [
+    "AR-1315A Lane C DRAFT ONLY — NOT the live .claude/settings.json. This is the exact intended",
+    "structural change, prepared off-live for later privileged control-plane propagation. It is",
+    "committed as a plain docs/replay-results/ file, not applied to .claude/settings.json, per the",
+    "ruling's explicit instruction: 'Do not edit live .claude/settings.json in this packet. It is",
+    "self-protected and must move only through the privileged control-plane flow.'",
+    "",
+    "WHAT CHANGED FROM THE LIVE FILE (measured against the live .claude/settings.json at the",
+    "current pin, commit 6c1d1b2f, worktree wt-claude-worker1-20260815): SessionStart, PreToolUse",
+    "and PostToolUse registrations are retained VERBATIM, byte-for-byte, from the live file. Exactly",
+    "ONE new top-level hooks key is added: 'SubagentStop'. It routes through the SAME existing",
+    "trusted guard doorway command already used by PreToolUse/PostToolUse (scripts/",
+    "claude_guard_hook.mjs with this worker's pinned manifest) — no direct hook to an unguarded",
+    "ad-hoc capture script, per the ruling's explicit prohibition.",
+    "",
+    "MATCHER: 'general-purpose', MEASURED (not assumed) against the frozen 8-row native call",
+    "manifest at docs/replay-results/svkm-extraction-certified/grade/opus-v2/",
+    "native_call_manifest_t1.json — every one of the 8 rows names subagent_type:'general-purpose'.",
+    "The current Claude Code hook contract matches SubagentStop on agent TYPE, not on the Agent",
+    "tool's own name, so this is the correct matcher value for the frozen G2 population this",
+    "worktree operates against."
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|fork",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/claude_guard_hook.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/worker1-hook-guard-manifest.json",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|Bash|Agent|Task|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/claude_guard_hook.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/worker1-hook-guard-manifest.json",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/claude_guard_hook.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/worker1-hook-guard-manifest.json",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "general-purpose",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/claude_guard_hook.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/worker1-hook-guard-manifest.json",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
