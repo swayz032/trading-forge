@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC1",
+  "source": "Trader-provided FVG transcript plus explicit trader TP clarification on 2026-08-17",
+  "detector_authority": {
+    "repository_path": "src/engine/indicators/fvg_native.py",
+    "rule": "Use the existing native detector; do not maintain a second strategy-specific FVG detector.",
+    "timeframe_for_current_strategy": "15m",
+    "completed_bars_only": true
+  },
+  "fvg_identity": {
+    "bullish": "third candle low is strictly above first candle high",
+    "bearish": "third candle high is strictly below first candle low",
+    "middle_candle": "displacement/imbalance candle",
+    "zone_boundaries": "wick-to-wick price band between candle one and candle three",
+    "active_target_gap": "formed and not subsequently re-entered/mitigated on a completed later 15m bar"
+  },
+  "trader_target_rule": {
+    "purpose": "FVG is one possible take-profit reaction destination, not an automatic winner over nearer liquidity.",
+    "rank_by": "FIRST_PRICE_AREA_LIKELY_TO_BE_CONTACTED_IN_TRADE_DIRECTION",
+    "rank_distance_uses": "near_edge_of_reaction_area_not_midpoint",
+    "fvg_take_profit": "middle of the selected active 15m FVG, tick rounded conservatively",
+    "liquidity_cluster_take_profit": "safe middle/interior of the selected meaningful liquidity cluster",
+    "liquidity_cluster_before_fvg": "TARGET_LIQUIDITY_CLUSTER",
+    "fvg_before_liquidity_cluster": "TARGET_FVG",
+    "nearby_strong_key_zone_before_both": "TARGET_OR_BLOCK_AT_THAT_NEARER_REACTION_AREA",
+    "tiny_weak_shelf": "may be skipped only when it fails the existing meaningful-reaction quality gate",
+    "insufficient_room_to_first_meaningful_reaction": "NO_TRADE",
+    "fixed_R_target": false
+  },
+  "video_entry_filters": {
+    "knowledge_recorded": [
+      "unmitigated/not previously tested",
+      "reaction close behavior",
+      "support/resistance confluence",
+      "relative FVG priority",
+      "premium/discount placement concept",
+      "break of structure before gap"
+    ],
+    "adoption_rule": "Do not silently turn the video's full six-factor FVG-entry checklist into hard current-strategy entry rules. The trader supplied this video so the bot knows FVG identity and explicitly confirmed the current 15m TP role. Existing user-confirmed FVG entry/context semantics remain unchanged unless separately confirmed."
+  },
+  "anti_overfit": {
+    "pnl_tuning_for_destination_ordering": false,
+    "semantic_change_invalidates_prior_v2_4_seal": true,
+    "fresh_validation_required_after_freeze": true
+  }
+}
