@@ -139,6 +139,14 @@ def test_meaningful_15m_reaction_zone_can_block_target_without_authorizing_entry
     assert out[0].meaningful is True
 
 
+def test_tp_contract_separates_reaction_significance_from_entry_authorization():
+    from research.current_mnq_strategy_v2_4_policy import load_fvg_spec
+    r = load_fvg_spec()["trader_target_rule"]
+    assert r["reaction_significance_is_distinct_from_entry_authorization"] is True
+    assert r["target_only_zone_can_create_entry"] is False
+    assert "at least 2 independent rejections" in r["target_only_15m_zone_rule"]
+
+
 def test_semantics_hash_changes_if_fvg_contract_changes(tmp_path):
     from research.current_mnq_strategy_v2_4_policy import semantics_hash
     spec = tmp_path / "spec.json"; spec.write_text("{}")
