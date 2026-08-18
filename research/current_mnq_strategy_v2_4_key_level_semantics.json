@@ -1,8 +1,8 @@
 {
-  "schema_version": 1,
-  "release_id": "MNQ-V2.4-KEY-LEVEL-EQUATION-1",
+  "schema_version": 2,
+  "release_id": "MNQ-V2.4-KEY-LEVEL-EQUATION-2",
   "frozen_at": "2026-08-17",
-  "purpose": "Encode the trader/video rule that a key zone can be established either by multiple independent rejections or by one exceptional swing rejection followed by drastic displacement, without PnL tuning.",
+  "purpose": "Encode the trader/video rule that a key zone can be established either by multiple independent rejections or by one exceptional swing rejection followed by drastic displacement, without PnL tuning or hindsight from later pivots.",
   "established_zone_path": {
     "authority": "existing causal multi-rejection quality engine",
     "minimum_independent_rejections": 2,
@@ -20,11 +20,14 @@
     "enabled": true,
     "lookback_calendar_days": 40,
     "same_side_reference_only": true,
+    "reference_pivots_must_confirm_before_candidate": true,
+    "candidate_itself_excluded_from_reference_distribution": true,
+    "later_pivots_forbidden_from_retroactive_classification": true,
     "minimum_wick_fraction_uses_frozen_strategy_parameter": "min_wick",
     "absolute_displacement_floor_atr": 1.0,
     "recent_displacement_percentile": 0.75,
     "minimum_reference_pivots_for_percentile": 4,
-    "equation": "confirmed_before_map_freeze AND wick>=min_wick AND displacement_atr>=max(1.0,Q75(recent confirmed same-side pivot displacement_atr))",
+    "equation": "confirmed_before_map_freeze AND wick>=min_wick AND displacement_atr>=max(1.0,Q75(same-side pivot displacement_atr confirmed before this candidate))",
     "no_overlap_duplicate_with_established_zone": true,
     "zone_half_width": "max(4_ticks,key_level_pad_atr*the_pivot_ATR)",
     "must_survive_zone_lifecycle_to_map_freeze": true
