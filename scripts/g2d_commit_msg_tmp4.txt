@@ -1,0 +1,34 @@
+worker-1: AR-1313 source-truth attribution table + one bounded correction + regrade
+
+Per AR-1312B/AR-1313. Zero new Agent/Task/model calls.
+
+- Investigated evidence_relevance.py / term_equivalence.py before attributing
+  causes: FVG<->fair value gap normalization already exists (AR-1239), so
+  the prior report's broad "known gate limitation" framing was too loose;
+  corrected per GPT's instruction.
+- Produced the required 5-class attribution table for all 8 rows, each
+  justified with actual gate scores from re-running evaluate_evidence_relevance
+  directly, not opinion.
+- Found one real EVIDENCE_PACKAGING_TOO_NARROW bug: my own Lane-1 quote
+  extractor only read the JSON `quote` field and discarded a secondary
+  literal quote the same recovered agent response already named in prose.
+  That secondary quote grounds standalone (own=0.247, rival=0.000) -- no
+  antecedent composition needed, checked and confirmed.
+- Searched src/engine/extraction for an existing extraction-text-correction
+  or duplicate-role-linking seam for F37/F38/F39: none found. Per the
+  ruling, that absence is reported, not architected around -- no new
+  seam was built.
+- Applied only the one packaging correction and reran the exact existing
+  g2d_finalizer.finalize()/run_route() path. Result: still RED, 4/12
+  accepted (same count), but entry_sequence[1].rationale now clears
+  relevance and reaches fidelity for the first time, correctly REDing on
+  a new, more precise finding: CERTAINTY_INFLATION (condition asserts
+  "confirms", source only offers a hedge "gives us an idea").
+
+New artifacts only: opus_phase1_route_t1_g2d_final_ar1313.json. All prior
+history (opus_phase1_route_t1.json, the Lane-1 result, isolated-receipts-t1/,
+isolated-recovery-t1/) untouched.
+
+Lane 2 (F36 SubagentStop repair, off-live only) still not started -- next item.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
