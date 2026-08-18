@@ -25,9 +25,10 @@ def test_seen_2022_through_freeze_date_is_mechanically_removed_from_clean_oos():
         date(2026, 1, 20), date(2026, 8, 17), date(2026, 8, 18),
     ]
     eligible, audit = oos.apply_contaminated_score_exclusions(days, spec, edge)
-    assert eligible == [date(2021, 12, 31), date(2026, 8, 18)]
-    assert audit["excluded_sessions"] == 4
+    assert eligible == [date(2026, 8, 18)]
+    assert audit["excluded_sessions"] == 5
     assert any(r["start"] == "2022-01-01" for r in audit["declared_ranges"])
+    assert any(r["start"] == "2021-12-05" for r in audit["declared_ranges"])
 
 
 def test_clean_years_count_actual_sessions_not_calendar_distance():
