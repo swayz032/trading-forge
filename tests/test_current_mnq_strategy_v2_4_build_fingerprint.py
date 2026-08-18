@@ -41,7 +41,7 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
     }
     assert required.issubset(files)
     assert len(files) == len(fingerprinted_files())
-    assert b["schema_version"] == 4
+    assert b["schema_version"] == 6
 
 
 def test_strategy_fingerprint_is_deterministic_on_unchanged_bytes():
