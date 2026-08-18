@@ -1,0 +1,42 @@
+worker-1: F36 off-live repair -- async-launch-ack vs true-final-completion boundary
+
+Per AR-1313A. Zero new Agent/Task/model calls; no live guard propagation.
+
+New off-live module src/engine/extraction/g2d_subagentstop_capture.py adds
+three functions on top of the existing, UNCHANGED capture_native_return()
+doorway:
+
+- record_async_launch_ack(): PostToolUse(Agent) async-ack lands here.
+  Launch telemetry only, never creates .raw/.completion, row stays
+  NATIVE_TASK_DISPATCHED.
+- capture_subagent_stop_final(): the real finalization boundary. Binds by
+  agent_id to the recorded launch ack, then calls capture_native_return()
+  unchanged -- duplicate-finalization protection is inherited, not
+  reimplemented.
+- assert_sequential_interlock(): every queue row strictly before `ref`
+  must already be RAW_RETURN_CAPTURED before `ref` may be claimed.
+
+Disclosed rather than guessed: searched this repo's own hook doorway
+(scripts/claude_guard_hook.mjs) and the installed @anthropic-ai/claude-code
+package for the real SubagentStop payload schema -- neither documents it.
+agent_id/raw_output are therefore taken as opaque caller-supplied
+arguments; the state-machine correctness is proven independent of that
+open field-name question, which is flagged as the one remaining item
+before live wiring.
+
+11 new tests, all passing, covering every required witness: async-ack
+negative, true-final positive, wrong/mismatched identity fail-closed,
+duplicate-completion cannot overwrite, row-N+1 denied while N is only
+launched, row-N+1 allowed once N is finalized, and a mutation/red control
+that reproduces the actual F36 defect (capture_native_return called
+directly on the ack payload "succeeds") against the repaired lifecycle
+(the same ack payload cannot finalize anything).
+
+Full affected regression suite (isolated_bridge, isolated_attempt_receipt,
+g2d_finalizer, postcall_capture, precall_transition, isolated_fallback_law,
+plus the 11 new tests): 166 passed, 3 skipped, 0 failed.
+
+Files changed: exactly the new module + new test file. Nothing under
+.claude/, the pinned toolbox, or either live doorway script was touched.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
