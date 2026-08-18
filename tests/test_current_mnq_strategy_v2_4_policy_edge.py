@@ -14,6 +14,7 @@ def green_evidence(**changes):
         real_user_positive_gold=5,
         semantic_negative_fixtures=len(spec["negative_semantic_fixtures"]),
         real_user_tempting_no_trade_gold=1,
+        gold_manifest_integrity_pass=True,
         contract_provenance_pass=True,
         data_quality_pass=True,
         sealed_calendar_years=3.5,
@@ -37,6 +38,12 @@ def test_green_edge_evidence_passes_research_gate():
     result = sealed_validation_gate(green_evidence())
     assert result.approved
     assert result.stage == "RESEARCH_VERIFIED"
+
+
+def test_same_gold_count_with_unproven_manifest_identity_cannot_pass():
+    result = sealed_validation_gate(green_evidence(gold_manifest_integrity_pass=False))
+    assert not result.approved
+    assert "GOLD_MANIFEST_INTEGRITY_NOT_PROVEN" in result.reasons
 
 
 def test_seen_data_cannot_pass_even_if_every_performance_number_is_good():
