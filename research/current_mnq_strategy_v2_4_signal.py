@@ -107,6 +107,7 @@ def find_first_actionable_signal(env: dict, dte: date, p: prod.Params,
             env["pdm"], env["pwm"], dte,
             reference_analysis, cand.direction, cand.setup,
             cand.setup == "BRK5",
+            piv15=env["piv15"],
         )
         if picked is None:
             continue
