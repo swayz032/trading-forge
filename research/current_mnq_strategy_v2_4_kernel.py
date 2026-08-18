@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Shared causal candidate kernel for Current MNQ v2.4.
 
-Single candidate path for historical validation and live/shadow formation:
+Single path for historical validation and live/shadow formation:
 PREMARKET -> LEVEL -> REACH -> REJECT/RECLAIM/BREAK/RETEST -> CANDLE CONTROL -> A+.
-Zone role is replayed by the v2.4 support/resistance lifecycle before every bar.
-A weak-breakout pending question snapshots the exact location role at the attempt.
+
+The current bar sees two causal zone snapshots:
+- PRE-CANDLE role: used for ordinary rejection and breakout attempts so a breakout
+  bar cannot erase the zone it is breaking.
+- POST-CANDLE role: used only when a previously BROKEN zone is restored/flipped by
+  this exact completed candle, allowing the reclaim/retest candle to confirm a
+  reversal without waiting one extra bar.
 """
 from __future__ import annotations
 
@@ -24,6 +29,10 @@ core = prod.core
 
 def completed_candle_window(full5: pd.DataFrame, ts: pd.Timestamp, n: int = 5) -> pd.DataFrame:
     return full5[full5.index <= ts].tail(n)[["open", "high", "low", "close"]].copy()
+
+
+def _as_location(loc: core.Location, z) -> core.Location:
+    return replace(loc, zone=z, side=z.side, quality=z.quality, confluence=z.confluence)
 
 
 def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
@@ -53,24 +62,34 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         if not np.isfinite(r.atr):
             continue
 
-        current_locs = []
+        pre_locs: list[core.Location] = []
+        transition_reversal_locs: list[core.Location] = []
         for loc in authorized:
             if loc.zone is None:
-                current_locs.append(loc)
+                pre_locs.append(loc)
                 continue
-            zs = zone_state_at_v24(loc.zone, full5, ts, p)
-            if zs.active:
-                current_locs.append(replace(
-                    loc, zone=zs, side=zs.side, quality=zs.quality,
-                    confluence=zs.confluence,
-                ))
+            before = zone_state_at_v24(loc.zone, full5, ts, p)
+            if before.active:
+                pre_locs.append(_as_location(loc, before))
+                continue
+
+            # Only a zone that was unavailable BEFORE this candle but becomes
+            # active AFTER this candle is a same-candle reclaim/role-flip setup.
+            after = zone_state_at_v24(loc.zone, full5, bar_close, p)
+            if after.active and after.state in {core.ZoneState.TESTED, core.ZoneState.FLIPPED_RETEST}:
+                transition_reversal_locs.append(_as_location(loc, after))
+
+        # Reversals can use the exact reclaim/retest candle that reactivates a
+        # role. Breakouts must use PRE-candle roles only.
+        reversal_locs = pre_locs + transition_reversal_locs
+        breakout_locs = pre_locs
 
         candidates: list[core.Candidate] = []
         pad = max(core.TICK * 2, p.touch_pad_atr * float(r.atr))
         candle_window = completed_candle_window(full5, ts)
 
         for direction, side in (("L", "S"), ("S", "R")):
-            near = [loc for loc in current_locs if loc.side == side and core.bar_interacts(loc, r, pad)]
+            near = [loc for loc in reversal_locs if loc.side == side and core.bar_interacts(loc, r, pad)]
             for loc in near:
                 zgate = gate_candidate(
                     bars=candle_window, zone_side=side, zone_lo=loc.lo, zone_hi=loc.hi,
@@ -86,7 +105,7 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                     ))
 
         for direction, side in (("L", "R"), ("S", "S")):
-            relevant = [loc for loc in current_locs if loc.side == side]
+            relevant = [loc for loc in breakout_locs if loc.side == side]
             for loc in relevant:
                 if not core.decisive_outside(loc, r, direction, p):
                     continue
@@ -117,8 +136,6 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                             pending_locs[key] = loc
 
         for key, pen in list(pending.items()):
-            # Use the role/quality/confluence snapshot from the attempt. A later
-            # state transition must not erase or rewrite the original 15m question.
             loc = pending_locs[key]
             if bar_close - pen.attempted_at > pd.Timedelta(minutes=30):
                 pending.pop(key, None); pending_locs.pop(key, None)
