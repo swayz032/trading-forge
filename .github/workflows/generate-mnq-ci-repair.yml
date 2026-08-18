@@ -1,0 +1,59 @@
+name: One-shot MNQ CI repair
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v2-4-zone-first-candles
+    paths:
+      - .github/workflows/generate-mnq-ci-repair.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/current-mnq-strategy-v2-4-zone-first-candles
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Restore Office payout wiring
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('public/slumhouse/office.html')
+          s = p.read_text()
+          mount = '<section id="of-payout" class="of-hide" aria-label="Payout Reality"></section>'
+          script = '<script src="/slumhouse/office-payout.js"></script>'
+          if 'id="of-payout"' not in s:
+              if '</body>' not in s:
+                  raise SystemExit('office.html has no </body> insertion point')
+              s = s.replace('</body>', f'  {mount}\n  {script}\n</body>', 1)
+          elif '/slumhouse/office-payout.js' not in s:
+              if '</body>' not in s:
+                  raise SystemExit('office.html has no </body> insertion point')
+              s = s.replace('</body>', f'  {script}\n</body>', 1)
+          p.write_text(s)
+      - name: Generate deterministic MNQ sidecar lockfile
+        working-directory: research/mnq_v23_realtime
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify repair artifacts
+        run: |
+          test -f research/mnq_v23_realtime/package-lock.json
+          grep -q '<section id="of-payout"' public/slumhouse/office.html
+          grep -q 'src="/slumhouse/office-payout.js"' public/slumhouse/office.html
+          git diff --check
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/slumhouse/office.html research/mnq_v23_realtime/package-lock.json
+          if git diff --cached --quiet; then
+            echo "No repair changes needed"
+            exit 0
+          fi
+          git commit -m "ci: repair MNQ sidecar install and Office payout wiring"
+          git push origin HEAD:research/current-mnq-strategy-v2-4-zone-first-candles
