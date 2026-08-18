@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Build Current MNQ v2.4 promotion evidence from actual artifacts.
 
-This prevents a v2.3 receipt/report from satisfying a v2.4 gate after the zone,
-candlestick, FVG/TP or edge equation changed. Missing or stale artifacts fail
-closed to zero/false evidence.
+Positive/negative user gold is identity-bound, not merely counted. Architecture
+receipts must contain the exact SHA256 of both manifests; changing a fixture while
+preserving the row count invalidates the old fidelity evidence automatically.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -31,9 +32,32 @@ def _json(path: str | Path | None) -> dict:
         raise RuntimeError(f"V24_EVIDENCE_JSON_CORRUPT:{p}") from exc
 
 
+def _sha256(path: str | Path) -> str:
+    p = Path(path)
+    if not p.exists() or not p.is_file():
+        raise RuntimeError(f"V24_GOLD_MANIFEST_MISSING:{p}")
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
 def gold_counts() -> tuple[int, int]:
     pos = _json(POSITIVE_GOLD); neg = _json(NEGATIVE_GOLD)
     return len(pos.get("fixtures", [])), len(neg.get("fixtures", []))
+
+
+def gold_manifest_hashes() -> dict[str, str]:
+    return {
+        "positive_user_gold_sha256": _sha256(POSITIVE_GOLD),
+        "tempting_no_trade_gold_sha256": _sha256(NEGATIVE_GOLD),
+    }
+
+
+def architecture_gold_integrity(arch: dict) -> bool:
+    current = gold_manifest_hashes()
+    return bool(
+        arch
+        and arch.get("positive_user_gold_sha256") == current["positive_user_gold_sha256"]
+        and arch.get("tempting_no_trade_gold_sha256") == current["tempting_no_trade_gold_sha256"]
+    )
 
 
 def build_evidence(*, architecture_receipt: str | Path | None,
@@ -52,6 +76,7 @@ def build_evidence(*, architecture_receipt: str | Path | None,
     edge = sealed.get("edge_certificate", {})
     sealed_same = bool(seal) and seal.get("semantics_sha256") == semantics_hash()
     arch_same = bool(arch) and arch.get("semantics_sha256") == semantics_hash()
+    gold_same = arch_same and architecture_gold_integrity(arch)
     drill_same = bool(drill) and drill.get("semantics_sha256") == semantics_hash()
     current_local = inspect_runtime().personal_device_candidate
 
@@ -62,6 +87,7 @@ def build_evidence(*, architecture_receipt: str | Path | None,
         real_user_positive_gold=int(pos_gold),
         semantic_negative_fixtures=len(spec.get("negative_semantic_fixtures", [])),
         real_user_tempting_no_trade_gold=int(neg_gold),
+        gold_manifest_integrity_pass=bool(gold_same),
         contract_provenance_pass=bool(sealed_ev.get("contract_provenance_pass", False)) and sealed_same,
         data_quality_pass=bool(sealed_ev.get("data_quality_pass", False)) and sealed_same,
         sealed_calendar_years=float(sealed_ev.get("sealed_calendar_years", 0.0)) if sealed_same else 0.0,
