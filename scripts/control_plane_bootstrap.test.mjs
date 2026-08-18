@@ -29,7 +29,7 @@ import {
   LAUNCH_EXECUTABLE, LAUNCH_ARGV, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL, buildPacketPrompt,
   COMMIT_MSG_FILE_REL, branchNamespaceCollision, SETTING_SOURCES, AUTHORITY_READ_CMD,
 } from './control-plane-bootstrap/plan.mjs';
-import { run, seatSettingsFor, rulingIdFromFilename, verifyCompletion, runStage } from './control-plane-bootstrap/bootstrap.mjs';
+import { run, seatSettingsFor, rulingIdFromFilename, verifyCompletion, runStage, measureState } from './control-plane-bootstrap/bootstrap.mjs';
 import { computeBundle, BUNDLE_FILES } from './control-plane-bootstrap/bundle.mjs';
 import {
   decide, measureObservedIdentity, receiptMatchesLive, verifyAuthorityIndependently, pathFromToolInput,
@@ -126,6 +126,65 @@ test('N6 wrong frozen queue SHA — including the AR-1276 §F prefix trap', () =
 test('N7 READY not 8', () => refusesWith((m, s) => { s.ready = 7; }, 'ready_not_8'));
 test('N8 SPENT not 0', () => refusesWith((m, s) => { s.spent = 1; }, 'spent_not_0'));
 test('N9 receipt namespace not README-only', () => refusesWith((m, s) => { s.receiptsReadmeOnly = false; }, 'receipts_not_readme_only'));
+
+/* ===== AR-1316A §3/§4 — GIT_TREE:<sha> preserved-snapshot form of require_receipts ========== */
+/* The eight Opus calls already happened (AR-1312); README_ONLY can never validate again for a
+ * post-launch authorization. These prove the new form WITHOUT touching README_ONLY's behavior —
+ * every N9/CONTROL/C14 test above still exercises the unmodified legacy branch, unedited. */
+
+const RECEIPT_TREE_SHA = 'c11966868f8a511554e1f26bf6e5555c59833d04';
+const OTHER_TREE_SHA = 'd'.repeat(40);
+
+test('CONTROL: GIT_TREE marker validates when the tree matches and the receipt dir is clean', () => {
+  const marker = { ...baselineMarker(), require_receipts: `GIT_TREE:${RECEIPT_TREE_SHA}` };
+  const measured = { ...baselineMeasured(), receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: true };
+  const v = validateAuthorization(marker, measured);
+  assert.equal(v.ok, true, `must pass, got ${v.code}: ${v.detail}`);
+});
+
+test('N9f GIT_TREE wrong sha refuses', () => {
+  const marker = { ...baselineMarker(), require_receipts: `GIT_TREE:${OTHER_TREE_SHA}` };
+  const measured = { ...baselineMeasured(), receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: true };
+  const v = validateAuthorization(marker, measured);
+  assert.equal(v.ok, false, 'must refuse');
+  assert.equal(v.code, 'receipts_tree_mismatch');
+});
+
+test('N9g GIT_TREE matches but a modified committed receipt makes the dir not clean -> refuses', () => {
+  const marker = { ...baselineMarker(), require_receipts: `GIT_TREE:${RECEIPT_TREE_SHA}` };
+  const measured = { ...baselineMeasured(), receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: false };
+  const v = validateAuthorization(marker, measured);
+  assert.equal(v.ok, false, 'must refuse');
+  assert.equal(v.code, 'receipts_not_clean');
+});
+
+test('N9h GIT_TREE matches but an untracked receipt file makes the dir not clean -> refuses', () => {
+  // Same boolean signal as N9g at the decision layer (untracked vs modified is a measureState
+  // distinction, proven separately below) — asserted again here so the malformed-form and
+  // dirty-tree refusals are not accidentally the same code path.
+  const marker = { ...baselineMarker(), require_receipts: `GIT_TREE:${RECEIPT_TREE_SHA}` };
+  const measured = { ...baselineMeasured(), receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: false };
+  const v = validateAuthorization(marker, measured);
+  assert.equal(v.ok, false, 'must refuse');
+  assert.equal(v.code, 'receipts_not_clean');
+});
+
+test('N9i malformed require_receipts value refuses distinctly from both real forms', () => {
+  for (const bad of ['', 'readme_only', 'GIT_TREE:', 'GIT_TREE:short', `GIT_TREE:${RECEIPT_TREE_SHA}x`, 'GIT_TREE: c11966868f8a511554e1f26bf6e5555c59833d04']) {
+    const marker = { ...baselineMarker(), require_receipts: bad };
+    const measured = { ...baselineMeasured(), receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: true };
+    const v = validateAuthorization(marker, measured);
+    assert.equal(v.ok, false, `"${bad}" must refuse`);
+    assert.equal(v.code, 'bad_require_receipts', `"${bad}" got ${v.code}: ${v.detail}`);
+  }
+});
+
+test('N9j old README-only fixture stays valid unchanged — proof #1/#8', () => {
+  // Byte-identical to the pre-AR-1316A CONTROL test: the legacy branch was never touched.
+  const v = validateAuthorization(baselineMarker(), baselineMeasured());
+  assert.equal(v.ok, true, `baseline (README_ONLY) must still pass, got ${v.code}: ${v.detail}`);
+  assert.equal(baselineMarker().require_receipts, 'README_ONLY');
+});
 
 test('N10 stale GPT authority, and a marker lifted from another ruling', () => {
   refusesWith((m, s) => { s.isNewestRuling = false; }, 'stale_authority');
@@ -852,7 +911,14 @@ const FAKE_QUEUE_SHA = createHash('sha256').update(Buffer.from(FAKE_QUEUE_JSON))
 const FAKE_REPO_ROOT = 'C:/Users/tonio/Projects/wt-claude-worker1-20260815';
 const FAKE_COMMON_DIR = `${FAKE_REPO_ROOT}/.git`;
 
-function fakeIo({ rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md', claimed = [], newStoreClaimed = [], existingControlPlaneBranches = [] }) {
+function fakeIo({
+  rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md', claimed = [], newStoreClaimed = [],
+  existingControlPlaneBranches = [],
+  // AR-1316A §3 — configurable so measureState-level tests can prove the tree-sha/clean measurement
+  // itself, distinct from validateAuthorization's decision tests above. Defaults answer as a clean,
+  // matching tree so every pre-existing test (which never asked about receipts-git-tree) is unaffected.
+  receiptsGitTreeSha = RECEIPT_TREE_SHA, receiptsStatusLines = [],
+}) {
   const queue = FAKE_QUEUE_JSON;
   return {
     repoRoot: FAKE_REPO_ROOT,
@@ -871,6 +937,9 @@ function fakeIo({ rulingText, rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md',
       if (a === 'rev-parse --git-common-dir') return '.git';
       // AR-1295 F24: measureState's scoped, read-only branch-namespace measurement.
       if (a === "for-each-ref --format=%(refname:short) refs/heads/control-plane/") return existingControlPlaneBranches.join('\n');
+      // AR-1316A §3: the two new independently-measured receipt-directory signals.
+      if (a.startsWith('rev-parse HEAD:')) return receiptsGitTreeSha;
+      if (a.startsWith('status --porcelain --')) return receiptsStatusLines.join('\n');
       return '';
     },
     readFile: () => queue,
@@ -906,6 +975,33 @@ function recordingEffects() {
   };
 }
 
+/* ===== AR-1316A §3/§4 proofs #5/#6 — the MEASUREMENT itself, not just the decision it feeds ==== */
+/* validateAuthorization only ever sees a boolean `receiptsClean`; these prove measureState derives
+ * that boolean correctly from two DIFFERENT real `git status --porcelain` shapes, so a modified
+ * tracked receipt and an untracked stray file are each independently shown to trip it. */
+
+test('measureState: receiptsGitTreeSha is read verbatim from `rev-parse HEAD:<dir>`, receiptsClean true on empty status', () => {
+  const m = measureState(fakeIo({ rulingText: '', receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsStatusLines: [] }));
+  assert.equal(m.receiptsGitTreeSha, RECEIPT_TREE_SHA);
+  assert.equal(m.receiptsClean, true);
+});
+
+test('measureState: a modified committed receipt (porcelain " M path") makes receiptsClean false', () => {
+  const m = measureState(fakeIo({
+    rulingText: '', receiptsGitTreeSha: RECEIPT_TREE_SHA,
+    receiptsStatusLines: [' M docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1/row-3.json'],
+  }));
+  assert.equal(m.receiptsClean, false);
+});
+
+test('measureState: an untracked receipt file (porcelain "?? path") makes receiptsClean false', () => {
+  const m = measureState(fakeIo({
+    rulingText: '', receiptsGitTreeSha: RECEIPT_TREE_SHA,
+    receiptsStatusLines: ['?? docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1/stray.txt'],
+  }));
+  assert.equal(m.receiptsClean, false);
+});
+
 const validRuling = (over = {}) => ['```json', JSON.stringify({ ...baselineMarker(), frozen_queue_sha256: FAKE_QUEUE_SHA, ...over }, null, 2), '```'].join('\n');
 
 test('C14 END-TO-END: refusal paths request ZERO effects', () => {
@@ -914,6 +1010,8 @@ test('C14 END-TO-END: refusal paths request ZERO effects', () => {
     ['example block', validRuling({ authorization_class: undefined })],
     ['wrong bundle', validRuling({ bootstrap_bundle_sha256: 'f'.repeat(64) })],
     ['wrong source sha', validRuling({ bootstrap_source_sha: 'a'.repeat(40) })],
+    // AR-1316A §3/§7: the new GIT_TREE refusal path must be exactly as zero-effect as every other.
+    ['GIT_TREE mismatch', validRuling({ require_receipts: `GIT_TREE:${'d'.repeat(40)}` })],
   ]) {
     const effects = recordingEffects();
     const result = run({ mode: 'execute', io: fakeIo({ rulingText: text }), effects });

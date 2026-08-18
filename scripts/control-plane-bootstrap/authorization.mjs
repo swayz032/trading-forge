@@ -79,6 +79,9 @@ export const CATEGORICAL_FORBIDDEN_PATH_TOKENS = Object.freeze([
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const HEX40 = /^[0-9a-f]{40}$/;
+// AR-1316A §3 — the new preserved-snapshot form of `require_receipts`. Anchored full-string so a
+// trailing garbage suffix on an otherwise-valid sha is refused as malformed, not truncated-matched.
+const GIT_TREE_FORM = /^GIT_TREE:([0-9a-f]{40})$/;
 // The optional trailing letter is not cosmetic: AR-1276, AR-1276A, AR-1276B and AR-1276C are four
 // distinct rulings. A pattern that stops at the digits collapses them into one identity.
 const PACKET = /^AR-\d{3,5}[A-Z]?$/;
@@ -217,8 +220,39 @@ export function validateAuthorization(marker, measured) {
   if (marker.require_spent !== 0 || measured.spent !== 0) {
     return refuse('spent_not_0', `require_spent=${marker.require_spent}, measured spent=${measured.spent}`);
   }
-  if (marker.require_receipts !== 'README_ONLY' || measured.receiptsReadmeOnly !== true) {
-    return refuse('receipts_not_readme_only', 'the G2 receipt namespace is not README-only');
+  // AR-1316A §3 — THE README-ONLY PRECONDITION WAS CORRECT BEFORE THE EIGHT OPUS CALLS EXISTED AND
+  // IS STALE NOW. The eight launches already happened and their receipts are preserved forensic
+  // evidence (AR-1312), so `require_receipts:'README_ONLY'` can never validate again post-launch —
+  // not because the code is wrong, but because the world it described is gone. This is a
+  // COMPATIBILITY EXTENSION of the one field, not a new authorization mode: the legacy form keeps
+  // its exact refusal code and exact behavior, byte-for-byte, for old/pre-execution authorizations.
+  if (marker.require_receipts === 'README_ONLY') {
+    if (measured.receiptsReadmeOnly !== true) {
+      return refuse('receipts_not_readme_only', 'the G2 receipt namespace is not README-only');
+    }
+  } else {
+    const gitTree = GIT_TREE_FORM.exec(marker.require_receipts);
+    if (!gitTree) {
+      return refuse(
+        'bad_require_receipts',
+        'require_receipts must be "README_ONLY" or "GIT_TREE:<40-hex-tree-sha>"',
+      );
+    }
+    // Preserve-and-strike (AR-1312): the marker pins an EXACT prior snapshot of the receipt
+    // directory, never "empty". Both the tree identity and worktree cleanliness are independently
+    // MEASURED by the caller (bootstrap.mjs measureState) — nothing here reads a filesystem.
+    if (gitTree[1] !== measured.receiptsGitTreeSha) {
+      return refuse(
+        'receipts_tree_mismatch',
+        `require_receipts pins tree ${gitTree[1]}, measured ${measured.receiptsGitTreeSha}`,
+      );
+    }
+    if (measured.receiptsClean !== true) {
+      return refuse(
+        'receipts_not_clean',
+        'the G2 receipt namespace has a working-tree modification or untracked file',
+      );
+    }
   }
   if (marker.require_agent_model_executions_before_launch !== 0 || measured.agentModelExecutions !== 0) {
     return refuse('agent_executions_not_0', 'Agent/subagent model executions before launch must be 0');

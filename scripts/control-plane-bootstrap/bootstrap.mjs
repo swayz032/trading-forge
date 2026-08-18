@@ -99,6 +99,13 @@ export function measureState(io) {
   const spent = Object.keys(queue.attempts || {}).length;
   const ready = Array.isArray(queue.queue) ? queue.queue.length - spent : -1;
   const receiptExtras = io.listDir(RECEIPT_DIR).filter((f) => f !== 'README.md');
+  // AR-1316A §3 — independently measured so a marker's GIT_TREE:<sha> claim is checked against the
+  // repository, never against itself. `rev-parse HEAD:<dir>` is the tree object git already commits
+  // to identify that exact directory's exact contents; `status --porcelain` scoped to the same path
+  // catches BOTH a modified tracked receipt and an untracked stray file — README-only's replacement,
+  // not its relaxation.
+  const receiptsGitTreeSha = io.git('rev-parse', `HEAD:${RECEIPT_DIR}`);
+  const receiptsClean = io.git('status', '--porcelain', '--', RECEIPT_DIR).trim().length === 0;
 
   io.git('fetch', '--quiet', 'origin', 'external-advisor/gpt-rulings');
   const gptAuthorityHead = io.git('rev-parse', 'origin/external-advisor/gpt-rulings');
@@ -145,6 +152,8 @@ export function measureState(io) {
     ready,
     spent,
     receiptsReadmeOnly: receiptExtras.length === 0,
+    receiptsGitTreeSha,
+    receiptsClean,
     gptAuthorityHead,
     rulingId,
     rulingText,
