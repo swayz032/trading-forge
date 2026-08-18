@@ -1,0 +1,47 @@
+{
+  "strategies": [
+    {
+      "confluences": [
+        {
+          "description": "The trade must be initiated at 9:30 AM ET New York time."
+        }
+      ],
+      "direction": "both",
+      "entry_sequence": [
+        {
+          "action": "At 9:30 AM ET, define the initial range by marking the high and low of the first 5-minute candle.",
+          "rationale": "This establishes the initial volatility range for the trading session.",
+          "step": 1
+        },
+        {
+          "action": "Wait for the 1-minute candle to close outside of the 5-minute range (breakout).",
+          "rationale": "The breakout gives an idea of the direction the market wants to go: a downside break is taken short, an upside break is taken as a buy.",
+          "step": 2
+        },
+        {
+          "action": "Wait for a fair value gap sequence to print outside the range.",
+          "rationale": "The FVG provides a high-probability entry point after the initial directional breakout.",
+          "step": 3
+        },
+        {
+          "action": "Enter the trade (long or short) on the closure of the third candle of the FVG sequence.",
+          "rationale": "The fair value gap sequence is valid once its third candle has been printed.",
+          "step": 4
+        }
+      ],
+      "higher_timeframe": "5m",
+      "lower_timeframe": "1m",
+      "name": "fvg_breakout_range_1m_5m",
+      "stop": {
+        "rationale": "The stop is placed at the bottom of the FVG candle, including the wick, to allow room for breathing."
+      },
+      "targets": [
+        {
+          "r_multiple": 2,
+          "rationale": "The strategy uses a fixed mechanical target based on a 2R risk-to-reward ratio.",
+          "type": "r_multiple"
+        }
+      ]
+    }
+  ]
+}
