@@ -1,7 +1,7 @@
 {
-  "schema_version": 5,
-  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-5-DQ1",
-  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, validation/data plumbing, clean-data quarantine or ProjectX execution chain invalidates prior evidence even when semantic prose is unchanged.",
+  "schema_version": 6,
+  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-6-ARCH1",
+  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when semantic prose is unchanged.",
   "contract_files": [
     "research/current_mnq_strategy_v2_4_spec.json",
     "research/current_mnq_strategy_v2_4_fvg_semantics.json",
@@ -39,7 +39,8 @@
     "research/current_mnq_strategy_v2_4_collect_clean_databento.py",
     "research/current_mnq_strategy_v2_4_clean_dataset_preflight.py",
     "research/current_mnq_strategy_v2_4_data_quality.py",
-    "research/current_mnq_strategy_v2_4_quarantine_clearance.py"
+    "research/current_mnq_strategy_v2_4_quarantine_clearance.py",
+    "research/current_mnq_strategy_v2_4_architecture_refresh.py"
   ],
   "production_source_files": [
     "research/current_mnq_strategy_v2_2_contracts.py",
