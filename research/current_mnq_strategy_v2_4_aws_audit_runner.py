@@ -5,11 +5,23 @@ Loads a project .env when python-dotenv is available, otherwise relies on boto3'
 standard credential chain (environment, shared ~/.aws credentials/config, etc.).
 No credential values are printed or written. The underlying audit remains
 read-only and performs no strategy P&L.
+
+This file is safe to execute directly as
+`python research/current_mnq_strategy_v2_4_aws_audit_runner.py`: it inserts the
+repository root into sys.path before importing the sibling research module.
 """
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
+
+# Direct execution sets sys.path[0] to <repo>/research, which makes
+# `from research import ...` fail. Add <repo> explicitly so both direct-file and
+# `python -m research...` invocation work from any current directory.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 
 def _load_project_dotenv() -> None:
@@ -18,9 +30,16 @@ def _load_project_dotenv() -> None:
     except ImportError:
         return
 
+    # Prefer the repository .env, then fall back to cwd/parents in case the
+    # user's local layout wraps the repository in another folder.
+    candidates = [REPO_ROOT / ".env"]
     here = Path.cwd().resolve()
-    for base in (here, *here.parents):
-        candidate = base / ".env"
+    candidates.extend(base / ".env" for base in (here, *here.parents))
+    seen: set[Path] = set()
+    for candidate in candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
         if candidate.exists():
             load_dotenv(candidate, override=False)
             return
