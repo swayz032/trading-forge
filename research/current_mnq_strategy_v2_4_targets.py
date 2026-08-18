@@ -10,10 +10,13 @@ Trader equation:
    area, so a refined target can never escape the area that won first reaction.
 4. A feature that protrudes toward entry remains a standalone earlier reaction and
    competes using its true near edge.
+5. TP/reaction significance is intentionally distinct from entry authorization:
+   an active 15m zone with >=2 independent rejections and minimum structural
+   quality may block/refine a target even when it lacks the confluence required
+   to authorize a brand-new A+ entry.
 
-This closes a false-room loophole where broad-zone distance could be larger than
-actual precise TP distance. No farther feature may leapfrog a nearer reaction area
-for prettier PnL.
+This closes both a false-room loophole and an entry-filter leakage loophole. No
+farther feature may leapfrog a nearer meaningful reaction area for prettier PnL.
 """
 from __future__ import annotations
 
@@ -77,6 +80,31 @@ def _structurally_meaningful_cluster(loc: core.Location, p: core.Params) -> bool
     if z is None:
         return False
     return bool(int(getattr(z, "touches", 0)) >= 2 and float(loc.quality) >= float(p.min_zone_quality))
+
+
+def _target_only_15m_locations(zones: list[core.Zone],
+                               existing_ids: set[str],
+                               p: core.Params) -> list[core.Location]:
+    """Keep meaningful 15m reaction zones even when entry authorization is stricter.
+
+    Entry authorization additionally asks for confluence or exceptionally high
+    zone quality. TP/blocker relevance only asks whether the active 15m structure
+    is independently established and meets the frozen minimum structural quality.
+    """
+    out: list[core.Location] = []
+    for z in zones:
+        if z is None or not z.active or z.id in existing_ids:
+            continue
+        if int(getattr(z, "touches", 0)) < 2:
+            continue
+        if float(getattr(z, "quality", 0.0)) < float(p.min_zone_quality):
+            continue
+        out.append(core.Location(
+            id=z.id, side=z.side, lo=float(z.lo), hi=float(z.hi), mid=float(z.mid),
+            source=z.source, quality=float(z.quality), confluence=int(z.confluence),
+            entry_authorized=False, zone=z,
+        ))
+    return out
 
 
 def _intersection(primary: core.Location, lo: float, hi: float) -> tuple[float, float] | None:
@@ -233,7 +261,12 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
     if piv15 is not None:
         open_ts = pd.Timestamp(f"{dte} 09:30", tz=core.TZ)
         level_env = {"h15": h15, "piv15": piv15, "full5": full5, "pdm": pdm, "pwm": pwm}
-        primary_locs, _ = build_entry_locations_v24(level_env, dte, open_ts, p)
+        primary_locs, primary_zones = build_entry_locations_v24(level_env, dte, open_ts, p)
+        # Entry authorization is intentionally stricter than reaction relevance.
+        # Add established active 15m zones that are meaningful blockers/targets
+        # even if they were not authorized as fresh entries.
+        existing = {loc.id for loc in primary_locs}
+        primary_locs = list(primary_locs) + _target_only_15m_locations(primary_zones, existing, p)
         for loc in primary_locs:
             kind = "KEY_LEVEL" if loc.source in KEY_SOURCES else "KEY_ZONE_15M"
             primaries.append((kind, loc))
