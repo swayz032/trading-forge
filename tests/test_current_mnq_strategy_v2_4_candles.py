@@ -68,15 +68,30 @@ def test_strong_bearish_close_through_support_is_breakout_not_rejection():
     assert not d.reversal_long_confirmed
 
 
-def test_sweep_below_support_then_reclaim_needs_bullish_candle_control():
+def test_sweep_reclaim_doji_waits_for_buyer_takeover():
     q = bars([
         (101.0, 101.5, 100.5, 101.25),
         (100.5, 101.75, 98.75, 100.75),
     ])
     d = evaluate_at_zone(q, "S", 99.5, 100.5)
     assert d.interaction == Interaction.SWEEP_RECLAIM_UP.value
+    assert d.indecision
+    assert not d.bullish_control
+    assert not d.reversal_long_confirmed
+    assert d.reason == "ZONE_REACHED_BUT_CONTROL_MIXED_WAIT"
+
+
+def test_sweep_reclaim_with_strong_bullish_close_confirms_buyer_takeover():
+    q = bars([
+        (101.0, 101.5, 100.5, 101.25),
+        (99.5, 102.25, 98.75, 102.0),
+    ])
+    d = evaluate_at_zone(q, "S", 99.5, 100.5)
+    assert d.interaction == Interaction.SWEEP_RECLAIM_UP.value
+    assert not d.indecision
     assert d.bullish_control
     assert d.reversal_long_confirmed
+    assert d.reason == "SUPPORT_REJECTION_BUYER_CONTROL"
 
 
 def test_doji_at_zone_without_directional_takeover_waits():
