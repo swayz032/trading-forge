@@ -55,6 +55,18 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "general-purpose",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/claude_guard_hook.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/worker1-hook-guard-manifest.json",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }
