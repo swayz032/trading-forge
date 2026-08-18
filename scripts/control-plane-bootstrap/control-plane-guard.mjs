@@ -21,7 +21,7 @@
  * shape re-enters the same path classifier the Edit/Write arm uses.
  */
 
-import { CATEGORICAL_FORBIDDEN_PATH_TOKENS } from './authorization.mjs';
+import { CATEGORICAL_FORBIDDEN_PATH_TOKENS, checkReceiptState } from './authorization.mjs';
 import { COMMIT_MSG_FILE_REL } from './plan.mjs';
 
 /**
@@ -439,12 +439,21 @@ export function verifySeatIdentity(observed, expected) {
   if (observed.isSubagent === true) {
     return { ok: false, code: 'not_top_level', detail: 'the control-plane seat must be top-level, never an Agent/subagent' };
   }
-  if (observed.ready !== 8 || observed.spent !== 0 || observed.receiptsReadmeOnly !== true) {
+  if (observed.ready !== 8 || observed.spent !== 0) {
     return {
       ok: false,
       code: 'frozen_state_drift',
-      detail: `frozen plane is not pristine: ready=${observed.ready} spent=${observed.spent} receiptsReadmeOnly=${observed.receiptsReadmeOnly}`,
+      detail: `frozen plane is not pristine: ready=${observed.ready} spent=${observed.spent}`,
     };
+  }
+  // AR-1317A Lane C.5 — REPLACES the prior hard-coded `receiptsReadmeOnly !== true` check, which
+  // could never pass under GIT_TREE authorization (AR-1317: SessionStart never minted an armed
+  // receipt for any GIT_TREE-authorized seat). Re-verified on EVERY call — SessionStart to arm, and
+  // every PreToolUse via the same `identity.ok` gate — so a tree that drifts dirty AFTER arming
+  // still denies every subsequent tool call, per AR-1317A §3 Lane C.6.
+  const receiptState = checkReceiptState(expected.requireReceipts, observed);
+  if (!receiptState.ok) {
+    return { ok: false, code: `frozen_state_drift_${receiptState.code}`, detail: receiptState.detail };
   }
   return { ok: true };
 }

@@ -29,7 +29,9 @@ import {
   LAUNCH_EXECUTABLE, LAUNCH_ARGV, SEAT_SETTINGS_REL, SEAT_MANIFEST_REL, buildPacketPrompt,
   COMMIT_MSG_FILE_REL, branchNamespaceCollision, SETTING_SOURCES, AUTHORITY_READ_CMD,
 } from './control-plane-bootstrap/plan.mjs';
-import { run, seatSettingsFor, rulingIdFromFilename, verifyCompletion, runStage, measureState } from './control-plane-bootstrap/bootstrap.mjs';
+import {
+  run, seatSettingsFor, rulingIdFromFilename, verifyCompletion, runStage, measureState, describeDoorwayResult,
+} from './control-plane-bootstrap/bootstrap.mjs';
 import { computeBundle, BUNDLE_FILES } from './control-plane-bootstrap/bundle.mjs';
 import {
   decide, measureObservedIdentity, receiptMatchesLive, verifyAuthorityIndependently, pathFromToolInput,
@@ -476,6 +478,8 @@ const seatManifest = () => ({
   frozen_queue_sha256: QUEUE_SHA,
   bootstrap_bundle_sha256: BUNDLE_SHA,
   allowed_paths: ['.claude/settings.json', 'CLAUDE.md'],
+  // AR-1317A Lane C.1 — the manifest now carries the marker's receipt-state law explicitly.
+  require_receipts: 'README_ONLY',
 });
 
 const seatObserved = (over = {}) => ({
@@ -492,6 +496,11 @@ const seatObserved = (over = {}) => ({
   ready: 8,
   spent: 0,
   receiptsReadmeOnly: true,
+  // AR-1317A Lane C.3 — the two GIT_TREE-form measurements, unused by the default README_ONLY law
+  // but present so a test can override just the receipt-state fields without reconstructing the
+  // whole fixture.
+  receiptsGitTreeSha: RECEIPT_TREE_SHA,
+  receiptsClean: true,
   isSubagent: false,
   gitDir: `${WORKTREE}/.git`,
   ...over,
@@ -710,6 +719,189 @@ test('C8c the seat re-verifies authority against the LIVE ruling, not the manife
 
   // A ruling that carries no marker at all.
   assert.equal(verifyAuthorityIndependently(mkIo({ rulingText: 'prose only' }), manifest).code, 'no_marker_in_current_authority');
+});
+
+/* ===== AR-1317A — the two-location GIT_TREE compatibility gap AR-1317 found and AR-1317A closed */
+/* AR-1317: a top-level bootstrap execution passed authorization (Lane A already fixed by AR-1316A)
+ * but the RECEIVING SEAT independently refused twice more — once because its own authority
+ * re-verification never measured the GIT_TREE inputs at all (Lane B), and once because its identity
+ * check carried a second, hard-coded README-only law that Lane A's fix never reached (Lane C). Both
+ * are proven here against the FIXED code; RED-proof (both fail on the pre-fix production files) is
+ * in the AR-1318 report, not duplicated as a second copy of these tests. */
+
+function gitTreeManifestFor(marker, over = {}) {
+  return {
+    ...seatManifest(),
+    ruling_id: marker.ruling_id,
+    target_packet: marker.target_packet,
+    authorization_id: marker.authorization_id,
+    bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256,
+    allowed_paths: [...marker.allowed_paths],
+    require_receipts: marker.require_receipts,
+    ...over,
+  };
+}
+
+// `fakeIo`'s reader always serves FAKE_QUEUE_JSON (its own FAKE_QUEUE_SHA), not the QUEUE_SHA
+// constant `baselineMarker()` defaults to — so any marker exercised through `fakeIo` must pin
+// `frozen_queue_sha256: FAKE_QUEUE_SHA`, exactly like the C8c test above does via its own reader.
+const gitTreeMarker = (over = {}) => ({
+  ...baselineMarker(),
+  frozen_queue_sha256: FAKE_QUEUE_SHA,
+  require_receipts: `GIT_TREE:${RECEIPT_TREE_SHA}`,
+  ...over,
+});
+
+test('AR1317A Lane B: verifyAuthorityIndependently accepts a GIT_TREE marker when tree/clean measure correctly', () => {
+  const marker = gitTreeMarker();
+  const rulingText = ['```json', JSON.stringify(marker), '```'].join('\n');
+  const manifest = gitTreeManifestFor(marker);
+  const io = {
+    ...fakeIo({ rulingText, receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsStatusLines: [] }),
+    readClaim: () => ({ ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256 }),
+  };
+  const v = verifyAuthorityIndependently(io, manifest);
+  assert.equal(v.ok, true, `expected ok, got ${v.code}: ${v.detail}`);
+});
+
+test('AR1317A Lane B negative: wrong receipt tree refuses at independent authority verification', () => {
+  const marker = gitTreeMarker();
+  const rulingText = ['```json', JSON.stringify(marker), '```'].join('\n');
+  const manifest = gitTreeManifestFor(marker);
+  const io = {
+    ...fakeIo({ rulingText, receiptsGitTreeSha: OTHER_TREE_SHA, receiptsStatusLines: [] }),
+    readClaim: () => ({ ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256 }),
+  };
+  const v = verifyAuthorityIndependently(io, manifest);
+  assert.equal(v.ok, false);
+  assert.match(v.detail, /receipts_tree_mismatch/);
+});
+
+test('AR1317A Lane B negative: a tracked-dirty receipt path refuses at independent authority verification', () => {
+  const marker = gitTreeMarker();
+  const rulingText = ['```json', JSON.stringify(marker), '```'].join('\n');
+  const manifest = gitTreeManifestFor(marker);
+  const io = {
+    ...fakeIo({
+      rulingText, receiptsGitTreeSha: RECEIPT_TREE_SHA,
+      receiptsStatusLines: [' M docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1/row-3.json'],
+    }),
+    readClaim: () => ({ ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256 }),
+  };
+  const v = verifyAuthorityIndependently(io, manifest);
+  assert.equal(v.ok, false);
+  assert.match(v.detail, /receipts_not_clean/);
+});
+
+test('AR1317A Lane B negative: an untracked receipt file refuses at independent authority verification', () => {
+  const marker = gitTreeMarker();
+  const rulingText = ['```json', JSON.stringify(marker), '```'].join('\n');
+  const manifest = gitTreeManifestFor(marker);
+  const io = {
+    ...fakeIo({
+      rulingText, receiptsGitTreeSha: RECEIPT_TREE_SHA,
+      receiptsStatusLines: ['?? docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated-receipts-t1/stray.json'],
+    }),
+    readClaim: () => ({ ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256 }),
+  };
+  const v = verifyAuthorityIndependently(io, manifest);
+  assert.equal(v.ok, false);
+  assert.match(v.detail, /receipts_not_clean/);
+});
+
+test('AR1317A Lane B README_ONLY legacy behavior remains unchanged', () => {
+  const marker = { ...baselineMarker(), frozen_queue_sha256: FAKE_QUEUE_SHA }; // require_receipts: 'README_ONLY'
+  const rulingText = ['```json', JSON.stringify(marker), '```'].join('\n');
+  const manifest = gitTreeManifestFor(marker);
+  const io = {
+    ...fakeIo({ rulingText, receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsStatusLines: [] }),
+    readClaim: () => ({ ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256 }),
+  };
+  assert.equal(verifyAuthorityIndependently(io, manifest).ok, true);
+});
+
+test('AR1317A Lane C.2: manifest require_receipts must equal the current marker exactly', () => {
+  const marker = gitTreeMarker();
+  const rulingText = ['```json', JSON.stringify(marker), '```'].join('\n');
+  const manifest = gitTreeManifestFor(marker, { require_receipts: 'README_ONLY' });
+  const io = {
+    ...fakeIo({ rulingText, receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsStatusLines: [] }),
+    readClaim: () => ({ ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256 }),
+  };
+  assert.equal(verifyAuthorityIndependently(io, manifest).code, 'manifest_receipts_mismatch');
+});
+
+const gitTreeExpected = (over = {}) => ({
+  repo: REPO, worktree: WORKTREE, branch: BRANCH, head: HEAD,
+  actor: 'top-level-control-plane-guard-repair', targetPacket: 'AR-1279',
+  authorizationId: 'cpb-2026-08-16-0001', rulingId: 'AR-1281',
+  queueSha256: QUEUE_SHA, bundleSha256: BUNDLE_SHA,
+  requireReceipts: `GIT_TREE:${RECEIPT_TREE_SHA}`,
+  ...over,
+});
+
+test('AR1317A Lane C.5: verifySeatIdentity accepts a GIT_TREE-authorized seat (was: hard-coded README-only refusal)', () => {
+  // receiptsReadmeOnly:false is the REAL production shape under GIT_TREE authorization — the whole
+  // reason that form exists is that the receipt directory is no longer README-only (AR-1312/AR-1316A).
+  // Leaving it at the fixture default (true) would let the OLD hard-coded `receiptsReadmeOnly !== true`
+  // check pass this case for the wrong reason, discriminating nothing — exactly the gap this test
+  // exists to close (caught by RED-proofing against the pre-fix code before landing this packet).
+  const observed = seatObserved({ receiptsReadmeOnly: false, receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: true });
+  const v = verifySeatIdentity(observed, gitTreeExpected());
+  assert.equal(v.ok, true, `expected ok, got ${v.code}: ${v.detail}`);
+});
+
+test('AR1317A Lane C.5 negative: wrong receipt tree denies identity even after the seat armed', () => {
+  const observed = seatObserved({ receiptsGitTreeSha: OTHER_TREE_SHA, receiptsClean: true });
+  const v = verifySeatIdentity(observed, gitTreeExpected());
+  assert.equal(v.ok, false);
+  assert.match(v.code, /receipts_tree_mismatch/);
+});
+
+test('AR1317A Lane C.5 negative: a dirty receipt path denies identity even after the seat armed', () => {
+  const observed = seatObserved({ receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: false });
+  const v = verifySeatIdentity(observed, gitTreeExpected());
+  assert.equal(v.ok, false);
+  assert.match(v.code, /receipts_not_clean/);
+});
+
+test('AR1317A Lane C.6: a receipt path that goes dirty AFTER arming denies every subsequent PreToolUse', () => {
+  const manifest = { ...seatManifest(), require_receipts: `GIT_TREE:${RECEIPT_TREE_SHA}` };
+  const store = armedStore();
+  // receiptsReadmeOnly:false throughout — the real GIT_TREE-mode production shape (see Lane C.5).
+  const cleanObserved = seatObserved({ receiptsReadmeOnly: false, receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: true });
+  assert.equal(
+    decide({ hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Edit', tool_input: { file_path: 'CLAUDE.md' } }, manifest, cleanObserved, store),
+    null,
+    'clean and matching must ALLOW (null = no objection)',
+  );
+  const nowDirty = seatObserved({ receiptsReadmeOnly: false, receiptsGitTreeSha: RECEIPT_TREE_SHA, receiptsClean: false });
+  const out = decide(
+    { hook_event_name: 'PreToolUse', session_id: 's1', tool_name: 'Edit', tool_input: { file_path: 'CLAUDE.md' } },
+    manifest, nowDirty, store,
+  );
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(out.hookSpecificOutput.permissionDecisionReason, /receipts_not_clean/);
+});
+
+test('AR1317A Lane D: describeDoorwayResult surfaces the real init-only stdout when no receipt was minted', () => {
+  const sessionStartRefusal = JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: 'SessionStart',
+      additionalContext:
+        'CONTROL-PLANE GUARD NOT ARMED: frozen_state_drift_bad_require_receipts — require_receipts '
+        + 'must be "README_ONLY" or "GIT_TREE:<40-hex-tree-sha>". Do not edit.',
+    },
+  });
+  const refused = describeDoorwayResult([], sessionStartRefusal);
+  assert.equal(refused.ok, false);
+  assert.match(
+    refused.detail, /frozen_state_drift_bad_require_receipts/,
+    'the ACTUAL SessionStart refusal text must be visible, not only the generic "no receipt" message',
+  );
+  // CONTROL: an armed receipt still passes cleanly, whatever the (unused) stdout says.
+  const armed = describeDoorwayResult(['tf-control-plane-armed-abc.json'], 'irrelevant noise');
+  assert.deepEqual(armed, { ok: true, receipts: ['tf-control-plane-armed-abc.json'] });
 });
 
 /* =============================== SEAT GUARD: DEFAULT DENY ================================= */

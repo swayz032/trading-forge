@@ -266,6 +266,27 @@ export function resolveAuthorization(measured) {
   return { ok: false, code: 'all_markers_refused', detail: refusals.join(' | ') };
 }
 
+/* ------------------------------------------------------------------ doorway diagnostic -------- */
+
+/**
+ * AR-1317A Lane D — pure, so the diagnostic-message shape is testable WITHOUT spawning a real
+ * `claude --init-only` process (forbidden this packet: "do not spend a new authorization").
+ * `foundReceipts` is the list already filtered to `tf-control-plane-armed-*` names; `stdout` is the
+ * captured, non-throwing `--init-only` output. A bounded tail, never the whole transcript — this is
+ * diagnostic evidence for a report, not a log dump.
+ */
+export function describeDoorwayResult(foundReceipts, stdout) {
+  if (Array.isArray(foundReceipts) && foundReceipts.length > 0) {
+    return { ok: true, receipts: foundReceipts };
+  }
+  const tail = String(stdout || '').slice(-600);
+  return {
+    ok: false,
+    detail: 'no durable armed receipt was minted by --init-only; the Local hook did not arm. '
+      + `init-only stdout tail: ${JSON.stringify(tail)}`,
+  };
+}
+
 /* ------------------------------------------------------------------ effects ------------------ */
 
 export function makeRealEffects(repoRoot) {
@@ -309,8 +330,15 @@ export function makeRealEffects(repoRoot) {
       delete env.CLAUDECODE;
       delete env.CLAUDE_CODE_SSE_PORT;
       delete env.CLAUDE_CODE_ENTRYPOINT;
+      // AR-1317A Lane D — a SUCCESSFUL `--init-only` exit previously discarded its own stdout before
+      // this function ever checked for the armed receipt, so the one piece of evidence that would
+      // have named the REAL SessionStart refusal (the `sessionContext(...)` "NOT ARMED: <code> —
+      // <detail>" line `decide()` emits) was thrown away on exactly the path that needed it (AR-1317:
+      // the worker could only observe "no receipt", not why). Capturing it changes no launch
+      // argument, setting source, timeout, or arming law — it is diagnostic evidence only.
+      let stdout = '';
       try {
-        execFileSync(LAUNCH_EXECUTABLE, ['--init-only', '--setting-sources', SETTING_SOURCES], {
+        stdout = execFileSync(LAUNCH_EXECUTABLE, ['--init-only', '--setting-sources', SETTING_SOURCES], {
           cwd: worktreePath, encoding: 'utf8', timeout: 180000, stdio: 'pipe', env,
         });
       } catch (error) {
@@ -318,10 +346,7 @@ export function makeRealEffects(repoRoot) {
       }
       const gitDir = execFileSync('git', ['-C', worktreePath, 'rev-parse', '--absolute-git-dir'], { encoding: 'utf8' }).trim();
       const found = fsReal.readdirSync(gitDir).filter((f) => f.startsWith('tf-control-plane-armed-'));
-      if (found.length === 0) {
-        return { ok: false, detail: 'no durable armed receipt was minted by --init-only; the Local hook did not arm' };
-      }
-      return { ok: true, receipts: found };
+      return describeDoorwayResult(found, stdout);
     },
 
     /**
@@ -461,6 +486,11 @@ export function run({ mode = 'plan', io, effects, now = null } = {}) {
     frozen_queue_sha256: measured.queueSha256,
     bootstrap_bundle_sha256: measured.bootstrapBundleSha256,
     allowed_paths: [...auth.marker.allowed_paths],
+    // AR-1317A Lane C.1 — the validated marker's EXACT receipt-state requirement, carried into the
+    // immutable seat manifest so the receiving seat's own frozen-state check (verifySeatIdentity)
+    // can re-verify against the SAME law the top-level authorization already validated, on every
+    // SessionStart and every PreToolUse — not just once, and never re-derived from scratch.
+    require_receipts: auth.marker.require_receipts,
   };
 
   // ---- AR-1295 F25 — POST-CLAIM. The authorization is spent from here on regardless of outcome,

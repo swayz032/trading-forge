@@ -92,6 +92,51 @@ function refuse(code, detail) {
 }
 
 /**
+ * AR-1317A Lane A — THE ONE RECEIPT-STATE LAW, SHARED BY THE TOP-LEVEL BOOTSTRAP AUTHORIZATION AND
+ * THE RECEIVING SEAT'S OWN IDENTITY CHECK. Previously this decision lived only inline in
+ * `validateAuthorization` below; `control-plane-guard.mjs::verifySeatIdentity` carried a SECOND,
+ * independent, hardcoded `receiptsReadmeOnly !== true` check that this compatibility extension
+ * never reached — so a GIT_TREE-authorized run could pass top-level authorization and still be
+ * refused by the seat's own SessionStart identity check (AR-1317, `frozen_state_drift`).
+ * There is now exactly one place this decision is made; every caller imports it.
+ *
+ * @param requireReceipts the marker's (or manifest's) `require_receipts` string
+ * @param measured        `{ receiptsReadmeOnly, receiptsGitTreeSha, receiptsClean }` — INDEPENDENTLY
+ *                         measured by the caller, never taken from anyone's claim about it.
+ */
+export function checkReceiptState(requireReceipts, measured) {
+  if (requireReceipts === 'README_ONLY') {
+    if (measured?.receiptsReadmeOnly !== true) {
+      return refuse('receipts_not_readme_only', 'the G2 receipt namespace is not README-only');
+    }
+    return { ok: true };
+  }
+  const gitTree = GIT_TREE_FORM.exec(requireReceipts);
+  if (!gitTree) {
+    return refuse(
+      'bad_require_receipts',
+      'require_receipts must be "README_ONLY" or "GIT_TREE:<40-hex-tree-sha>"',
+    );
+  }
+  // Preserve-and-strike (AR-1312): the marker pins an EXACT prior snapshot of the receipt
+  // directory, never "empty". Both the tree identity and worktree cleanliness are independently
+  // MEASURED by the caller — nothing here reads a filesystem.
+  if (gitTree[1] !== measured?.receiptsGitTreeSha) {
+    return refuse(
+      'receipts_tree_mismatch',
+      `require_receipts pins tree ${gitTree[1]}, measured ${measured?.receiptsGitTreeSha}`,
+    );
+  }
+  if (measured?.receiptsClean !== true) {
+    return refuse(
+      'receipts_not_clean',
+      'the G2 receipt namespace has a working-tree modification or untracked file',
+    );
+  }
+  return { ok: true };
+}
+
+/**
  * Pull every candidate marker out of a ruling's markdown.
  *
  * Deliberately greedy: it returns AR-1276C's example too. Hiding the example from the validator
@@ -226,34 +271,10 @@ export function validateAuthorization(marker, measured) {
   // not because the code is wrong, but because the world it described is gone. This is a
   // COMPATIBILITY EXTENSION of the one field, not a new authorization mode: the legacy form keeps
   // its exact refusal code and exact behavior, byte-for-byte, for old/pre-execution authorizations.
-  if (marker.require_receipts === 'README_ONLY') {
-    if (measured.receiptsReadmeOnly !== true) {
-      return refuse('receipts_not_readme_only', 'the G2 receipt namespace is not README-only');
-    }
-  } else {
-    const gitTree = GIT_TREE_FORM.exec(marker.require_receipts);
-    if (!gitTree) {
-      return refuse(
-        'bad_require_receipts',
-        'require_receipts must be "README_ONLY" or "GIT_TREE:<40-hex-tree-sha>"',
-      );
-    }
-    // Preserve-and-strike (AR-1312): the marker pins an EXACT prior snapshot of the receipt
-    // directory, never "empty". Both the tree identity and worktree cleanliness are independently
-    // MEASURED by the caller (bootstrap.mjs measureState) — nothing here reads a filesystem.
-    if (gitTree[1] !== measured.receiptsGitTreeSha) {
-      return refuse(
-        'receipts_tree_mismatch',
-        `require_receipts pins tree ${gitTree[1]}, measured ${measured.receiptsGitTreeSha}`,
-      );
-    }
-    if (measured.receiptsClean !== true) {
-      return refuse(
-        'receipts_not_clean',
-        'the G2 receipt namespace has a working-tree modification or untracked file',
-      );
-    }
-  }
+  // AR-1317A Lane A: the decision itself now lives in ONE shared helper (`checkReceiptState`),
+  // reused by `verifySeatIdentity` in `control-plane-guard.mjs` — see that function's doc comment.
+  const receiptState = checkReceiptState(marker.require_receipts, measured);
+  if (!receiptState.ok) return receiptState;
   if (marker.require_agent_model_executions_before_launch !== 0 || measured.agentModelExecutions !== 0) {
     return refuse('agent_executions_not_0', 'Agent/subagent model executions before launch must be 0');
   }

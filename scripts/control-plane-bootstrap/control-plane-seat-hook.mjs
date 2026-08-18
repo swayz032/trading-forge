@@ -92,6 +92,13 @@ export function verifyAuthorityIndependently(io, manifest) {
   const spent = Object.keys(q.attempts || {}).length;
   const ready = Array.isArray(q.queue) ? q.queue.length - spent : -1;
   const receiptsReadmeOnly = io.listDir(receiptRel).filter((f) => f !== 'README.md').length === 0;
+  // AR-1317A Lane B — the SAME two measurements `bootstrap.mjs::measureState` already takes,
+  // independently re-derived here rather than trusted from anyone's claim. Without these, a
+  // GIT_TREE marker reaches `validateAuthorization` with `measured.receiptsGitTreeSha === undefined`
+  // and always refuses `receipts_tree_mismatch` — the earlier of the two blockers AR-1317 found,
+  // and the one it could not observe because `--init-only` discarded its own stdout.
+  const receiptsGitTreeSha = io.git('rev-parse', `HEAD:${receiptRel}`);
+  const receiptsClean = io.git('status', '--porcelain', '--', receiptRel).trim().length === 0;
   const bundleSha256 = computeBundle(io.readFileBytes).bundle_sha256;
 
   const candidates = extractCandidateMarkers(rulingText);
@@ -110,6 +117,8 @@ export function verifyAuthorityIndependently(io, manifest) {
       ready,
       spent,
       receiptsReadmeOnly,
+      receiptsGitTreeSha,
+      receiptsClean,
       agentModelExecutions: 0,
       claimedAuthorizationIds: new Set(),
       workerHead: io.git('rev-parse', 'HEAD'),
@@ -132,6 +141,16 @@ export function verifyAuthorityIndependently(io, manifest) {
     if (bundleSha256 !== manifest.bootstrap_bundle_sha256) {
       return { ok: false, code: 'manifest_bundle_mismatch', detail: `recomputed ${bundleSha256}, manifest ${manifest.bootstrap_bundle_sha256}` };
     }
+    // AR-1317A Lane C.2 — the manifest's frozen receipt-state LAW must equal the CURRENT GPT
+    // marker's, exactly. Without this, a manifest minted under one `require_receipts` value could
+    // silently outlive the authority that set it once the authority moves on.
+    if (marker.require_receipts !== manifest.require_receipts) {
+      return {
+        ok: false,
+        code: 'manifest_receipts_mismatch',
+        detail: `authority requires ${JSON.stringify(marker.require_receipts)}, manifest pins ${JSON.stringify(manifest.require_receipts)}`,
+      };
+    }
     // Set-for-set, so neither order nor a smuggled extra entry passes.
     const a = [...marker.allowed_paths].sort();
     const b = [...(manifest.allowed_paths || [])].sort();
@@ -148,7 +167,11 @@ export function verifyAuthorityIndependently(io, manifest) {
       return { ok: false, code: 'claim_mismatch', detail: 'the durable claim does not describe the current authorization' };
     }
 
-    return { ok: true, marker, measured: { queueSha256, ready, spent, receiptsReadmeOnly, bundleSha256, repo, rulingId } };
+    return {
+      ok: true,
+      marker,
+      measured: { queueSha256, ready, spent, receiptsReadmeOnly, receiptsGitTreeSha, receiptsClean, bundleSha256, repo, rulingId },
+    };
   }
   return { ok: false, code: 'authority_refused', detail: refusals.join(' | ') };
 }
@@ -214,6 +237,10 @@ export function measureObservedIdentity(io, trusted = {}) {
   let ready = -1;
   let spent = -1;
   let receiptsReadmeOnly = false;
+  // AR-1317A Lane C.3 — fail-closed defaults, same direction as `receiptsReadmeOnly`'s `false`
+  // above: a measurement that could not be taken must never read as "the frozen state is fine".
+  let receiptsGitTreeSha = null;
+  let receiptsClean = false;
   try {
     const bytes = io.readFileBytes(queueRel);
     queueSha256 = crypto.createHash('sha256').update(bytes).digest('hex');
@@ -221,6 +248,8 @@ export function measureObservedIdentity(io, trusted = {}) {
     spent = Object.keys(q.attempts || {}).length;
     ready = Array.isArray(q.queue) ? q.queue.length - spent : -1;
     receiptsReadmeOnly = io.listDir(receiptRel).filter((f) => f !== 'README.md').length === 0;
+    receiptsGitTreeSha = git('rev-parse', `HEAD:${receiptRel}`);
+    receiptsClean = git('status', '--porcelain', '--', receiptRel).trim().length === 0;
   } catch {
     /* leave the refusing defaults in place */
   }
@@ -245,6 +274,8 @@ export function measureObservedIdentity(io, trusted = {}) {
     ready,
     spent,
     receiptsReadmeOnly,
+    receiptsGitTreeSha,
+    receiptsClean,
     isSubagent: false,
   };
 }
@@ -300,6 +331,10 @@ function expectationsFrom(manifest) {
     rulingId: manifest?.ruling_id,
     queueSha256: manifest?.frozen_queue_sha256,
     bundleSha256: manifest?.bootstrap_bundle_sha256,
+    // AR-1317A Lane C.4 — the manifest's carried receipt-state law (Lane C.1), consumed by
+    // `verifySeatIdentity` via the shared `checkReceiptState` helper (Lane A/C.5), not compared
+    // here as an IDENTITY_FIELDS exact-match — it feeds the receipt-state law, not identity.
+    requireReceipts: manifest?.require_receipts,
   };
 }
 
