@@ -12,6 +12,7 @@ stored in repository files or dataset manifests.
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import asdict
 from datetime import date, timedelta
 from pathlib import Path
@@ -24,6 +25,7 @@ from research import current_mnq_strategy_v2_3_data as common
 DATASET = "GLBX.MDP3"
 SCHEMA = "ohlcv-1m"
 MNQ_LAUNCH = date(2019, 5, 6)
+DATABENTO_MAX_ATTEMPTS = 5
 
 
 def databento_raw_symbol(contract_id: str) -> str:
@@ -32,6 +34,36 @@ def databento_raw_symbol(contract_id: str) -> str:
     if len(tail) != 3 or tail[0] not in set(MONTH_CODE.values()) or not tail[1:].isdigit():
         raise ValueError(f"unexpected MNQ contract id: {contract_id}")
     return f"MNQ{tail[0]}{int(tail[1:]) % 10}"
+
+
+def _databento_get_range(db, client, *, label: str, **kwargs):
+    """Run one historical request with bounded retries for transport/server faults.
+
+    Databento client-side HTTP errors (bad auth, invalid request, missing symbol,
+    permission failure, etc.) are deterministic and must fail immediately. Generic
+    BentoError transport failures such as a prematurely-ended HTTP stream, plus
+    server-side 5xx errors, are retried with bounded exponential backoff.
+    """
+    for attempt in range(1, DATABENTO_MAX_ATTEMPTS + 1):
+        try:
+            return client.timeseries.get_range(**kwargs)
+        except db.BentoClientError:
+            raise
+        except (db.BentoServerError, db.BentoError, OSError) as exc:
+            if attempt >= DATABENTO_MAX_ATTEMPTS:
+                raise RuntimeError(
+                    f"DATABENTO_RETRY_EXHAUSTED:{label}:attempts={DATABENTO_MAX_ATTEMPTS}:"
+                    f"{type(exc).__name__}:{exc}"
+                ) from exc
+            delay = min(2 ** (attempt - 1), 16)
+            print(
+                f"Databento transient stream failure [{label}] "
+                f"attempt {attempt}/{DATABENTO_MAX_ATTEMPTS}; retrying in {delay}s "
+                f"({type(exc).__name__})",
+                flush=True,
+            )
+            time.sleep(delay)
+    raise AssertionError("unreachable")
 
 
 def _to_frame(store, canonical_contract_id: str, raw_symbol: str) -> pd.DataFrame:
@@ -81,7 +113,10 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
     for w in windows:
         symbol = databento_raw_symbol(w.contract_id)
         request_start = max(MNQ_LAUNCH, w.start)
-        definition = client.timeseries.get_range(
+        definition = _databento_get_range(
+            db,
+            client,
+            label=f"definition:{symbol}:{w.contract_id}",
             dataset=DATASET,
             schema="definition",
             symbols=symbol,
@@ -102,7 +137,10 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
             "asset": str(d0.get("asset", "MNQ")),
         }
 
-        store = client.timeseries.get_range(
+        store = _databento_get_range(
+            db,
+            client,
+            label=f"ohlcv-1m:{symbol}:{w.contract_id}",
             dataset=DATASET,
             schema=SCHEMA,
             symbols=symbol,
