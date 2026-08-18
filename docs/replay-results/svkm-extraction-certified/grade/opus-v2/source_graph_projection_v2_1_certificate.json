@@ -1,0 +1,93 @@
+{
+  "certificate_version": "source-graph-projection-v2.1-certificate",
+  "authority": "AR-1323A section 3 (E: stable certification command)",
+  "overall_status": "PARTIAL_SEE_CHECKLIST",
+  "checklist": {
+    "A_determinism": {
+      "status": "DONE",
+      "hash_run_1": "fd79f602cd55e0abde88cf95516d1a3efe100395c948c5db22ca8d3bc162fc4f",
+      "hash_run_2": "fd79f602cd55e0abde88cf95516d1a3efe100395c948c5db22ca8d3bc162fc4f",
+      "identical": true
+    },
+    "B_versioned_spec_data_artifact": {
+      "status": "DONE",
+      "spec_path": "docs/replay-results/svkm-extraction-certified/grade/opus-v2/source_graph_projection_v2_1_spec.json",
+      "detail": "all fixture-specific adjudication loaded from committed JSON, zero adjudication in this runner"
+    },
+    "C_self_contained_receipt": {
+      "status": "DONE",
+      "pins_present_and_verified": true,
+      "transcript_sha256": "df72444f70e8c79db0e1692867913f14d37c18fd063f681a2b562fe103ce99cc",
+      "extraction_sha256": "c37ff26f753449c35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823"
+    },
+    "D_conservation_9_1_2": {
+      "status": "DONE",
+      "conservation": {
+        "input_ref_count": 12,
+        "canonical_count": 9,
+        "alias_count": 1,
+        "preserved_metadata_count": 2
+      }
+    },
+    "E_graph_complete": {
+      "status": "DONE",
+      "graph": {
+        "edge_count": 9,
+        "root_refs": [
+          "confluences[0].description"
+        ],
+        "required_reachable_count": 9,
+        "reachable_count": 9,
+        "unreachable_refs": [],
+        "complete": true
+      }
+    },
+    "F_canonical_9_of_9_accepted": {
+      "status": "DONE",
+      "canonical_accepted_count": 9
+    },
+    "G_receipt_grade_green": {
+      "status": "DONE",
+      "grade": "GREEN_PENDING_CERTIFICATION"
+    },
+    "H_permanent_focused_tests": {
+      "status": "DONE",
+      "command": "pytest src/engine/tests/test_source_graph_projection.py -q",
+      "returncode": 0,
+      "tail": "...............................                                          [100%]\n31 passed in 0.28s",
+      "passed": true
+    },
+    "I_neighboring_suite": {
+      "status": "PARTIAL",
+      "command": "pytest src/engine/tests/_a_packet_harness.py src/engine/tests/_forensics_fixtures.py src/engine/tests/test_anchor_locator.py src/engine/tests/test_batch_locator.py src/engine/tests/test_cert_assembler.py src/engine/tests/test_cert_identity_seam.py src/engine/tests/test_compile_fidelity_leg_a.py src/engine/tests/test_compile_lints.py src/engine/tests/test_conflation_wiring.py src/engine/tests/test_enumeration_consistency.py src/engine/tests/test_evidence_antecedent.py src/engine/tests/test_evidence_relevance.py src/engine/tests/test_extractor_bridge.py src/engine/tests/test_g2d_bridge_report.py src/engine/tests/test_g2d_finalizer.py src/engine/tests/test_g2d_postcall_capture.py src/engine/tests/test_g2d_postcall_lifecycle.py src/engine/tests/test_g2d_precall_transition.py src/engine/tests/test_g2d_real_queue_preflight.py src/engine/tests/test_g2d_subagentstop_capture.py src/engine/tests/test_isolated_attempt_receipt.py src/engine/tests/test_isolated_bridge.py src/engine/tests/test_isolated_dispatch.py src/engine/tests/test_isolated_fallback_law.py src/engine/tests/test_mergesilencing_fence.py src/engine/tests/test_mp1_backtester_ingress.py src/engine/tests/test_mp1_candidate_persistence.py src/engine/tests/test_mp1_candidate_receipt.py src/engine/tests/test_opening_range_conformance.py src/engine/tests/test_opening_range_execution_fanout.py src/engine/tests/test_opus_phase1_route.py src/engine/tests/test_pilot_conveyor.py src/engine/tests/test_producer_staging_vocabulary.py src/engine/tests/test_route_antecedent_composition.py src/engine/tests/test_s6_candidate_transport_and_adapter_execution.py src/engine/tests/test_seal_conductor_cli.py src/engine/tests/test_seal_conductor_dispatch_r030.py src/engine/tests/test_seal_conductor_plan_attrition.py src/engine/tests/test_seal_conductor_staged.py src/engine/tests/test_sealed_read_driver.py src/engine/tests/test_sealed_read_gate.py src/engine/tests/test_source_fidelity_guard.py src/engine/tests/test_source_graph_projection.py src/engine/tests/test_span_collision.py src/engine/tests/test_spec_producer.py src/engine/tests/test_spine_a_compile_entry_point.py src/engine/tests/test_term_equivalence.py src/engine/tests/test_tier1_detectors.py src/engine/tests/test_topology_producer.py src/engine/tests/test_trigger_safety_blast_radius.py src/engine/tests/test_trigger_safety_refusal.py src/engine/tests/test_wave6_pass2_guards.py src/engine/tests/test_wave6_pass2_orchestration.py -q",
+      "returncode": 1,
+      "tail": "  C:\\Users\\tonio\\Projects\\wt-claude-worker1-20260815\\src\\engine\\context\\bias_engine.py:1361: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n    \"decisionTimestamp\": datetime.datetime.utcnow().isoformat() + \"Z\",\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED src/engine/tests/test_compile_lints.py::test_no_lint_imports_vectorbt_or_backtester\nFAILED src/engine/tests/test_isolated_dispatch.py::test_preflight_on_the_REAL_committed_queue_is_ready\n2 failed, 1100 passed, 8 warnings in 29.83s",
+      "passed": false,
+      "scope": "53 test files under src/engine/tests importing src.engine.extraction (dependency-based neighborhood of the changed module)",
+      "full_bare_pytest_attempted": [
+        {
+          "timeout_s": 900,
+          "result": "TIMEOUT"
+        },
+        {
+          "timeout_s": 1800,
+          "result": "TIMEOUT"
+        }
+      ],
+      "known_unrelated_failures": [
+        {
+          "test": "test_compile_lints.py::test_no_lint_imports_vectorbt_or_backtester",
+          "diagnosis": "order-dependent; passes standalone; no vectorbt/backtester string in any file this packet touched"
+        },
+        {
+          "test": "test_isolated_dispatch.py::test_preflight_on_the_REAL_committed_queue_is_ready",
+          "diagnosis": "asserts protected G2 receipt namespace isolated-receipts-t1/ is empty; out of this packet's scope, never written by this packet"
+        }
+      ]
+    },
+    "J_github_ci": {
+      "status": "EXTERNAL_NOT_CHECKED_BY_THIS_RUNNER",
+      "detail": "GitHub CI status is external to this local runner and is not fabricated here. Check via `gh api repos/<owner>/<repo>/commits/<sha>/status` or the GitHub UI."
+    }
+  }
+}

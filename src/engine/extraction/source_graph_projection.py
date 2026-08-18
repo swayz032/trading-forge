@@ -81,7 +81,7 @@ from .evidence_relevance import evaluate_evidence_relevance
 from .opus_phase1_route import _same_requirement, _validate_composition_specs
 from .source_fidelity_guard import check_condition_fidelity
 
-PROJECTION_VERSION = "source-graph-projection-v2"
+PROJECTION_VERSION = "source-graph-projection-v2.1"
 
 ACCEPTED = "ACCEPTED_PENDING_CERTIFICATION"
 ALIAS_OF_CANONICAL = "ALIAS_OF_CANONICAL"
@@ -169,28 +169,114 @@ def _sha256(text: str) -> str:
     return hashlib.sha256((text or "").encode("utf-8")).hexdigest()
 
 
+# AR-1323A F56: the minimum narrow schema a `preserved_metadata_records` entry must satisfy. A
+# dict merely existing (the AR-1322A-era check) is not enough -- `{"reason": "x"}` passed and
+# still passes the eligibility gate above it. This is membership/shape validation only; it does
+# not judge whether the CONTENT is a good historical record, only that the required fields exist
+# and are internally consistent (e.g. a null `historical_evidence` must carry its own reason).
+_REQUIRED_PRESERVED_METADATA_KEYS = (
+    "original_text", "historical_disposition", "historical_evidence",
+    "exclusion_reason", "exclusion_authority",
+)
+
+
+def _validate_preserved_metadata_schema(ref: str, record: dict) -> None:
+    missing = [k for k in _REQUIRED_PRESERVED_METADATA_KEYS if k not in record]
+    if missing:
+        raise ValueError(
+            f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record is missing required key(s) "
+            f"{missing} -- a bare {{'reason': ...}} scaffold no longer satisfies the schema "
+            "(AR-1323A F56); every preserved-metadata record must carry original_text, "
+            "historical_disposition, historical_evidence (an object or explicit null), "
+            "exclusion_reason, and exclusion_authority"
+        )
+    if not str(record.get("original_text") or "").strip():
+        raise ValueError(
+            f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record's original_text is empty"
+        )
+    if not str(record.get("exclusion_reason") or "").strip():
+        raise ValueError(
+            f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record's exclusion_reason is empty"
+        )
+    if not str(record.get("exclusion_authority") or "").strip():
+        raise ValueError(
+            f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record's exclusion_authority is "
+            "empty -- an unauthored exclusion is an invented adjudication wearing a schema's "
+            "clothes, the same rule AR-1243 section 11 applies to composition specs and aliases"
+        )
+    if not str(record.get("historical_disposition") or "").strip():
+        raise ValueError(
+            f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record's historical_disposition is "
+            "empty"
+        )
+    corrected_text = record.get("corrected_text")
+    if corrected_text is not None and not str(record.get("correction_authority") or "").strip():
+        raise ValueError(
+            f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record declares corrected_text but "
+            "no correction_authority"
+        )
+    hist_ev = record.get("historical_evidence")
+    if hist_ev is None:
+        if not str(record.get("historical_evidence_null_reason") or "").strip():
+            raise ValueError(
+                f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record's historical_evidence is "
+                "null but carries no historical_evidence_null_reason -- an explicit null must "
+                "say WHY no historical evidence span exists, not merely omit one"
+            )
+        if not str(record.get("historical_evidence_null_authority") or "").strip():
+            raise ValueError(
+                f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record's historical_evidence is "
+                "null but carries no historical_evidence_null_authority"
+            )
+    else:
+        if not isinstance(hist_ev, dict) or "quote" not in hist_ev or "char_span" not in hist_ev:
+            raise ValueError(
+                f"PRESERVED_METADATA_SCHEMA_INCOMPLETE: {ref!r} record's historical_evidence "
+                "must be an object with 'quote' and 'char_span', or explicit null"
+            )
+
+
 def validate_graph_edges(
     edges: Sequence[GraphEdge], valid_refs: set[str], root_refs: Sequence[str],
-    required_reachable: set[str],
+    required_reachable: set[str], allowed_edge_types: Sequence[str] | None = None,
 ) -> dict:
-    """Structural-only validation (AR-1322A F51). This function has NO knowledge of what an
-    `edge_type` string means -- it only checks:
+    """Structural-only validation (AR-1322A F51, AR-1323A F57). This function has NO knowledge of
+    what an `edge_type` string MEANS -- it only checks:
 
         1. every `from_ref`/`to_ref` names a real ref in this run;
-        2. the edge set is a DAG (no cycles) -- a dependency graph that cycles cannot express an
+        2. every `edge_type` is non-empty, and (when `allowed_edge_types` is supplied) is a member
+           of that caller-declared vocabulary -- membership only, never semantic inference;
+        3. the edge set is a DAG (no cycles) -- a dependency graph that cycles cannot express an
            order at all;
-        3. every ref in `required_reachable` is reachable from at least one `root_refs` entry by
+        4. every ref in `required_reachable` is reachable from at least one `root_refs` entry by
            following edges forward.
 
-    Raises ValueError on (1) or (2) -- those are malformed-graph errors, not diagnostic findings.
-    Returns a dict reporting (3), since incomplete reachability is a real, reportable finding
+    Raises ValueError on (1)/(2)/(3) -- those are malformed-graph errors, not diagnostic findings.
+    Returns a dict reporting (4), since incomplete reachability is a real, reportable finding
     about THIS graph's completeness, not a schema error.
+
+    `allowed_edge_types=None` (the default) skips the vocabulary-membership check -- existing
+    callers that never declared a vocabulary keep their prior behavior byte-for-byte; the empty-
+    type refusal applies unconditionally because an edge with no type asserts no order semantics
+    at all, vocabulary or not.
     """
+    vocab = set(allowed_edge_types) if allowed_edge_types is not None else None
     for e in edges:
         if e.from_ref not in valid_refs:
             raise ValueError(f"graph edge references unknown from_ref {e.from_ref!r}")
         if e.to_ref not in valid_refs:
             raise ValueError(f"graph edge references unknown to_ref {e.to_ref!r}")
+        if not str(e.edge_type or "").strip():
+            raise ValueError(
+                f"GRAPH_EDGE_TYPE_EMPTY: edge {e.from_ref!r} -> {e.to_ref!r} has no edge_type; "
+                "every declared edge must assert an order semantic, not merely a topology link"
+            )
+        if vocab is not None and e.edge_type not in vocab:
+            raise ValueError(
+                f"GRAPH_EDGE_TYPE_UNKNOWN: edge {e.from_ref!r} -> {e.to_ref!r} declares "
+                f"edge_type {e.edge_type!r}, which is not a member of the declared vocabulary "
+                f"{sorted(vocab)!r}"
+            )
     for r in root_refs:
         if r not in valid_refs:
             raise ValueError(f"graph root {r!r} is not a valid ref in this run")
@@ -241,7 +327,8 @@ def validate_graph_edges(
 
 
 def _validate_projection_spec(
-    spec: ProjectionSpec, conditions: Sequence[dict], text_by_ref: dict[str, str]
+    spec: ProjectionSpec, conditions: Sequence[dict], text_by_ref: dict[str, str],
+    transcript: str | None = None, strict_preserved_metadata_schema: bool = False,
 ) -> None:
     all_refs = {c["condition_ref"] for c in conditions}
 
@@ -324,6 +411,18 @@ def _validate_projection_spec(
                 "preserved_metadata_records; this module computes nothing for a preserved ref, "
                 "it only carries what the caller supplies"
             )
+        record = spec.preserved_metadata_records[r]
+        if strict_preserved_metadata_schema:
+            _validate_preserved_metadata_schema(r, record)
+        hist_ev = record.get("historical_evidence")
+        if hist_ev is not None and transcript is not None:
+            start, end = int(hist_ev["char_span"][0]), int(hist_ev["char_span"][1])
+            if transcript[start:end] != hist_ev["quote"]:
+                raise ValueError(
+                    f"PRESERVED_METADATA_EVIDENCE_NOT_LITERAL: {r!r} record's "
+                    f"historical_evidence char_span [{start}, {end}] does not exactly equal "
+                    "its declared quote in the pinned transcript"
+                )
 
 
 def run_projection(
@@ -333,7 +432,11 @@ def run_projection(
     projection: ProjectionSpec,
     relevance_floor: float = 0.10,
     composition_specs: Sequence[dict] | None = None,
-    extra_evidence_by_ref: dict[str, tuple[str, ...]] | None = None,
+    extra_evidence_by_ref: dict[str, tuple[Any, ...]] | None = None,
+    transcript_sha256: str | None = None,
+    extraction_sha256: str | None = None,
+    allowed_edge_types: Sequence[str] | None = None,
+    strict_preserved_metadata_schema: bool = False,
 ) -> dict[str, Any]:
     """`extra_evidence_by_ref`: OPTIONAL additional literal spans folded into a canonical ref's
     fidelity evidence package, for a claim whose full scope is grounded by more than one
@@ -341,15 +444,45 @@ def run_projection(
     bidirectional rule the source teaches via two separate worked examples). This is NOT
     `evidence_antecedent` composition — there is no "earlier definition, later reference" link
     to check order/grounding/same-entity/no-redefinition against; there are simply two literal
-    spans that both bear on one claim. The only check this function itself performs is that each
-    extra span is a LITERAL substring of the pinned transcript — the same non-negotiable literal
-    fence every other evidence path in this pipeline already enforces. Relevance still runs on
-    the PRIMARY span alone (same `evaluated_on: primary_span_only` scoping rule
-    `opus_phase1_route.py` already documents for composition); only fidelity sees the full set.
+    spans that both bear on one claim. Relevance still runs on the PRIMARY span alone (same
+    `evaluated_on: primary_span_only` scoping rule `opus_phase1_route.py` already documents for
+    composition); only fidelity sees the full set.
+
+    Each item in an `extra_evidence_by_ref` tuple is EITHER:
+      * a bare `str` quote (legacy shape, preserved byte-for-byte for existing callers) — checked
+        only for literal substring membership, no span embedded in the receipt; OR
+      * a `dict` `{"quote": str, "char_span": [start, end]}` (AR-1323A F55) — checked for EXACT
+        span identity (`transcript[start:end] == quote`, not mere substring containment, so two
+        identical-text occurrences can never be silently conflated) and the resolved span/quote/
+        hash is embedded per-item in the outcome's `evidence_spans` list.
+
+    `transcript_sha256` / `extraction_sha256` (AR-1323A F55): optional caller-supplied pins.
+    `transcript_sha256`, if given, is VERIFIED against a hash this function computes itself from
+    the `transcript` argument in hand (never trusts the caller's claim) and embedded at receipt
+    top level on match; a mismatch raises. `extraction_sha256` is carried through and embedded
+    verbatim — this function has no access to the extraction record to verify it independently;
+    that verification is the caller's responsibility (the caller has the record).
+
+    `strict_preserved_metadata_schema` (AR-1323A F56, default `False`): when `True`, every
+    `preserved_metadata_records` entry must satisfy the narrow schema
+    `_validate_preserved_metadata_schema` enforces. Default `False` preserves the frozen v1/v2
+    candidates' exact prior behavior byte-for-byte (`{"reason": ...}` scaffolding still passes) —
+    this function never rewrites a caller's historical record shape to satisfy a schema that
+    postdates it. The v2.1 stable spec loader always passes `True`.
     """
+    if transcript_sha256 is not None:
+        computed = _sha256(transcript)
+        if computed != transcript_sha256:
+            raise ValueError(
+                f"TRANSCRIPT_PIN_MISMATCH: caller-supplied transcript_sha256 {transcript_sha256!r} "
+                f"does not match the sha256 of the transcript text in hand ({computed!r})"
+            )
     text_by_ref = {c["condition_ref"]: c["condition_text"] for c in conditions}
     answers_by_ref = {a["condition_ref"]: a["raw_output"] for a in batch_answers}
-    _validate_projection_spec(projection, conditions, text_by_ref)
+    _validate_projection_spec(
+        projection, conditions, text_by_ref, transcript=transcript,
+        strict_preserved_metadata_schema=strict_preserved_metadata_schema,
+    )
     specs_by_ref = _validate_composition_specs(composition_specs, text_by_ref)
 
     def _provenance(ref: str) -> dict:
@@ -477,15 +610,35 @@ def run_projection(
                 continue
             evidence_quotes = [comp_record["antecedent_quote"], mech["quote"]]
 
-        extra_quotes = tuple((extra_evidence_by_ref or {}).get(ref, ()))
-        for eq in extra_quotes:
-            if eq not in transcript:
-                raise ValueError(
-                    f"extra_evidence_by_ref[{ref!r}] contains a span that is not a literal "
-                    "substring of the pinned transcript -- the literal fence is non-negotiable "
-                    "for every evidence path, including supplementary spans"
-                )
-        full_evidence = list(evidence_quotes) + list(extra_quotes)
+        extra_items = tuple((extra_evidence_by_ref or {}).get(ref, ()))
+        extra_quotes: list[str] = []
+        extra_spans: list[dict] = []
+        for item in extra_items:
+            if isinstance(item, dict):
+                eq, span = item["quote"], item["char_span"]
+                start, end = int(span[0]), int(span[1])
+                if transcript[start:end] != eq:
+                    raise ValueError(
+                        f"extra_evidence_by_ref[{ref!r}] declares char_span [{start}, {end}] "
+                        f"that does not exactly equal its quote in the pinned transcript -- "
+                        "the literal fence requires exact span identity, not mere substring "
+                        "containment, so an ambiguous repeated quote can never be silently "
+                        "resolved to the wrong occurrence"
+                    )
+                extra_quotes.append(eq)
+                extra_spans.append({
+                    "quote": eq, "char_span": [start, end], "quote_sha256": _sha256(eq),
+                })
+            else:
+                eq = item
+                if eq not in transcript:
+                    raise ValueError(
+                        f"extra_evidence_by_ref[{ref!r}] contains a span that is not a literal "
+                        "substring of the pinned transcript -- the literal fence is "
+                        "non-negotiable for every evidence path, including supplementary spans"
+                    )
+                extra_quotes.append(eq)
+        full_evidence = list(evidence_quotes) + extra_quotes
 
         findings = check_condition_fidelity(cond_text, full_evidence)
         if findings:
@@ -499,6 +652,7 @@ def run_projection(
                     {"kind": f.kind, "clause": f.clause, "detail": f.detail} for f in findings
                 ],
                 "evidence_quotes": full_evidence,
+                "supplementary_evidence_spans": extra_spans,
             }
             continue
 
@@ -510,6 +664,7 @@ def run_projection(
             ),
             "char_span": list(mech["char_span"]), "quote": mech["quote"], "relevance": rel,
             "composition": comp_record, "evidence_quotes": full_evidence,
+            "supplementary_evidence_spans": extra_spans,
         }
 
     for a in projection.alias_specs:
@@ -544,6 +699,14 @@ def run_projection(
         rec["condition_ref"] = ref
         rec["disposition"] = PRESERVED_NON_EXECUTABLE_METADATA
         rec["excluded_from_denominator"] = True
+        # AR-1323A F56: self-verifying hashes for every text/quote this module was handed, on the
+        # same never-trust-a-caller-supplied-hash discipline as `_provenance()` below.
+        rec["original_text_sha256"] = _sha256(rec.get("original_text", ""))
+        if rec.get("corrected_text") is not None:
+            rec["corrected_text_sha256"] = _sha256(rec["corrected_text"])
+        hist_ev = rec.get("historical_evidence")
+        if hist_ev is not None:
+            hist_ev["quote_sha256"] = _sha256(hist_ev["quote"])
         outcomes[ref] = rec
 
     # AR-1322A F50: embed self-verifying original/projected-text provenance and evidence-quote
@@ -568,6 +731,7 @@ def run_projection(
         valid_refs=set(text_by_ref) | {a.alias_ref for a in projection.alias_specs},
         root_refs=list(projection.graph_roots),
         required_reachable=canonical_set,
+        allowed_edge_types=allowed_edge_types,
     )
 
     grade = (
@@ -578,7 +742,13 @@ def run_projection(
 
     return {
         "projection_version": PROJECTION_VERSION,
-        "authority": "AR-1321A section 4-6 / AR-1322A section 3 (v2 receipt/guard/evidence repair)",
+        "authority": (
+            "AR-1321A section 4-6 / AR-1322A section 3 / AR-1323A section 3 (v2.1 "
+            "certificate-contract closure: versioned spec, self-contained evidence receipt, "
+            "preserved-metadata schema, typed-graph vocabulary, durable proof, stable runner)"
+        ),
+        "transcript_sha256": transcript_sha256 if transcript_sha256 is not None else _sha256(transcript),
+        "extraction_sha256": extraction_sha256,
         "grade": grade,
         "grade_meaning": (
             "GREEN_PENDING_CERTIFICATION means every CANONICAL node cleared every mechanical, "
