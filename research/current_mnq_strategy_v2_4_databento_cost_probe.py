@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Estimate Databento cost for the frozen v2.4 clean MNQ history request.
 
-This script performs metadata cost queries only. It downloads no market data and
-never prints the API key. Databento reads DATABENTO_API_KEY from the environment.
+OPTIONAL / NON-GATING utility. It performs metadata cost queries only, downloads
+no market data, and never prints the API key. Databento reads
+DATABENTO_API_KEY from the environment.
 """
 from __future__ import annotations
 
