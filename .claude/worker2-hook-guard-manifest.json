@@ -18,7 +18,6 @@
 
   "edit_scope": {
     "allowed_prefixes": [
-      "src/server/services/paper-",
       "docs/replay-results/",
       ".claude/skills/worker-2-paper-runtime-onboarding/",
       "scripts/"
@@ -28,8 +27,10 @@
       "src/server/services/lifecycle-service.ts",
       "src/server/scheduler.ts",
       "src/server/services/paper-trading-stream.ts",
-      "src/server/services/paper-signal-service.ts"
+      "src/server/services/paper-signal-service.ts",
+      "src/server/services/paper-qualification-activation-service.ts"
     ],
+    "_prefix_not_exact_reason": "edit-scope-guard.mjs::evaluateScope requires allowedPrefixes to be directory prefixes ending in '/' -- there is no filename-prefix wildcard (e.g. 'paper-*'). First attempt used 'src/server/services/paper-' as a prefix and the guard correctly REFUSED to arm on it (measured 2026-08-18); fixed by listing exact filenames instead, including the not-yet-created paper-qualification-activation-service.ts named in claude-worker-2-ar1155-card.md.",
     "_source": "claude-worker-2-ar1155-card.md 'Primary production paths', the only currently-authorized packet. Deliberately does NOT include a broad src/server/services/ or src/server/ prefix.",
     "_lifecycle_and_scheduler_are_not_self_scoping": "lifecycle-service.ts and scheduler.ts are NOT in the pinned toolbox's WORKER_2_RULES lane-match list and are NOT in its COORDINATION_RULES either, so lane-boundary-guard classifies them REVIEW_REQUIRED -- allowed only because this scope explicitly lists them, per AR-1155's own authorization. ownership-collision-matrix.yaml (outside this repo, doctrine only) additionally requires Claude-Lead reservation before editing them; the mechanical guard does not enforce that reservation step -- it only proves the edit is inside this packet's authorized scope.",
     "_not_listed_is_not_allowed": "Compiler, Strategy Factory, decision-atom, atomize-transcript, and any Worker-1 lane surface are absent deliberately. WORKER_1_RULES in the pinned toolbox denies them regardless of this scope.",
