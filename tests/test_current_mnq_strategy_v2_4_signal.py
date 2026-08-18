@@ -59,7 +59,8 @@ def _env(d: date):
         "contract_by_session": {d: "CON.F.US.MNQ.U26"},
         "adjustment_by_session": {d: 0.0},
         "dataset_manifest": {"dataset_sha256": "abc"},
-        "piv5": pd.DataFrame(), "full5": pd.DataFrame(), "h15": pd.DataFrame(),
+        "piv5": pd.DataFrame(), "piv15": pd.DataFrame(),
+        "full5": pd.DataFrame(), "h15": pd.DataFrame(),
         "pdm": {}, "pwm": {}, "one": pd.DataFrame(),
     }
 
