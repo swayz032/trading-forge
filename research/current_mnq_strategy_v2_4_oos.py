@@ -5,10 +5,11 @@ The prior v2.3 result is deliberately not inherited. This runner binds the seal 
 the complete v2.4 build fingerprint and executes only Params() through the shared
 zone+candle candidate kernel. No parameter search or variant selection exists.
 
-Previously inspected performance ranges are mechanically excluded from CLEAN OOS.
-Clean temporal coverage is measured from ACTUAL eligible trading sessions. User
-gold evidence is accepted only when the architecture receipt carries the exact
-current positive/negative gold manifest hashes.
+EDGE-EQUATION-2 requires the complete genuine MNQ pre-contamination historical
+scope: dataset coverage must begin no later than MNQ launch (2019-05-06) and run
+through 2021-12-31. Initial post-launch warmup is present but unscored. This avoids
+both the mathematically impossible legacy 3-calendar-year gate and any temptation
+to cherry-pick a smaller clean subrange after seeing performance.
 """
 from __future__ import annotations
 
@@ -79,7 +80,45 @@ def apply_contaminated_score_exclusions(days: list, spec: dict,
     }
 
 
+def _clean_historical_scope(edge_spec: dict) -> tuple[pd.Timestamp, pd.Timestamp]:
+    scope = edge_spec["clean_historical_scope"]
+    start = pd.Timestamp(scope["required_dataset_start_on_or_before"])
+    end = pd.Timestamp(scope["required_dataset_end_on_or_after"])
+    if start > end:
+        raise RuntimeError("V24_CLEAN_SCOPE_INVALID")
+    return start, end
+
+
+def audit_clean_historical_scope(manifest: dict, edge_spec: dict) -> dict:
+    required_start, required_end = _clean_historical_scope(edge_spec)
+    try:
+        observed_start = pd.Timestamp(manifest["requested_start"])
+        observed_end = pd.Timestamp(manifest["requested_end"])
+    except Exception as exc:
+        raise RuntimeError("V24_CLEAN_SCOPE_MANIFEST_DATES_MISSING") from exc
+    issues = []
+    if observed_start > required_start:
+        issues.append(f"DATASET_START_TOO_LATE:{observed_start.date()}>{required_start.date()}")
+    if observed_end < required_end:
+        issues.append(f"DATASET_END_TOO_EARLY:{observed_end.date()}<{required_end.date()}")
+    return {
+        "status": "PASS" if not issues else "REFUSE",
+        "required_start": str(required_start.date()),
+        "required_end": str(required_end.date()),
+        "observed_requested_start": str(observed_start.date()),
+        "observed_requested_end": str(observed_end.date()),
+        "issues": issues,
+    }
+
+
+def restrict_to_clean_historical_scope(days: list, edge_spec: dict) -> list:
+    start, end = _clean_historical_scope(edge_spec)
+    s, x = start.date(), end.date()
+    return [d for d in sorted(days) if s <= d <= x]
+
+
 def _eligible_calendar_years(days: list) -> float:
+    # Informational only under EDGE-EQUATION-2; actual session count is the gate.
     return float(len(set(days)) / CLEAN_SESSIONS_PER_YEAR)
 
 
@@ -93,8 +132,12 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     spec = load_spec(); edge_spec = load_edge_spec()
     raw5, raw1, manifest = e.load_production_dataset(root)
     verify_dataset_bytes(root, manifest)
+    scope_audit = audit_clean_historical_scope(manifest, edge_spec)
+    if scope_audit["status"] != "PASS":
+        raise RuntimeError("SEALED_CLEAN_SCOPE_REFUSE:" + "|".join(scope_audit["issues"]))
+
     seal = {
-        "schema_version": 4,
+        "schema_version": 5,
         "strategy_release": e.ENGINE_VERSION,
         "sealed_utc": datetime.now(timezone.utc).isoformat(),
         "semantics_sha256": semantics_hash(),
@@ -104,7 +147,8 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         "variant_selection_allowed": False,
         "bootstrap_seed": SEED,
         "v2_3_result_inherited": False,
-        "clean_years_method": "unique_clean_score_sessions/252",
+        "clean_scope": scope_audit,
+        "clean_years_method": "unique_clean_score_sessions/252_INFORMATIONAL_ONLY",
         "edge_equation": edge_spec["equation"],
         "gold_manifest_sha256": gold_manifest_hashes(),
         "contaminated_score_ranges": _all_contaminated_ranges(spec, edge_spec),
@@ -116,7 +160,8 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         raise RuntimeError("SEALED_DATA_QUALITY_REFUSE:" + "|".join(dq["issues"]))
     env = e.prepare(raw5, raw1, manifest)
     candidate_days = e.scoreable_days(env)
-    days, exclusion_audit = apply_contaminated_score_exclusions(candidate_days, spec, edge_spec)
+    uncontaminated, exclusion_audit = apply_contaminated_score_exclusions(candidate_days, spec, edge_spec)
+    days = restrict_to_clean_historical_scope(uncontaminated, edge_spec)
     if not days:
         raise RuntimeError("SEALED_NO_CLEAN_SCOREABLE_DAYS")
     provenance = audit_scoreable_contract_provenance(raw1, manifest, days)
@@ -162,6 +207,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         real_user_tempting_no_trade_gold=neg_gold,
         gold_manifest_integrity_pass=bool(gold_valid),
         contract_provenance_pass=True, data_quality_pass=True,
+        clean_historical_scope_pass=True,
         sealed_calendar_years=years, sealed_sessions=len(days), sealed_trades=len(ledger),
         chronological_folds=folds_n, positive_folds=int((folds.net_pnl > 0).sum()),
         block_bootstrap_mean_lower_95=boot["lower_95"], slippage_stress_net=stress,
@@ -174,9 +220,10 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     )
     gate = sealed_validation_gate(ev)
     report = {
-        "seal": seal, "data_quality": dq, "contamination_exclusion": exclusion_audit,
-        "clean_observation_years": years,
-        "clean_observation_years_method": "unique_clean_score_sessions/252",
+        "seal": seal, "data_quality": dq, "clean_historical_scope": scope_audit,
+        "contamination_exclusion": exclusion_audit,
+        "clean_score_sessions": len(days), "clean_observation_years": years,
+        "clean_observation_years_method": "unique_clean_score_sessions/252_INFORMATIONAL_ONLY",
         "gold_manifest_integrity_pass": bool(gold_valid),
         "contract_provenance": provenance, "metrics": m,
         "folds": folds.to_dict(orient="records"),
