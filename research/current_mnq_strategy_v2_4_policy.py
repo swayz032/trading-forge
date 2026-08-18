@@ -8,13 +8,29 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_spec.json")
+FVG_SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_fvg_semantics.json")
 
 
-def semantics_hash(path: str | Path = SPEC_PATH) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+def semantics_hash(path: str | Path = SPEC_PATH, fvg_path: str | Path = FVG_SPEC_PATH) -> str:
+    """Hash every executable semantic contract, not merely the primary spec.
+
+    FVG target ordering materially changes entries that have sufficient room and
+    the resulting target price, so changing that policy must invalidate every
+    sealed/shadow/promotion receipt just like changing the entry spec would.
+    """
+    h = hashlib.sha256()
+    for p in (Path(path), Path(fvg_path)):
+        data = p.read_bytes()
+        h.update(len(data).to_bytes(8, "big"))
+        h.update(data)
+    return h.hexdigest()
 
 
 def load_spec(path: str | Path = SPEC_PATH) -> dict:
+    return json.loads(Path(path).read_text())
+
+
+def load_fvg_spec(path: str | Path = FVG_SPEC_PATH) -> dict:
     return json.loads(Path(path).read_text())
 
 
@@ -81,6 +97,7 @@ def sealed_validation_gate(ev: Evidence, spec: dict | None = None) -> GateResult
     if not ev.contract_provenance_pass: reasons.append("CONTRACT_PROVENANCE_NOT_PROVEN")
     if not ev.data_quality_pass: reasons.append("DATA_QUALITY_NOT_PROVEN")
     if ev.sealed_calendar_years < float(req["sealed_validation_min_calendar_years"]): reasons.append("INSUFFICIENT_SEALED_YEARS")
+    if ev.sealed_sessions < int(req["sealed_validation_min_sessions"]): reasons.append("INSUFFICIENT_SEALED_TRADES") if False else None
     if ev.sealed_sessions < int(req["sealed_validation_min_sessions"]): reasons.append("INSUFFICIENT_SEALED_SESSIONS")
     if ev.sealed_trades < int(req["sealed_validation_min_trades"]): reasons.append("INSUFFICIENT_SEALED_TRADES")
     if ev.chronological_folds != int(req["chronological_folds"]): reasons.append("WRONG_FOLD_COUNT")
