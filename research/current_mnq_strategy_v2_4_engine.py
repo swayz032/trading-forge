@@ -8,9 +8,6 @@ historical and live paths share the same first-reaction/FVG semantics.
 """
 from __future__ import annotations
 
-import math
-from pathlib import Path
-
 import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as v23
@@ -52,6 +49,7 @@ def _analysis_run_day(env: dict, dte, p: Params):
             env["pdm"], env["pwm"], dte,
             entry, cand.direction, cand.setup,
             cand.setup == "BRK5",
+            piv15=env["piv15"],
         )
         if picked is None:
             continue
@@ -70,39 +68,20 @@ def _analysis_run_day(env: dict, dte, p: Params):
             raise RuntimeError("V24_ANALYSIS_EXECUTABLE_PRICE_OFF_TICK")
 
         return {
-            "session": str(dte),
-            "signal_time": str(cand.signal_time),
-            "confirmed_time": str(cand.confirmed_time),
-            "entry_time": str(entry_time),
-            "side": "LONG" if cand.direction == "L" else "SHORT",
-            "setup": cand.setup,
-            "candidate_reason": cand.reason,
-            "premarket_primary": plan.primary,
-            "premarket_score": plan.score,
-            "premarket_structure": plan.pm_structure,
-            "premarket_location": plan.location_state,
-            "entry_location": cand.location.source,
-            "location_id": cand.location.id,
-            "location_quality": cand.location.quality,
-            "location_confluence": cand.location.confluence,
-            "entry_raw_open": raw_open,
-            "entry": entry,
-            "stop": stop,
-            "target_raw": picked.raw_price,
-            "target": picked.executable_price,
-            "target_points": abs(picked.executable_price - entry),
-            "target_source": picked.location.source,
-            "target_quality": picked.quality,
-            "path_reason": path_reason,
-            "exit_time": str(exit_time),
-            "exit_price": exit_px,
-            "exit_reason": why,
-            "gross_pnl": gross,
-            "fees": core.ROUND_TRIP_FEE,
-            "net_pnl": net,
-            "r": pts / p.stop,
-            "mfe_points": mfe,
-            "mae_points": mae,
+            "session": str(dte), "signal_time": str(cand.signal_time),
+            "confirmed_time": str(cand.confirmed_time), "entry_time": str(entry_time),
+            "side": "LONG" if cand.direction == "L" else "SHORT", "setup": cand.setup,
+            "candidate_reason": cand.reason, "premarket_primary": plan.primary,
+            "premarket_score": plan.score, "premarket_structure": plan.pm_structure,
+            "premarket_location": plan.location_state, "entry_location": cand.location.source,
+            "location_id": cand.location.id, "location_quality": cand.location.quality,
+            "location_confluence": cand.location.confluence, "entry_raw_open": raw_open,
+            "entry": entry, "stop": stop, "target_raw": picked.raw_price,
+            "target": picked.executable_price, "target_points": abs(picked.executable_price-entry),
+            "target_source": picked.location.source, "target_quality": picked.quality,
+            "path_reason": path_reason, "exit_time": str(exit_time), "exit_price": exit_px,
+            "exit_reason": why, "gross_pnl": gross, "fees": core.ROUND_TRIP_FEE,
+            "net_pnl": net, "r": pts/p.stop, "mfe_points": mfe, "mae_points": mae,
         }
     return None
 
