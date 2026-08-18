@@ -28,6 +28,12 @@ def test_historical_and_live_import_the_exact_same_candidate_kernel():
     assert sig.iter_actionable_candidates is ker.iter_actionable_candidates
 
 
+def test_kernel_uses_v24_level_builder_not_legacy_entry_map():
+    source = open(ker.__file__, encoding="utf-8").read()
+    assert "build_entry_locations_v24" in source
+    assert "core.build_entry_locations(env" not in source
+
+
 def test_zone_candle_gate_can_veto_an_old_style_complete_reversal(monkeypatch):
     env = _env(); ts = env["r5"].index[0]
     loc = ker.core.Location(
@@ -35,7 +41,7 @@ def test_zone_candle_gate_can_veto_an_old_style_complete_reversal(monkeypatch):
         quality=0.9, confluence=2, entry_authorized=True, zone=None,
     )
     monkeypatch.setattr(ker.core, "premarket_plan", lambda *a, **k: SimpleNamespace(primary="BULL"))
-    monkeypatch.setattr(ker.core, "build_entry_locations", lambda *a, **k: ([loc], []))
+    monkeypatch.setattr(ker, "build_entry_locations_v24", lambda *a, **k: ([loc], []))
     monkeypatch.setattr(ker.core, "bar_interacts", lambda *a, **k: True)
     monkeypatch.setattr(ker.core, "reversal_story", lambda *a, **k: SimpleNamespace(complete=True))
     monkeypatch.setattr(ker.core, "plan_allows", lambda *a, **k: True)
