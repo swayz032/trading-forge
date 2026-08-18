@@ -98,7 +98,12 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 //   b6c70282 -> 4c5f9d4a   (AR-1307 F32-F35 handshake repair). Member diff: 3 new .mjs files,
 //                           44 -> 47. Descendant verified under AR-1310 with
 //                           `git merge-base --is-ancestor b6c70282 4c5f9d4a`.
-const TOOLBOX_PIN = '4c5f9d4adba5972a051aa845b98809bc2b6c7aa4';
+// RE-PINNED 2026-08-18 by AR-1319 control-plane seat, on AR-1318A executable ruling
+// (cpb-2026-08-18-0007):
+//   4c5f9d4a -> bbf2e6c2   (AR-1318 F36 two-location GIT_TREE receipt-state compatibility
+//                           repair + SubagentStop lifecycle finality). Descendant verified
+//                           under AR-1318A ruling with Worker commit 3c2df1d0.
+const TOOLBOX_PIN = 'bbf2e6c2e9ae39a7f0f2be182c9046165eb4b198';
 
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
