@@ -1,7 +1,7 @@
 {
-  "schema_version": 1,
-  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-1",
-  "purpose": "Any critical executable change must invalidate prior v2.4 architecture, sealed, shadow and promotion evidence even when semantic prose is unchanged.",
+  "schema_version": 2,
+  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-2",
+  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, data/contract plumbing or ProjectX execution chain invalidates prior evidence even when semantic prose is unchanged.",
   "contract_files": [
     "research/current_mnq_strategy_v2_4_spec.json",
     "research/current_mnq_strategy_v2_4_fvg_semantics.json",
@@ -10,9 +10,15 @@
     "research/current_mnq_strategy_v2_4_build_contract.json"
   ],
   "strategy_and_edge_source_files": [
+    "research/current_mnq_strategy_v1_fast.py",
+    "research/current_mnq_strategy_v2_ab.py",
     "research/current_mnq_strategy_v2_2_engine.py",
+    "research/current_mnq_strategy_v2_2_engine_runtime.py",
+    "research/current_mnq_strategy_v2_2_gold_lifecycle.py",
+    "research/current_mnq_strategy_v2_2_engine_final.py",
     "research/current_mnq_strategy_v2_3_engine.py",
     "research/current_mnq_strategy_v2_3_oos.py",
+    "research/current_mnq_strategy_v2_3_data.py",
     "src/engine/indicators/fvg_native.py",
     "research/current_mnq_strategy_v2_4_candles.py",
     "research/current_mnq_strategy_v2_4_zone_candles.py",
@@ -29,6 +35,11 @@
     "research/current_mnq_strategy_v2_4_policy.py"
   ],
   "production_source_files": [
+    "research/current_mnq_strategy_v2_2_contracts.py",
+    "research/current_mnq_strategy_v2_2_projectx_history.py",
+    "research/current_mnq_strategy_v2_2_projectx_broker.py",
+    "research/current_mnq_strategy_v2_3_broker.py",
+    "research/current_mnq_strategy_v2_3_policy.py",
     "research/current_mnq_strategy_v2_3_local_runtime.py",
     "research/current_mnq_strategy_v2_3_realtime.py",
     "research/current_mnq_strategy_v2_3_live_data.py",
@@ -46,5 +57,8 @@
     "research/current_mnq_strategy_v2_4_execution.py",
     "research/current_mnq_strategy_v2_4_automation_runtime.py"
   ],
-  "rule": "Fingerprint hashes each path label, byte length and exact file bytes in declared order. Missing file is a hard failure."
+  "data_source_files": [
+    "research/current_mnq_strategy_v2_3_databento.py"
+  ],
+  "rule": "Fingerprint hashes each declared path label, byte length and exact file bytes in deterministic section/order. Missing or duplicate file is a hard failure."
 }
