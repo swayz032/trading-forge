@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 """Shared causal candidate kernel for Current MNQ v2.4.
 
-This is the single candidate-formation path used by both historical validation and
-live/shadow signal formation. It layers the trader's explicit corrections on top
-of proven production plumbing:
-
-    PREMARKET -> BUILD LEVELS -> REACH ZONE -> REJECT/BREAK -> CANDLE CONTROL -> A+.
-
-Executable levels come from the v2.4 key-level equation: established independent
-rejection clusters plus exceptional single-swing displacement zones. No candle
-pattern can create a candidate away from one of those authorized locations.
+Single candidate path for historical validation and live/shadow formation:
+PREMARKET -> LEVEL -> REACH -> REJECT/RECLAIM/BREAK/RETEST -> CANDLE CONTROL -> A+.
+Zone role is replayed by the v2.4 support/resistance lifecycle before every bar.
 """
 from __future__ import annotations
 
@@ -22,18 +16,17 @@ import pandas as pd
 from research import current_mnq_strategy_v2_3_engine as prod
 from research.current_mnq_strategy_v2_4_gate import gate_candidate
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
+from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
 
 core = prod.core
 
 
 def completed_candle_window(full5: pd.DataFrame, ts: pd.Timestamp, n: int = 5) -> pd.DataFrame:
-    """Return only bars known at the close of the current 5m bar."""
     return full5[full5.index <= ts].tail(n)[["open", "high", "low", "close"]].copy()
 
 
 def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                                as_of: pd.Timestamp | None = None):
-    """Yield chronological single-direction A+ candidates before target selection."""
     full5, r5, h15 = env["full5"], env["r5"], env["h15"]
     session = r5[r5.index.date == dte]
     if session.empty:
@@ -58,14 +51,15 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         if not np.isfinite(r.atr):
             continue
 
-        # Resolve state immediately BEFORE the current completed bar. The current
-        # break/reclaim candle may not erase the very question it is answering.
+        # State is resolved strictly BEFORE the current bar. A broken support that
+        # has accepted/retested as resistance is actually presented as R here;
+        # a failed break/reclaim is restored to its original role.
         current_locs = []
         for loc in authorized:
             if loc.zone is None:
                 current_locs.append(loc)
                 continue
-            zs = core.zone_state_at(loc.zone, full5, ts, p)
+            zs = zone_state_at_v24(loc.zone, full5, ts, p)
             if zs.active:
                 current_locs.append(replace(
                     loc, zone=zs, side=zs.side, quality=zs.quality,
@@ -122,10 +116,8 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                         ))
 
         for key, pen in list(pending.items()):
-            # Pending attempts bind to the ORIGINAL pre-open authorized location.
-            # The attempt itself may have broken its current state, but that does
-            # not erase the 15m acceptance question.
-            loc = next((x for x in authorized if x.id == pen.location_id), None)
+            # The pending question binds to the exact role/zone at the attempt.
+            loc = next((x for x in current_locs if x.id == pen.location_id), None)
             if loc is None:
                 pending.pop(key, None)
                 continue
