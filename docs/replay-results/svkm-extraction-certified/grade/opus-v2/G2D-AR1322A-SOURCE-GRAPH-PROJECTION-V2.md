@@ -160,7 +160,7 @@ pushes in this campaign — all evidence above is local pytest + direct script e
 | F.1 | freeze/reference old RED witness by hash+identities | **DONE** — above |
 | F.2 | permanent focused tests | **DONE** — 19 tests, `test_source_graph_projection.py` |
 | F.3 | hermetic preflight test, no receipt reconciliation | **DONE** — `sandbox` fixture repaired, 6/6 passing, real receipts untouched |
-| F.4 | two zero-call runs, canonical LF hash, verify against committed bytes | **DONE this pass** for the two local runs (identical `f3ba635e...`); the "verify against the bytes fetched from the worker branch" half of this item completes once this commit is pushed — noted as the one part of F.4 that cannot be self-verified before push |
+| F.4 | two zero-call runs, canonical LF hash, verify against committed bytes | **DONE, fully closed.** Two local runs: identical `f3ba635e2eefac2092b0fa337b2e95dfefde9757674487c409855126ffca5853`. After pushing (`25c57055`), fetched `origin/claude/worker1-h1-20260815:docs/replay-results/svkm-extraction-certified/grade/opus-v2/source_graph_projection_v2.json` directly and hashed those bytes: **identical**, `f3ba635e2eefac2092b0fa337b2e95dfefde9757674487c409855126ffca5853`. The reported hash equals the file on the remote branch, not merely the local one. |
 | F.5 | correct the direction score table | **DONE** — F52 above, scores pulled from committed artifact only |
 | F.6 | report CI separately | **DONE** — `CI: NONE` stated above, explicitly not conflated with local-test green |
 
