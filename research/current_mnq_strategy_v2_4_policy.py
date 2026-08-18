@@ -36,12 +36,7 @@ def semantics_hash(path: str | Path = SPEC_PATH,
                    edge_path: str | Path = EDGE_SPEC_PATH,
                    key_level_path: str | Path = KEY_LEVEL_SPEC_PATH,
                    build_path: str | Path = BUILD_CONTRACT_PATH) -> str:
-    """Hash exact critical contracts + implementation bytes in declared order.
-
-    Historical name `semantics_hash` is retained for receipt compatibility, but
-    its meaning is now stronger: it is the complete v2.4 strategy/build
-    fingerprint. A critical code change invalidates old evidence automatically.
-    """
+    """Hash exact critical contracts + implementation bytes in declared order."""
     build_path = Path(build_path)
     overrides = {
         "research/current_mnq_strategy_v2_4_spec.json": Path(path),
@@ -55,8 +50,7 @@ def semantics_hash(path: str | Path = SPEC_PATH,
         p = overrides.get(rel, REPO_ROOT / rel)
         if not p.exists() or not p.is_file():
             raise RuntimeError(f"V24_FINGERPRINT_FILE_MISSING:{rel}")
-        data = p.read_bytes()
-        label = rel.encode("utf-8")
+        data = p.read_bytes(); label = rel.encode("utf-8")
         h.update(len(label).to_bytes(4, "big")); h.update(label)
         h.update(len(data).to_bytes(8, "big")); h.update(data)
     return h.hexdigest()
@@ -89,7 +83,8 @@ class Evidence:
     gold_manifest_integrity_pass: bool = False
     contract_provenance_pass: bool = False
     data_quality_pass: bool = False
-    sealed_calendar_years: float = 0.0
+    clean_historical_scope_pass: bool = False
+    sealed_calendar_years: float = 0.0  # informational only under EDGE-EQUATION-2
     sealed_sessions: int = 0
     sealed_trades: int = 0
     chronological_folds: int = 0
@@ -146,7 +141,9 @@ def sealed_validation_gate(ev: Evidence, spec: dict | None = None) -> GateResult
     reasons = list(research_gate(ev, spec).reasons)
     if not ev.contract_provenance_pass: reasons.append("CONTRACT_PROVENANCE_NOT_PROVEN")
     if not ev.data_quality_pass: reasons.append("DATA_QUALITY_NOT_PROVEN")
-    if ev.sealed_calendar_years < float(req["sealed_validation_min_calendar_years"]): reasons.append("INSUFFICIENT_SEALED_YEARS")
+    # EDGE-EQUATION-2 deliberately replaces the impossible legacy 3-calendar-year
+    # gate with complete genuine MNQ pre-contamination history + actual session count.
+    if not ev.clean_historical_scope_pass: reasons.append("CLEAN_HISTORICAL_SCOPE_INCOMPLETE")
     if ev.sealed_sessions < max(int(req["sealed_validation_min_sessions"]), int(edge["minimum_score_sessions"])): reasons.append("INSUFFICIENT_SEALED_SESSIONS")
     if ev.sealed_trades < max(int(req["sealed_validation_min_trades"]), int(edge["minimum_trades"])): reasons.append("INSUFFICIENT_SEALED_TRADES")
     if ev.chronological_folds != int(req["chronological_folds"]): reasons.append("WRONG_FOLD_COUNT")
