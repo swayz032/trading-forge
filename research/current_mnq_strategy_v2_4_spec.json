@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "strategy_id": "CURRENT_MNQ_DISCRETIONARY_TRANSLATION",
   "release_id": "MNQ-V2.4-ZONE-CANDLE-PC1",
   "supersedes_semantics": "MNQ-V2.3-PC1",
@@ -9,7 +9,16 @@
   "session": {
     "timezone": "America/New_York",
     "execution_window": "09:30-12:00",
+    "rth_context": "09:30-16:00",
     "max_trades_per_session": 1
+  },
+  "risk_intent": {
+    "desired_contracts": 15,
+    "stop_points": 17.25,
+    "tick_size": 0.25,
+    "point_value_usd": 2.0,
+    "execution_risk_overlay_may_reduce_size": true,
+    "signal_semantics_must_not_change_when_size_is_reduced": true
   },
   "hard_entry_order": [
     "PREMARKET_CONTEXT",
@@ -25,11 +34,8 @@
     "pattern_without_zone_interaction": "NO_TRADE",
     "authorized_locations": [
       "causal_15m_repeated_rejection_wick_support_resistance",
-      "PDH",
-      "PDL",
-      "PWH",
-      "PWL",
-      "active_15m_FVG_boundary_or_reaction_area"
+      "PDH_PDL_PWH_PWL_as_context_or_authorized_location_when_quality_gate_passes",
+      "active_15m_FVG_as_context_or_authorized_location_when_quality_gate_passes"
     ],
     "valid_rejection_interactions": [
       "touch_and_reject",
@@ -48,74 +54,31 @@
     "role": "CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL",
     "timeframe": "5m_primary_execution_story_with_15m_context_and_weak_breakout_confirmation",
     "single_candle_families": [
-      "doji",
-      "long_legged_doji",
-      "dragonfly_doji",
-      "gravestone_doji",
-      "spinning_top",
-      "hammer_geometry",
-      "inverted_hammer_geometry",
-      "shooting_star_geometry",
-      "hanging_man_geometry",
-      "bullish_marubozu",
-      "bearish_marubozu",
-      "bullish_long_body_displacement",
-      "bearish_long_body_displacement",
-      "bullish_pin_rejection",
-      "bearish_pin_rejection"
+      "doji", "long_legged_doji", "dragonfly_doji", "gravestone_doji",
+      "spinning_top", "hammer_geometry", "inverted_hammer_geometry",
+      "shooting_star_geometry", "hanging_man_geometry", "bullish_marubozu",
+      "bearish_marubozu", "bullish_long_body_displacement",
+      "bearish_long_body_displacement", "bullish_pin_rejection", "bearish_pin_rejection"
     ],
     "two_candle_families": [
-      "bullish_engulfing",
-      "bearish_engulfing",
-      "bullish_harami",
-      "bearish_harami",
-      "harami_cross",
-      "piercing_line",
-      "dark_cloud_cover",
-      "tweezer_bottom",
-      "tweezer_top",
-      "bullish_kicker",
-      "bearish_kicker",
-      "inside_bar",
-      "outside_bar",
-      "failed_push_reclaim"
+      "bullish_engulfing", "bearish_engulfing", "bullish_harami", "bearish_harami",
+      "harami_cross", "piercing_line", "dark_cloud_cover", "tweezer_bottom",
+      "tweezer_top", "bullish_kicker", "bearish_kicker", "inside_bar",
+      "outside_bar", "failed_push_reclaim"
     ],
     "three_plus_candle_families": [
-      "morning_star",
-      "evening_star",
-      "morning_doji_star",
-      "evening_doji_star",
-      "three_white_soldiers",
-      "three_black_crows",
-      "three_inside_up",
-      "three_inside_down",
-      "three_outside_up",
-      "three_outside_down",
-      "bullish_abandoned_baby",
-      "bearish_abandoned_baby",
-      "rising_three_methods",
-      "falling_three_methods",
-      "compression_then_expansion",
-      "repeated_rejection_then_displacement"
+      "morning_star", "evening_star", "morning_doji_star", "evening_doji_star",
+      "three_white_soldiers", "three_black_crows", "three_inside_up", "three_inside_down",
+      "three_outside_up", "three_outside_down", "bullish_abandoned_baby",
+      "bearish_abandoned_baby", "rising_three_methods", "falling_three_methods",
+      "compression_then_expansion", "repeated_rejection_then_displacement"
     ],
     "priority_rule": "GEOMETRY_AND_SEQUENCE_MEANING_OVERRIDES_PATTERN_NAME",
-    "story": [
-      "APPROACH",
-      "FIGHT",
-      "DECISION"
-    ],
+    "story": ["APPROACH", "FIGHT", "DECISION"],
     "control_features": [
-      "body_to_range_ratio",
-      "upper_wick_fraction",
-      "lower_wick_fraction",
-      "close_location",
-      "range_expansion_or_contraction",
-      "engulfing_or_inside_relationship",
-      "failed_push",
-      "reclaim",
-      "follow_through",
-      "displacement",
-      "two_sided_wick_conflict"
+      "body_to_range_ratio", "upper_wick_fraction", "lower_wick_fraction",
+      "close_location", "range_expansion_or_contraction", "engulfing_or_inside_relationship",
+      "failed_push", "reclaim", "follow_through", "displacement", "two_sided_wick_conflict"
     ],
     "mixed_or_indecisive_control": "WAIT_OR_NO_TRADE"
   },
@@ -125,30 +88,78 @@
     "resistance_breakout_long": "price reaches resistance and strong bullish displacement/acceptance breaks through, or weak attempt later receives new completed 15m acceptance",
     "support_breakout_short": "price reaches support and strong bearish displacement/acceptance breaks through, or weak attempt later receives new completed 15m acceptance"
   },
+  "zone_lifecycle": {
+    "breach_is_not_automatically_permanent_break": true,
+    "quick_reclaim_restores_original_polarity": true,
+    "durable_acceptance_can_flip_role": true,
+    "future_bars_forbidden": true
+  },
   "target_semantics": {
     "destination": "next_meaningful_reaction_or_liquidity_cluster",
-    "skip_tiny_weak_shelves": true,
-    "do_not_skip_nearby_strong_blocker": true,
-    "safe_middle_not_exact_half": true,
+    "tiny_weak_shelves_may_be_skipped": true,
+    "nearby_strong_blocker_may_not_be_silently_skipped": true,
+    "safe_middle_not_exact_fifty_percent": true,
+    "active_15m_FVG_may_be_destination": true,
     "fixed_R_target": false
   },
-  "risk_intent": {
-    "desired_contracts": 15,
-    "stop_points": 17.25,
-    "tick_size": 0.25,
-    "point_value_usd": 2.0,
-    "risk_overlay_may_only_reduce_or_refuse_size": true
+  "negative_semantic_fixtures": [
+    "candlestick_pattern_away_from_authorized_zone",
+    "mere_approach_that_never_reaches_zone",
+    "doji_or_spinning_top_at_zone_without_directional_takeover",
+    "mixed_overlap_and_two_sided_wicks",
+    "weak_breakout_without_new_completed_15m_acceptance",
+    "counter_bias_reversal_without_completed_control_transfer",
+    "nearby_strong_blocker_before_destination",
+    "retired_or_invalidated_FVG_used_as_confluence",
+    "off_tick_entry_stop_or_target",
+    "second_trade_same_session",
+    "stale_or_ambiguous_contract_identity",
+    "stale_market_data",
+    "failed_breakout_that_reclaims_original_zone_must_not_be_treated_as_durable_role_flip"
+  ],
+  "evidence_policy": {
+    "real_user_positive_gold_min": 5,
+    "semantic_negative_fixture_min": 10,
+    "real_user_tempting_no_trade_gold_min": 1,
+    "sealed_validation_min_calendar_years": 3,
+    "sealed_validation_min_sessions": 500,
+    "sealed_validation_min_trades": 100,
+    "chronological_folds": 4,
+    "min_positive_folds": 3,
+    "block_bootstrap_mean_expectancy_lower_95_must_be_positive": true,
+    "slippage_stress_points": [0.5, 1.0, 2.0],
+    "all_slippage_stress_net_must_be_positive": true,
+    "shadow_min_full_sessions": 10,
+    "shadow_min_executed_or_would_execute_trades": 5,
+    "shadow_rule_changes_allowed": 0,
+    "shadow_duplicate_order_events_allowed": 0,
+    "shadow_unreconciled_state_events_allowed": 0
   },
   "anti_overfit": {
     "no_PnL_parameter_tuning_for_this_semantic_correction": true,
+    "no_parameter_search_on_sealed_validation": true,
+    "no_variant_promotion_from_sealed_validation": true,
+    "rule_change_after_sealed_result_invalidates_that_result": true,
     "v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4": true,
     "reason": "Zone-first candlestick semantics materially change the executable strategy; v2.4 requires fresh sealed validation after implementation is frozen.",
     "contaminated_score_ranges": [
-      {
-        "start": "2026-01-20",
-        "end": "2026-04-15",
-        "reason": "Previously inspected/development-tested sample."
-      }
+      {"start": "2026-01-20", "end": "2026-04-15", "reason": "Previously inspected/development-tested sample."}
     ]
+  },
+  "topstep_compliance": {
+    "projectx_automation_requires_personal_device": true,
+    "vpn_vps_remote_server_refused": true,
+    "projectx_api_on_live_funded_account_refused": true,
+    "realtime_account_must_report_simulated_true": true,
+    "orders_are_final_and_system_must_fail_closed": true
+  },
+  "deployment": {
+    "default_mode": "SHADOW",
+    "automation_requires_signed_promotion_receipt": true,
+    "automation_requires_personal_device": true,
+    "remote_server_automation_refused": true,
+    "broker_state_must_reconcile_before_each_submission": true,
+    "promotion_stage_name": "TOPSTEPX_API_AUTOMATION_ELIGIBLE",
+    "live_funded_account_stage": "MANUAL_OR_OTHER_TOPSTEP_PERMITTED_EXECUTION_ONLY"
   }
 }
