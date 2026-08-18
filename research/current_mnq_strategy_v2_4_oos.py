@@ -5,10 +5,10 @@ The prior v2.3 result is deliberately not inherited. This runner binds the seal 
 the v2.4 semantic hash and executes only Params() through the shared zone+candle
 candidate kernel. No parameter search or variant selection exists here.
 
-A second anti-overfit boundary is enforced: any date range whose aggregate MNQ
-strategy performance was already inspected before the v2.4 equation freeze is
-mechanically excluded from CLEAN OOS scoring. Such data may still be used by the
-separate development diagnostic, but never relabeled as fresh final proof.
+Previously inspected performance ranges are mechanically excluded from CLEAN OOS.
+Clean temporal coverage is measured from ACTUAL eligible trading sessions, not the
+calendar distance between the first and last clean observation, so a multi-year
+excluded hole can never masquerade as evidence.
 """
 from __future__ import annotations
 
@@ -23,17 +23,13 @@ import pandas as pd
 from research import current_mnq_strategy_v2_4_engine as e
 from research.current_mnq_strategy_v2_3_evidence import gold_counts
 from research.current_mnq_strategy_v2_3_oos import (
-    SEED,
-    audit_scoreable_contract_provenance,
-    chronological_folds,
-    moving_block_bootstrap_mean,
-    slippage_stress,
-    verify_dataset_bytes,
+    SEED, audit_scoreable_contract_provenance, chronological_folds,
+    moving_block_bootstrap_mean, slippage_stress, verify_dataset_bytes,
 )
 from research.current_mnq_strategy_v2_4_edge import build_edge_certificate, load_edge_spec
-from research.current_mnq_strategy_v2_4_policy import (
-    Evidence, load_spec, sealed_validation_gate, semantics_hash,
-)
+from research.current_mnq_strategy_v2_4_policy import Evidence, load_spec, sealed_validation_gate, semantics_hash
+
+CLEAN_SESSIONS_PER_YEAR = 252.0
 
 
 def _json_if_present(path: str | Path | None) -> dict:
@@ -48,9 +44,7 @@ def _json_if_present(path: str | Path | None) -> dict:
 def _all_contaminated_ranges(spec: dict, edge_spec: dict) -> list[dict]:
     ranges = list(spec.get("anti_overfit", {}).get("contaminated_score_ranges", []))
     ranges += list(edge_spec.get("anti_overfit", {}).get("known_seen_performance_ranges", []))
-    # Exact duplicate ranges are harmless but make audit output noisy.
-    unique = []
-    seen = set()
+    unique = []; seen = set()
     for r in ranges:
         key = (str(r["start"]), str(r["end"]), str(r.get("reason", "")))
         if key not in seen:
@@ -84,9 +78,8 @@ def apply_contaminated_score_exclusions(days: list, spec: dict,
 
 
 def _eligible_calendar_years(days: list) -> float:
-    if len(days) < 2:
-        return 0.0
-    return max(0.0, (max(days) - min(days)).days / 365.25)
+    """Conservative clean observation years from actual unique trading sessions."""
+    return float(len(set(days)) / CLEAN_SESSIONS_PER_YEAR)
 
 
 def run_sealed(dataset_root: str | Path, out_dir: str | Path,
@@ -100,7 +93,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     raw5, raw1, manifest = e.load_production_dataset(root)
     verify_dataset_bytes(root, manifest)
     seal = {
-        "schema_version": 2,
+        "schema_version": 3,
         "strategy_release": e.ENGINE_VERSION,
         "sealed_utc": datetime.now(timezone.utc).isoformat(),
         "semantics_sha256": semantics_hash(),
@@ -110,6 +103,7 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
         "variant_selection_allowed": False,
         "bootstrap_seed": SEED,
         "v2_3_result_inherited": False,
+        "clean_years_method": "unique_clean_score_sessions/252",
         "edge_equation": edge_spec["equation"],
         "contaminated_score_ranges": _all_contaminated_ranges(spec, edge_spec),
     }
@@ -177,6 +171,8 @@ def run_sealed(dataset_root: str | Path, out_dir: str | Path,
     gate = sealed_validation_gate(ev)
     report = {
         "seal": seal, "data_quality": dq, "contamination_exclusion": exclusion_audit,
+        "clean_observation_years": years,
+        "clean_observation_years_method": "unique_clean_score_sessions/252",
         "contract_provenance": provenance, "metrics": m,
         "folds": folds.to_dict(orient="records"),
         "block_bootstrap_mean_trade": boot, "slippage_stress_net": stress,
