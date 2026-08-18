@@ -4,12 +4,10 @@
 Single path for historical validation and live/shadow formation:
 PREMARKET -> LEVEL -> REACH -> REJECT/RECLAIM/BREAK/RETEST -> CANDLE CONTROL -> A+.
 
-The current bar sees two causal zone snapshots:
-- PRE-CANDLE role: used for ordinary rejection and breakout attempts so a breakout
-  bar cannot erase the zone it is breaking.
-- POST-CANDLE role: used only when a previously BROKEN zone is restored/flipped by
-  this exact completed candle, allowing the reclaim/retest candle to confirm a
-  reversal without waiting one extra bar.
+Premarket is a conditional prior. Counter-plan setups can proceed only when the
+already-confirmed zone/candle event occurs at a major location under the frozen
+v2.4 premarket equation. No literal 0.80 cutoff or unconditional counter-breakout
+ban remains in this kernel.
 """
 from __future__ import annotations
 
@@ -22,6 +20,7 @@ import pandas as pd
 from research import current_mnq_strategy_v2_3_engine as prod
 from research.current_mnq_strategy_v2_4_gate import gate_candidate
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
+from research.current_mnq_strategy_v2_4_premarket import plan_allows_v24
 from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
 
 core = prod.core
@@ -72,15 +71,10 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
             if before.active:
                 pre_locs.append(_as_location(loc, before))
                 continue
-
-            # Only a zone that was unavailable BEFORE this candle but becomes
-            # active AFTER this candle is a same-candle reclaim/role-flip setup.
             after = zone_state_at_v24(loc.zone, full5, bar_close, p)
             if after.active and after.state in {core.ZoneState.TESTED, core.ZoneState.FLIPPED_RETEST}:
                 transition_reversal_locs.append(_as_location(loc, after))
 
-        # Reversals can use the exact reclaim/retest candle that reactivates a
-        # role. Breakouts must use PRE-candle roles only.
         reversal_locs = pre_locs + transition_reversal_locs
         breakout_locs = pre_locs
 
@@ -98,7 +92,7 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                 if not zgate.allowed:
                     continue
                 story = core.reversal_story(full5, ts, r, direction, loc, p)
-                if story.complete and core.plan_allows(plan, direction, "REV", story, loc):
+                if story.complete and plan_allows_v24(plan, direction, "REV", story, loc, p):
                     candidates.append(core.Candidate(
                         direction, "REV", loc, story, ts, bar_close,
                         f"ZONE_CANDLE_REV:{zgate.reason}",
@@ -116,7 +110,7 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                         bars=candle_window, zone_side=side, zone_lo=loc.lo, zone_hi=loc.hi,
                         direction=direction, setup="BRK5", pad=0.0,
                     )
-                    if zgate.allowed and core.plan_allows(plan, direction, "BRK5", None, loc):
+                    if zgate.allowed and plan_allows_v24(plan, direction, "BRK5", None, loc, p):
                         candidates.append(core.Candidate(
                             direction, "BRK5", loc, None, ts, bar_close,
                             f"ZONE_CANDLE_BRK5:{zgate.reason}",
@@ -151,7 +145,7 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                 direction=pen.direction, setup="BRK15", pad=0.0,
                 fifteen_minute_acceptance=True,
             )
-            if zgate.allowed and core.plan_allows(plan, pen.direction, "BRK15", None, loc):
+            if zgate.allowed and plan_allows_v24(plan, pen.direction, "BRK15", None, loc, p):
                 candidates.append(core.Candidate(
                     pen.direction, "BRK15", loc, None, pen.attempted_at,
                     confirmed, f"ZONE_CANDLE_BRK15:{zgate.reason}",
