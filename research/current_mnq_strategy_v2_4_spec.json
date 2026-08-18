@@ -1,11 +1,11 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "strategy_id": "CURRENT_MNQ_DISCRETIONARY_TRANSLATION",
-  "release_id": "MNQ-V2.4-ZONE-CANDLE-PC1",
+  "release_id": "MNQ-V2.4-ZONE-CANDLE-PC1-DQ1",
   "supersedes_semantics": "MNQ-V2.3-PC1",
-  "frozen_at": "2026-08-17",
+  "frozen_at": "2026-08-18",
   "instrument": "MNQ",
-  "semantic_correction_reason": "Trader explicitly reconfirmed that candlestick patterns and key-level rules are taught together. Candlestick patterns are confirmation/control evidence only after price reaches a valid pre-drawn zone. Price must reject/reclaim, break/accept, or validly break-retest that zone before a trade can qualify.",
+  "semantic_correction_reason": "Trader explicitly reconfirmed that candlestick patterns and key-level rules are taught together. Candlestick patterns are confirmation/control evidence only after price reaches a valid pre-drawn zone. Price must reject/reclaim, break/accept, or validly break-retest that zone before a trade can qualify. Trader also supplied a fresh real-trade example before clean v2.4 PnL confirming that TP ownership is determined by the first meaningful reaction area in physical price order: a nearer liquidity cluster must not be skipped for a farther FVG, and vice versa.",
   "source_model": {
     "candlestick_video_pack_is_joint_candle_and_key_level_evidence": true,
     "location_and_pattern_must_be_interpreted_together": true,
@@ -156,6 +156,11 @@
   },
   "target_semantics": {
     "destination": "next_meaningful_reaction_or_liquidity_cluster",
+    "first_reaction_priority": "Whichever valid meaningful reaction area has the nearest physical first-contact edge in the trade direction owns the TP decision. A nearer 5m liquidity cluster outranks a farther 15m FVG; a nearer active 15m FVG outranks a farther liquidity cluster. No farther feature may leapfrog the nearer meaningful reaction area.",
+    "long_scan_direction": "from_entry_upward",
+    "short_scan_direction": "from_entry_downward",
+    "overlap_policy": "When a 5m cluster or FVG is internal to the already-winning broad reaction area, it may refine TP only inside that area; it may not move the target beyond the first-reaction owner.",
+    "real_user_example_2026_08_18": "Trader supplied a real trade screenshot where the liquidity cluster sat in front of the FVG in the trade direction; the cluster was therefore the first reaction zone and the TP was placed at the cluster rather than skipping it for the farther FVG.",
     "tiny_weak_shelves_may_be_skipped": true,
     "nearby_strong_blocker_may_not_be_silently_skipped": true,
     "safe_middle_not_exact_fifty_percent": true,
@@ -179,7 +184,9 @@
     "sweep_reclaim_without_hold_or_directional_defense",
     "role_flip_from_single_transient_wick_breach",
     "break_retest_without_prior_durable_acceptance",
-    "low_quality_chart_clutter_level_used_as_A_plus_location"
+    "low_quality_chart_clutter_level_used_as_A_plus_location",
+    "farther_FVG_leapfrogs_nearer_meaningful_liquidity_cluster",
+    "farther_liquidity_cluster_leapfrogs_nearer_active_FVG"
   ],
   "evidence_policy": {
     "real_user_positive_gold_min": 5,
@@ -205,8 +212,11 @@
     "no_variant_promotion_from_sealed_validation": true,
     "rule_change_after_sealed_result_invalidates_that_result": true,
     "v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4": true,
-    "reason": "Zone-first candlestick and key-level semantics materially change the executable strategy; v2.4 requires fresh sealed validation after implementation is frozen.",
+    "reason": "Zone-first candlestick/key-level semantics and the first-reaction TP hierarchy are frozen before clean v2.4 PnL. Vendor-degraded source dates are also quarantined before clean v2.4 PnL so questionable bars cannot affect score evidence.",
     "contaminated_score_ranges": [
+      {"start": "2020-02-27", "end": "2020-04-08", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-02-27 and 2020-02-28 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
+      {"start": "2020-06-30", "end": "2020-08-10", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-06-30 and 2020-07-01 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
+      {"start": "2021-12-05", "end": "2022-01-14", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2021-12-05 degraded. Exclude the source date plus the maximum 40-calendar-day causal context window; the clean dataset itself ends 2021-12-31."},
       {"start": "2026-01-20", "end": "2026-04-15", "reason": "Previously inspected/development-tested sample."}
     ]
   },
