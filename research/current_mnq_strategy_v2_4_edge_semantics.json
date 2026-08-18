@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "release_id": "MNQ-V2.4-EDGE-EQUATION-1",
+  "frozen_at": "2026-08-17",
+  "purpose": "Define edge before seeing v2.4 validation PnL. No component may be relaxed because a result fails.",
+  "equation": {
+    "name": "WEAKEST_LINK_ROBUST_EXPECTANCY",
+    "definition": "ROBUST_EDGE_EXPECTANCY = min(BOOTSTRAP_LCB95, MAX_COST_STRESS_EXPECTANCY, DETAILED_EXPECTANCY, LEAVE_BEST_MONTH_OUT_EXPECTANCY)",
+    "certified_edge": "DATA_CLEAN AND SAMPLE_OK AND TEMPORAL_OK AND ROBUST_EDGE_EXPECTANCY > 0 AND BREAK_EVEN_MARGIN > 0",
+    "interpretation": "The strategy only claims edge at the weakest surviving expectancy after uncertainty, friction, outlier-removal and calendar-concentration attacks."
+  },
+  "gates": {
+    "minimum_trades": 100,
+    "minimum_score_sessions": 500,
+    "chronological_folds": 4,
+    "minimum_positive_folds": 3,
+    "top_winner_fraction_removed": 0.05,
+    "leave_best_calendar_month_out": true,
+    "bootstrap_lower_95_must_be_positive": true,
+    "highest_declared_slippage_stress_expectancy_must_be_positive": true,
+    "detailed_expectancy_must_be_positive": true,
+    "leave_best_month_out_expectancy_must_be_positive": true,
+    "break_even_win_rate_margin_must_be_positive": true
+  },
+  "anti_overfit": {
+    "no_parameter_search": true,
+    "no_threshold_rescue_after_result": true,
+    "no_best_variant_selection": true,
+    "same_history_may_be_used_for_development_diagnostics_but_not_relabeled_clean_OOS": true,
+    "known_seen_performance_ranges": [
+      {
+        "start": "2022-01-01",
+        "end": "2026-08-17",
+        "reason": "Aggregate MNQ strategy performance over this multi-year Databento era was already inspected before the v2.4 equation was frozen. It can support development/robustness diagnostics, but it cannot be called a fresh clean v2.4 OOS proof."
+      }
+    ],
+    "clean_final_edge_requires": "A date range with no overlap with known_seen_performance_ranges, or future post-freeze shadow/live evidence."
+  },
+  "diagnostics_not_hard_gates": [
+    "long_short_profit_split",
+    "setup_profit_split",
+    "win_rate",
+    "profit_factor",
+    "maximum_drawdown",
+    "longest_losing_streak",
+    "target_distance_distribution"
+  ]
+}
