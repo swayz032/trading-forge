@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed evidence policy bound to every Current MNQ v2.4 contract."""
+"""Fail-closed evidence policy bound to Current MNQ v2.4 contracts AND code."""
 from __future__ import annotations
 
 import hashlib
@@ -7,22 +7,58 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_spec.json")
 FVG_SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_fvg_semantics.json")
 EDGE_SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_edge_semantics.json")
 KEY_LEVEL_SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_key_level_semantics.json")
+BUILD_CONTRACT_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_build_contract.json")
+
+
+def load_build_contract(path: str | Path = BUILD_CONTRACT_PATH) -> dict:
+    return json.loads(Path(path).read_text())
+
+
+def fingerprinted_files(build_path: str | Path = BUILD_CONTRACT_PATH) -> tuple[str, ...]:
+    b = load_build_contract(build_path)
+    rows = (
+        list(b.get("contract_files", [])) +
+        list(b.get("strategy_and_edge_source_files", [])) +
+        list(b.get("production_source_files", []))
+    )
+    if not rows or len(rows) != len(set(rows)):
+        raise RuntimeError("V24_BUILD_CONTRACT_EMPTY_OR_DUPLICATE_PATH")
+    return tuple(rows)
 
 
 def semantics_hash(path: str | Path = SPEC_PATH,
                    fvg_path: str | Path = FVG_SPEC_PATH,
                    edge_path: str | Path = EDGE_SPEC_PATH,
-                   key_level_path: str | Path = KEY_LEVEL_SPEC_PATH) -> str:
-    """Hash every executable semantic/evidence contract."""
+                   key_level_path: str | Path = KEY_LEVEL_SPEC_PATH,
+                   build_path: str | Path = BUILD_CONTRACT_PATH) -> str:
+    """Hash exact critical contracts + implementation bytes in declared order.
+
+    Historical name `semantics_hash` is retained for receipt compatibility, but
+    its meaning is now stronger: it is the complete v2.4 strategy/build
+    fingerprint. A critical code change invalidates old evidence automatically.
+    """
+    build_path = Path(build_path)
+    overrides = {
+        "research/current_mnq_strategy_v2_4_spec.json": Path(path),
+        "research/current_mnq_strategy_v2_4_fvg_semantics.json": Path(fvg_path),
+        "research/current_mnq_strategy_v2_4_edge_semantics.json": Path(edge_path),
+        "research/current_mnq_strategy_v2_4_key_level_semantics.json": Path(key_level_path),
+        "research/current_mnq_strategy_v2_4_build_contract.json": build_path,
+    }
     h = hashlib.sha256()
-    for p in (Path(path), Path(fvg_path), Path(edge_path), Path(key_level_path)):
+    for rel in fingerprinted_files(build_path):
+        p = overrides.get(rel, REPO_ROOT / rel)
+        if not p.exists() or not p.is_file():
+            raise RuntimeError(f"V24_FINGERPRINT_FILE_MISSING:{rel}")
         data = p.read_bytes()
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
+        label = rel.encode("utf-8")
+        h.update(len(label).to_bytes(4, "big")); h.update(label)
+        h.update(len(data).to_bytes(8, "big")); h.update(data)
     return h.hexdigest()
 
 
