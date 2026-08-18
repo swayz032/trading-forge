@@ -43,9 +43,21 @@ You are not Worker 1 and do not inherit Graph Engineering/compiler work.
 4. Read canonical `C:\Users\tonio\Projects\trading-forge\.claude\skills\worker-execution\SKILL.md`; if absent, stop. Do not replace it.
 5. Read this directory's `lane-manifest.md` and `role-overlay.md`.
 6. Read `C:\Users\tonio\Documents\Codex\2026-08-14\hey\handoffs\claude-worker-2-ar1155-card.md` only after its gates are proven.
-7. Report the canonical skill path, manifest, overlay, worktree, branch, head, **the armed ear and its baseline SHA**, and `worker_1_default_inbox_loaded=false`.
+7. 🛑 **PEER SESSION HANDSHAKE — REQUIRED, canonical `worker-onboarding/SKILL.md` §2b.** Mint a
+   new `session_instance_id`, send `WORKER_SESSION_START_HELLO` to `worker-1` on your own branch,
+   fetch+read `worker-1`'s branch for a matching `WORKER_SESSION_START_ACK`, validate it with
+   `scripts/peer-handshake-guard.mjs`. State is `STARTUP_WAITING_FOR_PEER_ACK` until it matches.
+   Do not copy the recipe here — follow §2b.
+8. Report the canonical skill path, manifest, overlay, worktree, branch, head, **the armed ear and
+   its baseline SHA**, `worker_1_default_inbox_loaded=false`, and the handshake fields §2b
+   requires (`session_instance_id`, `peer_worker_id`, `peer_session_instance_id`, `hello_commit`,
+   `ack_commit`, `peer_session_rotated`, `messaging_startup_verified`, `intended_packet`).
 
-If GPT acceptance of AR-1138 and the two-worker activation receipt cannot be proven, report `worker_2_state=GATED_IDLE` and do no implementation. Installation is not activation.
+If GPT acceptance of AR-1138 and the two-worker activation receipt cannot be proven, report
+`worker_2_state=GATED_IDLE` and do no implementation. Installation is not activation.
+**Even when GATED_IDLE is cleared, `messaging_startup_verified=true` is a separate, additional
+requirement before engineering begins — a proven activation receipt does not itself prove this
+session's own handshake.**
 
 ## Intake boundary
 

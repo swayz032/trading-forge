@@ -11,4 +11,12 @@ write scope on its own branch, not on the GPT branch and not via operator relay.
 | Filename | `AR-<number>-<UPPER-KEBAB-SLUG>-<YYYY-MM-DD>.md` |
 | Cross-lane read | the other worker `git fetch`es this branch read-only and `git show`s the file; never edits it |
 
-Non-AR files (`README.md`, `HANDOFF-*.md`) are not worker reports.
+Non-AR files (`README.md`, `HANDOFF-*.md`) are not worker reports. Also non-AR, and required at
+every fresh session by `worker-onboarding SS2b`:
+
+| Prefix | Meaning |
+|---|---|
+| `HELLO-<worker_id>-<session_instance_id8>-<date>.md` | peer session handshake opener |
+| `ACK-<worker_id>-<session_instance_id8>-<date>.md` | peer session handshake acknowledgement |
+
+`scripts/peer-handshake-guard.mjs` validates their content; this directory only carries the files.
