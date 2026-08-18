@@ -6,11 +6,8 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from research.current_mnq_strategy_v2_4_candles import (
-    Interaction,
-    ZoneCandleDecision,
-    evaluate_at_zone,
-)
+from research.current_mnq_strategy_v2_4_candles import Interaction, ZoneCandleDecision
+from research.current_mnq_strategy_v2_4_zone_candles import evaluate_at_zone
 
 
 @dataclass(frozen=True)
@@ -44,10 +41,6 @@ def gate_candidate(*, bars: pd.DataFrame, zone_side: str, zone_lo: float,
         allowed = ev.breakout_long_confirmed if direction == "L" else ev.breakout_short_confirmed
         return CandidateGate(allowed, ev.reason if allowed else "ZONE_REACHED_5M_BREAKOUT_NOT_CONFIRMED", ev)
 
-    # Weak momentum breakout path: the attempt must actually close through the
-    # zone in the requested direction, then a NEW completed 15m candle must later
-    # accept beyond that same zone. Candlestick evidence is read at the attempt;
-    # 15m acceptance is a separate required witness.
     expected = Interaction.BREAK_CLOSE_UP.value if direction == "L" else Interaction.BREAK_CLOSE_DOWN.value
     if ev.interaction != expected:
         return CandidateGate(False, "WEAK_BREAKOUT_ATTEMPT_DID_NOT_BREAK_ZONE", ev)
