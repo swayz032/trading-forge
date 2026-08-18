@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ProjectX execution path bound specifically to Current MNQ v2.4 receipts."""
+"""ProjectX execution path bound specifically to Current MNQ v2.4 receipts/signals."""
 from __future__ import annotations
 
 import hashlib
@@ -11,6 +11,8 @@ from research.current_mnq_strategy_v2_3_broker import FeedHealth, V23ProjectXBro
 from research.current_mnq_strategy_v2_3_local_runtime import require_live_arming_phrase, require_personal_device
 from research.current_mnq_strategy_v2_3_state import PersistentSessionLedger
 from research.current_mnq_strategy_v2_3_topstep_risk import survival_safe_qty
+from research.current_mnq_strategy_v2_4_engine import ENGINE_VERSION
+from research.current_mnq_strategy_v2_4_policy import semantics_hash
 from research.current_mnq_strategy_v2_4_receipt import verify_receipt
 
 
@@ -22,8 +24,24 @@ def client_tag(signal: dict) -> str:
     return "MNQV24-" + hashlib.sha256(raw.encode()).hexdigest()[:24]
 
 
+def validate_signal_identity(signal: dict) -> None:
+    """Reject stale/mismatched strategy decisions before any daily-bullet mutation."""
+    if signal.get("semantics_sha256") != semantics_hash():
+        raise RuntimeError("V24_SIGNAL_SEMANTICS_STALE")
+    if signal.get("engine_version") != ENGINE_VERSION:
+        raise RuntimeError("V24_SIGNAL_ENGINE_VERSION_MISMATCH")
+    side = str(signal.get("side", "")).upper()
+    source = str(signal.get("reference_source", ""))
+    if side == "LONG" and source != "LIVE_ASK":
+        raise RuntimeError("V24_LONG_SIGNAL_REFERENCE_NOT_LIVE_ASK")
+    if side == "SHORT" and source != "LIVE_BID":
+        raise RuntimeError("V24_SHORT_SIGNAL_REFERENCE_NOT_LIVE_BID")
+    if side not in {"LONG", "SHORT"}:
+        raise RuntimeError("V24_SIGNAL_SIDE_INVALID")
+
+
 class V24ProjectXBroker(V23ProjectXBroker):
-    """Reuse proven v2.3 broker mechanics but require the v2.4 promotion seal."""
+    """Reuse proven v2.3 broker mechanics but require v2.4 receipt + signal identity."""
 
     def submit_signal(self, signal: dict, health: FeedHealth,
                       realtime_account_balance: float,
@@ -36,6 +54,7 @@ class V24ProjectXBroker(V23ProjectXBroker):
         require_live_arming_phrase()
         # Critical version boundary: a perfectly valid v2.3 receipt MUST fail here.
         verify_receipt(promotion_receipt, self.account_id)
+        validate_signal_identity(signal)
         if not health.healthy:
             raise RuntimeError("REALTIME_HEALTH_REFUSE")
         if risk_store.config.account_id != self.account_id:
@@ -70,9 +89,13 @@ class V24ProjectXBroker(V23ProjectXBroker):
             raise RuntimeError("TOPSTEP_SIZE_REFUSE:" + "|".join(size.reasons))
         qty = size.safe_qty
         tag = client_tag(signal)
+
+        # Pure local bracket/geometry validation must happen BEFORE mutating the
+        # crash-safe daily bullet. Only an order that is locally constructible is
+        # allowed to reserve today's one-shot execution state.
+        payload = self.build_order(signal, qty, contract, tag)
         ledger.reserve(session, tag, qty)
         self._flat_reconciled()
-        payload = self.build_order(signal, qty, contract, tag)
         try:
             data = self.api._post("/Order/place", payload)
             order_id = str(data["orderId"])
