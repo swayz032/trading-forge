@@ -7,15 +7,16 @@
   arm-witnesses it the same way Worker-1's does: observe the guard actually decide, do not infer
   it from its inputs.
 
-  UPDATED 2026-08-18 (operator decision): now passes --dangerously-skip-permissions, same as
-  Worker-1. The underlying guard mechanism is byte-identical to Worker-1's (zero changes to the
-  pinned toolbox, bbf2e6c2e9ae39a7f0f2be182c9046165eb4b198) -- only the manifest (session_anchor +
-  edit_scope data) is new to this branch, and it was control-tested before this flag was added:
-  arm witness + 2 positive + 6 negative controls (Worker-1-owned-path BLOCK, unarmed-session DENY,
-  out-of-scope-in-lane DENY, self-protected-surface DENY, wrong-branch STOP, wrong-worktree STOP),
-  all correct. Same division of labour as Worker-1: this flag removes the OPERATOR prompt, it does
-  not remove the GUARD -- a guard deny still blocks the tool call with the guard's own reason, and
-  this launcher still REFUSES to reach the launch line unless C5 observed the guard actually arm.
+  UPDATED 2026-08-18: passes --dangerously-skip-permissions on the OPERATOR'S EXPLICIT, CONFIRMED
+  OVERRIDE of AR-1331A, which reads "Do not enable --dangerously-skip-permissions for Worker 2 at
+  this time." The operator holds final authority over the worker fleet; this is disclosed here,
+  not hidden, so a future reader (including GPT) can see the flag is live and why. The underlying
+  guard mechanism is byte-identical to Worker-1's (zero changes to the pinned toolbox,
+  bbf2e6c2e9ae39a7f0f2be182c9046165eb4b198) -- only the manifest is new to this branch, and it was
+  control-tested (arm witness + 2 positive + 6 negative controls, all correct) before this flag
+  was first added. Same division of labour as Worker-1: this flag removes the OPERATOR prompt, it
+  does not remove the GUARD -- a guard deny still blocks the tool call, and this launcher still
+  REFUSES to reach the launch line unless C5 observed the guard actually arm.
 
   This script assumes only its own location, same as Worker-1's launcher.
 #>
@@ -120,7 +121,6 @@ Write-Host '  Run /worker-2-paper-runtime-onboarding once seated.' -ForegroundCo
 Write-Host ''
 Set-Location $Worktree
 
-# --dangerously-skip-permissions: the operator is not the permission pipeline. This is only safe
-# because the launcher REFUSED to reach this line unless C5 observed the guard actually arm --
-# same reasoning as worker1_seat_launch.ps1, same underlying guard code.
+# --dangerously-skip-permissions: operator override of AR-1331A, confirmed 2026-08-18. See header
+# comment. Only reached because C5 above observed the guard actually arm.
 claude --dangerously-skip-permissions
