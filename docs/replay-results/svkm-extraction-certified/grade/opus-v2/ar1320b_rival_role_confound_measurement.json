@@ -1,0 +1,156 @@
+{
+  "table_b_refused_rows": [
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "role": "rationale",
+      "own_score": 0.016176470588235292,
+      "best_rival_ref": "entry_sequence[0].action",
+      "best_rival_role": "action",
+      "best_rival_score": 0.3211798675196739,
+      "relationship_to_rival": "SAME_ENTRY_STEP",
+      "evidence_package_tested": "And what that now gives me is a range on the five minute. Right? So that's how high the price went within the first 5 minutes and that's how low it went."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "role": "action",
+      "own_score": 0.2777070063694268,
+      "best_rival_ref": "entry_sequence[3].action",
+      "best_rival_role": "action",
+      "best_rival_score": 0.29685621027314896,
+      "relationship_to_rival": "ADJACENT_ENTRY_STEP",
+      "evidence_package_tested": "What we are looking for is a fair value gap sequence that is printing outside of the range."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "role": "rationale",
+      "own_score": 0.0,
+      "best_rival_ref": null,
+      "best_rival_role": null,
+      "best_rival_score": 0.0,
+      "relationship_to_rival": "NO_RIVAL",
+      "evidence_package_tested": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "role": "rationale",
+      "own_score": 0.10638297872340426,
+      "best_rival_ref": "entry_sequence[3].action",
+      "best_rival_role": "action",
+      "best_rival_score": 0.21302181755712077,
+      "relationship_to_rival": "SAME_ENTRY_STEP",
+      "evidence_package_tested": "my entry is going to be on the closure of that third candle"
+    }
+  ],
+  "table_c_counterfactuals": [
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "variant": "control",
+      "n_rivals": 11,
+      "grounded": false,
+      "own_score": 0.016176470588235292,
+      "best_rival_score": 0.3211798675196739,
+      "reason": "MISGROUNDED_BELOW_FLOOR: the span covers only 0.016 of the condition's distinctive content (floor 0.10) — it shares a word, not a subject"
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "variant": "same_field_role",
+      "n_rivals": 5,
+      "grounded": false,
+      "own_score": 0.016176470588235292,
+      "best_rival_score": 0.058181818181818175,
+      "reason": "MISGROUNDED_BELOW_FLOOR: the span covers only 0.016 of the condition's distinctive content (floor 0.10) — it shares a word, not a subject"
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "variant": "exclude_same_step_sibling",
+      "n_rivals": 10,
+      "grounded": false,
+      "own_score": 0.016176470588235292,
+      "best_rival_score": 0.29654403567447046,
+      "reason": "MISGROUNDED_BELOW_FLOOR: the span covers only 0.016 of the condition's distinctive content (floor 0.10) — it shares a word, not a subject"
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "variant": "control",
+      "n_rivals": 11,
+      "grounded": false,
+      "own_score": 0.2777070063694268,
+      "best_rival_score": 0.29685621027314896,
+      "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.30 vs 0.28), so it does not ground THIS one — the signature of generic text being reused as evidence"
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "variant": "same_field_role",
+      "n_rivals": 3,
+      "grounded": false,
+      "own_score": 0.2777070063694268,
+      "best_rival_score": 0.29685621027314896,
+      "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.30 vs 0.28), so it does not ground THIS one — the signature of generic text being reused as evidence"
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "variant": "exclude_same_step_sibling",
+      "n_rivals": 10,
+      "grounded": false,
+      "own_score": 0.2777070063694268,
+      "best_rival_score": 0.29685621027314896,
+      "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.30 vs 0.28), so it does not ground THIS one — the signature of generic text being reused as evidence"
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "variant": "control",
+      "n_rivals": 11,
+      "grounded": false,
+      "own_score": 0.0,
+      "best_rival_score": 0.0,
+      "reason": "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "variant": "same_field_role",
+      "n_rivals": 5,
+      "grounded": false,
+      "own_score": 0.0,
+      "best_rival_score": 0.0,
+      "reason": "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "variant": "exclude_same_step_sibling",
+      "n_rivals": 10,
+      "grounded": false,
+      "own_score": 0.0,
+      "best_rival_score": 0.0,
+      "reason": "MISGROUNDED_NO_OVERLAP: the span shares no content term with the condition, so it cannot be evidence for it"
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "variant": "control",
+      "n_rivals": 11,
+      "grounded": false,
+      "own_score": 0.10638297872340426,
+      "best_rival_score": 0.21302181755712077,
+      "reason": "MISGROUNDED_NOT_DISCRIMINATING: the span fits a different condition at least as well (0.21 vs 0.11), so it does not ground THIS one — the signature of generic text being reused as evidence"
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "variant": "same_field_role",
+      "n_rivals": 5,
+      "grounded": true,
+      "own_score": 0.10638297872340426,
+      "best_rival_score": 0.013157894736842105,
+      "reason": "GROUNDED: the span fits this condition (0.11) better than any rival (0.01)"
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "variant": "exclude_same_step_sibling",
+      "n_rivals": 10,
+      "grounded": true,
+      "own_score": 0.10638297872340426,
+      "best_rival_score": 0.013157894736842105,
+      "reason": "GROUNDED: the span fits this condition (0.11) better than any rival (0.01)"
+    }
+  ],
+  "control_1_accepted_rows_stay_grounded": true,
+  "control_2_disclaimer_stays_misgrounded": true
+}
