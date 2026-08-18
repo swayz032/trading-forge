@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `33af780e51cae93ac0087d0670b98c50213776b6`
+> Generated at commit `778df91e5e39992dc0c006cd9d99a3072f804336`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 311 | 408 | 128476 | 1997 |
+| `src/` | Python | 312 | 409 | 128657 | 2002 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1906 | 773 |
+| `src/` | 1908 | 774 |
 | `scripts/` | 255 | 253 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2196** | **1026** |
+| **TOTAL** | **2198** | **1027** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 458 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 87 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1133 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1134 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **202**.  Modules reachable from them: **755** of **2196** parsed files.
+Total entry points: **202**.  Modules reachable from them: **755** of **2198** parsed files.
 
 <details><summary>All 202 entry points and why each was counted</summary>
 
@@ -307,8 +307,8 @@ table below it.**
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3753 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1171 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.4% of 4980 rows |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1176 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.3% of 4985 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=202 |
 | C6 | a registered route module is reachable | PASS | modules reachable=755 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
@@ -316,7 +316,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=1997 ts=2933 |
+| C12 | symbols enumerated in both languages | PASS | py=2002 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=43 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6626/6626 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -332,8 +332,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **221 of 4659 enumerated symbol names (4.7%) are defined in more than one file, covering
-  492 of 4930 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **221 of 4664 enumerated symbol names (4.7%) are defined in more than one file, covering
+  492 of 4935 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -352,12 +352,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3753 | 75.4% |
+| `WIRED` | 3753 | 75.3% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1171 | 23.5% |
+| `BUILT-UNREACHABLE` | 1176 | 23.6% |
 | `DECLARED-ABSENT` | 43 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4980** | |
+| **TOTAL** | **4985** | |
 
 ---
 
@@ -413,7 +413,7 @@ table below it.**
 | `src/engine/evt_tail.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/exits` | 20 | 0 | 2 | 0 | 0 | 22 |
 | `src/engine/exportability.py` | 3 | 0 | 0 | 0 | 0 | 3 |
-| `src/engine/extraction` | 302 | 0 | 49 | 0 | 0 | 351 |
+| `src/engine/extraction` | 302 | 0 | 54 | 0 | 0 | 356 |
 | `src/engine/family_meta_enforcement.py` | 10 | 0 | 2 | 0 | 0 | 12 |
 | `src/engine/fill_model.py` | 9 | 0 | 1 | 0 | 0 | 10 |
 | `src/engine/firm_config.py` | 2 | 0 | 1 | 0 | 0 | 3 |
@@ -1087,7 +1087,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1171** `BUILT-UNREACHABLE` symbols, **631 have test coverage but no production caller**.
+Of **1176** `BUILT-UNREACHABLE` symbols, **634 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1254,6 +1254,9 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `FinalizationRefused` | class | `src/engine/extraction/g2d_finalizer.py:47` | 1 | unique |
 | `_actual_model_identity_is_approved` | function | `src/engine/extraction/g2d_finalizer.py:100` | 1 | unique |
 | `collect_isolated_results` | function | `src/engine/extraction/g2d_finalizer.py:109` | 1 | unique |
+| `assert_sequential_interlock` | function | `src/engine/extraction/g2d_subagentstop_capture.py:164` | 1 | unique |
+| `capture_subagent_stop_final` | function | `src/engine/extraction/g2d_subagentstop_capture.py:135` | 1 | unique |
+| `record_async_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:80` | 1 | unique |
 | `IsolatedDispatcher` | class | `src/engine/extraction/isolated_dispatch.py:57` | 1 | unique |
 | `preflight_real_queue` | function | `src/engine/extraction/isolated_dispatch.py:104` | 1 | unique |
 | `substitute_isolated_answer` | function | `src/engine/extraction/isolated_fallback_law.py:218` | 1 | unique |
@@ -1398,11 +1401,8 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `assertProvenanceStamp` | function | `src/server/lib/provenance-stamp.ts:420` | 1 | unique |
 | `buildDataSnapshotId` | function | `src/server/lib/provenance-stamp.ts:198` | 1 | unique |
 | `computeOverlayConfigHash` | function | `src/server/lib/provenance-stamp.ts:184` | 1 | unique |
-| `deriveSpecProvenanceRef` | function | `src/server/lib/provenance-stamp.ts:455` | 1 | unique |
-| `isLegacyBackfillAllowed` | function | `src/server/lib/provenance-stamp.ts:353` | 1 | unique |
-| `isProvenanceEnforced` | function | `src/server/lib/provenance-stamp.ts:341` | 1 | unique |
 
-_...331 more omitted from this table._
+_...334 more omitted from this table._
 
 ### 7.2 All BUILT-UNREACHABLE, by subsystem
 
@@ -1643,7 +1643,7 @@ _...331 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/extraction</code> - 49 symbols</summary>
+<details><summary><code>src/engine/extraction</code> - 54 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1675,6 +1675,11 @@ _...331 more omitted from this table._
 | `_actual_model_identity_is_approved` | function | `src/engine/extraction/g2d_finalizer.py:100` | defining module is not reachable from any measured entry point |
 | `collect_isolated_results` | function | `src/engine/extraction/g2d_finalizer.py:109` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `finalize` | function | `src/engine/extraction/g2d_finalizer.py:288` | defining module is not reachable from any measured entry point |
+| `_launch_ack_path` | function | `src/engine/extraction/g2d_subagentstop_capture.py:76` | defining module is not reachable from any measured entry point |
+| `record_async_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:80` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `_read_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:127` | defining module is not reachable from any measured entry point |
+| `capture_subagent_stop_final` | function | `src/engine/extraction/g2d_subagentstop_capture.py:135` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `assert_sequential_interlock` | function | `src/engine/extraction/g2d_subagentstop_capture.py:164` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `Invoker` | class | `src/engine/extraction/isolated_dispatch.py:37` | defining module is not reachable from any measured entry point |
 | `DispatchOutcome` | class | `src/engine/extraction/isolated_dispatch.py:47` | defining module is not reachable from any measured entry point |
 | `IsolatedDispatcher` | class | `src/engine/extraction/isolated_dispatch.py:57` | no non-test reference outside its own definition; 1 test file(s) do reference it |
@@ -4042,15 +4047,15 @@ This is the *we already have this* list.  Check it before writing anything.
 | `get_or_extract` | function | `src/engine/extraction/extractor_bridge.py:368` | 1 | unique |
 | `run_dry_run_real_extractor` | function | `src/engine/extraction/extractor_bridge.py:414` | 0 | unique |
 | `main` | function | `src/engine/extraction/extractor_bridge.py:490` | 218 | AMBIG |
-| `AttemptRefused` | class | `src/engine/extraction/isolated_attempt_receipt.py:50` | 3 | unique |
+| `AttemptRefused` | class | `src/engine/extraction/isolated_attempt_receipt.py:50` | 4 | unique |
 | `_sha_bytes` | function | `src/engine/extraction/isolated_attempt_receipt.py:55` | 1 | unique |
-| `_safe_name` | function | `src/engine/extraction/isolated_attempt_receipt.py:59` | 4 | unique |
-| `DurableAttemptLedger` | class | `src/engine/extraction/isolated_attempt_receipt.py:71` | 7 | unique |
+| `_safe_name` | function | `src/engine/extraction/isolated_attempt_receipt.py:59` | 5 | unique |
+| `DurableAttemptLedger` | class | `src/engine/extraction/isolated_attempt_receipt.py:71` | 8 | unique |
 | `_dispatch_path` | function | `src/engine/extraction/isolated_bridge.py:103` | 0 | unique |
 | `_completion_path` | function | `src/engine/extraction/isolated_bridge.py:107` | 0 | unique |
-| `state_of` | function | `src/engine/extraction/isolated_bridge.py:111` | 1 | unique |
+| `state_of` | function | `src/engine/extraction/isolated_bridge.py:111` | 2 | unique |
 | `record_native_dispatch` | function | `src/engine/extraction/isolated_bridge.py:133` | 1 | unique |
-| `capture_native_return` | function | `src/engine/extraction/isolated_bridge.py:192` | 1 | unique |
+| `capture_native_return` | function | `src/engine/extraction/isolated_bridge.py:192` | 2 | unique |
 | `bridge_report` | function | `src/engine/extraction/isolated_bridge.py:291` | 1 | unique |
 | `_sha` | function | `src/engine/extraction/isolated_fallback_law.py:71` | 4 | AMBIG |
 | `FrozenQueue` | class | `src/engine/extraction/isolated_fallback_law.py:76` | 0 | unique |
