@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `7884b6bc44c2e19b21bf1f137b97d4a84b50e330`
+> Generated at commit `18e6fa04faee450e43a7a1ea91147aef64aa375a`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 312 | 409 | 128805 | 2006 |
+| `src/` | Python | 312 | 409 | 128809 | 2007 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -307,8 +307,8 @@ table below it.**
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3753 |
-| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1180 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.2% of 4989 rows |
+| C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1181 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.2% of 4990 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=202 |
 | C6 | a registered route module is reachable | PASS | modules reachable=755 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
@@ -316,7 +316,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=2006 ts=2933 |
+| C12 | symbols enumerated in both languages | PASS | py=2007 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=43 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6626/6626 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -332,8 +332,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **221 of 4668 enumerated symbol names (4.7%) are defined in more than one file, covering
-  492 of 4939 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **221 of 4669 enumerated symbol names (4.7%) are defined in more than one file, covering
+  492 of 4940 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -354,10 +354,10 @@ table below it.**
 |---|---:|---:|
 | `WIRED` | 3753 | 75.2% |
 | `FLAG-GATED` | 6 | 0.1% |
-| `BUILT-UNREACHABLE` | 1180 | 23.7% |
+| `BUILT-UNREACHABLE` | 1181 | 23.7% |
 | `DECLARED-ABSENT` | 43 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **4989** | |
+| **TOTAL** | **4990** | |
 
 ---
 
@@ -413,7 +413,7 @@ table below it.**
 | `src/engine/evt_tail.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/exits` | 20 | 0 | 2 | 0 | 0 | 22 |
 | `src/engine/exportability.py` | 3 | 0 | 0 | 0 | 0 | 3 |
-| `src/engine/extraction` | 302 | 0 | 58 | 0 | 0 | 360 |
+| `src/engine/extraction` | 302 | 0 | 59 | 0 | 0 | 361 |
 | `src/engine/family_meta_enforcement.py` | 10 | 0 | 2 | 0 | 0 | 12 |
 | `src/engine/fill_model.py` | 9 | 0 | 1 | 0 | 0 | 10 |
 | `src/engine/firm_config.py` | 2 | 0 | 1 | 0 | 0 | 3 |
@@ -1087,7 +1087,7 @@ the latter is the TS->Python subprocess seam, where a typo fails only at runtime
 caller.  This is a MAP entry, not a work order: it does not mean delete it, and it does not
 mean wire it.  Acting on anything here is a separate, authorized decision.
 
-Of **1180** `BUILT-UNREACHABLE` symbols, **637 have test coverage but no production caller**.
+Of **1181** `BUILT-UNREACHABLE` symbols, **637 have test coverage but no production caller**.
 Those are the highest-confidence *already built, just not plugged in* finds: someone wrote it,
 someone proved it works, and nothing calls it.
 
@@ -1254,12 +1254,12 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `FinalizationRefused` | class | `src/engine/extraction/g2d_finalizer.py:47` | 1 | unique |
 | `_actual_model_identity_is_approved` | function | `src/engine/extraction/g2d_finalizer.py:100` | 1 | unique |
 | `collect_isolated_results` | function | `src/engine/extraction/g2d_finalizer.py:109` | 1 | unique |
-| `SubagentStopNotTerminal` | class | `src/engine/extraction/g2d_subagentstop_capture.py:128` | 1 | unique |
-| `assert_sequential_interlock` | function | `src/engine/extraction/g2d_subagentstop_capture.py:312` | 1 | unique |
-| `capture_subagent_stop_event` | function | `src/engine/extraction/g2d_subagentstop_capture.py:245` | 1 | unique |
-| `capture_subagent_stop_final` | function | `src/engine/extraction/g2d_subagentstop_capture.py:283` | 1 | unique |
-| `extract_subagent_stop_fields` | function | `src/engine/extraction/g2d_subagentstop_capture.py:195` | 1 | unique |
-| `record_async_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:140` | 1 | unique |
+| `SubagentStopNotTerminal` | class | `src/engine/extraction/g2d_subagentstop_capture.py:102` | 1 | unique |
+| `assert_sequential_interlock` | function | `src/engine/extraction/g2d_subagentstop_capture.py:316` | 1 | unique |
+| `capture_subagent_stop_event` | function | `src/engine/extraction/g2d_subagentstop_capture.py:248` | 1 | unique |
+| `capture_subagent_stop_final` | function | `src/engine/extraction/g2d_subagentstop_capture.py:298` | 1 | unique |
+| `extract_subagent_stop_fields` | function | `src/engine/extraction/g2d_subagentstop_capture.py:169` | 1 | unique |
+| `record_async_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:114` | 1 | unique |
 | `IsolatedDispatcher` | class | `src/engine/extraction/isolated_dispatch.py:57` | 1 | unique |
 | `preflight_real_queue` | function | `src/engine/extraction/isolated_dispatch.py:104` | 1 | unique |
 | `substitute_isolated_answer` | function | `src/engine/extraction/isolated_fallback_law.py:218` | 1 | unique |
@@ -1643,7 +1643,7 @@ _...337 more omitted from this table._
 
 </details>
 
-<details><summary><code>src/engine/extraction</code> - 58 symbols</summary>
+<details><summary><code>src/engine/extraction</code> - 59 symbols</summary>
 
 | Symbol | Kind | Defined at | Reason |
 |---|---|---|---|
@@ -1675,15 +1675,16 @@ _...337 more omitted from this table._
 | `_actual_model_identity_is_approved` | function | `src/engine/extraction/g2d_finalizer.py:100` | defining module is not reachable from any measured entry point |
 | `collect_isolated_results` | function | `src/engine/extraction/g2d_finalizer.py:109` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `finalize` | function | `src/engine/extraction/g2d_finalizer.py:288` | defining module is not reachable from any measured entry point |
-| `SubagentStopNotTerminal` | class | `src/engine/extraction/g2d_subagentstop_capture.py:128` | defining module is not reachable from any measured entry point |
-| `_launch_ack_path` | function | `src/engine/extraction/g2d_subagentstop_capture.py:136` | defining module is not reachable from any measured entry point |
-| `record_async_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:140` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `_read_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:187` | defining module is not reachable from any measured entry point |
-| `extract_subagent_stop_fields` | function | `src/engine/extraction/g2d_subagentstop_capture.py:195` | defining module is not reachable from any measured entry point |
-| `_subagent_stop_event_path` | function | `src/engine/extraction/g2d_subagentstop_capture.py:241` | defining module is not reachable from any measured entry point |
-| `capture_subagent_stop_event` | function | `src/engine/extraction/g2d_subagentstop_capture.py:245` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `capture_subagent_stop_final` | function | `src/engine/extraction/g2d_subagentstop_capture.py:283` | defining module is not reachable from any measured entry point |
-| `assert_sequential_interlock` | function | `src/engine/extraction/g2d_subagentstop_capture.py:312` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `SubagentStopNotTerminal` | class | `src/engine/extraction/g2d_subagentstop_capture.py:102` | defining module is not reachable from any measured entry point |
+| `_launch_ack_path` | function | `src/engine/extraction/g2d_subagentstop_capture.py:110` | defining module is not reachable from any measured entry point |
+| `record_async_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:114` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `_read_launch_ack` | function | `src/engine/extraction/g2d_subagentstop_capture.py:161` | defining module is not reachable from any measured entry point |
+| `extract_subagent_stop_fields` | function | `src/engine/extraction/g2d_subagentstop_capture.py:169` | defining module is not reachable from any measured entry point |
+| `_subagent_stop_event_path` | function | `src/engine/extraction/g2d_subagentstop_capture.py:222` | defining module is not reachable from any measured entry point |
+| `_validate_launch_ack_identity` | function | `src/engine/extraction/g2d_subagentstop_capture.py:226` | defining module is not reachable from any measured entry point |
+| `capture_subagent_stop_event` | function | `src/engine/extraction/g2d_subagentstop_capture.py:248` | no non-test reference outside its own definition; 1 test file(s) do reference it |
+| `capture_subagent_stop_final` | function | `src/engine/extraction/g2d_subagentstop_capture.py:298` | defining module is not reachable from any measured entry point |
+| `assert_sequential_interlock` | function | `src/engine/extraction/g2d_subagentstop_capture.py:316` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `Invoker` | class | `src/engine/extraction/isolated_dispatch.py:37` | defining module is not reachable from any measured entry point |
 | `DispatchOutcome` | class | `src/engine/extraction/isolated_dispatch.py:47` | defining module is not reachable from any measured entry point |
 | `IsolatedDispatcher` | class | `src/engine/extraction/isolated_dispatch.py:57` | no non-test reference outside its own definition; 1 test file(s) do reference it |
