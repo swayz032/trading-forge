@@ -8,7 +8,7 @@ Two structural paths can create an executable 15m zone:
    existed BEFORE that pivot confirmed.
 
 Later pivots may never retroactively redefine whether an older swing was dramatic.
-No PnL appears anywhere in the equation.
+All zone roles use the v2.4 reclaim/break/retest lifecycle. No PnL appears here.
 """
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
 from research.current_mnq_strategy_v2_4_fvg import active_15m_fvgs
+from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
 
 core = prod.core
 SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_key_level_semantics.json")
@@ -112,8 +113,6 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
         if side_q.empty:
             continue
         for row in side_q.itertuples():
-            # Formation-causal regime reference. No pivot confirmed at or after
-            # this candidate may decide whether the candidate was exceptional.
             prior = side_q[side_q.confirm < row.confirm]
             threshold = _reference_threshold(prior, floor_atr, percentile, min_refs)
             prior_disp = pd.to_numeric(prior.disp, errors="coerce").dropna().to_numpy(float)
@@ -123,14 +122,11 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
             half = max(core.TICK * 4.0, float(p.key_level_pad_atr) * atr)
             center = float(row.price)
             lo, hi = center - half, center + half
-
             if any(core.overlap(lo, hi, float(x.lo), float(x.hi), 0.0) for x in established):
                 continue
 
             close_away = _pivot_close_away(h15, row)
-            quality, wick_q, recency = _quality(
-                row, threshold, prior_disp, asof, p, close_away,
-            )
+            quality, wick_q, recency = _quality(row, threshold, prior_disp, asof, p, close_away)
             confluence = int(any(lo <= float(x) <= hi for x in refs))
             confluence += int(any(core.overlap(lo, hi, float(f.lo), float(f.hi), 0.0)
                                   for f in native_fvgs))
@@ -145,7 +141,7 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
                 created=created, last_event=row.t, source=SOURCE,
                 confluence=int(confluence), state=state,
             )
-            zone = core.zone_state_at(zone, full5, asof, p)
+            zone = zone_state_at_v24(zone, full5, asof, p)
             if not zone.active:
                 continue
             out.append(core.Location(
@@ -164,10 +160,10 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
 
 def build_entry_locations_v24(env: dict, dte, open_ts: pd.Timestamp,
                               p: core.Params) -> tuple[list[core.Location], list[core.Zone]]:
-    """Build the frozen pre-open v2.4 entry map with native 15m FVG confluence."""
+    """Build frozen pre-open entry map with native FVG confluence and role flips."""
     h15, piv15, full5 = env["h15"], env["piv15"], env["full5"]
     established_zones = core.build_zones(piv15, h15, open_ts, p, look_days=40)
-    established_zones = [core.zone_state_at(z, full5, open_ts, p) for z in established_zones]
+    established_zones = [zone_state_at_v24(z, full5, open_ts, p) for z in established_zones]
     a15 = h15[h15.index + pd.Timedelta(minutes=15) <= open_ts].atr.tail(20).median()
     atr15 = float(a15) if np.isfinite(a15) else 20.0
     native_fvgs = active_15m_fvgs(h15, open_ts)
