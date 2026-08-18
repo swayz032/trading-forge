@@ -11,7 +11,7 @@ from research.current_mnq_strategy_v2_3_broker import FeedHealth, V23ProjectXBro
 from research.current_mnq_strategy_v2_3_local_runtime import require_live_arming_phrase, require_personal_device
 from research.current_mnq_strategy_v2_3_state import PersistentSessionLedger
 from research.current_mnq_strategy_v2_3_topstep_risk import survival_safe_qty
-from research.current_mnq_strategy_v2_4_engine import ENGINE_VERSION
+from research.current_mnq_strategy_v2_4_engine import ENGINE_VERSION, TICK
 from research.current_mnq_strategy_v2_4_policy import semantics_hash
 from research.current_mnq_strategy_v2_4_receipt import verify_receipt
 
@@ -40,6 +40,26 @@ def validate_signal_identity(signal: dict) -> None:
         raise RuntimeError("V24_SIGNAL_SIDE_INVALID")
 
 
+def validate_execution_quote(signal: dict, health: FeedHealth) -> None:
+    """Require the final broker quote to equal the quote that approved geometry.
+
+    ProjectX attached brackets are tick distances from the eventual market fill.
+    If the executable quote moves after target/room approval, submitting the old
+    tick geometry would silently move the absolute TP/SL relationship. Refuse and
+    let the strategy recalculate from the new quote instead.
+    """
+    side = str(signal.get("side", "")).upper()
+    quote = health.best_ask if side == "LONG" else health.best_bid if side == "SHORT" else None
+    if quote is None:
+        raise RuntimeError("V24_EXECUTION_SIDE_QUOTE_MISSING")
+    entry = float(signal["entry"])
+    q = float(quote)
+    if abs(q / TICK - round(q / TICK)) > 1e-9:
+        raise RuntimeError("V24_EXECUTION_QUOTE_OFF_TICK")
+    if abs(q - entry) > 1e-9:
+        raise RuntimeError(f"V24_EXECUTION_QUOTE_DRIFT:{entry:.2f}->{q:.2f}")
+
+
 class V24ProjectXBroker(V23ProjectXBroker):
     """Reuse proven v2.3 broker mechanics but require v2.4 receipt + signal identity."""
 
@@ -57,6 +77,7 @@ class V24ProjectXBroker(V23ProjectXBroker):
         validate_signal_identity(signal)
         if not health.healthy:
             raise RuntimeError("REALTIME_HEALTH_REFUSE")
+        validate_execution_quote(signal, health)
         if risk_store.config.account_id != self.account_id:
             raise RuntimeError("RISK_STORE_ACCOUNT_MISMATCH")
 
