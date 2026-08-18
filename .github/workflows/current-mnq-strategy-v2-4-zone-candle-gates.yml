@@ -70,8 +70,10 @@ jobs:
       - name: Prove corrected semantic and weakest-link edge contract
         run: |
           PYTHONPATH=. python - <<'PY'
-          from research.current_mnq_strategy_v2_4_policy import load_spec, load_fvg_spec, load_edge_spec
-          p=load_spec(); f=load_fvg_spec(); e=load_edge_spec()
+          from research.current_mnq_strategy_v2_4_policy import (
+              load_spec, load_fvg_spec, load_edge_spec, load_key_level_spec,
+          )
+          p=load_spec(); f=load_fvg_spec(); e=load_edge_spec(); k=load_key_level_spec()
           assert p['zone_gate']['mandatory'] is True
           assert p['zone_gate']['pattern_without_zone_interaction']=='NO_TRADE'
           assert p['zone_gate']['mere_approach_without_touch']=='NO_TRADE'
@@ -83,13 +85,17 @@ jobs:
           assert f['trader_target_rule']['liquidity_cluster_before_fvg']=='TARGET_LIQUIDITY_CLUSTER'
           assert f['trader_target_rule']['fvg_before_liquidity_cluster']=='TARGET_FVG'
           assert f['trader_target_rule']['rank_distance_uses']=='near_edge_of_reaction_area_not_midpoint'
+          assert k['established_zone_path']['minimum_independent_rejections']==2
+          assert k['exceptional_single_swing_path']['absolute_displacement_floor_atr']==1.0
+          assert k['exceptional_single_swing_path']['recent_displacement_percentile']==0.75
+          assert k['anti_overfit']['no_PnL_selection'] is True
           assert e['equation']['name']=='WEAKEST_LINK_ROBUST_EXPECTANCY'
           assert e['gates']['top_winner_fraction_removed']==0.05
           assert e['gates']['leave_best_calendar_month_out'] is True
           assert e['anti_overfit']['no_threshold_rescue_after_result'] is True
           seen=e['anti_overfit']['known_seen_performance_ranges']
           assert any(x['start']=='2022-01-01' and x['end']=='2026-08-17' for x in seen)
-          print('PASS: v2.4 strategy + weakest-link edge equation are frozen before validation')
+          print('PASS: v2.4 levels -> zone -> candles -> first-reaction TP -> weakest-link edge are frozen')
           PY
       - name: Verify read-only SignalR sidecar and hosted-runtime refusal
         working-directory: research/mnq_v23_realtime
@@ -120,13 +126,15 @@ jobs:
           PYTHONPATH=. python - <<'PY'
           import json, xml.etree.ElementTree as ET
           from pathlib import Path
-          from research.current_mnq_strategy_v2_3_evidence import gold_counts
-          from research.current_mnq_strategy_v2_4_policy import semantics_hash, load_spec, load_fvg_spec, load_edge_spec
+          from research.current_mnq_strategy_v2_4_evidence import gold_counts
+          from research.current_mnq_strategy_v2_4_policy import (
+              semantics_hash, load_spec, load_fvg_spec, load_edge_spec, load_key_level_spec,
+          )
           root=ET.parse('/tmp/mnq_v24_junit.xml').getroot()
           suites=list(root) if root.tag=='testsuites' else [root]
           tests=sum(int(x.attrib.get('tests',0)) for x in suites)
           failures=sum(int(x.attrib.get('failures',0))+int(x.attrib.get('errors',0)) for x in suites)
-          spec=load_spec(); fvg=load_fvg_spec(); edge=load_edge_spec(); pos,neg=gold_counts()
+          spec=load_spec(); fvg=load_fvg_spec(); edge=load_edge_spec(); key=load_key_level_spec(); pos,neg=gold_counts()
           receipt={
               'release_id':spec['release_id'],
               'semantics_sha256':semantics_hash(),
@@ -137,6 +145,8 @@ jobs:
               'zone_gate_mandatory':True,
               'patterns_away_from_zone_refused':True,
               'shared_historical_live_candidate_kernel':True,
+              'established_zone_min_independent_rejections':key['established_zone_path']['minimum_independent_rejections'],
+              'exceptional_single_swing_equation':key['exceptional_single_swing_path']['equation'],
               'native_fvg_detector':fvg['detector_authority']['repository_path'],
               'native_fvg_timeframe':'15m',
               'first_reaction_target_ordering':True,
