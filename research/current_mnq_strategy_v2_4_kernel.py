@@ -2,12 +2,14 @@
 """Shared causal candidate kernel for Current MNQ v2.4.
 
 This is the single candidate-formation path used by both historical validation and
-live/shadow signal formation. It layers the trader's explicit correction on top of
-v2.3 production plumbing:
+live/shadow signal formation. It layers the trader's explicit corrections on top
+of proven production plumbing:
 
-    PREMARKET -> REACH ZONE -> REJECT/BREAK -> CANDLE CONTROL -> A+.
+    PREMARKET -> BUILD LEVELS -> REACH ZONE -> REJECT/BREAK -> CANDLE CONTROL -> A+.
 
-No candlestick pattern can create a candidate away from an authorized location.
+Executable levels come from the v2.4 key-level equation: established independent
+rejection clusters plus exceptional single-swing displacement zones. No candle
+pattern can create a candidate away from one of those authorized locations.
 """
 from __future__ import annotations
 
@@ -19,6 +21,7 @@ import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
 from research.current_mnq_strategy_v2_4_gate import gate_candidate
+from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
 
 core = prod.core
 
@@ -30,12 +33,7 @@ def completed_candle_window(full5: pd.DataFrame, ts: pd.Timestamp, n: int = 5) -
 
 def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                                as_of: pd.Timestamp | None = None):
-    """Yield chronological single-direction A+ candidates before target selection.
-
-    If as_of is supplied, bars whose close is later than as_of are physically
-    excluded. Historical validation passes as_of=None but every decision still
-    uses only current/prior completed bars.
-    """
+    """Yield chronological single-direction A+ candidates before target selection."""
     full5, r5, h15 = env["full5"], env["r5"], env["h15"]
     session = r5[r5.index.date == dte]
     if session.empty:
@@ -45,7 +43,7 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         return
 
     plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], env["pcm"])
-    locations, _ = core.build_entry_locations(env, dte, open_ts, p)
+    locations, _ = build_entry_locations_v24(env, dte, open_ts, p)
     authorized = [x for x in locations if x.entry_authorized]
     pending: dict[tuple[str, str], core.PendingBreakout] = {}
 
@@ -78,8 +76,6 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         pad = max(core.TICK * 2, p.touch_pad_atr * float(r.atr))
         candle_window = completed_candle_window(full5, ts)
 
-        # Reversal: zone touch/reclaim is mandatory, THEN candle control, THEN
-        # existing multi-bar Approach->Fight->Decision and premarket plan gates.
         for direction, side in (("L", "S"), ("S", "R")):
             near = [loc for loc in current_locs if loc.side == side and core.bar_interacts(loc, r, pad)]
             for loc in near:
@@ -96,9 +92,6 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                         f"ZONE_CANDLE_REV:{zgate.reason}",
                     ))
 
-        # Breakout: price must actually fail the correct side of the zone. Strong
-        # 5m acceptance can confirm immediately. Weak attempts are remembered and
-        # require a NEW completed 15m acceptance tied to that exact attempt.
         for direction, side in (("L", "R"), ("S", "S")):
             relevant = [loc for loc in current_locs if loc.side == side]
             for loc in relevant:
@@ -128,10 +121,10 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                             direction, loc.id, bar_close, loc.lo, loc.hi,
                         ))
 
-        # Confirm weak breakouts using the original attempt candle + a later 15m
-        # acceptance. Use the original authorized location even if the attempt has
-        # now caused its current state to become BROKEN.
         for key, pen in list(pending.items()):
+            # Pending attempts bind to the ORIGINAL pre-open authorized location.
+            # The attempt itself may have broken its current state, but that does
+            # not erase the 15m acceptance question.
             loc = next((x for x in authorized if x.id == pen.location_id), None)
             if loc is None:
                 pending.pop(key, None)
