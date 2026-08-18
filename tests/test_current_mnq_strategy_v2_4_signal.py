@@ -48,8 +48,10 @@ def _patch_candidate(monkeypatch, direction: str, actionable: pd.Timestamp):
         executable_price=140.0 if direction == "L" else 60.0,
         distance=40.0, quality=0.9, blocker=False, destination=True, fvg_confluent=False,
     )
-    monkeypatch.setattr(sig.core, "build_target_locations", lambda *a, **k: [])
-    monkeypatch.setattr(sig.core, "classify_path_and_destination", lambda *a, **k: (picked, "OK"))
+    # Patch the CURRENT v2.4 target boundary. The earlier test accidentally
+    # monkeypatched retired v2.3 hooks, which allowed production integration
+    # tests to call the real target builder with an intentionally empty fixture.
+    monkeypatch.setattr(sig, "build_and_classify", lambda *a, **k: (picked, "FIRST_REACTION:TEST"))
 
 
 def _env(d: date):
