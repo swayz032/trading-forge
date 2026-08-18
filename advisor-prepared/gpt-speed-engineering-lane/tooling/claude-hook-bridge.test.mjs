@@ -56,6 +56,13 @@ function pre(root, tool_name, tool_input) {
 function taskCompleted(root) {
   return { cwd: root, hook_event_name: 'TaskCompleted', task_id: '1', task_subject: 'packet', session_id: 's1' };
 }
+function subagentStop(root, overrides = {}) {
+  return {
+    cwd: root, hook_event_name: 'SubagentStop', session_id: 's1',
+    agent_id: 'agent-1', agent_type: 'general-purpose', last_assistant_message: 'the answer',
+    ...overrides,
+  };
+}
 /**
  * 🛑 REPLACES `verifiedEnv()`, which returned `{ TF_CLAUDE_GUARD_ANCHOR_OK: '1' }`.
  *
@@ -269,4 +276,39 @@ test('TaskCompleted blocks a false receipt instead of reporting fake green', () 
   const result = evaluateHookEvent({ input: taskCompleted(root), manifest: m });
   assert.equal(result.decision, 'block');
   assert.match(result.reason, /finish check failed/);
+});
+
+// ---------------------------------------------------------------------------
+// AR-1315A §5 Lane B — SubagentStop. 🛑 THIS EVENT MUST NEVER PRODUCE `decision`/`block`: for
+// Stop/SubagentStop hooks that means "force the agent to keep running", the opposite of a
+// refusal, and it is never correct to force an already-finished subagent to continue. Every
+// scenario below asserts the ABSENCE of a `decision` field, not merely a particular value.
+// ---------------------------------------------------------------------------
+
+test('SubagentStop on an unarmed session records nothing observable -- never a decision/block, never forces the agent to continue', () => {
+  const { root, base } = makeRepo();
+  const m = manifest(base); // no SessionStart call at all
+  const result = evaluateHookEvent({ input: subagentStop(root), manifest: m });
+  assert.equal(result.decision, undefined);
+  assert.equal(result._audit.anchor_verified, false);
+});
+
+test('SubagentStop with g2_precall disabled is a plain pass-through -- armed session, no decision', () => {
+  const { root, base } = makeRepo();
+  const m = manifest(base); // finish.enabled:false, no g2_precall block at all
+  arm(root, m);
+  const result = evaluateHookEvent({ input: subagentStop(root), manifest: m });
+  assert.equal(result.decision, undefined);
+  assert.equal(result._audit.guarded, false);
+});
+
+test('SubagentStop with g2_precall enabled but no configured queue/receipt_dir path still never emits a decision on an internal error', () => {
+  const { root, base } = makeRepo();
+  const m = manifest(base, {
+    g2_precall: { enabled: true, strict_session: true, queue_path: 'does/not/exist.json', receipt_dir: 'does/not/exist', native_call_manifest_path: 'does/not/exist2.json' },
+  });
+  arm(root, m);
+  const result = evaluateHookEvent({ input: subagentStop(root), manifest: m });
+  assert.equal(result.decision, undefined, 'a load failure must fail closed on the RECORD, never force the agent to continue');
+  assert.ok(result._audit.subagent_stop_error, 'the failure is still visible in the audit trail');
 });

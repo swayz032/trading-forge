@@ -211,6 +211,17 @@ function postToolUse(manifestPath, sessionId, ref, permitMarkerPath, toolRespons
   });
 }
 
+// AR-1315A §5 Lane B/D — a real SubagentStop event. 🛑 The visible JSON output is ALWAYS `{}`
+// (nothing on stdout at all) by design: this event never carries a `decision`, so
+// `claude-hook-runner.mjs` never has anything outside `_audit` to print. Every assertion about
+// this event's effect is therefore made against the RECEIPT FILES it wrote, not the hook output.
+function subagentStop(manifestPath, sessionId, agentId, lastAssistantMessage) {
+  return runHook(manifestPath, {
+    cwd: WORKER_TREE, hook_event_name: 'SubagentStop', session_id: sessionId,
+    agent_id: agentId, agent_type: 'general-purpose', last_assistant_message: lastAssistantMessage,
+  });
+}
+
 function preDecision(result) { return result.json?.hookSpecificOutput?.permissionDecision ?? null; }
 function preReason(result) { return result.json?.hookSpecificOutput?.permissionDecisionReason ?? ''; }
 function postDecision(result) { return result.json?.decision ?? null; }
@@ -251,37 +262,83 @@ test('THE FULL G2-D HANDSHAKE, end to end, through the real runner/bridge proces
     assert.match(preReason(row2WhileUncaptured), /stuck at NATIVE_TASK_DISPATCHED/);
     assert.equal(fs.existsSync(permit2), false);
 
-    // 5. Row 1 PostToolUse, a synthetic runtime-shaped response -> .raw + .completion, through
-    //    the REAL g2d_postcall_capture.py (never a hand-planted receipt).
-    const responsePayload = { success: true, result: 'the model answered: wait for the close.' };
-    const row1Post = postToolUse(manifestPath, sessionId, REF_1, permit1, responsePayload);
-    assert.equal(postDecision(row1Post), null, `row 1 capture must not block: ${postReason(row1Post)}`);
+    // 5. AR-1315A §5 Lane B/D (F36): row 1 PostToolUse, the REAL runtime-shaped async-launch-ack
+    //    response -> a launch ack ONLY, through the REAL g2d_postcall_lifecycle.py. NEVER
+    //    .raw/.completion any more -- that was the exact F36 defect this packet closes.
+    const agentId = 'agent-lifecycle-witness-1';
+    const ackPayload = { isAsync: true, status: 'async_launched', agentId };
+    const row1Post = postToolUse(manifestPath, sessionId, REF_1, permit1, ackPayload);
+    assert.equal(postDecision(row1Post), null, `row 1 launch ack must not block: ${postReason(row1Post)}`);
+    assert.equal(fs.existsSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.launch_ack.json`)), true, 'the real g2d_postcall_lifecycle.py wrote .launch_ack');
+    assert.equal(fs.existsSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`)), false, 'F36: a launch ack must NEVER produce .raw');
+    assert.equal(fs.existsSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.completion.json`)), false, 'F36: a launch ack must NEVER produce .completion');
+
+    // 5b. Row 2 is STILL blocked by the global interlock: an ack does not finalize row 1, so it
+    //     stays at NATIVE_TASK_DISPATCHED exactly as before the ack.
+    const row2StillUncaptured = preToolUse(manifestPath, sessionId, REF_2, permit2);
+    assert.equal(preDecision(row2StillUncaptured), 'deny');
+    assert.match(preReason(row2StillUncaptured), /stuck at NATIVE_TASK_DISPATCHED/);
+
+    // 5c. A duplicate PostToolUse launch ack for the same row before it is finalized is refused
+    //     by the real Python law (record_async_launch_ack: one ack per row), and produces no
+    //     second .launch_ack.json write.
+    const beforeDupAck = fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.launch_ack.json`), 'utf8');
+    const dupAck = postToolUse(manifestPath, sessionId, REF_1, permit1, { isAsync: true, status: 'async_launched', agentId });
+    assert.equal(postDecision(dupAck), 'block', postReason(dupAck));
+    assert.match(postReason(dupAck), /async launch ack refused/);
+    assert.equal(fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.launch_ack.json`), 'utf8'), beforeDupAck, 'the first ack is untouched by the duplicate attempt');
+
+    // 6. The REAL terminal event: SubagentStop, bound by agent_id to the launch ack above,
+    //    through the REAL g2d_postcall_lifecycle.py subagent-stop -> g2d_subagentstop_capture.py
+    //    -> capture_native_return (unchanged). THIS is what now produces .raw + .completion.
+    //    🛑 Visible hook output is always `{}` for SubagentStop -- see subagentStop()'s doc
+    //    comment -- so this is proven entirely through the receipt files.
+    const finalAnswer = 'the model answered: wait for the close.';
+    const stop = subagentStop(manifestPath, sessionId, agentId, finalAnswer);
+    assert.equal(stop.stdout, '', 'SubagentStop must never emit a visible decision');
+    assert.equal(stop.status, 0);
     assert.equal(fs.existsSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`)), true);
     assert.equal(fs.existsSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.completion.json`)), true);
     const rawDoc = JSON.parse(fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`), 'utf8'));
     assert.equal(
       rawDoc.raw_output_sha256,
-      crypto.createHash('sha256').update(JSON.stringify(responsePayload)).digest('hex'),
-      'the persisted raw return hashes the EXACT synthetic tool_response bytes this test supplied',
+      crypto.createHash('sha256').update(finalAnswer).digest('hex'),
+      'the persisted raw return hashes the EXACT SubagentStop last_assistant_message text',
     );
 
-    // 6. Row 2 PreToolUse -> now ALLOW, only after its OWN permit -> claim -> dispatch.
+    // 6b. A SubagentStop naming a wrong/unbound agent_id for row 1's already-finalized launch ack
+    //     is simply refused (no recorded ack for a stranger identity) and touches no receipt.
+    const beforeFinal = fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`), 'utf8');
+    const wrongAgentStop = subagentStop(manifestPath, sessionId, 'agent-nobody-launched', 'an impostor answer');
+    assert.equal(wrongAgentStop.stdout, '', 'a refused SubagentStop still never emits a visible decision');
+    assert.equal(fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`), 'utf8'), beforeFinal);
+
+    // 7. Row 2 PreToolUse -> now ALLOW, only after row 1's real SubagentStop finalized it AND
+    //    row 2's OWN permit -> claim -> dispatch.
     const row2Now = preToolUse(manifestPath, sessionId, REF_2, permit2);
     assert.equal(preDecision(row2Now), null, `row 2 must now be allowed: ${preReason(row2Now)}`);
     assert.equal(fs.existsSync(permit2), true);
     assert.equal(fs.existsSync(path.join(scratch.receiptDir, `${safeName(REF_2)}.attempt.json`)), true);
     assert.equal(fs.existsSync(path.join(scratch.receiptDir, `${safeName(REF_2)}.dispatch.json`)), true);
 
-    // 7. Duplicate row 1 PostToolUse -> BLOCK/STOP, first capture provably unchanged.
-    const beforeDup = fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`), 'utf8');
-    const dup = postToolUse(manifestPath, sessionId, REF_1, permit1, { success: true, result: 'a different, second answer' });
+    // 8. Duplicate row 1 PostToolUse AFTER finalization -> BLOCK/STOP, first capture provably
+    //    unchanged (the pre-existing "already has a captured raw return" gate, untouched by
+    //    AR-1315A -- this proves it still fires once the row is genuinely finalized).
+    const dup = postToolUse(manifestPath, sessionId, REF_1, permit1, { isAsync: true, status: 'async_launched', agentId: 'agent-late-duplicate' });
     assert.equal(postDecision(dup), 'block', postReason(dup));
     assert.match(postReason(dup), /already has a captured raw return/);
-    assert.equal(fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`), 'utf8'), beforeDup, 'the first capture is untouched by the duplicate attempt');
+    assert.equal(fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`), 'utf8'), beforeFinal, 'the finalized capture is untouched by the late duplicate PostToolUse');
 
-    // 8. Zero real model calls anywhere in this witness -- every "model call" was a synthetic
-    //    PreToolUse ALLOW decision or a synthetic PostToolUse tool_response payload this test
-    //    authored; nothing here ever invoked the Agent tool for real.
+    // 9. A duplicate SubagentStop for the already-finalized row is refused by the real Python
+    //    audit-receipt law (one terminal event per row) and never overwrites .raw.
+    const dupStop = subagentStop(manifestPath, sessionId, agentId, 'a different final answer');
+    assert.equal(dupStop.stdout, '');
+    assert.equal(fs.readFileSync(path.join(scratch.receiptDir, `${safeName(REF_1)}.raw.json`), 'utf8'), beforeFinal, 'the finalized capture is untouched by the duplicate SubagentStop');
+
+    // 10. Zero real model calls anywhere in this witness -- every "model call" was a synthetic
+    //     PreToolUse ALLOW decision, a synthetic PostToolUse async-launch-ack payload, or a
+    //     synthetic SubagentStop payload this test authored; nothing here ever invoked the Agent
+    //     tool for real.
   } finally {
     cleanupScratch(scratch, sessionId);
   }

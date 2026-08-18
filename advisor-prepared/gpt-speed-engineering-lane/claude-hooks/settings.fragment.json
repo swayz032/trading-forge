@@ -36,6 +36,18 @@
         ]
       }
     ],
+    "SubagentStop": [
+      {
+        "matcher": "general-purpose",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/advisor-prepared/gpt-speed-engineering-lane/tooling/claude-hook-runner.mjs --manifest \"$CLAUDE_PROJECT_DIR\"/.claude/gpt-worker-guard.json",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
     "TaskCompleted": [
       {
         "hooks": [

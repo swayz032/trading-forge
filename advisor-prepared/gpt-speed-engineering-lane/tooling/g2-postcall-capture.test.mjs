@@ -14,6 +14,7 @@ import {
   evaluatePostCallCapture,
   extractRawResponseText,
   defaultCapture,
+  defaultCaptureLaunchAck,
 } from './g2-postcall-capture.mjs';
 import { loadG2Context, safeName, canonicalNativeCallSha256, SUBAGENT_TOOL_NAMES } from './g2-precall-guard.mjs';
 
@@ -125,31 +126,33 @@ test('POSITIVE: a call matching no frozen row is not handled (ordinary non-G2 su
   assert.equal(r.handled, false);
 });
 
-test('POSITIVE: a dispatched G2 row with a matching post-call event is captured, capture receives the exact raw text', () => {
+test('POSITIVE: a dispatched G2 row with a matching post-call event records a LAUNCH ACK, never a final capture (F36) -- captureLaunchAck receives the exact response as ackPayload', () => {
   const ctx = makeG2();
   plantDispatch(ctx, REF_A);
-  const cap = fakeCapture();
+  const cap = fakeCapture({ ok: true, receipt: { state: 'ASYNC_LAUNCH_ACK_RECORDED' } });
   const r = evaluatePostCallCapture({
-    toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'the verbatim answer',
-    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), capture: cap,
+    toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: { isAsync: true, status: 'async_launched', agentId: 'agent-1' },
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), captureLaunchAck: cap,
   });
   assert.equal(r.handled, true);
-  assert.equal(r.captured, true, r.reason);
+  assert.equal(r.captured, false, 'F36: PostToolUse must never claim a final capture');
+  assert.equal(r.launchAck, true, r.reason);
+  assert.equal(r.block, false);
   assert.equal(cap.calls.length, 1);
   assert.equal(cap.calls[0].conditionRef, REF_A);
-  assert.equal(cap.calls[0].rawOutput, 'the verbatim answer');
+  assert.deepEqual(cap.calls[0].ackPayload, { isAsync: true, status: 'async_launched', agentId: 'agent-1' });
 });
 
 // ---------------------------------------------------------------------------
 // NEGATIVE — every shape AR-1304 section 8's post-call checklist names
 // ---------------------------------------------------------------------------
 
-test('NEGATIVE: no prior dispatch is refused, capture is never invoked', () => {
+test('NEGATIVE: no prior dispatch is refused, captureLaunchAck is never invoked', () => {
   const ctx = makeG2(); // no plantDispatch
   const cap = fakeCapture();
   const r = evaluatePostCallCapture({
     toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
-    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), capture: cap,
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), captureLaunchAck: cap,
   });
   assert.equal(r.handled, true);
   assert.equal(r.captured, false);
@@ -157,7 +160,7 @@ test('NEGATIVE: no prior dispatch is refused, capture is never invoked', () => {
   assert.equal(cap.calls.length, 0);
 });
 
-test('NEGATIVE: a second post-tool event for an already-captured row is refused, capture is never invoked', () => {
+test('NEGATIVE: a second post-tool event for an already-finalized row is refused, captureLaunchAck is never invoked', () => {
   const ctx = makeG2();
   plantDispatch(ctx, REF_A);
   fs.writeFileSync(path.join(ctx.receiptDir, `${safeName(REF_A)}.raw.json`), '{}');
@@ -165,23 +168,23 @@ test('NEGATIVE: a second post-tool event for an already-captured row is refused,
   const cap = fakeCapture();
   const r = evaluatePostCallCapture({
     toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'a second answer',
-    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), capture: cap,
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), captureLaunchAck: cap,
   });
   assert.equal(r.captured, false);
   assert.match(r.reason, /already has a captured raw return/);
   assert.equal(cap.calls.length, 0);
 });
 
-test('NEGATIVE: response for a different condition only ever resolves and captures that condition, never REF_A by accident', () => {
+test('NEGATIVE: response for a different condition only ever resolves and acks that condition, never REF_A by accident', () => {
   const ctx = makeG2();
   plantDispatch(ctx, REF_A);
   plantDispatch(ctx, REF_B);
-  const cap = fakeCapture();
+  const cap = fakeCapture({ ok: true, receipt: { state: 'ASYNC_LAUNCH_ACK_RECORDED' } });
   const r = evaluatePostCallCapture({
     toolName: 'Agent', toolInput: toolInputFor(REF_B), toolResponse: 'answer for B',
-    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_B), capture: cap,
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_B), captureLaunchAck: cap,
   });
-  assert.equal(r.captured, true, r.reason);
+  assert.equal(r.launchAck, true, r.reason);
   assert.equal(cap.calls[0].conditionRef, REF_B);
 });
 
@@ -207,16 +210,18 @@ test('NEGATIVE: a manifest frozen against a different queue is refused', () => {
   assert.equal(r.handled, false);
 });
 
-test('NEGATIVE: capture doorway refusal is surfaced, not silently swallowed', () => {
+test('NEGATIVE: launch-ack doorway refusal is surfaced, not silently swallowed', () => {
   const ctx = makeG2();
   plantDispatch(ctx, REF_A);
-  const cap = fakeCapture({ ok: false, error: 'malformed completion metadata' });
+  const cap = fakeCapture({ ok: false, error: 'malformed launch-ack payload' });
   const r = evaluatePostCallCapture({
     toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
-    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), capture: cap,
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), captureLaunchAck: cap,
   });
   assert.equal(r.captured, false);
-  assert.match(r.reason, /capture refused: malformed completion metadata/);
+  assert.equal(r.launchAck, undefined);
+  assert.equal(r.block, true);
+  assert.match(r.reason, /async launch ack refused: malformed launch-ack payload/);
 });
 
 // ---------------------------------------------------------------------------
@@ -235,10 +240,10 @@ test('MUTATION: without the dispatch-existence check, an undispatched row would 
   cap.calls.length = 0;
   const real = evaluatePostCallCapture({
     toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
-    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), capture: cap,
+    g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), captureLaunchAck: cap,
   });
   assert.equal(real.captured, false);
-  assert.equal(cap.calls.length, 0, 'the real, checked gate never invokes capture for an undispatched row');
+  assert.equal(cap.calls.length, 0, 'the real, checked gate never invokes captureLaunchAck for an undispatched row');
 });
 
 // ---------------------------------------------------------------------------
@@ -328,18 +333,21 @@ test('F35: once resolved to a frozen row, "no prior dispatch" is block:true REGA
   }
 });
 
-test('F35: once resolved to a frozen row, a successful capture is block:false REGARDLESS of strict mode', () => {
+test('F35: once resolved to a frozen row, a successful launch ack is block:false REGARDLESS of strict mode (never captured:true -- F36)', () => {
   const ctx = makeG2();
   plantDispatch(ctx, REF_A);
   for (const strictSession of [true, false]) {
-    const cap = fakeCapture();
+    const cap = fakeCapture({ ok: true, receipt: { state: 'ASYNC_LAUNCH_ACK_RECORDED' } });
     const r = evaluatePostCallCapture({
-      toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: 'x',
-      g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), strictSession, capture: cap,
+      toolName: 'Agent', toolInput: toolInputFor(REF_A), toolResponse: { isAsync: true, status: 'async_launched', agentId: 'agent-1' },
+      g2: ctx.g2, cwd: ctx.root, nativeCalls: nativeCallsFor(ctx, REF_A), strictSession, captureLaunchAck: cap,
     });
-    assert.equal(r.captured, true, `strictSession=${strictSession}`);
+    assert.equal(r.launchAck, true, `strictSession=${strictSession}`);
+    assert.equal(r.captured, false, `strictSession=${strictSession}: F36 -- launch ack is never a final capture`);
     assert.equal(r.block, false, `strictSession=${strictSession}`);
-    fs.rmSync(path.join(ctx.receiptDir, `${safeName(REF_A)}.raw.json`), { force: true }); // reset for next loop iter's fresh plantDispatch state check (dispatch remains, no raw before this iter's call)
+    // Nothing to reset: the fake captureLaunchAck never touches the filesystem, and a launch ack
+    // never creates .raw.json/.completion.json, so the dispatch-only gate state is unchanged
+    // going into the next loop iteration.
   }
 });
 
@@ -483,4 +491,55 @@ test('INTEGRATION: defaultCapture shells out to the real doorway and the guard-s
   const after = fs.readdirSync(rig.receiptDir);
   assert.equal(after.length, before + 2, after.join(','));
   assert.ok(after.every((f) => !f.includes('.tmp')), 'no temp handoff file leaked into the receipt dir');
+});
+
+// ---------------------------------------------------------------------------
+// AR-1315A §5 Lane B / Lane D — INTEGRATION for the F36 launch-ack doorway against the REAL
+// scripts/g2d_postcall_lifecycle.py in the sibling Worker-1 worktree (AR-1315A §5 Lane A).
+// ---------------------------------------------------------------------------
+
+const HAS_LIFECYCLE_DOORWAY = fs.existsSync(path.join(WORKER_TREE, 'scripts', 'g2d_postcall_lifecycle.py'));
+
+test('INTEGRATION: defaultCaptureLaunchAck shells out to the real F36 doorway -- ack recorded, row NEVER reaches .raw/.completion, temp files cleaned up', {
+  skip: !HAS_LIFECYCLE_DOORWAY && 'sibling worker worktree with g2d_postcall_lifecycle.py not present',
+}, () => {
+  const rig = makeRealLawQueue();
+  realClaimAndDispatch(rig);
+  const before = fs.readdirSync(rig.receiptDir).length;
+  const ackPayload = { isAsync: true, status: 'async_launched', agentId: 'agent-real-int-1' };
+  const result = defaultCaptureLaunchAck({
+    repoRoot: WORKER_TREE,
+    queuePath: rig.queuePath,
+    receiptDir: rig.receiptDir,
+    conditionRef: rig.ref,
+    ackPayload,
+  });
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(result.receipt.state, 'ASYNC_LAUNCH_ACK_RECORDED');
+  assert.equal(result.receipt.note, 'row remains NATIVE_TASK_DISPATCHED; capture_native_return was NOT called');
+
+  const after = fs.readdirSync(rig.receiptDir);
+  assert.equal(after.length, before + 1, after.join(','));
+  assert.ok(after.some((f) => f.endsWith('.launch_ack.json')), 'a launch_ack receipt was written');
+  assert.ok(after.every((f) => !f.endsWith('.raw.json') && !f.endsWith('.completion.json')), 'F36: a launch ack must never produce .raw/.completion');
+  assert.ok(after.every((f) => !f.includes('.tmp')), 'no temp handoff file leaked into the receipt dir');
+});
+
+test('INTEGRATION: defaultCaptureLaunchAck refuses a payload missing the documented async-launch shape, real doorway, real refusal text', {
+  skip: !HAS_LIFECYCLE_DOORWAY && 'sibling worker worktree with g2d_postcall_lifecycle.py not present',
+}, () => {
+  const rig = makeRealLawQueue();
+  realClaimAndDispatch(rig);
+  const before = fs.readdirSync(rig.receiptDir).length;
+  const result = defaultCaptureLaunchAck({
+    repoRoot: WORKER_TREE,
+    queuePath: rig.queuePath,
+    receiptDir: rig.receiptDir,
+    conditionRef: rig.ref,
+    ackPayload: { success: true, result: 'this looks like a final answer, not a launch ack' },
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.error, /async-launch-ack shape/);
+  const after = fs.readdirSync(rig.receiptDir);
+  assert.equal(after.length, before, 'an unknown shape must fail closed and write nothing');
 });

@@ -15,6 +15,7 @@ import {
   SUBAGENT_TOOL_NAMES,
 } from './g2-precall-guard.mjs';
 import { evaluatePostCallCapture } from './g2-postcall-capture.mjs';
+import { evaluateSubagentStop } from './g2-subagentstop-capture.mjs';
 import { mintGuardSession, revokeGuardSession, verifyGuardSession } from './guard-session-marker.mjs';
 
 // Re-exported for the lifecycle red proofs: those controls must be able to place a marker where
@@ -336,6 +337,36 @@ export function evaluateHookEvent({ input, manifest }) {
     return { _audit: { event, guarded: false } };
   }
 
+  // AR-1315A §5 Lane B — the F36 terminal half. A real `SubagentStop` event fires once a
+  // subagent finishes; the current Claude Code hook contract matches it on AGENT TYPE, not tool
+  // name, and carries `agent_id` + `last_assistant_message`. 🛑 THIS BRANCH MUST NEVER RETURN
+  // `block()`/`{decision:"block"}`: for this event that decision means "force the agent to keep
+  // running", not "refuse" — the opposite of what a capture failure should do to an agent that
+  // has already stopped. Every outcome here — armed/unarmed, G2 on/off, doorway accept/refuse —
+  // is folded into `_audit` only, exactly as `g2-subagentstop-capture.mjs`'s header requires.
+  if (event === 'SubagentStop') {
+    const session = armedSession(input, manifest, repoRoot);
+    if (!session.ok) {
+      return { _audit: { event, anchor_verified: false, session } };
+    }
+
+    if (!(manifest.g2_precall && manifest.g2_precall.enabled === true)) {
+      return { _audit: { event, guarded: false } };
+    }
+
+    try {
+      const g2 = loadG2Context({
+        queuePath: path.resolve(repoRoot, manifest.g2_precall.queue_path),
+        receiptDir: path.resolve(repoRoot, manifest.g2_precall.receipt_dir),
+      });
+      const verdict = evaluateSubagentStop({ hookPayload: input, g2, cwd: repoRoot });
+      return { _audit: { event, subagent_stop: verdict } };
+    } catch (error) {
+      // Fail closed on the RECORD (nothing captured), never on the agent (nothing forced).
+      return { _audit: { event, subagent_stop_error: error.message } };
+    }
+  }
+
   if (event === 'TaskCompleted') {
     const session = armedSession(input, manifest, repoRoot);
     if (!session.ok) {
@@ -393,6 +424,10 @@ function main() {
     })();
     if (event === 'PreToolUse') process.stdout.write(`${JSON.stringify(deny(`GPT worker guard internal error: ${error.message}`))}\n`);
     else if (event === 'TaskCompleted' || event === 'PostToolUse') process.stdout.write(`${JSON.stringify(block(`GPT worker guard internal error: ${error.message}`))}\n`);
+    // 'SubagentStop' is deliberately absent from the branch above: block() means "force the
+    // agent to keep running" for this event, never a refusal, so a top-level SubagentStop
+    // failure falls through to stderr-only -- exactly like SessionStart -- rather than emitting
+    // any hook decision at all.
     else process.stderr.write(`claude-hook-bridge: ${error.message}\n`);
   }
 }

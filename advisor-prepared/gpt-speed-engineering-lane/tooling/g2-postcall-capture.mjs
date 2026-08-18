@@ -28,6 +28,21 @@
  * real) PostToolUse payload before wiring this into `.claude/settings.json` — this is named
  * explicitly in the handoff packet as a live surface still requiring verification, not
  * silently assumed correct.
+ *
+ * 🛑 AR-1314A/AR-1315A F36 — CORRECTED, 2026-08-18: a resolved strict-G2 PostToolUse(Agent|Task)
+ * return is the SYNCHRONOUS async-launch acknowledgement, never the subagent's final answer.
+ * `evaluatePostCallCapture()` below NO LONGER calls `capture_native_return` (via `defaultCapture`
+ * / `scripts/g2d_postcall_capture.py`) for a resolved G2 row — doing so was exactly the F36
+ * defect: an ack persisted as though it were the final raw return, permanently occupying the
+ * row's one-shot receipt slot before the subagent had actually finished. It now ALWAYS routes a
+ * resolved row to `defaultCaptureLaunchAck()` / `scripts/g2d_postcall_lifecycle.py launch-ack`
+ * (AR-1315A §5 Lane A), which validates the documented async-launch shape and calls
+ * `record_async_launch_ack()` only — the row stays `NATIVE_TASK_DISPATCHED`. Final capture now
+ * happens ONLY through a later, separately-handled real `SubagentStop` event
+ * (`g2-subagentstop-capture.mjs`). `defaultCapture` and `extractRawResponseText` are kept and
+ * still tested below because `scripts/g2d_postcall_capture.py` remains a real, separately-used
+ * doorway (`scripts/g2d_bridge_report.py` still calls it) — they are simply no longer invoked
+ * from this gate.
  */
 
 import fs from 'node:fs';
@@ -74,7 +89,12 @@ export function extractRawResponseText(toolResponse) {
   return JSON.stringify(toolResponse ?? null);
 }
 
-/** Shells out to the trusted Python doorway. Never reimplements the receipt law. */
+/** Shells out to the trusted Python doorway. Never reimplements the receipt law.
+ *
+ * 🛑 AR-1315A §5 Lane B: NOT called by `evaluatePostCallCapture()` any more (see below). Kept,
+ * exported and independently tested because `scripts/g2d_postcall_capture.py` still exists and
+ * is still called by `scripts/g2d_bridge_report.py` — deleting this doorway would strand that
+ * caller for a reason unrelated to F36. */
 export function defaultCapture({ repoRoot, queuePath, receiptDir, conditionRef, rawOutput, completion, python }) {
   const script = path.join(repoRoot, 'scripts', 'g2d_postcall_capture.py');
   if (!fs.existsSync(script)) return { ok: false, error: `protected capture doorway not found: ${script}` };
@@ -108,6 +128,38 @@ export function defaultCapture({ repoRoot, queuePath, receiptDir, conditionRef, 
 }
 
 /**
+ * AR-1315A §5 Lane B point 1 — shells out to the F36 Worker-side doorway
+ * (`scripts/g2d_postcall_lifecycle.py launch-ack`, AR-1315A §5 Lane A), which itself does
+ * nothing but validate the documented async-launch-ack shape and call
+ * `record_async_launch_ack()`. This function reimplements neither check: an unknown shape, a
+ * missing agent identity, a row not currently NATIVE_TASK_DISPATCHED, or a duplicate ack are
+ * ALL refused by the Python doorway, and its refusal reason is surfaced here unchanged.
+ */
+export function defaultCaptureLaunchAck({ repoRoot, queuePath, receiptDir, conditionRef, ackPayload, python }) {
+  const script = path.join(repoRoot, 'scripts', 'g2d_postcall_lifecycle.py');
+  if (!fs.existsSync(script)) return { ok: false, error: `protected lifecycle doorway not found: ${script}` };
+
+  const tmpAck = path.join(receiptDir, `.postcall-ack-${process.pid}-${Date.now()}.tmp`);
+  fs.writeFileSync(tmpAck, JSON.stringify(ackPayload ?? null), 'utf8');
+  try {
+    const exe = python || process.env.TF_PYTHON || 'python';
+    const args = [script, 'launch-ack', '--queue', queuePath, '--receipt-dir', receiptDir, '--condition-ref', conditionRef, '--ack-payload-json', tmpAck];
+    const res = spawnSync(exe, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, cwd: repoRoot });
+    if (res.error) return { ok: false, error: `lifecycle doorway did not execute: ${res.error.message}` };
+    const out = (res.stdout || '').trim();
+    let parsed = null;
+    try { parsed = JSON.parse(out); } catch { parsed = null; }
+    if (res.status !== 0 || !parsed || parsed.ok !== true) {
+      return { ok: false, error: `launch ack refused (exit ${res.status}): ${(parsed && parsed.error) || (res.stderr || '').trim() || out || 'no output'}`, raw: parsed };
+    }
+    return { ok: true, receipt: parsed };
+  } finally {
+    // Same handoff-file discipline as defaultCapture: never part of the receipt contract.
+    try { fs.unlinkSync(tmpAck); } catch { /* already gone */ }
+  }
+}
+
+/**
  * THE GATE. Returns { handled, reason } for a non-G2 or unresolved call outside strict G2, or
  * { handled: true, captured: true|false, block, reason } once inside strict G2 or once the
  * call has been resolved to a frozen row.
@@ -137,7 +189,7 @@ export function evaluatePostCallCapture({
   cwd = process.cwd(),
   nativeCalls = null,
   strictSession = false,
-  capture = defaultCapture,
+  captureLaunchAck = defaultCaptureLaunchAck,
 }) {
   if (!SUBAGENT_TOOLS.has(toolName)) return { handled: false, reason: 'not a subagent dispatch' };
 
@@ -173,18 +225,30 @@ export function evaluatePostCallCapture({
     return { handled: true, captured: false, block: true, reason: `${conditionRef} already has a captured raw return; a second capture is refused` };
   }
 
-  const rawOutput = extractRawResponseText(toolResponse);
-  const result = capture({
+  // AR-1315A §5 Lane B point 1/2: a resolved strict-G2 PostToolUse(Agent|Task) return is the
+  // SYNCHRONOUS async-launch acknowledgement, never the subagent's final answer (F36's root
+  // cause). This path therefore NEVER calls capture_native_return()/defaultCapture any more —
+  // it ALWAYS routes to the F36 launch-ack doorway, which itself validates the documented
+  // async-launch shape and fails closed on anything else. The row stays NATIVE_TASK_DISPATCHED;
+  // only a later, separately-handled SubagentStop event (g2-subagentstop-capture.mjs) may
+  // finalize it.
+  const result = captureLaunchAck({
     repoRoot: cwd,
     queuePath: g2.queuePath,
     receiptDir: g2.receiptDir,
     conditionRef,
-    rawOutput,
-    completion: null,
+    ackPayload: toolResponse,
   });
 
   if (!result.ok) {
-    return { handled: true, captured: false, block: true, reason: `capture refused: ${result.error}` };
+    return { handled: true, captured: false, block: true, reason: `async launch ack refused: ${result.error}` };
   }
-  return { handled: true, captured: true, block: false, reason: `captured raw return for ${conditionRef}`, receipt: result.receipt };
+  return {
+    handled: true,
+    captured: false,
+    launchAck: true,
+    block: false,
+    reason: `recorded async launch ack for ${conditionRef}; row remains NATIVE_TASK_DISPATCHED`,
+    receipt: result.receipt,
+  };
 }
