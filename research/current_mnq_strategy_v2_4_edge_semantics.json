@@ -1,13 +1,21 @@
 {
-  "schema_version": 1,
-  "release_id": "MNQ-V2.4-EDGE-EQUATION-1",
-  "frozen_at": "2026-08-17",
-  "purpose": "Define edge before seeing v2.4 validation PnL. No component may be relaxed because a result fails.",
+  "schema_version": 2,
+  "release_id": "MNQ-V2.4-EDGE-EQUATION-2",
+  "frozen_at": "2026-08-18",
+  "purpose": "Define edge before seeing clean v2.4 validation PnL. No component may be relaxed because a result fails. Equation-2 corrects an impossible calendar gate discovered before any clean PnL was observed: MNQ launched 2019-05-06, so fewer than 756 weekdays exist before the already-contaminated 2022-01-01 boundary.",
   "equation": {
     "name": "WEAKEST_LINK_ROBUST_EXPECTANCY",
     "definition": "ROBUST_EDGE_EXPECTANCY = min(BOOTSTRAP_LCB95, MAX_COST_STRESS_EXPECTANCY, DETAILED_EXPECTANCY, LEAVE_BEST_MONTH_OUT_EXPECTANCY)",
-    "certified_edge": "DATA_CLEAN AND SAMPLE_OK AND TEMPORAL_OK AND ROBUST_EDGE_EXPECTANCY > 0 AND BREAK_EVEN_MARGIN > 0",
+    "certified_edge": "DATA_CLEAN AND CLEAN_SCOPE_COMPLETE AND SAMPLE_OK AND TEMPORAL_OK AND ROBUST_EDGE_EXPECTANCY > 0 AND BREAK_EVEN_MARGIN > 0",
     "interpretation": "The strategy only claims edge at the weakest surviving expectancy after uncertainty, friction, outlier-removal and calendar-concentration attacks."
+  },
+  "clean_historical_scope": {
+    "instrument_launch_date": "2019-05-06",
+    "required_dataset_start_on_or_before": "2019-05-06",
+    "required_dataset_end_on_or_after": "2021-12-31",
+    "require_full_available_pre_contamination_history": true,
+    "initial_post_launch_warmup_is_unscored": true,
+    "reason": "Use the complete genuine MNQ history available before the known-seen 2022+ performance era. Do not substitute NQ, synthetic pre-launch MNQ, or cherry-picked subranges."
   },
   "gates": {
     "minimum_trades": 100,
@@ -26,6 +34,7 @@
     "no_parameter_search": true,
     "no_threshold_rescue_after_result": true,
     "no_best_variant_selection": true,
+    "gate_change_reason_must_predate_clean_result": true,
     "same_history_may_be_used_for_development_diagnostics_but_not_relabeled_clean_OOS": true,
     "known_seen_performance_ranges": [
       {
@@ -34,7 +43,7 @@
         "reason": "Aggregate MNQ strategy performance over this multi-year Databento era was already inspected before the v2.4 equation was frozen. It can support development/robustness diagnostics, but it cannot be called a fresh clean v2.4 OOS proof."
       }
     ],
-    "clean_final_edge_requires": "A date range with no overlap with known_seen_performance_ranges, or future post-freeze shadow/live evidence."
+    "clean_final_edge_requires": "Complete genuine MNQ history from launch through 2021-12-31 with contaminated dates excluded, or future post-freeze evidence under a separately frozen future-evidence contract."
   },
   "diagnostics_not_hard_gates": [
     "long_short_profit_split",
