@@ -8,6 +8,7 @@ on:
       - 'research/current_mnq_strategy_v2_4_*.py'
       - 'research/current_mnq_strategy_v2_4_*.json'
       - 'research/current_mnq_strategy_v2_3_*.py'
+      - 'src/engine/indicators/fvg_native.py'
       - 'research/mnq_v23_realtime/**'
       - 'research/mnq_v23_requirements.txt'
       - 'tests/test_current_mnq_strategy_v2_4*.py'
@@ -19,6 +20,7 @@ on:
       - 'research/current_mnq_strategy_v2_4_*.py'
       - 'research/current_mnq_strategy_v2_4_*.json'
       - 'research/current_mnq_strategy_v2_3_*.py'
+      - 'src/engine/indicators/fvg_native.py'
       - 'research/mnq_v23_realtime/**'
       - 'research/mnq_v23_requirements.txt'
       - 'tests/test_current_mnq_strategy_v2_4*.py'
@@ -68,15 +70,20 @@ jobs:
       - name: Prove corrected semantic contract
         run: |
           PYTHONPATH=. python - <<'PY'
-          from research.current_mnq_strategy_v2_4_policy import load_spec
-          p=load_spec()
+          from research.current_mnq_strategy_v2_4_policy import load_spec, load_fvg_spec
+          p=load_spec(); f=load_fvg_spec()
           assert p['zone_gate']['mandatory'] is True
           assert p['zone_gate']['pattern_without_zone_interaction']=='NO_TRADE'
           assert p['zone_gate']['mere_approach_without_touch']=='NO_TRADE'
           assert p['zone_gate']['mid_range_pattern']=='NO_TRADE'
           assert p['candlestick_semantics']['role']=='CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL'
           assert p['anti_overfit']['v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4'] is True
-          print('PASS: v2.4 = premarket -> zone -> reject/break -> candles/control -> A+')
+          assert f['detector_authority']['repository_path']=='src/engine/indicators/fvg_native.py'
+          assert f['detector_authority']['timeframe_for_current_strategy']=='15m'
+          assert f['trader_target_rule']['liquidity_cluster_before_fvg']=='TARGET_LIQUIDITY_CLUSTER'
+          assert f['trader_target_rule']['fvg_before_liquidity_cluster']=='TARGET_FVG'
+          assert f['trader_target_rule']['rank_distance_uses']=='near_edge_of_reaction_area_not_midpoint'
+          print('PASS: v2.4 = premarket -> zone -> reject/break -> candles/control -> first reaction TP')
           PY
       - name: Verify read-only SignalR sidecar and hosted-runtime refusal
         working-directory: research/mnq_v23_realtime
@@ -108,12 +115,12 @@ jobs:
           import json, xml.etree.ElementTree as ET
           from pathlib import Path
           from research.current_mnq_strategy_v2_3_evidence import gold_counts
-          from research.current_mnq_strategy_v2_4_policy import semantics_hash, load_spec
+          from research.current_mnq_strategy_v2_4_policy import semantics_hash, load_spec, load_fvg_spec
           root=ET.parse('/tmp/mnq_v24_junit.xml').getroot()
           suites=list(root) if root.tag=='testsuites' else [root]
           tests=sum(int(x.attrib.get('tests',0)) for x in suites)
           failures=sum(int(x.attrib.get('failures',0))+int(x.attrib.get('errors',0)) for x in suites)
-          spec=load_spec(); pos,neg=gold_counts()
+          spec=load_spec(); fvg=load_fvg_spec(); pos,neg=gold_counts()
           receipt={
               'release_id':spec['release_id'],
               'semantics_sha256':semantics_hash(),
@@ -124,6 +131,9 @@ jobs:
               'zone_gate_mandatory':True,
               'patterns_away_from_zone_refused':True,
               'shared_historical_live_candidate_kernel':True,
+              'native_fvg_detector':fvg['detector_authority']['repository_path'],
+              'native_fvg_timeframe':'15m',
+              'first_reaction_target_ordering':True,
               'signalr_sidecar_ci_automation_refused':True,
               'automation_approved':False,
               'reason':'v2.4 software architecture only; fresh sealed OOS + real no-trade gold + local shadow/drills still required'
