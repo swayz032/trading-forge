@@ -2,11 +2,8 @@ from __future__ import annotations
 
 import pandas as pd
 
-from research.current_mnq_strategy_v2_4_candles import (
-    Interaction,
-    classify_patterns,
-    evaluate_at_zone,
-)
+from research.current_mnq_strategy_v2_4_candles import Interaction, classify_patterns
+from research.current_mnq_strategy_v2_4_zone_candles import evaluate_at_zone
 
 
 def bars(rows):
@@ -71,7 +68,7 @@ def test_strong_bearish_close_through_support_is_breakout_not_rejection():
     assert not d.reversal_long_confirmed
 
 
-def test_sweep_below_support_then_reclaim_counts_as_failed_seller_push():
+def test_sweep_below_support_then_reclaim_needs_bullish_candle_control():
     q = bars([
         (101.0, 101.5, 100.5, 101.25),
         (100.5, 101.75, 98.75, 100.75),
