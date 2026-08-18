@@ -1,11 +1,16 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "strategy_id": "CURRENT_MNQ_DISCRETIONARY_TRANSLATION",
   "release_id": "MNQ-V2.4-ZONE-CANDLE-PC1",
   "supersedes_semantics": "MNQ-V2.3-PC1",
   "frozen_at": "2026-08-17",
   "instrument": "MNQ",
-  "semantic_correction_reason": "Trader explicitly reconfirmed that candlestick patterns are used as confirmation/control evidence only after price reaches a pre-drawn zone. Price must reject the zone or break/accept through the zone. Candlestick patterns away from zones are never entries.",
+  "semantic_correction_reason": "Trader explicitly reconfirmed that candlestick patterns and key-level rules are taught together. Candlestick patterns are confirmation/control evidence only after price reaches a valid pre-drawn zone. Price must reject/reclaim, break/accept, or validly break-retest that zone before a trade can qualify.",
+  "source_model": {
+    "candlestick_video_pack_is_joint_candle_and_key_level_evidence": true,
+    "location_and_pattern_must_be_interpreted_together": true,
+    "creator_specific_rules_not_adopted_without_trader_confirmation": true
+  },
   "session": {
     "timezone": "America/New_York",
     "execution_window": "09:30-12:00",
@@ -22,33 +27,85 @@
   },
   "hard_entry_order": [
     "PREMARKET_CONTEXT",
+    "BUILD_CAUSAL_KEY_LEVEL_MAP",
     "PRICE_REACHES_AUTHORIZED_ZONE",
-    "CLASSIFY_ZONE_INTERACTION_AS_REJECTION_OR_BREAKOUT_ATTEMPT",
+    "CLASSIFY_ZONE_INTERACTION_AS_REJECTION_RECLAIM_BREAK_OR_RETEST",
     "READ_CANDLESTICK_PATTERN_AND_MULTI_CANDLE_CONTROL_STORY",
     "REQUIRE_DIRECTIONAL_CONTROL_CONFIRMATION",
     "REQUIRE_ROOM_TO_NEXT_MEANINGFUL_DESTINATION",
     "FIRST_A_PLUS_ONLY"
   ],
+  "key_level_semantics": {
+    "role": "LOCATION_FILTER_AND_INFLECTION_MAP_NOT_STANDALONE_SIGNAL",
+    "level_is_zone_not_magic_tick": true,
+    "primary_quality_evidence": [
+      "multiple_independent_rejections_or_wick_reactions",
+      "repeated_support_or_resistance_behavior",
+      "clear_reaction_cluster"
+    ],
+    "secondary_quality_evidence": [
+      "strong_displacement_away_from_swing_high_or_low",
+      "recent_respected_pivot",
+      "prior_support_resistance_role_history",
+      "PDH_PDL_PWH_PWL_context",
+      "active_15m_FVG_context"
+    ],
+    "active_map_policy": {
+      "prioritize_relevant_nearby_levels": true,
+      "avoid_chart_clutter": true,
+      "do_not_delete_farther_meaningful_destination": true,
+      "recent_levels_receive_more_relevance_but_recency_alone_is_not_sufficient": true
+    },
+    "inflection_rule": "A valid zone may reject, reclaim, break, accept, retest or later flip role; touching it does not predict direction.",
+    "role_flip": {
+      "transient_wick_breach_is_not_role_flip": true,
+      "durable_acceptance_required": true,
+      "valid_retest_can_confirm_flip": true,
+      "resistance_to_support": true,
+      "support_to_resistance": true
+    },
+    "reclaim": {
+      "breach_and_close_back_is_initial_evidence_only": true,
+      "hold_or_defense_required": true,
+      "directional_control_required": true,
+      "doji_reclaim_alone_is_not_A_plus": true
+    },
+    "break_retest": {
+      "valid_zone_interaction": true,
+      "prior_resistance_accepted_then_retested_as_support_can_authorize_long_location": true,
+      "prior_support_accepted_then_retested_as_resistance_can_authorize_short_location": true,
+      "candle_control_still_required": true
+    },
+    "causal_maintenance": {
+      "future_bars_forbidden": true,
+      "zone_updates_use_completed_bars_only": true,
+      "historical_zone_state_must_be_reproducible_at_that_timestamp": true
+    }
+  },
   "zone_gate": {
     "mandatory": true,
     "pattern_without_zone_interaction": "NO_TRADE",
     "authorized_locations": [
       "causal_15m_repeated_rejection_wick_support_resistance",
+      "causal_15m_strong_displacement_swing_zone_when_quality_gate_passes",
+      "accepted_and_retested_role_flip_zone",
       "PDH_PDL_PWH_PWL_as_context_or_authorized_location_when_quality_gate_passes",
       "active_15m_FVG_as_context_or_authorized_location_when_quality_gate_passes"
     ],
     "valid_rejection_interactions": [
       "touch_and_reject",
-      "penetrate_and_reclaim",
-      "sweep_and_reclaim",
-      "failed_breakout_back_inside"
+      "penetrate_and_reclaim_with_defense",
+      "sweep_and_reclaim_with_control",
+      "failed_breakout_back_inside_with_control"
     ],
     "valid_breakout_interactions": [
       "strong_5m_displacement_close_through_zone",
-      "weak_attempt_followed_by_new_completed_15m_acceptance_close_beyond_zone"
+      "weak_attempt_followed_by_new_completed_15m_acceptance_close_beyond_zone",
+      "accepted_break_followed_by_valid_retest"
     ],
     "mere_approach_without_touch": "NO_TRADE",
-    "mid_range_pattern": "NO_TRADE"
+    "mid_range_pattern": "NO_TRADE",
+    "touch_without_directional_control": "WAIT_OR_NO_TRADE"
   },
   "candlestick_semantics": {
     "role": "CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL",
@@ -78,7 +135,7 @@
     "control_features": [
       "body_to_range_ratio", "upper_wick_fraction", "lower_wick_fraction",
       "close_location", "range_expansion_or_contraction", "engulfing_or_inside_relationship",
-      "failed_push", "reclaim", "follow_through", "displacement", "two_sided_wick_conflict"
+      "failed_push", "reclaim", "hold_or_defense", "follow_through", "displacement", "two_sided_wick_conflict"
     ],
     "mixed_or_indecisive_control": "WAIT_OR_NO_TRADE"
   },
@@ -86,12 +143,15 @@
     "support_rejection_long": "price reaches support, rejection/reclaim candle story shows sellers failed and buyers take control",
     "resistance_rejection_short": "price reaches resistance, rejection/reclaim candle story shows buyers failed and sellers take control",
     "resistance_breakout_long": "price reaches resistance and strong bullish displacement/acceptance breaks through, or weak attempt later receives new completed 15m acceptance",
-    "support_breakout_short": "price reaches support and strong bearish displacement/acceptance breaks through, or weak attempt later receives new completed 15m acceptance"
+    "support_breakout_short": "price reaches support and strong bearish displacement/acceptance breaks through, or weak attempt later receives new completed 15m acceptance",
+    "resistance_break_retest_long": "resistance is genuinely broken and accepted, retests as support, then bullish candle/control evidence confirms",
+    "support_break_retest_short": "support is genuinely broken and accepted, retests as resistance, then bearish candle/control evidence confirms"
   },
   "zone_lifecycle": {
     "breach_is_not_automatically_permanent_break": true,
     "quick_reclaim_restores_original_polarity": true,
     "durable_acceptance_can_flip_role": true,
+    "retest_can_confirm_role_flip": true,
     "future_bars_forbidden": true
   },
   "target_semantics": {
@@ -115,7 +175,11 @@
     "second_trade_same_session",
     "stale_or_ambiguous_contract_identity",
     "stale_market_data",
-    "failed_breakout_that_reclaims_original_zone_must_not_be_treated_as_durable_role_flip"
+    "failed_breakout_that_reclaims_original_zone_must_not_be_treated_as_durable_role_flip",
+    "sweep_reclaim_without_hold_or_directional_defense",
+    "role_flip_from_single_transient_wick_breach",
+    "break_retest_without_prior_durable_acceptance",
+    "low_quality_chart_clutter_level_used_as_A_plus_location"
   ],
   "evidence_policy": {
     "real_user_positive_gold_min": 5,
@@ -141,7 +205,7 @@
     "no_variant_promotion_from_sealed_validation": true,
     "rule_change_after_sealed_result_invalidates_that_result": true,
     "v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4": true,
-    "reason": "Zone-first candlestick semantics materially change the executable strategy; v2.4 requires fresh sealed validation after implementation is frozen.",
+    "reason": "Zone-first candlestick and key-level semantics materially change the executable strategy; v2.4 requires fresh sealed validation after implementation is frozen.",
     "contaminated_score_ranges": [
       {"start": "2026-01-20", "end": "2026-04-15", "reason": "Previously inspected/development-tested sample."}
     ]
