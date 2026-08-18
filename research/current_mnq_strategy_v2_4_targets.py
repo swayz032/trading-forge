@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 """First-reaction take-profit engine for Current MNQ v2.4.
 
-Trader rule:
-  Look forward from entry in the trade direction. The first MEANINGFUL reaction
-  area gets priority. If a frozen 15m key zone or 5m liquidity cluster is before
-  an active 15m FVG, target that nearer reaction area. If the active 15m FVG is
-  before the next meaningful level/cluster, target the FVG midpoint.
-
-Ordering is by the NEAR EDGE of each area—the first price that can be contacted—
-not by midpoint. Midpoint/safe interior is chosen only AFTER the first reaction
-area wins.
+The first meaningful reaction area wins by near-edge distance. Frozen 15m key
+zones, dynamic 5m liquidity clusters, PD/PW levels and active native 15m FVGs all
+use the same causal zone/FVG lifecycle before competing for TP priority.
 """
 from __future__ import annotations
 
@@ -21,6 +15,7 @@ import pandas as pd
 from research import current_mnq_strategy_v2_3_engine as v23
 from research.current_mnq_strategy_v2_4_fvg import active_15m_fvgs
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
+from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
 
 core = v23.core
 TICK = core.TICK
@@ -65,14 +60,10 @@ def _structurally_meaningful_cluster(loc: core.Location, p: core.Params) -> bool
     z = getattr(loc, "zone", None)
     if z is None:
         return False
-    # No extra target-only magic quality threshold. A cluster is meaningful if
-    # it satisfies the already-frozen established reaction-zone equation.
     return bool(int(getattr(z, "touches", 0)) >= 2 and float(loc.quality) >= float(p.min_zone_quality))
 
 
 def _dedupe(raw_locs: list[tuple[str, core.Location, bool]]) -> list[tuple[str, core.Location, bool]]:
-    # HTF/key area is authoritative if it physically overlaps a lower-timeframe
-    # reaction cluster. This avoids double-counting the same reaction neighborhood.
     priority = {"KEY_ZONE_15M": 3, "KEY_LEVEL": 2, "LIQUIDITY_CLUSTER": 1}
     chosen: list[tuple[str, core.Location, bool]] = []
     for kind, loc, conf in sorted(
@@ -105,35 +96,27 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
 
     raw_locs: list[tuple[str, core.Location, bool]] = []
 
-    # Dynamic 5m reaction/liquidity clusters, causal at decision time.
     zones5 = core.build_zones(piv5, full5, asof, p, look_days=25)
-    zones5 = [core.zone_state_at(z, full5, asof, p) for z in zones5]
+    zones5 = [zone_state_at_v24(z, full5, asof, p) for z in zones5]
     zones5 = core.enrich_confluence(zones5, refs, native_fvgs, atr15, p)
     for loc in core.zone_locations([z for z in zones5 if z.active]):
         fvg_conf = any(core.overlap(loc.lo, loc.hi, f.lo, f.hi, tol) for f in native_fvgs)
         raw_locs.append(("LIQUIDITY_CLUSTER", loc, fvg_conf))
 
-    # Frozen 15m primary map. It is rebuilt AS OF 09:30, never at entry, so an
-    # intraday move cannot manufacture its own future-facing primary zone.
     if piv15 is not None:
         open_ts = pd.Timestamp(f"{dte} 09:30", tz=core.TZ)
-        level_env = {
-            "h15": h15, "piv15": piv15, "full5": full5,
-            "pdm": pdm, "pwm": pwm,
-        }
+        level_env = {"h15": h15, "piv15": piv15, "full5": full5, "pdm": pdm, "pwm": pwm}
         primary_locs, _ = build_entry_locations_v24(level_env, dte, open_ts, p)
         for loc in primary_locs:
             kind = "KEY_LEVEL" if loc.source in KEY_SOURCES else "KEY_ZONE_15M"
             fvg_conf = any(core.overlap(loc.lo, loc.hi, f.lo, f.hi, tol) for f in native_fvgs)
             raw_locs.append((kind, loc, fvg_conf))
     else:
-        # Compatibility for isolated tests that intentionally do not build piv15.
         for loc in core.make_key_locations(pdm, pwm, dte, atr15, p):
             raw_locs.append(("KEY_LEVEL", loc, False))
 
     locs = _dedupe(raw_locs)
     out: list[ReactionDestination] = []
-
     for kind, loc, fvg_conf in locs:
         if not _ahead(entry, float(loc.lo), float(loc.hi), direction):
             continue
@@ -141,21 +124,13 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
         if contact <= 0:
             continue
         q = _liquidity_quality(loc)
-        meaningful = bool(
-            kind in {"KEY_ZONE_15M", "KEY_LEVEL"}
-            or _structurally_meaningful_cluster(loc, p)
-        )
+        meaningful = bool(kind in {"KEY_ZONE_15M", "KEY_LEVEL"} or _structurally_meaningful_cluster(loc, p))
         out.append(ReactionDestination(
-            location=loc,
-            kind=kind,
-            first_contact_distance=contact,
+            location=loc, kind=kind, first_contact_distance=contact,
             target_raw=_cluster_target(loc, direction, float(p.tp_depth)),
-            quality=q,
-            meaningful=meaningful,
-            fvg_confluent=fvg_conf,
+            quality=q, meaningful=meaningful, fvg_confluent=fvg_conf,
         ))
 
-    # Active/unmitigated native 15m FVG destinations.
     for i, f in enumerate(native_fvgs):
         if not _ahead(entry, f.lo, f.hi, direction):
             continue
@@ -169,18 +144,13 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
         )
         cluster_overlap = any(core.overlap(loc.lo, loc.hi, x[1].lo, x[1].hi, 0.0) for x in locs)
         out.append(ReactionDestination(
-            location=loc, kind="FVG_15M",
-            first_contact_distance=contact, target_raw=float(f.mid),
-            quality=0.70, meaningful=True, fvg_confluent=cluster_overlap,
+            location=loc, kind="FVG_15M", first_contact_distance=contact,
+            target_raw=float(f.mid), quality=0.70, meaningful=True,
+            fvg_confluent=cluster_overlap,
         ))
 
     kind_rank = {"KEY_ZONE_15M": 0, "KEY_LEVEL": 1, "LIQUIDITY_CLUSTER": 2, "FVG_15M": 3}
-    out.sort(key=lambda x: (
-        x.first_contact_distance,
-        kind_rank.get(x.kind, 9),
-        -x.quality,
-        x.location.id,
-    ))
+    out.sort(key=lambda x: (x.first_contact_distance, kind_rank.get(x.kind, 9), -x.quality, x.location.id))
     return out
 
 
@@ -191,19 +161,14 @@ def classify_first_reaction_destination(destinations: list[ReactionDestination],
     if not destinations:
         return None, "NO_DESTINATION"
     min_room = float(p.min_room_r * p.stop)
-
     for d in destinations:
         if not d.meaningful:
-            # Tiny/noisy shelf: skip only because it failed the structural
-            # reaction equation, never because a farther target earns more money.
             if d.quality > p.weak_blocker_quality and not (setup == "BRK5" and strong_momentum):
                 if d.first_contact_distance < min_room:
                     return None, f"WEAK_NEAR_BLOCKER:{d.location.source}:{d.first_contact_distance:.2f}"
             continue
-
         if d.first_contact_distance < min_room:
             return None, f"FIRST_REACTION_TOO_CLOSE:{d.kind}:{d.location.source}:{d.first_contact_distance:.2f}"
-
         raw = float(d.target_raw)
         px = core.executable_target(raw, direction)
         if not core.tick_valid(px):
@@ -213,7 +178,6 @@ def classify_first_reaction_destination(destinations: list[ReactionDestination],
             False, True, d.kind == "FVG_15M" or d.fvg_confluent,
         )
         return target, f"FIRST_REACTION:{d.kind}"
-
     return None, "NO_MEANINGFUL_DESTINATION"
 
 
@@ -223,9 +187,6 @@ def build_and_classify(piv5: pd.DataFrame, full5: pd.DataFrame, h15: pd.DataFram
                        strong_momentum: bool,
                        piv15: pd.DataFrame | None = None):
     destinations = build_reaction_destinations(
-        piv5, full5, h15, asof, p, pdm, pwm, dte, entry, direction,
-        piv15=piv15,
+        piv5, full5, h15, asof, p, pdm, pwm, dte, entry, direction, piv15=piv15,
     )
-    return classify_first_reaction_destination(
-        destinations, entry, direction, setup, p, strong_momentum,
-    )
+    return classify_first_reaction_destination(destinations, entry, direction, setup, p, strong_momentum)
