@@ -4,6 +4,12 @@
 No v2.3 strategy decision or promotion receipt can enter this path. The first A+
 setup from the shared causal v2.4 kernel is authoritative; if it is missed, the
 session is disabled rather than replaced by a later setup.
+
+Timing contract: slow historical/context refresh happens BEFORE the authoritative
+live BBO used to approve entry/stop/target geometry. The execution layer then
+reads the realtime snapshot once more immediately before broker submission and
+refuses any quote drift. This avoids approving a target from a quote that aged
+while context data was refreshing.
 """
 from __future__ import annotations
 
@@ -75,18 +81,24 @@ class AutomationRuntime:
             return {"status": "DAILY_BULLET_ALREADY_CONSUMED", "session": session, "phase": state.phase}
 
         contract_id = projectx_contract_id(session_date)
-        rt = read_realtime_snapshot(
-            self.snapshot_path, self.account_id, contract_id,
-            now=local.tz_convert("UTC").to_pydatetime(),
-        )
+
+        # Historical/context I/O may take seconds. Complete it before reading the
+        # BBO that will authorize this decision's exact execution geometry.
+        context_asof_utc = local.tz_convert("UTC").to_pydatetime()
         if not self.context.manifest_path.exists():
-            self.context.bootstrap(session_date, lookback_days=100,
-                                   as_of_utc=local.tz_convert("UTC").to_pydatetime())
+            self.context.bootstrap(session_date, lookback_days=100, as_of_utc=context_asof_utc)
         else:
-            self.context.refresh(session_date, as_of_utc=local.tz_convert("UTC").to_pydatetime())
+            self.context.refresh(session_date, as_of_utc=context_asof_utc)
 
         raw5, raw1, manifest = load_production_dataset(self.context_root)
         env = prepare_causal(raw5, raw1, manifest, local)
+
+        # This is the authoritative quote for decision geometry. A second quote
+        # is fetched by submit_with_realtime_snapshot immediately before submit;
+        # the broker refuses if it changed.
+        rt = read_realtime_snapshot(
+            self.snapshot_path, self.account_id, contract_id,
+        )
         decision = find_first_actionable_signal(
             env, session_date, Params(), local,
             live_bid_raw=rt.best_bid, live_ask_raw=rt.best_ask,
