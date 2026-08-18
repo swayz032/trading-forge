@@ -43,7 +43,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
       - name: Compile all v2.4 modules
         run: python -m py_compile research/current_mnq_strategy_v2_4_*.py
-      - name: Run inherited production safety plus v2.4 fidelity gates
+      - name: Run inherited production safety plus v2.4 fidelity and edge gates
         run: |
           PYTHONPATH=. pytest --confcutdir=tests -q \
             tests/test_current_mnq_strategy_v2_2_contracts.py \
@@ -67,11 +67,11 @@ jobs:
             tests/test_current_mnq_strategy_v2_3_signal.py \
             tests/test_current_mnq_strategy_v2_4*.py \
             --junitxml=/tmp/mnq_v24_junit.xml
-      - name: Prove corrected semantic contract
+      - name: Prove corrected semantic and weakest-link edge contract
         run: |
           PYTHONPATH=. python - <<'PY'
-          from research.current_mnq_strategy_v2_4_policy import load_spec, load_fvg_spec
-          p=load_spec(); f=load_fvg_spec()
+          from research.current_mnq_strategy_v2_4_policy import load_spec, load_fvg_spec, load_edge_spec
+          p=load_spec(); f=load_fvg_spec(); e=load_edge_spec()
           assert p['zone_gate']['mandatory'] is True
           assert p['zone_gate']['pattern_without_zone_interaction']=='NO_TRADE'
           assert p['zone_gate']['mere_approach_without_touch']=='NO_TRADE'
@@ -83,7 +83,13 @@ jobs:
           assert f['trader_target_rule']['liquidity_cluster_before_fvg']=='TARGET_LIQUIDITY_CLUSTER'
           assert f['trader_target_rule']['fvg_before_liquidity_cluster']=='TARGET_FVG'
           assert f['trader_target_rule']['rank_distance_uses']=='near_edge_of_reaction_area_not_midpoint'
-          print('PASS: v2.4 = premarket -> zone -> reject/break -> candles/control -> first reaction TP')
+          assert e['equation']['name']=='WEAKEST_LINK_ROBUST_EXPECTANCY'
+          assert e['gates']['top_winner_fraction_removed']==0.05
+          assert e['gates']['leave_best_calendar_month_out'] is True
+          assert e['anti_overfit']['no_threshold_rescue_after_result'] is True
+          seen=e['anti_overfit']['known_seen_performance_ranges']
+          assert any(x['start']=='2022-01-01' and x['end']=='2026-08-17' for x in seen)
+          print('PASS: v2.4 strategy + weakest-link edge equation are frozen before validation')
           PY
       - name: Verify read-only SignalR sidecar and hosted-runtime refusal
         working-directory: research/mnq_v23_realtime
@@ -115,12 +121,12 @@ jobs:
           import json, xml.etree.ElementTree as ET
           from pathlib import Path
           from research.current_mnq_strategy_v2_3_evidence import gold_counts
-          from research.current_mnq_strategy_v2_4_policy import semantics_hash, load_spec, load_fvg_spec
+          from research.current_mnq_strategy_v2_4_policy import semantics_hash, load_spec, load_fvg_spec, load_edge_spec
           root=ET.parse('/tmp/mnq_v24_junit.xml').getroot()
           suites=list(root) if root.tag=='testsuites' else [root]
           tests=sum(int(x.attrib.get('tests',0)) for x in suites)
           failures=sum(int(x.attrib.get('failures',0))+int(x.attrib.get('errors',0)) for x in suites)
-          spec=load_spec(); fvg=load_fvg_spec(); pos,neg=gold_counts()
+          spec=load_spec(); fvg=load_fvg_spec(); edge=load_edge_spec(); pos,neg=gold_counts()
           receipt={
               'release_id':spec['release_id'],
               'semantics_sha256':semantics_hash(),
@@ -134,9 +140,11 @@ jobs:
               'native_fvg_detector':fvg['detector_authority']['repository_path'],
               'native_fvg_timeframe':'15m',
               'first_reaction_target_ordering':True,
+              'edge_equation':edge['equation']['definition'],
+              'clean_oos_seen_history_exclusion':edge['anti_overfit']['known_seen_performance_ranges'],
               'signalr_sidecar_ci_automation_refused':True,
               'automation_approved':False,
-              'reason':'v2.4 software architecture only; fresh sealed OOS + real no-trade gold + local shadow/drills still required'
+              'reason':'v2.4 architecture only; clean sealed edge proof + real no-trade gold + local shadow/drills still required'
           }
           out=Path('research/_mnq_v24_architecture'); out.mkdir(parents=True,exist_ok=True)
           (out/'architecture_receipt.json').write_text(json.dumps(receipt,indent=2,sort_keys=True))
