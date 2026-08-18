@@ -63,3 +63,30 @@ def test_touch_without_control_does_not_become_trade():
     )
     assert not g.allowed
     assert g.reason == "ZONE_REACHED_REVERSAL_NOT_CONFIRMED"
+
+
+def test_real_user_range_on_key_level_waits_for_momentum_breakout():
+    """User gold NT01: chop on the key level is WAIT, not breakout authority."""
+    ranging = bars([
+        (100.8, 101.2, 99.4, 100.2),
+        (100.2, 100.9, 99.2, 100.5),
+        (100.5, 101.1, 99.5, 100.1),
+        (100.1, 100.8, 99.3, 100.3),
+    ])
+    waiting = gate_candidate(
+        bars=ranging, zone_side="S", zone_lo=99.0, zone_hi=101.0,
+        direction="S", setup="BRK5",
+    )
+    assert not waiting.allowed
+    assert waiting.reason == "ZONE_REACHED_5M_BREAKOUT_NOT_CONFIRMED"
+
+    breakout = pd.concat([
+        ranging,
+        bars([(100.0, 100.3, 97.0, 97.4)]),
+    ], ignore_index=True)
+    confirmed = gate_candidate(
+        bars=breakout, zone_side="S", zone_lo=99.0, zone_hi=101.0,
+        direction="S", setup="BRK5",
+    )
+    assert confirmed.allowed
+    assert confirmed.reason == "SUPPORT_BREAK_BEARISH_ACCEPTANCE"
