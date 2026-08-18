@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "release_id": "MNQ-V2.4-PREMARKET-EQUATION-1",
+  "frozen_at": "2026-08-17",
+  "purpose": "Premarket context is a directional prior, not an unconditional veto. Only strong evidence at a major authorized location may invalidate a counter-direction morning thesis.",
+  "major_location_equation": "location_quality >= frozen Params.high_zone_quality OR location_confluence >= 2",
+  "aligned_or_neutral": "ALLOW_IF_ALL_OTHER_ZONE_CANDLE_ROOM_GATES_PASS",
+  "counter_plan_reversal": "ALLOW_ONLY_IF_COMPLETE_REVERSAL_STORY_AND_MAJOR_LOCATION",
+  "counter_plan_strong_5m_breakout": "ALLOW_ONLY_IF_MAJOR_LOCATION; the shared kernel separately requires strong 5m displacement/acceptance through the zone",
+  "counter_plan_weak_breakout": "ALLOW_ONLY_IF_MAJOR_LOCATION; the shared kernel separately requires a new completed 15m acceptance beyond the exact attempted zone",
+  "forbidden": [
+    "counter_plan_pattern_away_from_zone",
+    "counter_plan_touch_without_directional_control",
+    "counter_plan_weak_breakout_without_new_15m_acceptance",
+    "hardcoded_unregistered_quality_cutoff"
+  ],
+  "anti_overfit": {
+    "new_numeric_threshold_added": false,
+    "uses_existing_frozen_high_zone_quality": true,
+    "no_PnL_selection": true,
+    "no_variant_search": true,
+    "changing_this_contract_invalidates_prior_v2_4_evidence": true
+  }
+}
