@@ -1,0 +1,22 @@
+worker-1: AR-1312A Lane 1 deterministic grading over the 8 recovered answers
+
+Per AR-1312A, ran the frozen deterministic substitution/grading pipeline
+(g2d_finalizer.finalize -> opus_phase1_route.run_route, reused by import,
+no second comparator authored) over the 8 RECOVERED_SINGLE_SOURCE isolated
+answers from AR-1312. Zero new Agent/Task/model calls.
+
+Result: RED, 4/12 accepted, unchanged from the original batch route grade.
+All 8 escalated rows land back on the same disposition class even though
+5 of 8 used a materially different recovered quote span than the original
+batch answer. Full eight-row disposition table (old vs recovered vs final,
+deciding gate, verbatim reason, and whether the extracted condition itself
+needs correction) is in the committed report. Negative results preserved
+as-is, per the ruling -- no gate weakened to rescue the extraction.
+
+New artifact only: opus_phase1_route_t1_g2d_final.json. The original
+opus_phase1_route_t1.json history and isolated-receipts-t1/ are untouched.
+
+Lane 2 (F36 async-capture repair via SubagentStop, off-live only) not
+started this pass -- flagged as the next item.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
