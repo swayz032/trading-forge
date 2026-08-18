@@ -4,6 +4,7 @@
 Single candidate path for historical validation and live/shadow formation:
 PREMARKET -> LEVEL -> REACH -> REJECT/RECLAIM/BREAK/RETEST -> CANDLE CONTROL -> A+.
 Zone role is replayed by the v2.4 support/resistance lifecycle before every bar.
+A weak-breakout pending question snapshots the exact location role at the attempt.
 """
 from __future__ import annotations
 
@@ -39,6 +40,7 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
     locations, _ = build_entry_locations_v24(env, dte, open_ts, p)
     authorized = [x for x in locations if x.entry_authorized]
     pending: dict[tuple[str, str], core.PendingBreakout] = {}
+    pending_locs: dict[tuple[str, str], core.Location] = {}
 
     for i in range(len(session)):
         ts = session.index[i]
@@ -51,9 +53,6 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         if not np.isfinite(r.atr):
             continue
 
-        # State is resolved strictly BEFORE the current bar. A broken support that
-        # has accepted/retested as resistance is actually presented as R here;
-        # a failed break/reclaim is restored to its original role.
         current_locs = []
         for loc in authorized:
             if loc.zone is None:
@@ -111,18 +110,18 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                     )
                     if zgate.reason == "WAIT_FOR_NEW_COMPLETED_15M_ACCEPTANCE":
                         key = (direction, loc.id)
-                        pending.setdefault(key, core.PendingBreakout(
-                            direction, loc.id, bar_close, loc.lo, loc.hi,
-                        ))
+                        if key not in pending:
+                            pending[key] = core.PendingBreakout(
+                                direction, loc.id, bar_close, loc.lo, loc.hi,
+                            )
+                            pending_locs[key] = loc
 
         for key, pen in list(pending.items()):
-            # The pending question binds to the exact role/zone at the attempt.
-            loc = next((x for x in current_locs if x.id == pen.location_id), None)
-            if loc is None:
-                pending.pop(key, None)
-                continue
+            # Use the role/quality/confluence snapshot from the attempt. A later
+            # state transition must not erase or rewrite the original 15m question.
+            loc = pending_locs[key]
             if bar_close - pen.attempted_at > pd.Timedelta(minutes=30):
-                pending.pop(key, None)
+                pending.pop(key, None); pending_locs.pop(key, None)
                 continue
             confirmed = core.latest_new_15m_confirmation(h15, pen, bar_close)
             if confirmed is None or confirmed > bar_close:
@@ -140,7 +139,7 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                     pen.direction, "BRK15", loc, None, pen.attempted_at,
                     confirmed, f"ZONE_CANDLE_BRK15:{zgate.reason}",
                 ))
-            pending.pop(key, None)
+            pending.pop(key, None); pending_locs.pop(key, None)
 
         if not candidates or len(set(c.direction for c in candidates)) != 1:
             continue
