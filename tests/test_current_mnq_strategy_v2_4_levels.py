@@ -58,6 +58,27 @@ def test_future_unconfirmed_pivot_is_never_used():
     assert out == []
 
 
+def test_reference_window_is_frozen_at_candidate_confirmation_not_current_asof():
+    # Four comparison pivots existed inside the candidate's own 40-day history.
+    # Weeks later those pivots are outside today's 40-day map window while the
+    # candidate is still visible. The candidate must NOT suddenly reclassify.
+    q = piv([
+        (ts("2026-06-10 10:00"), ts("2026-06-10 10:45"), "R", 19500.0, .40, 1.40, 20.0),
+        (ts("2026-06-11 10:00"), ts("2026-06-11 10:45"), "R", 19600.0, .40, 1.50, 20.0),
+        (ts("2026-06-12 10:00"), ts("2026-06-12 10:45"), "R", 19700.0, .40, 1.60, 20.0),
+        (ts("2026-06-13 10:00"), ts("2026-06-13 10:45"), "R", 19800.0, .40, 1.70, 20.0),
+        (ts("2026-07-15 10:00"), ts("2026-07-15 10:45"), "R", 20500.0, .45, 1.30, 20.0),
+    ])
+    early = levels.exceptional_single_swing_zones(
+        q, pd.DataFrame(), empty_bars(), ts("2026-07-16 09:30"), core.Params()
+    )
+    late = levels.exceptional_single_swing_zones(
+        q, pd.DataFrame(), empty_bars(), ts("2026-08-17 09:30"), core.Params()
+    )
+    assert not any(x.mid == 20500.0 for x in early)
+    assert not any(x.mid == 20500.0 for x in late)
+
+
 def test_later_giant_pivots_cannot_retroactively_invalidate_earlier_exceptional_swing():
     asof = ts("2026-08-17 09:30")
     early = (
