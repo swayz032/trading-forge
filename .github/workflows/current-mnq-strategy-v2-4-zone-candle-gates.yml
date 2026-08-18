@@ -9,6 +9,14 @@ on:
       - 'research/current_mnq_strategy_v2_4_*.json'
       - 'tests/test_current_mnq_strategy_v2_4*.py'
       - '.github/workflows/current-mnq-strategy-v2-4-zone-candle-gates.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'research/current_mnq_strategy_v2_4_*.py'
+      - 'research/current_mnq_strategy_v2_4_*.json'
+      - 'tests/test_current_mnq_strategy_v2_4*.py'
+      - '.github/workflows/current-mnq-strategy-v2-4-zone-candle-gates.yml'
   workflow_dispatch:
 
 jobs:
