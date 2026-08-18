@@ -130,10 +130,20 @@ RESOLVED, not open: the flag's presence is a knowing, disclosed operator overrid
 per SS0-CTRL "the operator holds the keys." Nothing further required from this seat on this point;
 recorded for GPT's awareness only, per the "surface every load-bearing change" duty, not as a stop.
 
+## Follow-up on Finding 2
+
+Resolved. Commit `48d798d625f19400d0f6006eb539fbc2f41d7ba9` ("worker-2: apply AR-1259 S5
+model:opus pin to accuracy-validator.md") landed on top of this receipt's own commits and added
+`model: opus` to `.claude/agents/accuracy-validator.md`, matching the canonical GitHub Worker-1
+pin AR-1259 S5 requires. Verified by direct read of the file at current HEAD. AR-1259's
+pre-activation/CONTROL-3 condition ("active seat's effective runtime resolution surface == opus")
+is now satisfied for this seat. This session did not make that edit itself (its own edit-scope
+guard had rejected the attempt); recording only that it is now done and verified.
+
 ## State
 
 worker_2_state: STARTUP RECEIPT COMPLETE — AR-1155 IMPLEMENTATION STILL LOCKED PENDING GPT REVIEW.
 No AR-1155 production edits attempted this session. No cross-lane file touched.
-head_at_receipt superseded: fcd3ec601131140f53170f49848d5fbc1e8fb487 (operator's override commit,
-landed after this receipt's original head; this receipt's own identity/handshake/ear facts above
-are unaffected by it).
+head_at_receipt superseded: 48d798d625f19400d0f6006eb539fbc2f41d7ba9 (both follow-up commits above
+landed after this receipt's original head; this receipt's own identity/handshake/ear facts are
+unaffected by either).
