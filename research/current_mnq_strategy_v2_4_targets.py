@@ -2,17 +2,18 @@
 """Hierarchical first-reaction take-profit engine for Current MNQ v2.4.
 
 Trader equation:
-1. The first MEANINGFUL broad reaction area by near-edge distance owns the room /
-   blocker question.
-2. Inside a winning frozen 15m key area, use the earliest meaningful internal 5m
-   liquidity cluster or active 15m FVG as the precise TP feature when present.
-3. If no internal feature exists, use the broad area's safe interior.
-4. A standalone 5m cluster or FVG still competes normally when it is encountered
-   before any broad key area.
+1. The first MEANINGFUL reaction area by physical near edge owns the room/blocker
+   question.
+2. A frozen 15m/key area may use an internal 5m liquidity cluster or active 15m
+   FVG for precise TP only when that feature does NOT protrude toward entry.
+3. Internal precision is clipped to the geometric INTERSECTION with the broad
+   area, so a refined target can never escape the area that won first reaction.
+4. A feature that protrudes toward entry remains a standalone earlier reaction and
+   competes using its true near edge.
 
-This preserves both "what price reacts to first" and the trader's use of the 5m
-chart for precise TP placement. No farther feature may leapfrog a nearer area for
-prettier PnL.
+This closes a false-room loophole where broad-zone distance could be larger than
+actual precise TP distance. No farther feature may leapfrog a nearer reaction area
+for prettier PnL.
 """
 from __future__ import annotations
 
@@ -59,10 +60,14 @@ def _first_contact(entry: float, lo: float, hi: float, direction: str) -> float:
     return float(lo - entry) if direction == "L" else float(entry - hi)
 
 
-def _cluster_target(loc: core.Location, direction: str, depth: float) -> float:
+def _interval_target(lo: float, hi: float, direction: str, depth: float) -> float:
     if direction == "L":
-        return float(loc.lo + depth * (loc.hi - loc.lo))
-    return float(loc.hi - depth * (loc.hi - loc.lo))
+        return float(lo + depth * (hi - lo))
+    return float(hi - depth * (hi - lo))
+
+
+def _cluster_target(loc: core.Location, direction: str, depth: float) -> float:
+    return _interval_target(float(loc.lo), float(loc.hi), direction, depth)
 
 
 def _structurally_meaningful_cluster(loc: core.Location, p: core.Params) -> bool:
@@ -74,14 +79,36 @@ def _structurally_meaningful_cluster(loc: core.Location, p: core.Params) -> bool
     return bool(int(getattr(z, "touches", 0)) >= 2 and float(loc.quality) >= float(p.min_zone_quality))
 
 
-def _inside_or_overlaps(outer: core.Location, lo: float, hi: float) -> bool:
-    return core.overlap(float(outer.lo), float(outer.hi), float(lo), float(hi), 0.0)
+def _intersection(primary: core.Location, lo: float, hi: float) -> tuple[float, float] | None:
+    ilo = max(float(primary.lo), float(lo))
+    ihi = min(float(primary.hi), float(hi))
+    if ilo > ihi:
+        return None
+    return float(ilo), float(ihi)
 
 
-def _precision_location(primary: core.Location, feature_source: str, feature_id: str) -> core.Location:
+def _protrudes_toward_entry(primary: core.Location, lo: float, hi: float,
+                            direction: str) -> bool:
+    """True when feature starts closer to entry than the broad primary area."""
+    if direction == "L":
+        return float(lo) < float(primary.lo)
+    return float(hi) > float(primary.hi)
+
+
+def _is_internal_feature(primary: core.Location, lo: float, hi: float,
+                         direction: str) -> bool:
+    return bool(
+        _intersection(primary, lo, hi) is not None
+        and not _protrudes_toward_entry(primary, lo, hi, direction)
+    )
+
+
+def _precision_location(primary: core.Location, feature_source: str, feature_id: str,
+                        lo: float, hi: float) -> core.Location:
     return replace(
         primary,
         id=f"{primary.id}|PRECISION:{feature_id}",
+        lo=float(lo), hi=float(hi), mid=float((lo + hi) / 2.0),
         source=f"{primary.source}+{feature_source}",
     )
 
@@ -89,37 +116,48 @@ def _precision_location(primary: core.Location, feature_source: str, feature_id:
 def _refine_primary(primary_kind: str, primary: core.Location,
                     clusters5: list[core.Location], native_fvgs: list,
                     entry: float, direction: str, p: core.Params) -> ReactionDestination:
-    """Keep broad-zone contact distance, but refine TP with first internal feature."""
+    """Refine a broad area only with features that begin no earlier than it."""
     broad_contact = _first_contact(entry, float(primary.lo), float(primary.hi), direction)
     broad_target = _cluster_target(primary, direction, float(p.tp_depth))
-    candidates: list[tuple[float, int, float, str, str, bool]] = []
+    # contact, kind-priority, target, source, id, is_fvg, intersection_lo, intersection_hi
+    candidates: list[tuple[float, int, float, str, str, bool, float, float]] = []
 
     for c in clusters5:
         if not _structurally_meaningful_cluster(c, p):
             continue
-        if not _inside_or_overlaps(primary, c.lo, c.hi):
+        if not _is_internal_feature(primary, c.lo, c.hi, direction):
             continue
-        # Internal feature ordering is still by physical near edge from entry.
-        if direction == "L" and float(c.hi) <= entry:
+        inter = _intersection(primary, c.lo, c.hi)
+        assert inter is not None
+        ilo, ihi = inter
+        if direction == "L" and ihi <= entry:
             continue
-        if direction == "S" and float(c.lo) >= entry:
+        if direction == "S" and ilo >= entry:
             continue
-        contact = max(broad_contact, max(0.0, _first_contact(entry, float(c.lo), float(c.hi), direction)))
+        contact = max(0.0, _first_contact(entry, ilo, ihi, direction))
+        if contact < broad_contact - 1e-9:
+            raise RuntimeError("V24_INTERNAL_CLUSTER_CONTACT_PRECEDES_PRIMARY")
         candidates.append((
-            contact, 0, _cluster_target(c, direction, float(p.tp_depth)),
-            "LIQUIDITY_CLUSTER_5M", c.id, False,
+            contact, 0, _interval_target(ilo, ihi, direction, float(p.tp_depth)),
+            "LIQUIDITY_CLUSTER_5M", c.id, False, ilo, ihi,
         ))
 
     for i, f in enumerate(native_fvgs):
-        if not _inside_or_overlaps(primary, f.lo, f.hi):
+        if not _is_internal_feature(primary, f.lo, f.hi, direction):
             continue
-        if direction == "L" and float(f.hi) <= entry:
+        inter = _intersection(primary, f.lo, f.hi)
+        assert inter is not None
+        ilo, ihi = inter
+        if direction == "L" and ihi <= entry:
             continue
-        if direction == "S" and float(f.lo) >= entry:
+        if direction == "S" and ilo >= entry:
             continue
-        contact = max(broad_contact, max(0.0, _first_contact(entry, float(f.lo), float(f.hi), direction)))
+        contact = max(0.0, _first_contact(entry, ilo, ihi, direction))
+        if contact < broad_contact - 1e-9:
+            raise RuntimeError("V24_INTERNAL_FVG_CONTACT_PRECEDES_PRIMARY")
         candidates.append((
-            contact, 1, float(f.mid), "FVG_15M_NATIVE", f"FVG:{f.formed_at.isoformat()}:{i}", True,
+            contact, 1, float((ilo + ihi) / 2.0), "FVG_15M_NATIVE",
+            f"FVG:{f.formed_at.isoformat()}:{i}", True, ilo, ihi,
         ))
 
     if not candidates:
@@ -130,11 +168,17 @@ def _refine_primary(primary_kind: str, primary: core.Location,
             fvg_confluent=False, precision_source=None,
         )
 
-    # On an exact near-edge tie, 5m cluster gets precision priority because the
-    # trader explicitly uses 5m for precise TP. This tie-break never moves target
-    # selection to a feature contacted later.
-    contact, _, raw, source, feature_id, is_fvg = sorted(candidates, key=lambda x: (x[0], x[1], x[4]))[0]
-    loc = _precision_location(primary, source, feature_id)
+    # Internal ordering remains physical. Exact contact ties prefer 5m precision
+    # because the trader explicitly uses 5m for precise TP; this tie never lets a
+    # later feature leapfrog an earlier one.
+    contact, _, raw, source, feature_id, is_fvg, ilo, ihi = sorted(
+        candidates, key=lambda x: (x[0], x[1], x[4])
+    )[0]
+    loc = _precision_location(primary, source, feature_id, ilo, ihi)
+    if direction == "L" and not (float(primary.lo) <= raw <= float(primary.hi)):
+        raise RuntimeError("V24_REFINED_LONG_TARGET_ESCAPED_PRIMARY")
+    if direction == "S" and not (float(primary.lo) <= raw <= float(primary.hi)):
+        raise RuntimeError("V24_REFINED_SHORT_TARGET_ESCAPED_PRIMARY")
     return ReactionDestination(
         location=loc,
         kind=f"{primary_kind}_REFINED_{source}",
@@ -147,15 +191,19 @@ def _refine_primary(primary_kind: str, primary: core.Location,
     )
 
 
-def _dedupe_standalone_clusters(clusters: list[core.Location], primaries: list[core.Location]) -> list[core.Location]:
-    # If a 5m cluster is inside a frozen HTF/key area, it is retained as internal
-    # precision evidence but not emitted again as a competing standalone area.
+def _dedupe_standalone_clusters(clusters: list[core.Location], primaries: list[core.Location],
+                                direction: str) -> list[core.Location]:
+    """Suppress only truly internal clusters; protruding overlaps stay standalone."""
     out = []
     for c in clusters:
-        if any(_inside_or_overlaps(p, c.lo, c.hi) for p in primaries):
+        if any(_is_internal_feature(p, c.lo, c.hi, direction) for p in primaries):
             continue
         out.append(c)
     return out
+
+
+def _fvg_is_internal_to_any(f, primaries: list[core.Location], direction: str) -> bool:
+    return any(_is_internal_feature(p, f.lo, f.hi, direction) for p in primaries)
 
 
 def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
@@ -201,7 +249,7 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
         if d.first_contact_distance > 0:
             out.append(d)
 
-    for loc in _dedupe_standalone_clusters(clusters5, primary_locs_only):
+    for loc in _dedupe_standalone_clusters(clusters5, primary_locs_only, direction):
         if not _ahead(entry, float(loc.lo), float(loc.hi), direction):
             continue
         contact = _first_contact(entry, float(loc.lo), float(loc.hi), direction)
@@ -218,10 +266,10 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
             precision_source="LIQUIDITY_CLUSTER_5M",
         ))
 
-    # FVGs nested inside a primary have already been considered as internal
-    # precision features. Emit only standalone FVGs here.
+    # Suppress only truly internal FVGs already used for primary refinement.
+    # An FVG that protrudes toward entry remains a standalone earlier reaction.
     for i, f in enumerate(native_fvgs):
-        if any(_inside_or_overlaps(p0, f.lo, f.hi) for p0 in primary_locs_only):
+        if _fvg_is_internal_to_any(f, primary_locs_only, direction):
             continue
         if not _ahead(entry, f.lo, f.hi, direction):
             continue
@@ -239,8 +287,6 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
             fvg_confluent=True, precision_source="FVG_15M_NATIVE",
         ))
 
-    # The broad near-edge remains the decisive ordering distance even when TP is
-    # refined deeper inside that area.
     kind_rank = {
         "KEY_ZONE_15M": 0, "KEY_LEVEL": 1,
         "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M": 0,
@@ -249,7 +295,9 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
         "KEY_LEVEL_REFINED_FVG_15M_NATIVE": 1,
         "LIQUIDITY_CLUSTER": 2, "FVG_15M": 3,
     }
-    out.sort(key=lambda x: (x.first_contact_distance, kind_rank.get(x.kind, 9), -x.quality, x.location.id))
+    out.sort(key=lambda x: (
+        x.first_contact_distance, kind_rank.get(x.kind, 9), -x.quality, x.location.id,
+    ))
     return out
 
 
@@ -272,8 +320,16 @@ def classify_first_reaction_destination(destinations: list[ReactionDestination],
         px = core.executable_target(raw, direction)
         if not core.tick_valid(px):
             raise RuntimeError(f"V24_TARGET_OFF_TICK:{px}")
+        # Defensive invariant: precise TP itself may never be closer than the
+        # reaction-area contact distance used to justify room.
+        actual_target_distance = abs(float(px) - float(entry))
+        if actual_target_distance + 1e-9 < float(d.first_contact_distance):
+            raise RuntimeError(
+                f"V24_TARGET_DISTANCE_LT_REACTION_CONTACT:{actual_target_distance:.4f}<"
+                f"{d.first_contact_distance:.4f}"
+            )
         target = core.Target(
-            d.location, raw, px, abs(px - entry), d.quality,
+            d.location, raw, px, actual_target_distance, d.quality,
             False, True, bool(d.fvg_confluent),
         )
         return target, f"FIRST_REACTION:{d.kind}"
