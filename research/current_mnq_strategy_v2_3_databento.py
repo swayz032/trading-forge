@@ -23,6 +23,7 @@ from research import current_mnq_strategy_v2_3_data as common
 
 DATASET = "GLBX.MDP3"
 SCHEMA = "ohlcv-1m"
+MNQ_LAUNCH = date(2019, 5, 6)
 
 
 def databento_raw_symbol(contract_id: str) -> str:
@@ -41,7 +42,6 @@ def _to_frame(store, canonical_contract_id: str, raw_symbol: str) -> pd.DataFram
     if "ts_event" in x.columns:
         x = x.rename(columns={"ts_event": "datetime"})
     elif "datetime" not in x.columns:
-        # Databento frames normally expose ts_event as index for OHLCV.
         raise RuntimeError("DATABENTO_TS_EVENT_MISSING")
     keep = [c for c in ("datetime", "open", "high", "low", "close", "volume") if c in x.columns]
     x = x[keep].copy()
@@ -54,6 +54,8 @@ def _to_frame(store, canonical_contract_id: str, raw_symbol: str) -> pd.DataFram
 def collect_databento(start: date, end: date, out_dir: str | Path,
                        warmup_days: int = 90) -> dict:
     """Collect a frozen multi-year validation dataset from explicit MNQ outrights."""
+    if start < MNQ_LAUNCH:
+        raise ValueError(f"MNQ did not exist before {MNQ_LAUNCH}")
     if start >= end:
         raise ValueError("start must be before end")
     try:
@@ -66,7 +68,9 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
     root = Path(out_dir)
     raw_dir = root / "raw_contracts"
     raw_dir.mkdir(parents=True, exist_ok=True)
-    warmup_start = start - timedelta(days=warmup_days)
+    # Never manufacture pre-launch MNQ warmup. Initial strategy warmup is simply
+    # unscored until enough genuine MNQ bars exist after launch.
+    warmup_start = max(MNQ_LAUNCH, start - timedelta(days=warmup_days))
     windows = common.contract_windows(warmup_start, end, overlap_days=7)
     client = db.Historical()  # reads DATABENTO_API_KEY by SDK convention
 
@@ -76,13 +80,13 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
 
     for w in windows:
         symbol = databento_raw_symbol(w.contract_id)
-        # Definition request is a source-identity witness independent of OHLCV.
+        request_start = max(MNQ_LAUNCH, w.start)
         definition = client.timeseries.get_range(
             dataset=DATASET,
             schema="definition",
             symbols=symbol,
             stype_in="raw_symbol",
-            start=str(w.start),
+            start=str(request_start),
             end=str(min(w.end + timedelta(days=1), end + timedelta(days=8))),
         ).to_df()
         if definition.empty:
@@ -103,7 +107,7 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
             schema=SCHEMA,
             symbols=symbol,
             stype_in="raw_symbol",
-            start=str(w.start),
+            start=str(request_start),
             end=str(w.end + timedelta(days=1)),
         )
         frame = _to_frame(store, w.contract_id, symbol)
@@ -118,7 +122,7 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
             "source_raw_symbol": symbol,
             "source_dataset": DATASET,
             "source_schema": SCHEMA,
-            "requested_start": str(w.start),
+            "requested_start": str(request_start),
             "requested_end": str(w.end),
             "definition": definitions[w.contract_id],
         }
@@ -162,6 +166,7 @@ def collect_databento(start: date, end: date, out_dir: str | Path,
         sessions=len(set(continuous1.session)), contract_sessions=contract_sessions,
     )
     payload = asdict(manifest)
+    payload["mnq_launch_date"] = str(MNQ_LAUNCH)
     payload["databento_definitions"] = definitions
     payload["dataset_sha256"] = common.canonical_hash(payload)
     (root / "dataset_manifest.json").write_text(json.dumps(payload, indent=2, sort_keys=True))
