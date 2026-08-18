@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `fb97d871cf1535903827bc9298298c714b8c76d8`
+> Generated at commit `d26dd40a8d751e15cde6af83cb0c564c1d6e96a2`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 314 | 411 | 129767 | 2024 |
+| `src/` | Python | 315 | 412 | 130217 | 2035 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1912 | 776 |
+| `src/` | 1914 | 777 |
 | `scripts/` | 271 | 269 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2218** | **1045** |
+| **TOTAL** | **2220** | **1046** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 460 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 89 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1136 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1137 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,9 +86,9 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **209**.  Modules reachable from them: **765** of **2218** parsed files.
+Total entry points: **210**.  Modules reachable from them: **766** of **2220** parsed files.
 
-<details><summary>All 209 entry points and why each was counted</summary>
+<details><summary>All 210 entry points and why each was counted</summary>
 
 | Entry point | Discovered because |
 |---|---|
@@ -241,6 +241,7 @@ Total entry points: **209**.  Modules reachable from them: **765** of **2218** p
 | `src/engine/extraction/compile_certified_record.py` | has `__main__` guard (runnable module) (+1 more) |
 | `src/engine/extraction/extractor_bridge.py` | has `__main__` guard (runnable module) |
 | `src/engine/extraction/pilot_conveyor.py` | has `__main__` guard (runnable module) |
+| `src/engine/extraction/svkm_v2_1_compile.py` | has `__main__` guard (runnable module) |
 | `src/engine/extraction/tier1_coverage_report.py` | has `__main__` guard (runnable module) |
 | `src/engine/extraction/tier2_design_report.py` | has `__main__` guard (runnable module) |
 | `src/engine/firm_config.py` | subprocess path literal in scripts/check-ts-python-firm-rules-version.ts |
@@ -313,23 +314,23 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3784 |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3795 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1167 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5007 rows |
-| C5 | server entry point discovered | PASS | entry points discovered=209 |
-| C6 | a registered route module is reachable | PASS | modules reachable=765 |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5018 rows |
+| C5 | server entry point discovered | PASS | entry points discovered=210 |
+| C6 | a registered route module is reachable | PASS | modules reachable=766 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=128, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=2024 ts=2933 |
+| C12 | symbols enumerated in both languages | PASS | py=2035 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=43 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6626/6626 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=415 |
 | C20 | aliased imports count as references | PASS | walk_forward.py in callers=True (state=WIRED, non-test caller files=1) |
-| C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=209 |
+| C19 | `python -m` module-spec entry points are discovered | PASS | pine_compiler is an entry point=True; total entry points=210 |
 | C18 | `export { X as Y }` binding form is enumerated | PASS | alertRoutes enumerated=True |
 
 **19 / 19 controls pass.**
@@ -339,8 +340,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **222 of 4685 enumerated symbol names (4.7%) are defined in more than one file, covering
-  494 of 4957 symbol rows (10.0%).**  Every symbol table below marks those rows `AMBIG`.
+  **222 of 4696 enumerated symbol names (4.7%) are defined in more than one file, covering
+  494 of 4968 symbol rows (9.9%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -359,12 +360,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3784 | 75.6% |
+| `WIRED` | 3795 | 75.6% |
 | `FLAG-GATED` | 6 | 0.1% |
 | `BUILT-UNREACHABLE` | 1167 | 23.3% |
 | `DECLARED-ABSENT` | 43 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **5007** | |
+| **TOTAL** | **5018** | |
 
 ---
 
@@ -420,7 +421,7 @@ table below it.**
 | `src/engine/evt_tail.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/exits` | 20 | 0 | 2 | 0 | 0 | 22 |
 | `src/engine/exportability.py` | 3 | 0 | 0 | 0 | 0 | 3 |
-| `src/engine/extraction` | 333 | 0 | 45 | 0 | 0 | 378 |
+| `src/engine/extraction` | 344 | 0 | 45 | 0 | 0 | 389 |
 | `src/engine/family_meta_enforcement.py` | 10 | 0 | 2 | 0 | 0 | 12 |
 | `src/engine/fill_model.py` | 9 | 0 | 1 | 0 | 0 | 10 |
 | `src/engine/firm_config.py` | 2 | 0 | 1 | 0 | 0 | 3 |
@@ -3981,7 +3982,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/extraction</code> - 333 symbols</summary>
+<details><summary><code>src/engine/extraction</code> - 344 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -3994,7 +3995,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_resolves_as_anchor` | function | `src/engine/extraction/anchor_locator.py:211` | 0 | unique |
 | `_verify_and_locate` | function | `src/engine/extraction/anchor_locator.py:225` | 3 | unique |
 | `locate_anchor` | function | `src/engine/extraction/anchor_locator.py:259` | 8 | unique |
-| `sha256` | function | `src/engine/extraction/batch_locator.py:76` | 65 | unique |
+| `sha256` | function | `src/engine/extraction/batch_locator.py:76` | 66 | unique |
 | `production_rules_block` | function | `src/engine/extraction/batch_locator.py:85` | 0 | unique |
 | `build_batch_brief` | function | `src/engine/extraction/batch_locator.py:103` | 1 | unique |
 | `build_batch_task` | function | `src/engine/extraction/batch_locator.py:148` | 1 | unique |
@@ -4023,7 +4024,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `SpecIdentityError` | class | `src/engine/extraction/compile_certified_record.py:134` | 0 | unique |
 | `parse_spec_id` | function | `src/engine/extraction/compile_certified_record.py:142` | 0 | unique |
 | `_load_record` | function | `src/engine/extraction/compile_certified_record.py:176` | 0 | unique |
-| `compile_record_to_artifact` | function | `src/engine/extraction/compile_certified_record.py:193` | 0 | unique |
+| `compile_record_to_artifact` | function | `src/engine/extraction/compile_certified_record.py:193` | 1 | unique |
 | `main` | function | `src/engine/extraction/compile_certified_record.py:250` | 225 | AMBIG |
 | `SpineCondition` | class | `src/engine/extraction/compile_lints.py:117` | 2 | unique |
 | `CompiledSpine` | class | `src/engine/extraction/compile_lints.py:135` | 2 | unique |
@@ -4236,7 +4237,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_validate_preserved_metadata_schema` | function | `src/engine/extraction/source_graph_projection.py:183` | 0 | unique |
 | `validate_graph_edges` | function | `src/engine/extraction/source_graph_projection.py:239` | 0 | unique |
 | `_validate_projection_spec` | function | `src/engine/extraction/source_graph_projection.py:329` | 0 | unique |
-| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:428` | 4 | unique |
+| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:428` | 5 | unique |
 | `SpanCollision` | class | `src/engine/extraction/span_collision.py:41` | 0 | unique |
 | `role_of` | function | `src/engine/extraction/span_collision.py:49` | 0 | unique |
 | `_overlap` | function | `src/engine/extraction/span_collision.py:55` | 0 | unique |
@@ -4258,12 +4259,23 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_entry_condition` | function | `src/engine/extraction/spec_producer.py:589` | 0 | unique |
 | `_spec_role` | function | `src/engine/extraction/spec_producer.py:623` | 0 | unique |
 | `produce_spec_artifact` | function | `src/engine/extraction/spec_producer.py:645` | 0 | unique |
-| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:758` | 1 | unique |
+| `_spec_hash` | function | `src/engine/extraction/spec_producer.py:758` | 2 | unique |
 | `_approximation_metrics` | function | `src/engine/extraction/spec_producer.py:763` | 0 | unique |
 | `_all_strings` | function | `src/engine/extraction/spec_producer.py:832` | 0 | unique |
 | `RecordCompileResult` | class | `src/engine/extraction/spec_producer.py:936` | 1 | unique |
 | `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:1024` | 1 | unique |
 | `_opening_range_condition_id` | function | `src/engine/extraction/spec_producer.py:1111` | 0 | unique |
+| `CanonicalNodeNotAcceptedError` | class | `src/engine/extraction/svkm_v2_1_compile.py:138` | 0 | unique |
+| `_bench` | function | `src/engine/extraction/svkm_v2_1_compile.py:144` | 1 | unique |
+| `_canonical_hash` | function | `src/engine/extraction/svkm_v2_1_compile.py:159` | 1 | unique |
+| `run_certified_projection` | function | `src/engine/extraction/svkm_v2_1_compile.py:169` | 0 | unique |
+| `_outcome_by_ref` | function | `src/engine/extraction/svkm_v2_1_compile.py:187` | 0 | unique |
+| `_projected_text` | function | `src/engine/extraction/svkm_v2_1_compile.py:191` | 0 | unique |
+| `build_certified_record` | function | `src/engine/extraction/svkm_v2_1_compile.py:216` | 0 | unique |
+| `_preserved_metadata_text` | function | `src/engine/extraction/svkm_v2_1_compile.py:289` | 0 | unique |
+| `_load_frozen_source_risk` | function | `src/engine/extraction/svkm_v2_1_compile.py:304` | 0 | unique |
+| `_svkm_timeframe_roles` | function | `src/engine/extraction/svkm_v2_1_compile.py:333` | 0 | unique |
+| `compile_svkm_v2_1_vertical` | function | `src/engine/extraction/svkm_v2_1_compile.py:395` | 0 | unique |
 | `timeframe_tokens` | function | `src/engine/extraction/term_equivalence.py:62` | 0 | unique |
 | `abbreviation_tokens` | function | `src/engine/extraction/term_equivalence.py:116` | 0 | unique |
 | `equivalence_tokens` | function | `src/engine/extraction/term_equivalence.py:129` | 1 | unique |
@@ -5523,9 +5535,9 @@ This is the *we already have this* list.  Check it before writing anything.
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
 | `SourceTimeframeRoleError` | class | `src/engine/source_timeframe_roles.py:62` | 1 | unique |
-| `TimeframeRoleBinding` | class | `src/engine/source_timeframe_roles.py:102` | 1 | AMBIG |
+| `TimeframeRoleBinding` | class | `src/engine/source_timeframe_roles.py:102` | 2 | AMBIG |
 | `_exact_keys` | function | `src/engine/source_timeframe_roles.py:144` | 1 | AMBIG |
-| `SourceTimeframeRoles` | class | `src/engine/source_timeframe_roles.py:158` | 3 | unique |
+| `SourceTimeframeRoles` | class | `src/engine/source_timeframe_roles.py:158` | 4 | unique |
 
 </details>
 
