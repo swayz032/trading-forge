@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed evidence policy bound to Current MNQ v2.4 semantics."""
+"""Fail-closed evidence policy bound to every Current MNQ v2.4 contract."""
 from __future__ import annotations
 
 import hashlib
@@ -10,14 +10,16 @@ from pathlib import Path
 SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_spec.json")
 FVG_SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_fvg_semantics.json")
 EDGE_SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_edge_semantics.json")
+KEY_LEVEL_SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_key_level_semantics.json")
 
 
 def semantics_hash(path: str | Path = SPEC_PATH,
                    fvg_path: str | Path = FVG_SPEC_PATH,
-                   edge_path: str | Path = EDGE_SPEC_PATH) -> str:
-    """Hash every executable semantic/evidence contract, not merely the strategy spec."""
+                   edge_path: str | Path = EDGE_SPEC_PATH,
+                   key_level_path: str | Path = KEY_LEVEL_SPEC_PATH) -> str:
+    """Hash every executable semantic/evidence contract."""
     h = hashlib.sha256()
-    for p in (Path(path), Path(fvg_path), Path(edge_path)):
+    for p in (Path(path), Path(fvg_path), Path(edge_path), Path(key_level_path)):
         data = p.read_bytes()
         h.update(len(data).to_bytes(8, "big"))
         h.update(data)
@@ -33,6 +35,10 @@ def load_fvg_spec(path: str | Path = FVG_SPEC_PATH) -> dict:
 
 
 def load_edge_spec(path: str | Path = EDGE_SPEC_PATH) -> dict:
+    return json.loads(Path(path).read_text())
+
+
+def load_key_level_spec(path: str | Path = KEY_LEVEL_SPEC_PATH) -> dict:
     return json.loads(Path(path).read_text())
 
 
@@ -86,8 +92,7 @@ def _required_slippage_keys(spec: dict) -> tuple[str, ...]:
 
 
 def research_gate(ev: Evidence, spec: dict | None = None) -> GateResult:
-    spec = spec or load_spec()
-    req = spec["evidence_policy"]
+    spec = spec or load_spec(); req = spec["evidence_policy"]
     reasons: list[str] = []
     if ev.semantics_sha256 != semantics_hash(): reasons.append("SEMANTICS_HASH_MISMATCH")
     if ev.architecture_tests_failed != 0: reasons.append("ARCHITECTURE_TEST_FAILURE")
@@ -113,9 +118,6 @@ def sealed_validation_gate(ev: Evidence, spec: dict | None = None) -> GateResult
     for key in _required_slippage_keys(spec):
         if key not in ev.slippage_stress_net: reasons.append(f"MISSING_SLIPPAGE_STRESS:{key}")
         elif float(ev.slippage_stress_net[key]) <= 0: reasons.append(f"NEGATIVE_SLIPPAGE_STRESS:{key}")
-
-    # Breakthrough weakest-link edge equation. These checks cannot be bypassed by
-    # high total PnL, a strong profit factor, or one monster month.
     if not ev.data_clean_oos: reasons.append("EDGE_DATA_NOT_CLEAN_OOS")
     if ev.robust_edge_expectancy is None or ev.robust_edge_expectancy <= 0: reasons.append("ROBUST_EDGE_EXPECTANCY_NOT_POSITIVE")
     if ev.detailed_expectancy is None or ev.detailed_expectancy <= 0: reasons.append("EDGE_TOP5_WINNER_REMOVAL_NOT_POSITIVE")
