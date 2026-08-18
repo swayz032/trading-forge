@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-1",
+  "purpose": "Any critical executable change must invalidate prior v2.4 architecture, sealed, shadow and promotion evidence even when semantic prose is unchanged.",
+  "contract_files": [
+    "research/current_mnq_strategy_v2_4_spec.json",
+    "research/current_mnq_strategy_v2_4_fvg_semantics.json",
+    "research/current_mnq_strategy_v2_4_edge_semantics.json",
+    "research/current_mnq_strategy_v2_4_key_level_semantics.json",
+    "research/current_mnq_strategy_v2_4_build_contract.json"
+  ],
+  "strategy_and_edge_source_files": [
+    "research/current_mnq_strategy_v2_2_engine.py",
+    "research/current_mnq_strategy_v2_3_engine.py",
+    "research/current_mnq_strategy_v2_3_oos.py",
+    "src/engine/indicators/fvg_native.py",
+    "research/current_mnq_strategy_v2_4_candles.py",
+    "research/current_mnq_strategy_v2_4_zone_candles.py",
+    "research/current_mnq_strategy_v2_4_gate.py",
+    "research/current_mnq_strategy_v2_4_fvg.py",
+    "research/current_mnq_strategy_v2_4_zone_lifecycle.py",
+    "research/current_mnq_strategy_v2_4_levels.py",
+    "research/current_mnq_strategy_v2_4_kernel.py",
+    "research/current_mnq_strategy_v2_4_targets.py",
+    "research/current_mnq_strategy_v2_4_engine.py",
+    "research/current_mnq_strategy_v2_4_signal.py",
+    "research/current_mnq_strategy_v2_4_edge.py",
+    "research/current_mnq_strategy_v2_4_oos.py",
+    "research/current_mnq_strategy_v2_4_policy.py"
+  ],
+  "production_source_files": [
+    "research/current_mnq_strategy_v2_3_local_runtime.py",
+    "research/current_mnq_strategy_v2_3_realtime.py",
+    "research/current_mnq_strategy_v2_3_live_data.py",
+    "research/current_mnq_strategy_v2_3_account_risk.py",
+    "research/current_mnq_strategy_v2_3_state.py",
+    "research/current_mnq_strategy_v2_3_topstep_risk.py",
+    "research/current_mnq_strategy_v2_3_shadow.py",
+    "research/current_mnq_strategy_v2_4_shadow.py",
+    "research/current_mnq_strategy_v2_4_shadow_runtime.py",
+    "research/current_mnq_strategy_v2_4_evidence.py",
+    "research/current_mnq_strategy_v2_4_receipt.py",
+    "research/current_mnq_strategy_v2_4_promotion.py",
+    "research/current_mnq_strategy_v2_4_operations_drill.py",
+    "research/current_mnq_strategy_v2_4_broker.py",
+    "research/current_mnq_strategy_v2_4_execution.py",
+    "research/current_mnq_strategy_v2_4_automation_runtime.py"
+  ],
+  "rule": "Fingerprint hashes each path label, byte length and exact file bytes in declared order. Missing file is a hard failure."
+}
