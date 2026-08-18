@@ -42,6 +42,23 @@ def test_signal_identity_binds_live_quote_side():
     b.validate_signal_identity(signal(side="SHORT", reference_source="LIVE_BID"))
 
 
+def test_execution_quote_must_equal_quote_used_to_approve_target_room():
+    same = SimpleNamespace(best_ask=100.0, best_bid=99.75)
+    b.validate_execution_quote(signal(), same)
+    with pytest.raises(RuntimeError, match="EXECUTION_QUOTE_DRIFT"):
+        b.validate_execution_quote(signal(), SimpleNamespace(best_ask=100.25, best_bid=100.0))
+    with pytest.raises(RuntimeError, match="EXECUTION_SIDE_QUOTE_MISSING"):
+        b.validate_execution_quote(signal(), SimpleNamespace(best_ask=None, best_bid=99.75))
+
+
+def test_execution_quote_uses_bid_for_short():
+    s = signal(side="SHORT", reference_source="LIVE_BID", entry=99.75,
+               stop=109.75, target=70.0)
+    b.validate_execution_quote(s, SimpleNamespace(best_ask=100.0, best_bid=99.75))
+    with pytest.raises(RuntimeError, match="EXECUTION_QUOTE_DRIFT"):
+        b.validate_execution_quote(s, SimpleNamespace(best_ask=100.0, best_bid=99.50))
+
+
 def test_local_order_validation_happens_before_daily_bullet_reserve(monkeypatch):
     monkeypatch.setattr(b, "require_personal_device", lambda *a, **k: None)
     monkeypatch.setattr(b, "require_live_arming_phrase", lambda *a, **k: None)
@@ -70,7 +87,7 @@ def test_local_order_validation_happens_before_daily_bullet_reserve(monkeypatch)
     ledger.reserve = reserve
     ledger.disable = lambda *a, **k: None
     ledger.mark_submitted = lambda *a, **k: None
-    health = SimpleNamespace(healthy=True)
+    health = SimpleNamespace(healthy=True, best_ask=100.0, best_bid=99.75)
 
     with pytest.raises(RuntimeError, match="BAD_GEOMETRY"):
         broker.submit_signal(
