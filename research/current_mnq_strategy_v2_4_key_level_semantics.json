@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "release_id": "MNQ-V2.4-KEY-LEVEL-EQUATION-1",
+  "frozen_at": "2026-08-17",
+  "purpose": "Encode the trader/video rule that a key zone can be established either by multiple independent rejections or by one exceptional swing rejection followed by drastic displacement, without PnL tuning.",
+  "established_zone_path": {
+    "authority": "existing causal multi-rejection quality engine",
+    "minimum_independent_rejections": 2,
+    "quality_dimensions": [
+      "wick_quality",
+      "displacement_away",
+      "close_away",
+      "price_compactness",
+      "temporal_independence",
+      "recency",
+      "reaction_count_saturation"
+    ]
+  },
+  "exceptional_single_swing_path": {
+    "enabled": true,
+    "lookback_calendar_days": 40,
+    "same_side_reference_only": true,
+    "minimum_wick_fraction_uses_frozen_strategy_parameter": "min_wick",
+    "absolute_displacement_floor_atr": 1.0,
+    "recent_displacement_percentile": 0.75,
+    "minimum_reference_pivots_for_percentile": 4,
+    "equation": "confirmed_before_map_freeze AND wick>=min_wick AND displacement_atr>=max(1.0,Q75(recent confirmed same-side pivot displacement_atr))",
+    "no_overlap_duplicate_with_established_zone": true,
+    "zone_half_width": "max(4_ticks,key_level_pad_atr*the_pivot_ATR)",
+    "must_survive_zone_lifecycle_to_map_freeze": true
+  },
+  "confluence": {
+    "prior_day_or_week_level_overlap_adds_one_vote": true,
+    "native_active_15m_fvg_overlap_adds_one_vote": true,
+    "fvg_detector_authority": "src/engine/indicators/fvg_native.py"
+  },
+  "anti_overfit": {
+    "no_PnL_selection": true,
+    "no_threshold_search": true,
+    "percentile_is_market_regime_adaptation_not_variant_selection": true,
+    "changing_this_contract_invalidates_prior_v2_4_evidence": true
+  }
+}
