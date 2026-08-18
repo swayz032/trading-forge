@@ -50,14 +50,14 @@ def _candidate_prior_reference_set(history: pd.DataFrame, side: str,
     """Return only information that existed in the candidate's own lookback window.
 
     This deliberately anchors the window at candidate_confirm rather than the
-    current `asof`. Therefore classification cannot change merely because old
-    reference pivots later age out of today's 40-day map window.
+    current `asof`. Both boundaries use the confirmation clock—the instant a
+    pivot became knowable—rather than the raw swing timestamp.
     """
     start = candidate_confirm - pd.Timedelta(days=int(look_days))
     return history[
         (history.side == side) &
-        (history.confirm < candidate_confirm) &
-        (history.t >= start)
+        (history.confirm >= start) &
+        (history.confirm < candidate_confirm)
     ].copy()
 
 
