@@ -93,7 +93,12 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 //
 // A re-pin is a DELIBERATE act with a member diff behind it, which is precisely the motion the
 // comment above demands instead of silently adopting whatever a branch points at.
-const TOOLBOX_PIN = 'b6c702821bc48281b02e16773c7c277ae17fb03f';
+// RE-PINNED 2026-08-17 by AR-1311 control-plane seat, on AR-1311A executable ruling
+// (cpb-2026-08-17-0005):
+//   b6c70282 -> 4c5f9d4a   (AR-1307 F32-F35 handshake repair). Member diff: 3 new .mjs files,
+//                           44 -> 47. Descendant verified under AR-1310 with
+//                           `git merge-base --is-ancestor b6c70282 4c5f9d4a`.
+const TOOLBOX_PIN = '4c5f9d4adba5972a051aa845b98809bc2b6c7aa4';
 
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
