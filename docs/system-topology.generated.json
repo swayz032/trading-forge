@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T06:25:34.711Z",
+  "generatedAt": "2026-08-19T06:30:56.768Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -516,7 +516,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 1112h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 1113h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
