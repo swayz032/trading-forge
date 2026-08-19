@@ -48,6 +48,18 @@ def _env(direction="L"):
     }
 
 
+def _patch_long_reversal(monkeypatch):
+    loc = ker.core.Location(
+        id="S1", side="S", lo=99.0, hi=100.0, mid=99.5, source="WICK_ZONE",
+        quality=0.9, confluence=2, entry_authorized=True, zone=None,
+    )
+    monkeypatch.setattr(ker.core, "premarket_plan", lambda *a, **k: SimpleNamespace(primary="BULL"))
+    monkeypatch.setattr(ker, "build_entry_locations_v24", lambda *a, **k: ([loc], []))
+    monkeypatch.setattr(ker, "reversal_story_v24", lambda *a, **k: SimpleNamespace(complete=True))
+    monkeypatch.setattr(ker, "plan_allows_v24", lambda *a, **k: True)
+    return loc
+
+
 def test_historical_and_live_import_the_exact_same_candidate_kernel():
     assert eng.iter_actionable_candidates is ker.iter_actionable_candidates
     assert sig.iter_actionable_candidates is ker.iter_actionable_candidates
@@ -105,6 +117,33 @@ def test_role_flip_already_confirmed_before_forming_bar_can_use_live_force(monke
     assert cand.reason == "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
     assert actionable == ts + pd.Timedelta(minutes=2)
     assert actionable < ts + pd.Timedelta(minutes=5)
+
+
+def test_live_asof_and_historical_mode_agree_on_first_force_minute_without_future_leak(monkeypatch):
+    env = _env("L"); ts = env["r5"].index[0]
+    _patch_long_reversal(monkeypatch)
+
+    # At 10:01 only one 1m sub-bar has completed. The force equation requires
+    # two, so live mode must refuse even though future data exists in env["one"].
+    too_early = list(ker.iter_actionable_candidates(
+        env, ts.date(), eng.Params(), as_of=ts + pd.Timedelta(minutes=1)
+    ))
+    assert too_early == []
+
+    # At 10:02 two completed sub-bars prove force. Live and full historical mode
+    # must identify the exact same first decision minute and reason.
+    live = list(ker.iter_actionable_candidates(
+        env, ts.date(), eng.Params(), as_of=ts + pd.Timedelta(minutes=2)
+    ))
+    hist = list(ker.iter_actionable_candidates(env, ts.date(), eng.Params(), as_of=None))
+    assert len(live) == 1
+    assert len(hist) == 1
+    live_cand, live_at, _ = live[0]
+    hist_cand, hist_at, _ = hist[0]
+    assert live_at == hist_at == ts + pd.Timedelta(minutes=2)
+    assert live_cand.reason == hist_cand.reason == "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+    assert live_cand.direction == hist_cand.direction == "L"
+    assert live_at < ts + pd.Timedelta(minutes=5)
 
 
 def test_entry_fidelity_paths_are_present_in_shared_kernel():
