@@ -8,6 +8,11 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_generate.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   pull_request:
     branches:
@@ -16,6 +21,11 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_generate.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   workflow_dispatch:
 
@@ -30,23 +40,37 @@ jobs:
           python-version: '3.12.13'
       - name: Install frozen research dependencies
         run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
-      - name: Prove replay-lab anti-hindsight contract
-        run: PYTHONPATH=. pytest --confcutdir=tests -q tests/test_current_mnq_strategy_v2_4_replay_lab.py
-      - name: Generate blind replay pack on contaminated development data
-        run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_generate
-      - name: Upload trader review pack — safe to open
+      - name: Prove V2 frozen lab and V3 interactive fidelity contracts
+        run: |
+          PYTHONPATH=. pytest --confcutdir=tests -q \
+            tests/test_current_mnq_strategy_v2_4_replay_lab.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py
+      - name: Generate interactive V3 replay pack on contaminated development data
+        run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_generate
+      - name: Vendor pinned TradingView Lightweight Charts 5.2.0
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          cd "$tmp"
+          pkg="$(npm pack lightweight-charts@5.2.0 --silent)"
+          tar -xzf "$pkg"
+          cp package/dist/lightweight-charts.standalone.production.js \
+            "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
+          test -s "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
+      - name: Upload V3 trader replay pack — safe bot answers withheld
         uses: actions/upload-artifact@v4
         with:
-          name: mnq-v2-4-blind-replay-review-pack
+          name: mnq-v2-4-interactive-replay-v3-review-pack
           path: |
-            research/_mnq_v24_replay_lab/pack/review.html
-            research/_mnq_v24_replay_lab/pack/review_pack.json
-            research/_mnq_v24_replay_lab/pack/labels_template.json
-            research/_mnq_v24_replay_lab/pack/receipt.json
+            research/_mnq_v24_replay_lab_v3/pack/review_v3.html
+            research/_mnq_v24_replay_lab_v3/pack/review_pack_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/labels_template_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/receipt_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js
           if-no-files-found: error
-      - name: Upload hidden bot answer key — do not open before labels freeze
+      - name: Upload hidden V3 bot answer key — do not open before labels freeze
         uses: actions/upload-artifact@v4
         with:
-          name: mnq-v2-4-hidden-replay-answer-key
-          path: research/_mnq_v24_replay_lab/pack/answer_key.json
+          name: mnq-v2-4-hidden-replay-v3-answer-key
+          path: research/_mnq_v24_replay_lab_v3/pack/answer_key_v3.json
           if-no-files-found: error
