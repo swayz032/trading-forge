@@ -3362,6 +3362,7 @@ export class LifecycleService {
       let streamRunning = false;
       try {
         const { startStream, isStreaming } = await import("./paper-trading-stream.js");
+        const { verifyPaperActivation } = await import("./paper-qualification-activation-service.js");
         // Find any active session for this strategy
         const [activeSess] = await db.select({ id: paperSessions.id })
           .from(paperSessions)
@@ -3376,18 +3377,31 @@ export class LifecycleService {
             streamRunning = true;
             logger.info({ strategyId: id, sessionId: activeSessId }, "→PAPER: internal stream already running — continuing (internal-engine authority)");
           } else {
-            const symbols: string[] = [];
-            if (strategy.symbol) symbols.push(strategy.symbol);
-            const stratConfigForStream = (strategy.config ?? {}) as Record<string, unknown>;
-            if (stratConfigForStream.symbol && !symbols.includes(String(stratConfigForStream.symbol))) {
-              symbols.push(String(stratConfigForStream.symbol));
-            }
-            if (symbols.length > 0) {
-              await startStream(activeSessId, symbols);
+            // AR-1155: this IS the "SHADOW→PAPER / legacy TESTING→PAPER" first-activation
+            // path the qualification-activation verifier exists for — resolve/stamp/verify
+            // candidate + run/environment + TF_RUNTIME_REVISION identity before starting the
+            // stream, same as POST /api/paper/start and the scheduler resume/retry paths.
+            const activation = await verifyPaperActivation(activeSessId, { correlationId: options.correlationId ?? null });
+            if (activation.ok) {
+              await startStream(activeSessId, activation.symbols);
               streamRunning = true;
-              logger.info({ strategyId: id, sessionId: activeSessId, symbols }, "→PAPER: started internal stream (internal-engine authority declared)");
+              logger.info(
+                { strategyId: id, sessionId: activeSessId, symbols: activation.symbols },
+                "→PAPER: started internal stream (internal-engine authority declared, activation verified)",
+              );
             } else {
-              logger.warn({ strategyId: id, sessionId: activeSessId }, "→PAPER: cannot start internal stream — no symbol resolvable for strategy");
+              logger.warn(
+                { strategyId: id, sessionId: activeSessId, reason: activation.reason },
+                "→PAPER: activation verify BLOCKED — internal stream not started",
+              );
+              db.insert(auditLog).values({
+                action: "paper.start_stream_blocked_on_transition",
+                entityId: id, entityType: "strategy", status: "blocked",
+                decisionAuthority: "system",
+                input: { fromState, toState, sessionId: activeSessId },
+                result: { reason: activation.reason, transitioned_to: "PAPER", stream_running: false },
+                correlationId: options.correlationId ?? null,
+              }).catch((e) => { logger.warn({ err: e }, "paper.start_stream_blocked_on_transition audit failed (non-blocking)"); });
             }
           }
         }
