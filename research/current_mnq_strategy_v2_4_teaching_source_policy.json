@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "status": "TRADER_CONFIRMED_STRATEGY_SOURCE_POLICY",
+  "confirmed_at": "2026-08-19",
+  "purpose": "Record the trader's clarification that the outside teaching screenshots/videos are from the same educational material used to learn the strategy. They are therefore strategy-source references, not generic internet illustrations.",
+  "evidence_hierarchy": [
+    {
+      "rank": 1,
+      "class": "TRADER_IMPLEMENTATION_GOLD",
+      "includes": ["trader actual trades", "trader screenshots", "trader videos", "trader direct labels and corrections"],
+      "authority": "highest",
+      "rule": "Repeated trader implementation and explicit trader corrections control when teaching material and trader practice differ."
+    },
+    {
+      "rank": 2,
+      "class": "TRADER_LEARNING_SOURCE_REFERENCE",
+      "includes": ["teaching videos the trader confirms were used to learn the strategy", "screenshots captured from those teaching videos"],
+      "authority": "strategy-source reference",
+      "rule": "May define and clarify visual concepts such as meaningful key zones, repeated reaction/rejection structure, displacement away, support/resistance role flips, nearest relevant structure, and reaction-cluster context when consistent with trader implementation."
+    },
+    {
+      "rank": 3,
+      "class": "MECHANICAL_TRANSLATION",
+      "includes": ["equations", "features", "deterministic code", "replay grader"],
+      "authority": "derived",
+      "rule": "Must be traceable to ranks 1-2 and may not silently invent strategy semantics."
+    },
+    {
+      "rank": 4,
+      "class": "VALIDATION_EVIDENCE",
+      "includes": ["blind replay", "unseen historical data", "clean edge exam", "robustness", "shadow"],
+      "authority": "proof layer",
+      "rule": "Tests the translation; it does not rewrite trader semantics from favorable PnL."
+    }
+  ],
+  "lab_use": {
+    "teaching_material_may_inform": ["scenario taxonomy", "key-zone visual prompts", "reaction/rejection examples", "role-flip examples", "nearest-relevant-zone examples", "negative/control examples"],
+    "blindness_rule": "Do not show source/reference examples as answers inside blind replay cases.",
+    "trader_override": "If a teaching example conflicts with the trader's demonstrated or explicitly corrected implementation, model the trader implementation."
+  },
+  "anti_overfit": {
+    "no_pnl_threshold_selection": true,
+    "no_clean_result_rescue": true,
+    "no_automatic_rule_change_from_teaching_image_alone": true,
+    "material_semantic_changes_require_regression_evidence": true
+  }
+}
