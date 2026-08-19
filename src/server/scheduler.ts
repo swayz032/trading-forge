@@ -8504,28 +8504,18 @@ async function detectStalePaperSessions(): Promise<void> {
           // Clean up dead WebSocket
           stopStream(session.id);
 
-          // Resolve symbol list from strategy (same pattern as resumeActivePaperSessions)
-          const strat = session.strategyId
-            ? await db.select().from(strategies).where(eq(strategies.id, session.strategyId)).limit(1)
-            : [];
-
-          const symbols: string[] = [];
-          if (strat[0]?.symbol) symbols.push(strat[0].symbol);
-          const stratConfig = strat[0]?.config as Record<string, unknown> | undefined;
-          if (stratConfig?.symbol && !symbols.includes(String(stratConfig.symbol))) {
-            symbols.push(String(stratConfig.symbol));
-          }
-
-          if (symbols.length === 0) {
-            logger.warn({ sessionId: session.id }, "Cannot auto-recover paper session — no symbol found");
-            continue;
-          }
-
-          // AR-1155 F-6 (GPT AR-1339A S2): verify before reconnecting, closing the census to
-          // zero unverified activation/reconnect sites. On block: do NOT reconnect, emit a
-          // distinct blocked audit (never the generic recoverErr catch below), and leave the
-          // existing recoveryAttempts counter (already incremented above this try block) to
-          // govern retry/cap exactly as any other recovery failure would.
+          // AR-1155 F-6/F-10 (GPT AR-1339A S2 / AR-1341A S3): verifyPaperActivation() is the
+          // SINGLE symbol-resolution authority here — it resolves the same strategy.symbol +
+          // strategy.config.symbol fields the old inline read did (a "no symbol found" input
+          // now surfaces as its own `candidate_unresolved` blocked reason below, folded into the
+          // same fail-closed audit rather than a separate silent `continue`), and its returned
+          // `symbols` is used consistently for startStream, the success audit, and the SSE
+          // broadcast — closing the gap where a concurrent strategy-symbol edit could make the
+          // success receipt report different bytes than what actually started streaming.
+          // On block: do NOT reconnect, emit a distinct blocked audit (never the generic
+          // recoverErr catch below), and leave the existing recoveryAttempts counter (already
+          // incremented above this try block) to govern retry/cap exactly as any other recovery
+          // failure would.
           const reconnectActivation = await verifyPaperActivation(session.id, { correlationId });
           if (!reconnectActivation.ok) {
             logger.warn(
@@ -8544,9 +8534,10 @@ async function detectStalePaperSessions(): Promise<void> {
             });
             continue;
           }
+          const symbols = reconnectActivation.symbols;
 
           // Reconnect WebSocket stream
-          startStream(session.id, reconnectActivation.symbols);
+          startStream(session.id, symbols);
 
           // Restore in-memory position state from DB
           const openPositions = await db
