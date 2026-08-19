@@ -5,19 +5,42 @@ def _js() -> str:
     return Path("research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js").read_text()
 
 
-def test_v3_desktop_enhancement_projects_drawings_focuses_recent_and_uses_ny_wall_clock():
+def test_v3_unifies_structure_and_tp_on_one_main_chart_with_zoomable_context():
     js = _js()
-    assert "paintLayer(ov15, c15, l.trader_zones, null)" in js
-    assert "paintLayer(ov5, c5, l.trader_zones, l.trader_tp_reaction_cluster)" in js
+    assert "panel15.style.display = 'none'" in js
+    assert "Main Structure / Key Zones + TP Reaction Cluster" in js
+    assert "const main = mk('chartMain')" in js
+    assert "paintLayer(ov5, main, l.trader_zones, l.trader_tp_reaction_cluster)" in js
     assert "paintLayer(ov1, c1, l.trader_zones, l.trader_tp_reaction_cluster)" in js
-    assert "focusRecent(c15, 72)" in js
-    assert "focusRecent(c5, 84)" in js
+    assert "15m CONTEXT" in js
+    assert "− ZOOM OUT" in js
+    assert "+ ZOOM IN" in js
+    assert "FIT ALL" in js
+    assert "handleScroll: {mouseWheel: true" in js
+    assert "handleScale: {axisPressedMouseMove: true, mouseWheel: true, pinch: true}" in js
+    assert "cur().context_15m" in js
+    assert "cur().context_5m" in js
+    assert "focusRecent(main, mainTf === '15m' ? 112 : 96)" in js
     assert "focusRecent(c1, 60)" in js
     assert "Date.UTC" in js
-    assert "09:47-04:00 is displayed as 09:47" in js
-    assert "setData(false)" in js
+    assert "09:47 rather than 13:47" in js
     for forbidden in ("bot_action", "bot_relevant_zones", "bot_tp_reaction_cluster", "net_pnl"):
         assert forbidden not in js
+
+
+def test_v3_zone_capture_records_how_trader_found_the_level_on_same_main_chart():
+    js = _js()
+    assert "VISIBLE_REJECTION" in js
+    assert "ZOOMED_OUT_HIGHER_LOWER" in js
+    assert "MOVE_AWAY_REJECTION_ORIGIN" in js
+    assert "source_method: zoneMethod.value" in js
+    assert "marked_time: replayTime()" in js
+    assert "marked_main_timeframe: mainTf" in js
+    assert "drawZone.onclick = () => beginDraw('main-zone', ov5)" in js
+    assert "drawTp.onclick = () => beginDraw('main-tp', ov5)" in js
+    assert "main.series.coordinateToPrice" in js
+    assert "If the next level is off-screen" in js
+    assert "after price moves away hard" in js
 
 
 def test_v3_one_scenario_has_one_final_trade_and_same_minute_wait_is_deduplicated():
@@ -30,4 +53,4 @@ def test_v3_one_scenario_has_one_final_trade_and_same_minute_wait_is_deduplicate
     assert "l.decision_timeline = []" in js
     assert "document.querySelectorAll('[data-action],[data-force]')" in js
     assert "b.disabled = locked" in js
-    assert "Replay ${l.reveal_count}/${cur().replay_1m.length} min" in js
+    assert "Replay ${l.reveal_count}/${cur().replay_1m.length} min · Main ${mainTf}" in js
