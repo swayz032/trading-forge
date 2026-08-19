@@ -34,22 +34,23 @@ def test_support_rejection_plus_bullish_control_allows_reversal_long():
     assert g.allowed
 
 
-def test_weak_breakout_requires_new_15m_acceptance_even_after_zone_break():
+def test_weak_breakout_requires_completed_15m_three_bar_not_generic_acceptance():
     q = bars([
         (99.0, 100.0, 98.75, 99.5),
         (99.5, 102.0, 99.25, 101.25),
     ])
     waiting = gate_candidate(
         bars=q, zone_side="R", zone_lo=100, zone_hi=101,
-        direction="L", setup="BRK15", fifteen_minute_acceptance=False,
-    )
-    assert not waiting.allowed
-    assert waiting.reason == "WAIT_FOR_NEW_COMPLETED_15M_ACCEPTANCE"
-    confirmed = gate_candidate(
-        bars=q, zone_side="R", zone_lo=100, zone_hi=101,
         direction="L", setup="BRK15", fifteen_minute_acceptance=True,
     )
+    assert not waiting.allowed
+    assert waiting.reason == "WAIT_FOR_COMPLETED_15M_THREE_BAR_CONTINUATION"
+    confirmed = gate_candidate(
+        bars=q, zone_side="R", zone_lo=100, zone_hi=101,
+        direction="L", setup="BRK15", fifteen_minute_three_bar_continuation=True,
+    )
     assert confirmed.allowed
+    assert confirmed.reason == "WEAK_BREAK_CONFIRMED_BY_15M_THREE_BAR_CONTINUATION"
 
 
 def test_touch_without_control_does_not_become_trade():
@@ -65,8 +66,8 @@ def test_touch_without_control_does_not_become_trade():
     assert g.reason == "ZONE_REACHED_REVERSAL_NOT_CONFIRMED"
 
 
-def test_real_user_range_on_key_level_waits_for_momentum_breakout():
-    """User gold NT01: chop on the key level is WAIT, not breakout authority."""
+def test_real_user_range_on_key_level_first_break_waits_for_next_momentum():
+    """User gold: chop waits; even first break print is setup until follow-through."""
     ranging = bars([
         (100.8, 101.2, 99.4, 100.2),
         (100.2, 100.9, 99.2, 100.5),
@@ -78,15 +79,25 @@ def test_real_user_range_on_key_level_waits_for_momentum_breakout():
         direction="S", setup="BRK5",
     )
     assert not waiting.allowed
-    assert waiting.reason == "ZONE_REACHED_5M_BREAKOUT_NOT_CONFIRMED"
 
-    breakout = pd.concat([
+    first_break = pd.concat([
         ranging,
         bars([(100.0, 100.3, 97.0, 97.4)]),
     ], ignore_index=True)
+    still_waiting = gate_candidate(
+        bars=first_break, zone_side="S", zone_lo=99.0, zone_hi=101.0,
+        direction="S", setup="BRK5",
+    )
+    assert not still_waiting.allowed
+    assert still_waiting.reason == "WAIT_FOR_POST_BREAK_MOMENTUM"
+
+    followthrough = pd.concat([
+        first_break,
+        bars([(97.5, 97.7, 94.5, 94.8)]),
+    ], ignore_index=True)
     confirmed = gate_candidate(
-        bars=breakout, zone_side="S", zone_lo=99.0, zone_hi=101.0,
+        bars=followthrough, zone_side="S", zone_lo=99.0, zone_hi=101.0,
         direction="S", setup="BRK5",
     )
     assert confirmed.allowed
-    assert confirmed.reason == "SUPPORT_BREAK_BEARISH_ACCEPTANCE"
+    assert confirmed.reason == "FIRST_BREAK_PRINT_THEN_MOMENTUM_CONFIRMATION"
