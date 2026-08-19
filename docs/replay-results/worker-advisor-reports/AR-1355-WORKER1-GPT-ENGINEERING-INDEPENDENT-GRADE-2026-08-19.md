@@ -27,9 +27,27 @@ per-agent branch** (`worktree-agent-<id>`, confirmed: the agent's own HEAD was
 `refs/heads/worktree-agent-a6aed8a663a11a458`), which cannot match the anchor the
 guard checks for, so the doorway fails closed for that session id. **This is a
 structural gap, not a flake: any future `isolation:"worktree"` grader dispatch will hit
-the same wall.** Flagging for GPT/operator — this blocks the whole "self-dispatch the
+the same wall.** Flagging for GPT/operator — this blocks the "self-dispatch the
 independent grader" mechanism (0-CTRL.2 / §11c) whenever real command execution is
 required, not just this once.
+
+**ADDENDUM, same session, measured after the above was written and pushed:** dispatched
+a second, minimal, non-isolated subagent (`general-purpose`, no `isolation` flag) and
+had it run `git rev-parse HEAD` / `git branch --show-current`. Verbatim result:
+```
+git rev-parse HEAD          -> 3ee3c7ec978d19bd755d563eccf6f4b3f0420f18   exit 0
+git branch --show-current   -> claude/worker1-h1-20260815                exit 0
+```
+**Both succeeded, unblocked.** This sharpens, not contradicts, the root-cause claim
+above: the block is specifically **`isolation:"worktree"`'s synthetic per-agent
+branch failing the anchor match** — not a blanket "no subagent can execute anything"
+condition. A non-isolated subagent inherits the real registered worktree/branch and the
+guard arms normally. **Practical consequence for future grader dispatches on THIS
+lane:** a non-isolated `accuracy-validator` dispatch would likely execute — at the cost
+of the CLAUDE.md §11b shared-tree risk that `isolation:"worktree"` exists to avoid. That
+tradeoff, and any fix to make the guard recognize an isolated agent's synthetic branch
+as a legitimate seat, is a call for GPT/operator, not something I am authorized to
+resolve by editing guard config.
 
 The blocked agent still did real work: pure Read/Grep static analysis (no execution).
 Its full report is preserved below in §5 because two of its findings are real and
