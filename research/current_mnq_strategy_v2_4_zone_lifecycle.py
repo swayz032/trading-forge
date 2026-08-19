@@ -59,6 +59,12 @@ def zone_state_at_v24(zone: core.Zone, bars5: pd.DataFrame,
     state = core.ZoneState.ACTIVE_SUPPORT if role == "S" else core.ZoneState.ACTIVE_RESISTANCE
     pending_broken_role: str | None = None
 
+    # Preserve the legacy/fixture behavior for a truly empty history even when
+    # the empty frame has no declared columns. Production non-empty history must
+    # still expose the exact lifecycle fields below.
+    if bars5.empty:
+        return replace(zone, side=role, state=state)
+
     q = bars5.loc[
         (bars5.index >= zone.created) & (bars5.index < asof),
         ["low", "high", "close", "atr"],
@@ -66,8 +72,7 @@ def zone_state_at_v24(zone: core.Zone, bars5: pd.DataFrame,
     if q.empty:
         return replace(zone, side=role, state=state)
 
-    for r in q.itertuples(index=False, name=None):
-        low, high, close, atr_raw = r
+    for low, high, close, atr_raw in q.itertuples(index=False, name=None):
         atr = float(atr_raw) if pd.notna(atr_raw) else np.nan
         clear = p.breakout_clear_atr * atr if np.isfinite(atr) else core.TICK * 2
         interacts = bool(float(low) <= float(zone.hi) and float(high) >= float(zone.lo))
@@ -83,27 +88,22 @@ def zone_state_at_v24(zone: core.Zone, bars5: pd.DataFrame,
 
         old = pending_broken_role
         if old == "S":
-            # Failed support break: price reclaimed the zone. Location is support
-            # again, but entry still needs the separate candle/control gate.
             if float(close) >= float(zone.mid):
                 role = "S"
                 pending_broken_role = None
                 state = core.ZoneState.TESTED
                 continue
-            # Accepted break followed by a retest from below -> resistance.
             if interacts and float(close) <= float(zone.mid):
                 role = "R"
                 pending_broken_role = None
                 state = core.ZoneState.FLIPPED_RETEST
                 continue
         else:
-            # Failed resistance break: close back down restores resistance.
             if float(close) <= float(zone.mid):
                 role = "R"
                 pending_broken_role = None
                 state = core.ZoneState.TESTED
                 continue
-            # Accepted break followed by a retest from above -> support.
             if interacts and float(close) >= float(zone.mid):
                 role = "S"
                 pending_broken_role = None
