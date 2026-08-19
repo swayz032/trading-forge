@@ -37,6 +37,12 @@ PRIOR_V2_REVIEW_SESSIONS = frozenset({
     "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02",
 })
 
+ZONE_SOURCE_METHODS = [
+    "VISIBLE_REJECTION",
+    "ZOOMED_OUT_HIGHER_LOWER",
+    "MOVE_AWAY_REJECTION_ORIGIN",
+]
+
 
 def main():
     contract = json.loads(CONTRACT.read_text())
@@ -105,6 +111,8 @@ def main():
     leaks = [x for x in forbidden if x in safe_json]
     if leaks:
         raise RuntimeError("REPLAY_V3_SAFE_PACK_LEAK:" + ",".join(leaks))
+    # These are scaffold markers before CI injects the unified trader-visible
+    # enhancement and bundles the page into one self-contained HTML file.
     required_ui = [
         LWC_FILE, "15m Context / Key Zones", "5m Main Setup / TP Reaction Cluster",
         "1m Live Force / Tug-of-War", "+1m", "+5m", "Draw Key Zone",
@@ -135,6 +143,14 @@ def main():
         "prior_v2_session_overlap_count": 0,
         "repeated_old_sessions_used_to_fill_case_count": False,
         "tp_semantics": "FIRST_MEANINGFUL_REACTION_CLUSTER_NOT_SIDE_BY_SIDE_CANDLES",
+        "trader_requested_ui_layout": "ONE_UNIFIED_MAIN_STRUCTURE_CHART_PLUS_BOTTOM_1M_ENTRY_CHART",
+        "key_zone_and_tp_same_main_chart_after_ci_enhancement": True,
+        "main_chart_timeframe_switch": ["5m", "15m"],
+        "main_chart_native_pan_zoom": True,
+        "main_chart_explicit_zoom_controls": True,
+        "zone_source_methods": ZONE_SOURCE_METHODS,
+        "move_away_rejection_can_be_marked_after_waiting_for_visible_separation": True,
+        "one_final_entry_per_case": True,
         "user_gold_reference_manifest": str(GOLD),
         "user_media_bytes_committed": False,
         "future_bars_progressively_hidden_by_ui": True,
@@ -142,7 +158,7 @@ def main():
         "formal_blind_evidence_eligible": False,
         "edge_evidence_eligible": False,
         "standalone_html_expected_after_ci_bundle_step": True,
-        "next": "Open review_v3.html; trade each fresh replay minute-by-minute; one final ENTER/NO_TRADE decision is allowed per case; freeze/export mnq_replay_v3_labels_FROZEN.json; only then open answer_key_v3.json for timing/force/zone/reaction-cluster grading.",
+        "next": "Open review_v3.html; use the one big main chart for key zones + TP, switch 5m/15m and zoom/pan when the level is outside the immediate view, use the bottom 1m chart for force/entry timing, make one final ENTER/NO_TRADE decision, then freeze/export mnq_replay_v3_labels_FROZEN.json. Only after labels freeze may the hidden answer key be opened for grading.",
     }
     (OUT / "receipt_v3.json").write_text(json.dumps(receipt, indent=2, sort_keys=True))
     print(json.dumps(receipt, indent=2, sort_keys=True))
