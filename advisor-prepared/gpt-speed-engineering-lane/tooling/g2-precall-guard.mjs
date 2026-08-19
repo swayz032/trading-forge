@@ -89,9 +89,45 @@ export function sha256File(filePath) {
 }
 
 /**
- * Load the frozen G2 context from committed artifacts. Never derives or regenerates a queue.
+ * AR-1348 repair — an INDEPENDENTLY-VERIFIED pinned transcript, used ONLY inside isG2Shaped()
+ * to EXEMPT a condition_ref-label collision from a DIFFERENT task. It never weakens any other
+ * check (queue-path / receipt-dir / permit-marker matches are untouched), and it never trusts
+ * anything the caller supplies: the manifest (self-protected, AR-1263 §7A) names the native-call
+ * manifest path, which names the transcript path + its own pinned sha256, and this function
+ * reads the actual file bytes and RE-HASHES them itself before ever trusting the content. Any
+ * failure anywhere in this chain (no path passed, file missing, hash mismatch) leaves
+ * `pinnedTranscript` unverified, which means isG2Shaped() stays exactly as fail-closed as it was
+ * before this repair — the default on any doubt is unchanged.
  */
-export function loadG2Context({ queuePath, receiptDir }) {
+function loadVerifiedPinnedTranscript({ nativeCallManifestPath, repoRoot }) {
+  if (!nativeCallManifestPath || !repoRoot) return null;
+  try {
+    if (!fs.existsSync(nativeCallManifestPath)) return null;
+    const ncm = JSON.parse(fs.readFileSync(nativeCallManifestPath, 'utf8'));
+    const provenance = ncm.prompt_provenance;
+    if (!provenance || !provenance.transcript_path || !provenance.transcript_sha256) return null;
+    const transcriptFsPath = path.isAbsolute(provenance.transcript_path)
+      ? provenance.transcript_path
+      : path.join(repoRoot, provenance.transcript_path);
+    if (!fs.existsSync(transcriptFsPath)) return null;
+    const text = fs.readFileSync(transcriptFsPath, 'utf8');
+    const actualSha256 = crypto.createHash('sha256').update(text, 'utf8').digest('hex');
+    if (actualSha256 !== provenance.transcript_sha256) return null;
+    return { text, verified: true, sha256: actualSha256 };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Load the frozen G2 context from committed artifacts. Never derives or regenerates a queue.
+ *
+ * `repoRoot` and `nativeCallManifestPath` are OPTIONAL (AR-1348 repair) — omitting either is
+ * backward compatible and leaves `pinnedTranscript` null, which is the pre-repair fail-closed
+ * behavior. They exist only to let isG2Shaped() independently verify the frozen transcript for
+ * the label-collision exemption; see loadVerifiedPinnedTranscript() above.
+ */
+export function loadG2Context({ queuePath, receiptDir, repoRoot, nativeCallManifestPath }) {
   if (!queuePath || !fs.existsSync(queuePath)) throw new Error(`frozen queue artifact not found: ${queuePath}`);
   if (!receiptDir || !fs.existsSync(receiptDir)) throw new Error(`real receipt directory not found: ${receiptDir}`);
 
@@ -107,6 +143,7 @@ export function loadG2Context({ queuePath, receiptDir }) {
     maxAttemptsPerCondition: queue.max_attempts_per_condition,
     entries,
     attempts: queue.attempts || {},
+    pinnedTranscript: loadVerifiedPinnedTranscript({ nativeCallManifestPath, repoRoot }),
   };
 }
 
@@ -271,8 +308,36 @@ export function isG2Shaped(g2, toolInput) {
 
   if (hay.includes(path.basename(g2.queuePath))) return { g2: true, why: 'references the frozen queue artifact' };
   if (hay.includes(path.basename(g2.receiptDir))) return { g2: true, why: 'references the real receipt directory' };
-  for (const ref of g2.entries.keys()) {
-    if (hay.includes(ref)) return { g2: true, why: `references frozen condition ref ${ref}` };
+
+  const matchedRef = [...g2.entries.keys()].find((ref) => hay.includes(ref));
+  if (matchedRef) {
+    // AR-1348 repair — a condition_ref like "entry_sequence[0].rationale" is a GENERIC
+    // taxonomy-vocabulary label (h1-pilot taxonomy_version), not unique to this frozen queue:
+    // AR-1234's batch_locator format reuses the identical label shape verbatim for every video
+    // it processes, so an unrelated dispatch about a DIFFERENT video's DIFFERENT transcript can
+    // carry the exact same literal substring by pure vocabulary coincidence. [MEASURED
+    // 2026-08-19, AR-1348] A bare label match is STILL fail-closed BY DEFAULT (unchanged from
+    // before this repair) UNLESS we can INDEPENDENTLY prove — via a hash WE computed ourselves
+    // from a file WE read ourselves, never trusting anything the caller wrote — that this call
+    // does not actually carry the frozen packet's own pinned transcript content anywhere in it.
+    // A call that cannot possibly be reasoning over the frozen source (its verified content is
+    // simply absent) cannot be the frozen packet, regardless of which label it happens to echo.
+    if (!g2.pinnedTranscript || !g2.pinnedTranscript.verified) {
+      // No independently-verified transcript loaded — stay exactly as fail-closed as before.
+      return { g2: true, why: `references frozen condition ref ${matchedRef}` };
+    }
+    if (hay.includes(g2.pinnedTranscript.text)) {
+      return {
+        g2: true,
+        why: `references frozen condition ref ${matchedRef} and carries the frozen packet's own pinned transcript content`,
+      };
+    }
+    // Label collision only, independently disproven: fall through to `g2: false` below. This
+    // does NOT weaken protection of the actual frozen packet — any call that genuinely carries
+    // the real pinned transcript is still caught by the branch above, and `strictSession`, when
+    // armed for a real dedicated G2 execution window, bypasses this function entirely (every
+    // dispatch is G2-shaped by session membership, not by content) and is untouched by this
+    // repair.
   }
   return { g2: false, why: null };
 }

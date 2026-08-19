@@ -241,16 +241,23 @@ export function evaluateHookEvent({ input, manifest }) {
     if (manifest.g2_precall && manifest.g2_precall.enabled === true
         && SUBAGENT_TOOL_NAMES.includes(input.tool_name)) {
       try {
+        const nativeCallManifestPath = path.resolve(repoRoot, manifest.g2_precall.native_call_manifest_path);
         const g2 = loadG2Context({
           queuePath: path.resolve(repoRoot, manifest.g2_precall.queue_path),
           receiptDir: path.resolve(repoRoot, manifest.g2_precall.receipt_dir),
+          // AR-1348 repair: lets isG2Shaped() independently verify the frozen packet's own
+          // pinned transcript (never trusts the caller) to exempt a condition_ref label
+          // collision from a different task. Optional/backward compatible — see g2-precall-
+          // guard.mjs's loadVerifiedPinnedTranscript().
+          repoRoot,
+          nativeCallManifestPath,
         });
         // AR-1267 §6.2: the frozen eight-row native-call identity. It is REQUIRED whenever the
         // pre-call gate is enabled — a missing path is a denial inside the guard, never a
         // silently unbound call, because "no expectation loaded" would otherwise be the widest
         // hole of all.
         const nativeCalls = loadNativeCallManifest({
-          manifestPath: path.resolve(repoRoot, manifest.g2_precall.native_call_manifest_path),
+          manifestPath: nativeCallManifestPath,
         });
         const verdict = evaluateG2PreCall({
           toolName: input.tool_name,
