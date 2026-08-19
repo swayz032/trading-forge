@@ -8,7 +8,8 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     lwc = tmp_path / "lightweight-charts.standalone.production.js"
     enhance = tmp_path / "replay_v3_enhance.js"
     html.write_text(
-        '<html><head><script src="lightweight-charts.standalone.production.js"></script></head>'
+        '<html><head><script src="lightweight-charts.standalone.production.js"></script>'
+        '<style>.overlay{position:absolute;inset:0;z-index:5;pointer-events:none}</style></head>'
         '<body><script>'
         "const storeKey='mnq-replay-v3:'+pack.pack_id;"
         "let saved=JSON.parse(localStorage.getItem(storeKey)||'{}');"
@@ -46,8 +47,8 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
         "  document.getElementById('mainZoomOut').onclick = () => zoomMain(1.55);\n"
         "  document.getElementById('mainZoomIn').onclick = () => zoomMain(0.68);\n"
         "  document.getElementById('mainFit').onclick = () => { main.chart.timeScale().fitContent(); drawOverlays(); };\n"
-        "drawZone.onclick = () => beginDraw('main-zone', ov5);\n"
-        "drawTp.onclick = () => beginDraw('main-tp', ov5);\n"
+        "  drawZone.onclick = () => beginDraw('main-zone', ov5);\n"
+        "  drawTp.onclick = () => beginDraw('main-tp', ov5);\n"
         "setData = function (fit) {\n"
         "    refreshMain(Boolean(fit));\n"
         "    renderClock();\n"
@@ -64,14 +65,13 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "if (l.final_action) return;" in out
     assert "Main Structure / Key Zones + TP Reaction Cluster" in out
     assert "MOVE_AWAY_REJECTION_ORIGIN" in out
-    assert "beginDraw('main-zone', ov5)" in out
-    assert "beginDraw('main-tp', ov5)" in out
     assert "REPLAY_STORAGE_DISABLED_USING_MEMORY" in out
     assert "JSON.parse(localStorage.getItem(storeKey)" not in out
     assert "function save(){localStorage.setItem" not in out
     assert "try{saved=JSON.parse(window.localStorage.getItem(storeKey)||'{}')}" in out
     assert "if(!storageAvailable)return" in out
     assert "const TICK=0.25;" in out
+    assert "width:100%;height:100%;z-index:5;pointer-events:none" in out
     assert "renderClock();\n    renderLabels();\n    updateMainControlStatus('REPLAY');" in out
     assert "MNQ_CONTROLS_READY" in out
     assert "updateMainControlStatus('TIMEFRAME')" in out
@@ -79,6 +79,9 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "updateMainControlStatus('FIT ALL')" in out
     assert "subscribeVisibleLogicalRangeChange" in out
     assert "addEventListener('click', () => setMainTf('15m'))" in out
+    assert "panel5.scrollIntoView({behavior: 'auto', block: 'center'})" in out
+    assert "drawZone.onclick = () => revealMainForDraw('main-zone')" in out
+    assert "drawTp.onclick = () => revealMainForDraw('main-tp')" in out
 
 
 def test_v3_generator_explicitly_excludes_all_prior_v2_review_sessions():
