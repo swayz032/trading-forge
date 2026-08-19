@@ -1,6 +1,6 @@
 {
-  "schema_version": 2,
-  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-2",
+  "schema_version": 3,
+  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-3",
   "frozen_at": "2026-08-18",
   "purpose": "Bind the trader-confirmed distinction between ordinary momentum, true displacement, rejection-trigger sequences, normal post-break continuation, 15m three-bar continuation after a weak break, and the only two permitted pre-break early-entry families.",
   "core_equation": "AUTHORIZED_LOCATION_AND_ROOM + VALID_CANDLE_STORY + DIRECTIONAL_MOMENTUM_TRIGGER",
@@ -26,7 +26,7 @@
   },
   "normal_breakout_family": {
     "first_print_beyond_key_zone": "SETUP_ONLY",
-    "entry_trigger": "a subsequent momentum candle in the breakout direction",
+    "entry_trigger": "the next completed 5m candle is directional momentum in the breakout direction and remains beyond the broken zone",
     "first_break_candle_alone": "NO_ENTRY",
     "fake_break_protection": true
   },
@@ -47,11 +47,11 @@
     "families": [
       {
         "name": "REPEAT_TEST_MOMENTUM_ATTACK",
-        "rule": "The key level has already been tested, price returns for another test/attack, and a momentum candle confirms the breakout attack before a completed candle has printed beyond the zone."
+        "rule": "The key level has already been tested, at least one completed bar resets away so this is a distinct test rather than adjacent bars sitting on the level, then price returns for another test/attack and a momentum candle confirms the breakout attack before a completed candle has printed beyond the zone."
       },
       {
         "name": "DISPLACEMENT_SEQUENCE_INTO_LEVEL",
-        "rule": "A genuine displacement sequence drives directly toward the key zone; the third candle must retain directional momentum. If the third candle reverses color/control, no early entry."
+        "rule": "A genuine displacement drive heads directly toward the key zone. At least one of the first two drive candles must be true displacement; the other may be ordinary directional momentum because every strong candle is not displacement. The third candle must retain directional momentum. If the third candle reverses color/control, no early entry."
       }
     ],
     "all_other_pre_break_entries": "NO_TRADE"
