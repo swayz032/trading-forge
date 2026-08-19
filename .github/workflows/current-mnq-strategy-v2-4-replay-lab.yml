@@ -33,6 +33,10 @@ on:
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   workflow_dispatch:
 
+concurrency:
+  group: current-mnq-v2-4-replay-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   replay-lab:
     runs-on: ubuntu-24.04
