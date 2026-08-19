@@ -214,21 +214,36 @@ def breakout_followthrough_after_first_print(full5: pd.DataFrame, ts: pd.Timesta
 def repeat_test_momentum_prebreak(full5: pd.DataFrame, ts: pd.Timestamp, row,
                                   direction: str, loc: core.Location,
                                   p: core.Params, pad: float) -> bool:
-    """Early exception #1: prior test + renewed momentum attack before full break."""
+    """Early exception #1: distinct prior test -> reset away -> momentum re-attack."""
     if _outside(row, loc, direction) or not momentum_bar(row, direction, p):
         return False
     if not _reaches(row, loc, pad):
         return False
     prior = full5[full5.index < ts].tail(6)
-    prior_tests = [r for _, r in prior.iterrows()
-                   if _reaches(r, loc, pad) and not _outside(r, loc, direction)]
-    return bool(prior_tests)
+    if len(prior) < 2:
+        return False
+    reached = [bool(_reaches(r, loc, pad) and not _outside(r, loc, direction))
+               for _, r in prior.iterrows()]
+    # A repeat test is not several adjacent bars sitting on the same level. The
+    # earlier test must be followed by at least one completed bar that no longer
+    # reaches the zone before the current momentum attack returns to it.
+    for i, hit in enumerate(reached[:-1]):
+        if hit and any(not later_hit for later_hit in reached[i + 1:]):
+            return True
+    return False
 
 
 def displacement_sequence_prebreak(full5: pd.DataFrame, ts: pd.Timestamp, row,
                                    direction: str, loc: core.Location,
                                    p: core.Params, pad: float) -> bool:
-    """Early exception #2: two displacement bars + third momentum bar into level."""
+    """Early exception #2: genuine displacement drive + third momentum candle.
+
+    At least one of the first two drive candles must be true displacement. The
+    other may be ordinary directional momentum; this preserves the trader's
+    explicit rule that every strong candle is not displacement. Candle three
+    must retain directional momentum and the sequence must keep progressing
+    toward the authorized key zone.
+    """
     if _outside(row, loc, direction) or not _reaches(row, loc, pad):
         return False
     prior = full5[full5.index < ts].tail(5)
@@ -238,9 +253,11 @@ def displacement_sequence_prebreak(full5: pd.DataFrame, ts: pd.Timestamp, row,
     baseline = prior.head(3)
     ref = float(np.median([_geom(r).range for _, r in baseline.iterrows()]))
     a, b, c = seq.iloc[0], seq.iloc[1], seq.iloc[2]
-    if not (displacement_bar(a, direction, p, ref) and
-            displacement_bar(b, direction, p, ref) and
-            momentum_bar(c, direction, p)):
+    first_two_directional = bool(momentum_bar(a, direction, p) and
+                                 momentum_bar(b, direction, p))
+    genuine_displacement = bool(displacement_bar(a, direction, p, ref) or
+                                displacement_bar(b, direction, p, ref))
+    if not (first_two_directional and genuine_displacement and momentum_bar(c, direction, p)):
         return False
     closes = seq.close.to_numpy(float)
     if direction == "L":
