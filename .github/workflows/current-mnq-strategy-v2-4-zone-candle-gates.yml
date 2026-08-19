@@ -81,9 +81,16 @@ jobs:
           p=load_spec(); f=load_fvg_spec(); e=load_edge_spec(); k=load_key_level_spec()
           assert p['zone_gate']['mandatory'] is True
           assert p['zone_gate']['pattern_without_zone_interaction']=='NO_TRADE'
-          assert p['zone_gate']['mere_approach_without_touch']=='NO_TRADE'
+          assert p['zone_gate']['mere_approach_without_touch']=='NO_TRADE_EXCEPT_TWO_FROZEN_PREBREAK_FAMILIES'
           assert p['zone_gate']['mid_range_pattern']=='NO_TRADE'
           assert p['candlestick_semantics']['role']=='CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL'
+          assert p['entry_trigger_semantics']['normal_breakout']=='first completed print beyond zone is setup only -> subsequent momentum candle confirms'
+          assert p['entry_trigger_semantics']['weak_breakout']=='weak first break -> controlled pullback -> completed 15m three-bar continuation'
+          assert p['entry_trigger_semantics']['prebreak_early_entry_exceptions_only']==[
+              'repeat_test_momentum_attack',
+              'true_displacement_sequence_into_level_with_third_candle_momentum',
+          ]
+          assert p['key_level_semantics']['active_map_policy']['no_hindsight_full_day_range_label'] is True
           assert p['anti_overfit']['v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4'] is True
           assert f['detector_authority']['repository_path']=='src/engine/indicators/fvg_native.py'
           assert f['detector_authority']['timeframe_for_current_strategy']=='15m'
@@ -101,8 +108,8 @@ jobs:
           assert e['anti_overfit']['no_threshold_rescue_after_result'] is True
           seen=e['anti_overfit']['known_seen_performance_ranges']
           assert any(x['start']=='2022-01-01' and x['end']=='2026-08-17' for x in seen)
-          assert len(fingerprinted_files()) >= 40
-          print('PASS: v2.4 full equation + executable fingerprint are frozen')
+          assert len(fingerprinted_files()) >= 42
+          print('PASS: v2.4 entry fidelity + full equation + executable fingerprint are frozen')
           PY
       - name: Verify read-only SignalR sidecar and hosted-runtime refusal
         working-directory: research/mnq_v23_realtime
@@ -155,6 +162,11 @@ jobs:
               'zone_gate_mandatory':True,
               'patterns_away_from_zone_refused':True,
               'shared_historical_live_candidate_kernel':True,
+              'momentum_displacement_separated':True,
+              'first_break_requires_followthrough_momentum':True,
+              'weak_break_15m_three_bar_continuation':True,
+              'prebreak_exception_count':2,
+              'range_day_entry_zone_room_gate':True,
               'established_zone_min_independent_rejections':key['established_zone_path']['minimum_independent_rejections'],
               'exceptional_single_swing_equation':key['exceptional_single_swing_path']['equation'],
               'native_fvg_detector':fvg['detector_authority']['repository_path'],
