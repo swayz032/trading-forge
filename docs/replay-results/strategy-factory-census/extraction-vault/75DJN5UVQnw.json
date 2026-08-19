@@ -1,0 +1,159 @@
+{
+  "video_id": "75DJN5UVQnw",
+  "extracted_at": 1787104267.038951,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "da154ed3bf6a8f46ae3bec229a88b77a7a53d63afb6b60db5eeecd7369f44315",
+  "extraction": {
+    "video_id": "75DJN5UVQnw",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "for a supply zone, this is where aggressive sellers stepped in and overwhelmed buyers, driving price down.",
+            "step": 1,
+            "action": "Identify a Supply Zone where aggressive sellers overwhelmed buyers, driving price down.",
+            "rationale": "This imbalance indicates institutional footprint and potential reversal."
+          },
+          {
+            "transcript_quote": "I'm going to mark this area from open to high as a supply zone.",
+            "step": 2,
+            "action": "Mark the Supply Zone from the open to the high of the base candle.",
+            "rationale": "Defining the zone boundaries captures the institutional footprint."
+          },
+          {
+            "transcript_quote": "when price comes back into the zone, I want to watch how volume is reacting as it moves up. And in this case, we can see that buyers started to weaken",
+            "step": 3,
+            "action": "Wait for aggressive sellers to step in (weakening buyers) upon retesting the zone.",
+            "rationale": "Confirmation of institutional interest upon zone retest is the entry trigger."
+          },
+          {
+            "transcript_quote": "I'll stay on the 5minut, and I usually like to look for, you know, some level of support or resistance or um a trend line break or some sort of other",
+            "step": 4,
+            "action": "Refine the entry on a lower timeframe (e.g., 5m) using support/resistance, trendline breaks, or other confirmation.",
+            "rationale": "Lower timeframes provide precise entry triggers for the larger zone."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_high_above_entry",
+          "transcript_quote": "I'll just set my stop above the key level that I used to enter at",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed above the entry level to protect against a false breakout."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_low",
+            "transcript_quote": "target the next level of liquidity below. That could be prior high, prior low, level of support or resistance, or some level of liquidity that we see",
+            "r_multiple": null,
+            "rationale": "Target the next level of liquidity below the entry."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "for a supply zone, this is where aggressive sellers stepped in and overwhelmed buyers, driving price down.",
+            "name": "aggressive_seller_overwhelm",
+            "description": "The zone is formed where aggressive sellers overwhelmed buyers, driving price down.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "Supply zones are going to be found above the current price.",
+            "name": "zone_location_above",
+            "description": "Supply zones are located above the current price.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "And as soon as we tapped into the zone, sellers stepped in. This to me is a sign that this could be a solid entry point.",
+            "name": "aggressive_seller_entry_confirmation",
+            "description": "Sellers stepping in upon retest of the zone confirms a solid entry point.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Order Flow",
+            "role": "model",
+            "verbatim_description": "What actually moves the markets is the balance or imbalance between aggressive orders and passive orders.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Supply and Demand Zones",
+            "role": "zone",
+            "verbatim_description": "These are the footprints that they leave behind [institutional activity], and institutions often defend these areas or finish filling uncompleted orders when price gets back to these areas.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Footprints",
+            "role": "concept",
+            "verbatim_description": "Institutions cannot place an order this big and hide it. Their size leaves footprints.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Area of consolidation or a base",
+            "role": "zone",
+            "verbatim_description": "This is what you want to look for on the chart: an area of consolidation or a base.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Strong and balanced candle",
+            "role": "entry_step",
+            "verbatim_description": "This is a strong and balanced candle moving away from that base.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Supply Zone",
+            "role": "zone",
+            "verbatim_description": "This is where aggressive sellers stepped in and overwhelmed buyers, driving price down.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Demand Zone",
+            "role": "zone",
+            "verbatim_description": "This is where aggressive buyers stepped in and overwhelmed sellers, pushing price higher.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Top-down analysis",
+            "role": "model",
+            "verbatim_description": "My process is a top-down analysis, meaning I usually start on the 4 hour and refine my levels all the way down to the 30 minute.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Small basing candle",
+            "role": "entry_step",
+            "verbatim_description": "I'm actually going to be looking for the candle immediately before the imbalance move. This is usually going to be a small basing candle of the opposite color.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Imbalance move",
+            "role": "entry_step",
+            "verbatim_description": "This is usually going to be a small basing candle of the opposite color [followed by] a strong green imbalance candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bookmap",
+            "role": "indicator",
+            "verbatim_description": "You can actually refine your entries even more by using tools like bookmap so that you can see exactly where buyers and sellers are sitting at.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity",
+            "role": "target",
+            "verbatim_description": "I'll just set my stop above the key level that I used to enter at and target the next level of liquidity below.",
+            "source": "pass1_llm_extraction"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}
