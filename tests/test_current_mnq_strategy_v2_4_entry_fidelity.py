@@ -155,7 +155,7 @@ def test_adjacent_bars_sitting_on_level_do_not_fake_a_repeat_test():
     )
 
 
-def test_displacement_prebreak_needs_genuine_displacement_in_drive_and_third_momentum():
+def test_displacement_prebreak_is_about_third_candle_momentum_not_fvg():
     p = core.Params()
     resistance = loc("R", 105.0, 106.0)
     q = frame([
@@ -164,15 +164,18 @@ def test_displacement_prebreak_needs_genuine_displacement_in_drive_and_third_mom
         (101.0, 101.9, 100.8, 101.5),
         (101.5, 103.6, 101.4, 103.3),
         (103.3, 104.2, 103.2, 104.1),
-        (104.05, 105.0, 104.0, 104.9),
+        (103.8, 105.0, 103.5, 104.9),
     ])
     ts = q.index[-1]
-    # Bar 1 of the drive is true displacement. Bar 2 is strong momentum but not
-    # displacement. The third candle retains momentum into the key zone.
+    # Candle 1 of the drive is true displacement. Candle 2 is strong momentum
+    # but not displacement. Candle 3 retains momentum into the key level.
     assert displacement_bar(q.iloc[-3], "L", p, reference_range=1.0)
     assert momentum_bar(q.iloc[-2], "L", p)
     assert not displacement_bar(q.iloc[-2], "L", p, reference_range=1.0)
     assert momentum_bar(q.iloc[-1], "L", p)
+    # Deliberately no classic bullish 3-candle FVG between drive candle 1 and
+    # candle 3. The entry must still qualify because FVG is not the trigger.
+    assert float(q.iloc[-1].low) <= float(q.iloc[-3].high)
     assert displacement_sequence_prebreak(q, ts, q.iloc[-1], "L", resistance, p, pad=0.10)
 
     reversed_third = q.copy()
