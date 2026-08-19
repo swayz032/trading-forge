@@ -17,7 +17,7 @@ from research.current_mnq_strategy_v2_4_targets import build_and_classify
 
 core = v23.core
 TZ = v23.TZ
-ENGINE_VERSION = "MNQ-V2.4-ZONE-CANDLE-PC1"
+ENGINE_VERSION = "MNQ-V2.4-ZONE-CANDLE-PC2-ENTRY1"
 Params = v23.Params
 TICK = v23.TICK
 POINT_VALUE = v23.POINT_VALUE
