@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "status": "IMMUTABLE_HASHED_V24_USER_FIDELITY_SET_V1",
+  "frozen_at": "2026-08-18",
+  "privacy": "No user screenshot bytes are committed. Only cryptographic hashes and trader-confirmed semantic labels are stored.",
+  "source_archive": {
+    "name": "Trading screenshots (4).zip",
+    "sha256": "80b9a40a336f908c653900a71618bc92e258f36b3e1bd426891c49482d815942"
+  },
+  "fixtures": [
+    {
+      "id": "V24G01_REJECTION_STORY_THEN_MOMENTUM",
+      "source_kind": "user_screenshot_batch_plus_direct_label",
+      "source_files": [
+        {"name": "Screenshot 2026-08-18 175702.png", "sha256": "f6fc7b7b4404ed78a2294c357c0fc4d81b6723446e0144dccbff029abd22fedb"},
+        {"name": "Screenshot 2026-08-18 180237.png", "sha256": "e9abf16283d41e18c093ededeb326f55fddbcefd935c2ceda80921c85151bb78"},
+        {"name": "Screenshot 2026-08-18 180356.png", "sha256": "28570dbf36971a7837a014532edc5bd7e9fa9b8ae68a2c26f5e1fd4638d14730"}
+      ],
+      "trader_label": "A key-level rejection entry can be two momentum candles, doji then momentum, pinbar then momentum, inside bar then momentum, or shrinking candles heading into the key level, rejection, then a reverse momentum candle. Rejection by itself is not enough.",
+      "must_have": ["authorized_key_zone", "rejection_or_control_story", "directional_momentum_trigger"],
+      "must_not_do": ["enter_on_rejection_without_momentum", "require_displacement_for_every_rejection_entry"]
+    },
+    {
+      "id": "V24G02_MOMENTUM_IS_NOT_AUTOMATIC_DISPLACEMENT",
+      "source_kind": "direct_trader_rule",
+      "trader_label": "Every strong move is not displacement. There are strong bullish and bearish momentum candles that are not displacement.",
+      "must_have": ["separate_momentum_geometry_from_displacement_range_expansion"],
+      "must_not_do": ["classify_every_strong_red_or_green_candle_as_displacement"]
+    },
+    {
+      "id": "V24G03_PREBREAK_DISPLACEMENT_SEQUENCE",
+      "source_kind": "user_screenshot_pair_plus_direct_label",
+      "source_files": [
+        {"name": "Screenshot 2026-08-16 075020.png", "sha256": "db867045aff322df5b6a5db050afb6cc1354b6d115700f7c8391090fca9e24e4"},
+        {"name": "Screenshot 2026-08-17 221445.png", "sha256": "8ac406fe0d713c632415d380f03f9068e273374e3de792f26554fbdc80dcb562"}
+      ],
+      "trader_label": "One of only two pre-break exceptions: genuine strong displacement drives toward the key level; wait for the third candle to retain momentum because the third candle can reverse, then an early entry may occur before a candle has printed beyond the level.",
+      "must_have": ["genuine_displacement_sequence", "third_candle_directional_momentum", "approaching_authorized_key_zone"],
+      "must_not_do": ["front_run_level_on_ordinary_strong_candle", "enter_if_third_candle_reverses_control"]
+    },
+    {
+      "id": "V24G04_REPEAT_TEST_PREBREAK_MOMENTUM",
+      "source_kind": "direct_trader_rule_with_rejection_batch",
+      "trader_label": "The other pre-break exception: after the level has already been tested, price can return and attack/test it again with breakout momentum; that momentum attack can authorize entry before a completed candle has printed beyond the key level.",
+      "must_have": ["prior_key_level_test", "repeat_attack", "momentum_trigger"],
+      "must_not_do": ["allow_arbitrary_first_approach_prebreak_entry"]
+    },
+    {
+      "id": "V24G05_FIRST_PRINT_THEN_MOMENTUM_OR_15M_THREE_BAR",
+      "source_kind": "direct_trader_rule",
+      "trader_label": "When price first prints beyond a key level, that first print is not the entry by itself; a following momentum candle can confirm. If the initial break is weak, price may pull back and the trader checks the 15-minute chart for a three-bar continuation entry.",
+      "must_have": ["first_break_print_is_setup", "post_break_momentum_confirmation_or_15m_three_bar_continuation"],
+      "must_not_do": ["auto_enter_on_first_close_beyond_level"]
+    },
+    {
+      "id": "V24G06_FIRST_REACTION_LIQUIDITY_BEFORE_FVG",
+      "source_kind": "user_screenshot_pair_plus_direct_label",
+      "source_files": [
+        {"name": "Screenshot 2026-08-18 180244.png", "sha256": "670c80f2173101f9269f73cf0ef10c8c7a4e3a9cfeb51af9eb3d94e597c9ce42"},
+        {"name": "Screenshot 2026-08-18 180356.png", "sha256": "28570dbf36971a7837a014532edc5bd7e9fa9b8ae68a2c26f5e1fd4638d14730"}
+      ],
+      "trader_label": "The liquidity cluster appeared before the FVG, price reacted there and did not need to trade into the farther FVG. Whichever meaningful reaction area appears first owns TP.",
+      "must_have": ["physical_first_contact_order", "nearer_liquidity_cluster_owns_tp_when_before_fvg"],
+      "must_not_do": ["skip_nearer_cluster_for_farther_fvg"]
+    },
+    {
+      "id": "V24G07_RANGE_DAY_KEY_ZONE_ROOM",
+      "source_kind": "direct_trader_rule",
+      "trader_label": "On ranging days, do not mark fresh key zones too close to the range. Draw/authorize key zones where price has room to break out and travel before it reaches the key-level zone.",
+      "must_have": ["causal_range_state", "breakout_travel_room_before_fresh_entry_zone"],
+      "must_not_do": ["crowd_fresh_entry_zones_against_active_range", "delete_nearby_structure_from_reaction_context"]
+    }
+  ]
+}
