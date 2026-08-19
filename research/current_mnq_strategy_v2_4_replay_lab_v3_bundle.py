@@ -12,7 +12,9 @@ Denied localStorage used to abort the core script before event handlers were bou
 which made every visible button look normal but do nothing. The bundler patches the
 core storage access to fail over to in-memory state instead of aborting the page.
 It also refreshes the replay counter on every +1m/+5m/play step so a successful
-button press is visibly obvious instead of looking frozen.
+button press is visibly obvious instead of looking frozen, and binds the frozen
+MNQ 0.25-point tick into the browser runtime so zone/TP drawing cannot fail on an
+undefined TICK symbol.
 """
 from __future__ import annotations
 
@@ -25,6 +27,9 @@ ENHANCE = PACK / "replay_v3_enhance.js"
 
 LWC_MARKER = '<script src="lightweight-charts.standalone.production.js"></script>'
 ENHANCE_MARKER = '<script src="replay_v3_enhance.js"></script>'
+STORE_KEY_MARKER = "const storeKey='mnq-replay-v3:'+pack.pack_id;"
+SAFE_TICK_STORE_KEY = "const TICK=0.25;const storeKey='mnq-replay-v3:'+pack.pack_id;"
+TICK_MARKER = "const TICK=0.25;"
 VULNERABLE_STORAGE_READ = "let saved=JSON.parse(localStorage.getItem(storeKey)||'{}');"
 SAFE_STORAGE_READ = (
     "let storageAvailable=true;let saved={};"
@@ -55,15 +60,20 @@ UNIFIED_MARKERS = (
 )
 
 
-def _patch_local_storage_fail_closed(html: str) -> str:
+def _patch_browser_runtime(html: str) -> str:
+    if STORE_KEY_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_STORE_KEY_MARKER_MISSING")
     if VULNERABLE_STORAGE_READ not in html:
         raise RuntimeError("REPLAY_V3_STORAGE_READ_MARKER_MISSING")
     if VULNERABLE_STORAGE_SAVE not in html:
         raise RuntimeError("REPLAY_V3_STORAGE_SAVE_MARKER_MISSING")
+    html = html.replace(STORE_KEY_MARKER, SAFE_TICK_STORE_KEY, 1)
     html = html.replace(VULNERABLE_STORAGE_READ, SAFE_STORAGE_READ, 1)
     html = html.replace(VULNERABLE_STORAGE_SAVE, SAFE_STORAGE_SAVE, 1)
     if VULNERABLE_STORAGE_READ in html or VULNERABLE_STORAGE_SAVE in html:
         raise RuntimeError("REPLAY_V3_UNSAFE_STORAGE_ACCESS_REMAINS")
+    if TICK_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_BROWSER_TICK_NOT_BOUND")
     return html
 
 
@@ -90,7 +100,7 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         if "</script>" in js.lower():
             raise RuntimeError(f"REPLAY_V3_{name}_SCRIPT_UNSAFE_CLOSE_TAG")
 
-    html = _patch_local_storage_fail_closed(html)
+    html = _patch_browser_runtime(html)
     enhance = _patch_visible_progress(enhance)
     html = html.replace(LWC_MARKER, f"<script>\n{lwc}\n</script>", 1)
     html = html.replace(ENHANCE_MARKER, f"<script>\n{enhance}\n</script>", 1)
@@ -99,6 +109,8 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         raise RuntimeError("REPLAY_V3_EXTERNAL_RUNTIME_DEPENDENCY_REMAINS")
     if SAFE_STORAGE_MARKER not in html:
         raise RuntimeError("REPLAY_V3_STORAGE_FALLBACK_NOT_BUNDLED")
+    if TICK_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_BROWSER_TICK_NOT_BUNDLED")
     if PROGRESS_MARKER not in html:
         raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_BUNDLED")
     if "RESET DECISION" not in html or "if (l.final_action) return;" not in html:
