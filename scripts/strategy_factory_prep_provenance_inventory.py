@@ -20,7 +20,7 @@ join key that cannot be spoofed by a clean-looking unanchored count:
     backend = "none"        iff spine_condition_count == 0 (no condition to locate, so
                              `locate_condition_anchors` was never called with anything to do --
                              not the same as "safe", just "the locator authority question does
-                             not apply to this unit").
+                             not apply to this unit).
 
 Also covers the population `needs_regeneration` symptom-based sets miss entirely: extraction
 records that produced ZERO strategy objects (no prep file ever gets created for those -- the
@@ -58,18 +58,18 @@ def sha256_file(path: str) -> str | None:
 
 
 def _validate_receipt(receipt_path: str, video_id: str, strategy_index: int, repo_root: str) -> tuple[bool, str]:
-    """AR-1351 F-4: `os.path.exists(receipt_path)` alone proves nothing -- the independent
-    grader planted a receipt copied from a DIFFERENT unit and it passed the old check with 0
-    of the grader's own 4 content checks agreeing. This validates the receipt's CONTENT against
-    the unit it is being read for, not merely its presence:
-      1. receipt.video_id / receipt.strategy_index match the filename this receipt lives at
-         (catches a copy-pasted receipt from another unit).
-      2. receipt.raw_response_sha256 matches a fresh hash of the raw response file it claims to
-         describe, computed the same way the driver computed it at write time (text-mode read,
-         universal-newline-normalized, matching AR-1351 F-3's fix regardless of whether the file
-         on disk still carries pre-fix CRLF bytes or post-fix LF bytes).
-    Returns (ok, detail) -- detail is always populated, for both PASS and FAIL, so the caller
-    never has to guess what was actually checked.
+    """Validate a locator receipt against the concrete unit and every durable authority anchor.
+
+    A receipt is authoritative only when all of these joins succeed:
+      1. receipt identity matches the unit being inventoried;
+      2. receipt raw_response_sha256 matches this unit's raw response on disk;
+      3. receipt batch_task_sha256 is present;
+      4. this unit's batch_task_index.json exists, is readable, and carries matching identity;
+      5. task_index.task_sha256 is present and equals receipt.batch_task_sha256;
+      6. this unit's actual batch_task.txt exists and hashes to the same task SHA.
+
+    Every missing, malformed, or mismatched anchor fails closed. This prevents a copied/re-written
+    receipt from becoming `opus_batch` merely because the checks that would disprove it were absent.
     """
     if not os.path.exists(receipt_path):
         return False, "no receipt file at this path"
@@ -94,9 +94,15 @@ def _validate_receipt(receipt_path: str, video_id: str, strategy_index: int, rep
     if not claimed_sha:
         return False, "receipt has no raw_response_sha256 to verify"
     if not os.path.exists(raw_response_path):
-        return False, f"receipt claims raw_response_sha256={claimed_sha} but no raw response file exists at {raw_response_path}"
-    with open(raw_response_path, "r", encoding="utf-8") as f:
-        actual_text = f.read()
+        return False, (
+            f"receipt claims raw_response_sha256={claimed_sha} but no raw response file exists "
+            f"at {raw_response_path}"
+        )
+    try:
+        with open(raw_response_path, "r", encoding="utf-8") as f:
+            actual_text = f.read()
+    except OSError as e:
+        return False, f"raw response file unreadable: {e}"
     actual_sha = hashlib.sha256(actual_text.encode("utf-8")).hexdigest()
     if actual_sha != claimed_sha:
         return False, (
@@ -104,26 +110,61 @@ def _validate_receipt(receipt_path: str, video_id: str, strategy_index: int, rep
             f"{raw_response_path} hashes to {actual_sha}"
         )
 
-    # AR-1353 F-5: the task-sha join AR-1351's own fix point named but this check did not yet
-    # implement. Cross-check the receipt's claimed batch_task_sha256 against THIS unit's own
-    # batch_task_index.json -- a receipt whose identity fields and raw-response hash were both
-    # rewritten to match unit B, but whose task hash still names unit A's task, is caught here.
-    task_index_path = os.path.join(
-        repo_root, "docs/replay-results/strategy-factory-census/extraction-vault/opus-batch",
-        f"{video_id}__s{strategy_index}", "batch_task_index.json",
-    )
     claimed_task_sha = receipt.get("batch_task_sha256")
-    if claimed_task_sha and os.path.exists(task_index_path):
+    if not claimed_task_sha:
+        return False, "receipt has no batch_task_sha256 to verify"
+
+    task_dir = os.path.join(
+        repo_root, "docs/replay-results/strategy-factory-census/extraction-vault/opus-batch",
+        f"{video_id}__s{strategy_index}",
+    )
+    task_index_path = os.path.join(task_dir, "batch_task_index.json")
+    if not os.path.exists(task_index_path):
+        return False, f"no batch_task_index.json exists for this unit at {task_index_path}"
+    try:
         with open(task_index_path, "r", encoding="utf-8") as f:
             own_task_index = json.load(f)
-        own_task_sha = own_task_index.get("task_sha256")
-        if own_task_sha != claimed_task_sha:
-            return False, (
-                f"batch_task_sha256 MISMATCH: receipt claims {claimed_task_sha}, this unit's own "
-                f"batch_task_index.json records {own_task_sha}"
-            )
+    except (json.JSONDecodeError, OSError) as e:
+        return False, f"batch_task_index.json unreadable/malformed: {e}"
+
+    if (
+        own_task_index.get("video_id") != video_id
+        or own_task_index.get("strategy_index") != strategy_index
+    ):
+        return False, (
+            "batch_task_index identity mismatch: "
+            f"index claims video_id={own_task_index.get('video_id')!r} "
+            f"strategy_index={own_task_index.get('strategy_index')!r}, expected "
+            f"video_id={video_id!r} strategy_index={strategy_index!r}"
+        )
+
+    own_task_sha = own_task_index.get("task_sha256")
+    if not own_task_sha:
+        return False, "batch_task_index.json has no task_sha256 to verify"
+    if own_task_sha != claimed_task_sha:
+        return False, (
+            f"batch_task_sha256 MISMATCH: receipt claims {claimed_task_sha}, this unit's own "
+            f"batch_task_index.json records {own_task_sha}"
+        )
+
+    task_path = os.path.join(task_dir, "batch_task.txt")
+    if not os.path.exists(task_path):
+        return False, f"no batch_task.txt exists for this unit at {task_path}"
+    try:
+        with open(task_path, "r", encoding="utf-8") as f:
+            task_text = f.read()
+    except OSError as e:
+        return False, f"batch_task.txt unreadable: {e}"
+    actual_task_sha = hashlib.sha256(task_text.encode("utf-8")).hexdigest()
+    if actual_task_sha != claimed_task_sha:
+        return False, (
+            f"batch_task.txt SHA256 MISMATCH: receipt/index claim {claimed_task_sha}, actual "
+            f"task file hashes to {actual_task_sha}"
+        )
+
     return True, (
-        f"identity + raw_response_sha256 ({actual_sha}) + batch_task_sha256 all verified against disk"
+        f"identity + raw_response_sha256 ({actual_sha}) + task-index identity + "
+        f"batch_task_sha256 ({actual_task_sha}) all verified against disk"
     )
 
 
@@ -209,27 +250,32 @@ def main() -> int:
                 with open(receipt_path, "r", encoding="utf-8") as f:
                     receipt = json.load(f)
                 backend = "opus_batch"
-                evidence = (f"sibling opus_batch_receipt.json present AND CONTENT-VALIDATED "
-                            f"(AR-1351 F-4): {receipt_check_detail}. raw_response_sha256="
-                            f"{receipt.get('raw_response_sha256')}, "
-                            f"invocation={receipt.get('invocation')}")
+                declared_invocation = receipt.get("invocation_declared", receipt.get("invocation"))
+                invocation_attested = receipt.get("invocation_attested", False)
+                evidence = (
+                    f"sibling opus_batch_receipt.json present AND CONTENT-VALIDATED "
+                    f"(AR-1351 F-4 / AR-1354 F-5 / GPT AR-1352A): {receipt_check_detail}. "
+                    f"raw_response_sha256={receipt.get('raw_response_sha256')}, "
+                    f"invocation_declared={declared_invocation}, "
+                    f"invocation_attested={invocation_attested}"
+                )
                 needs = False
                 reason = "already regenerated under the authorized Opus batch locator"
             elif os.path.exists(receipt_path):
-                # AR-1351 F-4: a receipt FILE exists but failed content validation (identity
-                # mismatch or hash mismatch against its own claimed raw response) -- treat as
-                # UNTRUSTED, not as evidence of regeneration. Existence alone proved nothing;
-                # this is the exact gap the independent grader's planted-bad control exploited
-                # (a receipt for a DIFFERENT unit copied into this one's directory fired 0 of the
-                # old existence-only check's signals).
+                # A receipt FILE exists but failed content validation. Treat as UNTRUSTED rather
+                # than using existence as authority; missing authority anchors are failures too.
                 backend = "gemma"
-                evidence = (f"opus_batch_receipt.json EXISTS but FAILED content validation: "
-                            f"{receipt_check_detail} -- not trusted as evidence of a real "
-                            f"regeneration for THIS unit")
+                evidence = (
+                    f"opus_batch_receipt.json EXISTS but FAILED content validation: "
+                    f"{receipt_check_detail} -- not trusted as evidence of a real regeneration "
+                    f"for THIS unit"
+                )
                 needs = True
-                reason = ("a receipt file is present but its content does not verify against "
-                          "this unit's own identity/raw response -- must be regenerated for real "
-                          "rather than trusted on the basis of file existence alone")
+                reason = (
+                    "a receipt file is present but its content does not verify against this "
+                    "unit's own identity/raw response/task authority -- must be regenerated for "
+                    "real rather than trusted on the basis of file existence alone"
+                )
             elif spine_count and spine_count > 0:
                 backend = "gemma"
                 evidence = (f"no opus_batch_receipt.json sibling and spine_condition_count="
