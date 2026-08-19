@@ -47,8 +47,8 @@ def test_doji_rejection_then_non_displacement_momentum_can_confirm_reversal():
         (103.0, 103.5, 102.0, 102.5),
         (102.5, 103.0, 101.0, 101.5),
         (101.5, 102.0, 100.5, 100.8),
-        (100.2, 100.8, 99.0, 100.25),  # doji / lower rejection at support
-        (100.7, 102.7, 100.7, 102.5),  # momentum trigger; not range-expanded
+        (100.2, 100.8, 99.0, 100.25),
+        (100.7, 102.7, 100.7, 102.5),
     ])
     ts = q.index[-1]
     story = reversal_story_v24(q, ts, q.iloc[-1], "L", loc("S", 99.0, 100.0), p, pad=0.25)
@@ -62,8 +62,8 @@ def test_first_break_print_is_setup_then_next_momentum_confirms():
     p = core.Params()
     q = frame([
         (99.5, 100.5, 99.0, 100.2),
-        (100.2, 101.4, 100.0, 101.2),  # first completed print above resistance
-        (101.1, 103.0, 101.0, 102.8),  # next momentum candle
+        (100.2, 101.4, 100.0, 101.2),
+        (101.1, 103.0, 101.0, 102.8),
     ])
     resistance = loc("R", 100.0, 101.0)
     assert first_break_print(q.iloc[:-1], q.index[-2], q.iloc[-2], "L", resistance)
@@ -77,11 +77,11 @@ def test_repeat_test_momentum_is_allowed_prebreak_but_first_approach_is_not():
     resistance = loc("R", 100.0, 101.0)
     prior_test = frame([
         (98.5, 99.0, 98.0, 98.8),
-        (98.8, 100.8, 98.5, 100.2),  # prior test, no close beyond zone
+        (98.8, 100.8, 98.5, 100.2),
         (99.0, 99.4, 98.6, 99.1),
         (99.1, 99.5, 98.9, 99.3),
         (99.3, 99.6, 99.0, 99.4),
-        (99.6, 100.95, 99.5, 100.8),  # renewed momentum attack, still prebreak
+        (99.6, 100.95, 99.5, 100.8),
     ])
     ts = prior_test.index[-1]
     assert repeat_test_momentum_prebreak(
@@ -109,9 +109,9 @@ def test_displacement_prebreak_requires_two_expanded_bars_and_third_momentum():
         (100.0, 100.8, 99.8, 100.5),
         (100.5, 101.3, 100.3, 101.0),
         (101.0, 101.9, 100.8, 101.5),
-        (101.5, 103.6, 101.4, 103.3),  # displacement 1
-        (103.3, 104.7, 103.2, 104.5),  # displacement 2
-        (104.4, 104.95, 104.35, 104.9),  # third candle retains momentum
+        (101.5, 103.6, 101.4, 103.3),
+        (103.3, 104.7, 103.2, 104.5),
+        (104.4, 104.95, 104.35, 104.9),
     ])
     ts = q.index[-1]
     assert displacement_sequence_prebreak(q, ts, q.iloc[-1], "L", resistance, p, pad=0.10)
@@ -126,9 +126,9 @@ def test_displacement_prebreak_requires_two_expanded_bars_and_third_momentum():
 def test_weak_break_pullback_15m_three_bar_continuation():
     p = core.Params()
     h15 = frame([
-        (100.5, 101.8, 100.2, 101.5),  # bar 1: break
-        (101.5, 101.6, 100.4, 101.0),  # bar 2: controlled pullback
-        (101.0, 103.0, 100.9, 102.8),  # bar 3: momentum continuation
+        (100.5, 101.8, 100.2, 101.5),
+        (101.5, 101.6, 100.4, 101.0),
+        (101.0, 103.0, 100.9, 102.8),
     ], start="2026-08-18 10:00", freq="15min")
     pending = core.PendingBreakout("L", "R1", pd.Timestamp("2026-08-18 10:05", tz=core.TZ), 100.0, 101.0)
     confirmed = fifteen_minute_three_bar_continuation(
@@ -154,3 +154,27 @@ def test_range_day_near_zone_loses_entry_authority_but_is_preserved(monkeypatch)
     assert [x.id for x in out] == ["NEAR", "FAR"]
     assert out[0].entry_authorized is False
     assert out[1].entry_authorized is True
+
+
+def test_range_room_reconstructs_optional_previous_close_context(monkeypatch):
+    p = core.Params()
+    pm = frame(
+        [(105.0, 110.0, 100.0, 105.0)] * 12,
+        start="2026-08-18 04:00", freq="25min",
+    )
+    env = {"full5": pm, "pdm": {}, "pwm": {}}
+    seen = {}
+    monkeypatch.setattr(core, "prev_maps", lambda *args, **kwargs: ({}, {}, {"2026-08-18": 104.0}))
+
+    def fake_plan(full5, dte, pdm, pwm, pcm):
+        seen["pcm"] = pcm
+        return SimpleNamespace(pm_structure="TREND")
+
+    monkeypatch.setattr(core, "premarket_plan", fake_plan)
+    out = _range_room_authorization(
+        [loc("R", 140.0, 141.0, "FAR")], env,
+        pd.Timestamp("2026-08-18").date(),
+        pd.Timestamp("2026-08-18 09:30", tz=core.TZ), p,
+    )
+    assert seen["pcm"] == {"2026-08-18": 104.0}
+    assert out[0].entry_authorized is True
