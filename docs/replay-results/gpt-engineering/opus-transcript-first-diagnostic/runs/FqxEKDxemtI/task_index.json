@@ -1,0 +1,19 @@
+{
+  "artifact": "opus-transcript-first-task-index-v2",
+  "status": "AWAITING_FRESH_OPUS_READER",
+  "video_id": "FqxEKDxemtI",
+  "diagnostic_category": "TRUE_NEGATIVE_FIXED_STOP_CONTROL",
+  "transcript_path": "src/engine/extraction/fixtures/source-evidence/FqxEKDxemtI.transcript.txt",
+  "transcript_sha256": "bb16d5ea96244d5258cf65f004899719bf6645c229d651344c518f7308d93b22",
+  "transcript_char_len": 14000,
+  "task_path": "C:\\Users\\tonio\\Projects\\wt-claude-worker1-20260815\\docs\\replay-results\\gpt-engineering\\opus-transcript-first-diagnostic\\runs\\FqxEKDxemtI\\opus_source_reader_task.txt",
+  "task_sha256": "5126072721c8d4f96ebd173da334f374561741a45c6813f15c12320c1ce923ca",
+  "required_model_override": "opus",
+  "required_reader_role": "OPUS_LEAD_SOURCE_READER",
+  "semantic_blindness": {
+    "legacy_extraction_opened_by_emit": false,
+    "legacy_semantics_in_prompt": false,
+    "construction": "static source-reader contract + exact transcript bytes only"
+  },
+  "next_step": "Dispatch ONE fresh Claude Code subagent with model override=opus and give it ONLY opus_source_reader_task.txt. Save its raw final text verbatim. Create an invocation receipt bound to this task/transcript, then run ingest."
+}

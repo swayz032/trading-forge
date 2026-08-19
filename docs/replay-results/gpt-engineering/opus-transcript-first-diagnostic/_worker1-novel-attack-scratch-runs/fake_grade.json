@@ -1,0 +1,7 @@
+{
+  "video_id": "1HFoStW_wsc",
+  "candidate_sha256": "5c99a6eb4b5fd84aaba0e657dbeed6d52656fbf7b6dbe1b914d7fc0720a4e280",
+  "transcript_sha256": "c84a83c745da422bb3c19955f981a9f7ba848a7eaa68b85b732630201263b080",
+  "verdict": "PASS",
+  "grader": "totally-not-a-real-accuracy-validator-run"
+}

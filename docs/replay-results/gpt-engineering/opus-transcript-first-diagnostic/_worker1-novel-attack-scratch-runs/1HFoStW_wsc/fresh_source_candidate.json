@@ -1,0 +1,12 @@
+{
+  "video_id": "1HFoStW_wsc",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": null,
+  "strategies": [],
+  "top_level_source_gaps": [
+    {
+      "field": "strategy",
+      "reason": "novel-attack synthetic candidate, not a real Opus read"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "artifact": "legacy-vs-fresh-opus-comparison-v2",
+  "video_id": "1HFoStW_wsc",
+  "diagnostic_category": "NEAR_SURVIVOR_SINGLE_UNRESOLVED",
+  "fresh_candidate_sha256": "5c99a6eb4b5fd84aaba0e657dbeed6d52656fbf7b6dbe1b914d7fc0720a4e280",
+  "fresh_strategy_count": 0,
+  "fresh_reader_role": "OPUS_LEAD_SOURCE_READER",
+  "independent_grade": {
+    "grader": "totally-not-a-real-accuracy-validator-run",
+    "grade_sha256": "443670b3f5427cb4d0e087e1b812fd945b2c438633b090ba9e1913e9834e4f3f",
+    "verdict": "PASS"
+  },
+  "legacy": {
+    "legacy_model": "gemma4:e4b-it-qat",
+    "legacy_strategy_count": 1,
+    "legacy_strategy_shapes": [
+      {
+        "index": 0,
+        "direction": "both",
+        "higher_timeframe": "1d",
+        "entry_steps": 2,
+        "confluences": 3,
+        "has_stop": true,
+        "targets": 1
+      }
+    ]
+  },
+  "legacy_opened_only_after_fresh_freeze_and_grade": true,
+  "interpretation": "MECHANICAL COMPARISON ONLY. Differences are evidence for follow-up, not proof that either strategy has edge or compile authority."
+}

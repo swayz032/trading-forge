@@ -1,0 +1,19 @@
+{
+  "artifact": "opus-transcript-first-task-index-v2",
+  "status": "AWAITING_FRESH_OPUS_READER",
+  "video_id": "1HFoStW_wsc",
+  "diagnostic_category": "NEAR_SURVIVOR_SINGLE_UNRESOLVED",
+  "transcript_path": "src/engine/extraction/fixtures/source-evidence/1HFoStW_wsc.transcript.txt",
+  "transcript_sha256": "c84a83c745da422bb3c19955f981a9f7ba848a7eaa68b85b732630201263b080",
+  "transcript_char_len": 15596,
+  "task_path": "C:\\Users\\tonio\\Projects\\wt-claude-worker1-20260815\\docs\\replay-results\\gpt-engineering\\opus-transcript-first-diagnostic\\_worker1-novel-attack-scratch-runs\\1HFoStW_wsc\\opus_source_reader_task.txt",
+  "task_sha256": "518cecc5659d38a04c769d406d96dcb850303b29fb941df6b368a23784632c9a",
+  "required_model_override": "opus",
+  "required_reader_role": "OPUS_LEAD_SOURCE_READER",
+  "semantic_blindness": {
+    "legacy_extraction_opened_by_emit": false,
+    "legacy_semantics_in_prompt": false,
+    "construction": "static source-reader contract + exact transcript bytes only"
+  },
+  "next_step": "Dispatch ONE fresh Claude Code subagent with model override=opus and give it ONLY opus_source_reader_task.txt. Save its raw final text verbatim. Create an invocation receipt bound to this task/transcript, then run ingest."
+}

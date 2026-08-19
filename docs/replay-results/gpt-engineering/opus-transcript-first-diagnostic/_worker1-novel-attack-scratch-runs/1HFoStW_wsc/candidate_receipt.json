@@ -1,0 +1,25 @@
+{
+  "artifact": "opus-transcript-first-candidate-receipt-v2",
+  "status": "FRESH_OPUS_SOURCE_CANDIDATE_NOT_CERTIFIED",
+  "video_id": "1HFoStW_wsc",
+  "diagnostic_category": "NEAR_SURVIVOR_SINGLE_UNRESOLVED",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "model_override": "opus",
+  "actual_model_identity": "NOVEL-ATTACK: not a real model call",
+  "invocation_declared": true,
+  "invocation_independently_attested": false,
+  "task_sha256": "518cecc5659d38a04c769d406d96dcb850303b29fb941df6b368a23784632c9a",
+  "transcript_sha256": "c84a83c745da422bb3c19955f981a9f7ba848a7eaa68b85b732630201263b080",
+  "raw_response_sha256": "88542183347382a9a2d5ebfc34d03248cd77f7a1027743e9a2449bf234396334",
+  "candidate_sha256": "5c99a6eb4b5fd84aaba0e657dbeed6d52656fbf7b6dbe1b914d7fc0720a4e280",
+  "validation": {
+    "strategy_count": 0,
+    "literal_quote_count": 0,
+    "literal_quote_failures": 0,
+    "identity_sequence": []
+  },
+  "legacy_semantics_visible": false,
+  "factory_authority": false,
+  "certification_required": true,
+  "next_step": "Independent grader attacks candidate against the same transcript. Do not compare to legacy extraction until that grade is frozen."
+}
