@@ -22,7 +22,11 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
         "/* Main Structure / Key Zones + TP Reaction Cluster */\n"
         "/* 15m CONTEXT · − ZOOM OUT · MOVE_AWAY_REJECTION_ORIGIN */\n"
         "drawZone.onclick = () => beginDraw('main-zone', ov5);\n"
-        "drawTp.onclick = () => beginDraw('main-tp', ov5);\n",
+        "drawTp.onclick = () => beginDraw('main-tp', ov5);\n"
+        "setData = function (fit) {\n"
+        "    refreshMain(Boolean(fit));\n"
+        "    renderClock();\n"
+        "  };\n",
         encoding="utf-8",
     )
     out = bundle(html, lwc, enhance)
@@ -40,6 +44,7 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "function save(){localStorage.setItem" not in out
     assert "try{saved=JSON.parse(window.localStorage.getItem(storeKey)||'{}')}" in out
     assert "if(!storageAvailable)return" in out
+    assert "renderClock();\n    renderLabels();" in out
 
 
 def test_v3_generator_explicitly_excludes_all_prior_v2_review_sessions():
