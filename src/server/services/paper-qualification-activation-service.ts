@@ -258,13 +258,37 @@ export function decideActivation(input: {
  * Callers call `startStream(sessionId, result.symbols)` themselves, only
  * when `result.ok === true`.
  */
-export async function verifyPaperActivation(
-  sessionId: string,
-  opts: { correlationId?: string | null } = {},
-): Promise<ActivationVerifyResult> {
+interface ResolvedActivationState {
+  session: typeof paperSessions.$inferSelect | null;
+  existingIdentity: PaperQualificationIdentity | null;
+  symbols: string[];
+  feedMode: "delayed" | "realtime" | "unknown";
+  runtimeRevision: string | null;
+  candidateVersionHash: string;
+  runEnvironmentHash: string;
+  diagnostic: PaperQualificationIdentity["diagnostic"];
+}
+
+/**
+ * The ONE place `verifyPaperActivation` reads current state and computes both hashes — used for
+ * the initial check, the lost-race re-verification, AND the F-8 post-write re-verification below.
+ * Never a second, divergent implementation of "what does 'current' mean".
+ */
+async function resolveActivationState(sessionId: string): Promise<ResolvedActivationState> {
   const [session] = await db.select().from(paperSessions).where(eq(paperSessions.id, sessionId));
+  const feedMode = resolveFeedMode();
+  const runtimeRevision = resolveRuntimeRevision();
   if (!session) {
-    return { ok: false, reason: "session_not_found" };
+    return {
+      session: null,
+      existingIdentity: null,
+      symbols: [],
+      feedMode,
+      runtimeRevision,
+      candidateVersionHash: "",
+      runEnvironmentHash: canonicalHash(buildRunEnvironmentProjection({ mode: "", firmId: null, feedMode, rawSessionConfig: null })),
+      diagnostic: { strategy_id: "", lifecycle_state: "", symbols: [], timeframe: "", mode: "", firm_id: null, feed_mode: feedMode },
+    };
   }
 
   // F-5 (GPT AR-1339A S1): NEVER the cached getSessionConfig() — identity verification must
@@ -284,9 +308,6 @@ export async function verifyPaperActivation(
     rawStrategy?.config as Record<string, unknown> | undefined,
   );
 
-  const feedMode = resolveFeedMode();
-  const runtimeRevision = resolveRuntimeRevision();
-
   const candidateProjection = cached
     ? buildCandidateProjection({
         strategyId: cached.strategyId,
@@ -303,11 +324,9 @@ export async function verifyPaperActivation(
     rawSessionConfig: session.config as PaperSessionConfigShape | null,
   });
 
-  const existingIdentity = (session.config as PaperSessionConfigWithIdentity | null)?.qualification_identity ?? null;
-
-  const result = decideActivation({
-    strategyId: cached?.strategyId ?? session.strategyId ?? null,
-    lifecycleState: cached?.lifecycleState ?? null,
+  return {
+    session,
+    existingIdentity: (session.config as PaperSessionConfigWithIdentity | null)?.qualification_identity ?? null,
     symbols,
     feedMode,
     runtimeRevision,
@@ -322,9 +341,34 @@ export async function verifyPaperActivation(
       firm_id: session.firmId ?? null,
       feed_mode: feedMode,
     },
-    existingIdentity,
-    nowIso: new Date().toISOString(),
+  };
+}
+
+function decideFromState(state: ResolvedActivationState, nowIso: string): ActivationVerifyResult {
+  return decideActivation({
+    strategyId: state.session?.strategyId ?? null,
+    lifecycleState: state.diagnostic.lifecycle_state || null,
+    symbols: state.symbols,
+    feedMode: state.feedMode,
+    runtimeRevision: state.runtimeRevision,
+    candidateVersionHash: state.candidateVersionHash,
+    runEnvironmentHash: state.runEnvironmentHash,
+    diagnostic: state.diagnostic,
+    existingIdentity: state.existingIdentity,
+    nowIso,
   });
+}
+
+export async function verifyPaperActivation(
+  sessionId: string,
+  opts: { correlationId?: string | null } = {},
+): Promise<ActivationVerifyResult> {
+  const initial = await resolveActivationState(sessionId);
+  if (!initial.session) {
+    return { ok: false, reason: "session_not_found" };
+  }
+
+  const result = decideFromState(initial, new Date().toISOString());
 
   if (!result.ok) {
     await insertAuditRowSafe({
@@ -357,22 +401,10 @@ export async function verifyPaperActivation(
       .returning({ id: paperSessions.id });
 
     if (!written) {
-      // Lost the race — re-read the winning stamp and verify against it instead of
-      // silently proceeding under a stamp this call never wrote or confirmed.
-      const [rewon] = await db.select().from(paperSessions).where(eq(paperSessions.id, sessionId));
-      const winningIdentity = (rewon?.config as PaperSessionConfigWithIdentity | null)?.qualification_identity ?? null;
-      const reverified = decideActivation({
-        strategyId: cached?.strategyId ?? session.strategyId ?? null,
-        lifecycleState: cached?.lifecycleState ?? null,
-        symbols,
-        feedMode,
-        runtimeRevision,
-        candidateVersionHash: candidateProjection ? canonicalHash(candidateProjection) : "",
-        runEnvironmentHash: canonicalHash(runEnvironmentProjection),
-        diagnostic: result.identity.diagnostic,
-        existingIdentity: winningIdentity,
-        nowIso: new Date().toISOString(),
-      });
+      // Lost the race — re-resolve current state fresh and verify against the winning
+      // stamp instead of silently proceeding under a stamp this call never wrote or confirmed.
+      const rewon = await resolveActivationState(sessionId);
+      const reverified = decideFromState(rewon, new Date().toISOString());
       if (!reverified.ok) {
         await insertAuditRowSafe({
           action: "paper.activation_verify_blocked",
@@ -390,6 +422,33 @@ export async function verifyPaperActivation(
         );
       }
       return reverified;
+    }
+
+    // F-8 (GPT AR-1341A S1): TOCTOU close. Our CAS won (we were first to stamp), but between
+    // the READ that computed this hash and the WRITE that just persisted it, some OTHER writer
+    // could have mutated the strategy/session bytes this hash covers (jsonb_set only protects
+    // against a CONCURRENT STAMP, not a concurrent semantic-field edit). Re-resolve fresh state
+    // now and confirm it STILL matches the stamp we just wrote — the one and only immutability
+    // check, reusing the same decideActivation resume-path comparison, before any caller is told
+    // ok:true. The stamp itself is never rewritten to chase newer state.
+    const postWrite = await resolveActivationState(sessionId);
+    const postWriteCheck = decideFromState(postWrite, new Date().toISOString());
+    if (!postWriteCheck.ok) {
+      await insertAuditRowSafe({
+        action: "paper.activation_verify_blocked",
+        entityType: "paper_session",
+        entityId: sessionId,
+        input: { sessionId, race: "post_stamp_toctou" },
+        result: { reason: postWriteCheck.reason },
+        status: "blocked",
+        decisionAuthority: "system",
+        correlationId: opts.correlationId ?? null,
+      });
+      logger.warn(
+        { sessionId, reason: postWriteCheck.reason },
+        "paper-qualification-activation-service: post-stamp re-verification BLOCKED (F-8 TOCTOU)",
+      );
+      return postWriteCheck;
     }
 
     await insertAuditRowSafe({
