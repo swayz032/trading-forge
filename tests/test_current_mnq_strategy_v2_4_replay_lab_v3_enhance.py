@@ -43,6 +43,28 @@ def test_v3_zone_capture_records_how_trader_found_the_level_on_same_main_chart()
     assert "after price moves away hard" in js
 
 
+def test_v3_price_drawings_reproject_after_zoom_pan_and_click_sets_exact_tp_level():
+    js = _js()
+    assert "const DRAW_TICK = 0.25" in js
+    assert "function snapToTick(price)" in js
+    assert "function scheduleOverlaySync()" in js
+    assert "requestAnimationFrame(() =>" in js
+    assert "main.chart.timeScale().subscribeVisibleLogicalRangeChange(scheduleOverlaySync)" in js
+    assert "panel5.addEventListener('wheel', scheduleOverlaySync" in js
+    assert "panel5.addEventListener('pointermove', scheduleOverlaySync" in js
+    assert "panel5.addEventListener('pointerup', scheduleOverlaySync" in js
+    assert "function pointerY(e)" in js
+    assert "e.clientY - r.top" in js
+    assert "const dragPixels = Math.abs(endY - mainDragY)" in js
+    assert "dragPixels <= 4" in js
+    assert "TRADER_TP_LEVEL_CLICK" in js
+    assert "TRADER_REACTION_CLUSTER_DRAG" in js
+    assert "tp.lo === tp.hi" in js
+    assert "exact TP level" in js
+    assert "paintBand(ctx, d.w" in js
+    assert "ctx.moveTo(0, Math.round(top) + 0.5)" in js
+
+
 def test_v3_one_scenario_has_one_final_trade_and_same_minute_wait_is_deduplicated():
     js = _js()
     assert "if (l.final_action) return;" in js
