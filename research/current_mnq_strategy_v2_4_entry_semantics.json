@@ -1,6 +1,6 @@
 {
-  "schema_version": 3,
-  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-3",
+  "schema_version": 4,
+  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-4",
   "frozen_at": "2026-08-18",
   "purpose": "Bind the trader-confirmed distinction between ordinary momentum, true displacement, rejection-trigger sequences, normal post-break continuation, 15m three-bar continuation after a weak break, and the only two permitted pre-break early-entry families.",
   "core_equation": "AUTHORIZED_LOCATION_AND_ROOM + VALID_CANDLE_STORY + DIRECTIONAL_MOMENTUM_TRIGGER",
@@ -51,7 +51,10 @@
       },
       {
         "name": "DISPLACEMENT_SEQUENCE_INTO_LEVEL",
-        "rule": "A genuine displacement drive heads directly toward the key zone. At least one of the first two drive candles must be true displacement; the other may be ordinary directional momentum because every strong candle is not displacement. The third candle must retain directional momentum. If the third candle reverses color/control, no early entry."
+        "rule": "A genuine displacement drive heads directly toward the key zone. At least one of the first two drive candles must be true displacement; the other may be ordinary directional momentum because every strong candle is not displacement. The THIRD candle is the timing trigger and must retain directional momentum while price is close to the authorized key level. If the third candle reverses color/control, no early entry.",
+        "fvg_relationship": "IRRELEVANT_TO_ENTRY_AUTHORITY",
+        "fvg_required": false,
+        "note": "A three-candle sequence may incidentally form an FVG, but the trader does not use FVG formation to authorize this entry. The rule is about the third candle of the displacement drive retaining momentum near the key level."
       }
     ],
     "all_other_pre_break_entries": "NO_TRADE"
