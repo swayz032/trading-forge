@@ -10,6 +10,7 @@ import { computeAndPersistSessionFeedback } from "../services/paper-session-feed
 import { detectDrift } from "../services/drift-detection-service.js";
 import { calculateCorrelation, portfolioCorrelationMatrix } from "../services/correlation-service.js";
 import { startStream, stopStream, stopAllStreams, getActiveStreams, isStreaming, getBarBuffer, runSerializedPerSession } from "../services/paper-trading-stream.js";
+import { verifyPaperActivation } from "../services/paper-qualification-activation-service.js";
 import { logShadowSignal } from "../services/shadow-service.js";
 import { cleanupSession } from "../services/paper-signal-service.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
@@ -187,21 +188,18 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
       correlationId: req.id ?? null,
     }).catch((auditErr) => req.log.warn({ auditErr, sessionId: session.id }, "paper.evidence_labels_stamped audit write failed (non-blocking)"));
 
-    // Look up strategy symbol(s) and start the Massive WS stream
+    // AR-1155: resolve + verify the qualification-activation identity (candidate,
+    // exit-config, run/feed identity, TF_RUNTIME_REVISION — stamped once, verified
+    // on every later call) before starting the Massive WS stream. startStream()
+    // only runs when verification returns ok:true.
     try {
-      const [strat] = await db.select().from(strategies).where(eq(strategies.id, strategyId));
-      const symbols: string[] = [];
-      if (strat?.symbol) symbols.push(strat.symbol);
-      // Also check config for additional symbols
-      const stratConfig = strat?.config as Record<string, unknown> | undefined;
-      if (stratConfig?.symbol && !symbols.includes(String(stratConfig.symbol))) {
-        symbols.push(String(stratConfig.symbol));
-      }
-      if (symbols.length > 0) {
-        startStream(session.id, symbols);
-        req.log.info({ sessionId: session.id, symbols }, "Paper stream started for session");
+      const activation = await verifyPaperActivation(session.id, { correlationId: req.id ?? null });
+      if (activation.ok) {
+        startStream(session.id, activation.symbols);
+        req.log.info({ sessionId: session.id, symbols: activation.symbols }, "Paper stream started for session");
       } else {
-        req.log.warn({ sessionId: session.id, strategyId }, "No symbols found — stream not started");
+        req.log.warn({ sessionId: session.id, strategyId, reason: activation.reason }, "Activation verify blocked — stream not started");
+        throw new Error(`activation_blocked: ${activation.reason}`);
       }
     } catch (streamErr) {
       // Track C.2: stream startup failure — write audit + Discord WARN + mark session failed_to_stream.
