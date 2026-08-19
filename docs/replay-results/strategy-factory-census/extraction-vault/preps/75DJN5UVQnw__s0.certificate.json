@@ -1,0 +1,285 @@
+{
+  "conditions": [
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "Now, for a supply zone, this is where aggressive sellers stepped in and overwhelmed buyers, driving price down.",
+      "char_span": [
+        2784,
+        2895
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Identical quote to item 1, verbatim match to the claimed zone-formation condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "And that imbalance is what causes those sharp moves up and down that we see on our chart. And this is why it matters. Institutions cannot place an order this big and hide it. Their size leaves footprints. And if we can recognize where they've been active, we can position ourselves to trade with them instead of against them. And supply and demand zones are the footprints that they leave behind.",
+      "char_span": [
+        2008,
+        2404
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote ties imbalance to institutional footprints, but never mentions 'potential reversal', which the claim adds without support."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "And for a supply zone, a small green candle right before a strong red imbalance candle. I'm going to mark this from the open to the high.",
+      "char_span": [
+        4026,
+        4163
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote explicitly identifies the base (green) candle before the red imbalance candle and says to mark from open to high, matching the claim."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "And supply and demand zones are the footprints that they leave behind.",
+      "char_span": [
+        2334,
+        2404
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote only asserts zones ARE footprints generally; it does not address the act of 'defining zone boundaries' that the claim describes."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "And in this case, we can see that buyers started to weaken. And as soon as we tapped into the zone, sellers stepped in. This to me is a sign that this could be a solid entry point.",
+      "char_span": [
+        5284,
+        5464
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote directly describes buyers weakening and sellers stepping in on the retest as the signal for a solid entry, matching the claim."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "This is what's going to actually give me the confirmation to take the trade, not just seeing price come tap into the zone.",
+      "char_span": [
+        4520,
+        4642
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote says an unspecified 'this' (not zone-tap alone) confirms entry, but doesn't itself name 'institutional interest' as the confirming factor."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "Now, in this case, I'll stay on the 5minut, and I usually like to look for, you know, some level of support or resistance or um a trend line break or some sort of other confirmation for entry.",
+      "char_span": [
+        5606,
+        5798
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote lists staying on 5-minute chart and looking for support/resistance, trendline break, or other confirmation for entry, matching the claim closely."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "So for me, I'm going to go ahead and scale down to a lower time frame like the 5 minute, 1 minute, or even the 15-second to refine my entry.",
+      "char_span": [
+        5465,
+        5605
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote says lower timeframes (5m/1m/15s) refine entry, but doesn't itself state this is 'for the larger zone' as the claim frames it."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "Now, for a supply zone, this is where aggressive sellers stepped in and overwhelmed buyers, driving price down.",
+      "char_span": [
+        2784,
+        2895
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Identical quote to item 1, verbatim match to the claimed zone-formation condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "And so, supply zones are going to be found above the current price.",
+      "char_span": [
+        2896,
+        2963
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote is a near-verbatim statement that supply zones are found above current price, matching the claim exactly."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "And as soon as we tapped into the zone, sellers stepped in. This to me is a sign that this could be a solid entry point.",
+      "char_span": [
+        5344,
+        5464
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote states sellers stepped in on zone tap as a sign of a solid entry point, matching the claim's substance."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "I'll just set my stop above the key level that I used to enter at",
+      "char_span": [
+        5914,
+        5979
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote confirms stop is placed above the entry/key level, but never mentions protecting against a 'false breakout', which the claim adds."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "target the next level of liquidity below.",
+      "char_span": [
+        5984,
+        6025
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote directly states targeting the next liquidity level below, matching the claim's substance even without the word 'entry' explicit."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "75DJN5UVQnw",
+    "full_transcript_sha256": "7e8605f74ae203092e1524ec384d59326902384a79213ae32c887ac8a8c114e8",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 5,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 8
+  },
+  "dry_run": false
+}
