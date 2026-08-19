@@ -12,37 +12,7 @@
         "verdict": "context",
         "control_gate_passed": true,
         "support": "confirmed",
-        "support_justification": "Identical quote to item 1, verbatim match to the claimed zone-formation condition."
-      }
-    },
-    {
-      "surface_class": "context",
-      "classifying_tier": null,
-      "quote_anchor": "And that imbalance is what causes those sharp moves up and down that we see on our chart. And this is why it matters. Institutions cannot place an order this big and hide it. Their size leaves footprints. And if we can recognize where they've been active, we can position ourselves to trade with them instead of against them. And supply and demand zones are the footprints that they leave behind.",
-      "char_span": [
-        2008,
-        2404
-      ],
-      "adjudication_verdict": {
-        "verdict": "context",
-        "control_gate_passed": true,
-        "support": "partial",
-        "support_justification": "Quote ties imbalance to institutional footprints, but never mentions 'potential reversal', which the claim adds without support."
-      }
-    },
-    {
-      "surface_class": "context",
-      "classifying_tier": 3,
-      "quote_anchor": "And for a supply zone, a small green candle right before a strong red imbalance candle. I'm going to mark this from the open to the high.",
-      "char_span": [
-        4026,
-        4163
-      ],
-      "adjudication_verdict": {
-        "verdict": "context",
-        "control_gate_passed": true,
-        "support": "confirmed",
-        "support_justification": "Quote explicitly identifies the base (green) candle before the red imbalance candle and says to mark from open to high, matching the claim."
+        "support_justification": "The quote is a near-verbatim statement of the supply-zone definition in the condition."
       }
     },
     {
@@ -57,27 +27,57 @@
         "verdict": "context",
         "control_gate_passed": true,
         "support": "partial",
-        "support_justification": "Quote only asserts zones ARE footprints generally; it does not address the act of 'defining zone boundaries' that the claim describes."
+        "support_justification": "The quote grounds the institutional-footprint idea but says nothing about imbalance or potential reversal."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "And for a supply zone, a small green candle right before a strong red imbalance candle. I'm going to mark this from the open to the high.",
+      "char_span": [
+        4026,
+        4163
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The trader explicitly identifies the base candle before the imbalance candle and marks open to high."
       }
     },
     {
       "surface_class": "context",
       "classifying_tier": 3,
-      "quote_anchor": "And in this case, we can see that buyers started to weaken. And as soon as we tapped into the zone, sellers stepped in. This to me is a sign that this could be a solid entry point.",
+      "quote_anchor": "And that tells me that an institution probably stepped in here. So I'm going to mark this area from open to high as a supply zone.",
       "char_span": [
-        5284,
-        5464
+        5057,
+        5187
       ],
       "adjudication_verdict": {
         "verdict": "context",
         "control_gate_passed": true,
         "support": "confirmed",
-        "support_justification": "Quote directly describes buyers weakening and sellers stepping in on the retest as the signal for a solid entry, matching the claim."
+        "support_justification": "The quote ties the institutional inference directly to marking the open-to-high zone boundaries."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "And in this case, we can see that buyers started to weaken. And as soon as we tapped into the zone, sellers stepped in.",
+      "char_span": [
+        5284,
+        5403
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states buyers weakening and sellers stepping in exactly at the zone tap."
       }
     },
     {
       "surface_class": "gate-strength",
-      "classifying_tier": null,
+      "classifying_tier": 3,
       "quote_anchor": "This is what's going to actually give me the confirmation to take the trade, not just seeing price come tap into the zone.",
       "char_span": [
         4520,
@@ -86,8 +86,8 @@
       "adjudication_verdict": {
         "verdict": "gate-strength",
         "control_gate_passed": true,
-        "support": "partial",
-        "support_justification": "Quote says an unspecified 'this' (not zone-tap alone) confirms entry, but doesn't itself name 'institutional interest' as the confirming factor."
+        "support": "confirmed",
+        "support_justification": "The trader explicitly names the post-tap confirmation, not the tap itself, as what triggers the trade."
       }
     },
     {
@@ -102,12 +102,12 @@
         "verdict": "gate-strength",
         "control_gate_passed": true,
         "support": "confirmed",
-        "support_justification": "Quote lists staying on 5-minute chart and looking for support/resistance, trendline break, or other confirmation for entry, matching the claim closely."
+        "support_justification": "The quote names the 5-minute timeframe and the support/resistance or trendline-break confirmation for entry."
       }
     },
     {
       "surface_class": "context",
-      "classifying_tier": null,
+      "classifying_tier": 3,
       "quote_anchor": "So for me, I'm going to go ahead and scale down to a lower time frame like the 5 minute, 1 minute, or even the 15-second to refine my entry.",
       "char_span": [
         5465,
@@ -116,23 +116,23 @@
       "adjudication_verdict": {
         "verdict": "context",
         "control_gate_passed": true,
-        "support": "partial",
-        "support_justification": "Quote says lower timeframes (5m/1m/15s) refine entry, but doesn't itself state this is 'for the larger zone' as the claim frames it."
+        "support": "confirmed",
+        "support_justification": "The quote states scaling to lower timeframes specifically to refine the entry."
       }
     },
     {
       "surface_class": "context",
       "classifying_tier": 3,
-      "quote_anchor": "Now, for a supply zone, this is where aggressive sellers stepped in and overwhelmed buyers, driving price down.",
+      "quote_anchor": "this is where aggressive sellers stepped in and overwhelmed buyers, driving price down",
       "char_span": [
-        2784,
-        2895
+        2808,
+        2894
       ],
       "adjudication_verdict": {
         "verdict": "context",
         "control_gate_passed": true,
         "support": "confirmed",
-        "support_justification": "Identical quote to item 1, verbatim match to the claimed zone-formation condition."
+        "support_justification": "Verbatim expression of the aggressive-seller zone-formation condition."
       }
     },
     {
@@ -147,11 +147,11 @@
         "verdict": "context",
         "control_gate_passed": true,
         "support": "confirmed",
-        "support_justification": "Quote is a near-verbatim statement that supply zones are found above current price, matching the claim exactly."
+        "support_justification": "The quote states directly that supply zones are found above current price."
       }
     },
     {
-      "surface_class": "context",
+      "surface_class": "gate-strength",
       "classifying_tier": 3,
       "quote_anchor": "And as soon as we tapped into the zone, sellers stepped in. This to me is a sign that this could be a solid entry point.",
       "char_span": [
@@ -159,10 +159,10 @@
         5464
       ],
       "adjudication_verdict": {
-        "verdict": "context",
+        "verdict": "gate-strength",
         "control_gate_passed": true,
         "support": "confirmed",
-        "support_justification": "Quote states sellers stepped in on zone tap as a sign of a solid entry point, matching the claim's substance."
+        "support_justification": "The quote links sellers stepping in at the zone tap to it being a solid entry point."
       }
     },
     {
@@ -177,22 +177,22 @@
         "verdict": "context",
         "control_gate_passed": true,
         "support": "partial",
-        "support_justification": "Quote confirms stop is placed above the entry/key level, but never mentions protecting against a 'false breakout', which the claim adds."
+        "support_justification": "Stop placement above the entry level is supported, but the false-breakout rationale is not in the quote."
       }
     },
     {
       "surface_class": "context",
       "classifying_tier": 3,
-      "quote_anchor": "target the next level of liquidity below.",
+      "quote_anchor": "target the next level of liquidity below",
       "char_span": [
         5984,
-        6025
+        6024
       ],
       "adjudication_verdict": {
         "verdict": "context",
         "control_gate_passed": true,
         "support": "confirmed",
-        "support_justification": "Quote directly states targeting the next liquidity level below, matching the claim's substance even without the word 'entry' explicit."
+        "support_justification": "The quote states targeting the next liquidity level below."
       }
     }
   ],
@@ -276,10 +276,10 @@
   "diagnosis": {
     "unanchored": 0,
     "coverage_miss": 0,
-    "classification_fallthrough_unresolved": 5,
+    "classification_fallthrough_unresolved": 2,
     "tier3_fail": 0,
     "lint_fail": 0,
-    "ok": 8
+    "ok": 11
   },
   "dry_run": false
 }

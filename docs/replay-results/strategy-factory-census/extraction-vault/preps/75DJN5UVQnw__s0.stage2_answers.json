@@ -1,15 +1,15 @@
 {
-  "75DJN5UVQnw-S0-B000": {"support": "confirmed", "justification": "Quote states verbatim that aggressive sellers overwhelmed buyers driving price down, exactly matching the claimed zone-formation condition."},
-  "75DJN5UVQnw-S0-B001": {"support": "partial", "justification": "Quote ties imbalance to institutional footprints, but never mentions 'potential reversal', which the claim adds without support."},
-  "75DJN5UVQnw-S0-B002": {"support": "confirmed", "justification": "Quote explicitly identifies the base (green) candle before the red imbalance candle and says to mark from open to high, matching the claim."},
-  "75DJN5UVQnw-S0-B003": {"support": "partial", "justification": "Quote only asserts zones ARE footprints generally; it does not address the act of 'defining zone boundaries' that the claim describes."},
-  "75DJN5UVQnw-S0-B004": {"support": "confirmed", "justification": "Quote directly describes buyers weakening and sellers stepping in on the retest as the signal for a solid entry, matching the claim."},
-  "75DJN5UVQnw-S0-B005": {"support": "partial", "justification": "Quote says an unspecified 'this' (not zone-tap alone) confirms entry, but doesn't itself name 'institutional interest' as the confirming factor."},
-  "75DJN5UVQnw-S0-B006": {"support": "confirmed", "justification": "Quote lists staying on 5-minute chart and looking for support/resistance, trendline break, or other confirmation for entry, matching the claim closely."},
-  "75DJN5UVQnw-S0-B007": {"support": "partial", "justification": "Quote says lower timeframes (5m/1m/15s) refine entry, but doesn't itself state this is 'for the larger zone' as the claim frames it."},
-  "75DJN5UVQnw-S0-B008": {"support": "confirmed", "justification": "Identical quote to item 1, verbatim match to the claimed zone-formation condition."},
-  "75DJN5UVQnw-S0-B009": {"support": "confirmed", "justification": "Quote is a near-verbatim statement that supply zones are found above current price, matching the claim exactly."},
-  "75DJN5UVQnw-S0-B010": {"support": "confirmed", "justification": "Quote states sellers stepped in on zone tap as a sign of a solid entry point, matching the claim's substance."},
-  "75DJN5UVQnw-S0-B011": {"support": "partial", "justification": "Quote confirms stop is placed above the entry/key level, but never mentions protecting against a 'false breakout', which the claim adds."},
-  "75DJN5UVQnw-S0-B012": {"support": "confirmed", "justification": "Quote directly states targeting the next liquidity level below, matching the claim's substance even without the word 'entry' explicit."}
+  "75DJN5UVQnw-S0-B000": {"support": "confirmed", "justification": "The quote is a near-verbatim statement of the supply-zone definition in the condition."},
+  "75DJN5UVQnw-S0-B001": {"support": "partial", "justification": "The quote grounds the institutional-footprint idea but says nothing about imbalance or potential reversal."},
+  "75DJN5UVQnw-S0-B002": {"support": "confirmed", "justification": "The trader explicitly identifies the base candle before the imbalance candle and marks open to high."},
+  "75DJN5UVQnw-S0-B003": {"support": "confirmed", "justification": "The quote ties the institutional inference directly to marking the open-to-high zone boundaries."},
+  "75DJN5UVQnw-S0-B004": {"support": "confirmed", "justification": "The quote states buyers weakening and sellers stepping in exactly at the zone tap."},
+  "75DJN5UVQnw-S0-B005": {"support": "confirmed", "justification": "The trader explicitly names the post-tap confirmation, not the tap itself, as what triggers the trade."},
+  "75DJN5UVQnw-S0-B006": {"support": "confirmed", "justification": "The quote names the 5-minute timeframe and the support/resistance or trendline-break confirmation for entry."},
+  "75DJN5UVQnw-S0-B007": {"support": "confirmed", "justification": "The quote states scaling to lower timeframes specifically to refine the entry."},
+  "75DJN5UVQnw-S0-B008": {"support": "confirmed", "justification": "Verbatim expression of the aggressive-seller zone-formation condition."},
+  "75DJN5UVQnw-S0-B009": {"support": "confirmed", "justification": "The quote states directly that supply zones are found above current price."},
+  "75DJN5UVQnw-S0-B010": {"support": "confirmed", "justification": "The quote links sellers stepping in at the zone tap to it being a solid entry point."},
+  "75DJN5UVQnw-S0-B011": {"support": "partial", "justification": "Stop placement above the entry level is supported, but the false-breakout rationale is not in the quote."},
+  "75DJN5UVQnw-S0-B012": {"support": "confirmed", "justification": "The quote states targeting the next liquidity level below."}
 }
