@@ -11,6 +11,7 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
@@ -24,6 +25,7 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
@@ -47,6 +49,22 @@ jobs:
             tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py
       - name: Generate interactive V3 replay pack on contaminated development data
         run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_generate
+      - name: Bind cross-timeframe trader drawing layer
+        run: |
+          set -euo pipefail
+          pack="research/_mnq_v24_replay_lab_v3/pack"
+          cp research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js "$pack/replay_v3_enhance.js"
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '<script src="replay_v3_enhance.js"></script>'
+          if marker not in text:
+              text = text.replace('</body>', marker + '</body>')
+          p.write_text(text, encoding='utf-8')
+          PY
+          grep -q 'replay_v3_enhance.js' "$pack/review_v3.html"
+          grep -q 'paintLayer(ov5, c5, l.trader_zones, l.trader_tp_reaction_cluster)' "$pack/replay_v3_enhance.js"
       - name: Vendor pinned TradingView Lightweight Charts 5.2.0
         run: |
           set -euo pipefail
@@ -66,6 +84,7 @@ jobs:
             research/_mnq_v24_replay_lab_v3/pack/review_pack_v3.json
             research/_mnq_v24_replay_lab_v3/pack/labels_template_v3.json
             research/_mnq_v24_replay_lab_v3/pack/receipt_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/replay_v3_enhance.js
             research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js
           if-no-files-found: error
       - name: Upload hidden V3 bot answer key — do not open before labels freeze
