@@ -3,7 +3,7 @@ from pathlib import Path
 from research.current_mnq_strategy_v2_4_replay_lab_v3_bundle import bundle
 
 
-def test_v3_bundle_inlines_required_browser_runtimes(tmp_path):
+def test_v3_bundle_inlines_required_browser_runtimes_and_unified_main_controls(tmp_path):
     html = tmp_path / "review_v3.html"
     lwc = tmp_path / "lightweight-charts.standalone.production.js"
     enhance = tmp_path / "replay_v3_enhance.js"
@@ -14,7 +14,11 @@ def test_v3_bundle_inlines_required_browser_runtimes(tmp_path):
     )
     lwc.write_text("window.LightweightCharts={};", encoding="utf-8")
     enhance.write_text(
-        "if (l.final_action) return; /* RESET DECISION */",
+        "if (l.final_action) return; /* RESET DECISION */\n"
+        "/* Main Structure / Key Zones + TP Reaction Cluster */\n"
+        "/* 15m CONTEXT · − ZOOM OUT · MOVE_AWAY_REJECTION_ORIGIN */\n"
+        "drawZone.onclick = () => beginDraw('main-zone', ov5);\n"
+        "drawTp.onclick = () => beginDraw('main-tp', ov5);\n",
         encoding="utf-8",
     )
     out = bundle(html, lwc, enhance)
@@ -23,6 +27,10 @@ def test_v3_bundle_inlines_required_browser_runtimes(tmp_path):
     assert "window.LightweightCharts={};" in out
     assert "RESET DECISION" in out
     assert "if (l.final_action) return;" in out
+    assert "Main Structure / Key Zones + TP Reaction Cluster" in out
+    assert "MOVE_AWAY_REJECTION_ORIGIN" in out
+    assert "beginDraw('main-zone', ov5)" in out
+    assert "beginDraw('main-tp', ov5)" in out
 
 
 def test_v3_generator_explicitly_excludes_all_prior_v2_review_sessions():
