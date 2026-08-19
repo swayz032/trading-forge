@@ -50,6 +50,7 @@ import { LifecycleService } from "./services/lifecycle-service.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { runPythonModule } from "./lib/python-runner.js";
 import { startStream, stopStream, isStreaming, getActiveStreams, getStreamHealth, getBarBuffer } from "./services/paper-trading-stream.js";
+import { verifyPaperActivation } from "./services/paper-qualification-activation-service.js";
 import { restorePositionState, cleanupSession, restoreGovernorState, rehydratePendingEntryQueueForSession } from "./services/paper-signal-service.js";
 import { trainDeepAR, predictRegime, validatePastForecasts, isDeepARDeferred } from "./services/deepar-service.js";
 import { setRegimeWeights } from "./services/regime-state-service.js";
@@ -7284,8 +7285,31 @@ async function resumeActivePaperSessions(): Promise<void> {
         continue;
       }
 
+      // AR-1155: verify qualification-activation identity (candidate/exit/run/feed +
+      // TF_RUNTIME_REVISION) before reconnecting — boot resume is a re-verification of
+      // an existing stamp, so a runtime-revision or candidate drift refuses countable
+      // resume rather than silently reconnecting under changed executable identity.
+      const bootActivation = await verifyPaperActivation(session.id);
+      if (!bootActivation.ok) {
+        logger.warn(
+          { sessionId: session.id, reason: bootActivation.reason },
+          "AR-1155: boot resume — activation verify BLOCKED, not reconnecting stream",
+        );
+        await insertAuditRowSafe({
+          action: "paper.session_resume_blocked_activation",
+          entityType: "paper_session",
+          entityId: session.id as `${string}-${string}-${string}-${string}-${string}`,
+          status: "blocked",
+          decisionAuthority: "scheduler",
+          result: { reason: bootActivation.reason, strategyId: session.strategyId },
+        });
+        skipCount++;
+        skippedSessionIds.push(session.id);
+        continue;
+      }
+
       // Reconnect WebSocket stream
-      startStream(session.id, symbols);
+      startStream(session.id, bootActivation.symbols);
       resumeCount++;
 
       // Restore in-memory position state from DB
@@ -8282,6 +8306,31 @@ async function detectStalePaperSessions(): Promise<void> {
         logger.warn({ err: auditErr, sessionId: session.id }, "paper.session_auto_restarted: pre-attempt audit write failed");
       });
 
+      // AR-1155: verify qualification-activation identity BEFORE flipping status to
+      // `active` — a failed_to_stream session is always a resume (the stamp was set
+      // at original /api/paper/start), so a runtime-revision or candidate drift must
+      // refuse countable restart and leave the row in `failed_to_stream` (still
+      // discoverable by this same cron next tick) rather than resurrecting the
+      // stream, or worse, stranding the row `active` with no stream and no retry.
+      const fix1Activation = await verifyPaperActivation(session.id, { correlationId });
+      if (!fix1Activation.ok) {
+        logger.warn(
+          { sessionId: session.id, reason: fix1Activation.reason },
+          "AR-1155: FIX-1 auto-restart — activation verify BLOCKED, not restarting stream",
+        );
+        await insertAuditRowSafe({
+          action: "paper.session_restart_blocked_activation",
+          entityType: "paper_session",
+          entityId: session.id,
+          status: "blocked",
+          decisionAuthority: "scheduler",
+          input: { strategyId: session.strategyId, restart_attempt: restartCount + 1 },
+          result: { reason: fix1Activation.reason },
+          correlationId,
+        });
+        continue;
+      }
+
       // Reset status to `active` so startStream + paper signal flow can process it
       await db
         .update(paperSessions)
@@ -8289,10 +8338,10 @@ async function detectStalePaperSessions(): Promise<void> {
         .set({ status: "active" as any })
         .where(eq(paperSessions.id, session.id));
 
-      startStream(session.id, symbols);
+      startStream(session.id, fix1Activation.symbols);
 
       logger.info(
-        { sessionId: session.id, symbols, restartAttempt: restartCount + 1 },
+        { sessionId: session.id, symbols: fix1Activation.symbols, restartAttempt: restartCount + 1 },
         "FIX-1: paper session stream restarted successfully",
       );
 
