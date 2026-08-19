@@ -1,0 +1,52 @@
+name: Current MNQ Strategy v2.4 Human-Bot Replay Lab
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v2-4-zone-first-candles
+    paths:
+      - 'research/current_mnq_strategy_v2_4_replay_lab.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_generate.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab.py'
+      - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'research/current_mnq_strategy_v2_4_replay_lab.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_generate.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab.py'
+      - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
+  workflow_dispatch:
+
+jobs:
+  replay-lab:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+      - name: Install frozen research dependencies
+        run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
+      - name: Prove replay-lab anti-hindsight contract
+        run: PYTHONPATH=. pytest --confcutdir=tests -q tests/test_current_mnq_strategy_v2_4_replay_lab.py
+      - name: Generate blind replay pack on contaminated development data
+        run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_generate
+      - name: Upload trader review pack — safe to open
+        uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-4-blind-replay-review-pack
+          path: |
+            research/_mnq_v24_replay_lab/pack/review.html
+            research/_mnq_v24_replay_lab/pack/review_pack.json
+            research/_mnq_v24_replay_lab/pack/labels_template.json
+            research/_mnq_v24_replay_lab/pack/receipt.json
+          if-no-files-found: error
+      - name: Upload hidden bot answer key — do not open before labels freeze
+        uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-4-hidden-replay-answer-key
+          path: research/_mnq_v24_replay_lab/pack/answer_key.json
+          if-no-files-found: error
