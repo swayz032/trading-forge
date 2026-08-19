@@ -12,9 +12,15 @@ The reference window is anchored to each candidate's own confirmation time, so
 older comparison pivots aging out of the *current* premarket window cannot silently
 reclassify a previously-known swing. All zone roles use the v2.4 reclaim/break/
 retest lifecycle. No PnL appears here.
+
+Range-day fidelity: when the causal pre-open structure is MIXED/ranging, a nearby
+structural zone is not deleted (it may still matter as a reaction/TP area), but it
+is not authorized as a fresh entry location unless price has the already-frozen
+minimum room to break out of the range before reaching that zone.
 """
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 import math
 from pathlib import Path
@@ -119,9 +125,6 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
     refs = refs or []
     native_fvgs = native_fvgs or []
 
-    # `history` contains all wick-valid pivots knowable by asof. Candidate map
-    # membership uses today's lookback, but candidate grading below uses a
-    # separate window anchored to each candidate's confirmation timestamp.
     history = piv15[
         (piv15.confirm <= asof) &
         (pd.to_numeric(piv15.wick, errors="coerce") >= float(p.min_wick))
@@ -181,6 +184,42 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
     return sorted(chosen, key=lambda x: (x.mid, x.id))
 
 
+def _range_room_authorization(locations: list[core.Location], env: dict, dte,
+                              open_ts: pd.Timestamp, p: core.Params) -> list[core.Location]:
+    """On a causal ranging/mixed morning, do not crowd fresh entry zones.
+
+    The location is preserved even when authorization is removed so target/blocker
+    construction can still respect a nearby reaction area. No hindsight full-day
+    range label is used.
+    """
+    full5 = env["full5"]
+    plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], env["pcm"])
+    if str(plan.pm_structure) != "MIXED":
+        return locations
+    pm = full5[
+        (full5.index.date == dte) &
+        (full5.index.time >= core.PRE_START) &
+        (full5.index.time <= core.PRE_END) &
+        (full5.index < open_ts)
+    ]
+    if len(pm) < 12:
+        return locations
+    range_lo = float(pm.low.min())
+    range_hi = float(pm.high.max())
+    min_room = float(p.min_room_r) * float(p.stop)
+    out: list[core.Location] = []
+    for loc in locations:
+        authorized = bool(loc.entry_authorized)
+        if loc.side == "R":
+            travel_room = float(loc.lo) - range_hi
+            authorized = authorized and travel_room >= min_room
+        elif loc.side == "S":
+            travel_room = range_lo - float(loc.hi)
+            authorized = authorized and travel_room >= min_room
+        out.append(replace(loc, entry_authorized=bool(authorized)))
+    return out
+
+
 def build_entry_locations_v24(env: dict, dte, open_ts: pd.Timestamp,
                               p: core.Params) -> tuple[list[core.Location], list[core.Zone]]:
     """Build frozen pre-open entry map with native FVG confluence and role flips."""
@@ -206,4 +245,5 @@ def build_entry_locations_v24(env: dict, dte, open_ts: pd.Timestamp,
         established=established, refs=refs, native_fvgs=native_fvgs,
     )
     keys = core.make_key_locations(env["pdm"], env["pwm"], dte, atr15, p)
-    return established + swings + keys, established_zones + [x.zone for x in swings if x.zone is not None]
+    locations = _range_room_authorization(established + swings + keys, env, dte, open_ts, p)
+    return locations, established_zones + [x.zone for x in swings if x.zone is not None]
