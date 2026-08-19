@@ -58,6 +58,21 @@ def test_doji_rejection_then_non_displacement_momentum_can_confirm_reversal():
     assert not story.displacement
 
 
+def test_lone_zone_touching_momentum_cannot_self_confirm_rejection_story():
+    p = core.Params()
+    q = frame([
+        (104.0, 104.5, 103.5, 104.2),
+        (103.8, 104.0, 103.0, 103.3),
+        (103.1, 103.4, 102.4, 102.7),
+        (102.6, 102.9, 101.8, 102.0),
+        (99.2, 101.8, 99.0, 101.6),
+    ])
+    ts = q.index[-1]
+    story = reversal_story_v24(q, ts, q.iloc[-1], "L", loc("S", 99.0, 100.0), p, pad=0.10)
+    assert momentum_bar(q.iloc[-1], "L", p)
+    assert not story.complete
+
+
 def test_first_break_print_is_setup_then_next_momentum_confirms():
     p = core.Params()
     q = frame([

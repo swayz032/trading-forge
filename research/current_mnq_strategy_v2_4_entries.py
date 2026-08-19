@@ -111,12 +111,12 @@ def _shrinking_into_zone(frame: pd.DataFrame, end_pos: int,
 def reversal_story_v24(full5: pd.DataFrame, ts: pd.Timestamp, row,
                        direction: str, loc: core.Location,
                        p: core.Params, pad: float) -> core.Story:
-    """Zone rejection story whose final trigger is momentum, not mandatory displacement.
+    """Zone rejection/control story followed by a distinct momentum trigger.
 
     Recognized trader families include doji/pin/inside-bar -> momentum,
     shrinking candles into the level -> rejection -> reverse momentum, and two
-    momentum candles after the rejection. Pattern labels are supporting evidence;
-    geometry + zone interaction owns the decision.
+    momentum candles after the rejection. The current momentum candle may not
+    self-certify as the earlier rejection/control event.
     """
     prior = full5[full5.index < ts].tail(5)
     current = pd.DataFrame([row], index=[ts])
@@ -125,11 +125,11 @@ def reversal_story_v24(full5: pd.DataFrame, ts: pd.Timestamp, row,
         return core.Story(False, False, False, False, False, False,
                           False, False, False, False, False)
 
-    # Use the most recent valid zone event from the current bar or the preceding
-    # three completed 5m bars. This permits "pattern at level, momentum next".
+    # The rejection/control event must precede the current momentum trigger.
+    # Search only the preceding three completed 5m bars, never the trigger bar.
     start = max(0, len(q) - 4)
     event_pos = None
-    for j in range(len(q) - 1, start - 1, -1):
+    for j in range(len(q) - 2, start - 1, -1):
         if _valid_rejection_side(q.iloc[j], loc, direction, pad):
             event_pos = j
             break
