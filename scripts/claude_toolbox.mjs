@@ -103,7 +103,24 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 //   4c5f9d4a -> bbf2e6c2   (AR-1318 F36 two-location GIT_TREE receipt-state compatibility
 //                           repair + SubagentStop lifecycle finality). Descendant verified
 //                           under AR-1318A ruling with Worker commit 3c2df1d0.
-const TOOLBOX_PIN = 'bbf2e6c2e9ae39a7f0f2be182c9046165eb4b198';
+// RE-PINNED 2026-08-19, operator-authorized, on AR-1348 (worker-1 report: G2 pre-call guard
+// false-positive blocks AR-1345A Opus batch dispatch):
+//   bbf2e6c2 -> 59cfb1cd   (isG2Shaped()'s condition_ref detection matched on a bare, generic
+//                           taxonomy-vocabulary label reused verbatim across every video by
+//                           AR-1234's batch_locator format, not unique to the frozen sVkm
+//                           queue -- systemically blocking every future video's dispatch, not
+//                           just one. Repair: the bare label match stays fail-closed BY
+//                           DEFAULT unless independently proven, via a transcript hash
+//                           computed from a file read by the guard itself (never trusting the
+//                           caller), that the call does not carry the frozen packet's own
+//                           pinned transcript content. Member diff: 2 files touched
+//                           (g2-precall-guard.mjs, claude-hook-bridge.mjs) + 1 new test file,
+//                           +228/-4. RED->GREEN proved (4/6 new tests fail without the fix,
+//                           6/6 pass with it); full suite 261->267, 0 regressions; proved
+//                           against the REAL sVkm queue/receipt/native-call-manifest/
+//                           transcript artifacts, not just synthetic fixtures. Descendant
+//                           verified with `git merge-base --is-ancestor bbf2e6c2 59cfb1cd`.
+const TOOLBOX_PIN = '59cfb1cdd1a9779e2a7be406397bea52362db467';
 
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });

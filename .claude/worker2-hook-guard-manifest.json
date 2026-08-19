@@ -3,9 +3,9 @@
   "worker": "worker-2",
   "_authority": "Ports the AR-1265/1266/1268/1270/1271A native hook guard (Worker-1) to Worker-2, per operator order 2026-08-18 Phase D. Prefer A (reuse) confirmed: claude-hook-bridge.mjs / lane-boundary-guard.mjs already hardcode WORKER_1_RULES and WORKER_2_RULES symmetrically, and manifest.worker already accepts 'worker-1' or 'worker-2' -- zero changes made to the pinned toolbox. This file is the smallest Worker-2-specific adaptation (Option B): session_anchor + edit_scope data only.",
   "_what_this_is": "The manifest the pinned toolbox's claude-hook-runner.mjs requires. It does NOT restate the lane rules -- those live in lane-boundary-guard.mjs::classifyPath inside the pinned toolbox (shared, unmodified). edit_scope NARROWS this packet on top of that.",
-  "_toolbox_pin": "bbf2e6c2e9ae39a7f0f2be182c9046165eb4b198",
-  "_toolbox_bundle_sha256": "ca0b3a708d90017018aa4ac9f4ee1aca205469fbabc418bbbf3f599959da7167",
-  "_toolbox_pin_history": "SAME pin as Worker-1's current manifest (AR-1319 / AR-1318A, cpb-2026-08-18-0007). No re-pin performed. Materializing this exact pin from Worker-2's own worktree reproduced the identical bundle_sha256, measured 2026-08-18.",
+  "_toolbox_pin": "59cfb1cdd1a9779e2a7be406397bea52362db467",
+  "_toolbox_bundle_sha256": "849253f1e5a08f7c9f1e0f177d9a956e50a249612df24476a97dde6c0f36ee7d",
+  "_toolbox_pin_history": "SAME pin as Worker-1's current manifest (AR-1319 / AR-1318A, cpb-2026-08-18-0007 -> AR-1348 condition_ref false-positive repair, operator-authorized, 2026-08-19, branch guardfix/ar1348-condition-ref-collision-repair). No Worker-2-specific re-pin performed; re-pinned in lockstep with Worker-1 purely to keep the shared toolbox byte-identical (this manifest carries no g2_precall block, so the AR-1348 fix itself is inert for Worker-2's own guard evaluation). Materializing this exact pin from Worker-2's own worktree reproduced the identical bundle_sha256, measured 2026-08-19.",
   "_doorway_note": "scripts/claude_guard_hook.mjs and scripts/claude_toolbox.mjs are copied byte-for-byte from claude/worker1-h1-20260815 (sha256 verified equal on both files). Their internal comments/error strings still say 'Worker-1' in a few places -- this is a known cosmetic mislabel, not a policy difference; the manifest's own worker:'worker-2' field is what the shared bridge actually keys on.",
 
   "session_anchor": {
