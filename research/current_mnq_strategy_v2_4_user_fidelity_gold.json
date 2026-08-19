@@ -1,8 +1,8 @@
 {
-  "schema_version": 2,
-  "status": "IMMUTABLE_HASHED_V24_USER_FIDELITY_SET_V2",
-  "frozen_at": "2026-08-18",
-  "privacy": "No user screenshot bytes are committed. Only cryptographic hashes and trader-confirmed semantic labels are stored.",
+  "schema_version": 3,
+  "status": "IMMUTABLE_HASHED_V24_USER_FIDELITY_SET_V3_FORCE1",
+  "frozen_at": "2026-08-19",
+  "privacy": "No user screenshot/video bytes are committed. Only cryptographic hashes and trader-confirmed semantic labels are stored.",
   "source_archive": {
     "name": "Trading screenshots (4).zip",
     "sha256": "80b9a40a336f908c653900a71618bc92e258f36b3e1bd426891c49482d815942"
@@ -34,9 +34,9 @@
         {"name": "Screenshot 2026-08-16 075020.png", "sha256": "db867045aff322df5b6a5db050afb6cc1354b6d115700f7c8391090fca9e24e4"},
         {"name": "Screenshot 2026-08-17 221445.png", "sha256": "8ac406fe0d713c632415d380f03f9068e273374e3de792f26554fbdc80dcb562"}
       ],
-      "trader_label": "One of only two pre-break exceptions: genuine displacement drives toward the key level; the trader watches the THIRD candle of that displacement drive and enters early only if that third candle is still a directional momentum candle near the key level. If the third candle reverses control, no entry. FVG formation is irrelevant to this entry rule and is not required.",
-      "must_have": ["genuine_displacement_drive", "third_candle_directional_momentum", "approaching_authorized_key_zone"],
-      "must_not_do": ["front_run_level_on_ordinary_strong_candle", "enter_if_third_candle_reverses_control", "require_fvg_for_displacement_entry"]
+      "trader_label": "One of only two pre-break exceptions: genuine displacement drives toward the key level; the trader watches the THIRD candle of that displacement drive while it is forming and may enter before its 5-minute close only after sustained directional force is proven near the key level. If the third candle loses/reverses control, no early entry. FVG formation is irrelevant and is not required.",
+      "must_have": ["genuine_displacement_drive", "third_candle_live_directional_force", "approaching_authorized_key_zone", "entry_may_precede_5m_close"],
+      "must_not_do": ["front_run_level_on_ordinary_strong_candle", "enter_if_third_candle_reverses_control", "wait_for_5m_close_when_force_already_proven", "require_fvg_for_displacement_entry"]
     },
     {
       "id": "V24G04_REPEAT_TEST_PREBREAK_MOMENTUM",
@@ -69,6 +69,32 @@
       "trader_label": "On ranging days, do not mark fresh key zones too close to the range. Draw/authorize key zones where price has room to break out and travel before it reaches the key-level zone.",
       "must_have": ["causal_range_state", "breakout_travel_room_before_fresh_entry_zone"],
       "must_not_do": ["crowd_fresh_entry_zones_against_active_range", "delete_nearby_structure_from_reaction_context"]
+    },
+    {
+      "id": "V24G08_LIVE_MOMENTUM_FORCE_BEFORE_CANDLE_CLOSE",
+      "source_kind": "user_video_pair_plus_direct_trader_label",
+      "source_files": [
+        {"name": "Desktop 2026.08.19 - 02.12.06.01.mp4", "sha256": "1e39083c6a8078022b5c84827b63e5b63908979177407d1868521934d48d3733"},
+        {"name": "Desktop 2026.08.19 - 02.13.19.02.mp4", "sha256": "95bcbb3f7bf3893385f77eb612e2bbb82e772c546d53a3a9a816c1f4e1ce4f00"}
+      ],
+      "trader_label": "I watch the forming momentum candle like a tug of war to see whether the force is real before I enter. Price can push up/down while the candle is alive. If I waited until the 5-minute candle closed I would often enter too late. My stop is 17.25 points, so late entry creates too much drawdown risk. Enter while the candle is still forming only after sustained directional force is proven; do not enter merely because it temporarily looks like a strong candle.",
+      "must_have": [
+        "forming_candle_observation",
+        "sustained_directional_force_before_entry",
+        "tug_of_war_giveback_penalized",
+        "entry_can_occur_before_parent_candle_close",
+        "historical_decision_uses_only_information_available_at_entry_time"
+      ],
+      "must_not_do": [
+        "auto_enter_on_first_directional_burst",
+        "use_final_parent_candle_ohlc_to_authorize_an_earlier_entry",
+        "require_parent_5m_close_after_force_is_already_proven",
+        "use_future_next_candle_to_decide_force"
+      ],
+      "risk_context": {
+        "stop_points": 17.25,
+        "reason": "Entry timing is semantic/risk-critical because a late entry consumes the fixed stop's normal pullback room."
+      }
     }
   ]
 }
