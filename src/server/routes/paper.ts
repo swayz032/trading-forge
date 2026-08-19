@@ -274,6 +274,16 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
         ),
       );
       await markFailedToStream();
+      // AR-1155 F-9 (GPT AR-1341A S2): a genuine startStream() transport failure is a real
+      // failure, not a successful start — must not fall through to the success audit/SSE/201
+      // below. Session row + failed_to_stream status + audit/notification are preserved
+      // (the existing FIX-1 retry cron depends on the row and status existing).
+      res.status(503).json({
+        error: "paper_stream_start_failed",
+        message: `Paper session data-stream failed to start: ${errMsg}`,
+        sessionId: session.id,
+      });
+      return;
     }
 
     // Audit trail — paper session lifecycle
