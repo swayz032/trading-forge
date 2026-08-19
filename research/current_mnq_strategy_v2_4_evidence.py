@@ -2,8 +2,9 @@
 """Build Current MNQ v2.4 promotion evidence from actual artifacts.
 
 Positive/negative user gold is identity-bound, not merely counted. Architecture
-receipts must contain the exact SHA256 of both manifests; changing a fixture while
-preserving the row count invalidates the old fidelity evidence automatically.
+receipts must contain the exact SHA256 of the inherited positive manifest, the
+current v2.4 trader-fidelity manifest, and the tempting-NO-TRADE manifest;
+changing any fixture while preserving row counts invalidates old evidence.
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from research.current_mnq_strategy_v2_4_policy import Evidence, load_spec, seman
 
 HERE = Path(__file__).resolve().parent
 POSITIVE_GOLD = HERE / "current_mnq_strategy_v2_2_gold_set.json"
+V24_POSITIVE_GOLD = HERE / "current_mnq_strategy_v2_4_user_fidelity_gold.json"
 NEGATIVE_GOLD = HERE / "current_mnq_strategy_v2_3_no_trade_gold.json"
 
 
@@ -40,13 +42,19 @@ def _sha256(path: str | Path) -> str:
 
 
 def gold_counts() -> tuple[int, int]:
-    pos = _json(POSITIVE_GOLD); neg = _json(NEGATIVE_GOLD)
-    return len(pos.get("fixtures", [])), len(neg.get("fixtures", []))
+    inherited = _json(POSITIVE_GOLD)
+    current = _json(V24_POSITIVE_GOLD)
+    neg = _json(NEGATIVE_GOLD)
+    return (
+        len(inherited.get("fixtures", [])) + len(current.get("fixtures", [])),
+        len(neg.get("fixtures", [])),
+    )
 
 
 def gold_manifest_hashes() -> dict[str, str]:
     return {
         "positive_user_gold_sha256": _sha256(POSITIVE_GOLD),
+        "v24_user_fidelity_gold_sha256": _sha256(V24_POSITIVE_GOLD),
         "tempting_no_trade_gold_sha256": _sha256(NEGATIVE_GOLD),
     }
 
@@ -56,6 +64,7 @@ def architecture_gold_integrity(arch: dict) -> bool:
     return bool(
         arch
         and arch.get("positive_user_gold_sha256") == current["positive_user_gold_sha256"]
+        and arch.get("v24_user_fidelity_gold_sha256") == current["v24_user_fidelity_gold_sha256"]
         and arch.get("tempting_no_trade_gold_sha256") == current["tempting_no_trade_gold_sha256"]
     )
 
