@@ -63,7 +63,7 @@ jobs:
             tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py
       - name: Generate fresh-session interactive V3 replay pack on contaminated development data
         run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_generate
-      - name: Bind single-trade cross-timeframe interaction layer
+      - name: Bind unified main chart and single-trade interaction layer
         run: |
           set -euo pipefail
           pack="research/_mnq_v24_replay_lab_v3/pack"
@@ -78,7 +78,12 @@ jobs:
           p.write_text(text, encoding='utf-8')
           PY
           grep -q 'replay_v3_enhance.js' "$pack/review_v3.html"
-          grep -q 'paintLayer(ov5, c5, l.trader_zones, l.trader_tp_reaction_cluster)' "$pack/replay_v3_enhance.js"
+          grep -q 'Main Structure / Key Zones + TP Reaction Cluster' "$pack/replay_v3_enhance.js"
+          grep -q "paintLayer(ov5, main, l.trader_zones, l.trader_tp_reaction_cluster)" "$pack/replay_v3_enhance.js"
+          grep -q "drawZone.onclick = () => beginDraw('main-zone', ov5)" "$pack/replay_v3_enhance.js"
+          grep -q "drawTp.onclick = () => beginDraw('main-tp', ov5)" "$pack/replay_v3_enhance.js"
+          grep -q 'ZOOMED_OUT_HIGHER_LOWER' "$pack/replay_v3_enhance.js"
+          grep -q 'MOVE_AWAY_REJECTION_ORIGIN' "$pack/replay_v3_enhance.js"
           grep -q 'if (l.final_action) return;' "$pack/replay_v3_enhance.js"
           grep -q 'RESET DECISION' "$pack/replay_v3_enhance.js"
           grep -q 'Date.UTC' "$pack/replay_v3_enhance.js"
@@ -101,6 +106,9 @@ jobs:
           ! grep -q 'src="replay_v3_enhance.js"' "$html"
           grep -q 'RESET DECISION' "$html"
           grep -q 'if (l.final_action) return;' "$html"
+          grep -q 'Main Structure / Key Zones + TP Reaction Cluster' "$html"
+          grep -q '15m CONTEXT' "$html"
+          grep -q 'MOVE_AWAY_REJECTION_ORIGIN' "$html"
       - name: Syntax-check generated V3 browser JavaScript
         run: |
           set -euo pipefail
@@ -118,7 +126,7 @@ jobs:
           PY
           node --check /tmp/replay_v3_core.js
           node --check /tmp/replay_v3_enhance.js
-      - name: Prove fresh sessions and standalone receipt
+      - name: Prove fresh sessions, unified layout, and standalone receipt
         run: |
           python - <<'PY'
           import json
@@ -141,9 +149,20 @@ jobs:
               raise SystemExit('REPLAY_V3_RECEIPT_OVERLAP_NOT_ZERO')
           if receipt['repeated_old_sessions_used_to_fill_case_count'] is not False:
               raise SystemExit('REPLAY_V3_OLD_SESSION_FILL_NOT_FALSE')
+          if receipt['trader_requested_ui_layout'] != 'ONE_UNIFIED_MAIN_STRUCTURE_CHART_PLUS_BOTTOM_1M_ENTRY_CHART':
+              raise SystemExit('REPLAY_V3_UNIFIED_LAYOUT_RECEIPT_MISSING')
+          if receipt['key_zone_and_tp_same_main_chart_after_ci_enhancement'] is not True:
+              raise SystemExit('REPLAY_V3_KEY_ZONE_TP_NOT_UNIFIED')
+          if receipt['main_chart_timeframe_switch'] != ['5m', '15m']:
+              raise SystemExit('REPLAY_V3_MAIN_TIMEFRAME_SWITCH_MISSING')
+          if 'MOVE_AWAY_REJECTION_ORIGIN' not in receipt['zone_source_methods']:
+              raise SystemExit('REPLAY_V3_MOVE_AWAY_ZONE_SOURCE_MISSING')
           html = (pack/'review_v3.html').read_text(encoding='utf-8')
           if 'src="lightweight-charts.standalone.production.js"' in html or 'src="replay_v3_enhance.js"' in html:
               raise SystemExit('REPLAY_V3_NOT_STANDALONE')
+          for marker in ('Main Structure / Key Zones + TP Reaction Cluster', '15m CONTEXT', '− ZOOM OUT', 'MOVE_AWAY_REJECTION_ORIGIN'):
+              if marker not in html:
+                  raise SystemExit('REPLAY_V3_UNIFIED_HTML_MISSING:' + marker)
           PY
       - name: Upload V3 trader replay pack — safe bot answers withheld
         uses: actions/upload-artifact@v4
