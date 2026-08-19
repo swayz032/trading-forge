@@ -50,6 +50,15 @@ vi.mock("../../db/index.js", () => {
   const routes = new Map<unknown, Record<string, unknown>[]>();
   const insertedRows: { table: unknown; row: Record<string, unknown> }[] = [];
   const updateReturning: Record<string, unknown>[] = [{}];
+  // AR-1346A S4: the TESTING→PAPER gate chain (WFE/PBO/B14/DSR/exportability/...)
+  // issues many sequential db.select() calls of different shapes against the SAME
+  // tables the sibling-stop tests table-route by identity — a per-table route
+  // cannot disambiguate "the 3rd select against backtests" from the 1st. When a
+  // FIFO queue is armed via __setSelectQueue, it takes priority over table
+  // routing for EVERY select() call; sibling-stop's existing tests never arm it,
+  // so their table-routing behavior is unchanged.
+  let selectQueueActive = false;
+  const selectQueue: unknown[] = [];
   let paperSessionsTableRef: unknown;
   // Real column object REFERENCES (not string names) — registered by the test
   // file at beforeEach-time via __setPaperSessionsColumns, since schema.js is
@@ -73,6 +82,7 @@ vi.mock("../../db/index.js", () => {
   function makeSelectChain(table: unknown | undefined, whereCondition?: unknown) {
     const isPaperSessions = table === paperSessionsTableRef;
     const resolveRows = () => {
+      if (selectQueueActive) return selectQueue.shift() ?? [];
       const seeded = table !== undefined ? routes.get(table) ?? [] : [];
       if (isPaperSessions && whereCondition) {
         return seeded.filter((row) => conditionMatchesRow(whereCondition, row));
@@ -124,9 +134,16 @@ vi.mock("../../db/index.js", () => {
       updateReturning.length = 0;
       updateReturning.push(...rows);
     },
+    __setSelectQueue: (items: unknown[]) => {
+      selectQueueActive = true;
+      selectQueue.length = 0;
+      selectQueue.push(...items);
+    },
     __reset: () => {
       routes.clear();
       insertedRows.length = 0;
+      selectQueueActive = false;
+      selectQueue.length = 0;
     },
   };
 
@@ -170,6 +187,59 @@ vi.mock("../signal-correlation-service.js", () => ({
 const evaluatePaperToDeployReadyGatesMock = vi.fn();
 vi.mock("../../lib/paper-to-deploy-ready-gates.js", () => ({
   evaluatePaperToDeployReadyGates: (...args: unknown[]) => evaluatePaperToDeployReadyGatesMock(...args),
+}));
+
+// ─── AR-1346A S4: the TESTING→PAPER manual-path gate chain's remaining deps ──
+// (goalscan-crit-manual-path-hard-gate-parity.test.ts's mock set is the
+// verified template for driving this exact manual path; B14/WFE/paramDrift/DSR
+// are left REAL there and here too — mocking them would hide a wiring
+// regression in the actual gates. Everything below is genuinely orthogonal to
+// what this describe block is proving: PAPER-entry activation wiring.)
+const mockFreezePolicyLifecycle = vi.fn();
+vi.mock("../../lib/frozen-policy-contract.js", () => ({
+  evaluateFrozenPolicyDriftAtPromotion: vi.fn(),
+  freezePolicyForStrategy: (...args: unknown[]) => mockFreezePolicyLifecycle(...args),
+}));
+vi.mock("../../production/kill-switch.js", () => ({
+  killSwitch: { isHaltedForProduction: vi.fn().mockResolvedValue(false), isHalted: vi.fn().mockReturnValue(false) },
+}));
+const mockEvaluatePboGate = vi.fn();
+vi.mock("../../lib/pbo-gate.js", () => ({
+  evaluatePboGate: (...args: unknown[]) => mockEvaluatePboGate(...args),
+}));
+vi.mock("../../lib/bif-gate.js", () => ({
+  evaluateBifGate: vi.fn(() => ({ passed: true, reason: "bif.clean", legacyNull: false, auditPayload: {} })),
+}));
+vi.mock("../../lib/composite-shadow-gate.js", () => ({ evaluateCompositeShadow: vi.fn() }));
+vi.mock("../../lib/composite-shadow-discord-router.js", () => ({ routeShadowDisagreementAlert: vi.fn() }));
+vi.mock("../../lib/promotion-gate-orchestrator.js", () => ({
+  evaluatePromotionGates: vi.fn(), getWfePromotionFloor: vi.fn(), getCpcvMinPaths: vi.fn(),
+}));
+vi.mock("../../lib/shadow-signal-divergence-checker.js", () => ({ compareShadowToBacktest: vi.fn() }));
+vi.mock("../../lib/shadow-signal-divergence-loader.js", () => ({
+  loadDivergenceInputs: vi.fn().mockResolvedValue({ shadowSignals: [], backtestExpected: [] }),
+}));
+vi.mock("../multi-firm-promotion-service.js", () => ({ evaluateMultiFirmEligibility: vi.fn() }));
+const mockGetLatestAdversarialStressRun = vi.fn().mockResolvedValue(undefined);
+vi.mock("../adversarial-stress-service.js", () => ({
+  getLatestAdversarialStressRun: (...args: unknown[]) => mockGetLatestAdversarialStressRun(...args),
+}));
+const mockGetLatestFrankensteinRun = vi.fn().mockResolvedValue(undefined);
+vi.mock("../frankenstein-service.js", () => ({
+  getLatestFrankensteinRun: (...args: unknown[]) => mockGetLatestFrankensteinRun(...args),
+}));
+vi.mock("../../lib/quantum-agreement.js", () => ({
+  computeAgreement: vi.fn(() => ({ score: null, delta: null, fallback: true, disagreementPct: null, withinTolerance: true })),
+}));
+
+// AR-1346A S3/S4's actual target: the verifier every PAPER-entry activation
+// path (scheduler boot-resume/retry/reconnect AND this lifecycle transition)
+// must call before startStream. Mocked at the module boundary — same accepted
+// pattern as paper-start-activation-wiring.test.ts and the sibling scheduler
+// witness files.
+const mockVerifyPaperActivation = vi.fn();
+vi.mock("../paper-qualification-activation-service.js", () => ({
+  verifyPaperActivation: (...args: unknown[]) => mockVerifyPaperActivation(...args),
 }));
 
 // THE SPY THAT MATTERS: real paper-trading-stream module mocked so we can
@@ -296,5 +366,162 @@ describe("M3 sibling-stop — PAPER→DEPLOY_READY genuinely stops the internal 
     await svc.promoteStrategy(STRATEGY_ID, "PAPER", "DEPLOY_READY");
 
     expect(mockStopStream).not.toHaveBeenCalled();
+  });
+});
+
+// ─── AR-1346A S4: lifecycle PAPER-ENTRY witness (TESTING→PAPER legacy path) ───
+//
+// Drives the REAL svc.promoteStrategy(STRATEGY_ID, "TESTING", "PAPER") all the
+// way through the real TESTING→PAPER gate chain (DSL guards, invariants,
+// WF-mode, B14/WFE/paramDrift/DSR [real evaluators, verified-clean synthetic
+// data — same recipe as goalscan-crit-manual-path-hard-gate-parity.test.ts],
+// PBO, honest-DSR, exportability, frozen-policy) to reach the real
+// `if (toState === "PAPER")` activation block, which loads
+// verifyPaperActivation and calls startStream(activeSessId, activation.symbols)
+// on success. Only THAT boundary is mocked+asserted on; every surrounding gate
+// runs for real or is mocked to a clean pass, per AR-1346A S4's own
+// instruction: isolate the activation wiring, don't re-test every gate.
+describe("AR-1346A lifecycle PAPER-entry witness — TESTING→PAPER real promoteStrategy() drives the real activation block", () => {
+  let svc: LifecycleService;
+  let mockDb: MockDb;
+  const TP_STRATEGY_ID = "aaaaaaaa-2222-0000-0000-000000000001";
+  const TP_SESSION_ID = "bbbbbbbb-2222-0000-0000-000000000001";
+  const TP_BT_ID = "cccccccc-2222-0000-0000-000000000001";
+
+  const tpStrategyRow = (overrides: Record<string, unknown> = {}) => ({
+    id: TP_STRATEGY_ID,
+    name: "ar1346a-lifecycle-paper-entry-fixture",
+    symbol: "MES",
+    lifecycleState: "TESTING",
+    config: {},
+    frozenPolicyHash: null,
+    regimeTrainedOn: "TRENDING",
+    ...overrides,
+  });
+
+  const dslGuardsCleanRow = () => ({ resultExtras: { dsl_guards: { guards_failed: false } } });
+  const latestBtEvidenceRow = (overrides: Record<string, unknown> = {}) => ({
+    id: TP_BT_ID,
+    forgeScore: 75,
+    resultExtras: null,
+    createdAt: new Date().toISOString(),
+    ...overrides,
+  });
+  const cleanWalkForwardResultsRow = () => ({
+    walkForwardResults: {
+      wfe_overall: 0.95,
+      wfe_status: "cpcv_combined_fold",
+      param_stability: { drift_classification: "stable", drift_confidence: 0.9 },
+      param_stability_status: "computed",
+      wf_metadata: { dsr_pass: true, dsr_unavailable: false, dsr: 1.2 },
+    },
+  });
+  const cleanMcSurvivalRow = () => ({ probabilityOfRuin: "0.05" });
+  const cleanB14McRow = () => ({
+    probabilityOfRuin: "0.05",
+    riskMetrics: { probability_of_ruin_ci: { point_estimate: 0.05, ci_low: 0.02, ci_high: 0.08, ci_method: "bca", n_resamples: 1000 } },
+  });
+
+  /**
+   * Positions 1-11 verified against goalscan-crit-manual-path-hard-gate-parity.test.ts's
+   * own "passes B14/WFE/paramDrift/DSR (all clean)" case (same manual path,
+   * same real B14/WFE/paramDrift/DSR evaluators, same clean synthetic shapes).
+   * Positions 12+ are new — this file is the first to drive this path to
+   * result.success===true, so they were derived by running against the real
+   * source and reading the exact next db.select() this constructor needs.
+   */
+  /**
+   * Exact 17-call sequence verified by running the real _promoteStrategyInner
+   * for TESTING→PAPER with a stack-trace-instrumented select-queue mock and
+   * reading off the real lifecycle-service.ts call sites in order (see
+   * WORKER2-AR1346A-LIFECYCLE-WITNESS-QUEUE-DERIVATION note in the closeout
+   * report — this is not a guess, it is a measured trace).
+   */
+  function armCleanSelectQueue(mockDb: MockDb, opts: { paperSessionActive?: boolean } = {}) {
+    mockDb.__setSelectQueue([
+      [tpStrategyRow()],                    // 1  (~684)  strategy fetch
+      [dslGuardsCleanRow()],                 // 2  (1479) DSL guards
+      [latestBtEvidenceRow()],               // 3  (1599) promotionEvidence backtest
+      [],                                    // 4  (1607) mcEvidence (none)
+      [],                                    // 5  (1652) qmcRun (none)
+      [{ createdAt: new Date().toISOString() }], // 6 (1802) staleness (fresh)
+      [{ resultExtras: null }],              // 7  (1863) invariants (legacy — no-op)
+      [{ resultExtras: null }],              // 8  (1970) WF-mode (legacy — no-op)
+      [cleanWalkForwardResultsRow()],        // 9  (2054) B14/WFE/paramDrift/DSR walkForwardResults fetch
+      [cleanMcSurvivalRow()],                // 10 (2070) MC-survival (0.95 survival, clean)
+      [cleanB14McRow()],                     // 11 (2103) B14 MC — clean, low ci_high
+      [{ resultExtras: null }],              // 12 (2286) W24 secondary pbo_flag read (legacy — no-op)
+      [{ walkForwardResults: null }],        // 13 (2359) Wave-29 PBO gate's own raw walkForwardResults read (evaluatePboGate itself is mocked — this only feeds its now-ignored args)
+      [{ resultExtras: null }],              // 14 (2560) honest-DSR gate backtest re-read (legacy — no-op)
+      [],                                    // 15 (2928) TESTING→PAPER compliance-drift propCompliance read (no row -> gate no-ops)
+      [],                                    // 16 (3012) TESTING→PAPER frozen-policy-freeze biasState regimeLabel read (empty -> "UNKNOWN", non-fatal)
+      opts.paperSessionActive === false
+        ? []
+        : [{ id: TP_SESSION_ID, strategyId: TP_STRATEGY_ID, status: "active" }], // 17 (3370) activation block's active paper session lookup — the one this witness targets
+    ]);
+  }
+
+  beforeEach(() => {
+    svc = new LifecycleService();
+    mockDb = db as unknown as MockDb;
+    vi.clearAllMocks();
+    mockDb.__reset();
+    mockDb.__setPaperSessionsTableRef(paperSessions);
+    mockDb.__setPaperSessionsColumns({ strategyId: paperSessions.strategyId, status: paperSessions.status });
+    mockDb.__setUpdateReturning([{ id: TP_STRATEGY_ID }]);
+
+    checkSignalCorrelationGateMock.mockResolvedValue({
+      allowed: true, reason: "mocked A7 pass", maxSimilarity: null, blockingStrategyId: null,
+    });
+    mockEvaluatePboGate.mockReturnValue({
+      ok: true, pbo: null, threshold: 0.15, legacyNull: true, reason: "lifecycle.pbo_unavailable_legacy", auditPayload: {},
+    });
+    mockFreezePolicyLifecycle.mockResolvedValue({ hash: "a".repeat(64), frozen_at: new Date() });
+    mockGetLatestAdversarialStressRun.mockResolvedValue(undefined);
+    mockGetLatestFrankensteinRun.mockResolvedValue({
+      passed: true, runId: "frank-run-clean", p95Sharpe: 0.1, medianPf: 1.0, nShuffles: 500,
+    });
+    mockIsStreaming.mockReturnValue(false);
+    // The verifier this witness exists to prove: default approves with symbols
+    // DELIBERATELY DIFFERENT from the strategy's own "MES" symbol, so a passing
+    // assertion proves startStream received the VERIFIER's symbols, not a
+    // fallback to strategy/config symbols.
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true,
+      symbols: ["MES-LIFECYCLE-VERIFIED"],
+      stamped: true,
+      identity: {},
+    });
+  });
+
+  it("verifyPaperActivation -> ok:true: real promoteStrategy(TESTING, PAPER) reaches the activation block and calls startStream with VERIFIER symbols", async () => {
+    armCleanSelectQueue(mockDb);
+
+    const result = await svc.promoteStrategy(TP_STRATEGY_ID, "TESTING", "PAPER");
+
+    expect(result.success).toBe(true);
+    expect(mockVerifyPaperActivation).toHaveBeenCalledWith(TP_SESSION_ID, expect.objectContaining({ correlationId: null }));
+    expect(mockStartStream).toHaveBeenCalledWith(TP_SESSION_ID, ["MES-LIFECYCLE-VERIFIED"]);
+    // Verifier symbols reach startStream — NOT the strategy's stale "MES" symbol.
+    expect(mockStartStream).not.toHaveBeenCalledWith(TP_SESSION_ID, ["MES"]);
+  });
+
+  it("verifyPaperActivation -> ok:false: real promoteStrategy(TESTING, PAPER) reaches the activation block but startStream is NEVER called", async () => {
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: false,
+      reason: "runtime_revision_mismatch: test",
+    });
+    armCleanSelectQueue(mockDb);
+
+    const result = await svc.promoteStrategy(TP_STRATEGY_ID, "TESTING", "PAPER");
+
+    expect(mockVerifyPaperActivation).toHaveBeenCalledWith(TP_SESSION_ID, expect.objectContaining({ correlationId: null }));
+    expect(mockStartStream).not.toHaveBeenCalled();
+    // The rest of this file's own contract (F1-F10, AR-1155/AR-1342A, frozen):
+    // the transition itself may still complete to PAPER even when the stream
+    // is blocked — capital/lifecycle state and the internal-stream authority
+    // are deliberately independent failure domains. Only the stream call is
+    // this witness's claim.
+    void result;
   });
 });

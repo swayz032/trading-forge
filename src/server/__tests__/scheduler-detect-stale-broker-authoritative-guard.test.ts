@@ -112,6 +112,15 @@ vi.mock("../services/paper-trading-stream.js", () => ({
   getStreamHealth: mockGetStreamHealth,
   getBarBuffer: vi.fn().mockReturnValue([]),
 }));
+
+// AR-1346A S3.B/S3.C: both the failed_to_stream auto-restart and the WS-reconnect
+// path are now gated by verifyPaperActivation. Mocked at the module boundary
+// (same accepted pattern as paper-start-activation-wiring.test.ts) rather than
+// driving its real DB/hash machinery, which is out of scope here.
+const mockVerifyPaperActivation = vi.fn();
+vi.mock("../services/paper-qualification-activation-service.js", () => ({
+  verifyPaperActivation: (...args: unknown[]) => mockVerifyPaperActivation(...args),
+}));
 vi.mock("../services/paper-signal-service.js", () => ({
   restorePositionState: vi.fn(),
   cleanupSession: mockCleanupSession,
@@ -251,6 +260,15 @@ describe("detectStalePaperSessions — M3 broker-authoritative guard (item 6)", 
     mockIsStreaming.mockReturnValue(false);
     mockGetStreamHealth.mockReturnValue({ connected: false, symbols: [] });
     mockGetActiveStreams.mockReturnValue(new Map());
+    // Default: verifier approves with symbols DELIBERATELY DIFFERENT from any
+    // strategy.symbol used below, so a passing assertion proves startStream
+    // received the VERIFIER's symbols, not the stale strategy-row symbol.
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true,
+      symbols: ["VERIFIED-DEFAULT"],
+      stamped: true,
+      identity: {},
+    });
   });
 
   it("failedToStreamSessions loop: does NOT restart a DEPLOY_READY strategy's failed_to_stream session", async () => {
@@ -281,6 +299,9 @@ describe("detectStalePaperSessions — M3 broker-authoritative guard (item 6)", 
         correlationId: expect.any(String),
       }),
     );
+    // The B5-style guard fires BEFORE symbol resolution / verification for a
+    // broker-authoritative strategy — the verifier is never reached.
+    expect(mockVerifyPaperActivation).not.toHaveBeenCalled();
   });
 
   it("failedToStreamSessions loop: DOES restart a PAPER strategy's failed_to_stream session (regression — unaffected by the new guard)", async () => {
@@ -290,6 +311,12 @@ describe("detectStalePaperSessions — M3 broker-authoritative guard (item 6)", 
       id: sessionId, strategyId, startedAt: new Date(), startingCapital: "50000",
       config: {}, mode: "paper", firmId: null,
     };
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true,
+      symbols: ["MES-VERIFIED"],
+      stamped: true,
+      identity: {},
+    });
     const { db } = await import("../db/index.js");
     Object.assign(db, buildDetectStaleDbMock({
       failedToStreamSessions: [failedSession],
@@ -300,7 +327,45 @@ describe("detectStalePaperSessions — M3 broker-authoritative guard (item 6)", 
     const { _testOnly } = await import("../scheduler.js");
     await _testOnly.detectStalePaperSessions();
 
-    expect(mockStartStream).toHaveBeenCalledWith(sessionId, ["MES"]);
+    expect(mockVerifyPaperActivation).toHaveBeenCalledWith(sessionId, expect.objectContaining({ correlationId: expect.any(String) }));
+    // Verifier symbols reach startStream — NOT the strategy's stale "MES" symbol.
+    expect(mockStartStream).toHaveBeenCalledWith(sessionId, ["MES-VERIFIED"]);
+    expect(mockStartStream).not.toHaveBeenCalledWith(sessionId, ["MES"]);
+    expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
+      expect.objectContaining({ action: "paper.session_restart_skipped_broker_authoritative" }),
+    );
+  });
+
+  it("AR-1155/AR-1346A: failedToStreamSessions loop — activation verify BLOCKED (ok:false) -> startStream NOT called, blocked audit row emitted, row stays failed_to_stream", async () => {
+    const strategyId = "bbbbbbbb-1111-0000-0000-000000000010";
+    const sessionId = "aaaaaaaa-1111-0000-0000-000000000010";
+    const failedSession = {
+      id: sessionId, strategyId, startedAt: new Date(), startingCapital: "50000",
+      config: {}, mode: "paper", firmId: null,
+    };
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: false,
+      reason: "runtime_revision_mismatch: test",
+    });
+    const { db } = await import("../db/index.js");
+    Object.assign(db, buildDetectStaleDbMock({
+      failedToStreamSessions: [failedSession],
+      activeSessions: [],
+      strategyRowsById: { [strategyId]: { id: strategyId, lifecycleState: "PAPER", symbol: "MES", config: {} } },
+    }));
+
+    const { _testOnly } = await import("../scheduler.js");
+    await _testOnly.detectStalePaperSessions();
+
+    expect(mockVerifyPaperActivation).toHaveBeenCalledWith(sessionId, expect.objectContaining({ correlationId: expect.any(String) }));
+    expect(mockStartStream).not.toHaveBeenCalled();
+    expect(mockInsertAuditRowSafe).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "paper.session_restart_blocked_activation",
+        entityId: sessionId,
+        result: expect.objectContaining({ reason: "runtime_revision_mismatch: test" }),
+      }),
+    );
     expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
       expect.objectContaining({ action: "paper.session_restart_skipped_broker_authoritative" }),
     );
@@ -370,6 +435,75 @@ describe("detectStalePaperSessions — M3 broker-authoritative guard (item 6)", 
         action: "paper.session_auto_stop_broker_authoritative_leak",
         entityId: sessionId,
       }),
+    );
+  });
+
+  it("AR-1155/AR-1346A: WS-reconnect — activation verify BLOCKED (ok:false) -> reconnect blocked, no startStream", async () => {
+    const strategyId = "bbbbbbbb-1111-0000-0000-000000000011";
+    const sessionId = "aaaaaaaa-1111-0000-0000-000000000011";
+    const elevenMinutesAgo = new Date(Date.now() - 11 * 60 * 1000);
+    const activeSession = { id: sessionId, strategyId, startedAt: elevenMinutesAgo };
+    // Disconnected-but-registered stream + session age > 10min triggers the
+    // auto-recovery/reconnect branch (not the M3 broker-authoritative guard,
+    // since this strategy is PAPER, and not the stale-timeout branch, since
+    // isStreaming() is true).
+    mockIsStreaming.mockReturnValue(true);
+    mockGetStreamHealth.mockReturnValue({ connected: false, symbols: [] });
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: false,
+      reason: "runtime_revision_mismatch: test",
+    });
+    const { db } = await import("../db/index.js");
+    Object.assign(db, buildDetectStaleDbMock({
+      failedToStreamSessions: [],
+      activeSessions: [activeSession],
+      strategyRowsById: { [strategyId]: { id: strategyId, lifecycleState: "PAPER", symbol: "MES", config: {} } },
+    }));
+
+    const { _testOnly } = await import("../scheduler.js");
+    await _testOnly.detectStalePaperSessions();
+
+    expect(mockVerifyPaperActivation).toHaveBeenCalledWith(sessionId, expect.objectContaining({ correlationId: expect.any(String) }));
+    expect(mockStartStream).not.toHaveBeenCalled();
+    expect(mockInsertAuditRowSafe).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "paper.session_reconnect_blocked_activation",
+        entityId: sessionId,
+        result: expect.objectContaining({ reason: "runtime_revision_mismatch: test" }),
+      }),
+    );
+  });
+
+  it("AR-1155/AR-1346A: WS-reconnect — activation verify OK -> reconnect uses VERIFIER symbols, not the stale strategy symbol", async () => {
+    const strategyId = "bbbbbbbb-1111-0000-0000-000000000012";
+    const sessionId = "aaaaaaaa-1111-0000-0000-000000000012";
+    const elevenMinutesAgo = new Date(Date.now() - 11 * 60 * 1000);
+    const activeSession = { id: sessionId, strategyId, startedAt: elevenMinutesAgo };
+    mockIsStreaming.mockReturnValue(true);
+    mockGetStreamHealth.mockReturnValue({ connected: false, symbols: [] });
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true,
+      symbols: ["MES-RECONNECT-VERIFIED"],
+      stamped: false,
+      identity: {},
+    });
+    const { db } = await import("../db/index.js");
+    Object.assign(db, buildDetectStaleDbMock({
+      failedToStreamSessions: [],
+      activeSessions: [activeSession],
+      strategyRowsById: { [strategyId]: { id: strategyId, lifecycleState: "PAPER", symbol: "MES", config: {} } },
+    }));
+
+    const { _testOnly } = await import("../scheduler.js");
+    await _testOnly.detectStalePaperSessions();
+
+    expect(mockVerifyPaperActivation).toHaveBeenCalledWith(sessionId, expect.objectContaining({ correlationId: expect.any(String) }));
+    expect(mockStopStream).toHaveBeenCalledWith(sessionId);
+    // Verifier symbols reach startStream — NOT the strategy's stale "MES" symbol.
+    expect(mockStartStream).toHaveBeenCalledWith(sessionId, ["MES-RECONNECT-VERIFIED"]);
+    expect(mockStartStream).not.toHaveBeenCalledWith(sessionId, ["MES"]);
+    expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
+      expect.objectContaining({ action: "paper.session_reconnect_blocked_activation" }),
     );
   });
 });

@@ -142,6 +142,14 @@ vi.mock("../services/paper-trading-stream.js", () => ({
   getBarBuffer: vi.fn().mockReturnValue([]),
 }));
 
+// AR-1346A S3.A: every resume path is now gated by verifyPaperActivation. Mocked
+// at the module boundary (same pattern accepted for paper-start-activation-wiring.test.ts)
+// rather than driving its real DB/hash machinery, which is out of scope here.
+const mockVerifyPaperActivation = vi.fn();
+vi.mock("../services/paper-qualification-activation-service.js", () => ({
+  verifyPaperActivation: (...args: unknown[]) => mockVerifyPaperActivation(...args),
+}));
+
 vi.mock("../services/paper-signal-service.js", () => ({
   restorePositionState: vi.fn(),
   cleanupSession: vi.fn(),
@@ -255,6 +263,15 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     selectCallCount = 0;
+    // Default: verifier approves with symbols DELIBERATELY DIFFERENT from any
+    // strategy.symbol/config.symbol used below, so a passing assertion proves
+    // startStream received the VERIFIER's symbols, not the stale/config ones.
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true,
+      symbols: ["VERIFIED-DEFAULT"],
+      stamped: true,
+      identity: {},
+    });
   });
 
   it("M3: RESUMES sessions whose strategy is in PAPER state — startStream IS called (was: skip, pre-M3)", async () => {
@@ -270,6 +287,12 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
       symbol: "MES",
       config: {},
     };
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true,
+      symbols: ["MES-VERIFIED"],
+      stamped: true,
+      identity: {},
+    });
 
     // Inject the fresh db mock
     const { db } = await import("../db/index.js");
@@ -279,7 +302,50 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
     const { _testOnly } = await import("../scheduler.js");
     await _testOnly.resumeActivePaperSessions();
 
-    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MES"]);
+    expect(mockVerifyPaperActivation).toHaveBeenCalledWith(session.id);
+    // Verifier symbols reach startStream — NOT the strategy's stale "MES" symbol.
+    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MES-VERIFIED"]);
+    expect(mockStartStream).not.toHaveBeenCalledWith(session.id, ["MES"]);
+    expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
+      expect.objectContaining({ action: "paper.session_resume_skipped_paper_plus" }),
+    );
+  });
+
+  it("AR-1155/AR-1346A: boot resume — activation verify BLOCKED (ok:false) -> startStream NOT called, blocked audit row emitted", async () => {
+    const session = {
+      id: "aaaaaaaa-0000-0000-0000-000000000002",
+      strategyId: "bbbbbbbb-0000-0000-0000-000000000002",
+      status: "active",
+      governorState: null,
+    };
+    const strategy = {
+      id: "bbbbbbbb-0000-0000-0000-000000000002",
+      lifecycleState: "PAPER",
+      symbol: "MES",
+      config: {},
+    };
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: false,
+      reason: "runtime_revision_mismatch: test",
+    });
+
+    const { db } = await import("../db/index.js");
+    Object.assign(db, buildDbMock([session], [strategy]));
+
+    const { _testOnly } = await import("../scheduler.js");
+    await _testOnly.resumeActivePaperSessions();
+
+    expect(mockVerifyPaperActivation).toHaveBeenCalledWith(session.id);
+    expect(mockStartStream).not.toHaveBeenCalled();
+    expect(mockInsertAuditRowSafe).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "paper.session_resume_blocked_activation",
+        entityId: session.id,
+        result: expect.objectContaining({ reason: "runtime_revision_mismatch: test" }),
+      }),
+    );
+    // The B5 broker-authoritative skip row must NOT fire for a PAPER session —
+    // this is the activation-block path, a distinct audit action.
     expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
       expect.objectContaining({ action: "paper.session_resume_skipped_paper_plus" }),
     );
@@ -315,6 +381,9 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
         action: "paper.session_resume_skipped_paper_plus",
       }),
     );
+    // B5 skip fires BEFORE symbol resolution / verification — the verifier is
+    // never reached for a broker-authoritative strategy.
+    expect(mockVerifyPaperActivation).not.toHaveBeenCalled();
   });
 
   it("still resumes sessions for CANDIDATE strategies (regression)", async () => {
@@ -330,6 +399,12 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
       symbol: "MES",
       config: {},
     };
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true,
+      symbols: ["MES-VERIFIED"],
+      stamped: true,
+      identity: {},
+    });
 
     const { db } = await import("../db/index.js");
     Object.assign(db, buildDbMock([session], [strategy]));
@@ -337,7 +412,8 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
     const { _testOnly } = await import("../scheduler.js");
     await _testOnly.resumeActivePaperSessions();
 
-    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MES"]);
+    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MES-VERIFIED"]);
+    expect(mockStartStream).not.toHaveBeenCalledWith(session.id, ["MES"]);
     expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
       expect.objectContaining({ action: "paper.session_resume_skipped_paper_plus" }),
     );
@@ -356,6 +432,12 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
       symbol: "MNQ",
       config: {},
     };
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true,
+      symbols: ["MNQ-VERIFIED"],
+      stamped: true,
+      identity: {},
+    });
 
     const { db } = await import("../db/index.js");
     Object.assign(db, buildDbMock([session], [strategy]));
@@ -363,7 +445,8 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
     const { _testOnly } = await import("../scheduler.js");
     await _testOnly.resumeActivePaperSessions();
 
-    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MNQ"]);
+    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MNQ-VERIFIED"]);
+    expect(mockStartStream).not.toHaveBeenCalledWith(session.id, ["MNQ"]);
   });
 
   it("resumes sessions when lifecycleState is NULL (defensive — legacy rows with no strategy FK)", async () => {
@@ -391,6 +474,8 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
     expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
       expect.objectContaining({ action: "paper.session_resume_skipped_paper_plus" }),
     );
+    // No symbol -> the function continues before ever calling the verifier.
+    expect(mockVerifyPaperActivation).not.toHaveBeenCalled();
   });
 
   it("M3: skips a DEPLOY_READY session but resumes PAPER and TESTING sessions in the same batch (the M3 boundary, exercised together)", async () => {
@@ -459,18 +544,34 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
       insert: vi.fn(() => ({ values: vi.fn().mockResolvedValue([]) })),
     };
 
+    // Discriminate by session so a mis-routed symbol set fails the test —
+    // verifier symbols intentionally differ from each session's stale strategy.symbol.
+    mockVerifyPaperActivation.mockImplementation(async (sessionId: string) => {
+      if (sessionId === paperSession.id) {
+        return { ok: true, symbols: ["MES-VERIFIED"], stamped: true, identity: {} };
+      }
+      if (sessionId === testingSession.id) {
+        return { ok: true, symbols: ["MNQ-VERIFIED"], stamped: true, identity: {} };
+      }
+      throw new Error(`unexpected verifyPaperActivation call for session ${sessionId}`);
+    });
+
     const { db } = await import("../db/index.js");
     Object.assign(db, mixedDb);
 
     const { _testOnly } = await import("../scheduler.js");
     await _testOnly.resumeActivePaperSessions();
 
-    // PAPER session → stream started (M3 inversion)
-    expect(mockStartStream).toHaveBeenCalledWith(paperSession.id, ["MES"]);
-    // TESTING session → stream started (unchanged)
-    expect(mockStartStream).toHaveBeenCalledWith(testingSession.id, ["MNQ"]);
+    // PAPER session → stream started with VERIFIER symbols (M3 inversion + AR-1155 verifier)
+    expect(mockStartStream).toHaveBeenCalledWith(paperSession.id, ["MES-VERIFIED"]);
+    expect(mockStartStream).not.toHaveBeenCalledWith(paperSession.id, ["MES"]);
+    // TESTING session → stream started with VERIFIER symbols (unchanged path, new verifier)
+    expect(mockStartStream).toHaveBeenCalledWith(testingSession.id, ["MNQ-VERIFIED"]);
+    expect(mockStartStream).not.toHaveBeenCalledWith(testingSession.id, ["MNQ"]);
     // DEPLOY_READY session → NO stream (still broker-authoritative, untouched by this wave)
     expect(mockStartStream).not.toHaveBeenCalledWith(deployReadySession.id, expect.anything());
+    // B5 skip fires before the verifier is ever consulted for the broker-authoritative session.
+    expect(mockVerifyPaperActivation).not.toHaveBeenCalledWith(deployReadySession.id);
     // Exactly one skip audit row, for the DEPLOY_READY session only
     expect(mockInsertAuditRowSafe).toHaveBeenCalledWith(
       expect.objectContaining({
