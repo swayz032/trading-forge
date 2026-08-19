@@ -1,15 +1,17 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "strategy_id": "CURRENT_MNQ_DISCRETIONARY_TRANSLATION",
-  "release_id": "MNQ-V2.4-ZONE-CANDLE-PC1-DQ1",
-  "supersedes_semantics": "MNQ-V2.3-PC1",
+  "release_id": "MNQ-V2.4-ZONE-CANDLE-PC2-ENTRY1",
+  "supersedes_semantics": "MNQ-V2.4-ZONE-CANDLE-PC1-DQ1",
   "frozen_at": "2026-08-18",
   "instrument": "MNQ",
-  "semantic_correction_reason": "Trader explicitly reconfirmed that candlestick patterns and key-level rules are taught together. Candlestick patterns are confirmation/control evidence only after price reaches a valid pre-drawn zone. Price must reject/reclaim, break/accept, or validly break-retest that zone before a trade can qualify. Trader also supplied a fresh real-trade example before clean v2.4 PnL confirming that TP ownership is determined by the first meaningful reaction area in physical price order: a nearer liquidity cluster must not be skipped for a farther FVG, and vice versa.",
+  "semantic_correction_reason": "Trader supplied additional real-trade screenshots and direct labels before clean v2.4 sealed PnL. The correction separates ordinary momentum from true displacement; makes momentum the rejection trigger after doji/pin/inside/shrinking or equivalent zone stories; changes a normal breakout so the first completed print beyond the key zone is setup only and a subsequent momentum candle confirms; adds weak-break pullback -> 15m three-bar continuation; freezes exactly two pre-break early-entry exceptions; preserves first-reaction TP ordering; and prevents fresh range-day entry zones from being crowded against the active pre-open range.",
   "source_model": {
     "candlestick_video_pack_is_joint_candle_and_key_level_evidence": true,
     "location_and_pattern_must_be_interpreted_together": true,
-    "creator_specific_rules_not_adopted_without_trader_confirmation": true
+    "creator_specific_rules_not_adopted_without_trader_confirmation": true,
+    "entry_fidelity_contract": "research/current_mnq_strategy_v2_4_entry_semantics.json",
+    "current_user_fidelity_gold": "research/current_mnq_strategy_v2_4_user_fidelity_gold.json"
   },
   "session": {
     "timezone": "America/New_York",
@@ -27,11 +29,11 @@
   },
   "hard_entry_order": [
     "PREMARKET_CONTEXT",
-    "BUILD_CAUSAL_KEY_LEVEL_MAP",
-    "PRICE_REACHES_AUTHORIZED_ZONE",
-    "CLASSIFY_ZONE_INTERACTION_AS_REJECTION_RECLAIM_BREAK_OR_RETEST",
-    "READ_CANDLESTICK_PATTERN_AND_MULTI_CANDLE_CONTROL_STORY",
-    "REQUIRE_DIRECTIONAL_CONTROL_CONFIRMATION",
+    "BUILD_CAUSAL_KEY_LEVEL_MAP_WITH_RANGE_ROOM_AUTHORIZATION",
+    "PRICE_REACHES_AUTHORIZED_ZONE_OR_MATCHES_ONE_OF_TWO_FROZEN_PREBREAK_EXCEPTIONS",
+    "CLASSIFY_REJECTION_RECLAIM_BREAK_RETEST_OR_CONTINUATION_STORY",
+    "READ_CANDLESTICK_GEOMETRY_AND_MULTI_CANDLE_CONTROL_STORY",
+    "REQUIRE_DIRECTIONAL_MOMENTUM_TRIGGER",
     "REQUIRE_ROOM_TO_NEXT_MEANINGFUL_DESTINATION",
     "FIRST_A_PLUS_ONLY"
   ],
@@ -54,7 +56,10 @@
       "prioritize_relevant_nearby_levels": true,
       "avoid_chart_clutter": true,
       "do_not_delete_farther_meaningful_destination": true,
-      "recent_levels_receive_more_relevance_but_recency_alone_is_not_sufficient": true
+      "recent_levels_receive_more_relevance_but_recency_alone_is_not_sufficient": true,
+      "range_day_fresh_entry_zone_rule": "When the causal pre-open structure is MIXED/ranging, preserve nearby structure as reaction/TP context but remove fresh-entry authorization from zones that do not leave the already-frozen minimum room from the active range edge.",
+      "range_room_uses_existing_parameter": "Params.min_room_r * Params.stop",
+      "no_hindsight_full_day_range_label": true
     },
     "inflection_rule": "A valid zone may reject, reclaim, break, accept, retest or later flip role; touching it does not predict direction.",
     "role_flip": {
@@ -93,23 +98,27 @@
       "active_15m_FVG_as_context_or_authorized_location_when_quality_gate_passes"
     ],
     "valid_rejection_interactions": [
-      "touch_and_reject",
-      "penetrate_and_reclaim_with_defense",
-      "sweep_and_reclaim_with_control",
-      "failed_breakout_back_inside_with_control"
+      "touch_and_reject_then_momentum",
+      "penetrate_and_reclaim_with_defense_then_momentum",
+      "sweep_and_reclaim_with_control_then_momentum",
+      "failed_breakout_back_inside_with_control_then_momentum",
+      "doji_pin_inside_or_shrinking_approach_story_then_momentum",
+      "two_momentum_candles_after_zone_rejection"
     ],
     "valid_breakout_interactions": [
-      "strong_5m_displacement_close_through_zone",
-      "weak_attempt_followed_by_new_completed_15m_acceptance_close_beyond_zone",
-      "accepted_break_followed_by_valid_retest"
+      "first_completed_print_beyond_zone_then_subsequent_momentum_candle",
+      "weak_break_pullback_then_completed_15m_three_bar_continuation",
+      "accepted_break_followed_by_valid_retest_and_momentum",
+      "prebreak_repeat_test_momentum_attack_exception",
+      "prebreak_true_displacement_sequence_with_third_candle_momentum_exception"
     ],
-    "mere_approach_without_touch": "NO_TRADE",
+    "mere_approach_without_touch": "NO_TRADE_EXCEPT_TWO_FROZEN_PREBREAK_FAMILIES",
     "mid_range_pattern": "NO_TRADE",
     "touch_without_directional_control": "WAIT_OR_NO_TRADE"
   },
   "candlestick_semantics": {
     "role": "CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL",
-    "timeframe": "5m_primary_execution_story_with_15m_context_and_weak_breakout_confirmation",
+    "timeframe": "5m_primary_execution_story_with_15m_context_and_weak_break_three_bar_continuation",
     "single_candle_families": [
       "doji", "long_legged_doji", "dragonfly_doji", "gravestone_doji",
       "spinning_top", "hammer_geometry", "inverted_hammer_geometry",
@@ -117,6 +126,7 @@
       "bearish_marubozu", "bullish_long_body_displacement",
       "bearish_long_body_displacement", "bullish_pin_rejection", "bearish_pin_rejection"
     ],
+    "legacy_pattern_label_note": "The recognizer's historical BULLISH/BEARISH_LONG_BODY_DISPLACEMENT label is a pattern-taxonomy name only. Executable true displacement is separately defined by the entry-fidelity contract as momentum plus range expansion; not every strong red/green momentum candle is displacement.",
     "two_candle_families": [
       "bullish_engulfing", "bearish_engulfing", "bullish_harami", "bearish_harami",
       "harami_cross", "piercing_line", "dark_cloud_cover", "tweezer_bottom",
@@ -128,24 +138,40 @@
       "three_white_soldiers", "three_black_crows", "three_inside_up", "three_inside_down",
       "three_outside_up", "three_outside_down", "bullish_abandoned_baby",
       "bearish_abandoned_baby", "rising_three_methods", "falling_three_methods",
-      "compression_then_expansion", "repeated_rejection_then_displacement"
+      "compression_then_expansion", "repeated_rejection_then_momentum",
+      "15m_three_bar_break_pullback_continuation"
     ],
     "priority_rule": "GEOMETRY_AND_SEQUENCE_MEANING_OVERRIDES_PATTERN_NAME",
     "story": ["APPROACH", "FIGHT", "DECISION"],
     "control_features": [
       "body_to_range_ratio", "upper_wick_fraction", "lower_wick_fraction",
       "close_location", "range_expansion_or_contraction", "engulfing_or_inside_relationship",
-      "failed_push", "reclaim", "hold_or_defense", "follow_through", "displacement", "two_sided_wick_conflict"
+      "failed_push", "reclaim", "hold_or_defense", "follow_through", "momentum",
+      "true_displacement_as_separate_stronger_condition", "two_sided_wick_conflict"
     ],
     "mixed_or_indecisive_control": "WAIT_OR_NO_TRADE"
   },
+  "entry_trigger_semantics": {
+    "momentum_candle": "Directional control candle using frozen body/close geometry; range expansion is not required.",
+    "true_displacement": "Momentum plus frozen range-expansion requirement.",
+    "rejection_entry": "authorized key zone -> valid rejection/control story -> directional momentum trigger",
+    "normal_breakout": "first completed print beyond zone is setup only -> subsequent momentum candle confirms",
+    "weak_breakout": "weak first break -> controlled pullback -> completed 15m three-bar continuation",
+    "prebreak_early_entry_exceptions_only": [
+      "repeat_test_momentum_attack",
+      "true_displacement_sequence_into_level_with_third_candle_momentum"
+    ],
+    "all_other_prebreak_entries": "NO_TRADE"
+  },
   "directional_examples": {
-    "support_rejection_long": "price reaches support, rejection/reclaim candle story shows sellers failed and buyers take control",
-    "resistance_rejection_short": "price reaches resistance, rejection/reclaim candle story shows buyers failed and sellers take control",
-    "resistance_breakout_long": "price reaches resistance and strong bullish displacement/acceptance breaks through, or weak attempt later receives new completed 15m acceptance",
-    "support_breakout_short": "price reaches support and strong bearish displacement/acceptance breaks through, or weak attempt later receives new completed 15m acceptance",
-    "resistance_break_retest_long": "resistance is genuinely broken and accepted, retests as support, then bullish candle/control evidence confirms",
-    "support_break_retest_short": "support is genuinely broken and accepted, retests as resistance, then bearish candle/control evidence confirms"
+    "support_rejection_long": "price reaches support; doji/pin/inside/shrinking or equivalent rejection story shows sellers failing; bullish momentum triggers",
+    "resistance_rejection_short": "price reaches resistance; doji/pin/inside/shrinking or equivalent rejection story shows buyers failing; bearish momentum triggers",
+    "resistance_breakout_long": "first completed print above resistance is setup; next bullish momentum can confirm, or a weak break may pull back and later complete the 15m three-bar continuation",
+    "support_breakout_short": "first completed print below support is setup; next bearish momentum can confirm, or a weak break may pull back and later complete the 15m three-bar continuation",
+    "resistance_break_retest_long": "resistance is genuinely broken and accepted, retests as support, then bullish momentum/control evidence confirms",
+    "support_break_retest_short": "support is genuinely broken and accepted, retests as resistance, then bearish momentum/control evidence confirms",
+    "prebreak_long_exception": "repeat-test momentum attack or genuine displacement sequence may trigger before a completed print above resistance",
+    "prebreak_short_exception": "repeat-test momentum attack or genuine displacement sequence may trigger before a completed print below support"
   },
   "zone_lifecycle": {
     "breach_is_not_automatically_permanent_break": true,
@@ -160,7 +186,7 @@
     "long_scan_direction": "from_entry_upward",
     "short_scan_direction": "from_entry_downward",
     "overlap_policy": "When a 5m cluster or FVG is internal to the already-winning broad reaction area, it may refine TP only inside that area; it may not move the target beyond the first-reaction owner.",
-    "real_user_example_2026_08_18": "Trader supplied a real trade screenshot where the liquidity cluster sat in front of the FVG in the trade direction; the cluster was therefore the first reaction zone and the TP was placed at the cluster rather than skipping it for the farther FVG.",
+    "real_user_example_2026_08_18": "Trader supplied real screenshots where the liquidity cluster sat in front of the FVG in the trade direction; price reacted at the cluster and did not need to enter the farther FVG, so the cluster owned TP.",
     "tiny_weak_shelves_may_be_skipped": true,
     "nearby_strong_blocker_may_not_be_silently_skipped": true,
     "safe_middle_not_exact_fifty_percent": true,
@@ -169,10 +195,14 @@
   },
   "negative_semantic_fixtures": [
     "candlestick_pattern_away_from_authorized_zone",
-    "mere_approach_that_never_reaches_zone",
+    "mere_approach_that_never_reaches_zone_and_matches_no_prebreak_exception",
     "doji_or_spinning_top_at_zone_without_directional_takeover",
     "mixed_overlap_and_two_sided_wicks",
-    "weak_breakout_without_new_completed_15m_acceptance",
+    "first_break_candle_without_subsequent_momentum_confirmation",
+    "weak_breakout_without_valid_15m_three_bar_continuation",
+    "ordinary_strong_candle_misclassified_as_true_displacement",
+    "prebreak_entry_outside_repeat_test_or_displacement_exception",
+    "displacement_sequence_whose_third_candle_reverses_control",
     "counter_bias_reversal_without_completed_control_transfer",
     "nearby_strong_blocker_before_destination",
     "retired_or_invalidated_FVG_used_as_confluence",
@@ -185,6 +215,7 @@
     "role_flip_from_single_transient_wick_breach",
     "break_retest_without_prior_durable_acceptance",
     "low_quality_chart_clutter_level_used_as_A_plus_location",
+    "range_day_fresh_entry_zone_crowded_against_active_range",
     "farther_FVG_leapfrogs_nearer_meaningful_liquidity_cluster",
     "farther_liquidity_cluster_leapfrogs_nearer_active_FVG"
   ],
@@ -212,7 +243,7 @@
     "no_variant_promotion_from_sealed_validation": true,
     "rule_change_after_sealed_result_invalidates_that_result": true,
     "v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4": true,
-    "reason": "Zone-first candlestick/key-level semantics and the first-reaction TP hierarchy are frozen before clean v2.4 PnL. Vendor-degraded source dates are also quarantined before clean v2.4 PnL so questionable bars cannot affect score evidence.",
+    "reason": "Entry-fidelity, range-room, zone-first candle semantics and first-reaction TP hierarchy are frozen before clean v2.4 PnL. No new numeric entry threshold was selected from performance; the new rules reuse existing frozen geometry/room parameters and direct trader labels.",
     "contaminated_score_ranges": [
       {"start": "2020-02-27", "end": "2020-04-08", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-02-27 and 2020-02-28 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
       {"start": "2020-06-30", "end": "2020-08-10", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-06-30 and 2020-07-01 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
