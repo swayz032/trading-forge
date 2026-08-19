@@ -1,13 +1,14 @@
 {
-  "schema_version": 6,
-  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-6-ARCH1",
-  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when semantic prose is unchanged.",
+  "schema_version": 7,
+  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-7-ENTRY2",
+  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, entry-fidelity semantics, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when semantic prose is unchanged.",
   "contract_files": [
     "research/current_mnq_strategy_v2_4_spec.json",
     "research/current_mnq_strategy_v2_4_fvg_semantics.json",
     "research/current_mnq_strategy_v2_4_edge_semantics.json",
     "research/current_mnq_strategy_v2_4_key_level_semantics.json",
     "research/current_mnq_strategy_v2_4_premarket_semantics.json",
+    "research/current_mnq_strategy_v2_4_entry_semantics.json",
     "research/current_mnq_strategy_v2_4_build_contract.json"
   ],
   "strategy_and_edge_source_files": [
@@ -25,6 +26,7 @@
     "research/current_mnq_strategy_v2_4_candles.py",
     "research/current_mnq_strategy_v2_4_zone_candles.py",
     "research/current_mnq_strategy_v2_4_gate.py",
+    "research/current_mnq_strategy_v2_4_entries.py",
     "research/current_mnq_strategy_v2_4_fvg.py",
     "research/current_mnq_strategy_v2_4_zone_lifecycle.py",
     "research/current_mnq_strategy_v2_4_levels.py",
