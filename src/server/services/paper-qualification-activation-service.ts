@@ -37,7 +37,7 @@ import { createHash } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { paperSessions, strategies } from "../db/schema.js";
-import { getSessionConfig, type CachedSession } from "./paper-signal-service.js";
+import { getSessionConfigFresh, type CachedSession } from "./paper-signal-service.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 import { resolveFeedMode } from "../lib/paper-evidence-labels.js";
@@ -267,7 +267,10 @@ export async function verifyPaperActivation(
     return { ok: false, reason: "session_not_found" };
   }
 
-  const cached: CachedSession | null = await getSessionConfig(sessionId);
+  // F-5 (GPT AR-1339A S1): NEVER the cached getSessionConfig() — identity verification must
+  // see the current DB bytes on every call, not a value cached from an earlier activation in
+  // this same process.
+  const cached: CachedSession | null = await getSessionConfigFresh(sessionId);
   // Market-data subscription surface: resolved from the RAW strategy row, the exact
   // same fields (strategy.symbol + strategy.config.symbol) every prior direct-
   // startStream() call site read — decoupled from `cached.config`, which is the
@@ -339,14 +342,17 @@ export async function verifyPaperActivation(
   }
 
   if (result.stamped) {
-    const newConfig: PaperSessionConfigWithIdentity = {
-      ...((session.config as PaperSessionConfigShape | null) ?? {}),
-      qualification_identity: result.identity,
-    };
-    // F-3: compare-and-set — only write if no concurrent caller already stamped it.
+    // F-3 + F-7 (GPT AR-1339A S3): compare-and-set AND non-clobbering. `jsonb_set` merges
+    // only the `qualification_identity` key against whatever `config` currently holds at
+    // UPDATE time (not the stale pre-read `session.config` object), so a concurrent writer
+    // touching an unrelated config key between our read and this write is preserved, not
+    // silently overwritten by a full-object replacement built from stale bytes.
+    const identityJson = JSON.stringify(result.identity);
     const [written] = await db
       .update(paperSessions)
-      .set({ config: newConfig })
+      .set({
+        config: sql`jsonb_set(coalesce(${paperSessions.config}, '{}'::jsonb), '{qualification_identity}', ${identityJson}::jsonb, true)`,
+      })
       .where(and(eq(paperSessions.id, sessionId), sql`(${paperSessions.config}->'qualification_identity') IS NULL`))
       .returning({ id: paperSessions.id });
 

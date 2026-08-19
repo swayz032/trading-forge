@@ -1018,13 +1018,11 @@ export async function getSessionTimeframe(sessionId: string): Promise<string> {
   return cfg?.timeframe ?? "1m";
 }
 
-// AR-1155: exported so paper-qualification-activation-service.ts can hash the SAME
-// post-translation effective config the paper engine actually executes against,
-// instead of building a second raw-DB approximation (GPT AR-1335A S2).
-export async function getSessionConfig(sessionId: string): Promise<CachedSession | null> {
-  const cached = sessionCache.get(sessionId);
-  if (cached) return cached;
-
+// AR-1155 F-5: the single canonical DB-fetch + translate implementation. Both the cached
+// getSessionConfig() (normal bar-execution path) and the cache-BYPASSING getSessionConfigFresh()
+// (identity verification path, GPT AR-1339A S1) call this SAME helper — one translation
+// semantics, never a second implementation that could silently diverge.
+async function loadSessionConfigFromDb(sessionId: string): Promise<CachedSession | null> {
   const [session] = await db
     .select()
     .from(paperSessions)
@@ -1052,7 +1050,7 @@ export async function getSessionConfig(sessionId: string): Promise<CachedSession
     );
   }
 
-  const entry: CachedSession = {
+  return {
     config,
     strategyId: strategy.id,
     name: strategy.name,
@@ -1071,9 +1069,29 @@ export async function getSessionConfig(sessionId: string): Promise<CachedSession
     // (legacy DB / schema drift) → openPosition treats it as static_styleC (no behavior change).
     exitPlanConfig: (strategy.exitPlanConfig as ExitPlanConfig | null | undefined) ?? null,
   };
+}
+
+// AR-1155: exported so paper-qualification-activation-service.ts can hash the SAME
+// post-translation effective config the paper engine actually executes against,
+// instead of building a second raw-DB approximation (GPT AR-1335A S2).
+export async function getSessionConfig(sessionId: string): Promise<CachedSession | null> {
+  const cached = sessionCache.get(sessionId);
+  if (cached) return cached;
+
+  const entry = await loadSessionConfigFromDb(sessionId);
+  if (!entry) return null;
 
   sessionCache.set(sessionId, entry);
   return entry;
+}
+
+// AR-1155 F-5 (GPT AR-1339A S1): deliberately BYPASSES sessionCache — for the qualification-
+// activation identity verifier, which must never accept stale cached candidate bytes as
+// continuity evidence. Does not read or write sessionCache; normal bar-execution callers must
+// keep using getSessionConfig() above. Same translation semantics (loadSessionConfigFromDb),
+// never a second implementation.
+export async function getSessionConfigFresh(sessionId: string): Promise<CachedSession | null> {
+  return loadSessionConfigFromDb(sessionId);
 }
 
 export function invalidateSessionCache(sessionId: string): void {
