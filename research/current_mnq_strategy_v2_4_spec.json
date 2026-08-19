@@ -1,13 +1,14 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "strategy_id": "CURRENT_MNQ_DISCRETIONARY_TRANSLATION",
-  "release_id": "MNQ-V2.4-ZONE-CANDLE-PC2-ENTRY1",
-  "supersedes_semantics": "MNQ-V2.4-ZONE-CANDLE-PC1-DQ1",
-  "frozen_at": "2026-08-18",
+  "release_id": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
+  "supersedes_semantics": "MNQ-V2.4-ZONE-CANDLE-PC2-ENTRY1",
+  "frozen_at": "2026-08-19",
   "instrument": "MNQ",
-  "semantic_correction_reason": "Trader supplied additional real-trade screenshots and direct labels before clean v2.4 sealed PnL. The correction separates ordinary momentum from true displacement; makes momentum the rejection trigger after doji/pin/inside/shrinking or equivalent zone stories; changes a normal breakout so the first completed print beyond the key zone is setup only and a subsequent momentum candle confirms; adds weak-break pullback -> 15m three-bar continuation; freezes exactly two pre-break early-entry exceptions; preserves first-reaction TP ordering; and prevents fresh range-day entry zones from being crowded against the active pre-open range.",
+  "semantic_correction_reason": "Trader supplied two additional real screen-recording videos and direct labels before any clean v2.4 performance result was observed. A prior sealed attempt aborted with an ArrayMemoryError before a ledger/edge result was produced. The new evidence clarifies that momentum is watched while the trigger candle is forming: the trader enters before the parent 5m/15m close once sustained buyer/seller force is proven because waiting for the close can be materially late against the frozen 17.25-point stop. Historical/live parity therefore uses only completed 1m sub-bars available at each decision clock, penalizes tug-of-war/giveback, and forbids final parent-candle OHLC from backdating an earlier entry. All existing location, displacement, breakout, range-room, first-reaction TP, risk and edge gates remain unchanged.",
   "source_model": {
     "candlestick_video_pack_is_joint_candle_and_key_level_evidence": true,
+    "live_force_video_pair_is_entry_clock_evidence": true,
     "location_and_pattern_must_be_interpreted_together": true,
     "creator_specific_rules_not_adopted_without_trader_confirmation": true,
     "entry_fidelity_contract": "research/current_mnq_strategy_v2_4_entry_semantics.json",
@@ -24,6 +25,7 @@
     "stop_points": 17.25,
     "tick_size": 0.25,
     "point_value_usd": 2.0,
+    "late_entry_drawdown_sensitive": true,
     "execution_risk_overlay_may_reduce_size": true,
     "signal_semantics_must_not_change_when_size_is_reduced": true
   },
@@ -33,7 +35,7 @@
     "PRICE_REACHES_AUTHORIZED_ZONE_OR_MATCHES_ONE_OF_TWO_FROZEN_PREBREAK_EXCEPTIONS",
     "CLASSIFY_REJECTION_RECLAIM_BREAK_RETEST_OR_CONTINUATION_STORY",
     "READ_CANDLESTICK_GEOMETRY_AND_MULTI_CANDLE_CONTROL_STORY",
-    "REQUIRE_DIRECTIONAL_MOMENTUM_TRIGGER",
+    "REQUIRE_SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE",
     "REQUIRE_ROOM_TO_NEXT_MEANINGFUL_DESTINATION",
     "FIRST_A_PLUS_ONLY"
   ],
@@ -98,19 +100,19 @@
       "active_15m_FVG_as_context_or_authorized_location_when_quality_gate_passes"
     ],
     "valid_rejection_interactions": [
-      "touch_and_reject_then_momentum",
-      "penetrate_and_reclaim_with_defense_then_momentum",
-      "sweep_and_reclaim_with_control_then_momentum",
-      "failed_breakout_back_inside_with_control_then_momentum",
-      "doji_pin_inside_or_shrinking_approach_story_then_momentum",
-      "two_momentum_candles_after_zone_rejection"
+      "touch_and_reject_then_live_force",
+      "penetrate_and_reclaim_with_defense_then_live_force",
+      "sweep_and_reclaim_with_control_then_live_force",
+      "failed_breakout_back_inside_with_control_then_live_force",
+      "doji_pin_inside_or_shrinking_approach_story_then_live_force",
+      "prior_momentum_after_rejection_then_live_force"
     ],
     "valid_breakout_interactions": [
-      "first_completed_print_beyond_zone_then_subsequent_momentum_candle",
-      "weak_break_pullback_then_completed_15m_three_bar_continuation",
-      "accepted_break_followed_by_valid_retest_and_momentum",
-      "prebreak_repeat_test_momentum_attack_exception",
-      "prebreak_true_displacement_sequence_with_third_candle_momentum_exception"
+      "first_completed_print_beyond_zone_then_following_forming_candle_live_force",
+      "weak_break_pullback_then_15m_bar3_live_force",
+      "accepted_break_followed_by_valid_retest_and_live_force",
+      "prebreak_repeat_test_live_force_exception",
+      "prebreak_true_displacement_sequence_with_third_candle_live_force_exception"
     ],
     "mere_approach_without_touch": "NO_TRADE_EXCEPT_TWO_FROZEN_PREBREAK_FAMILIES",
     "mid_range_pattern": "NO_TRADE",
@@ -118,7 +120,7 @@
   },
   "candlestick_semantics": {
     "role": "CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL",
-    "timeframe": "5m_primary_execution_story_with_15m_context_and_weak_break_three_bar_continuation",
+    "timeframe": "5m_primary_execution_story_with_intra5_force_plus_15m_context_and_intra15_bar3_force",
     "single_candle_families": [
       "doji", "long_legged_doji", "dragonfly_doji", "gravestone_doji",
       "spinning_top", "hammer_geometry", "inverted_hammer_geometry",
@@ -147,31 +149,36 @@
       "body_to_range_ratio", "upper_wick_fraction", "lower_wick_fraction",
       "close_location", "range_expansion_or_contraction", "engulfing_or_inside_relationship",
       "failed_push", "reclaim", "hold_or_defense", "follow_through", "momentum",
-      "true_displacement_as_separate_stronger_condition", "two_sided_wick_conflict"
+      "true_displacement_as_separate_stronger_condition", "two_sided_wick_conflict",
+      "completed_1m_path_efficiency_inside_forming_parent_candle",
+      "latest_completed_1m_close_at_directional_extreme"
     ],
     "mixed_or_indecisive_control": "WAIT_OR_NO_TRADE"
   },
   "entry_trigger_semantics": {
-    "momentum_candle": "Directional control candle using frozen body/close geometry; range expansion is not required.",
+    "momentum_candle": "Directional control geometry using frozen body/close thresholds; range expansion is not required.",
     "true_displacement": "Momentum plus frozen range-expansion requirement.",
-    "rejection_entry": "authorized key zone -> valid rejection/control story -> directional momentum trigger",
-    "normal_breakout": "first completed print beyond zone is setup only -> subsequent momentum candle confirms",
-    "weak_breakout": "weak first break -> controlled pullback -> completed 15m three-bar continuation",
+    "live_force": "forming parent candle must satisfy partial momentum geometry, path efficiency >= Params.body_frac, latest completed 1m close at the directional extreme, at least two completed 1m observations, and parent candle still open",
+    "historical_force_resolution": "completed 1m sub-bars only; no tick-order inference and no final parent OHLC backdating",
+    "rejection_entry": "authorized key zone -> valid completed rejection/control story -> sustained intra5 directional force -> entry before close when proven",
+    "normal_breakout": "first completed print beyond zone is setup only -> following forming 5m candle may trigger when sustained intra5 directional force is proven",
+    "weak_breakout": "weak first break -> controlled completed pullback -> forming 15m bar3 may trigger when sustained intra15 directional force is proven",
     "prebreak_early_entry_exceptions_only": [
       "repeat_test_momentum_attack",
       "true_displacement_sequence_into_level_with_third_candle_momentum"
     ],
+    "prebreak_exception_trigger_clock": "forming attack/third candle requires sustained intra5 force and may enter before close",
     "all_other_prebreak_entries": "NO_TRADE"
   },
   "directional_examples": {
-    "support_rejection_long": "price reaches support; doji/pin/inside/shrinking or equivalent rejection story shows sellers failing; bullish momentum triggers",
-    "resistance_rejection_short": "price reaches resistance; doji/pin/inside/shrinking or equivalent rejection story shows buyers failing; bearish momentum triggers",
-    "resistance_breakout_long": "first completed print above resistance is setup; next bullish momentum can confirm, or a weak break may pull back and later complete the 15m three-bar continuation",
-    "support_breakout_short": "first completed print below support is setup; next bearish momentum can confirm, or a weak break may pull back and later complete the 15m three-bar continuation",
-    "resistance_break_retest_long": "resistance is genuinely broken and accepted, retests as support, then bullish momentum/control evidence confirms",
-    "support_break_retest_short": "support is genuinely broken and accepted, retests as resistance, then bearish momentum/control evidence confirms",
-    "prebreak_long_exception": "repeat-test momentum attack or genuine displacement sequence may trigger before a completed print above resistance",
-    "prebreak_short_exception": "repeat-test momentum attack or genuine displacement sequence may trigger before a completed print below support"
+    "support_rejection_long": "price reaches support; doji/pin/inside/shrinking or equivalent completed rejection story shows sellers failing; forming bullish trigger candle must prove sustained intra5 force and may enter before its close",
+    "resistance_rejection_short": "price reaches resistance; doji/pin/inside/shrinking or equivalent completed rejection story shows buyers failing; forming bearish trigger candle must prove sustained intra5 force and may enter before its close",
+    "resistance_breakout_long": "first completed print above resistance is setup; the following forming 5m candle can confirm with sustained bullish force before close, or a weak break may pull back and later use forming 15m bar3 force",
+    "support_breakout_short": "first completed print below support is setup; the following forming 5m candle can confirm with sustained bearish force before close, or a weak break may pull back and later use forming 15m bar3 force",
+    "resistance_break_retest_long": "resistance is genuinely broken and accepted, retests as support, then sustained bullish live force confirms",
+    "support_break_retest_short": "support is genuinely broken and accepted, retests as resistance, then sustained bearish live force confirms",
+    "prebreak_long_exception": "repeat-test attack or genuine displacement sequence may trigger before a completed print above resistance only after sustained live force",
+    "prebreak_short_exception": "repeat-test attack or genuine displacement sequence may trigger before a completed print below support only after sustained live force"
   },
   "zone_lifecycle": {
     "breach_is_not_automatically_permanent_break": true,
@@ -217,7 +224,11 @@
     "low_quality_chart_clutter_level_used_as_A_plus_location",
     "range_day_fresh_entry_zone_crowded_against_active_range",
     "farther_FVG_leapfrogs_nearer_meaningful_liquidity_cluster",
-    "farther_liquidity_cluster_leapfrogs_nearer_active_FVG"
+    "farther_liquidity_cluster_leapfrogs_nearer_active_FVG",
+    "forming_directional_burst_without_sustained_force",
+    "tug_of_war_parent_candle_with_excessive_giveback",
+    "final_parent_candle_ohlc_used_to_backdate_an_earlier_entry",
+    "force_only_visible_at_parent_close_treated_as_intra_candle_entry"
   ],
   "evidence_policy": {
     "real_user_positive_gold_min": 5,
@@ -243,7 +254,10 @@
     "no_variant_promotion_from_sealed_validation": true,
     "rule_change_after_sealed_result_invalidates_that_result": true,
     "v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4": true,
-    "reason": "Entry-fidelity, range-room, zone-first candle semantics and first-reaction TP hierarchy are frozen before clean v2.4 PnL. No new numeric entry threshold was selected from performance; the new rules reuse existing frozen geometry/room parameters and direct trader labels.",
+    "new_PnL_selected_force_threshold_added": false,
+    "structural_force_min_completed_1m_observations": 2,
+    "prior_clean_attempt_status": "ABORTED_PRE_RESULT_ARRAY_MEMORY_ERROR_NO_LEDGER_OR_EDGE_RESULT_OBSERVED",
+    "reason": "Entry-fidelity, live-force timing, range-room, zone-first candle semantics and first-reaction TP hierarchy were corrected from direct trader evidence before any clean performance result was observed. The force equation reuses frozen body/close geometry and uses a structural two-completed-1m minimum to distinguish persistence from giveback; neither was selected from PnL. No edge, stop, target, room, session or robustness gate was relaxed.",
     "contaminated_score_ranges": [
       {"start": "2020-02-27", "end": "2020-04-08", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-02-27 and 2020-02-28 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
       {"start": "2020-06-30", "end": "2020-08-10", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-06-30 and 2020-07-01 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
