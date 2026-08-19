@@ -146,7 +146,15 @@ def _default_propose_fn(transcript: str, condition_text: str, timeout: float = 6
         ],
         "stream": False,
         "format": _OUTPUT_SCHEMA,
-        "options": {"temperature": 0.1, "top_p": 0.95, "top_k": 64},
+        # num_ctx: MEASURED 2026-08-19 -- this call never set it, so Ollama silently ran the
+        # loaded model at ITS OWN default context window (observed 4096 via GET /api/ps) rather
+        # than the project's documented canonical TRANSCRIPT_EXTRACTOR_NUM_CTX=32768 (CLAUDE.md
+        # S15, model-router.ts). Any transcript beyond ~4096 tokens (~16K chars) was silently
+        # truncated before the model ever saw the condition to ground -- e.g. a 22,830-char
+        # transcript (~5,700+ tokens) exceeds the default on its own, before the system prompt
+        # and condition text are even added. Matches the canonical extraction path's own context
+        # window rather than inventing a new one.
+        "options": {"temperature": 0.1, "top_p": 0.95, "top_k": 64, "num_ctx": 32768},
     }
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(_OLLAMA_URL, data=data, headers={"Content-Type": "application/json"})

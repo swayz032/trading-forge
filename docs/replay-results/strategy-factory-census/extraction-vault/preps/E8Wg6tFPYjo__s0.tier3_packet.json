@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 7
+    "target_items": 16
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video E8Wg6tFPYjo strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 7,
+      "item_count": 16,
       "items": [
         {
           "item_id": "E8Wg6tFPYjo-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And it's the kind of thing that can be adapted to any market conditions because again, it's literally buying low and selling high. So, it won't really get outdated."
+            "verbatim": "So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities."
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "I don't think that there should be much discretion in trading. If any, it should be very, very minimal."
+            "verbatim": "The strategy is very simplistic. We buy low and sell high."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "I don't think that there should be much discretion in trading."
+            "verbatim": "this large wick right here pierced above that previous high, purging all of that liquidity, bringing that money back into the market, adding fuel for the next upcoming move."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "If you have a strict set of rules to go by, in my opinion, that's the only way that you can gain real statistics of your strategy."
+            "verbatim": "The simple way to describe liquidity is just resting money in the market. And the market wants to purge that liquidity and bring that money back in to add fuel for the next move."
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "I don't think that there should be much discretion in trading."
+            "verbatim": "So whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure. That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "If you have a strict set of rules to go by, in my opinion, that's the only way that you can gain real statistics of your strategy."
+            "verbatim": "That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon."
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,151 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "I've been trading this way for years. I'm a huge advocate for mechanical trading strategies. I don't think that there should be much discretion in trading."
+            "verbatim": "So we don't just immediately enter when there's a break of structure because that would be selling low and we don't want to do that obviously. So when a break of structure occurs, we need to patiently wait for a retracement. Now, typically that retracement ends up being towards a fair value gap or an imbalance."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B007",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The best way I can explain why this happens is that the market doesn't like inefficiencies. If you take a close look at some candlesticks, you're going to see that mostly all of the wicks and bodies are touching at some point, and there's really no gaps in between. So whenever we do have a gap like this, eventually it does get filled."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B008",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So using the short position tool on Trading View, I place my entry at the 71% right here."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B009",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "My favorite number to use is 71%. And what that does is it allows me to get a really nice risk-to-reward ratio."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B010",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So, the premise of higher time frame alignment is premium and discount. Whenever we have a trading range, we want to gauge premium and discount pricing. So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B011",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "And so if we look all the way to the right, this large wick right here pierced above that previous high, purging all of that liquidity, bringing that money back into the market, adding fuel for the next upcoming move."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B012",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Whenever we have a break of structure occurring in the market that is signaling a potential trade."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B013",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B014",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I simply drag the stop-loss to the high of the Fibonacci range right here."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "E8Wg6tFPYjo-S0-B015",
+          "video_id": "E8Wg6tFPYjo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "If I target the 71% from my entry, I get a risk-to-reward ratio of 2.45."
           },
           "rater_response": {
             "role": null,
@@ -330,7 +474,7 @@
     "items": [
       {
         "item_id": "E8Wg6tFPYjo-S0-B000",
-        "extracted_condition_text": "The strategy is based on the principle of buying low and selling high relative to the trading range.",
+        "extracted_condition_text": "Determine the higher timeframe bias by identifying if the price is in a premium (above 50% of range) or discount (below 50% of range) zone.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -338,7 +482,7 @@
       },
       {
         "item_id": "E8Wg6tFPYjo-S0-B001",
-        "extracted_condition_text": "Wait for a liquidity sweep, specifically a major high or low to be purged by a large wick or candle body closure.",
+        "extracted_condition_text": "The strategy is based on the principle of buying low and selling high relative to the trading range.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -346,7 +490,7 @@
       },
       {
         "item_id": "E8Wg6tFPYjo-S0-B002",
-        "extracted_condition_text": "The higher timeframe must be aligned with premium (sell) or discount (buy) pricing.",
+        "extracted_condition_text": "Wait for a liquidity sweep, specifically a major high or low to be purged by a large wick or candle body closure.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -354,7 +498,7 @@
       },
       {
         "item_id": "E8Wg6tFPYjo-S0-B003",
-        "extracted_condition_text": "The initial stop is placed at the extreme high or low of the measured Fibonacci range.",
+        "extracted_condition_text": "Liquidity sweeps signal that resting money has been purged, fueling the next directional move.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -362,7 +506,7 @@
       },
       {
         "item_id": "E8Wg6tFPYjo-S0-B004",
-        "extracted_condition_text": "The higher timeframe must be aligned with premium (sell) or discount (buy) pricing.",
+        "extracted_condition_text": "Wait for a Break of Structure (BOS) to occur, signaling a significant movement in price.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -370,7 +514,7 @@
       },
       {
         "item_id": "E8Wg6tFPYjo-S0-B005",
-        "extracted_condition_text": "The initial stop is placed at the extreme high or low of the measured Fibonacci range.",
+        "extracted_condition_text": "BOS confirms a potential trading opportunity has been created.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -378,6 +522,78 @@
       },
       {
         "item_id": "E8Wg6tFPYjo-S0-B006",
+        "extracted_condition_text": "Wait for price to retrace into a Fair Value Gap (FVG) or Imbalance after the BOS.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B007",
+        "extracted_condition_text": "The market tends to fill inefficiencies (gaps) before continuing its move.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B008",
+        "extracted_condition_text": "Enter the trade at the 71% retracement level of the measured Fibonacci range.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B009",
+        "extracted_condition_text": "The 71% retracement is used as the entry point to achieve a favorable risk-to-reward ratio.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B010",
+        "extracted_condition_text": "The higher timeframe must be aligned with premium (sell) or discount (buy) pricing.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B011",
+        "extracted_condition_text": "A major high or low must be swept to purge resting liquidity.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B012",
+        "extracted_condition_text": "A break of structure must occur to signal a potential trading opportunity.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B013",
+        "extracted_condition_text": "The Fibonacci retracement level must align with a Fair Value Gap or Imbalance.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B014",
+        "extracted_condition_text": "The initial stop is placed at the extreme high or low of the measured Fibonacci range.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "E8Wg6tFPYjo-S0-B015",
         "extracted_condition_text": "The 71% retracement entry provides a risk-to-reward ratio of 2.45.",
         "adjudication_response": {
           "support": null,
