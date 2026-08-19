@@ -1,0 +1,15 @@
+diff --git a/scripts/control-plane-bootstrap/control-plane-seat-hook.mjs b/scripts/control-plane-bootstrap/control-plane-seat-hook.mjs
+--- a/scripts/control-plane-bootstrap/control-plane-seat-hook.mjs
++++ b/scripts/control-plane-bootstrap/control-plane-seat-hook.mjs
+@@
+ export function makeRealIo(cwd) {
+-  const git = (...args) => execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim();
++  // AR-1364A: keep repository selection out of argv. On Windows/Git-for-Windows, combining
++  // `git -C <deep-worktree>` with a long `<sha>:<path>` revision argument can cross the native
++  // path/stat boundary before Git evaluates the revision expression. Supplying the repository as
++  // the child process cwd preserves identical Git semantics without constructing that vulnerable
++  // argv shape. Authority validation itself is unchanged and remains fail-closed.
++  const git = (...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+   const realpath = (p) => fs.realpathSync(p).replaceAll('\\', '/');
+   return {
+     git,
