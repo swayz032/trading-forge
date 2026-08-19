@@ -188,19 +188,67 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
       correlationId: req.id ?? null,
     }).catch((auditErr) => req.log.warn({ auditErr, sessionId: session.id }, "paper.evidence_labels_stamped audit write failed (non-blocking)"));
 
-    // AR-1155: resolve + verify the qualification-activation identity (candidate,
-    // exit-config, run/feed identity, TF_RUNTIME_REVISION — stamped once, verified
-    // on every later call) before starting the Massive WS stream. startStream()
-    // only runs when verification returns ok:true.
+    // Deep-scan #16 Wave 2 Track G2 (#14) fallback, shared by both failure classes below:
+    // if the failed_to_stream UPDATE itself fails, the session never reaches that status —
+    // the auto-restart cron (which matches on it) will never find it, and the dead stream
+    // stays invisible with no operator signal. Log loudly + a distinct audit row + counter.
+    const markFailedToStream = async (): Promise<void> => {
+      await db
+        .update(paperSessions)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .set({ status: "failed_to_stream" as any })
+        .where(eq(paperSessions.id, session.id))
+        .catch((updateErr) => {
+          const updateErrMsg = updateErr instanceof Error ? updateErr.message : String(updateErr);
+          req.log.error(
+            { err: updateErr, sessionId: session.id },
+            "paper.session_start: FAILED to mark session failed_to_stream — auto-restart cron will not discover this dead stream",
+          );
+          db.insert(auditLog).values({
+            action: "paper.failed_to_stream_status_update_failed",
+            entityType: "paper_session",
+            entityId: session.id,
+            input: { strategyId, sessionId: session.id },
+            result: {
+              error: updateErrMsg,
+              note: "status UPDATE to failed_to_stream did not persist — auto-restart cron will not match this session",
+            },
+            status: "failure",
+            decisionAuthority: "system",
+            correlationId: req.id ?? null,
+          }).catch(() => { /* best-effort secondary audit; primary failure already logged above */ });
+          try { trackG2SilentFailuresTotal.labels({ site: "paper_session_failed_to_stream_update" }).inc(); } catch { /* non-blocking counter */ }
+        });
+    };
+
+    // AR-1155 (repaired per AR-1335A S5/F-4): resolve + verify the qualification-
+    // activation identity (candidate hash, run/environment hash, TF_RUNTIME_REVISION —
+    // stamped once, verified on every later call) before starting the Massive WS stream.
+    // A BLOCKED verification is a qualification-GATE refusal, not a transport failure —
+    // it takes its own fail-closed branch: no success audit, no success SSE, non-success
+    // HTTP response, and returns immediately WITHOUT falling into the generic
+    // session_start success path below. Only a genuine startStream() transport failure
+    // (network/WS — the pre-existing failure class) is handled by the catch block.
+    const activation = await verifyPaperActivation(session.id, { correlationId: req.id ?? null });
+    if (!activation.ok) {
+      req.log.warn(
+        { sessionId: session.id, strategyId, reason: activation.reason },
+        "AR-1155: activation verify BLOCKED — session not started, no success audit/SSE",
+      );
+      await markFailedToStream();
+      // paper.activation_verify_blocked audit row is already written inside verifyPaperActivation().
+      res.status(409).json({
+        error: "paper_activation_blocked",
+        message: `Paper session qualification-activation was refused: ${activation.reason}`,
+        sessionId: session.id,
+        reason: activation.reason,
+      });
+      return;
+    }
+
     try {
-      const activation = await verifyPaperActivation(session.id, { correlationId: req.id ?? null });
-      if (activation.ok) {
-        startStream(session.id, activation.symbols);
-        req.log.info({ sessionId: session.id, symbols: activation.symbols }, "Paper stream started for session");
-      } else {
-        req.log.warn({ sessionId: session.id, strategyId, reason: activation.reason }, "Activation verify blocked — stream not started");
-        throw new Error(`activation_blocked: ${activation.reason}`);
-      }
+      startStream(session.id, activation.symbols);
+      req.log.info({ sessionId: session.id, symbols: activation.symbols }, "Paper stream started for session");
     } catch (streamErr) {
       // Track C.2: stream startup failure — write audit + Discord WARN + mark session failed_to_stream.
       const errMsg = streamErr instanceof Error ? streamErr.message : String(streamErr);
@@ -225,39 +273,7 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
           "Stop and restart the paper session. If this keeps happening, check your MASSIVE_API_KEY in the .env file.",
         ),
       );
-      await db
-        .update(paperSessions)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .set({ status: "failed_to_stream" as any })
-        .where(eq(paperSessions.id, session.id))
-        .catch((updateErr) => {
-          // Deep-scan #16 Wave 2 Track G2 (#14): if THIS update fails, the session
-          // never actually reaches status='failed_to_stream' in the DB — the
-          // auto-restart cron (which matches on that status) will never find this
-          // session, and the dead stream stays invisible with no operator signal.
-          // Log loudly + a distinct audit row + a counter so the gap is discoverable
-          // even though we cannot safely retry synchronously from inside this
-          // best-effort stream-startup catch block.
-          const updateErrMsg = updateErr instanceof Error ? updateErr.message : String(updateErr);
-          req.log.error(
-            { err: updateErr, sessionId: session.id },
-            "paper.session_start: FAILED to mark session failed_to_stream — auto-restart cron will not discover this dead stream",
-          );
-          db.insert(auditLog).values({
-            action: "paper.failed_to_stream_status_update_failed",
-            entityType: "paper_session",
-            entityId: session.id,
-            input: { strategyId, sessionId: session.id },
-            result: {
-              error: updateErrMsg,
-              note: "status UPDATE to failed_to_stream did not persist — auto-restart cron will not match this session",
-            },
-            status: "failure",
-            decisionAuthority: "system",
-            correlationId: req.id ?? null,
-          }).catch(() => { /* best-effort secondary audit; primary failure already logged above */ });
-          try { trackG2SilentFailuresTotal.labels({ site: "paper_session_failed_to_stream_update" }).inc(); } catch { /* non-blocking counter */ }
-        });
+      await markFailedToStream();
     }
 
     // Audit trail — paper session lifecycle

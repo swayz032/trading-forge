@@ -589,7 +589,7 @@ export function checkTrailStopExtended(
   }
 }
 
-interface CachedSession {
+export interface CachedSession {
   config: StrategyConfig;
   strategyId: string;
   // deep-scan C-1: the strategy's CONCEPT name (not the UUID). The context/eligibility
@@ -1018,7 +1018,10 @@ export async function getSessionTimeframe(sessionId: string): Promise<string> {
   return cfg?.timeframe ?? "1m";
 }
 
-async function getSessionConfig(sessionId: string): Promise<CachedSession | null> {
+// AR-1155: exported so paper-qualification-activation-service.ts can hash the SAME
+// post-translation effective config the paper engine actually executes against,
+// instead of building a second raw-DB approximation (GPT AR-1335A S2).
+export async function getSessionConfig(sessionId: string): Promise<CachedSession | null> {
   const cached = sessionCache.get(sessionId);
   if (cached) return cached;
 

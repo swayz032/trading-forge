@@ -1,70 +1,140 @@
 /**
- * paper-qualification-activation-service.ts — AR-1155 (2026-08-18)
+ * paper-qualification-activation-service.ts — AR-1155 (2026-08-18, repaired per AR-1335A)
  *
  * One shared PAPER qualification-activation authority, replacing the direct
  * `startStream()` calls previously scattered across POST /api/paper/start and
- * scheduler.ts's boot-resume / failed-to-stream-retry paths. Resolves:
- *   - the runtime-translated candidate (the linked strategy row + its
- *     resolved trading symbols — the same values every direct-`startStream()`
- *     call site was independently re-deriving before this packet);
- *   - the dedicated exit-config identity (strategies.exit_plan_config, or the
- *     static Style C default when absent);
- *   - the effective run identity (session id / mode / firm) and feed identity
- *     (paper-evidence-labels' existing feed_mode resolution);
- *   - TF_RUNTIME_REVISION, defined by AR-1334A: the deployed runtime code
- *     image's explicit immutable revision, read ONLY from
- *     `process.env.TF_RUNTIME_REVISION`. Never inferred from working-tree
- *     HEAD, wall-clock time, process start time, package version, or an old
- *     compiled_spec hash — the consumer contract AR-1334A defines.
+ * scheduler.ts's boot-resume / failed-to-stream-retry paths.
  *
- * Stamps that identity ONCE into `paper_sessions.config.qualification_identity`
- * (existing JSONB column — no migration, per AR-1334A S2 rule 5). On every
- * later call for the same session (resume / retry / reconnect), the stamp is
- * VERIFIED, never overwritten: any drift in runtime revision, candidate,
- * exit-config, or run identity fails the session closed rather than silently
- * re-stamping under new conditions.
+ * Per AR-1147 §7 / AR-1335A, candidate identity is not row identity — it is a
+ * canonical hash over the exact execution-relevant candidate projection:
+ *   strategy_id + resolved execution symbol set + timeframe +
+ *   POST-TRANSLATION effective paper config (the same object
+ *   `paper-signal-service.ts::getSessionConfig()` hands the live paper engine,
+ *   via `translateDSLToPaperConfig()` — never a second raw-DB approximation)
+ *   + the full top-level `exit_plan_config`.
+ * That hash is `candidate_version_hash`.
+ *
+ * A second canonical hash, `run_environment_hash`, covers the non-strategy
+ * inputs that can also change qualification results: session mode, firm/risk
+ * identity, feed identity, and the session's own risk/execution config
+ * (`paper_sessions.config`, minus this module's own receipt key and the
+ * unrelated evidence-labels receipt — never self-hash the receipt).
+ *
+ * `TF_RUNTIME_REVISION` (AR-1334A: read ONLY from `process.env`, never
+ * inferred from working-tree HEAD/wall-clock/package version) is the third
+ * leg. All three are stamped ONCE, atomically (compare-and-set — see
+ * `verifyPaperActivation`), into `paper_sessions.config.qualification_identity`
+ * (existing JSONB column, no migration). On every later call for the same
+ * session, all three are recomputed fresh and compared for EXACT equality —
+ * never overwritten, never partially checked. Any drift fails the session
+ * closed.
  *
  * Callers MUST call the existing synchronous `startStream()` themselves, and
  * ONLY when this returns `{ ok: true }` — this module never calls it.
  */
 
-import { eq } from "drizzle-orm";
+import { createHash } from "node:crypto";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { paperSessions, strategies } from "../db/schema.js";
+import { getSessionConfig, type CachedSession } from "./paper-signal-service.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 import { resolveFeedMode } from "../lib/paper-evidence-labels.js";
 import type { PaperSessionConfigShape } from "../db/jsonb-shapes.js";
 
-// ─── Identity shape ─────────────────────────────────────────────────────────
+// ─── Canonical hashing (mirrors broker-router.ts::computeStrategyVersionHashForRouting) ──
 
-export interface QualificationCandidateIdentity {
+function sortedKeyReplacer(_key: string, value: unknown): unknown {
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    const sorted: Record<string, unknown> = {};
+    for (const k of Object.keys(value as Record<string, unknown>).sort()) {
+      sorted[k] = (value as Record<string, unknown>)[k];
+    }
+    return sorted;
+  }
+  return value;
+}
+
+/** Deterministic sha256 over sorted-key-canonicalized JSON. Same convention project-wide. */
+export function canonicalHash(value: unknown): string {
+  const canonical = JSON.stringify(value, sortedKeyReplacer) ?? "null";
+  return createHash("sha256").update(canonical, "utf8").digest("hex");
+}
+
+// ─── Projections (pure — the exact bytes each hash covers) ────────────────
+
+export interface CandidateProjection {
   strategy_id: string;
-  lifecycle_state: string;
   symbols: string[];
+  timeframe: string;
+  effective_config: unknown;
+  exit_plan_config: unknown;
 }
 
-export interface QualificationExitIdentity {
-  has_exit_plan_config: boolean;
-  exit_style: string | null;
-}
-
-export interface QualificationRunIdentity {
-  session_id: string;
+export interface RunEnvironmentProjection {
   mode: string;
   firm_id: string | null;
+  feed_mode: "delayed" | "realtime" | "unknown";
+  session_risk_config: Record<string, unknown>;
 }
 
-export interface QualificationFeedIdentity {
-  feed_mode: "delayed" | "realtime" | "unknown";
+export function buildCandidateProjection(input: {
+  strategyId: string;
+  symbols: string[];
+  timeframe: string;
+  effectiveConfig: unknown;
+  exitPlanConfig: unknown;
+}): CandidateProjection {
+  return {
+    strategy_id: input.strategyId,
+    symbols: [...input.symbols].sort(),
+    timeframe: input.timeframe,
+    effective_config: input.effectiveConfig,
+    exit_plan_config: input.exitPlanConfig,
+  };
 }
+
+/** Strips this module's own receipt key + the unrelated evidence-labels receipt (non-semantic, self-hash risk). */
+export function sessionRiskConfig(rawConfig: PaperSessionConfigShape | null | undefined): Record<string, unknown> {
+  const { evidence_labels: _evidence_labels, qualification_identity: _qualification_identity, ...rest } =
+    (rawConfig ?? {}) as Record<string, unknown> & { qualification_identity?: unknown };
+  return rest;
+}
+
+export function buildRunEnvironmentProjection(input: {
+  mode: string;
+  firmId: string | null;
+  feedMode: "delayed" | "realtime" | "unknown";
+  rawSessionConfig: PaperSessionConfigShape | null | undefined;
+}): RunEnvironmentProjection {
+  return {
+    mode: input.mode,
+    firm_id: input.firmId,
+    feed_mode: input.feedMode,
+    session_risk_config: sessionRiskConfig(input.rawSessionConfig),
+  };
+}
+
+// ─── Identity shape persisted to paper_sessions.config.qualification_identity ──
 
 export interface PaperQualificationIdentity {
-  candidate: QualificationCandidateIdentity;
-  exit_config: QualificationExitIdentity;
-  run: QualificationRunIdentity;
-  feed: QualificationFeedIdentity;
+  /** LOAD-BEARING — the only fields ever compared for resume/retry equality. */
+  candidate_version_hash: string;
+  run_environment_hash: string;
   runtime_revision: string;
+  /** Diagnostic only — human-readable receipt. Never compared; drift here without
+   *  a hash change cannot occur (the hashes cover these same values), but these
+   *  fields exist so an operator/GPT can read WHAT was stamped without recomputing. */
+  diagnostic: {
+    strategy_id: string;
+    lifecycle_state: string;
+    symbols: string[];
+    timeframe: string;
+    mode: string;
+    firm_id: string | null;
+    feed_mode: string;
+  };
   stamped_at: string;
 }
 
@@ -77,7 +147,7 @@ export type ActivationVerifyResult =
   | { ok: true; identity: PaperQualificationIdentity; symbols: string[]; stamped: boolean }
   | { ok: false; reason: string };
 
-// ─── Pure helpers (no I/O — directly unit-testable) ────────────────────────
+// ─── Pure helpers ───────────────────────────────────────────────────────────
 
 /** AR-1334A Decision 2: explicit, immutable runtime-build revision. Never inferred. */
 export function resolveRuntimeRevision(): string | null {
@@ -87,7 +157,7 @@ export function resolveRuntimeRevision(): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-/** Mirrors the symbol-resolution already duplicated at every direct-startStream() call site. */
+/** The market-data subscription surface — mirrors every direct-startStream() call site's own resolution. */
 export function resolveCandidateSymbols(
   strategySymbol: string | null | undefined,
   strategyConfig: Record<string, unknown> | null | undefined,
@@ -101,38 +171,28 @@ export function resolveCandidateSymbols(
   return symbols;
 }
 
-function sameSymbols(a: string[], b: string[]): boolean {
-  return JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
-}
-
 /**
- * Pure decision core. Given already-fetched session/strategy fields and the
- * current runtime revision, decides whether activation may proceed:
- *   - no existing stamp  -> build + return a fresh identity (`stamped: true`);
- *   - existing stamp     -> verify every dimension unchanged (`stamped: false`)
- *                           or fail closed on the first mismatch found.
- * No DB/env access here — exported directly so the decision logic is unit
- * tested without a database.
+ * Pure decision core. Given precomputed hashes + resolved fields, decides
+ * whether activation may proceed. No DB/env access — exported directly so the
+ * decision logic (including every mutation/mismatch class) is unit tested
+ * without a database.
  */
 export function decideActivation(input: {
-  sessionId: string;
-  mode: string;
-  firmId: string | null;
-  existingConfig: PaperSessionConfigWithIdentity | null | undefined;
   strategyId: string | null;
   lifecycleState: string | null;
-  strategySymbol: string | null | undefined;
-  strategyConfig: Record<string, unknown> | null | undefined;
-  exitPlanConfig: { exit_style?: string } | null | undefined;
+  symbols: string[];
   feedMode: "delayed" | "realtime" | "unknown";
   runtimeRevision: string | null;
+  candidateVersionHash: string;
+  runEnvironmentHash: string;
+  diagnostic: PaperQualificationIdentity["diagnostic"];
+  existingIdentity: PaperQualificationIdentity | null | undefined;
   nowIso: string;
 }): ActivationVerifyResult {
   if (!input.strategyId || !input.lifecycleState) {
     return { ok: false, reason: "candidate_unresolved: paper session has no linked strategy" };
   }
-  const symbols = resolveCandidateSymbols(input.strategySymbol, input.strategyConfig);
-  if (symbols.length === 0) {
+  if (input.symbols.length === 0) {
     return { ok: false, reason: "candidate_unresolved: no symbol found for strategy" };
   }
   if (input.feedMode === "unknown") {
@@ -145,10 +205,9 @@ export function decideActivation(input: {
     };
   }
 
-  const existing = input.existingConfig?.qualification_identity;
-
+  const existing = input.existingIdentity;
   if (existing) {
-    // RESUME — verify-only. Never overwrite an existing stamp.
+    // RESUME — verify-only, exact equality on every stamped dimension. Never overwrite.
     if (existing.runtime_revision !== input.runtimeRevision) {
       return {
         ok: false,
@@ -156,47 +215,45 @@ export function decideActivation(input: {
           `current runtime reports '${input.runtimeRevision}' — refusing countable resume under a changed executable identity`,
       };
     }
-    if (existing.candidate.strategy_id !== input.strategyId) {
-      return { ok: false, reason: "candidate_mutation: stamped strategy_id no longer matches the linked strategy" };
+    if (existing.candidate_version_hash !== input.candidateVersionHash) {
+      return {
+        ok: false,
+        reason: "candidate_mutation: candidate_version_hash no longer matches the original stamp " +
+          "(strategy id, symbol set, timeframe, effective post-translation config, or exit_plan_config changed)",
+      };
     }
-    if (!sameSymbols(existing.candidate.symbols, symbols)) {
-      return { ok: false, reason: "candidate_mutation: resolved symbols no longer match the original stamp" };
+    if (existing.run_environment_hash !== input.runEnvironmentHash) {
+      return {
+        ok: false,
+        reason: "run_mutation: run_environment_hash no longer matches the original stamp " +
+          "(mode, firm/risk identity, feed identity, or session risk config changed)",
+      };
     }
-    const currentExitStyle = input.exitPlanConfig?.exit_style ?? null;
-    if (
-      existing.exit_config.has_exit_plan_config !== (input.exitPlanConfig != null) ||
-      existing.exit_config.exit_style !== currentExitStyle
-    ) {
-      return { ok: false, reason: "exit_config_mutation: strategy exit_plan_config changed since the original stamp" };
-    }
-    if (existing.run.mode !== input.mode || existing.run.firm_id !== input.firmId) {
-      return { ok: false, reason: "run_mutation: session mode/firm_id no longer matches the original stamp" };
-    }
-    return { ok: true, identity: existing, symbols: existing.candidate.symbols, stamped: false };
+    return { ok: true, identity: existing, symbols: existing.diagnostic.symbols, stamped: false };
   }
 
   // FIRST ACTIVATION — build and return a fresh stamp.
   const identity: PaperQualificationIdentity = {
-    candidate: { strategy_id: input.strategyId, lifecycle_state: input.lifecycleState, symbols },
-    exit_config: {
-      has_exit_plan_config: input.exitPlanConfig != null,
-      exit_style: input.exitPlanConfig?.exit_style ?? null,
-    },
-    run: { session_id: input.sessionId, mode: input.mode, firm_id: input.firmId },
-    feed: { feed_mode: input.feedMode },
+    candidate_version_hash: input.candidateVersionHash,
+    run_environment_hash: input.runEnvironmentHash,
     runtime_revision: input.runtimeRevision,
+    diagnostic: input.diagnostic,
     stamped_at: input.nowIso,
   };
-  return { ok: true, identity, symbols, stamped: true };
+  return { ok: true, identity, symbols: input.symbols, stamped: true };
 }
 
 // ─── I/O wrapper ────────────────────────────────────────────────────────────
 
 /**
- * Fetches session + linked strategy, runs `decideActivation`, and on a FIRST
- * activation persists the stamp into `paper_sessions.config`. On a verified
- * resume, the existing stamp is left untouched (no write). On a blocked
- * result, nothing is persisted to `config` and an audit row records why.
+ * Fetches session + the SAME post-translation candidate view the paper engine
+ * consumes (`getSessionConfig`), runs `decideActivation`, and on a FIRST
+ * activation persists the stamp with a compare-and-set UPDATE (only writes
+ * when `config->'qualification_identity'` is still NULL — see F-3). If this
+ * call loses that race, it re-reads the winning stamp and verifies against
+ * it rather than overwriting. On a verified resume, no write happens. On a
+ * blocked result, nothing is persisted to `config` and an audit row records
+ * why.
  *
  * Callers call `startStream(sessionId, result.symbols)` themselves, only
  * when `result.ok === true`.
@@ -209,22 +266,60 @@ export async function verifyPaperActivation(
   if (!session) {
     return { ok: false, reason: "session_not_found" };
   }
-  const strat = session.strategyId
-    ? (await db.select().from(strategies).where(eq(strategies.id, session.strategyId)).limit(1))[0]
-    : undefined;
 
-  const result = decideActivation({
-    sessionId: session.id,
+  const cached: CachedSession | null = await getSessionConfig(sessionId);
+  // Market-data subscription surface: resolved from the RAW strategy row, the exact
+  // same fields (strategy.symbol + strategy.config.symbol) every prior direct-
+  // startStream() call site read — decoupled from `cached.config`, which is the
+  // TRANSLATED trading-logic object used below for the candidate hash. Conflating
+  // the two would silently change which symbols get subscribed to.
+  const [rawStrategy] = session.strategyId
+    ? await db.select().from(strategies).where(eq(strategies.id, session.strategyId)).limit(1)
+    : [];
+  const symbols = resolveCandidateSymbols(
+    rawStrategy?.symbol,
+    rawStrategy?.config as Record<string, unknown> | undefined,
+  );
+
+  const feedMode = resolveFeedMode();
+  const runtimeRevision = resolveRuntimeRevision();
+
+  const candidateProjection = cached
+    ? buildCandidateProjection({
+        strategyId: cached.strategyId,
+        symbols,
+        timeframe: cached.timeframe,
+        effectiveConfig: cached.config,
+        exitPlanConfig: cached.exitPlanConfig,
+      })
+    : null;
+  const runEnvironmentProjection = buildRunEnvironmentProjection({
     mode: session.mode,
     firmId: session.firmId ?? null,
-    existingConfig: session.config as PaperSessionConfigWithIdentity | null,
-    strategyId: session.strategyId ?? null,
-    lifecycleState: strat?.lifecycleState ?? null,
-    strategySymbol: strat?.symbol,
-    strategyConfig: strat?.config as Record<string, unknown> | undefined,
-    exitPlanConfig: strat?.exitPlanConfig ?? null,
-    feedMode: resolveFeedMode(),
-    runtimeRevision: resolveRuntimeRevision(),
+    feedMode,
+    rawSessionConfig: session.config as PaperSessionConfigShape | null,
+  });
+
+  const existingIdentity = (session.config as PaperSessionConfigWithIdentity | null)?.qualification_identity ?? null;
+
+  const result = decideActivation({
+    strategyId: cached?.strategyId ?? session.strategyId ?? null,
+    lifecycleState: cached?.lifecycleState ?? null,
+    symbols,
+    feedMode,
+    runtimeRevision,
+    candidateVersionHash: candidateProjection ? canonicalHash(candidateProjection) : "",
+    runEnvironmentHash: canonicalHash(runEnvironmentProjection),
+    diagnostic: {
+      strategy_id: cached?.strategyId ?? session.strategyId ?? "",
+      lifecycle_state: cached?.lifecycleState ?? "",
+      symbols,
+      timeframe: cached?.timeframe ?? "",
+      mode: session.mode,
+      firm_id: session.firmId ?? null,
+      feed_mode: feedMode,
+    },
+    existingIdentity,
     nowIso: new Date().toISOString(),
   });
 
@@ -248,7 +343,49 @@ export async function verifyPaperActivation(
       ...((session.config as PaperSessionConfigShape | null) ?? {}),
       qualification_identity: result.identity,
     };
-    await db.update(paperSessions).set({ config: newConfig }).where(eq(paperSessions.id, sessionId));
+    // F-3: compare-and-set — only write if no concurrent caller already stamped it.
+    const [written] = await db
+      .update(paperSessions)
+      .set({ config: newConfig })
+      .where(and(eq(paperSessions.id, sessionId), sql`(${paperSessions.config}->'qualification_identity') IS NULL`))
+      .returning({ id: paperSessions.id });
+
+    if (!written) {
+      // Lost the race — re-read the winning stamp and verify against it instead of
+      // silently proceeding under a stamp this call never wrote or confirmed.
+      const [rewon] = await db.select().from(paperSessions).where(eq(paperSessions.id, sessionId));
+      const winningIdentity = (rewon?.config as PaperSessionConfigWithIdentity | null)?.qualification_identity ?? null;
+      const reverified = decideActivation({
+        strategyId: cached?.strategyId ?? session.strategyId ?? null,
+        lifecycleState: cached?.lifecycleState ?? null,
+        symbols,
+        feedMode,
+        runtimeRevision,
+        candidateVersionHash: candidateProjection ? canonicalHash(candidateProjection) : "",
+        runEnvironmentHash: canonicalHash(runEnvironmentProjection),
+        diagnostic: result.identity.diagnostic,
+        existingIdentity: winningIdentity,
+        nowIso: new Date().toISOString(),
+      });
+      if (!reverified.ok) {
+        await insertAuditRowSafe({
+          action: "paper.activation_verify_blocked",
+          entityType: "paper_session",
+          entityId: sessionId,
+          input: { sessionId, race: "lost_first_stamp_race" },
+          result: { reason: reverified.reason },
+          status: "blocked",
+          decisionAuthority: "system",
+          correlationId: opts.correlationId ?? null,
+        });
+        logger.warn(
+          { sessionId, reason: reverified.reason },
+          "paper-qualification-activation-service: lost first-stamp race, re-verify against winner BLOCKED",
+        );
+      }
+      return reverified;
+    }
+
     await insertAuditRowSafe({
       action: "paper.activation_identity_stamped",
       entityType: "paper_session",
