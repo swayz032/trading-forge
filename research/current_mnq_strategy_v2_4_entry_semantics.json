@@ -1,17 +1,33 @@
 {
-  "schema_version": 4,
-  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-4",
-  "frozen_at": "2026-08-18",
-  "purpose": "Bind the trader-confirmed distinction between ordinary momentum, true displacement, rejection-trigger sequences, normal post-break continuation, 15m three-bar continuation after a weak break, and the only two permitted pre-break early-entry families.",
-  "core_equation": "AUTHORIZED_LOCATION_AND_ROOM + VALID_CANDLE_STORY + DIRECTIONAL_MOMENTUM_TRIGGER",
+  "schema_version": 5,
+  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-5-FORCE1",
+  "frozen_at": "2026-08-19",
+  "purpose": "Bind the trader-confirmed distinction between ordinary momentum, true displacement, rejection-trigger sequences, normal post-break continuation, weak-break 15m continuation, the only two permitted pre-break early-entry families, and the live intra-candle force clock used to avoid late entry against the fixed 17.25-point stop.",
+  "core_equation": "AUTHORIZED_LOCATION_AND_ROOM + VALID_CANDLE_STORY + SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE",
   "momentum_vs_displacement": {
-    "momentum_candle": "Directional body/control candle using the existing frozen Params.body_frac and Params.close_loc geometry. Range expansion is NOT required.",
+    "momentum_candle": "Directional body/control geometry using the existing frozen Params.body_frac and Params.close_loc. Range expansion is NOT required.",
     "displacement": "Momentum plus true range expansion using the existing frozen Params.range_ratio. Every strong bullish/red momentum candle is not displacement.",
     "forbidden_equivalence": "STRONG_OR_MOMENTUM_CANDLE != AUTOMATIC_DISPLACEMENT"
   },
+  "live_force_equation": {
+    "role": "ENTRY_CLOCK_FOR_ANY_MOMENTUM_TRIGGER",
+    "why": "The trader watches the forming candle like a buyer/seller tug of war and may enter before the parent candle closes once force is sustained. Waiting for the full 5m close can be materially late relative to the frozen 17.25-point stop and can consume normal pullback room.",
+    "historical_resolution": "COMPLETED_1M_SUBBARS_ONLY",
+    "live_resolution": "SAME_CAUSAL_DECISION_CLOCK_FOR_PARITY; no final parent-candle OHLC may authorize an earlier historical entry",
+    "equation": "FORCE = PARTIAL_MOMENTUM_GEOMETRY AND PATH_EFFICIENCY >= Params.body_frac AND LATEST_CLOSE_AT_DIRECTIONAL_EXTREME AND AT_LEAST_TWO_COMPLETED_1M_OBSERVATIONS AND PARENT_CANDLE_NOT_CLOSED",
+    "partial_momentum_geometry": "Aggregate only the completed 1m sub-bars known at the decision clock into the forming parent candle and apply the already-frozen Params.body_frac/Params.close_loc geometry.",
+    "path_efficiency": "directional_progress / sum(abs(consecutive_completed_1m_close_changes_including_parent_open))",
+    "tug_of_war": "Large giveback/back-and-forth increases path distance without equal directional progress and therefore lowers efficiency.",
+    "directional_extreme": "For longs, latest completed 1m close must equal/regain the strongest completed 1m close so far; shorts are the mirror image.",
+    "minimum_completed_1m_observations": 2,
+    "minimum_observation_reason": "Two completed sub-bars are the structural minimum needed to observe persistence versus giveback; this value was fixed from semantics before any clean performance result and is not PnL-selected.",
+    "parent_close_policy": "If force was not proven before the parent candle close, that candle does not receive the trader's early momentum-entry privilege.",
+    "future_next_candle_forbidden": true,
+    "tick_order_inference_forbidden": true
+  },
   "rejection_entry_family": {
     "location_required": true,
-    "trigger": "a distinct momentum candle after the completed rejection/control event",
+    "trigger": "completed rejection/control event followed by sustained live directional force in the forming trigger candle",
     "current_trigger_cannot_self_certify_prior_rejection": true,
     "valid_pre_trigger_stories": [
       "two_directional_momentum_candles_after_zone_rejection",
@@ -21,25 +37,25 @@
       "shrinking_candles_heading_into_zone_then_rejection_then_reverse_momentum",
       "other_geometry_equivalent_rejection_control_story_then_momentum"
     ],
-    "rejection_without_momentum": "WAIT_OR_NO_TRADE",
+    "rejection_without_live_force": "WAIT_OR_NO_TRADE",
     "pattern_name_alone": "NO_TRADE"
   },
   "normal_breakout_family": {
     "first_print_beyond_key_zone": "SETUP_ONLY",
-    "entry_trigger": "the next completed 5m candle is directional momentum in the breakout direction and remains beyond the broken zone",
+    "entry_trigger": "the following 5m candle may trigger before its close only after sustained intra-5m force is causally proven in the breakout direction while remaining beyond the broken zone",
     "first_break_candle_alone": "NO_ENTRY",
     "fake_break_protection": true
   },
   "weak_break_three_bar_continuation": {
     "timeframe": "15m",
     "weak_break_definition": "The first completed breakout candle closes beyond the exact zone but does not meet the frozen momentum-candle geometry.",
-    "strong_first_break_behavior": "Do not arm the weak-break 15m path; wait for the normal subsequent momentum confirmation.",
+    "strong_first_break_behavior": "Do not arm the weak-break 15m path; wait for the normal following momentum/force confirmation.",
     "sequence": [
       "BAR1: completed weak candle establishes the break beyond the exact key zone",
-      "BAR2: controlled pullback toward the broken level without invalidating through the opposite side",
-      "BAR3: directional momentum resumes and re-establishes continuation beyond the broken level"
+      "BAR2: completed controlled pullback toward the broken level without invalidating through the opposite side",
+      "BAR3: while forming, sustained directional force may trigger before the 15m close once continuation is causally proven"
     ],
-    "use_case": "When the initial break is not a strong/momentum move, do not chase. Let price pull back and use the 15m three-bar continuation structure as an entry path.",
+    "use_case": "When the initial break is not a strong/momentum move, do not chase. Let price pull back and use the 15m three-bar continuation structure, but do not require waiting for bar 3 to close if force is already sustained.",
     "future_bars_forbidden": true
   },
   "pre_break_early_entry_exceptions": {
@@ -47,14 +63,14 @@
     "families": [
       {
         "name": "REPEAT_TEST_MOMENTUM_ATTACK",
-        "rule": "The key level has already been tested, at least one completed bar resets away so this is a distinct test rather than adjacent bars sitting on the level, then price returns for another test/attack and a momentum candle confirms the breakout attack before a completed candle has printed beyond the zone."
+        "rule": "The key level has already been tested, at least one completed bar resets away so this is a distinct test rather than adjacent bars sitting on the level, then price returns for another test/attack. The forming attack candle may trigger before close only after sustained intra-5m directional force is proven."
       },
       {
         "name": "DISPLACEMENT_SEQUENCE_INTO_LEVEL",
-        "rule": "A genuine displacement drive heads directly toward the key zone. At least one of the first two drive candles must be true displacement; the other may be ordinary directional momentum because every strong candle is not displacement. The THIRD candle is the timing trigger and must retain directional momentum while price is close to the authorized key level. If the third candle reverses color/control, no early entry.",
+        "rule": "A genuine displacement drive heads directly toward the key zone. At least one of the first two drive candles must be true displacement; the other may be ordinary directional momentum because every strong candle is not displacement. The THIRD candle is the timing candle and may trigger before its close only after sustained directional force is proven while price is close to the authorized key level. If the third candle loses/reverses control, no early entry.",
         "fvg_relationship": "IRRELEVANT_TO_ENTRY_AUTHORITY",
         "fvg_required": false,
-        "note": "A three-candle sequence may incidentally form an FVG, but the trader does not use FVG formation to authorize this entry. The rule is about the third candle of the displacement drive retaining momentum near the key level."
+        "note": "A three-candle sequence may incidentally form an FVG, but the trader does not use FVG formation to authorize this entry. The rule is about the third candle of the displacement drive sustaining real force near the key level."
       }
     ],
     "all_other_pre_break_entries": "NO_TRADE"
@@ -62,7 +78,7 @@
   "range_day_key_zone_room": {
     "rule": "When the causal pre-open structure is ranging/mixed, do not authorize key zones crowded against or inside the active range. Preserve meaningful nearby structure as reaction/target context, but fresh entry-authorized zones should leave breakout travel room from the range edge before price reaches the key zone.",
     "range_classifier": "existing causal premarket plan pm_structure == MIXED",
-    "room_requirement": "reuse existing frozen Params.min_room_r * Params.stop; no new numeric threshold",
+    "room_requirement": "reuse existing frozen Params.min_room_r * Params.stop",
     "no_hindsight_day_label": true
   },
   "target_rule_reconfirmed": {
@@ -70,10 +86,12 @@
     "farther_feature_may_not_leapfrog": true
   },
   "anti_overfit": {
-    "new_numeric_threshold_added": false,
-    "reuses_existing_frozen_geometry_and_room_parameters": true,
+    "new_PnL_selected_numeric_threshold_added": false,
+    "structural_minimum_completed_1m_observations": 2,
+    "reuses_existing_frozen_geometry_thresholds_for_force": true,
     "no_PnL_selection": true,
-    "screenshots_and_direct_trader_labels_arrived_before_clean_v2_4_sealed_PnL": true,
+    "video_and_direct_trader_labels_arrived_before_any_clean_v2_4_performance_result_was_observed": true,
+    "prior_clean_attempt_status": "ABORTED_PRE_RESULT_ARRAY_MEMORY_ERROR_NO_LEDGER_OR_EDGE_RESULT_OBSERVED",
     "changing_this_contract_invalidates_prior_v2_4_evidence": true
   }
 }
