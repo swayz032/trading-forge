@@ -94,7 +94,8 @@
       "risk_context": {
         "stop_points": 17.25,
         "reason": "Entry timing is semantic/risk-critical because a late entry consumes the fixed stop's normal pullback room."
-      }
+      },
+      "clean_evidence_timing": "The videos/direct label were supplied after a clean runner had begun but after that runner aborted with ArrayMemoryError and before any ledger, report, edge certificate, fold result, or strategy performance result was observed. The force rule was therefore not selected from clean PnL."
     }
   ]
 }
