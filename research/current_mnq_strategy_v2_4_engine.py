@@ -3,8 +3,10 @@
 
 Candidate formation comes only from current_mnq_strategy_v2_4_kernel so sealed
 validation and live/shadow signal formation cannot silently use different entry
-semantics. Target formation comes only from current_mnq_strategy_v2_4_targets so
-historical and live paths share the same first-reaction/FVG semantics.
+semantics. The shared kernel now uses causal completed-1m sub-bars to watch the
+forming parent candle and can trigger before the 5m/15m close once sustained
+force is proven. Target formation comes only from current_mnq_strategy_v2_4_targets
+so historical and live paths share the same first-reaction/FVG semantics.
 """
 from __future__ import annotations
 
@@ -17,7 +19,7 @@ from research.current_mnq_strategy_v2_4_targets import build_and_classify
 
 core = v23.core
 TZ = v23.TZ
-ENGINE_VERSION = "MNQ-V2.4-ZONE-CANDLE-PC2-ENTRY1"
+ENGINE_VERSION = "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1"
 Params = v23.Params
 TICK = v23.TICK
 POINT_VALUE = v23.POINT_VALUE
