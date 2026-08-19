@@ -1,0 +1,72 @@
+{
+  "artifact": "opus-transcript-first-diagnostic-selection-v1",
+  "date": "2026-08-19",
+  "status": "DIAGNOSTIC_ONLY_NOT_FACTORY_AUTHORITY",
+  "purpose": "Test whether the frozen 0-survivor result is dominated by legacy extraction semantics by re-reading five original transcripts from scratch with a fresh Opus source reader before any legacy semantic artifact is exposed.",
+  "baseline": {
+    "projection": "docs/replay-results/strategy-factory-census/manifest-row-disposition-projection.json",
+    "inventory": "docs/replay-results/strategy-factory-census/extraction-vault/prep-provenance-inventory.json",
+    "frozen_result": "120 manifest rows from the existing 40-video corpus; 0 FAITHFUL_COMPILE_READY_FOR_BACKTEST survivors",
+    "preservation_law": "Do not rewrite, delete, relabel, or mass-regenerate the baseline while this diagnostic runs."
+  },
+  "reader_contract": {
+    "required_model_override": "opus",
+    "required_role": "OPUS_LEAD_SOURCE_READER",
+    "one_fresh_reader_per_video": true,
+    "input_allowed_before_candidate_freeze": [
+      "exact selected video_id",
+      "original transcript bytes",
+      "diagnostic source-reader instructions/output schema"
+    ],
+    "input_forbidden_before_candidate_freeze": [
+      "legacy extraction JSON",
+      "legacy Gemma strategy fields",
+      "legacy certificate/adjudication answers",
+      "legacy disposition prose other than the pre-registered case category"
+    ],
+    "legacy_comparison_allowed": "only after the fresh candidate is hash-frozen and independently graded"
+  },
+  "cases": [
+    {
+      "video_id": "1HFoStW_wsc",
+      "category": "NEAR_SURVIVOR_SINGLE_UNRESOLVED",
+      "measured_reason": "inventory diagnosis: 8 ok, 1 classification_fallthrough_unresolved",
+      "transcript_path": "src/engine/extraction/fixtures/source-evidence/1HFoStW_wsc.transcript.txt",
+      "legacy_extraction_path": "docs/replay-results/strategy-factory-census/extraction-vault/1HFoStW_wsc.json"
+    },
+    {
+      "video_id": "E8Wg6tFPYjo",
+      "category": "MEDIUM_PARAPHRASE_DRIFT",
+      "measured_reason": "inventory diagnosis: 12 ok, 4 classification_fallthrough_unresolved; projection reports 4 extractor-paraphrase-drift conditions",
+      "transcript_path": "src/engine/extraction/fixtures/source-evidence/E8Wg6tFPYjo.transcript.txt",
+      "legacy_extraction_path": "docs/replay-results/strategy-factory-census/extraction-vault/E8Wg6tFPYjo.json"
+    },
+    {
+      "video_id": "FAKWJ-1NlLE",
+      "category": "HEAVY_PARAPHRASE_DRIFT",
+      "measured_reason": "inventory diagnosis: 6 ok, 7 classification_fallthrough_unresolved",
+      "transcript_path": "src/engine/extraction/fixtures/source-evidence/FAKWJ-1NlLE.transcript.txt",
+      "legacy_extraction_path": "docs/replay-results/strategy-factory-census/extraction-vault/FAKWJ-1NlLE.json"
+    },
+    {
+      "video_id": "FqxEKDxemtI",
+      "category": "TRUE_NEGATIVE_FIXED_STOP_CONTROL",
+      "measured_reason": "projection refusal: fixed_point_stop_not_supported; this case should remain an honest refusal if the transcript-first lane is discriminating rather than permissive",
+      "transcript_path": "src/engine/extraction/fixtures/source-evidence/FqxEKDxemtI.transcript.txt",
+      "legacy_extraction_path": "docs/replay-results/strategy-factory-census/extraction-vault/FqxEKDxemtI.json"
+    },
+    {
+      "video_id": "7ieYBa7Z-Hg",
+      "category": "MULTI_STRATEGY_IDENTITY_CONTROL",
+      "measured_reason": "inventory contains strategy_index 0 and 1 for one transcript (7 unresolved/3 ok and 4 unresolved/2 ok respectively); fresh reader must enumerate strategies without inheriting old index assumptions",
+      "transcript_path": "src/engine/extraction/fixtures/source-evidence/7ieYBa7Z-Hg.transcript.txt",
+      "legacy_extraction_path": "docs/replay-results/strategy-factory-census/extraction-vault/7ieYBa7Z-Hg.json"
+    }
+  ],
+  "decision_rule": {
+    "legacy_contamination_supported": "At least one paraphrase-drift case changes materially under transcript-first reconstruction and survives independent source-fidelity grading, while the true-negative control remains honestly refused and no source rules are invented.",
+    "class_specific_contamination": "Only a bounded failure class changes; reprocess only that measured class unless broader evidence appears.",
+    "legacy_result_supported": "Fresh transcript-first reconstructions reproduce the same substantive refusals under independent grading; proceed to the 160 new videos once the owner supplies the list.",
+    "prohibited_inference": "A fresh extraction PASS is not trading edge and is not Factory compile authority by itself."
+  }
+}
