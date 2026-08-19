@@ -18,6 +18,10 @@ def test_v24_spec_requires_fresh_sealed_validation():
     assert len(semantics_hash()) == 64
 
 
+def test_engine_release_label_matches_frozen_spec_release():
+    assert oos.e.ENGINE_VERSION == load_spec()["release_id"]
+
+
 def test_seen_2022_through_freeze_date_is_mechanically_removed_from_clean_oos():
     spec = load_spec(); edge = load_edge_spec()
     days = [
