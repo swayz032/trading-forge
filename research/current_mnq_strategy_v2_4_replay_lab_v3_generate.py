@@ -2,9 +2,11 @@
 """Generate the desktop interactive MNQ v2.4 replay-lab V3 pack.
 
 Seen/contaminated 2026 data only. No clean OOS, PnL, exit outcome or parameter
-selection is used. The safe pack never embeds bot answers, but later replay bars
-are present for UI progressive disclosure and therefore are not cryptographically
-withheld from a technically sophisticated reviewer.
+selection is used. V3 deliberately excludes every session already shown in the
+prior V2 trader review so a new fidelity pass does not recycle the same charts.
+The safe pack never embeds bot answers, but later replay bars are present for UI
+progressive disclosure and therefore are not cryptographically withheld from a
+technically sophisticated reviewer.
 """
 from __future__ import annotations
 
@@ -29,6 +31,20 @@ LOCK = Path("research/current_mnq_strategy_v2_2_data_lock.json")
 CONTRACT = Path("research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json")
 GOLD = Path("research/current_mnq_strategy_v2_4_user_fidelity_gold.json")
 
+# These are the eight sessions exposed to the trader in the completed V2 blind
+# pack. V3 must not reuse them. This is a presentation/fidelity constraint only;
+# it is not a strategy threshold and no trade outcome participates in exclusion.
+PRIOR_V2_REVIEW_SESSIONS = frozenset({
+    "2026-03-23",
+    "2026-03-24",
+    "2026-03-25",
+    "2026-03-26",
+    "2026-03-30",
+    "2026-03-31",
+    "2026-04-01",
+    "2026-04-02",
+})
+
 
 def main():
     contract = json.loads(CONTRACT.read_text())
@@ -51,10 +67,15 @@ def main():
         raise RuntimeError("REPLAY_V3_DATA_QUALITY_FAIL:" + "|".join(dq["issues"]))
 
     env = old.prepare(raw5, raw1)
-    days = old.scoreable_days(env)
-    # Scan the whole already-seen development sample. Selection is based on
-    # authoritative full entries plus real force candidates rejected by the final
-    # room/TP gate, all on different sessions. No PnL or exit outcome is read.
+    all_days = old.scoreable_days(env)
+    days = [d for d in all_days if str(d) not in PRIOR_V2_REVIEW_SESSIONS]
+    if len(days) < 16:
+        raise RuntimeError(f"REPLAY_V3_TOO_FEW_FRESH_SESSIONS:{len(days)}")
+
+    # Scan the whole already-seen development sample after removing prior review
+    # sessions. Selection is based on authoritative full entries plus real force
+    # candidates rejected by the final room/TP gate, all on different sessions.
+    # No PnL, exit, winner/loser or future trade outcome is read.
     review, answers = build_replay_pack_v3_diverse(
         env, days, v24.Params(), max_cases=16, max_entry_cases=11,
         min_entry_cases=8, min_momentum_near_miss_cases=4,
@@ -65,6 +86,11 @@ def main():
         )
     if answers.get("pack_id") != review.get("pack_id"):
         raise RuntimeError("REPLAY_V3_PACK_ID_MISMATCH")
+
+    current_sessions = {c["session"] for c in review["cases"]}
+    overlap = sorted(current_sessions & PRIOR_V2_REVIEW_SESSIONS)
+    if overlap:
+        raise RuntimeError("REPLAY_V3_PRIOR_SESSION_REUSE:" + ",".join(overlap))
 
     sampling = answers.get("sampling_receipt", {})
     entry_cases = int(sampling.get("authoritative_entry_cases", 0))
@@ -101,7 +127,6 @@ def main():
         "pack_id": review["pack_id"],
         "strategy_release": contract["strategy_release"],
         "chart_engine": f"TradingView Lightweight Charts {LWC_VERSION}",
-        "chart_library_file_required": LWC_FILE,
         "data_contract": "seen/contaminated Jan-Apr 2026 M26 sample only",
         "clean_oos_opened": False,
         "pnl_or_exit_outcome_used_for_selection": False,
@@ -111,6 +136,8 @@ def main():
         "authoritative_entry_case_count": entry_cases,
         "momentum_near_miss_case_count": near_miss_cases,
         "one_case_per_session": True,
+        "prior_v2_review_sessions_excluded": sorted(PRIOR_V2_REVIEW_SESSIONS),
+        "prior_v2_session_overlap_count": 0,
         "tp_semantics": "FIRST_MEANINGFUL_REACTION_CLUSTER_NOT_SIDE_BY_SIDE_CANDLES",
         "user_gold_reference_manifest": str(GOLD),
         "user_media_bytes_committed": False,
@@ -118,7 +145,8 @@ def main():
         "future_bars_cryptographically_withheld": False,
         "formal_blind_evidence_eligible": False,
         "edge_evidence_eligible": False,
-        "next": "Open review_v3.html with the local Lightweight Charts JS beside it; trade each replay minute-by-minute; freeze/export mnq_replay_v3_labels_FROZEN.json; only then open answer_key_v3.json for timing/force/zone/reaction-cluster grading.",
+        "standalone_html_expected_after_ci_bundle_step": True,
+        "next": "Open review_v3.html; trade each fresh replay minute-by-minute; one final ENTER/NO_TRADE decision is allowed per case; freeze/export mnq_replay_v3_labels_FROZEN.json; only then open answer_key_v3.json for timing/force/zone/reaction-cluster grading.",
     }
     (OUT / "receipt_v3.json").write_text(json.dumps(receipt, indent=2, sort_keys=True))
     print(json.dumps(receipt, indent=2, sort_keys=True))
