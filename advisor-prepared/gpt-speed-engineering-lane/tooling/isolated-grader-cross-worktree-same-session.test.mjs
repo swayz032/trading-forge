@@ -55,7 +55,9 @@ function makeManifest() {
       expected_head: 'claude/worker1-test',
       require_clean: true,
     },
-    edit_scope: { allowed_exact: [], allowed_prefixes: [] },
+    // AR-1358: the prior empty scope made SessionStart fail before this control reached the
+    // isolated-grader path. Keep a real explicit scope so only place binding can decide the test.
+    edit_scope: { allowed_exact: ['proof.txt'], allowed_prefixes: [] },
     finish: { enabled: false },
   }, null, 2));
   return file;
