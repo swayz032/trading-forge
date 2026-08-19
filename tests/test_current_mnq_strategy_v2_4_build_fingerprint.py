@@ -28,6 +28,7 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
         "research/current_mnq_strategy_v2_3_databento.py",
         "src/engine/indicators/fvg_native.py",
         "research/current_mnq_strategy_v2_4_entries.py",
+        "research/current_mnq_strategy_v2_4_force.py",
         "research/current_mnq_strategy_v2_4_zone_lifecycle.py",
         "research/current_mnq_strategy_v2_4_levels.py",
         "research/current_mnq_strategy_v2_4_premarket.py",
@@ -43,8 +44,8 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
     }
     assert required.issubset(files)
     assert len(files) == len(fingerprinted_files())
-    assert b["schema_version"] == 7
-    assert b["release_id"] == "MNQ-V2.4-BUILD-FINGERPRINT-7-ENTRY2"
+    assert b["schema_version"] == 8
+    assert b["release_id"] == "MNQ-V2.4-BUILD-FINGERPRINT-8-FORCE1"
 
 
 def test_strategy_fingerprint_is_deterministic_on_unchanged_bytes():
