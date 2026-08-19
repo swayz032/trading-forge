@@ -72,12 +72,15 @@ def test_pullback_must_be_reconquered_before_force_can_trigger():
 
 
 def test_parent_close_is_not_an_intra_candle_entry_clock():
+    # The first four completed minutes chop and never prove force. The only large
+    # directional push arrives in minute five, which is not knowable until the
+    # parent 5m candle closes. That is too late for this intra-candle trigger.
     q = one([
         ("2026-08-19 10:00", 100.00, 100.50, 99.75, 100.25),
-        ("2026-08-19 10:01", 100.25, 100.75, 100.00, 100.50),
-        ("2026-08-19 10:02", 100.50, 101.00, 100.25, 100.75),
-        ("2026-08-19 10:03", 100.75, 101.25, 100.50, 101.00),
-        ("2026-08-19 10:04", 101.00, 105.25, 100.75, 105.00),
+        ("2026-08-19 10:01", 100.25, 100.50, 99.50, 99.75),
+        ("2026-08-19 10:02", 99.75, 100.50, 99.50, 100.25),
+        ("2026-08-19 10:03", 100.25, 100.50, 99.50, 99.75),
+        ("2026-08-19 10:04", 99.75, 105.25, 99.50, 105.00),
     ])
     clocks = decision_times(q, ts("2026-08-19 10:00"), 5)
     assert ts("2026-08-19 10:05") not in clocks
