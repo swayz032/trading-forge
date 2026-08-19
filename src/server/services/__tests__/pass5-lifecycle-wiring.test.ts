@@ -321,7 +321,11 @@ describe("Pass 5 Track D — toState===PAPER stream start/continue + authority d
     const m3Idx = src.indexOf("M3 FIX (2026-07-17)");
     expect(m3Idx).toBeGreaterThan(-1);
     const block = src.slice(m3Idx, m3Idx + 4500);
-    expect(block).toContain("startStream(activeSessId, symbols)");
+    // AR-1155 (2026-08-18): the PAPER-entry block now calls verifyPaperActivation(...)
+    // before starting the stream, and uses its returned (verifier-authoritative)
+    // symbols rather than the plain locally-resolved `symbols` variable — tracking
+    // the real, intentional, already-accepted lifecycle-service.ts:3386 change.
+    expect(block).toContain("startStream(activeSessId, activation.symbols)");
   });
 
   it("imports paper-trading-stream.js dynamically for startStream/isStreaming", () => {

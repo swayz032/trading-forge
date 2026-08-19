@@ -179,6 +179,14 @@ vi.mock("../services/paper-trading-stream.js", () => ({
   getActiveStreams: vi.fn().mockReturnValue(new Map()), getStreamHealth: mockGetStreamHealth,
   getBarBuffer: vi.fn().mockReturnValue([]),
 }));
+// AR-1155: every resume/retry/reconnect path is now gated by verifyPaperActivation
+// before startStream. Mocked at the module boundary (same accepted pattern as
+// scheduler-resume-paper-plus-skip.test.ts) so this file's own invariant (zero
+// routeOrder calls) stays isolated from the activation-verifier's own DB/hash logic.
+const mockVerifyPaperActivation = vi.fn();
+vi.mock("../services/paper-qualification-activation-service.js", () => ({
+  verifyPaperActivation: (...args: unknown[]) => mockVerifyPaperActivation(...args),
+}));
 vi.mock("../services/paper-signal-service.js", () => ({
   restorePositionState: vi.fn(), cleanupSession: vi.fn(),
   restoreGovernorState: vi.fn().mockReturnValue(null), invalidateDailyLossCache: vi.fn(),
@@ -244,6 +252,12 @@ describe("Leg C — boot-resume flow (resumeActivePaperSessions): PAPER resumes 
   beforeEach(() => {
     vi.clearAllMocks();
     mockIsStreaming.mockReturnValue(false);
+    // Verifier symbols DELIBERATELY DIFFERENT from the strategy's own "MES" symbol,
+    // so a passing assertion proves startStream received the VERIFIER's symbols,
+    // not a fallback to the stale strategy symbol.
+    mockVerifyPaperActivation.mockResolvedValue({
+      ok: true, symbols: ["MES-VERIFIED"], stamped: true, identity: {},
+    });
   });
 
   it("PAPER session resumes the internal stream (startStream called) and routeOrder is NEVER called", async () => {
@@ -256,7 +270,8 @@ describe("Leg C — boot-resume flow (resumeActivePaperSessions): PAPER resumes 
     const { _testOnly } = await import("../scheduler.js");
     await _testOnly.resumeActivePaperSessions();
 
-    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MES"]);
+    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MES-VERIFIED"]);
+    expect(mockStartStream).not.toHaveBeenCalledWith(session.id, ["MES"]);
     expect(mockRouteOrder).not.toHaveBeenCalled();
   });
 
