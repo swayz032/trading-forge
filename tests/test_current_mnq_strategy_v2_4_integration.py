@@ -35,7 +35,7 @@ def test_kernel_uses_v24_level_builder_not_legacy_entry_map():
     assert "core.build_entry_locations(env" not in source
 
 
-def test_zone_candle_gate_can_veto_an_old_style_complete_reversal(monkeypatch):
+def test_new_rejection_story_can_veto_an_old_style_complete_reversal(monkeypatch):
     env = _env(); ts = env["r5"].index[0]
     loc = ker.core.Location(
         id="S1", side="S", lo=99.0, hi=100.0, mid=99.5, source="WICK_ZONE",
@@ -43,15 +43,13 @@ def test_zone_candle_gate_can_veto_an_old_style_complete_reversal(monkeypatch):
     )
     monkeypatch.setattr(ker.core, "premarket_plan", lambda *a, **k: SimpleNamespace(primary="BULL"))
     monkeypatch.setattr(ker, "build_entry_locations_v24", lambda *a, **k: ([loc], []))
-    monkeypatch.setattr(ker.core, "bar_interacts", lambda *a, **k: True)
-    monkeypatch.setattr(ker.core, "reversal_story", lambda *a, **k: SimpleNamespace(complete=True))
-    monkeypatch.setattr(ker.core, "plan_allows", lambda *a, **k: True)
-    monkeypatch.setattr(ker, "gate_candidate", lambda **k: SimpleNamespace(allowed=False, reason="NO_ZONE_NO_TRADE"))
+    monkeypatch.setattr(ker, "reversal_story_v24", lambda *a, **k: SimpleNamespace(complete=False))
+    monkeypatch.setattr(ker, "plan_allows_v24", lambda *a, **k: True)
     got = list(ker.iter_actionable_candidates(env, ts.date(), eng.Params()))
     assert got == []
 
 
-def test_broken_zone_retest_candle_can_flip_role_and_confirm_reversal_on_same_close(monkeypatch):
+def test_broken_zone_retest_can_flip_role_and_confirm_new_reversal_story_same_close(monkeypatch):
     env = _env(); ts = env["r5"].index[0]; bar_close = ts + pd.Timedelta(minutes=5)
     original = ker.core.Zone(
         id="S:2026-08-10T10:00:00-04:00:400", side="S",
@@ -75,16 +73,8 @@ def test_broken_zone_retest_candle_can_flip_role_and_confirm_reversal_on_same_cl
         ker, "zone_state_at_v24",
         lambda z, bars, asof, p: broken if asof == ts else flipped,
     )
-    monkeypatch.setattr(ker.core, "bar_interacts", lambda *a, **k: True)
-    monkeypatch.setattr(ker.core, "reversal_story", lambda *a, **k: SimpleNamespace(complete=True))
-    monkeypatch.setattr(ker.core, "plan_allows", lambda *a, **k: True)
-    monkeypatch.setattr(
-        ker, "gate_candidate",
-        lambda **k: SimpleNamespace(
-            allowed=(k["setup"] == "REV" and k["direction"] == "S" and k["zone_side"] == "R"),
-            reason="RESISTANCE_REJECTION_SELLER_CONTROL",
-        ),
-    )
+    monkeypatch.setattr(ker, "reversal_story_v24", lambda *a, **k: SimpleNamespace(complete=True))
+    monkeypatch.setattr(ker, "plan_allows_v24", lambda *a, **k: True)
     got = list(ker.iter_actionable_candidates(env, ts.date(), eng.Params()))
     assert len(got) == 1
     cand, actionable, _ = got[0]
@@ -94,10 +84,16 @@ def test_broken_zone_retest_candle_can_flip_role_and_confirm_reversal_on_same_cl
     assert actionable == bar_close
 
 
-def test_zone_candle_gate_is_present_on_rev_brk5_and_brk15_paths():
+def test_entry_fidelity_paths_are_present_in_shared_kernel():
     source = open(ker.__file__, encoding="utf-8").read()
-    assert 'setup="REV"' in source
-    assert 'setup="BRK5"' in source
-    assert source.count('setup="BRK15"') >= 2
-    assert "WAIT_FOR_NEW_COMPLETED_15M_ACCEPTANCE" in source
+    assert "reversal_story_v24" in source
+    assert "breakout_followthrough_after_first_print" in source
+    assert "repeat_test_momentum_prebreak" in source
+    assert "displacement_sequence_prebreak" in source
+    assert "fifteen_minute_three_bar_continuation" in source
+    assert "FIRST_BREAK_PRINT_THEN_MOMENTUM_CONFIRMATION" in source
+    assert "WEAK_BREAK_PULLBACK_15M_THREE_BAR_CONTINUATION" in source
+    assert "PREBREAK_REPEAT_TEST_MOMENTUM_ATTACK" in source
+    assert "PREBREAK_DISPLACEMENT_SEQUENCE_THIRD_CANDLE_MOMENTUM" in source
     assert "pending_locs" in source
+    assert "WAIT_FOR_NEW_COMPLETED_15M_ACCEPTANCE" not in source
