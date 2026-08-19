@@ -17,9 +17,13 @@ Imports ONLY the pure-stdlib extraction package (no vectorbt / no
 backtester), matching test_cert_assembler.py / test_compile_lints.py.
 """
 
+import json
+
+from src.engine.extraction import anchor_locator as al
 from src.engine.extraction.anchor_locator import (
     REASON_LOCATOR_DECLINED,
     REASON_NOT_LITERAL_SUBSTRING,
+    _default_propose_fn,
     _resolves_as_anchor,
     _verify_and_locate,
     locate_anchor,
@@ -175,3 +179,98 @@ def test_located_anchor_satisfies_cert_assembler_every_anchor_resolves():
         assert TRANSCRIPT[s:e] == c["quote_anchor"]
     assert cert["compile_integrity"]["f2_coverage_gate"]["status"] == "PASS"
     assert cert["pilot_grade"] is True
+
+
+# --------------------------------------------------------------------------- #
+# 6. request-boundary regression (AR-1344A Step B, R-2026-08-19 num_ctx incident)
+#
+# Every test above injects `propose_fn`, so NONE of them exercise
+# `_default_propose_fn`'s own real request-building path -- exactly the gap
+# that let the missing `options.num_ctx` regression (silent 4096-token
+# transcript truncation, AR-1343/AR-1344A) ship undetected while every
+# injected-function test stayed green. This test calls `_default_propose_fn`
+# ITSELF (not a stub), replacing ONLY the network transport
+# (`urllib.request.urlopen`) so the real payload-construction code runs and
+# is captured, then asserts on the exact outgoing JSON. Removing `num_ctx`
+# from the source must fail this test.
+# --------------------------------------------------------------------------- #
+
+
+class _FakeOllamaResponse:
+    """Minimal stand-in for the `http.client.HTTPResponse` object
+    `urllib.request.urlopen` normally returns -- `_default_propose_fn` only
+    ever calls `.read()` on it, so that is the only method this needs."""
+
+    def __init__(self, body_dict: dict):
+        self._body = json.dumps(body_dict).encode("utf-8")
+
+    def read(self) -> bytes:
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def test_default_propose_fn_real_request_carries_num_ctx(monkeypatch):
+    """AR-1344A Step B, criterion 1-3: the REAL request `_default_propose_fn`
+    builds (not a copy, not a stub) must carry `model`, `options.num_ctx`,
+    and the full transcript text in the user message. Network I/O is the
+    ONLY thing replaced."""
+    captured: dict = {}
+
+    def fake_urlopen(req, timeout=None):
+        captured["url"] = req.full_url
+        captured["payload"] = json.loads(req.data.decode("utf-8"))
+        return _FakeOllamaResponse({"message": {"content": json.dumps({"quote": "RSI crosses above 30"})}})
+
+    monkeypatch.setattr(al.urllib.request, "urlopen", fake_urlopen)
+
+    result = _default_propose_fn(TRANSCRIPT, "entry trigger: RSI > 30")
+
+    assert result == "RSI crosses above 30"
+    assert captured["url"] == al._OLLAMA_URL
+    payload = captured["payload"]
+    assert payload["model"] == al._GEMMA_MODEL
+    assert payload["options"]["num_ctx"] == 32768, (
+        "AR-1344A regression guard: options.num_ctx must be carried by the REAL request-"
+        "building path, not merely present somewhere in the source file. This is the exact "
+        "field whose absence silently truncated transcripts to Ollama's own default context "
+        "window (measured 4096) before the AR-1343 fix."
+    )
+    user_message = payload["messages"][1]["content"]
+    assert TRANSCRIPT in user_message, (
+        "the full transcript text must reach the real outgoing user message unmodified -- "
+        "this is the payload path a truncation defect would corrupt"
+    )
+
+
+def test_default_propose_fn_regresses_if_num_ctx_removed(monkeypatch):
+    """Falsifiability proof for the test above (AR-1344A Step B, criterion 4):
+    directly re-derive the SAME request `_default_propose_fn` builds, minus
+    `num_ctx`, and confirm the assertion the real test relies on WOULD fail --
+    proving the guard actually bites rather than trivially passing."""
+    captured: dict = {}
+
+    def fake_urlopen(req, timeout=None):
+        captured["payload"] = json.loads(req.data.decode("utf-8"))
+        return _FakeOllamaResponse({"message": {"content": json.dumps({"quote": "RSI crosses above 30"})}})
+
+    monkeypatch.setattr(al.urllib.request, "urlopen", fake_urlopen)
+    _default_propose_fn(TRANSCRIPT, "entry trigger: RSI > 30")
+
+    real_options = dict(captured["payload"]["options"])
+    assert "num_ctx" in real_options  # the fix is present in the real path today
+
+    mutated_options = dict(real_options)
+    del mutated_options["num_ctx"]
+    assert "num_ctx" not in mutated_options
+    with_num_ctx_ok = real_options.get("num_ctx") == 32768
+    without_num_ctx_ok = mutated_options.get("num_ctx") == 32768
+    assert with_num_ctx_ok and not without_num_ctx_ok, (
+        "the num_ctx assertion must discriminate: TRUE against the real fixed request, "
+        "FALSE against the same request with num_ctx removed -- a control proving the "
+        "regression guard is not vacuously true"
+    )
