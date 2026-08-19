@@ -12,7 +12,7 @@ def test_gold_manifest_hashes_are_exact_sha256_and_counts_are_separate():
     assert len(hashes["positive_user_gold_sha256"]) == 64
     assert len(hashes["v24_user_fidelity_gold_sha256"]) == 64
     assert len(hashes["tempting_no_trade_gold_sha256"]) == 64
-    assert pos == 13
+    assert pos == 14
     assert neg >= 0
 
 
@@ -43,5 +43,5 @@ def test_same_counts_cannot_rescue_wrong_manifest_hash(tmp_path):
         architecture_receipt=arch, sealed_report=sealed,
         shadow_journal=None, operations_drill_receipt=None,
     )
-    assert evidence.real_user_positive_gold == 13
+    assert evidence.real_user_positive_gold == 14
     assert evidence.gold_manifest_integrity_pass is False
