@@ -1,0 +1,265 @@
+{
+  "video_id": "FqxEKDxemtI",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": {
+    "asset_class": "Forex (currency pairs)",
+    "instrument": "Currency pairs; demonstrated on euro dollar (EUR/USD), pound dollar (GBP/USD), and dollar Yen (USD/JPY)",
+    "rationale": "The educator explicitly scopes the strategy to Forex and states he has not traded it on other instruments; all worked examples are currency pairs quoted in pips.",
+    "transcript_quote": "This is a Forex specific trading strategy I have not traded it on the other instruments I invite you to put these indicators in your charts and experiment and look yourself whether or not it works or not but for forx it does work quite well"
+  },
+  "strategies": [
+    {
+      "source_strategy_id": "s0",
+      "name": "The Extreme Fade — 15-minute Bollinger Band 3rd-standard-deviation blowout with 2nd-standard-deviation close-back-inside confirmation",
+      "direction": "both",
+      "direction_transcript_quote": "if the currency pair and we want to first thing we want to do is see the currency pair close at or above the third standard deviation Binger band or on the downside close at or below the Third third standard deviation Binger band",
+      "higher_timeframe": "source_unresolved",
+      "higher_timeframe_transcript_quote": null,
+      "execution_timeframe": "15-minute chart",
+      "execution_timeframe_transcript_quote": "today I'll share a 15minute chart strategy that picks tops and bottoms or Market turns with Precision",
+      "setup": [
+        {
+          "description": "Chart is the 15-minute timeframe; the educator states the 1-minute and 5-minute are too noisy for this and that the 15-minute is for a slightly bigger move.",
+          "transcript_quote": "first let's talk about why the 15-minute chart is excellent for day traders who are looking for a slightly bigger move the 1 minute and 5 minute time frame can be very noisy"
+        },
+        {
+          "description": "Add a first Bollinger Band set at the default 20-period simple moving average with 2 standard deviations. The middle line (the basis) is the 20 SMA and is kept.",
+          "transcript_quote": "so you type in bowl and then you get bowl and your bands and by default you get the 20 period two standard deviations"
+        },
+        {
+          "description": "The default Bollinger Band definition used: middle line is the 20-period SMA, outer lines are 2 standard deviations above and below it.",
+          "transcript_quote": "by default the setting is typically 20 period simple moving average in the middle or 20 SMA and two standard deviations from that are the upper and lower lines"
+        },
+        {
+          "description": "Add a SECOND Bollinger Band set on the same chart, with the basis (middle line) removed, and change its standard deviation setting from two to three. This produces outer lines at 3 standard deviations and inner lines at 2 standard deviations.",
+          "transcript_quote": "so I'm going to add in another set of Ballinger bands and you can see second set of Ballinger bands here this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+        },
+        {
+          "description": "The critical setting change on the second band set is standard deviation 2 → 3, which creates the outer (3 SD) lines.",
+          "transcript_quote": "oh I forgot one very very important thing we're changing the standard deviation from two to three standard deviations and that's where we get our outside lines and our inside lines"
+        },
+        {
+          "description": "Line naming used by the rules: outside lines = 3rd standard deviation bands; inside lines = 2nd standard deviation bands.",
+          "transcript_quote": "now the outside lines are the third sdbb third standard deviation bands they're out here the inside and let me just uh add this onto the bottom over here the inside lines are what we call the second stand standard deviation Binger band"
+        },
+        {
+          "description": "Cosmetic/clarity preference (presentation, not an executable requirement): color all band lines the same color, and color the basis red so it stands out.",
+          "transcript_quote": "now what I like to do is I like to change everything the same color because as I said earlier when things are clean and they're easy to look at and they're easy to use it makes it faster for you to make interpretations in real Market environments"
+        },
+        {
+          "description": "Strategy purpose/context: it is a counter-trend reversal (top/bottom picking) method, and the educator explicitly warns that trading with the trend is more profitable and less stressful.",
+          "transcript_quote": "it is always more profitable and always less stressful to trade with the trends rather than against it with that said picking tops and bottoms is tempting and so I want to give you a good way to do it"
+        },
+        {
+          "description": "Core premise: the trade requires evidence/confirmation that momentum is waning — never an arbitrary overbought/oversold pick.",
+          "transcript_quote": "you never want to arbitrarily pick a top and bottom just because it feels like it's over bought or oversold you want evidence you need evidence you need confirmation that the momentum is waning"
+        },
+        {
+          "description": "Rejects the textbook 2-standard-deviation touch method as the trade trigger, because in strong trends price can hug the 2 SD line for long periods and produce fakeouts.",
+          "transcript_quote": "the textbook way of using moving uh Binger bands is that if it touches a two standard deviation it's overbought you should sell if it touches the two standard deviation the bottom it is oversold you should buy sometimes it works like here sometimes it doesn't"
+        },
+        {
+          "description": "Conceptual model for the setup: a move three standard deviations from the 20-period average is a stretched rubber band expected to snap back — but it may not snap back immediately.",
+          "transcript_quote": "we're looking for the move to move three standard deviations away from the 20 period average so you're thinking about like a rubber band where you get stretched to three standard deviations away from the average and you want it to snap back but it doesn't always snap back right away"
+        }
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "role": "context",
+          "action": "Apply the two Bollinger Band sets (20 SMA basis; 2 SD inner lines; 3 SD outer lines) to a 15-minute currency-pair chart.",
+          "rationale": "The 3 SD band is the extreme-stretch reference and the 2 SD band is the confirmation reference; both are required before any rule can be evaluated.",
+          "transcript_quote": "instead of just using the two standard deviation Binger bands we'll be adding the three standard deviation Binger band I call this strategy the extreme fate"
+        },
+        {
+          "step": 2,
+          "role": "spine",
+          "action": "Rule number one — wait for a candle to CLOSE at or beyond the 3rd standard deviation Bollinger band: close at or above the upper 3 SD band (for a short setup) or close at or below the lower 3 SD band (for a long setup).",
+          "rationale": "This is the educator's explicitly numbered first rule and defines the extreme-stretch condition that qualifies a potential turn.",
+          "transcript_quote": "so that's rule number one wait for it to close below the third standard deviation Binger band but when that happens it's not time to trade we need to look for confirmation"
+        },
+        {
+          "step": 3,
+          "role": "context",
+          "action": "Do NOT enter on the 3rd-standard-deviation close alone; the blowout by itself is not a trade because the move may extend on major news.",
+          "rationale": "The educator explicitly forbids entering on rule one alone, making the no-trade-yet state part of the taught sequence.",
+          "transcript_quote": "just because it's blown out you it doesn't mean it's time to arbitrarily pick a bottom because maybe it's really big news and it might move further"
+        },
+        {
+          "step": 4,
+          "role": "trigger",
+          "action": "LONG entry: after a close at/below the lower 3 SD band, wait for price to CLOSE back above the 2nd standard deviation Bollinger band (the inside line) on the downside; enter long on that close.",
+          "rationale": "This is the stated confirmation rule that converts the extreme stretch into an executable long.",
+          "transcript_quote": "so instead what you want to do is you want to wait for it to close on a downside back above the second standard deviation Binger band the inside line and it basically let me flip this um Arrow over here does it right over here that's when you go long"
+        },
+        {
+          "step": 5,
+          "role": "trigger",
+          "action": "SHORT entry: after a close at/above the upper 3 SD band, wait for rule number two — a close below the 2nd standard deviation Bollinger band — and sell on that candle.",
+          "rationale": "The educator names this explicitly as rule number two on the short side in the pound-dollar walkthrough.",
+          "transcript_quote": "we do have another setup in the pound dollar over here so we close above the three standard deviation we don't get in the trade yet you wait for rule number two which is a close below the second standard deviation Binger ban so you basically sell"
+        }
+      ],
+      "confluences": [
+        {
+          "name": "No trade ahead of major scheduled data",
+          "description": "Avoid taking the setup ahead of big news releases; trading after the data is preferred. Stated as a cardinal rule for any setup.",
+          "transcript_quote": "typically you want to avoid trading ahead of data it's really wonderful to trade after after data which is what happens here and those are the little things that you want to qualify your trade with to make it higher accuracy don't trade a h forhead of big news releases that should be one of your Cardinal rules for any setup regardless of what it is"
+        },
+        {
+          "name": "Confirmation over arbitrary extremes",
+          "description": "The strategy requires observed evidence of the turn (the close back inside the 2 SD band) rather than an overbought/oversold judgement; the market can stay irrational.",
+          "transcript_quote": "only once you see that evidence confirmation that turn is happening should you take a trade because as the famous economist John Mayor ke once said the market can remain irrational longer than you can remain solvid"
+        },
+        {
+          "name": "Filter value of the 3 SD requirement (no-signal protection)",
+          "description": "When price never closes beyond the 3 SD band, no trade exists, which the educator counts as the strategy protecting the trader from fakeout top/bottom picking.",
+          "transcript_quote": "but you also win when you don't take these false signals and they get trapped into picking tops in the euro dollar because at no point in time do we close below the first standard deviation Bing your band so saving you from Bad trades is the same as making money in my opinion"
+        }
+      ],
+      "stop": {
+        "anchor": "Long: 20 pips below the swing low. Short: 20 pips above the swing high. Described as an initial 'emergency stop' in case the trade is wrong.",
+        "rationale": "On the long example, entry 1.0960 with stop at 1.0920 = 20 pips below the swing low; on the short examples the stop is the swing high plus 20 pips (1.1042 + 20 = 1.1062; and 1.2810 + 20 pips = 1.2830). It is explicitly an emergency stop, not a working stop, and is trailed once the trade moves in favor.",
+        "transcript_quote": "here we go long at 109 5960 your stop should be 20 Pips below the swing low so in this case 10920 this is an emergency stop"
+      },
+      "targets": [
+        {
+          "priority": 1,
+          "type": "Fixed pip target — approximately 20 pips",
+          "r_multiple": null,
+          "rationale": "In the educator's experience these trades typically go about 20 pips, which he calls easily achievable; worked examples target entry ± 20 pips (long 1.0960 → 1.0980; short 1.2800 → 1.2780; short 1.27830 → 1.27630; short 1.49050 → 1.48850; long 1.28350 → 1.28550).",
+          "transcript_quote": "so where should you take profit typically with these trays in my experience they go about 20 Pips that's pretty easily achievable"
+        },
+        {
+          "priority": 2,
+          "type": "Touch of the basis (20-period SMA middle line)",
+          "r_multiple": null,
+          "rationale": "Second stated way to exit: when price touches the basis, described as a technically significant level.",
+          "transcript_quote": "now that the second way to exit is when it touches the basis the 20 SMA which is a technically significant level or when it touches the Bing ja band on the other side"
+        },
+        {
+          "priority": 3,
+          "type": "Touch of the Bollinger band on the opposite side (2nd standard deviation band on the other side)",
+          "r_multiple": null,
+          "rationale": "Third stated exit option; later restated specifically as the second standard deviation Bollinger band on the other side.",
+          "transcript_quote": "but you know maybe exiting over here taking off half the position or exiting at the other Binger second standard deviation Binger B the other side have been a wise trade"
+        }
+      ],
+      "management": [
+        {
+          "rule": "Trail the stop as the trade moves in your favor; the initial stop is only an emergency stop in case you are wrong.",
+          "transcript_quote": "so as it continues to move in your favor then you want to Trail your stop up it's just your initial emergency stop in case you're wrong"
+        },
+        {
+          "rule": "Concrete trailing illustration: with a long entered at 1.0960, if price goes to 1.0970 you should be moving your stop up to minus 10.",
+          "transcript_quote": "as it moves in your favor you're quickly trailing the stop so that if it goes to 10970 you should be looking at your stop to moving your stop up to minus 10 for example"
+        },
+        {
+          "rule": "If price goes back below the entry level, reconsider the trade (the emergency stop covers this case).",
+          "transcript_quote": "once again an emergency stop if it kind of goes below this level you want to reconsider the the trade"
+        },
+        {
+          "rule": "Partial exits are permitted — take off half the position at one exit point rather than exiting all at once.",
+          "transcript_quote": "maybe exiting over here taking off half the position or exiting at the other Binger second standard deviation Binger B the other side have been a wise trade"
+        },
+        {
+          "rule": "The trade may take time to reach the profit target — the educator shows a trade that does not reach target immediately and eventually gets there later.",
+          "transcript_quote": "let's go for plus 20 that's 08 and does it get there over here no it takes a t it's time and eventually gets there over here so you exit the rest of the trade over here"
+        },
+        {
+          "rule": "Trailing beyond the fixed target is left to the trader — the educator explicitly declines to specify the profit-trailing method.",
+          "transcript_quote": "so at least 20 Pips here maybe could Trail your stop going when it com comes to profits I'll let you figure out how to manage that yourself"
+        },
+        {
+          "rule": "Exiting ahead of an upcoming scheduled release is cited as a good time to exit.",
+          "transcript_quote": "you would have to wait a bit and it does happen right over here during this period right here before the Wednesday inflation report which would been a really good time to exit"
+        }
+      ],
+      "variants": [
+        {
+          "name": "Tighter stop distance",
+          "rule": "Instead of 20 pips beyond the swing point, the educator suggests roughly 10 pips above the swing high may be sufficient.",
+          "transcript_quote": "so it doesn't go anywhere near there I really don't even think you need 20 Pips maybe like 10 Pips above the swing high is sufficient"
+        },
+        {
+          "name": "Exit method alternatives",
+          "rule": "Three alternative exits are taught without a single mandated choice: ~20 pips fixed, touch of the basis (20 SMA), or touch of the opposite-side Bollinger band; and the example notes the 20-pip target can coincide with the basis.",
+          "transcript_quote": "so in this case you go along at 10960 you're looking to exit at 10980 and this one definitely um and it does you actually 10980 basically you know is coincides with this Zone with the basis as well"
+        },
+        {
+          "name": "Short-side mirror of the entry rules",
+          "rule": "The short side is the exact mirror: close at/above the 3 SD upper band, then a close back below the 2 SD upper band is the sell trigger, stop above the swing high.",
+          "transcript_quote": "the better trade or a nicer looking trade is actually this one where we do actually close this candle we close above the third standard deviation Bing Jaan you go short over here so you go short at 1227 the stop is at this High here 11 1042 + 20 is 62"
+        }
+      ],
+      "source_gaps": [
+        {
+          "field": "higher_timeframe",
+          "reason": "The transcript teaches a single 15-minute chart method and never specifies any higher-timeframe bias, filter, or confirmation chart."
+        },
+        {
+          "field": "target selection precedence",
+          "reason": "Three exit methods are taught (~20 pips, touch of the basis/20 SMA, touch of the opposite-side Bollinger band) plus optional half-position scaling, but the transcript never states which to use, in what order, or under what condition to prefer one over another. The assigned priority numbers here reflect source-order of presentation only, not a taught ranking."
+        },
+        {
+          "field": "stop distance",
+          "reason": "The taught stop is 20 pips beyond the swing point, but the educator also says 10 pips 'is sufficient' without stating when to use which."
+        },
+        {
+          "field": "swing low / swing high definition",
+          "reason": "The stop anchors on 'the swing low' / 'the swing high' but the transcript never defines how the swing point is identified (lookback bars, fractal rule, or whether it is the 3-SD-close candle's extreme)."
+        },
+        {
+          "field": "entry price / order type",
+          "reason": "Entries are quoted at specific prices on confirmation candles but the transcript does not state whether entry is at the confirmation candle's close, a market order on the next bar open, or a stop/limit order."
+        },
+        {
+          "field": "expiry / invalidation window between rule 1 and rule 2",
+          "reason": "The transcript says the snap-back 'doesn't always snap back right away' and moves can last long periods, but never states how many bars the 3-SD close remains valid before the setup is void, nor whether multiple 3-SD closes reset the count."
+        },
+        {
+          "field": "news filter specificity",
+          "reason": "'Don't trade ahead of big news releases' is a stated cardinal rule, but no list of qualifying events, no blackout window length, and no time-before/after threshold is given."
+        },
+        {
+          "field": "session filter",
+          "reason": "One example is discounted partly because it occurred 'during the Asia session before the big us retail sales day'. The transcript does not settle whether the Asia session itself is a disqualifier or only the pre-data timing."
+        },
+        {
+          "field": "trailing stop algorithm",
+          "reason": "Trailing is mandated but specified only by one illustration (+10 in favor → stop moved to minus 10). No general trail formula, step size, or trail reference (bar lows, ATR, band line) is given."
+        },
+        {
+          "field": "position sizing / risk per trade",
+          "reason": "No sizing, risk percentage, lot size, or account-risk rule is taught anywhere in the transcript."
+        },
+        {
+          "field": "band parameters of the second (3 SD) band set",
+          "reason": "The moving-average length of the second Bollinger Band set is never restated; only the standard-deviation change from two to three is specified. Whether the second set retains the 20-period default length is implied by the chart demo but not stated."
+        },
+        {
+          "field": "consistency of the confirmation-band reference in the worked examples",
+          "reason": "The stated rule uses the SECOND standard deviation band as confirmation ('wait for rule number two which is a close below the second standard deviation Binger ban'), but two walkthrough passages instead say 'first standard deviation' ('you waited for it to close above the first day deviation Binger band'; 'at no point in time do we close below the first standard deviation Bing your band'). The transcript does not resolve whether these are transcription artifacts or a distinct band reference."
+        },
+        {
+          "field": "maximum trades / concurrent positions",
+          "reason": "No limit on trades per day, per pair, or on holding multiple setups simultaneously is taught."
+        }
+      ]
+    }
+  ],
+  "top_level_source_gaps": [
+    {
+      "field": "additional strategies referenced but not taught",
+      "reason": "The educator references a future video on 1-minute and 5-minute short-term scalps ('look for a future video on that one'), but teaches no executable rules for it in this transcript, so it is not emitted as a strategy."
+    },
+    {
+      "field": "textbook 2-SD Bollinger method",
+      "reason": "The classic 'touch 2 SD upper = sell, touch 2 SD lower = buy' method and the squeeze/breakout and wide-band/strong-trend readings are described as background education and then explicitly set aside ('that is not the way we'll be using Binger bands'), so they are not emitted as separate taught strategies."
+    },
+    {
+      "field": "instrument scope beyond Forex",
+      "reason": "The educator states he has not traded this on other instruments and invites viewers to test it themselves; no rules or parameters for non-Forex instruments are given."
+    }
+  ]
+}

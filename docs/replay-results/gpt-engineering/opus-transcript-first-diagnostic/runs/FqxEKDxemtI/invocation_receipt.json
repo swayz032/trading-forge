@@ -1,0 +1,13 @@
+{
+  "video_id": "FqxEKDxemtI",
+  "task_sha256": "5126072721c8d4f96ebd173da334f374561741a45c6813f15c12320c1ce923ca",
+  "transcript_sha256": "bb16d5ea96244d5258cf65f004899719bf6645c229d651344c518f7308d93b22",
+  "model_override": "opus",
+  "actual_model_identity": "override=opus; exact runtime model identity not independently surfaced to the dispatcher (Agent tool model override accepted, no separate attestation channel available)",
+  "subagent_type": "general-purpose",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "fresh_reader": true,
+  "prompt_source": "task_file_only",
+  "legacy_semantics_visible": false,
+  "invocation_notes": "ONE fresh Opus reader; given only the emitted task text (preamble + video id + transcript) as the Agent tool prompt, verbatim as read from opus_source_reader_task.txt. No legacy extraction JSON, no prior certificate/adjudication text, no legacy strategy count, was included in the dispatch."
+}

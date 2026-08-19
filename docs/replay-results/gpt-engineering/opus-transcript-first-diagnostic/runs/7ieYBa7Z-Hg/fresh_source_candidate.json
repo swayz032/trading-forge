@@ -1,0 +1,398 @@
+{
+  "video_id": "7ieYBa7Z-Hg",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": {
+    "asset_class": "instrument-agnostic (taught as applying to any pair / any market / any asset class)",
+    "instrument": null,
+    "rationale": "The educator never names a specific instrument he trades. He explicitly claims the method is market- and time-agnostic ('every pair', 'any market', 'any asset class you trade'). The only concrete symbol appearing is 'ENQ' micros, and it is used solely inside a position-sizing example about account size, not as a stated traded instrument. He also references contracts/micros (futures-style language) while the host separately references FX pairs (EU/GU) in the host's own words, so the source does not settle the instrument.",
+    "transcript_quote": "But you're going to see it on every pair. You're going to see it in any market regardless of time."
+  },
+  "strategies": [
+    {
+      "source_strategy_id": "s0",
+      "name": "Previous-Range Retracement Entry at a Higher-Timeframe POI After a Sweep (swing-count qualified)",
+      "direction": "both",
+      "direction_transcript_quote": "That can be whether you're bullish, whether you're bearish.",
+      "higher_timeframe": "Top-down daily -> 4 hour -> 15 minute, with the traded POI on 15-minute / hourly / 4-hour / daily",
+      "higher_timeframe_transcript_quote": "So for me, what I like to do is go to the daily time frame, look at where we are in the daily. Are we within a daily wick? Some people might refer to a rejection block. Are we in a daily fractal? Are we in a daily supply demand? Whatever it is, I look for that. Then I go into the 4 hour and look at what the 4 hour is doing. Is the 4 hour wicking? Has the 4 hour swept something? I might go into the 15 minute and see have we had a closure above or below wherever it is that price is looking to go directionally.",
+      "execution_timeframe": "1 minute (3 minute also named); he also states the trailing/entry mechanics work on any timeframe",
+      "execution_timeframe_transcript_quote": "so it's on everything usually is on the one minute the 3 minute and that's because if we understand that price is fractal we could zoom out on a one minute chart and we can see the weekly highs and lows from it",
+      "setup": [
+        {
+          "description": "Market structure is the required foundation of every trade; the trade is taken on the efficient side of the trend.",
+          "transcript_quote": "so market structure is the crux of what I trade I don't believe that you should do anything outside of market structure market structure lets you know the side of the market that price is more efficient on"
+        },
+        {
+          "description": "Top-down analysis is mandatory as the directional compass before any lower-timeframe execution.",
+          "transcript_quote": "Top down is very very important. I top down is essentially your compass. If you don't know where prices go in, it's easy to get lost on any little impulse going one way or another."
+        },
+        {
+          "description": "The 1-minute trade is taken in the direction established by where price sits on the daily timeframe.",
+          "transcript_quote": "And then on the one minute, what I'm doing is trading in that direction of wherever I am in that daily time frame."
+        },
+        {
+          "description": "The only qualifying POI is a 'previous range': measured from the break-of-structure to the low that preceded it (swing high -> swing low -> new swing high that breaks the prior high).",
+          "transcript_quote": "So a quality POI is more of a previous range that is the only thing that I use."
+        },
+        {
+          "description": "Definition of the previous range: from the break of structure down to the low.",
+          "transcript_quote": "So, we get a swing high, we get a swing low, and then now we have the current swing high that's put in. That breakup structure from the breakup structure to the low, that is the previous range."
+        },
+        {
+          "description": "Only the original/first push that caused the break of structure is traded, not every subsequent push, because the pullback is where the reduced risk and larger reward live.",
+          "transcript_quote": "I always talk about the pullback being where your profit is. So most people see it as catching a falling knife. They prefer to trade a breakout, but at the pullback you're able to reduce your risk to a lot smaller than the entire range that's there. And then it allows for your reward to be higher."
+        },
+        {
+          "description": "The POI is one price repeatedly mitigates ('mms'): roughly three taps to the left, two taps to the right, then a first break that is the manipulation, then the move in the opposite direction.",
+          "transcript_quote": "I call them mms, right? This is where price tends to mitigate a specific area multiple times. It continues to tap onto it. It gives about three taps to the left, two taps to the right. It breaks through that first break. You know, that's manipulation."
+        },
+        {
+          "description": "Price must consolidate and then shift inside the higher-timeframe zone; a sweep/manipulation must precede taking the trade in the direction price is going.",
+          "transcript_quote": "You definitely have to wait for price to consolidate and then shift. But you need first a sweep, a manipulation, and then you trade in the direction that price is going in."
+        },
+        {
+          "description": "Required dwell time inside a daily zone before the shift — roughly two 4-hour candles / three 1-hour candles (a 'three bar pattern').",
+          "transcript_quote": "If I'm in a daily zone, I understand that price may need two 4hour candles, three 1-hour candles in that daily zone in order to shift. We know it as a three bar pattern, right?"
+        },
+        {
+          "description": "Equivalent dwell requirement when executing on M1 inside a 4-hour POI — about three or four 15-minute candles, roughly an hour of consolidation.",
+          "transcript_quote": "If I'm trading on M1, you have to remember that we need three or or four 15 minute candles and a 4hour POI for it to actually leave. So that means that you're trading in that that consolidation for about an hour."
+        },
+        {
+          "description": "The first M1 break of structure inside a daily zone is explicitly NOT the trade.",
+          "transcript_quote": "So basically, you're not taking the first M1 breakup structure in a daily zone. No, and hoping it removes. Yeah. No, no."
+        },
+        {
+          "description": "Rejects taking a very-low-timeframe (5-second) zone and projecting it to a far POI.",
+          "transcript_quote": "Some people try to get in on a a 5-second zone and try to take it to a RA POI. And I don't believe in that."
+        },
+        {
+          "description": "The method is not session-restricted; the educator states he trades all sessions.",
+          "transcript_quote": "I can trade in Asia. I can trade in London. I can trade in New York. It doesn't matter what time, what zone, what uh sorry, time frame that we're in."
+        }
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "role": "context",
+          "action": "Run top-down analysis: daily (wick / fractal / supply-demand), then 4 hour (wicking, swept something), then 15 minute (closure above or below in the directional bias).",
+          "rationale": "The higher timeframe is the compass that determines which direction the lower-timeframe execution is allowed to take.",
+          "transcript_quote": "Then I go into the 4 hour and look at what the 4 hour is doing. Is the 4 hour wicking? Has the 4 hour swept something? I might go into the 15 minute and see have we had a closure above or below wherever it is that price is looking to go directionally."
+        },
+        {
+          "step": 2,
+          "role": "context",
+          "action": "Identify the previous range created by the break of structure (break-of-structure high back to the prior low) as the POI to trade from.",
+          "rationale": "This is stated as the only POI type used.",
+          "transcript_quote": "So a quality POI is more of a previous range that is the only thing that I use."
+        },
+        {
+          "step": 3,
+          "role": "spine",
+          "action": "Wait for price to retrace back into that previous range, roughly 30%, 50% or 70% of it.",
+          "rationale": "The retracement into the previous range is where the entry is taken, with the intent to trade back to the high the retracement came from.",
+          "transcript_quote": "So, I'm expecting price to drop back into that previous range by about 30, 50, or 70% somewhere within there. And then I'm looking to trade price back to the high that it retraced from."
+        },
+        {
+          "step": 4,
+          "role": "spine",
+          "action": "Count the swings leading into the POI: at least four to six swings (e.g. four higher highs and four higher lows into a supply) before expecting the reversal. If the swing count is not there, no entry.",
+          "rationale": "The swing count is the stated pre-entry qualifier that protects against price impulsing straight through the POI.",
+          "transcript_quote": "as price is making higher highs and higher lows trading to a supply, you should at least have four to six swings before you're expecting price to reverse. So on the one minute time frame, if it's trading to a 15minute or hourly POI, you should at least have four highs, four higher highs, four higher lows before price actually turns and goes the other way."
+        },
+        {
+          "step": 5,
+          "role": "spine",
+          "action": "Require a sweep: there must be a low or a high beyond the POI that price sweeps, with price manipulating into a level of the POI.",
+          "rationale": "Explicitly stated as required for any trade — without a sweep the trader's own position is the liquidity that will be swept.",
+          "transcript_quote": "So, what I like to tell people to look out for is at least a low or a high above your POI. And when price sweeps that and manipulates into a certain level of the POI, that's when you should be expecting price to turn around and go the other way."
+        },
+        {
+          "step": 6,
+          "role": "trigger",
+          "action": "After the sweep, wait for confirmation — price sweeps the low and then trades above the previous down candle's high (inverse for shorts).",
+          "rationale": "Explicitly stated that the sweep alone is not sufficient to enter; a confirmation follows the sweep.",
+          "transcript_quote": "Now, that sweep isn't the only criteria for you to just ape into the trade and go. There's a confirmation that you can find after the sweep, meaning price sweeps the low, trades up above the previous down candles high."
+        },
+        {
+          "step": 7,
+          "role": "trigger",
+          "action": "Place the entry at the 50% of the zone (with the stop behind the 70%), or use the candlestick-structure entry (see variants) to tighten the stop.",
+          "rationale": "This is the stated entry placement inside the higher-timeframe zone once price returns into the previous range.",
+          "transcript_quote": "Now, when it gets back in there, I can use one of two things. I can place my entry at the 50, place my stop behind the 70%."
+        },
+        {
+          "step": 8,
+          "role": "trigger",
+          "action": "Enter once, at the exact spot price is expected to leave from — single entry, no feeler trades, no adding in drawdown.",
+          "rationale": "Stated so that being stopped there equals invalidation of the trade idea rather than a scattered position.",
+          "transcript_quote": "I like to take the entry at the exact spot that I'm expecting price to leave because that allows me to manage the position properly. And if I'm stopped out there, that means that I'm invalidated on the trade idea rather than trying to just scatter a couple trades in."
+        }
+      ],
+      "confluences": [
+        {
+          "name": "Rounding above the entry area (direction-disambiguation filter)",
+          "description": "To take the continuation side rather than the reversal side, the area price taps back into must sit above a rounded / semicircle formation; a down move or small fractal forms just before the rounding, price breaks above the rounding and returns to the spot that sent it up.",
+          "transcript_quote": "So, what I've found is that when we have that rounding and we see a little fractal or like a down move created just before the rounding, price breaks up above the rounding and comes right back to that spot that sent it up."
+        },
+        {
+          "name": "Rounding-break invalidation of side",
+          "description": "If price breaks that rounding-origin spot instead of holding it, the trader is on the wrong side and price is expected to take the floor out.",
+          "transcript_quote": "So, it breaks up above it, taps back in, and then it goes. But if it breaks that particular part there, it just means that you on the wrong side and likely you'll see price take the floor out."
+        },
+        {
+          "name": "Prominent wick to the left swept, then immediate push back into the range",
+          "description": "Highest-probability continuation condition: a wick to the left that stands out at any zoom level gets run, followed by an immediate push back into and above the range, traded with the prevailing trend.",
+          "transcript_quote": "This is a wick that stands out. You can zoom in and zoom out and you still see that wick clearly. it runs that wick and then you see an immediate push trading back into the range and now above that range. So that pool of liquidity that's there. Sorry, that's what I want people to focus on the most. That is the highest in probability to be able to trade a continuation that would with with whatever trend price is already going in."
+        },
+        {
+          "name": "Consolidation sitting on a zone weakens that zone",
+          "description": "When the consolidation forms on top of an existing zone, price is expected to trade through both the consolidation and the underlying zone when it returns.",
+          "transcript_quote": "And the reason why we expect the consolidation to be ran is because the consolidation is usually happening on a zone already and that consolidation is weakening the zone. So by the time price goes back to that zone, we expect it to trade through not only the consolidation but the zone that it was sitting on top of as well."
+        },
+        {
+          "name": "15-minute candle-close reclaim of a down candle",
+          "description": "Trading above a 15-minute down candle is confirmed by getting above the down candle's open and closing there by the time the next 15-minute candle completes.",
+          "transcript_quote": "we might be breaking up above a 15minute down candle just based on maybe the time of the candle and the time the candle the way it ended that maybe let's say 10:15 10:15 close as a bearish candle the open of 10:15 as long as we get up there and close by the time 10:45 comes then I know we're trading up above that down candle"
+        },
+        {
+          "name": "Swing count applies in both directions (counter-trend and pro-trend)",
+          "description": "Four to six swings is expected in any direction — retracement or continuation, counter-trend or with-trend, on any asset class and regardless of time.",
+          "transcript_quote": "So any direction whether it's counter trend whether it's with the trend you whether it's a retracement whether it's a continuation you should see that four to six swings there on any asset class you trade and this is again regardless of time"
+        },
+        {
+          "name": "Sweep is a universal precondition",
+          "description": "Every trade requires a sweep; without one, the trader's own position is what gets swept.",
+          "transcript_quote": "So, um I think that price always needs a sweep for any trade you take. I always say that if there is no sweep, you are the sweep. And if you cannot see the liquidity, you are liquidity."
+        }
+      ],
+      "stop": {
+        "anchor": "Primary placement: entry at the 50% of the higher-timeframe zone with the stop behind the 70% of that zone. The trade idea's invalidation is the far side of the zone/POI (below the zone for longs; behind the 4-hour POI when executing on M1), which he distinguishes from the placed stop.",
+        "rationale": "Taught as: 'The entry starts at the 50% of the zone. The invalidation is below the zone.' — and when asked whether the stop is at the break-of-structure candle or the whole POI he answers 'The whole POI', then clarifies that the whole-POI level is the invalidation, not necessarily the placed stop, and that the placed stop can be tightened to the 70% of the zone or to a candlestick-structure level.",
+        "transcript_quote": "The entry starts at the 50% of the zone. The invalidation is below the zone."
+      },
+      "targets": [
+        {
+          "priority": 1,
+          "type": "beginning of the prominent wick to the left",
+          "r_multiple": null,
+          "rationale": "Target the beginning of the wick left behind by the impulse that the trend came from; price frequently hits the beginning of that wick and then retraces, so profit is taken within reach rather than held.",
+          "transcript_quote": "So, when it comes to targeting, I tell people to target if there's a prominent wick to the left. Let's say, you know, you get into an M1 reversal. Now, price is trading higher. It takes out a high usually where the trend came from, the impulse that came down, where the trend came from, there's a wick there. If you target the beginning of the wick that's there, a lot of the times you see price hit the beginning of the wick and then retrace."
+        },
+        {
+          "priority": 2,
+          "type": "the high the retracement came from (origin of the previous range)",
+          "r_multiple": null,
+          "rationale": "After price retraces into the previous range, the trade is taken back to the high it retraced from.",
+          "transcript_quote": "And then I'm looking to trade price back to the high that it retraced from."
+        },
+        {
+          "priority": 3,
+          "type": "intervening higher-timeframe POI (pay yourself there)",
+          "r_multiple": null,
+          "rationale": "If a higher-timeframe POI sits between the entry and the expected destination, profit is taken somewhere in that area.",
+          "transcript_quote": "And if it's going to a higher time frame POI between where I'm getting in and where I expect price to go, I'm looking to pay myself somewhere in there."
+        },
+        {
+          "priority": 4,
+          "type": "opposite POI of the range (range rotation)",
+          "r_multiple": null,
+          "rationale": "When ranging between two POIs (a supply above and a demand below), the trade runs from one POI back to the other, with risk just behind the POI entered from.",
+          "transcript_quote": "So those two POIs, the one above and below, I'm either trading back to one or back to the other. It gives me multiple opportunities with the risk just behind the POI in order to take a trade."
+        },
+        {
+          "priority": 5,
+          "type": "no fixed reward — reward is whatever the managed trade yields",
+          "r_multiple": null,
+          "rationale": "Only the risk is fixed in advance; the R outcome is left open and determined by management, unless a specific target is present.",
+          "transcript_quote": "It might end up as a 1 to3, it might end up as a one to five, but as long as I have that one set on what I'm willing to lose, then the RR could really be anything."
+        }
+      ],
+      "management": [
+        {
+          "rule": "Single position in, single position out — no partials and no pyramiding/adding.",
+          "transcript_quote": "I'm just one in one out. If I put five contracts in, I'm taking five contracts out on the same trade. I don't do the partial or I don't do the they call it pyramiding. You know, some people might add a position here, add another one and draw down, add another one up here. I don't do any of that."
+        },
+        {
+          "rule": "Conflicting instruction taught to others: if you are part of the initial reversal, take a partial somewhere and target something within reach.",
+          "transcript_quote": "So, you want to make sure that if you're a part of the initial reversal, partial somewhere, target something that's within reach, and should price end up coming back down to your entry, stopping you out, and it actually goes, now you have enough mental capital to be able to get back in and continue trading in that direction of wherever price is going."
+        },
+        {
+          "rule": "Trail the stop under the bullish (green) candle lows while price is impulsing — on any timeframe.",
+          "transcript_quote": "If we have green candle, green candles going up, like bullish candles. I place my stop below the green candle lows. This is as price is impulsing, right?"
+        },
+        {
+          "rule": "When price pulls back, hits the first imbalance and then puts in a new high, move the stop from break-even to below that newly formed low — i.e. trail either the swing lows or the bullish candle lows.",
+          "transcript_quote": "That's where you take it from break even to put it below the low. So, you want to trail the swing lows or you want to trade the bullish candle lows. That's how I generally trade my stop trail my stops."
+        },
+        {
+          "rule": "Full size held with one-candle protection on the first reaction out of a higher-timeframe POI.",
+          "transcript_quote": "That first reaction, whether it goes to 1 to three or 1 to 5, uh, you hold it full volume and then one candle protection. Yes. And that's given that I understand it's the first move inside of a higher time frame POI."
+        },
+        {
+          "rule": "Re-entry is expected: when price puts in a new high then trades back below that low, that is another opportunity to re-enter in the same direction.",
+          "transcript_quote": "And that new high, often times we put in that high and then trade back below that low. Now, that's another opportunity to get in to another trade going up. or when you wait for it to put back in that low and now go higher."
+        },
+        {
+          "rule": "Do not sit in drawdown; the entry must be tagged and price must begin to leave.",
+          "transcript_quote": "I need to see my trade get hit, tagged in, and then price begins to leave. I'm not interested in sitting in draw down or anything."
+        },
+        {
+          "rule": "Risk per trade approximately 3-5%, held constant — size is never increased on conviction or decreased on uncertainty.",
+          "transcript_quote": "So, it's about maybe 3 to 5% somewhere. It is. It is as it always has been."
+        },
+        {
+          "rule": "Same position size every trade; size graduates only with account equity.",
+          "transcript_quote": "So I tend to trade the same size every time I get in. I'm not someone who like, oh, let me, you know, put five contracts on it instead of three because I know that this like I feel something in me that this will occur. I trade the same size each time."
+        },
+        {
+          "rule": "Position-size ladder tied to account size: one micro per $1,000 of account equity.",
+          "transcript_quote": "So, if you're trading with a $1,000 account and you're trading on something like ENQ, right, you should only be trading with one micro. And every $1,000 you have in that account, you can size up to the next micro."
+        },
+        {
+          "rule": "The setup produces three to five opportunities per occurrence on the zone; actual execution averages about two, sometimes three trades a day.",
+          "transcript_quote": "Um, I would say it's about maybe two, sometimes three trades a day. Okay? You know, sometimes it can just be one trade."
+        },
+        {
+          "rule": "Stop trading for the day after an outsized managed winner.",
+          "transcript_quote": "And if I can catch something like that during the day, then there's no reason for me to trade for the rest of the day, right?"
+        },
+        {
+          "rule": "Inexperienced traders are told to stay out of the first hour of the New York open due to manipulation.",
+          "transcript_quote": "But as far as time goes, that first hour of trading, I usually tell students to stay out. People that I'm teaching, I let them know. First hour of the New York open of the New York open. Yes. I usually tell them to stay out because that time you could see price go straight up and torpedo right down."
+        },
+        {
+          "rule": "The trader is a reaction trader — the trade is whatever price gives on the first reaction, not a held trend position.",
+          "transcript_quote": "Yes, I'm I'm a reaction trader. Whatever price gives me, that's what I do."
+        },
+        {
+          "rule": "Holding an M1 entry all the way to a daily high is taught against for traders who cannot secure profit consistently.",
+          "transcript_quote": "Um, I I believe that an advanced trader could very well have that approach, but for the person who doesn't necessarily win trades a lot or it's very difficult for them to find trades, trying to hold on to an entry that's going all the way to a daily high when they can't even secure profit consistently. That's something that I tend to teach against."
+        },
+        {
+          "rule": "Post-loss review: losses cluster in the same recurring pattern/environment, and that environment is then avoided.",
+          "transcript_quote": "So what I tend to do is go and look at where I struggled, what was occurring while I struggled, and then the next time that I do trade, I'm staying out of that kind of environment."
+        }
+      ],
+      "variants": [
+        {
+          "name": "Candlestick-structure entry (tightened stop)",
+          "rule": "Instead of the 50%-of-zone entry with the stop behind the 70%, wait for candlestick structure: candles push in one direction, an opposing candle closes beyond them, price retraces into that candle — entry there, stop behind that candle. This reduces the stop from the full zone to where price currently is, at the cost of being stopped before price leaves.",
+          "transcript_quote": "Or I could wait for something that I call candlestick structure where you have bullish candles going in, you have a bearish candle that closes below the bullish candle. You have price retrace into the bullish candle and then it drops lower. So when it retraces into that bullish candle, that's where your entry is and your stop is behind that bullish candle that that went up above. So, it's essentially reducing your stop from the zone that's up there to now just where price currently is at. Now, you can run the risk of being stopped out and then price actually leaves"
+        },
+        {
+          "name": "21 EMA trailing variant",
+          "rule": "A looser trail: after catching the reversal, wait for a close below the 21 EMA followed by a trade back above it, and tuck the stop below that low; repeat at each subsequent close below the 21 EMA once price takes out the high that brought it to the EMA.",
+          "transcript_quote": "But there's one way that I've taught on my YouTube channel how to trail and it's with a 21 EMA. If you put a 21 EMA on your chart as price is leaving and you know you caught the reversal, you got the bottom, now it's going to wherever it's going. When price closes below the EMA and then trades back up above it, you can tuck your stop right below that low because that low tends to be very reliable to hold where price will stay above the EMA, tap back into the same range that's there and then trade higher."
+        },
+        {
+          "name": "21 EMA trail — repeating rule",
+          "rule": "Place the stop under each close below the 21 EMA, once price takes out the high that brought it to the EMA.",
+          "transcript_quote": "So if you want to trail in, you know, more loose way, you could wait for those closures below the 21 EMA and then just place your stop under each closure of the 21 EMA when it takes out the high that brought it to the EMA."
+        },
+        {
+          "name": "Second-swing / range-manipulation entry (preferred portion of the sequence)",
+          "rule": "Preferred segment is the second swing: price breaks above the range, puts in a high, then puts in a low through the low of the range — trade the manipulation leg, valid because higher-timeframe (hourly/daily) structure has already broken.",
+          "transcript_quote": "Uh the preferred portion is the second swing. So you have price break up above the range and then you see it put in a low through the low of the range."
+        },
+        {
+          "name": "Second-swing rationale",
+          "rule": "The break-above-then-below-low sequence is only taken because higher-timeframe structure has already broken; the trade is the manipulation leg into where price is expected to run.",
+          "transcript_quote": "What what usually happens though with something like that is that if it's breaking up above that consolidation, putting in a high, and then going back down below the low, that's only because maybe on the hourly or the daily structure has already broken. So you're trading the manipulation part of it going down into where you expect price to violate, you expect price to run."
+        },
+        {
+          "name": "Range rotation between two POIs",
+          "rule": "When price is ranging between a supply above and a demand below, trade from one POI back to the other with risk just behind the POI; requires experience in range trading, and if not entered in the middle of the range price simply rebounds low-to-high repeatedly until it breaks out.",
+          "transcript_quote": "But when we have that range, we're usually ranging between two POIs, a supply and a demand. So this is why I mentioned with range trade and if you have the experience to do so, this is what Asia taught me that we're going back and forth between two spots."
+        },
+        {
+          "name": "First-hour New York manipulation trade (experienced only)",
+          "rule": "The first hour is tradable for experienced traders — it is prime for price to trade into a previous range and reject the other way; beginners are told to stay out.",
+          "transcript_quote": "You can trade that manipulation if you want to. Like I mentioned, the previous range is where I look for entries. So that first hour, it's prime for looking for price to go into a previous range and then reject the other way."
+        },
+        {
+          "name": "Aggressive first move vs. post-sweep second move (changes trail tightness)",
+          "rule": "If part of the first aggressive move into the POI, the position must be managed tightly because price is slated to come back and sweep the inducement; if part of the second move after the sweep (e.g. a double bottom where the second low takes the first out and goes), the stop can be trailed more loosely.",
+          "transcript_quote": "So, usually on double bottoms, if price is tapping into one low and then puts in another low, takes it out and then go, I know that if I'm in that the bottom of that trade now, I can just trail a little more, you know, loose rather than having to trail strict. So, it all depends on where I'm actually at."
+        },
+        {
+          "name": "Liquidity participation: generation vs. sweep",
+          "rule": "The trader can participate either in the generation of liquidity (lows being placed and respected, expecting a close back above and a move to the high) or in the sweep of those lows and the move back up.",
+          "transcript_quote": "So I would say that I trade as a part of both the generation of liquidity and the sweep of liquidity. So, if we're creating that little range below and we're placing some lows there and then price sweeps through those lows and then moves back up again, that's I can trade a part of that generation or I can trade the sweep and run back up above."
+        }
+      ],
+      "source_gaps": [
+        {
+          "field": "stop placement (exact)",
+          "reason": "Three different stop levels are stated without a resolving rule for which applies when: 'the whole POI' as invalidation, 'behind the 70%' of the zone when entering at the 50%, and 'behind that bullish candle' for the candlestick-structure entry. He explicitly separates 'invalidation' from 'the stop' ('That that that's my invalidation though. That's not the stop.') but never settles the placed-stop rule."
+        },
+        {
+          "field": "exit sizing (partial vs. full)",
+          "reason": "Directly contradictory within the source: he instructs others to 'partial somewhere' on the initial reversal, then states of his own execution 'I'm just one in one out... I don't do the partial'. The transcript does not reconcile the two."
+        },
+        {
+          "field": "entry retracement depth",
+          "reason": "Three depths are offered ('about 30, 50, or 70% somewhere within there') and separately a single value ('The entry starts at the 50% of the zone'). No rule selects among them."
+        },
+        {
+          "field": "swing count threshold (exact)",
+          "reason": "Stated variously as 'at least four to six swings', 'at least four highs, four higher highs, four higher lows', and 'generally around four, maybe five sometimes'. The exact minimum and how a swing is defined/measured are not settled."
+        },
+        {
+          "field": "rounding pattern definition",
+          "reason": "The rounding/semicircle filter that decides continuation vs. reversal is described only visually ('a round sort of semiircle kind of right at the top of it') with no measurable criterion, timeframe, or bar count."
+        },
+        {
+          "field": "prominent wick definition",
+          "reason": "Defined only as a wick that 'stands out' and is still visible when zooming in and out; no size, timeframe, or lookback rule is given."
+        },
+        {
+          "field": "21 EMA settings",
+          "reason": "Only the period (21) and the type (EMA) are stated. The timeframe it is applied to and the price source are not specified."
+        },
+        {
+          "field": "target selection rule",
+          "reason": "Multiple target types are taught (beginning of prominent wick, the high price retraced from, intervening higher-timeframe POI, opposite POI of the range) with no rule for which to use on a given trade, and he explicitly declines any fixed reward ('the RR could really be anything')."
+        },
+        {
+          "field": "risk-reward / win-rate criteria",
+          "reason": "He explicitly rejects fixed R:R and win-rate targets as trade filters, so no minimum R:R gate exists to encode."
+        },
+        {
+          "field": "session / time-of-day filter",
+          "reason": "Time is stated as non-load-bearing ('It doesn't matter what time, what zone'), while the first hour of the New York open is a stay-out instruction for beginners but 'totally tradable' for the experienced. The transcript does not settle whether an executable session filter exists."
+        },
+        {
+          "field": "daily loss limit / max losses per day",
+          "reason": "Never stated. Only per-trade risk (3-5%) and an approximate trade count (two to three a day, three to five opportunities) are given; no loss-based stop-for-the-day rule is taught (only a win-based one)."
+        },
+        {
+          "field": "trade-count reconciliation",
+          "reason": "'three to five opportunities' per occurrence on the zone vs. 'about maybe two, sometimes three trades a day' actually executed — no rule states which of the available opportunities are taken."
+        },
+        {
+          "field": "range-rotation entry trigger",
+          "reason": "The range-rotation variant states entering 'within the middle of the range' with risk behind the POI, but no explicit trigger, sweep requirement, or invalidation for the range-rotation entry specifically is given."
+        }
+      ]
+    }
+  ],
+  "top_level_source_gaps": [
+    {
+      "field": "instrument / asset class",
+      "reason": "The educator never states which instrument he trades. He asserts the method works on 'every pair', 'any market', 'any asset class'. 'ENQ' appears only inside an account-size/micro-sizing example, and the FX pairs 'EU or GU' are named by the host about the host's own trading, not by the educator."
+    },
+    {
+      "field": "strategy count",
+      "reason": "The educator explicitly states there is only ONE setup he takes ('there's one setup that I choose to take each and every day'), described as the previous-range retracement around a repeatedly-mitigated POI. The range-rotation, second-swing/manipulation, and first-hour applications are presented as applications of that same previous-range mechanic rather than as separately taught strategies, so they are preserved as variants under s0 rather than split into separate strategies."
+    },
+    {
+      "field": "backtest / validation parameters",
+      "reason": "He repeatedly invites backtesting ('back test it', 'run the data on it') but specifies no lookback period, sample size, market, or pass criterion."
+    },
+    {
+      "field": "account / execution venue",
+      "reason": "He states he trades a live brokerage account and advises against prop firms, but no broker, contract specification, or execution mechanism is given."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "artifact": "opus-transcript-first-candidate-receipt-v2",
+  "status": "FRESH_OPUS_SOURCE_CANDIDATE_NOT_CERTIFIED",
+  "video_id": "E8Wg6tFPYjo",
+  "diagnostic_category": "MEDIUM_PARAPHRASE_DRIFT",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "model_override": "opus",
+  "actual_model_identity": "override=opus; exact runtime model identity not independently surfaced to the dispatcher (Agent tool model override accepted, no separate attestation channel available)",
+  "invocation_declared": true,
+  "invocation_independently_attested": false,
+  "task_sha256": "e3fa15185a1131cdd301a389685e7d125015d37b2792866ca7bdfe980deb57c7",
+  "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+  "raw_response_sha256": "858cb977600204827918dad8fd531722e454f0c0f348a91fd3b1ed62e9ce0008",
+  "candidate_sha256": "858cb977600204827918dad8fd531722e454f0c0f348a91fd3b1ed62e9ce0008",
+  "validation": {
+    "strategy_count": 1,
+    "literal_quote_count": 41,
+    "literal_quote_failures": 0,
+    "identity_sequence": [
+      "s0"
+    ]
+  },
+  "legacy_semantics_visible": false,
+  "factory_authority": false,
+  "certification_required": true,
+  "next_step": "Independent grader attacks candidate against the same transcript. Do not compare to legacy extraction until that grade is frozen."
+}

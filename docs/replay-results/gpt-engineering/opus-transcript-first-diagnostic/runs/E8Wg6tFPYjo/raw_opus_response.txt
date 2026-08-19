@@ -1,0 +1,289 @@
+{
+  "video_id": "E8Wg6tFPYjo",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": {
+    "asset_class": "forex (demonstrated), taught as applicable to metals, indices, and reported use in cryptocurrency",
+    "instrument": "GBP AUD and NZDUSD (the two worked examples)",
+    "rationale": "Both worked examples are forex pairs on the 15-minute chart; the educator explicitly states the strategy is applicable to basically all assets and names forex, metals, indices, and crypto (crypto only as second-hand report, not his own use).",
+    "transcript_quote": "as I said at the beginning of the video this strategy is applicable to basically all assets. So of course the forex market like I've been showing you here today. It's also great for metals and indices and I also know a lot of people who use it in the cryptocurrency market. I don't personally but I've heard that there's been a lot of success with that."
+  },
+  "strategies": [
+    {
+      "source_strategy_id": "s0",
+      "name": "Four-item checklist 15-minute strategy: 4H premium/discount alignment + liquidity sweep + break of structure with imbalance + 71% Fibonacci retracement limit entry",
+      "direction": "both",
+      "direction_transcript_quote": "anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities.",
+      "higher_timeframe": "4 hour",
+      "higher_timeframe_transcript_quote": "This strategy consists of two time frames, the 15-minute and the 4 hour.",
+      "execution_timeframe": "15 minute",
+      "execution_timeframe_transcript_quote": "The 15-minut time frame is going to be our execution time frame where we actually place trades. And the 4our time frame is going to act as our higher time frame to form a bias and anchor that bias to at all times.",
+      "setup": [
+        {
+          "description": "The entire strategy is a four-item checklist that must be satisfied.",
+          "transcript_quote": "We have higher time frame alignment, liquidity sweep, break of structure plus imbalance, and a 71% retracement."
+        },
+        {
+          "description": "The two timeframes must agree; the 15-minute bias must be aligned to the 4-hour bias rather than taken in isolation.",
+          "transcript_quote": "If we can align our 15minute trade bias to a higher time frame bias, which is the overarching trend, then more times than not, we'll be on the right side of the market, and it'll prevent a lot of unnecessary losses."
+        },
+        {
+          "description": "Higher-timeframe bias is defined by premium/discount of a trading range measured on the 4-hour.",
+          "transcript_quote": "So, the premise of higher time frame alignment is premium and discount. Whenever we have a trading range, we want to gauge premium and discount pricing."
+        },
+        {
+          "description": "Core premise of the whole strategy is buy low / sell high.",
+          "transcript_quote": "The strategy is very simplistic. We buy low and sell high."
+        },
+        {
+          "description": "Liquidity is resting money, most commonly at major highs and major lows; identifying which side has been purged and which side remains is required before entering.",
+          "transcript_quote": "The simple way to describe liquidity is just resting money in the market. And the market wants to purge that liquidity and bring that money back in to add fuel for the next move. The most common area to find resting liquidity is major highs and major lows."
+        },
+        {
+          "description": "Structure (major highs and lows) is identified by fractal swing points; the educator's paid indicator is optional and the free Williams fractals equivalent works.",
+          "transcript_quote": "There's a free version of these little arrows if you search on Trading View fractals or Williams fractals. It's completely free."
+        },
+        {
+          "description": "The indicator is a convenience only; every step can be done manually.",
+          "transcript_quote": "Now, if I could draw your attention to the top right of the screen, you're going to see my checklist here."
+        },
+        {
+          "description": "Imbalance / fair value gap is a three-candle pattern with a gap between the first candle's low and the third candle's high (short-side illustration), and price is drawn back to fill it before continuing.",
+          "transcript_quote": "it's a three candlestick pattern. 1 2 3. And between the low of this first candle and the high of the third candle, we can see that there is a very large gap. That was a period of time where there was only a straight move to the downside. There was no equilibrium between buying and selling, which is why it's called imbalance."
+        },
+        {
+          "description": "The Fibonacci tool is used only as a measurement/framing tool, not as an indicator or a reaction level.",
+          "transcript_quote": "The Fibonacci retracement tool is not an indicator. It is not a strategy in and of itself. The way I use it is simply as a measurement tool. It helps me frame my trade. So don't be under the impression that somehow these retracement levels are magic numbers that price will react to. That is absolutely not the case."
+        },
+        {
+          "description": "Fibonacci tool settings: deselect all levels, enable only 71% and 75% (plus 0 and 1); only the 71% is actually used for entry.",
+          "transcript_quote": "You just deselect everything and enable the levels you want. So I have the 71% and the 75%. Really only use the 71%. But yeah, just deselect everything that you don't want. Only enable the ones that you do want, of course, including the zero and the one."
+        },
+        {
+          "description": "The Fibonacci range is drawn from the low to the high of the leg (stated in the long/second example).",
+          "transcript_quote": "So, all I do is break out the Fibonacci tool, start at the low, click, and drag to the high."
+        },
+        {
+          "description": "Use TradingView's weak magnet mode when snapping levels to candle wicks.",
+          "transcript_quote": "To make this easier, you can use the magnet tool on Trading View. Just set it to weak magnet instead of strong magnet. I find that you fight it a lot less when it's just the weak magnet."
+        }
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "role": "context",
+          "action": "Check 4-hour premium/discount. If 4H is in premium (above 50% of the trading range) look only for sells; if 4H is in discount (below 50%) look only for buys.",
+          "rationale": "Checklist item 1 — higher timeframe alignment, so the 15-minute trade is on the side of the overarching trend.",
+          "transcript_quote": "So, my indicator automatically checks premium and discount on the higher time frame. As you can see here, I have it set to 4hour. So, it's already telling me that we're trading at a premium on the 4hour time frame and it's right before selling opportunities. So that means we can go down to the 15-minute time frame like we're on right now and look for potential selling opportunities."
+        },
+        {
+          "step": 2,
+          "role": "context",
+          "action": "Identify a liquidity sweep — a wick piercing beyond a recent major high (buyside purge, favors sells) or beyond a recent major low (sellside purge, favors buys) — and identify where the remaining untouched resting liquidity sits as the likely next objective of price.",
+          "rationale": "Checklist item 2 — establishes that the fuel has been taken from one side and that price's next objective is the opposite side's liquidity.",
+          "transcript_quote": "if we look all the way to the right, this large wick right here pierced above that previous high, purging all of that liquidity, bringing that money back into the market, adding fuel for the next upcoming move. So this is what's referred to as buyside liquidity because the liquidity was purged to the upside. Now this tells us that there's a high likelihood of selling opportunities being favored now because the liquidity was already purged to the upside. So now the next objective of price would be to purge liquidity from the downside."
+        },
+        {
+          "step": 3,
+          "role": "spine",
+          "action": "Wait for a break of structure (a structural major low or high violated, labeled BOS) and identify the imbalance / fair value gap created inside that move.",
+          "rationale": "Checklist item 3 — the break of structure is the signal that a trading opportunity exists, and the imbalance is where the retracement is expected to go.",
+          "transcript_quote": "So whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure. That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon."
+        },
+        {
+          "step": 4,
+          "role": "spine",
+          "action": "Do not enter at the break of structure; wait for a retracement, which typically runs toward the fair value gap / imbalance.",
+          "rationale": "Entering immediately on the break would violate the buy-low/sell-high premise of the strategy.",
+          "transcript_quote": "So we don't just immediately enter when there's a break of structure because that would be selling low and we don't want to do that obviously. So when a break of structure occurs, we need to patiently wait for a retracement. Now, typically that retracement ends up being towards a fair value gap or an imbalance."
+        },
+        {
+          "step": 5,
+          "role": "trigger",
+          "action": "Draw the Fibonacci retracement over the range and place a pending limit order at the 71% retracement level, with stop and take-profit taken from the two ends of the Fibonacci range.",
+          "rationale": "Checklist item 4 — the 71% is an extreme version of the premium/discount idea and is what produces the stated risk-to-reward.",
+          "transcript_quote": "So using the short position tool on Trading View, I place my entry at the 71% right here. I simply drag the stop-loss to the high of the Fibonacci range right here. And then I drag the takerit to the low of the Fibonacci range right here."
+        },
+        {
+          "step": 6,
+          "role": "trigger",
+          "action": "The order must be a pending limit order, not a market execution; copy entry, take-profit and stop-loss prices from the position tool's inputs into the execution platform.",
+          "rationale": "The setup is built in advance at a price price has not yet reached.",
+          "transcript_quote": "Now, because we're setting up a trade in advance, you would have to do a pending limit order, which means you're betting that price will get to this point at some point in time. So, that obviously differs from a market execution where you're entering right away in real time. So, it's really important to note you have to use pending limit orders for this strategy."
+        }
+      ],
+      "confluences": [
+        {
+          "name": "Fibonacci 71% aligned with the imbalance / fair value gap (A+ setup)",
+          "description": "Off-checklist confluence: when the 71% entry level coincides with the fair value gap, the trade is treated as higher probability because price is expected to react at the gap, minimizing drawdown.",
+          "transcript_quote": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap. Remember what I said about imbalances and fair value gaps. It's a reaction point for price. Price wants to fill that gap and then continue it in its intended direction. So if we can line up our entry with that fair value gap, odds are we're not going to have significant draw down."
+        },
+        {
+          "name": "A+ setup definition",
+          "description": "The A+ classification is the four checklist items plus the Fibonacci/fair-value-gap alignment together.",
+          "transcript_quote": "Make your Fibonacci numbers line up with the fair value gap or imbalance. So, if you can do that combined with the other things that I've listed here, that is what I like to call an A+ setup and you have a very high likelihood of success."
+        },
+        {
+          "name": "Untested relative equal highs/lows as the draw on liquidity",
+          "description": "Untested relative equal levels on the opposite side identify where price is most likely headed, i.e. the target-side liquidity.",
+          "transcript_quote": "And where can we identify that next objective? Well, the most recent major lows right here. So, those are pretty untested relative equal lows. And it's safe to say that the objective of price would be most likely to head in that direction to purge liquidity from those lows."
+        },
+        {
+          "name": "Wick rejection (liquidity grab) distinguished from a body-close break of structure",
+          "description": "A sweep made by a wick rather than a candle body close is treated as a liquidity grab signalling insufficient momentum to continue, and therefore rejection back the other way.",
+          "transcript_quote": "The reason this is a liquidity grab instead of a break of structure is because it was a wick instead of candle body closure. If you compare the candle body closure here to the candlestick here, there's a big difference. And I hope you guys can see that. Whenever a wick is forming like that, that means there was not enough momentum to actually break through and continue. But instead, it rejected from that area and continue to push up from there."
+        },
+        {
+          "name": "Opposite-side liquidity still unpurged",
+          "description": "In the long example, the fact that the move made relative equal highs rather than purging the prior high is what qualifies the setup; had that candle purged the high, the educator would not have considered it a trade setup.",
+          "transcript_quote": "If this candlestick right here went higher and purged liquidity from this high, that would be a different story. This would probably just be indecision and I would not even consider it as a trade setup. But because we made these relative equal highs, that tells me price is highly likely to push higher once more, taking out all of this liquidity."
+        }
+      ],
+      "stop": {
+        "anchor": "The end of the Fibonacci range on the far side of the retracement — for a short, the high of the Fibonacci range; for a long, the low of the Fibonacci range (snapped to the wick with the weak magnet tool)",
+        "rationale": "The stop is dragged to the extreme of the Fibonacci range used to frame the trade; it is not a fixed distance and is defined purely by the range's endpoint.",
+        "transcript_quote": "I simply drag the stop-loss to the high of the Fibonacci range right here."
+      },
+      "targets": [
+        {
+          "priority": 1,
+          "type": "Opposite end of the Fibonacci range (low of the range for a short, high of the range for a long)",
+          "r_multiple": 2.45,
+          "rationale": "Take-profit is dragged to the opposite extreme of the same Fibonacci range that defines the stop; entering at the 71% retracement yields a stated risk-to-reward of 2.45.",
+          "transcript_quote": "If I target the 71% from my entry, I get a risk-to-reward ratio of 2.45. That of course means for every dollar that I'm risking, I would gain two and a half roughly in return if it's a successful trade."
+        },
+        {
+          "priority": 1,
+          "type": "Long-example placement of the same target rule",
+          "r_multiple": null,
+          "rationale": "For a long, the take-profit is dragged to the high of the Fibonacci range and the stop to the wick at the low.",
+          "transcript_quote": "Now using the magnet tool again, I can click the stop loss, drag it over to that wick, and it'll snap right to it. Same thing goes for my takerit. Click this little button at the top, drag it to the high of the Fibonacci range, and drop it."
+        }
+      ],
+      "management": [
+        {
+          "rule": "The trade idea remains valid until either endpoint of the Fibonacci range is violated; a sharp reaction that fails to violate the range low is not a reason to cancel the pending order.",
+          "transcript_quote": "You can see that this low here did not violate the low of the Fibonacci range. That's a very important detail because if our trade was based on this high and this low, then technically the trade still remains valid until one of those levels are violated. If neither of those levels have been violated, then the trade idea is still intact and there's logically no reason to delete the order."
+        },
+        {
+          "rule": "Tolerate minor overshoot past the 71% entry (price pushing a little past the 75%) as minimal drawdown rather than a failed idea.",
+          "transcript_quote": "You can see that it pushed past the 71, a little bit past the 75, but overall that is very minimal draw down in the grand scheme of things."
+        },
+        {
+          "rule": "Drawdown is time spent between entry and the stop-loss; the aim of timing entry at a reaction point is to minimize it, but drawdown and losing trades still occur even with all confluences present.",
+          "transcript_quote": "Anytime that price is spending in this dark gray area close to my stop loss, that's considered draw down. That's when you're going to see those big red numbers adding up and growing, and we obviously don't want that."
+        },
+        {
+          "rule": "Nothing is guaranteed; even a full confluence stack can produce drawdown and losses.",
+          "transcript_quote": "Ideally, of course, the markets are imperfect. It doesn't always work like this. Even if all the confluences line up, we sometimes still get draw down and losing trades. Of course, nothing is 100% in the market. But what we can do is try our best to mitigate it."
+        },
+        {
+          "rule": "Execute the strategy mechanically with a strict rule set rather than discretionarily, so it can be measured and tested.",
+          "transcript_quote": "I'm a huge advocate for mechanical trading strategies. I don't think that there should be much discretion in trading. If any, it should be very, very minimal. But if you have a very mechanical trading strategy such as this, what that allows you to do is test it in a very robust way without involving human emotion."
+        },
+        {
+          "rule": "Practice/validate on demo or backtesting platforms before/while gaining confidence.",
+          "transcript_quote": "Even if it's on a demo account or a platform like FX Replay or Tradezela back testing, that's fine, too."
+        }
+      ],
+      "variants": [
+        {
+          "name": "Short variant (4H premium)",
+          "rule": "When the 4-hour is in premium, only sells are considered; the liquidity sweep is a buyside purge above a major high, entry is a sell limit at the 71%, stop at the high of the Fibonacci range, take-profit at the low of the range (GBP AUD example).",
+          "transcript_quote": "it's already telling me that we're trading at a premium on the 4hour time frame and it's right before selling opportunities. So that means we can go down to the 15-minute time frame like we're on right now and look for potential selling opportunities."
+        },
+        {
+          "name": "Long variant (4H discount)",
+          "rule": "When the 4-hour is in discount, only buys are considered; the sweep is a sellside purge below a major low, entry is a buy limit at the 71%, stop at the low/wick of the Fibonacci range, take-profit at the high of the range (NZDUSD example).",
+          "transcript_quote": "my indicator is showing me that the 4hour time frame is currently at a discount, which means we should not be looking for selling opportunities. is we should only be looking for buying opportunities, which is actually what I would be interested in on this 15-minute time frame."
+        },
+        {
+          "name": "Imperfect / internal break of structure accepted",
+          "rule": "The break of structure need not be a clean major-structure break; an internal break of structure still qualifies as a break of structure for the checklist.",
+          "transcript_quote": "The break of structure is not very clear here. This is more so an internal breakup structure, but it is a breaker structure nonetheless."
+        },
+        {
+          "name": "Fibonacci extended to the right for visualization",
+          "rule": "Optional presentation step: extend the Fibonacci tool far to the right so the position tool can be overlaid on the retracement levels.",
+          "transcript_quote": "I'm going to double click on the fib tool. And what I like to do just for visualization purposes is extend it out far to the right. This allows me to also place my parameter tool and visualize the trade altogether."
+        },
+        {
+          "name": "Off-platform execution",
+          "rule": "If not executing on TradingView, copy entry, take-profit and stop-loss prices from the position tool's inputs into MetaTrader 4/5 or another platform, including a phone.",
+          "transcript_quote": "So again, if you're not executing on Trading View and you have, for example, MetaTrader 4 or MetaTrader 5 on your cellular device, just double click the parameters, go to inputs, and you'll see your entry price, your take-profit level, and your stop-loss level. You simply input those into your execution platform, and take the trade."
+        }
+      ],
+      "source_gaps": [
+        {
+          "field": "trading_range_definition_for_premium_discount",
+          "reason": "The transcript says premium/discount is measured against 'a trading range' on the 4-hour and that the indicator computes it automatically, but never states which swing high and swing low define that range, how far back it looks, or how it is redrawn."
+        },
+        {
+          "field": "fibonacci_anchor_points",
+          "reason": "Only the long example states the draw direction ('start at the low, click, and drag to the high'). The transcript never defines which low and which high — whether they are the sweep extreme, the break-of-structure leg, the fractal swing points, or the imbalance boundaries — so the exact anchors are unresolved for both examples."
+        },
+        {
+          "field": "major_high_low_detection_parameters",
+          "reason": "Structure points come from the educator's indicator or from 'fractals or Williams fractals', but no period/length setting or definition of 'major' versus minor swing is given."
+        },
+        {
+          "field": "liquidity_sweep_qualification_threshold",
+          "reason": "No stated minimum penetration depth, wick size, or number of candles that makes a wick beyond a prior high/low count as a sweep, nor how recent the swept level must be."
+        },
+        {
+          "field": "sequencing_and_time_window",
+          "reason": "The checklist implies an order (alignment, sweep, break of structure + imbalance, 71% retracement) but the transcript never states a maximum number of bars or time between the sweep, the break of structure, and the retracement, nor whether the break of structure must occur after the sweep in all cases."
+        },
+        {
+          "field": "imbalance_selection_rule",
+          "reason": "Multiple fair value gaps can exist inside a leg; the transcript does not say which imbalance to use when more than one is present, nor any minimum gap size."
+        },
+        {
+          "field": "fvg_alignment_tolerance",
+          "reason": "The A+ confluence requires the 71% level to 'line up' with the fair value gap, but no tolerance is defined (touching the gap, inside the gap, within N pips)."
+        },
+        {
+          "field": "role_of_the_75_percent_level",
+          "reason": "The 75% level is enabled in the Fibonacci settings and referenced when describing drawdown ('pushed past the 71, a little bit past the 75'), but the transcript explicitly says only the 71% is used and never assigns the 75% an executable role."
+        },
+        {
+          "field": "pending_order_expiry_or_cancellation",
+          "reason": "The only stated invalidation is violation of one of the Fibonacci range endpoints; no time-based expiry, bar-count limit, or rule for cancelling an unfilled order is given."
+        },
+        {
+          "field": "position_size_and_risk_per_trade",
+          "reason": "The transcript gives a risk-to-reward figure (2.45) but never states risk per trade, lot sizing, account risk percentage, or maximum concurrent positions."
+        },
+        {
+          "field": "session_or_time_filter",
+          "reason": "No trading session, time-of-day window, news filter, or day-of-week restriction is taught anywhere in the transcript."
+        },
+        {
+          "field": "partial_exits_breakeven_or_trade_management_after_fill",
+          "reason": "Once filled, the transcript shows only a fixed stop and fixed take-profit; no partial take-profit, breakeven move, or trailing rule is taught."
+        },
+        {
+          "field": "multiple_setups_or_re_entry",
+          "reason": "The transcript does not address what to do if the stop is hit and the same higher-timeframe bias persists, or whether a second setup may be taken in the same leg."
+        }
+      ]
+    }
+  ],
+  "top_level_source_gaps": [
+    {
+      "field": "strategy_count",
+      "reason": "The transcript teaches exactly one strategy. The GBP AUD and NZDUSD sections are two worked examples of the same four-item checklist (the second is explicitly framed as the 'not so pretty' example), not two separate strategies."
+    },
+    {
+      "field": "indicator_internals",
+      "reason": "The educator's custom indicator computes premium/discount, prints BOS labels, marks fractal highs/lows, and draws fair value gaps. Its internal logic and settings are not disclosed, so any automated reproduction of those annotations is not settled by the source."
+    },
+    {
+      "field": "performance_statistics",
+      "reason": "No win rate, expectancy, sample size, or backtest results are provided; the only quantitative claim is the 2.45 risk-to-reward geometry of the 71% entry."
+    },
+    {
+      "field": "instrument_specific_parameters",
+      "reason": "The strategy is claimed to work on forex, metals, indices and crypto, but no per-asset parameter differences, spread/commission handling, or instrument-specific adjustments are taught."
+    }
+  ]
+}
