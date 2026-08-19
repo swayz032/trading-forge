@@ -8,10 +8,13 @@ on:
       - 'research/current_mnq_strategy_v2_4_dev_diagnostic.py'
       - 'research/current_mnq_strategy_v2_4_engine.py'
       - 'research/current_mnq_strategy_v2_4_kernel.py'
+      - 'research/current_mnq_strategy_v2_4_force.py'
+      - 'research/current_mnq_strategy_v2_4_entries.py'
       - 'research/current_mnq_strategy_v2_4_candles.py'
       - 'research/current_mnq_strategy_v2_4_zone_candles.py'
       - 'research/current_mnq_strategy_v2_4_gate.py'
       - 'research/current_mnq_strategy_v2_4_spec.json'
+      - 'research/current_mnq_strategy_v2_4_entry_semantics.json'
       - '.github/workflows/current-mnq-strategy-v2-4-dev-diagnostic.yml'
   pull_request:
     branches:
@@ -20,10 +23,13 @@ on:
       - 'research/current_mnq_strategy_v2_4_dev_diagnostic.py'
       - 'research/current_mnq_strategy_v2_4_engine.py'
       - 'research/current_mnq_strategy_v2_4_kernel.py'
+      - 'research/current_mnq_strategy_v2_4_force.py'
+      - 'research/current_mnq_strategy_v2_4_entries.py'
       - 'research/current_mnq_strategy_v2_4_candles.py'
       - 'research/current_mnq_strategy_v2_4_zone_candles.py'
       - 'research/current_mnq_strategy_v2_4_gate.py'
       - 'research/current_mnq_strategy_v2_4_spec.json'
+      - 'research/current_mnq_strategy_v2_4_entry_semantics.json'
       - '.github/workflows/current-mnq-strategy-v2-4-dev-diagnostic.yml'
   workflow_dispatch:
 
