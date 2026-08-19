@@ -1,0 +1,30 @@
+name: Current MNQ Strategy v2 Controlled AB
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v1
+    paths:
+      - 'research/current_mnq_strategy_v2_ab.py'
+      - '.github/workflows/current-mnq-strategy-v2-ab.yml'
+  workflow_dispatch:
+
+jobs:
+  ab-research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install research dependencies
+        run: python -m pip install --disable-pip-version-check pandas numpy scipy
+      - name: Execute controlled v2 A/B and anti-overfit suite
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_ab.py
+      - name: Upload complete research evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-mnq-strategy-v2-ab-results
+          path: research/_mnq_v2_ab/
+          if-no-files-found: error

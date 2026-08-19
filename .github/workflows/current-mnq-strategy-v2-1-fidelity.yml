@@ -1,0 +1,30 @@
+name: Current MNQ Strategy v2.1 Fidelity Robustness
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v2-1-fidelity
+    paths:
+      - 'research/current_mnq_strategy_v2_1_fidelity.py'
+      - '.github/workflows/current-mnq-strategy-v2-1-fidelity.yml'
+  workflow_dispatch:
+
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install research dependencies
+        run: python -m pip install --disable-pip-version-check pandas numpy scipy
+      - name: Execute v2.1 fidelity and robustness suite
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_1_fidelity.py
+      - name: Upload complete evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-mnq-strategy-v2-1-fidelity-results
+          path: research/_mnq_v21_fidelity/
+          if-no-files-found: error

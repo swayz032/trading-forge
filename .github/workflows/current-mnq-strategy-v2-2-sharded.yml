@@ -1,0 +1,87 @@
+name: Current MNQ Strategy v2.2 Sharded Robustness
+
+# Heavy contaminated-development P&L suite: MANUAL ONLY.
+# Do not auto-rerun this when semantic/safety code changes.
+on:
+  workflow_dispatch:
+
+jobs:
+  base:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check pandas numpy scipy pytest
+      - name: Prove v2.2 correctness, safety, and fast-equivalence
+        run: PYTHONPATH=. pytest --confcutdir=tests -q tests/test_current_mnq_strategy_v2_2*.py
+      - name: Run frozen base only
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_base_shard.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v22-shard-base
+          path: research/_mnq_v22_sharded/base/
+          if-no-files-found: error
+
+  params:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check pandas numpy scipy
+      - name: Run frozen parameter shard
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_variant_shard.py --kind params --index ${{ matrix.shard }} --count 6
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v22-shard-param-${{ matrix.shard }}
+          path: research/_mnq_v22_sharded/param_${{ matrix.shard }}/
+          if-no-files-found: error
+
+  slippage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check pandas numpy scipy
+      - name: Run all frozen slippage stresses
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_variant_shard.py --kind slippage --index 0 --count 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v22-shard-slippage
+          path: research/_mnq_v22_sharded/slip_0/
+          if-no-files-found: error
+
+  aggregate:
+    needs: [base, params, slippage]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check pandas numpy
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: v22-shard-*
+          path: research/_mnq_v22_sharded_inputs/
+          merge-multiple: true
+      - name: Aggregate without selecting a winner
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_aggregate.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-2-final-sharded-evidence
+          path: research/_mnq_v22_final/
+          if-no-files-found: error
