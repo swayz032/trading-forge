@@ -11,6 +11,8 @@ or inside an opaque/sandboxed document where the browser denies localStorage.
 Denied localStorage used to abort the core script before event handlers were bound,
 which made every visible button look normal but do nothing. The bundler patches the
 core storage access to fail over to in-memory state instead of aborting the page.
+It also refreshes the replay counter on every +1m/+5m/play step so a successful
+button press is visibly obvious instead of looking frozen.
 """
 from __future__ import annotations
 
@@ -40,6 +42,9 @@ SAFE_STORAGE_SAVE = (
     "console.warn('REPLAY_STORAGE_DISABLED_USING_MEMORY',e)}}"
 )
 SAFE_STORAGE_MARKER = "REPLAY_STORAGE_DISABLED_USING_MEMORY"
+ENHANCE_PROGRESS_OLD = "refreshMain(Boolean(fit));\n    renderClock();\n  };"
+ENHANCE_PROGRESS_NEW = "refreshMain(Boolean(fit));\n    renderClock();\n    renderLabels();\n  };"
+PROGRESS_MARKER = "renderClock();\n    renderLabels();"
 UNIFIED_MARKERS = (
     "Main Structure / Key Zones + TP Reaction Cluster",
     "15m CONTEXT",
@@ -62,6 +67,15 @@ def _patch_local_storage_fail_closed(html: str) -> str:
     return html
 
 
+def _patch_visible_progress(enhance: str) -> str:
+    if ENHANCE_PROGRESS_OLD not in enhance:
+        raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_MARKER_MISSING")
+    out = enhance.replace(ENHANCE_PROGRESS_OLD, ENHANCE_PROGRESS_NEW, 1)
+    if PROGRESS_MARKER not in out:
+        raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_PATCHED")
+    return out
+
+
 def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = ENHANCE) -> str:
     html = html_path.read_text(encoding="utf-8")
     lwc = lwc_path.read_text(encoding="utf-8")
@@ -77,6 +91,7 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
             raise RuntimeError(f"REPLAY_V3_{name}_SCRIPT_UNSAFE_CLOSE_TAG")
 
     html = _patch_local_storage_fail_closed(html)
+    enhance = _patch_visible_progress(enhance)
     html = html.replace(LWC_MARKER, f"<script>\n{lwc}\n</script>", 1)
     html = html.replace(ENHANCE_MARKER, f"<script>\n{enhance}\n</script>", 1)
 
@@ -84,6 +99,8 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         raise RuntimeError("REPLAY_V3_EXTERNAL_RUNTIME_DEPENDENCY_REMAINS")
     if SAFE_STORAGE_MARKER not in html:
         raise RuntimeError("REPLAY_V3_STORAGE_FALLBACK_NOT_BUNDLED")
+    if PROGRESS_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_BUNDLED")
     if "RESET DECISION" not in html or "if (l.final_action) return;" not in html:
         raise RuntimeError("REPLAY_V3_SINGLE_TRADE_INTERACTION_NOT_BUNDLED")
     missing = [marker for marker in UNIFIED_MARKERS if marker not in html]
