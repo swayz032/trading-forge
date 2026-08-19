@@ -97,7 +97,9 @@ def test_grader_surfaces_action_and_zone_disagreement_without_pnl_threshold():
     assert grade["disagreements"][0]["disagreement_type"] == "ENTER_LONG__VS__WAIT"
     match = grade["rows"][0]["key_zone_grade"]["matches"][0]
     assert match["center_error_ticks"] == 1.0
-    assert "pnl" not in json.dumps(grade).lower()
+    serialized = json.dumps(grade).lower()
+    for forbidden_key in ('"pnl"', '"net_pnl"', '"gross_pnl"'):
+        assert forbidden_key not in serialized
 
 
 def test_same_side_entry_grades_tp_geometry():

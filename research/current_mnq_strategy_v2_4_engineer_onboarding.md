@@ -119,6 +119,8 @@ Tug-of-war/giveback increases path travel without equivalent directional progres
 
 ## TP / first reaction semantics
 
+Canonical contract label: `FIRST_MEANINGFUL_PHYSICAL_REACTION`.
+
 The first meaningful physical reaction area in the trade direction owns the TP/room decision.
 
 - Nearer meaningful liquidity/reaction cluster before farther FVG → nearer cluster wins.
