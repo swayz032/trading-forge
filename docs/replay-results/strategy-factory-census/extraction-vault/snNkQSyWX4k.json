@@ -1,0 +1,22 @@
+{
+  "video_id": "snNkQSyWX4k",
+  "extracted_at": 1787108493.531014,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "883913a05660ee780992c358e56dc4c2bf54c5e4aad540719f7d733c77b4f421",
+  "extraction": {
+    "video_id": "snNkQSyWX4k",
+    "instrument_classification": "futures_primary",
+    "strategies": [],
+    "rejected_strategies": [
+      {
+        "reason": "fixed_point_stop_not_supported",
+        "detail": "The speaker repeatedly defines the trade goal and stop management based on a fixed point (20 points), which violates the framework's requirement for structural or volatility-adjusted stop anchors."
+      }
+    ],
+    "empty_reason": null
+  }
+}

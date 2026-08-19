@@ -1,0 +1,205 @@
+{
+  "video_id": "l-2iKbcm5UI",
+  "extracted_at": 1787110535.7344725,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "feae3ee5c79f44d68236674812d023a1140ac0f3aae98d927de4ba24fd3983e4",
+  "extraction": {
+    "video_id": "l-2iKbcm5UI",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "short",
+        "entry_sequence": [
+          {
+            "transcript_quote": "we have a market structure break. Here again, we have a market structure break.",
+            "step": 1,
+            "action": "Confirm bearish market structure on the 4H timeframe by identifying a break of structure (MSB) in towards the downside.",
+            "rationale": "Bearish MSB establishes the primary directional bias for the trade."
+          },
+          {
+            "transcript_quote": "we see that the 0.5 fib aligns beautifully with the overall daily supply zone",
+            "step": 2,
+            "action": "Wait for price to retrace into the daily supply zone, specifically targeting the 0.5 Fibonacci retracement level.",
+            "rationale": "Retracement into the 0.5 Fib zone aligns the trade with the overall daily supply bias."
+          },
+          {
+            "transcript_quote": "identify a bullish candle that is most likely going to be your liquidity high",
+            "step": 3,
+            "action": "Identify and wait for a liquidity high (a bullish candle's high) to be taken out during the impulsive phase in towards the downside.",
+            "rationale": "Taking out liquidity confirms the market has swept the high and is ready for a reversal."
+          },
+          {
+            "transcript_quote": "we have a break of market structure. Therefore, again, we use the same confluences here on the 50-minute time frame.",
+            "step": 4,
+            "action": "Enter a short position on the 50-minute timeframe upon confirmation of a bearish market structure shift (MSB) within the overall impulse.",
+            "rationale": "The final MSB on the entry timeframe confirms the reversal intent and entry trigger."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "sweep_wick_above_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed above the liquidity high identified on the 50-minute timeframe."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 1,
+            "rationale": "Targeting the first risk-to-reward level."
+          },
+          {
+            "priority": 2,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "Targeting the second risk-to-reward level."
+          },
+          {
+            "priority": 3,
+            "type": "r_multiple",
+            "r_multiple": 3,
+            "rationale": "Targeting the final risk-to-reward level."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "all you're simply looking for is a swing high, a swing low, a new potential lower high, and then a new potential lower low",
+            "name": "bearish_market_structure",
+            "description": "The market must show a bearish market structure, specifically a new potential lower high and lower low.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "all we are simply looking for is for the market to retrace towards that 0.5 fib and then continue its overall leg further in towards downside",
+            "name": "premium_discount_retracement",
+            "description": "The market must retrace towards the 0.5 Fibonacci retracement level, aligning with the daily supply zone.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "identify a bullish candle that is most likely going to be your liquidity high",
+            "name": "liquidity_sweep",
+            "description": "The market must take out a liquidity high (a bullish candle's high) during the impulsive phase.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "a supply zone to be created in the form of a buy up, right? Before a strong sell down",
+            "name": "supply_zone_formation",
+            "description": "A supply zone must be formed, indicated by a buy up before a strong sell down (fractal structure shift).",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Overall Swing Range",
+            "role": "zone",
+            "verbatim_description": "I mark out the low and I mark out the high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium Versus Discount Tool",
+            "role": "indicator",
+            "verbatim_description": "I just use the zero, the 0.5, and the one fib.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "0.5 Fib",
+            "role": "zone",
+            "verbatim_description": "All we are simply looking for is for the market to retrace towards that 0.5 fib.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Supply and Demand",
+            "role": "zone",
+            "verbatim_description": "What we have here is a beautiful so-called buy up in towards the highs and then a very strong V-shape reversal in towards the downside.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity",
+            "role": "entry_step",
+            "verbatim_description": "When we want to identify liquidity, go one time frame lower.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bumps in the Road",
+            "role": "zone",
+            "verbatim_description": "These bumps in the road, those are going to be little liquidity highs where if you extend a line to the right, you will see that the market is very likely to interact with it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity High",
+            "role": "zone",
+            "verbatim_description": "This is the blue dotted line. That is the liquidity high that we want to get taken out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Impulsive Phase",
+            "role": "phase",
+            "verbatim_description": "We can now expect that the new impulsive phase in towards the downside is commencing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Overall Pullback Phase",
+            "role": "phase",
+            "verbatim_description": "The overall pullback phase has taken place, and that we're now looking to trade the next impulse in towards the downside.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fractal Structure Shift",
+            "role": "model",
+            "verbatim_description": "What you ultimately have here is something called a fractal structure shift, where you see a market structure shift on the individual candlesticks.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Daily Supply Zone",
+            "role": "zone",
+            "verbatim_description": "This green zone here is our daily supply zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "4-Hour Supply Zone",
+            "role": "zone",
+            "verbatim_description": "We have the 4-hour supply zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Market Structure",
+            "role": "model",
+            "verbatim_description": "We then understand market structure is bearish.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 12\u00c3\u2014 in transcript)",
+            "transcript_quote": "ount tool, and if you want my fib settings, it's very simple. I just use the zero, the 0.5, and the one fib. And all we are",
+            "occurrences": 12,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 6\u00c3\u2014 in transcript)",
+            "transcript_quote": "y it. And look at the overall impulse that you had here in towards the downside. And within that overall impulse, I view it as a",
+            "occurrences": 6,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "ucture shift, where you see a market structure shift on the individual candlesticks. Now, more on this in a future video, but all you're simpl",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

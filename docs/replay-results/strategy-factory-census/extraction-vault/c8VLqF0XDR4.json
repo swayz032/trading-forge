@@ -1,0 +1,150 @@
+{
+  "video_id": "c8VLqF0XDR4",
+  "extracted_at": 1787109285.7266173,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "dc792543ae94ce98cd820d762da8e9bd01b44ae26b6332e42d26e5bf7a22e3bf",
+  "extraction": {
+    "video_id": "c8VLqF0XDR4",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "30m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "So I will take the first 30 minute candle. So that's going to be from 9:30 New York time to 1000 a.m. New York time. You're going to mark the low of \u00ea\u00b7\u00b8",
+            "step": 1,
+            "action": "Identify the 30-minute Orb by marking the high and low of the first 30-minute candle (9:30 AM - 10:00 AM NY time).",
+            "rationale": "The 30-minute Orb defines the initial range for the strategy."
+          },
+          {
+            "transcript_quote": "I never buy breakdowns and I never buy breakouts. The reason being your riskreward is not well defined.",
+            "step": 2,
+            "action": "Wait for price to break the 30-minute Orb range (either above the high or below the low) to establish initial manipulation.",
+            "rationale": "The strategy avoids simple breakouts or breakdowns due to poor risk-to-reward definition."
+          },
+          {
+            "transcript_quote": "what I like to see is for price to pull back and retest that orb high or low.",
+            "step": 3,
+            "action": "Wait for price to pull back and retest the 30-minute Orb high (for long) or low (for short).",
+            "rationale": "The retest of the Orb acts as the high-probability entry trigger."
+          },
+          {
+            "transcript_quote": "you can look to get short with a stop-loss right above the high of this candle.",
+            "step": 4,
+            "action": "Enter short on the 5-minute candle close after price rejects the Orb low, with a stop loss placed right above the high of that rejection candle.",
+            "rationale": "The rejection of the Orb low confirms bearish reversal intent."
+          },
+          {
+            "transcript_quote": "you had another opportunity to go long with a stop-loss right below the high of that first 30 minutes.",
+            "step": 5,
+            "action": "Enter long on the 5-minute candle close after price retests the Orb high, with a stop loss placed right below the high of the 30-minute Orb candle.",
+            "rationale": "The retest of the Orb high confirms bullish reversal intent."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "transcript_quote": "stop loss right below these lows",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed structurally below the swing low of the entry candle."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "new_high",
+            "transcript_quote": "price pushed up into a new high a day",
+            "rationale": "The primary target is the new high of the day."
+          },
+          {
+            "priority": 2,
+            "type": "new_low",
+            "transcript_quote": "hitting your 1:1 risk-to-reward down here",
+            "rationale": "The secondary target is based on achieving a 1:1 risk-to-reward ratio."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "we also had the pre-market high right there as well.",
+            "name": "pre_market_high_confluence",
+            "description": "The trade setup is strengthened by the presence of the pre-market high.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "we also had an imbalance within the market right here.",
+            "name": "market_imbalance",
+            "description": "The setup is confirmed by an imbalance within the market.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "mixing that together with the order flow",
+            "name": "order_flow_confirmation",
+            "description": "The trade is validated by the alignment with order flow.",
+            "canonical_match": "delta_or_volume_signature"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "15minute orb strategy",
+            "role": "model",
+            "verbatim_description": "The 15minute orb strategy is everywhere right now.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "30 minute orb",
+            "role": "model",
+            "verbatim_description": "what my strategy is is I actually zoom out and I go based off of a 30 minute orb.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "pre-market high",
+            "role": "zone",
+            "verbatim_description": "We also had the pre-market high right there as well.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "imbalance",
+            "role": "zone",
+            "verbatim_description": "And we also had an imbalance within the market right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "order flow",
+            "role": "indicator",
+            "verbatim_description": "mixing that together with the order flow.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "6220 area",
+            "role": "zone",
+            "verbatim_description": "It went down into that 6220 area and we had even more buyers at that level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "is for price to pull back and retest that orb high or low. So, for today's trade, we pulled back. We tested that orb high righ",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "er break above that 15-minute range or below that 15-minute range to either look for a long entry or a short entry. Like I sai",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

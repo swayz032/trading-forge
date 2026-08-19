@@ -1,0 +1,252 @@
+{
+  "video_id": "oDLt9zh33LE",
+  "extracted_at": 1787109839.037601,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "1b9256ed26a158a3d63808d9b222b9d1b082bd8c73ff77e18b7192e3ae7cac87",
+  "extraction": {
+    "video_id": "oDLt9zh33LE",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Step number one, we are going to wait for a breakout on the fiveminut chart.",
+            "step": 1,
+            "action": "Wait for the 5m candle to break the 15m range high or low.",
+            "rationale": "This step filters out false signals by requiring a definitive breakout on the lower timeframe."
+          },
+          {
+            "transcript_quote": "We're going to wait for an overlapping fair value gap that crosses the higher low.",
+            "step": 2,
+            "action": "Wait for the breakout candle to create an overlapping fair value gap (FVG) that crosses the range high or low.",
+            "rationale": "The FVG must be the middle candle of the three-candle pattern and must overlap the initial range."
+          },
+          {
+            "transcript_quote": "Step number three, we're going to wait for the market to retest that high or low of this initial candle that has a fair value gap overlapping it.",
+            "step": 3,
+            "action": "Wait for the market to retest the high or low of the initial candle that formed the overlapping FVG.",
+            "rationale": "This retest provides the necessary patience and confirms the initial displacement."
+          },
+          {
+            "transcript_quote": "Step number four, we're only going to take the trade when the retest candle gets engulfed.",
+            "step": 4,
+            "action": "Wait for the retest candle to be engulfed by the opposing candle (bullish for long, bearish for short).",
+            "rationale": "The engulfing candle confirms that the breakout is real and ready to run."
+          },
+          {
+            "transcript_quote": "And as soon as that candle closes, that is your entry.",
+            "step": 5,
+            "action": "Enter the trade immediately upon the close of the engulfing candle.",
+            "rationale": "Entry is taken on the close of the confirmation candle."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "transcript_quote": "We're going to place our stop loss at this low.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed at the low of the initial candle that formed the FVG."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The first target is a clean 2R."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "You mark out the high and the low of the first 15minute candle range.",
+            "name": "opening_range_definition",
+            "description": "The strategy begins by marking the high and low of the first 15-minute candle to define the opening range.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "We're going to wait for an overlapping fair value gap that crosses the higher low.",
+            "name": "overlapping_fvg_displacement",
+            "description": "The market must displace through the range and create an FVG that overlaps the range high or low.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "We're going to wait for the market to trade back into that range and then give us an engulfing candle",
+            "name": "retest_and_engulfment",
+            "description": "The market must retest the initial candle and provide an engulfing candle for confirmation.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Opening Range Breakout",
+            "role": "model",
+            "verbatim_description": "It starts with the first 50 minutes after the session opens. You mark out the high and the low of the first 15minute candle range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "ORB Box",
+            "role": "zone",
+            "verbatim_description": "You mark out the high and the low of the first 15minute candle range. That is your orb box.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "False Breakouts",
+            "role": "filter",
+            "verbatim_description": "Price loves to poke above the range, suck traders in and then slam back in the other other direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Grab",
+            "role": "entry_step",
+            "verbatim_description": "This spike is just a liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap",
+            "role": "indicator",
+            "verbatim_description": "It is a three candle pattern where the low of the third candle and the high of the first candle do not touch each other.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Overlapping Fair Value Gap",
+            "role": "zone",
+            "verbatim_description": "The fair value gap has to be the same candle that breaks out of the range. That has to be the middle candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Displacement",
+            "role": "entry_step",
+            "verbatim_description": "This is displacement through the level to show you that buyers are in control.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Retest",
+            "role": "entry_step",
+            "verbatim_description": "We're going to wait for the market to retest that high or low of this initial candle that has a fair value gap overlapping it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Engulfing Candle",
+            "role": "entry_step",
+            "verbatim_description": "That engulfing candle, that is your confirmation that this breakout is real and ready to run.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Change in the State of Delivery",
+            "role": "phase",
+            "verbatim_description": "The market has taken out liquidity and with this liquidity being taken out, they receive a change in the state of delivery.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block",
+            "role": "zone",
+            "verbatim_description": "Forming an order block.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Propulsion Block",
+            "role": "zone",
+            "verbatim_description": "we form an order block or propulsion block out of that area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "External Range Liquidity",
+            "role": "zone",
+            "verbatim_description": "We sweep out external range liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Internal Range Liquidity",
+            "role": "zone",
+            "verbatim_description": "The market has left behind internal range liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Top-down analysis",
+            "role": "model",
+            "verbatim_description": "I'm going to go through an entire top-down analysis on how you can improve your win rate using this strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Expansion",
+            "role": "phase",
+            "verbatim_description": "We have 3 days of expansion.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation",
+            "role": "phase",
+            "verbatim_description": "We go from expansion to consolidation to expansion or expansion to reversal to expansion.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Reversal",
+            "role": "phase",
+            "verbatim_description": "it can be a consolidation and a reversal.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sweep",
+            "role": "entry_step",
+            "verbatim_description": "We mark out the high. We sweep.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Lowhanging fruit",
+            "role": "target",
+            "verbatim_description": "Here we have my first lowhanging fruit.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 24\u00c3\u2014 in transcript)",
+            "transcript_quote": "ng to wait for an overlapping fair value gap that crosses the higher low. So, how does that look like? Well, if I have to draw out the",
+            "occurrences": 24,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 19\u00c3\u2014 in transcript)",
+            "transcript_quote": "The opening range breakout. Everybody talks about it. Everybody tries it. But almost nobody trades it profit",
+            "occurrences": 19,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 5\u00c3\u2014 in transcript)",
+            "transcript_quote": "is up close candle forming an order block. and they think, \"Okay, now I'm going to take the sell because now I should be in the cor",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "ing to wait for the market to retest that high or low of this initial candle that has a fair value gap overlapping it. That is",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

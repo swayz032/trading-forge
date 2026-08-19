@@ -1,0 +1,240 @@
+{
+  "video_id": "NMUd0oX_7Pg",
+  "extracted_at": 1787109096.2528203,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "046894c533fd8064517d9de5c76ef600d5eb1f19b21acb83cbfc27a4bf478f75",
+  "extraction": {
+    "video_id": "NMUd0oX_7Pg",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "locate the first 15-minutes candle that formed on today's date",
+            "step": 1,
+            "action": "Identify the first 15-minute candle of the trading day and draw a range line at its high and low.",
+            "rationale": "This establishes the structural box for the manipulation candle."
+          },
+          {
+            "transcript_quote": "confirm that the candle you just boxed is what I call a manipulation candle",
+            "step": 2,
+            "action": "Confirm the 15-minute candle is a manipulation candle by checking if its range is 20 to 25% or more of the Daily ATR.",
+            "rationale": "The ATR threshold confirms the move was aggressive enough to be institutional."
+          },
+          {
+            "transcript_quote": "wait for one of two specific reversal candles to appear outside the range you boxed in step one",
+            "step": 3,
+            "action": "Wait for a reversal candle (Hammer, Inverted Hammer, Bullish Engulfing, or Bearish Engulfing) to appear outside the 15m range.",
+            "rationale": "The reversal candle signals the start of the intended move against the manipulation."
+          },
+          {
+            "transcript_quote": "wait for the next candle to break above the hammer high, enter at the open of the candle after that",
+            "step": 4,
+            "action": "Enter long on the open of the candle following the break above the reversal candle's high.",
+            "rationale": "The break confirms the reversal intent and provides a high-probability entry."
+          },
+          {
+            "transcript_quote": "enter at the low of the engulfing candle",
+            "step": 5,
+            "action": "Enter long on a limit order at the high of the previous red candle (for bullish engulfing).",
+            "rationale": "The engulfing candle provides a high-probability entry at a key reversal level."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "transcript_quote": "set your stop at the low of the hammer",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed beyond the low of the reversal candle wick."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "transcript_quote": "target profit? The top of the range we drew in step one.",
+            "r_multiple": null,
+            "rationale": "The top of the 15m range serves as the primary profit target."
+          },
+          {
+            "priority": 2,
+            "type": "range_low",
+            "transcript_quote": "target profit at the top of the box.",
+            "r_multiple": null,
+            "rationale": "The bottom of the 15m range serves as the primary profit target for short setups."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "the first 15-minutes candle that formed on today's date",
+            "name": "opening_candle_context",
+            "description": "The strategy requires the analysis to begin with the first 15-minute candle of the day.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "the size of the candle you just boxed from high to low is 20 to 25% or more of that daily ATR",
+            "name": "manipulation_atr_confirmation",
+            "description": "The candle's range must be 20-25% or more of the Daily ATR to confirm manipulation.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "volume above average, and price is already showing hesitation on the next candles",
+            "name": "volume_confirmation",
+            "description": "High volume above the 20-period MA confirms institutional involvement in the move.",
+            "canonical_match": "delta_or_volume_signature"
+          },
+          {
+            "transcript_quote": "wait for one of two specific reversal candles to appear outside the range you boxed in step one",
+            "name": "reversal_candle_trigger",
+            "description": "A reversal candle (Hammer/Engulfing) must form outside the 15m range to signal entry.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "The first 15-minutes candle",
+            "role": "zone",
+            "verbatim_description": "The first 15-minutes candle that formed on today's date. Simply draw a line at the high and low of that candle and extend both lines in the future for the next 60 to 90 minutes.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Manipulation Candle",
+            "role": "entry_step",
+            "verbatim_description": "A fast, aggressive move either up or down. Direction doesn't matter. What matters is that it's fast. It's aggressive, and it's moving in one direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "The Box",
+            "role": "zone",
+            "verbatim_description": "A line drawn at the high and low of the first 15-minutes candle and extended for the next 60 to 90 minutes. The box actually serves double-duty here. It gives us the entry zone on one side and two natural profit targets on the other.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Average True Range (ATR)",
+            "role": "indicator",
+            "verbatim_description": "This gives you a number. That value represents the average daily range over the past 14 days.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Manipulation Threshold",
+            "role": "filter",
+            "verbatim_description": "If the size of the candle you just boxed from high to low is 20 to 25% or more of that daily ATR, it's a confirmed manipulation candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Hammer",
+            "role": "entry_step",
+            "verbatim_description": "This needs to appear after a clear sharp red move downward. That long lower wick, that's not random. It's telling you that a massive buyer stepped in and absorbed all that selling pressure.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inverted Hammer",
+            "role": "entry_step",
+            "verbatim_description": "It appears after a clear green move upward with the wick extending from the top. It works the same way in reverse.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bullish Engulfing Candle",
+            "role": "entry_step",
+            "verbatim_description": "A bullish engulfing fully swallow[s] the previous red candle. I like to set my entry limit order at the high of that previous red candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Engulfing Candle",
+            "role": "entry_step",
+            "verbatim_description": "A bearish engulfing works the mirror way. Entry at the low of the previous green candle, stop at the high of the engulfing candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume MA",
+            "role": "indicator",
+            "verbatim_description": "A moving average line running through the volume histogram, which is set with an MA period of 20.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume spike",
+            "role": "entry_step",
+            "verbatim_description": "A high volume event that tells you that big players were actively involved in creating that move.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Institutional footprint",
+            "role": "filter",
+            "verbatim_description": "The quality of a move, indicating that the move may not be sustainable if it lacks this footprint.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "ATR",
+            "role": "indicator",
+            "verbatim_description": "Used to qualify if the candle is big enough to be considered for the setup.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 11\u00c3\u2014 in transcript)",
+            "transcript_quote": "u just boxed is what I call a manipulation candle. And most of the time, when you're looking at that opening 15-minute candle, it is",
+            "occurrences": 11,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 8\u00c3\u2014 in transcript)",
+            "transcript_quote": "ding and add the average true range indicator. Default settings, 14 days, no adjustments needed. This gives you a number. In o",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "60 to 90",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"60 to 90\"",
+            "transcript_quote": "60 to 90 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "20 to 25%",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"20 to 25%\"",
+            "transcript_quote": "20 to 25% ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "20 to 25",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"20 to 25\"",
+            "transcript_quote": "20 to 25",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "19 to 20%",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"19 to 20%\"",
+            "transcript_quote": "19 to 20% ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": ".5 to 1",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \".5 to 1\"",
+            "transcript_quote": ".5 to 1",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "video_id": "aHLIE_TXjpo",
+  "extracted_at": 1787108861.7703092,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "03ab0b42fc77c1b78d81771231c8430432780284664a9eb220a76d56db386614",
+  "extraction": {
+    "video_id": "aHLIE_TXjpo",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "So, if the previous 4-hour candle has closed bullish, we are looking for buys during the next 4-hour candle. And if it's closed bearish, we're looking",
+            "step": 1,
+            "action": "Wait for the previous 4-hour candle to close bullish (for long) or bearish (for short) to establish bias.",
+            "rationale": "The bias is set by the close of the preceding 4-hour candle."
+          },
+          {
+            "transcript_quote": "So, when the 6:00 a.m. candle opens, we are just looking for a high to be broken.",
+            "step": 2,
+            "action": "On the 5-minute chart, wait for price to break the high (for long) or low (for short) of the current 4-hour candle.",
+            "rationale": "The break of the candle high/low serves as the entry trigger."
+          },
+          {
+            "transcript_quote": "We don't want to see indecision candles, a hammer candles, or anything like that. If we do have a wick on a candle, it has to be at the bottom if we's",
+            "step": 3,
+            "action": "Ensure the entry candle is not an indecision candle or a hammer, and if a wick is present, it must be at the bottom for a long entry.",
+            "rationale": "Candle quality is required to avoid trading in indecision or rejection zones."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss is calculated dynamically based on the average range of the previous few 4-hour candles."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The speaker aims for a 1:2 risk to reward ratio."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "So, we are clearly looking for price to be trending.",
+            "name": "market_trend_alignment",
+            "description": "The strategy requires the market to be trending, not ranging.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "transcript_quote": "We want to see price break out of these areas and have some nice 4-hour candles in order to trade where we've got space before hitting any key levels.",
+            "name": "breakout_from_range",
+            "description": "Price must break out of sideways areas and show strong 4-hour candle movement.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "We don're looking for clean body closes.",
+            "name": "clean_candle_close",
+            "description": "The entry candle must have a clean body close, avoiding indecision or rejection wicks.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Clean Body Closes",
+            "role": "filter",
+            "verbatim_description": "we're looking for clean body closes.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Areas of Rejection",
+            "role": "zone",
+            "verbatim_description": "we don't have any areas of rejection to worry about on the 4-hour chart until I'd say here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trapped in Ranges",
+            "role": "filter",
+            "verbatim_description": "Where we wouldn't be taking buys and sells is in areas like this where price is just moving sideways or when price is trapped in ranges.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Lower Lows and Lower Highs",
+            "role": "phase",
+            "verbatim_description": "I was looking for lower lows and lower highs, and then a shift, and then a break of a high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Shift",
+            "role": "entry_step",
+            "verbatim_description": "I was looking for lower lows and lower highs, and then a shift, and then a break of a high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Current Hourly Candle to be in Line",
+            "role": "filter",
+            "verbatim_description": "we do need the current hourly candle to be in line with our trade in order to enter.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Average Range of the Previous Few Candles",
+            "role": "indicator",
+            "verbatim_description": "in order to calculate stop loss, we can look at the average range of the previous few candles.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Top Wick Rejection",
+            "role": "zone",
+            "verbatim_description": "We can't be looking for buys if this candle had a huge top wick on it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Swing Patterns",
+            "role": "phase",
+            "verbatim_description": "Price moving in these swing patterns as opposed to price just moving sideways.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Higher highs and higher lows",
+            "role": "model",
+            "verbatim_description": "This strategy is more like higher highs, higher lows. That's all that matters.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Indecision candle",
+            "role": "filter",
+            "verbatim_description": "We stay away from trades like that. What I'm hoping will happen now is the 6:00 to 10:00 candle will close bearish, gives us a nice-sized body, and then we look for rejections off this area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Area of rejection",
+            "role": "zone",
+            "verbatim_description": "We're not pushing into an area of rejection until I'd say around here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Confluence of currency strength",
+            "role": "filter",
+            "verbatim_description": "Provided that we have got that confluence of currency strength, which is always important with most trading strategies really.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Zela score",
+            "role": "indicator",
+            "verbatim_description": "So, our Zela score is 74.96.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 6\u00c3\u2014 in transcript)",
+            "transcript_quote": "nd we don't have any areas of rejection to worry about on the 4-hour chart until I'd say here. So, we're able to be taking these",
+            "occurrences": 6,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "is where price is just moving sideways or when price is trapped in ranges. We want to see price break out of these areas and hav",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "s, we can look at the average range of the previous few candles. So, if we look from 6:00 a.m., we measure this candle out. Th",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "00 to 10",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"00 to 10\"",
+            "transcript_quote": "00 to 10",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

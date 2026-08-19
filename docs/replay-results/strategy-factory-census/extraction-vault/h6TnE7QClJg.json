@@ -1,0 +1,160 @@
+{
+  "video_id": "h6TnE7QClJg",
+  "extracted_at": 1787109646.8155072,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "cbef22146e5138a7997b49dc6ea47463217fdda8b943b92439c4df3ee08109f3",
+  "extraction": {
+    "video_id": "h6TnE7QClJg",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "wait for the EMA10 to cross above the EMA 20. This signals bullish short-term momentum.",
+            "step": 1,
+            "action": "Wait for the EMA10 (fast, green) to cross above the EMA 20 (slow, orange) to signal bullish momentum.",
+            "rationale": "The EMA10 tracks short-term momentum, and the EMA 20 represents the broader short to medium-term trend."
+          },
+          {
+            "transcript_quote": "CCI must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength.",
+            "step": 2,
+            "action": "Check the CCI; it must be above zero at the time of the crossover or have crossed above zero shortly before to confirm momentum strength.",
+            "rationale": "CCI measures how far the current price has moved away from its average price, indicating momentum strength."
+          },
+          {
+            "transcript_quote": "enter the trade only when both conditions are present. You can enter on the close of the confirmation candle or if you want a better entry, wait for a",
+            "step": 3,
+            "action": "Enter the trade only when both the EMA crossover and CCI confirmation are present. Entry can be on the close of the confirmation candle or a pullback to the EMA10.",
+            "rationale": "Waiting for both signals aligns the entry with confirmed momentum."
+          },
+          {
+            "transcript_quote": "wait for the EMA10 to cross below the EMA 20 bearish momentum signal.",
+            "step": 4,
+            "action": "Wait for the EMA10 to cross below the EMA 20 to signal bearish momentum.",
+            "rationale": "The EMA10 tracks short-term momentum, and the EMA 20 represents the broader short to medium-term trend."
+          },
+          {
+            "transcript_quote": "CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength.",
+            "step": 5,
+            "action": "Check the CCI; it must be below zero at the time of the crossover or have crossed below zero shortly before to confirm bearish strength.",
+            "rationale": "CCI measures how far the current price has moved away from its average price, indicating momentum strength."
+          },
+          {
+            "transcript_quote": "enter when both align.",
+            "step": 6,
+            "action": "Enter the trade when both the EMA crossover and CCI confirmation align.",
+            "rationale": "Alignment of both signals confirms the strength of the move."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "transcript_quote": "place your stop loss below the most recent swing low or just below the EMA 20 depending on your risk tolerance and the volatility of the pair.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker advises placing the stop below the most recent swing low or just below the EMA 20."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 1.5,
+            "rationale": "The speaker advises setting the target at least 1.5 to two times the distance of the stop loss."
+          },
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The speaker advises setting the target at least 1.5 to two times the distance of the stop loss."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "wait for the EMA10 to cross above the EMA 20. This signals bullish short-term momentum.",
+            "name": "ema_crossover_bullish",
+            "description": "Wait for the EMA10 to cross above the EMA 20 to signal bullish short-term momentum.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "CCI must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength.",
+            "name": "cci_confirmation_bullish",
+            "description": "CCI must be above zero at the time of the crossover or have crossed above zero shortly before to confirm momentum strength.",
+            "canonical_match": "vwap_alignment"
+          },
+          {
+            "transcript_quote": "wait for the EMA10 to cross below the EMA 20 bearish momentum signal.",
+            "name": "ema_crossover_bearish",
+            "description": "Wait for the EMA10 to cross below the EMA 20 to signal bearish momentum.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength.",
+            "name": "cci_confirmation_bearish",
+            "description": "CCI must be below zero at the time of the crossover or have crossed below zero shortly before to confirm bearish strength.",
+            "canonical_match": "vwap_alignment"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "EMA10",
+            "role": "indicator",
+            "verbatim_description": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "EMA20",
+            "role": "indicator",
+            "verbatim_description": "The EMA 20 is smoother. It represents the broader short to medium-term trend.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "CCI",
+            "role": "indicator",
+            "verbatim_description": "The commodity channel index was designed to measure how far the current price has moved away from its average price over a certain period.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Early Warning System",
+            "role": "entry_step",
+            "verbatim_description": "CCI often crosses above zero before the EMA crossover happens. Read that again. Before, this is your early warning system.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bullish Short-Term Momentum",
+            "role": "phase",
+            "verbatim_description": "When the EMA10 crosses above the EMA20, it signals that recent momentum is accelerating upward. That's bullish.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Momentum Signal",
+            "role": "phase",
+            "verbatim_description": "When the EMA10 crosses below the EMA20, momentum is shifting down. That's bearish.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Momentum Confirmation",
+            "role": "entry_step",
+            "verbatim_description": "CCI must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "30 to 40",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 40\"",
+            "transcript_quote": "30 to 40 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

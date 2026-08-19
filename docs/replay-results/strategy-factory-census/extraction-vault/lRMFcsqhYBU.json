@@ -1,0 +1,252 @@
+{
+  "video_id": "lRMFcsqhYBU",
+  "extracted_at": 1787108409.3560855,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "c7fdf2301e898ba03d48e23f8904d88f1babeaff9f00541aad0cf520635e9e04",
+  "extraction": {
+    "video_id": "lRMFcsqhYBU",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1d",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "in a trending Market we normally have a situation where price is making higher highs and higher lows in this trending Market",
+            "step": 1,
+            "action": "Identify if the market is trending up (making higher highs and higher lows) or trending down (making lower lows and lower highs).",
+            "rationale": null
+          },
+          {
+            "transcript_quote": "I'm going to be looking not at this level but I'll put a horizontal line at this level go below it and look left to the very next level price will hit",
+            "step": 2,
+            "action": "For a counter-trend long trade, look below the current swing low and identify the next structural level price is likely to hit.",
+            "rationale": "This level serves as the major structure zone for the counter-trend trade."
+          },
+          {
+            "transcript_quote": "I would look for the next level price is going to hit up support then I would make sure that that level has been tested multiple times",
+            "step": 3,
+            "action": "Verify that the identified counter-trend level has been tested multiple times (at least two tests).",
+            "rationale": "Multiple tests validate the level as a major structure zone."
+          },
+          {
+            "transcript_quote": "on the four hour chart our rules were that I'm looking for a confirmation and for this strategy and for the scope of this video the confirmation is to",
+            "step": 4,
+            "action": "Drop down to the 4H chart and wait for the specific reversal confirmation (e.g., double bottom for long, double top for short).",
+            "rationale": "The 4H confirmation signals the reversal intent."
+          },
+          {
+            "transcript_quote": "I grab a box tool and I create a box between the lowest body and the lowest Wick of that candle",
+            "step": 5,
+            "action": "Create a termination zone (box) between the lowest body and the lowest wick of the reversal candle (e.g., double bottom).",
+            "rationale": "This zone defines the area where the reversal confirmation is valid."
+          },
+          {
+            "transcript_quote": "I'm looking for a Candlestick pattern that shows buying pressure that came with this big green candle here with the long Wick to the bottom side for",
+            "step": 6,
+            "action": "Enter on a candlestick pattern showing buying pressure (e.g., engulfing bar, hammer, or close above bar) after the reversal confirmation.",
+            "rationale": "The candlestick pattern confirms bullish momentum after the reversal."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "transcript_quote": "I normally do one times the ATR indicator below the lowest Wick of the double bottom",
+          "buffer_atr": null,
+          "atr_multiplier": 1,
+          "rationale": "The stop is placed one ATR below the lowest wick of the reversal candle."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 1.4,
+            "rationale": "The speaker uses a fixed target of 1.4 to 1 reward to risk ratio for counter-trend trades."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "this level must have been tested multiple times",
+            "name": "major_structure_test",
+            "description": "The identified major structure level must have been tested multiple times.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "I'm going to be looking not at this level but I'll put a horizontal line at this level go below it and look left to the very next level price will hit",
+            "name": "counter_trend_zone_identification",
+            "description": "Identify the next structural level price will hit outside of the current trend direction.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "the confirmation is going to be double bottoms",
+            "name": "4h_reversal_confirmation",
+            "description": "Wait for the specific reversal confirmation (e.g., double bottom) on the 4H chart.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Major structure level",
+            "role": "zone",
+            "verbatim_description": "we identify these major structure levels that keeps this trading strategy as objective and easy to follow as possible",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend continuation",
+            "role": "phase",
+            "verbatim_description": "I use this trading strategy for Trend continuation as well as counter Trend trading",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Counter Trend trading",
+            "role": "phase",
+            "verbatim_description": "I use this trading strategy for Trend continuation as well as counter Trend trading",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous level of resistance that was broken",
+            "role": "zone",
+            "verbatim_description": "the only two levels for Trend continuation trades that I am paying attention to are going to be the previous level of resistance that was broken",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous level of support",
+            "role": "zone",
+            "verbatim_description": "the only two levels for Trend continuation trades that I am paying attention to are going to be the previous level of support right down here",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Tested multiple times",
+            "role": "filter",
+            "verbatim_description": "an added rule for this becoming a major structure level that I'm actually looking in for possible trades is that this level must have been tested multiple times",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Swing low before the start of a pullback",
+            "role": "zone",
+            "verbatim_description": "I'm looking at our swing low before the start of a pullback this level is not going to be a level of support for me",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Next level price will hit",
+            "role": "zone",
+            "verbatim_description": "I'm going to be looking not at this level but I'll put a horizontal line at this level go below it and look left to the very next level price will hit",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Swing High before the start of the pullback",
+            "role": "zone",
+            "verbatim_description": "I'm going to take a look at price and at my most recent swing High I'm going to put a horizontal line there",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Zone",
+            "role": "zone",
+            "verbatim_description": "this is something like that zone would look so this would be our Zone the major structure level Zone and the optimal Trading Zone that I'm looking for possible trades in on the four hour chart",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Counter Trend trade",
+            "role": "phase",
+            "verbatim_description": "this is actually a counter Trend trade but what do we see that's happened so far on this chart would you consider this a reversal I would and the reason is Price is Right Here",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Double Bottom",
+            "role": "entry_step",
+            "verbatim_description": "the confirmation is going to be double bottoms and double tops so what we're waiting on on the four hour chart is a double bottom",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Termination Zone",
+            "role": "zone",
+            "verbatim_description": "this gray ish box is what I call my termination Zone and again it goes from the body of the lowest low of the double bottom down to the wick of that lowest low of the double bottom",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "ATR indicator",
+            "role": "indicator",
+            "verbatim_description": "I normally do one times the ATR indicator below the lowest Wick of the double bottom",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "1.4 to 1 reward to risk ratio",
+            "role": "target",
+            "verbatim_description": "I actually go with a fixed Target of a 1.4 to 1 reward to risk ratio on these types of Trades when they're counter Trend",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "major level of structure",
+            "role": "zone",
+            "verbatim_description": "this is not only our swing low before the impulsive move up but also has been what has been tested multiple times I was testing you there so it's been tested multiple times it's a valid major structure level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "OTZ optimal Trading Zone",
+            "role": "zone",
+            "verbatim_description": "since this area has been tested so many times I counted as an otz optimal Trading Zone otherwise known as a major structure level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "one two three move",
+            "role": "phase",
+            "verbatim_description": "here's our one two three move for a trending move this being the latest and most recent level of structure resistance broken.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "ascending wedge",
+            "role": "zone",
+            "verbatim_description": "before we get a breakout of this little ascending wedge.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "ATR",
+            "role": "indicator",
+            "verbatim_description": "ATR (mentioned 5\u00c3\u2014 in transcript)",
+            "transcript_quote": "e I normally do one times the ATR indicator below the lowest Wick of the double bottom the ATR indicator is right up here y",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Euro Aussie",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"Euro Aussie\" (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "the Euro Aussie",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Euro Swiss",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"Euro Swiss\" (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "the Euro Swiss",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Aussie Canada",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"Aussie Canada\" (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the Aussie Canada",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": ".4 to 1",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \".4 to 1\"",
+            "transcript_quote": ".4 to 1 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

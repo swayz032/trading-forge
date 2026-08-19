@@ -1,0 +1,262 @@
+{
+  "video_id": "iU8ww5MC2FQ",
+  "extracted_at": 1787110624.20501,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "283c17e3c0ed0b7428d57542338a1f2828f53a0d1598a63fd152edd1e363d016",
+  "extraction": {
+    "video_id": "iU8ww5MC2FQ",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I start at the top of that kind of high to the bottom. Drawing it then will give my 25 50% and 75% levels.",
+            "step": 1,
+            "action": "Draw a box using the high and low of the previous 4H candle, identifying the 25%, 50%, and 75% Fibonacci retracement levels.",
+            "rationale": "The 4H candle box defines the premature zone for retracement."
+          },
+          {
+            "transcript_quote": "it will try and play within the premature zone. Now the main point for this continuation model is that it is still just a simple impulse and trace.",
+            "step": 2,
+            "action": "Wait for price to manipulate and retrace into the premature zone (25% to 50% of the 4H box).",
+            "rationale": "The 25-50% zone is the optimum area for a retracement before continuation."
+          },
+          {
+            "transcript_quote": "So simply it is a chain state of delivery. So this is price breaking below a low point. Okay, a structural low point and closing below this. Okay, we'",
+            "step": 3,
+            "action": "Wait for a structural low/high to be broken and closed below/above, signaling a change of state.",
+            "rationale": "A structural close confirms the intention of the move."
+          },
+          {
+            "transcript_quote": "Price comes back here, rejects off of it, and then you are looking to enter with the very new candle.",
+            "step": 4,
+            "action": "Enter on the new candle after price rebalances off a structural level (e.g., a breaker block or FVG).",
+            "rationale": "Rebalancing off a structural level provides the final entry confirmation."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "fvg_low",
+          "transcript_quote": "So just there stop. We're going to place a stop below the most recent protective area which will be this value gap here.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed below the most recent protective area, specifically a value gap."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "transcript_quote": "And then stop loss and you can see what this is. Now, with our targets, we're just going to target a nice little one to two.",
+            "rationale": "The primary target is the opposite boundary of the 4H candle box."
+          },
+          {
+            "priority": 2,
+            "type": "range_low",
+            "transcript_quote": "And then stop loss and you can see what this is. Now, with our targets, we're just going to target a nice little one to two.",
+            "rationale": "The secondary target is the opposite boundary of the 4H candle box."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "if price breaks above our 4hour candle high for the day, we are looking for price to continue that bullishness for the rest of the session and the day",
+            "name": "htf_bias_bullish",
+            "description": "Price must break above the 4H candle high to establish a bullish bias.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "if price breaks below that for our candle low point, we then expect bearishness for the rest of the day and for the rest of the session",
+            "name": "htf_bias_bearish",
+            "description": "Price must break below the 4H candle low to establish a bearish bias.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "it will try and play within the premature zone. Now the main point for this continuation model is that it is still just a simple impulse and trace.",
+            "name": "retracement_to_premature_zone",
+            "description": "Price must retrace into the premature zone (25% to 50%) of the 4H box.",
+            "canonical_match": "vwap_alignment"
+          },
+          {
+            "transcript_quote": "So simply it is a chain state of delivery. So this is price breaking below a low point. Okay, a structural low point and closing below this. Okay, we",
+            "name": "ltf_change_of_state",
+            "description": "A structural low/high must be broken and closed to signal a change of state.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "You want to be using a box where there is your obviously works on either side but mainly it is all about you having a major body.",
+            "name": "htf_candle_quality",
+            "description": "The 4H candle used to define the box must have a major body, not a skinny or indecisive wick.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Continuation Model",
+            "role": "model",
+            "verbatim_description": "My number one continuation model that allow me to never miss a move.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "4hour Candle Box Strategy",
+            "role": "model",
+            "verbatim_description": "This is where my 4hour candle box strategy comes in.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Hidden Level",
+            "role": "zone",
+            "verbatim_description": "It is using the open and closing price of that 4hour candle because price will always look to bounce between these two levels before breaking out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "GA Box",
+            "role": "indicator",
+            "verbatim_description": "I personally use a GA box. I will show you guys the settings and from the top of that kind of high to the bottom.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premature Zone",
+            "role": "zone",
+            "verbatim_description": "The top of the candle is your premature zone. This is where you can expect there to be a retracement of some sort.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Optimum",
+            "role": "zone",
+            "verbatim_description": "The 25 to 50% is going to be optimum. This is ideally we want to see price make a retracement into and then continue to spiral higher.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Overextended Area",
+            "role": "zone",
+            "verbatim_description": "Now there is another zone and this is the overextended area. We tend to stay away from this zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Danger Zone",
+            "role": "zone",
+            "verbatim_description": "Once again the danger zone is beyond the 75% going to the 100% of this area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Redemption",
+            "role": "entry_step",
+            "verbatim_description": "This is what I call the second entry or the redemption. Even if you miss this first entry I know a lot of the time as a traders we like to chase the move upward.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Power Threeyear Accumulation",
+            "role": "phase",
+            "verbatim_description": "Price starts off very simple power threeyear accumulation. We start the new candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "IRS Model",
+            "role": "model",
+            "verbatim_description": "This is our IRS model. Now, it's not related to the tax man in any degree, but it does make out a very simple framework that we can use to start to categorize price action.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Impulse Phase",
+            "role": "phase",
+            "verbatim_description": "The first phase is our impulse phase. Now this is in the name a strong movement in one direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Range",
+            "role": "phase",
+            "verbatim_description": "And then finally, we have our range. And this is pretty much just a consolidation. It's still fair between both market participants.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sweep",
+            "role": "entry_step",
+            "verbatim_description": "And then finally, we have our sweep. Now, the sweep is meant to take out liquidity that's created at the bottom and top of a range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Far kind of box",
+            "role": "zone",
+            "verbatim_description": "This is the box where the major body is located, which is what you want. You do not want a skinny candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Major body",
+            "role": "filter",
+            "verbatim_description": "This is what you want. You do not want a skinny candle and all that is really is this okay indecisiveness where there is more wick than body.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "CRT approach",
+            "role": "model",
+            "verbatim_description": "Ideally on this type of day, you want to be going with more of a CRT approach.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Optimal level",
+            "role": "zone",
+            "verbatim_description": "We're also coming and really just not closing below our optimal level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Power three",
+            "role": "model",
+            "verbatim_description": "Walking through the power three of price creating this new candle here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Accumulation",
+            "role": "phase",
+            "verbatim_description": "Price first starts with a manipulation I mean a accumulation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Change of state",
+            "role": "entry_step",
+            "verbatim_description": "Right here will give you a change of state.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "GAN box",
+            "role": "indicator",
+            "verbatim_description": "I use a tool called the GAN box.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premature level",
+            "role": "zone",
+            "verbatim_description": "Once again is your optimum, your premature, your overextended level and then your danger zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Overextended level",
+            "role": "zone",
+            "verbatim_description": "Once again is your optimum, your premature, your overextended level and then your danger zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Breaker block",
+            "role": "entry_step",
+            "verbatim_description": "Ideally just use a breaker block. It's the easiest one to identify. It's simply a previous order block like this one here that got disrespected.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 25\u00c3\u2014 in transcript)",
+            "transcript_quote": "hat it is still just a simple impulse and trace. So the deeper the retracement the better it is. Yes, we can have a move off the",
+            "occurrences": 25,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

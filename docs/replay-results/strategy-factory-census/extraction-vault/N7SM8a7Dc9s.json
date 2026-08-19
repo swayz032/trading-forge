@@ -1,0 +1,253 @@
+{
+  "video_id": "N7SM8a7Dc9s",
+  "extracted_at": 1787110713.930981,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "be660b5a2eed966d980303e79a36de700dedef95f0012ecf708e96f80970485a",
+  "extraction": {
+    "video_id": "N7SM8a7Dc9s",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "the first thing is understanding the daily bias",
+            "step": 1,
+            "action": "Identify the daily bias by marking out high time frame draws on liquidity.",
+            "rationale": "The daily bias is determined by key levels where price is likely to react."
+          },
+          {
+            "transcript_quote": "we wait for any of these levels to be hit",
+            "step": 2,
+            "action": "Wait for price to hit a high time frame draw on liquidity (1H, 4H, or Session High/Low).",
+            "rationale": "Hitting a key level provides the initial opportunity for a reversal."
+          },
+          {
+            "transcript_quote": "we're going to be looking for low time frame reversals",
+            "step": 3,
+            "action": "Scale down to the low time frame (1M or 5M) and look for a reversal using an inverse fair value gap, a break of structure, or a 79% extension closure.",
+            "rationale": "A reversal on the low time frame signals a potential change in trend direction."
+          },
+          {
+            "transcript_quote": "we need to wait for number three, which is showing a continuation of the trend out of that key level that got hit",
+            "step": 4,
+            "action": "Wait for a continuation confluence (fair value gap, equilibrium, breaker block, or order block) on the low time frame.",
+            "rationale": "Continuation confirms the reversal intent and provides a high-probability entry."
+          },
+          {
+            "transcript_quote": "that's when I am ready to enter",
+            "step": 5,
+            "action": "Enter the trade on the low time frame continuation confluence.",
+            "rationale": "The combination of HTF bias, LTF reversal, and LTF continuation confirms the entry."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "transcript_quote": "we can go ahead and put our stops underneath these lows.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed structurally below the key level or swing low."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "transcript_quote": "where are we looking to exit? At our other draws on liquidity in the opposite direction.",
+            "r_multiple": null,
+            "rationale": "Targets are set at other high time frame draws on liquidity in the opposite direction."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "the first thing is understanding the daily bias",
+            "name": "htf_draw_on_liquidity",
+            "description": "The daily bias is determined by key levels where price is likely to react.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "we're going to be looking for low time frame reversals",
+            "name": "ltf_reversal_trigger",
+            "description": "We look for a reversal using an inverse fair value gap, a break of structure, or a 79% extension closure.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "continuation confluence",
+            "name": "ltf_continuation_confluence",
+            "description": "The trend must continue off of a continuation confluence like a fair value gap, equilibrium, breaker block, or order block.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Daily Bias",
+            "role": "model",
+            "verbatim_description": "The daily bias is pretty much us looking for key levels where price is going to want to go.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "High Time Frame Draws on Liquidity",
+            "role": "model",
+            "verbatim_description": "By marking out high time frame draws on liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "1 hour highs and lows",
+            "role": "zone",
+            "verbatim_description": "That is going to be 1 hour highs and lows.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "4 hour highs and lows",
+            "role": "zone",
+            "verbatim_description": "That is going to be 4 hour highs and lows.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Session highs/lows",
+            "role": "zone",
+            "verbatim_description": "That is going to be session highs and lows.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Low Time Frame Reversals",
+            "role": "entry_step",
+            "verbatim_description": "We are going to be looking for low time frame reversals.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inverse for Value Gap",
+            "role": "entry_step",
+            "verbatim_description": "We are going to be looking for three different potential confluences. Either an inverse for value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Structure",
+            "role": "entry_step",
+            "verbatim_description": "We are going to be looking for three different potential confluences. Either... a break of structure.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "79% extension getting closed above or below on the Fibonacci",
+            "role": "entry_step",
+            "verbatim_description": "We are going to be looking for three different potential confluences. ...or the 79% extension getting closed above or below on the Fibonacci.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Draw on Liquidity",
+            "role": "entry_step",
+            "verbatim_description": "These are where orders can be filled to cause price to reverse in a different direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Key Level",
+            "role": "zone",
+            "verbatim_description": "We come into a key level where price has the potential to reverse.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inverse Fair Value Gap",
+            "role": "entry_step",
+            "verbatim_description": "We're going to be looking for an inverse fair value gap off of these levels.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "79% Extension Closure",
+            "role": "entry_step",
+            "verbatim_description": "Or a 79% extension closure above that extension level within our low time frame trend.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Continuation Confluence",
+            "role": "model",
+            "verbatim_description": "Low time frame continuation confluence in whatever direction that we're trying to target.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap",
+            "role": "entry_step",
+            "verbatim_description": "This comes in the form of fair value gaps, equilibrium, breaker blocks, and order blocks.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Equilibrium",
+            "role": "entry_step",
+            "verbatim_description": "This comes in the form of fair value gaps, equilibrium, breaker blocks, and order blocks.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Breaker Block",
+            "role": "entry_step",
+            "verbatim_description": "This comes in the form of fair value gaps, equilibrium, breaker blocks, and order blocks.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block",
+            "role": "entry_step",
+            "verbatim_description": "This comes in the form of fair value gaps, equilibrium, breaker blocks, and order blocks.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "London Session Highs",
+            "role": "zone",
+            "verbatim_description": "These are going to be our targets. Boom. Up into these areas.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Asian Session Highs",
+            "role": "zone",
+            "verbatim_description": "We have Asian session highs right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 11\u00c3\u2014 in transcript)",
+            "transcript_quote": "fair value gap, equilibrium, breaker block or order block, that's when I am ready to enter. Okay, so we come into a key level where",
+            "occurrences": 11,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 11\u00c3\u2014 in transcript)",
+            "transcript_quote": "r an inverse for value gap, a break of structure, or the 79% extension getting closed above or below on the Fibonacci. Okay. And again, I",
+            "occurrences": 11,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 7\u00c3\u2014 in transcript)",
+            "transcript_quote": "to be looking for an inverse fair value gap off of these levels, a break of structure off of these levels, or a 79% extension closure",
+            "occurrences": 7,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "on. So if we come down and we sweep out, let's say we have boom, this is an hourly low. We're making a low time frame downtren",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "closed above or below on the Fibonacci. Okay. And again, I have videos on inverse for value gap. I have videos on breakup struct",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

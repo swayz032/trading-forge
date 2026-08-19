@@ -1,0 +1,254 @@
+{
+  "video_id": "nV9gknhy2Ew",
+  "extracted_at": 1787108646.3556254,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "de399b86cc40b1806679af40a586218b6f8497a9e020b3dc83a3a255c48c25f3",
+  "extraction": {
+    "video_id": "nV9gknhy2Ew",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I trade the 10:00 a.m. 4hour candle.",
+            "step": 1,
+            "action": "Identify the 4H candle opening at 10:00 AM, as this is the highest win rate candle for the strategy.",
+            "rationale": "The speaker specifies the 10:00 AM 4H candle as the optimal time for this setup."
+          },
+          {
+            "transcript_quote": "you're looking for a market structure shift below the opening price or market structure shift above the opening price.",
+            "step": 2,
+            "action": "Look for a market structure shift (MSS) relative to the opening price of the 4H candle.",
+            "rationale": "The MSS determines the directional bias (long or short) for the trade."
+          },
+          {
+            "transcript_quote": "you want to use your fib from the last low that was formed to the last high that was formed before the market start to shift.",
+            "step": 3,
+            "action": "Measure the manipulation phase by projecting Fibonacci/Standard Deviation levels (e.g., -2, -2.5) from the last swing low to the last swing high before the MSS.",
+            "rationale": "This measurement defines the manipulation phase and the target area for the expansion."
+          },
+          {
+            "transcript_quote": "you have to look for SMT divergence around this area.",
+            "step": 4,
+            "action": "Wait for SMT divergence (e.g., NQ makes a higher high, but ES fails to do so) around the projected manipulation phase levels.",
+            "rationale": "SMT divergence confirms that the manipulation phase is over and the expansion is imminent."
+          },
+          {
+            "transcript_quote": "wait for price to close below all these consecutive bullish candles that swept this high.",
+            "step": 5,
+            "action": "Enter on a change in the state of delivery, such as price closing below consecutive candles that swept a significant liquidity high.",
+            "rationale": "A sweep of liquidity confirms the exhaustion of the opposing side and signals entry."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_high_above_entry",
+          "transcript_quote": "put your stop right above the high",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop must be placed beyond the structural invalidation point (the high/low of the entry candle)."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2.5,
+            "rationale": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "you're looking for a market structure shift below the opening price or market structure shift above the opening price.",
+            "name": "market_structure_shift_bias",
+            "description": "The market must show a market structure shift relative to the 4H candle opening price.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "you have to look for SMT divergence around this area.",
+            "name": "smt_divergence_confirmation",
+            "description": "SMT divergence must be present around the projected manipulation phase levels.",
+            "canonical_match": "cross_asset_aligned"
+          },
+          {
+            "transcript_quote": "wait for price to close below all these consecutive bullish candles that swept this high.",
+            "name": "liquidity_sweep_delivery_change",
+            "description": "Price must sweep and close below consecutive candles that swept a significant liquidity level.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "I trade the 10:00 a.m. 4hour candle.",
+            "name": "killzone_time_filter",
+            "description": "The strategy is specifically applied to the 10:00 a.m. 4-hour candle.",
+            "canonical_match": "killzone_active"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "power 03",
+            "role": "model",
+            "verbatim_description": "It is a accumulation phase where price opens... accumulation manipulation and distribution or in simple words power 03.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "accumulation",
+            "role": "phase",
+            "verbatim_description": "It is a accumulation phase where price opens... you will see some form of consolidation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "manipulation",
+            "role": "phase",
+            "verbatim_description": "The manipulation which is basically a liquidity sweep or the manipulation phase is basically this wick all right that goes up right.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "distribution",
+            "role": "phase",
+            "verbatim_description": "And then we have the distribution phase.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "10:00 a.m. 4-hour candle",
+            "role": "filter",
+            "verbatim_description": "For this strategy specifically, I trade the 10:00 a.m. 4hour candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "market structure shift",
+            "role": "entry_step",
+            "verbatim_description": "It is a fractal pattern that is like lower low, lower high, lower low and then a break of lower high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "liquidity sweep",
+            "role": "entry_step",
+            "verbatim_description": "The manipulation which is basically a liquidity sweep or the manipulation phase is basically this wick all right that goes up right.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "SMT divergence",
+            "role": "entry_step",
+            "verbatim_description": "SMT is going to confirm that the manipulation phase is over and now we are going to deliver to the downside.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "HTF bar of three by 2\u00c2\u00b0",
+            "role": "indicator",
+            "verbatim_description": "Go to indicators and type in HTF bar of three by 2\u00c2\u00b0.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "significant low",
+            "role": "target",
+            "verbatim_description": "Now around the -2 and -2.5, you want to mark out a significant low or significant sellside liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "entry_step",
+            "verbatim_description": "You can take your entry from the fair value gap or a breaker block.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "breaker block",
+            "role": "entry_step",
+            "verbatim_description": "You can take your entry from the fair value gap or a breaker block.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "consecutive same color candles that swap liquidity",
+            "role": "entry_step",
+            "verbatim_description": "You want to keep an eye on the candle or consecutive same color candles that swap liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Change in a state of delivery",
+            "role": "entry_step",
+            "verbatim_description": "look for a market structure shift or change in a state of delivery.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Manipulation phase",
+            "role": "phase",
+            "verbatim_description": "we want to do is first look for the manipulation phase, right?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Breakoff structure",
+            "role": "entry_step",
+            "verbatim_description": "So we have a lower low, lower high, and then a lower low. Right? So the market structure shift leg is around this area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Standard deviation projection",
+            "role": "target",
+            "verbatim_description": "Now let's use the standard deviation projection from this low to this high and it is projecting this liquidity level right.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "PD array",
+            "role": "filter",
+            "verbatim_description": "if there is a PD array, right? So over here you can see is that we opened here and we had this auto 5m minute auto block around this area, right?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Auto 5m minute auto block",
+            "role": "filter",
+            "verbatim_description": "we had this auto 5m minute auto block around this area, right? That is your extra confluence that you can use with the power of three strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Power of three strategy",
+            "role": "model",
+            "verbatim_description": "you can use with the power of three strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "PD race",
+            "role": "filter",
+            "verbatim_description": "Try to implement five minute or 50-minute PD race.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "CISD",
+            "role": "entry_step",
+            "verbatim_description": "So over here we have this bearish candle that is CISD over here and we probably here around this area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 30\u00c3\u2014 in transcript)",
+            "transcript_quote": "I'm teaching you right now is accumulation manipulation and distribution or in simple words power 03 now what exactly is power of th",
+            "occurrences": 30,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 28\u00c3\u2014 in transcript)",
+            "transcript_quote": "is that you're looking for a market structure shift below the opening price or market structure shift above the opening price. Right? So what",
+            "occurrences": 28,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Timeframe Candle/Box",
+            "role": "indicator",
+            "verbatim_description": "Timeframe Candle/Box (mentioned 7\u00c3\u2014 in transcript)",
+            "transcript_quote": "o this is the opening of this 4hour candle. Okay. And we are only going to be trading the 4hour candle's power of three. But let's l",
+            "occurrences": 7,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

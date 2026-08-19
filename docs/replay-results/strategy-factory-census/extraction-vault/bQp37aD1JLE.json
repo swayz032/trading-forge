@@ -1,0 +1,194 @@
+{
+  "video_id": "bQp37aD1JLE",
+  "extracted_at": 1787109991.4924126,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "9674b30a03b0ee9b383edb9222cbd4aa740ca1a686ce8ab2af81ce5a3f1e1815",
+  "extraction": {
+    "video_id": "bQp37aD1JLE",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I like to get onto the 4hour chart for whatever market I trade. And this works on every single market you can imagine.",
+            "step": 1,
+            "action": "Establish the overall trend and bias by analyzing the most recent price action on the 4-hour chart.",
+            "rationale": "The 4-hour chart provides the macro context and directional bias for the trade."
+          },
+          {
+            "transcript_quote": "we want to see is price still bullish like is it actually bullish in the most recent bit of price action or is it just consolidating for a bit or isit",
+            "step": 2,
+            "action": "Wait for the price to retrace or pull back from the established 4H trend to identify a potential entry zone.",
+            "rationale": "The retracement allows for a high-probability entry without fighting the overall trend."
+          },
+          {
+            "transcript_quote": "we want to see price shoot off, show us that we're still bullish on the lower time frames, act out confirmation, and then give us a retracement, [to]\u00c2\u00a0",
+            "step": 3,
+            "action": "Switch to the 5m or 15m chart and wait for a bullish confirmation, specifically a Fair Value Gap or Order Block, to signal continuation.",
+            "rationale": "Lower timeframe confirmation validates the bullish bias and provides a precise entry point."
+          },
+          {
+            "transcript_quote": "Enter on the 4hour fair value gap for your stop. This isn't like a liquidity sweep. It's not fixed. You can put your stop I say wherever. the minimum",
+            "step": 4,
+            "action": "Enter the long position upon confirmation of the bullish Fair Value Gap or Order Block on the lower timeframe.",
+            "rationale": "The entry is taken at the point of structural confirmation on the entry timeframe."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "fvg_low",
+          "transcript_quote": "the minimum place you want to put your stop is you see this candle here which forms the fair value gap and again if you don't know what a fair value",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed at the low of the candle that forms the Fair Value Gap to protect against a reversal."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 3,
+            "rationale": "The speaker recommends targeting at least a 3:1 risk-to-reward ratio."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "I like to get onto the 4hour chart for whatever market I trade. And this works on every single market you can imagine.",
+            "name": "4h_bias_alignment",
+            "description": "The strategy requires establishing the overall trend and bias using the 4-hour chart.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "there is a lot of liquidity built at this high here, right? big numbers and this is something for your notes. Smart money, so big banks, hedge funds",
+            "name": "liquidity_target_identification",
+            "description": "The trader identifies major liquidity zones or 'big figures' on the chart to understand where smart money is positioning.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "we want to see price shoot off, show us that we're still bullish on the lower time frames, act out confirmation",
+            "name": "ltf_bullish_confirmation",
+            "description": "The entry requires confirmation on the 5m or 15m chart that the price action is still bullish despite the retracement.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "4-hour chart",
+            "role": "tool",
+            "verbatim_description": "If you master the 4-hour chart, you've mastered trading. Why? Because the 4-hour chart tells you everything.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Smart Money",
+            "role": "concept",
+            "verbatim_description": "Smart money, so big banks, hedge funds, um, they're not going to buy, they're not going to press buy market, right? Because they're moving billions into the market.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Sweeps",
+            "role": "entry_step",
+            "verbatim_description": "you can see plenty of liquidity sweeps, stop runs, uh just consolidation before price takes out lows and then know quickly goes up.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop Runs",
+            "role": "entry_step",
+            "verbatim_description": "you can see plenty of liquidity sweeps, stop runs, uh just consolidation before price takes out lows and then know quickly goes up.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Big Figure",
+            "role": "zone",
+            "verbatim_description": "there is a lot of liquidity built at this high here, right? big numbers and this is something for your notes.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity",
+            "role": "zone",
+            "verbatim_description": "there is a lot of liquidity built at this high here, right? big numbers and this is something for your notes.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block",
+            "role": "zone",
+            "verbatim_description": "All I care about now is the most recent swing in price action. So really all I care about is this, right? Like what is price actually doing at this point here?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap",
+            "role": "zone",
+            "verbatim_description": "if we were bearish, can you see this fair value gap? I know there's order blocks here, but you know, it's a tiny order block.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point of Interest",
+            "role": "zone",
+            "verbatim_description": "this is our point of interest, our key area, whatever you want to call it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Confirmation",
+            "role": "entry_step",
+            "verbatim_description": "we want to see confirmation um that we're actually right, that we're actually bullish overall.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 13\u00c3\u2014 in transcript)",
+            "transcript_quote": "Like, I don't care about this order block. All I care about now is the most recent swing in price action. So really all I care abou",
+            "occurrences": 13,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 12\u00c3\u2014 in transcript)",
+            "transcript_quote": "ere bearish, can you see this fair value gap? I know there's order blocks here, but you know, it's a tiny order block. So, let me just",
+            "occurrences": 12,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Timeframe Candle/Box",
+            "role": "indicator",
+            "verbatim_description": "Timeframe Candle/Box (mentioned 10\u00c3\u2014 in transcript)",
+            "transcript_quote": "do is I like to get onto the 4hour chart for whatever market I trade. And this works on every single market you can imagine. Any m",
+            "occurrences": 10,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "verall, there can be a little retracement on the higher time frames so price can shoot off, right? Because like I was saying in the",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "it or is it just retracing to sweep out lows for liquidity? Like what is price actually doing? So, what I like to do, let's ma",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "your stop. This isn't like a liquidity sweep. It's not fixed. You can put your stop I say wherever. the minimum place you want to put",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

@@ -1,0 +1,314 @@
+{
+  "video_id": "gddYspvW0_w",
+  "extracted_at": 1787110336.761191,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "52ff933b82477e9f752d8213287e4cc4e22ba8b9a6b804dbfedd9129015c4a49",
+  "extraction": {
+    "video_id": "gddYspvW0_w",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1d",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I want to see the 20 MA either trending higher or I want to see it trending lower.",
+            "step": 1,
+            "action": "Determine the trend by observing if the 20 MA is trending higher (uptrend) or trending lower (downtrend).",
+            "rationale": "The 20 MA is used to establish the primary trend direction."
+          },
+          {
+            "transcript_quote": "And every time prices come close to or touch the 20 MA, that could present buying opportunities.",
+            "step": 2,
+            "action": "Enter long when price retraces or consolidates into the rising 20 MA during an established uptrend.",
+            "rationale": "The 20 MA acts as support during an uptrend, providing buying opportunities on retracements."
+          },
+          {
+            "transcript_quote": "And every time we get that retracement, that gives us an opportunity to potentially go short.",
+            "step": 3,
+            "action": "Enter short when price retraces or consolidates into the falling 20 MA during an established downtrend.",
+            "rationale": "The 20 MA acts as resistance during a downtrend, providing short opportunities on retracements."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "No specific initial stop placement anchor was provided by the speaker."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "We don't want to see flat moving averages. In fact, a flat 20 MA could suggest that that stock or that crypto or whatever you are trading actually...[",
+            "name": "20_ma_momentum",
+            "description": "The 20 MA must be trending (rising or falling) and not flat, as a flat MA suggests a lack of momentum.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "transcript_quote": "And look how well prices respect this 20 MA. Prices are using the 20 MA almost as support where whenever we retrace or whenever we consolidate into...",
+            "name": "20_ma_support_resistance",
+            "description": "Price action must respect the 20 MA, using it as support in uptrends and resistance in downtrends.",
+            "canonical_match": "vwap_alignment"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "20 MA",
+            "role": "indicator",
+            "verbatim_description": "it is the ultimate trend following tool in existence.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 MA",
+            "role": "indicator",
+            "verbatim_description": "The 200 MA could act as a ceiling for price whenever prices are trading below it. It could also act as a floor for prices whenever prices are trading above it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Extension",
+            "role": "zone",
+            "verbatim_description": "Extension is the distance between price and the 20 period moving average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Extended",
+            "role": "filter",
+            "verbatim_description": "I don't really like to use that word overbought. I like to use extended.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Squeeze play",
+            "role": "phase",
+            "verbatim_description": "where you have a flat 200 period moving average and then you have a 20 period moving average that is rising and going through this 200.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "established downtrend",
+            "role": "phase",
+            "verbatim_description": "I know exactly what's going on. established downtrend, then an established uptrend...",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "established uptrend",
+            "role": "phase",
+            "verbatim_description": "I know exactly what's going on. established downtrend, then an established uptrend...",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "base breakout",
+            "role": "entry_step",
+            "verbatim_description": "We have that initial move up. We consolidate directly into the 20 breakout over the base.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "consolidation",
+            "role": "phase",
+            "verbatim_description": "We have a consolidation into that rising 20 MA.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "bullish bias",
+            "role": "filter",
+            "verbatim_description": "So I was going into yesterday with a bearish bias and I actually really like gaps that open below the 200.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 10\u00c3\u2014 in transcript)",
+            "transcript_quote": "where they will touch it and bounce, touch it and bounce or consolidate into it and continue higher. Now, the same thing appl",
+            "occurrences": 10,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 5\u00c3\u2014 in transcript)",
+            "transcript_quote": "RSI or Elliot wave theory or Fibonacci. I keep it simple. And a lot of you guys are going to watch this video and be like, \"Oh m",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "there's no momentum and it's sideways. And then the trader doesn't know what to do and they end up making the wrong decision an",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "VWAP (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "ve never used stochcastics or VWAP or RSI or Elliot wave theory or Fibonacci. I keep it simple. And a lot of you guys are go",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "15 to 20",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"15 to 20\"",
+            "transcript_quote": "15 to 20 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "higher_timeframe": "1d",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "So, what we're looking for is for a flat 200 period moving average.",
+            "step": 1,
+            "action": "Wait for the 200 MA to be relatively flat, acting as a potential ceiling or floor.",
+            "rationale": "The 200 MA must be flat to set up a squeeze play."
+          },
+          {
+            "transcript_quote": "Every now and then, you'll get what's called a squeeze play where you have a flat 200 period moving average and then you have a 20 period moving...[",
+            "step": 2,
+            "action": "Wait for the 20 MA to rise and cross through the flat 200 MA.",
+            "rationale": "The rising 20 MA through the flat 200 MA signals the start of a squeeze play."
+          },
+          {
+            "transcript_quote": "And they'll continue to oscillate and oscillate and oscillate and squeeze until the point where it can't squeeze anymore, and it's just going to break",
+            "step": 3,
+            "action": "Enter on the breakout after the oscillation phase between the 20 MA and 200 MA.",
+            "rationale": "The breakout occurs when the oscillation between the two MAs can no longer be sustained."
+          }
+        ],
+        "preferred_regime": "ranging",
+        "stop": {
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "No specific initial stop placement anchor was provided by the speaker."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "We want the 200 period simple moving average to be relatively flat.",
+            "name": "200_ma_flat",
+            "description": "The 200 MA must be relatively flat to allow for a squeeze setup.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "transcript_quote": "you have a 20 period moving average that is rising and going through this 200.",
+            "name": "20_ma_rising",
+            "description": "The 20 MA must be rising and crossing the flat 200 MA.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "20 MA",
+            "role": "indicator",
+            "verbatim_description": "it is the ultimate trend following tool in existence.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 MA",
+            "role": "indicator",
+            "verbatim_description": "The 200 MA could act as a ceiling for price whenever prices are trading below it. It could also act as a floor for prices whenever prices are trading above it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Extension",
+            "role": "zone",
+            "verbatim_description": "Extension is the distance between price and the 20 period moving average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Extended",
+            "role": "filter",
+            "verbatim_description": "I don't really like to use that word overbought. I like to use extended.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Squeeze play",
+            "role": "phase",
+            "verbatim_description": "where you have a flat 200 period moving average and then you have a 20 period moving average that is rising and going through this 200.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "established downtrend",
+            "role": "phase",
+            "verbatim_description": "I know exactly what's going on. established downtrend, then an established uptrend...",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "established uptrend",
+            "role": "phase",
+            "verbatim_description": "I know exactly what's going on. established downtrend, then an established uptrend...",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "base breakout",
+            "role": "entry_step",
+            "verbatim_description": "We have that initial move up. We consolidate directly into the 20 breakout over the base.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "consolidation",
+            "role": "phase",
+            "verbatim_description": "We have a consolidation into that rising 20 MA.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "bullish bias",
+            "role": "filter",
+            "verbatim_description": "So I was going into yesterday with a bearish bias and I actually really like gaps that open below the 200.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 10\u00c3\u2014 in transcript)",
+            "transcript_quote": "where they will touch it and bounce, touch it and bounce or consolidate into it and continue higher. Now, the same thing appl",
+            "occurrences": 10,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 5\u00c3\u2014 in transcript)",
+            "transcript_quote": "RSI or Elliot wave theory or Fibonacci. I keep it simple. And a lot of you guys are going to watch this video and be like, \"Oh m",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "there's no momentum and it's sideways. And then the trader doesn't know what to do and they end up making the wrong decision an",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "VWAP (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "ve never used stochcastics or VWAP or RSI or Elliot wave theory or Fibonacci. I keep it simple. And a lot of you guys are go",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "15 to 20",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"15 to 20\"",
+            "transcript_quote": "15 to 20 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

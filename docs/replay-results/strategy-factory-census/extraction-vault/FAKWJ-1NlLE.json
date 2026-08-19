@@ -1,0 +1,245 @@
+{
+  "video_id": "FAKWJ-1NlLE",
+  "extracted_at": 1787109023.304362,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "386efcb57df5eafbcb7f7577af1f2aad798319dc9de6039f6dd390a42787c98b",
+  "extraction": {
+    "video_id": "FAKWJ-1NlLE",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "candle one is always going to be that accumulation candle",
+            "step": 1,
+            "action": "Wait for the first candle (C1) to form as the accumulation phase.",
+            "rationale": "Accumulation sets the initial directional bias for the AMD pattern."
+          },
+          {
+            "transcript_quote": "candle 2 forms that reversal, but you can see it has a large opposing run",
+            "step": 2,
+            "action": "Wait for Candle 2 to form a large opposing run that does not support expansion, indicating a potential reversal.",
+            "rationale": "A large opposing run in C2 suggests the market is testing the opposite extreme before the main move."
+          },
+          {
+            "transcript_quote": "candle 3 opens, makes a shallow opposing run, and then has that expansion higher",
+            "step": 3,
+            "action": "Wait for Candle 3 to open, make a shallow opposing run (wick), and then trade the expansion higher.",
+            "rationale": "The expansion candle (C3) is the primary target for the trade, following the manipulation."
+          },
+          {
+            "transcript_quote": "price opens makes its shallow opposing run has a change in the state of delivery which makes this a protected low",
+            "step": 4,
+            "action": "Enter on the body of the expansion candle after a protected low (or protected swing) has formed.",
+            "rationale": "The protected low/swing confirms the reversal intent and provides a structural entry trigger."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "transcript_quote": "we have closed over and we are inside a fair value gap here",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed beyond the protected low/wick, often using the Fair Value Gap as a structural anchor."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "transcript_quote": "I can look to trade it higher. This means I can really take any entry in here with my stop loss on this low looking to target that previous day high.",
+            "r_multiple": null,
+            "rationale": "The primary target is the previous day high, confirming the expansion move."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "we want to align this with a daily bias",
+            "name": "daily_bias_alignment",
+            "description": "The trade must align with the overall daily bias.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "we have a reversal candle",
+            "name": "reversal_candle_formation",
+            "description": "A reversal candle must form on the higher timeframe to initiate the AMD pattern.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "we have a change in the state of delivery",
+            "name": "change_in_state_of_delivery",
+            "description": "A change in the state of delivery (CSD) is required to confirm the reversal point.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "4hour power of three",
+            "role": "model",
+            "verbatim_description": "How to trade the open high low close of a 4hour candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "AMD",
+            "role": "model",
+            "verbatim_description": "Accumulation, manipulation, and distribution.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "accumulation",
+            "role": "phase",
+            "verbatim_description": "The first candle will always be accumulation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "manipulation",
+            "role": "phase",
+            "verbatim_description": "If candle 2 has a small wick, it can be the manipulation as well as the distribution.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "distribution",
+            "role": "phase",
+            "verbatim_description": "The third candle is the distribution.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "consolidation range",
+            "role": "zone",
+            "verbatim_description": "A consolidation range, which then has an opposing run, and then we are looking to trade this distribution or the real move.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "opposing run",
+            "role": "entry_step",
+            "verbatim_description": "We're going to let price open. We're going to let it form its opposing run or its wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "expansion candle",
+            "role": "target",
+            "verbatim_description": "The whole goal is to be trading that distribution or the expansion candle, that directional candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "shallow wick",
+            "role": "filter",
+            "verbatim_description": "As long as this is a shallow wick, it supports expansion.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "protected swing",
+            "role": "zone",
+            "verbatim_description": "It forms a protected swing, and then it can trade it higher.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "change in the state of delivery",
+            "role": "entry_step",
+            "verbatim_description": "Price opens makes its shallow opposing run has a change in the state of delivery which makes this a protected low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "protected low",
+            "role": "zone",
+            "verbatim_description": "If this is a protected low this means this wick has formed and then we can trade this expansion higher.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "reversal candle",
+            "role": "entry_step",
+            "verbatim_description": "We have a reversal candle which is just manipulation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "continuation expansion candle",
+            "role": "target",
+            "verbatim_description": "This is the candle we want to be trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "daily bias",
+            "role": "filter",
+            "verbatim_description": "We want to align this with a daily bias.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "EQ of the previous day's range",
+            "role": "zone",
+            "verbatim_description": "We are respecting the EQ of the previous day's range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "T-spot",
+            "role": "zone",
+            "verbatim_description": "We are respecting the EQ of the previous day's range and that T-spot.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "zone",
+            "verbatim_description": "We are inside a fair value gap here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "failure swings",
+            "role": "zone",
+            "verbatim_description": "It's leaving failure swings on the high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "2 R",
+            "role": "target",
+            "verbatim_description": "I can use that as a stop loss as long as I can get 2 R to these highs.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Power of Three",
+            "role": "model",
+            "verbatim_description": "So, what does it look like if you're trading a 4hour power of three",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fractal Model",
+            "role": "model",
+            "verbatim_description": "using a lower time frame fractal model",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "EQ",
+            "role": "zone",
+            "verbatim_description": "make a high while respecting the EQ of the previous candle",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation",
+            "role": "phase",
+            "verbatim_description": "here you can see we have a consolidation",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Candle 3 Closure",
+            "role": "entry_step",
+            "verbatim_description": "we have a candle 3 closure on the 30 minute also forming a protected swing",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 28\u00c3\u2014 in transcript)",
+            "transcript_quote": "ve seen my AMD video, we have accumulation, manipulation, and distribution. We have a consolidation range, which then has an opposin",
+            "occurrences": 28,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

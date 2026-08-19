@@ -1,0 +1,248 @@
+{
+  "video_id": "qLtq73bTPBA",
+  "extracted_at": 1787110177.8143723,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "3aa7f837e021088baf607e9ace075ebc020d35bf0ffde7d8fc733f51e82ea2c0",
+  "extraction": {
+    "video_id": "qLtq73bTPBA",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1d",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Top down analysis starting from the top working our way down.",
+            "step": 1,
+            "action": "Begin the top-down analysis by starting at the highest timeframe (e.g., Monthly).",
+            "rationale": "This establishes the overall market bias and structure."
+          },
+          {
+            "transcript_quote": "We're trying to capture as many touch points as possible.",
+            "step": 2,
+            "action": "Draw both upward and downward trend lines, capturing as many touch points as possible.",
+            "rationale": "Trend lines provide the structural guidance for the market movement."
+          },
+          {
+            "transcript_quote": "Remember, we're going to make sure that price does not intersect.",
+            "step": 3,
+            "action": "Ensure that the price does not intersect or cut through the trend lines while drawing them.",
+            "rationale": "The integrity of the trend line is maintained only if price respects the line."
+          },
+          {
+            "transcript_quote": "All of the lines that we draw from higher time frames down to lower time frames have to connect.",
+            "step": 4,
+            "action": "Iteratively move down through timeframes (e.g., Monthly to Weekly, Weekly to Daily, etc.), ensuring each new trend line connects to the previous line's most recent touch point.",
+            "rationale": "Connecting lines maintains structural integrity across different time scales."
+          },
+          {
+            "transcript_quote": "Price is moving up. It is breaking through this downward trend line. This is telling us to take action, to place a trade.",
+            "step": 5,
+            "action": "Wait for price to break one of the established trend lines (the 'action line').",
+            "rationale": "The break of a trend line serves as the primary indication to enter a trade."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_above_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss is placed on the other side of the safety line (the opposite trend line)."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "Top down analysis starting from the top working our way down.",
+            "name": "top_down_analysis",
+            "description": "The strategy requires a top-down analysis starting from the highest timeframe and working down to the entry timeframe.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "Remember, we're going to make sure that price does not intersect.",
+            "name": "no_line_intersection",
+            "description": "The trend lines must be drawn such that price does not intersect or cut through them.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "We're trying to capture as many touch points as possible.",
+            "name": "touch_point_capture",
+            "description": "The trend lines must be drawn to capture as many touch points as possible.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "Price is moving up. It is breaking through this downward trend line. This is telling us to take action, to place a trade.",
+            "name": "trend_line_break_action",
+            "description": "The entry is triggered when price breaks one of the established trend lines, which is designated as the action line.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Trend Line",
+            "role": "indicator",
+            "verbatim_description": "A simple tool that helps us see the direction of a price visually.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Ray Tool",
+            "role": "indicator",
+            "verbatim_description": "The actual tool in Trading View that we are going to be using.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bounce Playbook",
+            "role": "phase",
+            "verbatim_description": "This type of setup is called a trend line break. Now is the time we are talking about the break and retest.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Safety Line",
+            "role": "zone",
+            "verbatim_description": "We're going to drag this stop loss on the other side of the safety line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Top Down Analysis",
+            "role": "model",
+            "verbatim_description": "Starting from the highest time frame and working our way down.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point A",
+            "role": "entry_step",
+            "verbatim_description": "The pivot point. That's where it stays put.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point B",
+            "role": "entry_step",
+            "verbatim_description": "Where we get to move or adjust the line to any angle that we wish, any angle that we desire.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Action line",
+            "role": "entry_step",
+            "verbatim_description": "An action line is the line that was broken. This triggers our decision to place a trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Horizontal lines",
+            "role": "indicator",
+            "verbatim_description": "The horizontal lines are just added confirmation. It is not the meat of the strategy here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Support and resistance",
+            "role": "indicator",
+            "verbatim_description": "I will call them support and resistance usually. But it's just essentially a horizontal line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Key level",
+            "role": "indicator",
+            "verbatim_description": "A key level also another term here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Low-risk setup",
+            "role": "phase",
+            "verbatim_description": "A low-risk setup is a trade opportunity where the potential loss is small and clearly defined while the potential gain could be significantly larger.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "High-risk setup",
+            "role": "phase",
+            "verbatim_description": "The reason why this specific example is called a high-risk setup is because the distance from where the price is at right now to the safety line is far away.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop-loss",
+            "role": "stop_anchor",
+            "verbatim_description": "Stop-loss equals fire extinguisher. This keeps us from losing all our money. in case we get distracted, in case we get into the markets and we don't follow the king or we don't want to.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fee",
+            "role": "filter",
+            "verbatim_description": "Fee fee equals loss. We're going to be using these calculations above to help identify what our fees should look like.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend line break",
+            "role": "entry_step",
+            "verbatim_description": "When price breaks the trend line, it's our action. We call this a trend line break, but essentially the trend line break is a type of setup.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line Break Setup",
+            "role": "model",
+            "verbatim_description": "This is what this system is. We're just drawing lines and following rules.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Two Touch Point Trend Line Break",
+            "role": "model",
+            "verbatim_description": "When price breaks our line, we got an action, but this is where it has two touch points prior.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Touch Point Trend Line Break",
+            "role": "model",
+            "verbatim_description": "This specific setup had three touch points.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break and Retest",
+            "role": "model",
+            "verbatim_description": "A retest is when price breaks our action line and then touches it from the other side or retests it from the other side.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bounce Setup",
+            "role": "model",
+            "verbatim_description": "The only difference here is we're not waiting for price to break. We're actually waiting for price to bounce off of it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Solid Journaling",
+            "role": "phase",
+            "verbatim_description": "Solid journaling gives you the data. The data will give you what you need to justify.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Upward Trend Lines",
+            "role": "indicator",
+            "verbatim_description": "We want to make sure that it's on the correct spot.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Downward Trend Lines",
+            "role": "indicator",
+            "verbatim_description": "We want to make sure that it's on the correct spot.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Touch point",
+            "role": "entry_step",
+            "verbatim_description": "Trying to capture as many touch points as possible without price intersecting.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 27\u00c3\u2014 in transcript)",
+            "transcript_quote": "e talking about the break and retest. What is the break and retest? Same system, same setup, same criteria. So this is why thi",
+            "occurrences": 27,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

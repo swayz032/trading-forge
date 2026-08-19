@@ -1,0 +1,344 @@
+{
+  "video_id": "deymRD3kSD0",
+  "extracted_at": 1787109396.350124,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "16fb85bff67e8e73f671961ec154f87566cda844f26a95e910685e45d215c4b3",
+  "extraction": {
+    "video_id": "deymRD3kSD0",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "15m",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "transcript_quote": "The candle we care about is the 930 candle. This is the New York Stock Exchange open candle.",
+            "step": 1,
+            "action": "Use the 9:30 AM candle (NY Stock Exchange open) on the 15-minute timeframe to set the trading range.",
+            "rationale": "The 9:30 AM candle defines the high and low for the day's trading range."
+          },
+          {
+            "transcript_quote": "Here we simply want to see if the candle is going to close above or below the range.",
+            "step": 2,
+            "action": "Wait for the 5-minute candle to close above the established range to confirm the trend direction.",
+            "rationale": "A close above the range confirms the bullish trend bias for the day."
+          },
+          {
+            "transcript_quote": "Maybe you have a level of demand down here, which is just a big impulsive move of multiple green candles in a row.",
+            "step": 3,
+            "action": "Identify a level of demand, characterized by a big impulsive move of multiple green candles in a row.",
+            "rationale": "Demand levels represent strong buying pressure and are preferred entry points."
+          },
+          {
+            "transcript_quote": "I'm going to put my long right at the top of the demand.",
+            "step": 4,
+            "action": "Enter a long position at the top of the identified demand zone.",
+            "rationale": "Entering at the top of demand capitalizes on strong buying interest."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed below the bottom line and below the demand zone."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "recent_price",
+            "r_multiple": null,
+            "rationale": "The initial target is set at recent price action."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Here we simply want to see if the candle is going to close above or below the range.",
+            "name": "range_breakout_confirmation",
+            "description": "The 5-minute candle must close above the established range.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "Maybe you have a level of demand down here, which is just a big impulsive move of multiple green candles in a row.",
+            "name": "impulsive_demand_zone",
+            "description": "A level of demand is present, indicated by a big impulsive move of multiple green candles.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "I'm already on the 5minut time frame and I already got a small break out the top right here.",
+            "name": "5m_range_breakout",
+            "description": "The 5-minute timeframe shows a small breakout above the range.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "open range breakout trading strategy",
+            "role": "model",
+            "verbatim_description": "My open range breakout trading strategy is unstoppable. I grow accounts.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "trading range",
+            "role": "zone",
+            "verbatim_description": "We're going to use this to set our range. So once that candle is closed, we simply set the top of the range with the top wick and the bottom of the range with the bottom of the wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "trend confirmation",
+            "role": "entry_step",
+            "verbatim_description": "Here we simply want to see if the candle is going to close above or below the range. And you can see we just had the candle close above the range. Right there, giving us our trend confirmation for the day.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "impulsive move",
+            "role": "entry_step",
+            "verbatim_description": "This is probably the most important part and we're really measuring the impulse.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "range midline",
+            "role": "zone",
+            "verbatim_description": "Well, then you're probably looking to enter at the range midline going long from here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "level of demand",
+            "role": "zone",
+            "verbatim_description": "Maybe you have a level of demand down here, which is just a big impulsive move of multiple green candles in a row.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "zone",
+            "verbatim_description": "We know this is a good demand because we also have a fair value gap right here and another fair value gap right here which tells us we had some incredibly big buyers pushing the market up.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "recent price",
+            "role": "target",
+            "verbatim_description": "I'm going to target recent price. Something like this.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "trailing stop indicator",
+            "role": "indicator",
+            "verbatim_description": "It decided to use my trailing stop indicator. This one right here. So, I didn't really have a set takerit here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "discounted price zone",
+            "role": "zone",
+            "verbatim_description": "I'm simply waiting for the price to come back down. And because the price is such a high move up, we want to target the top of the range, not the bottom of the range. It's not going to get there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "market structure",
+            "role": "phase",
+            "verbatim_description": "We had a massive pullback and that pullback broke the market structure here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "orb trading strategy",
+            "role": "model",
+            "verbatim_description": "If you have any questions about my orb trading strategy, leave a comment below, smash the like button, subscribe to the channel, join my VIP trading room.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 15\u00c3\u2014 in transcript)",
+            "transcript_quote": "My open range breakout trading strategy is unstoppable. I grow accounts. I withdraw profits. And my dog",
+            "occurrences": 15,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "demand because we also have a fair value gap right here and another fair value gap right here which tells us we had some incredibly bi",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the break early, you get the retest early, and you enter the trade. You don't want to be waiting all day for the break, and y",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "higher_timeframe": "15m",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "transcript_quote": "The candle we care about is the 930 candle. This is the New York Stock Exchange open candle.",
+            "step": 1,
+            "action": "Use the 9:30 AM candle (NY Stock Exchange open) on the 15-minute timeframe to set the trading range.",
+            "rationale": "The 9:30 AM candle defines the high and low for the day's trading range."
+          },
+          {
+            "transcript_quote": "Look, break and close above our range and also through our trend line.",
+            "step": 2,
+            "action": "Wait for the candle to break and close above the range and also through the 200 period EMA trend line.",
+            "rationale": "This confirms a market reversal and bullish bias."
+          },
+          {
+            "transcript_quote": "I want to be tapping in to the top of the range, right? That way, I'm using the top of the range as a support along with my demand.",
+            "step": 3,
+            "action": "Wait for price to tap the top of the range, which acts as support along with the demand zone.",
+            "rationale": "Tapping the top of the range provides a high-probability entry point."
+          },
+          {
+            "transcript_quote": "I was already into the trade at this moment.",
+            "step": 4,
+            "action": "Enter the trade upon price tapping the top of the range/demand zone.",
+            "rationale": "The price action confirms the support level is holding."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed below the demand/range support level."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "r_multiple": null,
+            "rationale": "The target is set at the top of the range."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Look, break and close above our range and also through our trend line.",
+            "name": "range_and_ema_breakout",
+            "description": "The candle must break and close above the range and through the 200 period EMA trend line.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "We had many touches of that trend line.",
+            "name": "ema_trend_alignment",
+            "description": "The price has had many touches of the 200 period EMA trend line.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "We had multiple fair value gaps.",
+            "name": "multiple_fvg_confirmation",
+            "description": "Multiple fair value gaps are present, indicating strong buyers at the level.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "open range breakout trading strategy",
+            "role": "model",
+            "verbatim_description": "My open range breakout trading strategy is unstoppable. I grow accounts.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "trading range",
+            "role": "zone",
+            "verbatim_description": "We're going to use this to set our range. So once that candle is closed, we simply set the top of the range with the top wick and the bottom of the range with the bottom of the wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "trend confirmation",
+            "role": "entry_step",
+            "verbatim_description": "Here we simply want to see if the candle is going to close above or below the range. And you can see we just had the candle close above the range. Right there, giving us our trend confirmation for the day.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "impulsive move",
+            "role": "entry_step",
+            "verbatim_description": "This is probably the most important part and we're really measuring the impulse.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "range midline",
+            "role": "zone",
+            "verbatim_description": "Well, then you're probably looking to enter at the range midline going long from here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "level of demand",
+            "role": "zone",
+            "verbatim_description": "Maybe you have a level of demand down here, which is just a big impulsive move of multiple green candles in a row.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "zone",
+            "verbatim_description": "We know this is a good demand because we also have a fair value gap right here and another fair value gap right here which tells us we had some incredibly big buyers pushing the market up.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "recent price",
+            "role": "target",
+            "verbatim_description": "I'm going to target recent price. Something like this.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "trailing stop indicator",
+            "role": "indicator",
+            "verbatim_description": "It decided to use my trailing stop indicator. This one right here. So, I didn't really have a set takerit here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "discounted price zone",
+            "role": "zone",
+            "verbatim_description": "I'm simply waiting for the price to come back down. And because the price is such a high move up, we want to target the top of the range, not the bottom of the range. It's not going to get there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "market structure",
+            "role": "phase",
+            "verbatim_description": "We had a massive pullback and that pullback broke the market structure here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "orb trading strategy",
+            "role": "model",
+            "verbatim_description": "If you have any questions about my orb trading strategy, leave a comment below, smash the like button, subscribe to the channel, join my VIP trading room.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 15\u00c3\u2014 in transcript)",
+            "transcript_quote": "My open range breakout trading strategy is unstoppable. I grow accounts. I withdraw profits. And my dog",
+            "occurrences": 15,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "demand because we also have a fair value gap right here and another fair value gap right here which tells us we had some incredibly bi",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the break early, you get the retest early, and you enter the trade. You don't want to be waiting all day for the break, and y",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "video_id": "Qxlu8v_6G3Y",
+  "extracted_at": 1787110245.2759945,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "2133922f66e13eff993d5ea95672f1f823a901dfd383de57faca611ac0784ea9",
+  "extraction": {
+    "video_id": "Qxlu8v_6G3Y",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "we're going to wait until the 9:30 to 9:45 a.m. 15-minute candle closes. And then, you want to mark out the high and the low of this first 15-minute",
+            "step": 1,
+            "action": "Mark out the high and the low of the first 15-minute candle (9:30-9:45 AM ET) on the 15m chart.",
+            "rationale": "These levels define the initial trading range for the strategy."
+          },
+          {
+            "transcript_quote": "What we're looking for is called a fair value gap. And fair value gaps are very simple. It's when we have an expansive candle that leaves a gap",
+            "step": 2,
+            "action": "Wait for a Fair Value Gap (FVG) to print on the 5-minute chart that breaks through the 15-minute range.",
+            "rationale": "The FVG acts as the mechanical displacement signal to confirm the direction."
+          },
+          {
+            "transcript_quote": "As soon as the fair value gap prints on the 5-minute chart through that first 15-minute range, we're actually good to put a limit order right on that",
+            "step": 3,
+            "action": "Place a limit order at the FVG level on the 5m chart.",
+            "rationale": "Entering on the FVG allows for a high-probability entry as the market rebalances into the gap."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "fvg_low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed at the low of the first candle of the Fair Value Gap."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The target is set at a fixed two to one risk to reward ratio."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "we want to get to your desk right at 9:30 a.m. Eastern Standard Time.",
+            "name": "initial_volume_window",
+            "description": "The strategy requires starting the trading day at 9:30 AM ET.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "we're going to wait until the 9:30 to 9:45 a.m. 15-minute candle closes.",
+            "name": "15m_range_definition",
+            "description": "The initial 15-minute candle must close to define the high and low range.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "As soon as the fair value gap prints on the 5-minute chart through that first 15-minute range, we're actually good to put a limit order right on that",
+            "name": "fvg_through_range",
+            "description": "A Fair Value Gap must print on the 5m chart that breaks the 15m range.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "The first candle rule",
+            "role": "model",
+            "verbatim_description": "it is a stupid simple trading strategy that even a complete beginner couldn't mess up.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "15-minute chart",
+            "role": "indicator",
+            "verbatim_description": "each of the candles you're looking at represents 15 minutes' worth of trading time.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "high and the low of this first 15-minute candle",
+            "role": "zone",
+            "verbatim_description": "mark out the high and the low of this first 15-minute candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "displacement break",
+            "role": "entry_step",
+            "verbatim_description": "we need a very specific type of pattern to occur through this level in order to constitute of a break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "indicator",
+            "verbatim_description": "it's when we have an expansive candle that leaves a gap between the wicks of the candle before it and after it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap candle one",
+            "role": "stop_anchor",
+            "verbatim_description": "we're going to put our stop loss on fair value gap candle one.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed two to one risk to reward",
+            "role": "target",
+            "verbatim_description": "we're just going to go for a fixed two to one risk to reward.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 8\u00c3\u2014 in transcript)",
+            "transcript_quote": "we're looking for is called a fair value gap. And fair value gaps are very simple. It's when we have an expansive candle that leaves a",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "And we're going to wait for a displacement break of either the high or the low. Now, when we're talking about displacement breaks, we",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

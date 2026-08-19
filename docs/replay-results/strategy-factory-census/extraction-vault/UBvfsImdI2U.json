@@ -1,0 +1,197 @@
+{
+  "video_id": "UBvfsImdI2U",
+  "extracted_at": 1787108939.2461138,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "05e5158ff6352922b90f558ea62852ff2a80363028a6332228a4ffe4e7a8e597",
+  "extraction": {
+    "video_id": "UBvfsImdI2U",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "simply mark out your levels. Step number two is wait for a break and price must reverse.",
+            "step": 1,
+            "action": "Mark out the high and low of the most previous candle, including the wick, on the 1H timeframe.",
+            "rationale": "This defines the initial range for the CRT setup."
+          },
+          {
+            "transcript_quote": "wait for the actual colored part of the candle to close back inside that range.",
+            "step": 2,
+            "action": "Wait for price to break the defined high or low, and then for the candle's body to close back inside that range (reversal confirmation).",
+            "rationale": "The reversal of the candle body inside the range confirms the initial break was a false move."
+          },
+          {
+            "transcript_quote": "the third candle will come in and it will make a complete U-shaped reversal to the opposite end that was broken.",
+            "step": 3,
+            "action": "Wait for the third candle to form a complete U-shaped reversal to the opposite end of the initial range.",
+            "rationale": "This confirms the market's intent to move from one extreme to the other."
+          },
+          {
+            "transcript_quote": "You are going to mark out the second candle, the one that broke and reversed.",
+            "step": 4,
+            "action": "Mark out the high or low of the second candle (the one that broke and reversed).",
+            "rationale": "This sets the boundary for the entry trigger on the lower timeframe."
+          },
+          {
+            "transcript_quote": "wait for price to come and break this middle candle's high on the lower time frame, and that is when your entry is taken.",
+            "step": 5,
+            "action": "Enter on the break of the middle candle's high (for longs) or low (for shorts) on the 1M timeframe.",
+            "rationale": "The break of the middle candle's high/low on the lower timeframe serves as the final entry trigger."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "atr_multiple",
+          "buffer_atr": null,
+          "atr_multiplier": 1.5,
+          "rationale": "I will drag up my stop loss, right? Because we already have our TP figured out. I'm dragging up my stop loss until my risk reward becomes 1.5."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "r_multiple": 1.5,
+            "rationale": "I will drag your TP to that candle's high, because that is where we know that price wants to make a move."
+          },
+          {
+            "priority": 1,
+            "type": "range_low",
+            "r_multiple": 1.5,
+            "rationale": "I will drag your TP to that candle's high, because that is where we know that price wants to make a move."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Go overall, just quick take a look at the overall market trend.",
+            "name": "trend_alignment",
+            "description": "Go overall, just quick take a look at the overall market trend.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "the best possible setup is going to be in the New York session. So, 9:30 a.m. Eastern time is where we start looking for the setup",
+            "name": "ny_session_killzone",
+            "description": "The best possible setup is going to be in the New York session. So, 9:30 a.m. Eastern time is where we start looking for the setup",
+            "canonical_match": "killzone_active"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Candle Range Theory",
+            "role": "model",
+            "verbatim_description": "A very simple concept where the entire movement is happening within a candle itself, trading from one range of the candle to the other one.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "most previous candle's high and the most previous candle's low",
+            "role": "zone",
+            "verbatim_description": "The initial boundaries marked on the chart, which includes the wick, not just the body.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "the actual colored part of the candle",
+            "role": "zone",
+            "verbatim_description": "The part of the candle that must close back inside the range after a break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "middle candle",
+            "role": "zone",
+            "verbatim_description": "The second candle that comes and breaks and immediately reverses, which is used to determine the entry point.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "U-shaped reversal",
+            "role": "entry_step",
+            "verbatim_description": "The third candle will come in and it will make a complete U-shaped reversal to the opposite end that was broken.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "New York session",
+            "role": "filter",
+            "verbatim_description": "The best possible setup is going to be in the New York session, specifically starting at 9:30 a.m. Eastern time.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "uptrend",
+            "role": "filter",
+            "verbatim_description": "The overall market trend used to identify which CRT you will play, as the market is trading from orders to orders.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "CRT",
+            "role": "model",
+            "verbatim_description": "Price came and broke that low and immediately reversed back up. The actual colored part of the can- the candle closed back inside the range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Shifted Bias",
+            "role": "phase",
+            "verbatim_description": "The market was never doing this before. It was never making lower highs every single time. Now, it's making lower highs every damn time we come across.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Lower Highs",
+            "role": "entry_step",
+            "verbatim_description": "Every single time, what is the market doing now? We're making lower highs. The market was never doing this before.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "First CRT of the day",
+            "role": "entry_step",
+            "verbatim_description": "I'm looking for the first CRT that forms and that is it. I really don't care about anything else.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "CRT (Candle Range Theory)",
+            "role": "model",
+            "verbatim_description": "CRT (Candle Range Theory) (mentioned 28\u00c3\u2014 in transcript)",
+            "transcript_quote": "w do we take that one perfect CRT a day, close our computer, and just win. That's it. Because what I have seen a lot of peo",
+            "occurrences": 28,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 9\u00c3\u2014 in transcript)",
+            "transcript_quote": "that goes into it. So, candle range theory, also known as CRT, is a very, very simple concept. And all you're really going to",
+            "occurrences": 9,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "70 to 80%",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"70 to 80%\"",
+            "transcript_quote": "70 to 80% ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": ".5 to 2",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \".5 to 2\"",
+            "transcript_quote": ".5 to 2 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

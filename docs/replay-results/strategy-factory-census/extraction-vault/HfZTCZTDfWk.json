@@ -1,0 +1,22 @@
+{
+  "video_id": "HfZTCZTDfWk",
+  "extracted_at": 1787109326.9550507,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "23cf9b53a001d838a2b7f1432e576b991b1558d6c75828bb10348a52c36d13c6",
+  "extraction": {
+    "video_id": "HfZTCZTDfWk",
+    "instrument_classification": "futures_primary",
+    "strategies": [],
+    "rejected_strategies": [
+      {
+        "reason": "fixed_point_stop_not_supported",
+        "detail": "The speaker suggests using a fixed 30-pip stop loss for day traders, which violates the framework's ban on fixed-point stops."
+      }
+    ],
+    "empty_reason": null
+  }
+}

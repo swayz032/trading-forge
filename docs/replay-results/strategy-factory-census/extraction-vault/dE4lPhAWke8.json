@@ -1,0 +1,276 @@
+{
+  "video_id": "dE4lPhAWke8",
+  "extracted_at": 1787110479.0211804,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "8b4112c63e026d9d7694e094d71f55f76ef68f4ce2a195a792f4482a9422d3d3",
+  "extraction": {
+    "video_id": "dE4lPhAWke8",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "if I have a bullish bias, I'm looking for higher highs and higher lows to form and continue.",
+            "step": 1,
+            "action": "Establish a bullish bias by confirming the market is making higher highs and higher lows on the higher timeframe.",
+            "rationale": "Higher highs and higher lows indicate a continuation of the bullish trend."
+          },
+          {
+            "transcript_quote": "the market often needs to trade to these levels to generate interest. Maybe it's stopping out a ton of retail traders before going in the continued",
+            "step": 2,
+            "action": "Wait for a liquidity raid (stop hunt) where the market sweeps through a pool of equal highs or equal lows to purge retail stops.",
+            "rationale": "The market needs liquidity to operate and often targets areas where retail traders have placed stops."
+          },
+          {
+            "transcript_quote": "I want to see a raid on that old high and then I need to see a closure back below that old high. That to me is a signal that this bearish market",
+            "step": 3,
+            "action": "Wait for a Swing Failure Pattern (SFP) confirmation, which is a closure back below the old high (for short) or above the old low (for long) after the raid.",
+            "rationale": "The SFP signals that the market structure has shifted and the previous bias is being invalidated."
+          },
+          {
+            "transcript_quote": "after we took out this old low, right, we got a very, very strong closure here. But now, we're going to wait for a fair value gap",
+            "step": 4,
+            "action": "Wait for displacement, characterized by a large-bodied candle and the creation of a Fair Value Gap (FVG) following the SFP.",
+            "rationale": "Displacement confirms the reversal intent and provides a clear entry trigger."
+          },
+          {
+            "transcript_quote": "as it trades back into the inverted fair value gap, we're going to go long. You know, maybe you could use the stop loss at the low end of the fair",
+            "step": 5,
+            "action": "Enter the trade within the FVG or after a strong rejection of the FVG, using the FVG low/high as the initial stop anchor.",
+            "rationale": "Entry is taken on the retest of the FVG after the market has shown displacement and structure shift."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "fvg_low",
+          "transcript_quote": "maybe you could use the stop loss at the low end of the fair value gap.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The initial stop is placed at the low end of the Fair Value Gap (FVG) to protect against a reversal."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "transcript_quote": "we're targeting the high of the range here.",
+            "rationale": "The primary target is the high end of the current trading range."
+          },
+          {
+            "priority": 2,
+            "type": "equal_highs",
+            "transcript_quote": "you guys can see here as well that these are equal highs in here.",
+            "rationale": "Secondary targets are areas of equal highs or lows where significant liquidity is present."
+          },
+          {
+            "priority": 3,
+            "type": "previous_daily_high",
+            "transcript_quote": "maybe you're just going to target the previous day's high if you're bullish",
+            "rationale": "For short-term traders, previous day highs and lows act as liquidity magnets."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "if I have a bullish bias, I'm looking for higher highs and higher lows to form and continue.",
+            "name": "higher_timeframe_bias",
+            "description": "The market must be making higher highs and higher lows (or lower highs and lower lows) on the higher timeframe.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "we have equal highs and equal lows where multiple levels align.",
+            "name": "liquidity_pool_presence",
+            "description": "The market must have clear liquidity pools, such as equal highs or equal lows, to trade towards.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "the market often needs to trade to these levels to generate interest. Maybe it's stopping out a ton of retail traders before going in the continued",
+            "name": "liquidity_raid",
+            "description": "The market must raid the liquidity pool (purge stops) before continuing in the direction of the bias.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "I want to see a raid on that old high and then I need to see a closure back below that old high. That to me is a signal that this bearish market",
+            "name": "swing_failure_pattern",
+            "description": "A closure back above the old low (for long) or below the old high (for short) must occur after the raid.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "a large-bodied candles, a break in market structure, and a fair value gap creation.",
+            "name": "displacement_and_fvg",
+            "description": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "daily bias",
+            "role": "model",
+            "verbatim_description": "The elements of daily bias include the higher time frame trends, meaning the weekly, daily, 4hour, maybe even the monthly time frame.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "higher time frames",
+            "role": "indicator",
+            "verbatim_description": "We are looking at the weekly, daily, 4hour, maybe even the monthly time frame to establish the trend.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "market structure shift",
+            "role": "entry_step",
+            "verbatim_description": "When we have market structure shift, that's when typically we'll maybe see a trend change.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "old low",
+            "role": "zone",
+            "verbatim_description": "If we have an old low here, what I'm looking for is an actual closure below that level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "retest",
+            "role": "entry_step",
+            "verbatim_description": "If we get a retest, I do not want to see it take out this high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "manipulation",
+            "role": "filter",
+            "verbatim_description": "Any retracement higher is just manipulation to try and get people to go long again.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "target",
+            "role": "target",
+            "verbatim_description": "Finding an actual target, which are old highs and old lows where significant trading activity occurred.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "previous day's high and low",
+            "role": "target",
+            "verbatim_description": "If you're a short-term trader, you're going to be looking at previous days highs and lows acting as those liquidity magnets.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gaps",
+            "role": "indicator",
+            "verbatim_description": "We are looking for trend confirmation by retesting and rejecting high time frame fair value gaps.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "discount",
+            "role": "zone",
+            "verbatim_description": "The price trades down to a discount, gets really close to that old low, never penetrates it, and then goes higher.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "equal highs and lows",
+            "role": "zone",
+            "verbatim_description": "These are levels where multiple levels align, such as double tops or equal lows.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "liquidity",
+            "role": "target",
+            "verbatim_description": "I tend to like targeting those levels where there is a level of liquidity above or below.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "neutral or ranging",
+            "role": "filter",
+            "verbatim_description": "What I typically avoid is when the market is neutral or ranging for days with no clear direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "equal liquidity",
+            "role": "filter",
+            "verbatim_description": "This scenario, where we have equal highs and equal lows, is basically just setting up the markets for a major trap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Equal Lows",
+            "role": "zone",
+            "verbatim_description": "A level where stops are being built up, which can be targeted once a market structure shift occurs.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Equal Highs",
+            "role": "zone",
+            "verbatim_description": "A level that eventually gets purged out of the market.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Pool",
+            "role": "zone",
+            "verbatim_description": "A level of equal lows or maybe it's a significant lower high where stops are being built up, generating interest where retail is putting their stop losses.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Swing Failure Pattern",
+            "role": "entry_step",
+            "verbatim_description": "We have an old swing point and I want to see a raid on that old high and then I need to see a closure back below that old high (or vice versa).",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Displacement",
+            "role": "entry_step",
+            "verbatim_description": "The characteristics of it are large bodied candles, a break in market structure, and a fair value gap creation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "4R Risk-to-Reward Setup",
+            "role": "target",
+            "verbatim_description": "A specific risk-to-reward calculation used when planning a trade out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 23\u00c3\u2014 in transcript)",
+            "transcript_quote": "ice versa, if we trade into a fair value gap, let's say we have a fair value gap that's down in here and then we reject that next 24 t",
+            "occurrences": 23,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Equal Highs/Lows",
+            "role": "target",
+            "verbatim_description": "Equal Highs/Lows (mentioned 14\u00c3\u2014 in transcript)",
+            "transcript_quote": "vious weekly high. Maybe it's equal highs and lows where multiple levels align. So, this is a level that I typically like trading.",
+            "occurrences": 14,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Swing Failure Pattern (SFP)",
+            "role": "entry_step",
+            "verbatim_description": "Swing Failure Pattern (SFP) (mentioned 12\u00c3\u2014 in transcript)",
+            "transcript_quote": "those stops? And what is the swing failure pattern? So, what a liquidity pool looks like is just what I talked about, a level of equal lows",
+            "occurrences": 12,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 11\u00c3\u2014 in transcript)",
+            "transcript_quote": "level. And then, if we get a retest, I do not want to see it take out this high. So, as long as this high is being protected,",
+            "occurrences": 11,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 7\u00c3\u2014 in transcript)",
+            "transcript_quote": "t the closure, it goes to the range high. Okay? So, as soon as it closes back above that low, we can understand that there's a",
+            "occurrences": 7,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

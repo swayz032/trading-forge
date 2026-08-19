@@ -1,0 +1,231 @@
+{
+  "video_id": "mNcoaNdAyIE",
+  "extracted_at": 1787108305.1666105,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "2849aa0e04b77b268d36b2433b4c69bbbd4b7e09015cafd752ab4ac7e6951f8a",
+  "extraction": {
+    "video_id": "mNcoaNdAyIE",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "we're drawing our zones on the 1 hour time frame or on the 4hour time frame. And we're looking for the most recent support or resistance zone.",
+            "step": 1,
+            "action": "Identify the most recent support or resistance zone on the 4H or 1H timeframe.",
+            "rationale": "The zone represents the most recent area of uncertainty."
+          },
+          {
+            "transcript_quote": "we need it to close on that same time frame. So what I mean by that is if you draw a 1h hour support or resistance zone, you draw a zone on the 1 hour",
+            "step": 2,
+            "action": "Wait for the candlestick on the HTF to close outside of the identified support or resistance zone.",
+            "rationale": "The body of the candlestick must close outside the zone, not just the wick."
+          },
+          {
+            "transcript_quote": "we're going to drop down to the 1 minute chart. We're going to then just wait for any of the following to form. We're basically waiting for price to",
+            "step": 3,
+            "action": "Drop to the 1M chart and wait for price to pull back into the previous resistance or support zone.",
+            "rationale": "The pullback into the zone is the setup for the entry trigger."
+          },
+          {
+            "transcript_quote": "once we have consolidation, once price pulls back into our previous resistance or support zone and we have consolidation or we get a higher higher low",
+            "step": 4,
+            "action": "Wait for price to form consolidation, a higher high/lower low structure change, or a trend line break within the zone.",
+            "rationale": "This confirms the reversal intent or continuation bias."
+          },
+          {
+            "transcript_quote": "we're then going to enter the trade at the break of that consolidation. in that trend line or that recent high/ low.",
+            "step": 5,
+            "action": "Enter the trade at the break of the consolidation, trend line, or recent high/low.",
+            "rationale": "The break confirms the entry trigger."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "transcript_quote": "We're going to place the stop loss below the most recent higher low if we entered for buys, or we're going to place it above the most recent lower",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss is placed below the most recent higher low for buys, or above the most recent lower high for sells."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "transcript_quote": "The target for our takerit is always going to be a next major high or major low on the 1 hour time frame or the 4 hour time frame.",
+            "r_multiple": null,
+            "rationale": "The target is set at the next major high or low on the HTF."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "we're drawing our zones on the 1 hour time frame or on the 4hour time frame. And we're looking for the most recent support or resistance zone.",
+            "name": "htf_zone_identification",
+            "description": "The trade must be initiated by identifying the most recent support or resistance zone on the 4H or 1H timeframe.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "we need it to close on that same time frame. So what I mean by that is if you draw a 1h hour support or resistance zone, you draw a zone on the 1 hour",
+            "name": "htf_breakout_confirmation",
+            "description": "The HTF candle must close outside of the identified support or resistance zone.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "we're going to drop down to the 1 minute chart. We're going to then just wait for any of the following to form. We're basically waiting for price to",
+            "name": "ltf_retest_entry",
+            "description": "Price must pull back into the previous resistance or support zone on the 1M chart.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "once we have consolidation, once price pulls back into our previous resistance or support zone and we have consolidation or we get a higher higher low",
+            "name": "ltf_trigger_pattern",
+            "description": "The LTF must show consolidation, a higher high/lower low, or a trend line break.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "break and retest strategy",
+            "role": "model",
+            "verbatim_description": "This strategy is a break and retest strategy. It is optimizing and going with the direction of the market by waiting for these breakouts of supports or resistance areas, then waiting for those to then be retested.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "area of uncertainty",
+            "role": "zone",
+            "verbatim_description": "We're looking for the most recent support or resistance zone. Basically, the most recent area of uncertainty.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "previous resistance zone",
+            "role": "zone",
+            "verbatim_description": "We're going to then just wait for any of the following to form. We're basically waiting for price to come back down into our previous resistance zone or previous support zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "previous support zone",
+            "role": "zone",
+            "verbatim_description": "We're going to then just wait for any of the following to form. We're basically waiting for price to come back down into our previous resistance zone or previous support zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "consolidation",
+            "role": "phase",
+            "verbatim_description": "Once price pulls back into our previous resistance or support zone and we have consolidation or we get a higher higher low or we get a trend line break, we're then going to enter the trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "higher high or a lower low structure change",
+            "role": "entry_step",
+            "verbatim_description": "Once price taps into our previous resistance or previous support zone, we're going to be looking for some consolidation or we're going to be looking for a higher high or a lower low structure change.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "next major high or major low",
+            "role": "target",
+            "verbatim_description": "The target for our takerit is always going to be a next major high or major low on the 1 hour time frame or the 4 hour time frame.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Hesitation Area",
+            "role": "zone",
+            "verbatim_description": "we saw our hesitation area right here on the hourly.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Zone",
+            "role": "zone",
+            "verbatim_description": "we want price to tap back into our zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation Break",
+            "role": "entry_step",
+            "verbatim_description": "we'd wait for price to break above this consolidation, which in this example right here that I just drew out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line",
+            "role": "indicator",
+            "verbatim_description": "we see a trend line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Higher High",
+            "role": "zone",
+            "verbatim_description": "I see a higher high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Higher Lows",
+            "role": "zone",
+            "verbatim_description": "I see higher lows right here as well.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Major Swing Low",
+            "role": "stop_anchor",
+            "verbatim_description": "I had it under this major swing low right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "this strategy is a break and retest strategy. If you don't know what that means, I'm going to break it down very simply for y",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Body-vs-Wick Filter",
+            "role": "filter",
+            "verbatim_description": "Body-vs-Wick Filter (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "by going from the top of the wick to the body of the highest candlestick in this uh uncertainty zone. So, once we did that, then we jus",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": ".5 to1",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \".5 to1\"",
+            "transcript_quote": ".5 to1 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": ".3 to1",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \".3 to1\"",
+            "transcript_quote": ".3 to1 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "60 to 65%",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"60 to 65%\"",
+            "transcript_quote": "60 to 65% ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "3 to1",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"3 to1\"",
+            "transcript_quote": "3 to1 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

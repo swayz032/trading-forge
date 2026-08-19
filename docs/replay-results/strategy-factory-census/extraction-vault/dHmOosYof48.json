@@ -1,0 +1,255 @@
+{
+  "video_id": "dHmOosYof48",
+  "extracted_at": 1787109189.7940707,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "f3cc8a5a221e568cea717fac518a24ecf5904aaa009005382971b562a54b2863",
+  "extraction": {
+    "video_id": "dHmOosYof48",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "One of the most important things you should do as a trader every single day is go to the charts and zoom out and analyze via top town analysis what is",
+            "step": 1,
+            "action": "Zoom out to the 4H chart to analyze the larger point of view trend and develop a daily bias.",
+            "rationale": "Top-down analysis provides the necessary conviction for trades on smaller timeframes."
+          },
+          {
+            "transcript_quote": "We have got a high and since then we have printed lower highs. So overall we are in a downtrend, right?",
+            "step": 2,
+            "action": "Identify market structure (higher lows for bullish, lower highs for bearish) to confirm the overall trend bias.",
+            "rationale": "Market structure defines the primary trend direction."
+          },
+          {
+            "transcript_quote": "I was looking to see where is price now relative to prior price action, right? And that's helping me determine how far back I need to go.",
+            "step": 3,
+            "action": "Identify Key Pivot Levels (KPLs), multi-touch points, or SMAs (50/200) on the larger timeframe.",
+            "rationale": "These levels serve as points of interest for potential reversals or continuation."
+          },
+          {
+            "transcript_quote": "I want to now zoom in from the 4 hour to the 1 hour because I want to get more data.",
+            "step": 4,
+            "action": "Zoom into the 1H or 5M timeframe to gather more granular data and look for entry triggers.",
+            "rationale": "Zooming in provides more data without changing the larger point of view bias."
+          },
+          {
+            "transcript_quote": "make sure that you are putting more emphasis on the candles closing on the larger time frame.",
+            "step": 5,
+            "action": "Wait for the larger timeframe candle (e.g., 1H) to close, confirming the reversal or continuation intent.",
+            "rationale": "The larger timeframe candle close provides the final confirmation of the trade direction."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": null,
+          "transcript_quote": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": null
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "We have got a high and since then we have printed lower highs. So overall we are in a downtrend, right?",
+            "name": "market_structure_aligned",
+            "description": "The market must be in a clear uptrend or downtrend based on higher lows or lower highs.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "I was looking to see where is price now relative to prior price action, right? And that's helping me determine how far back I need to go.",
+            "name": "key_pivot_level_proximity",
+            "description": "Price must be near a Key Pivot Level (KPL), multi-touch point, or SMA (50/200).",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "You don't want to look for reactions near these KPLs when there's no volume. You want volume to come in.",
+            "name": "volume_confirmation",
+            "description": "Wait for volume to come in before looking for reactions near KPLs.",
+            "canonical_match": "delta_or_volume_signature"
+          },
+          {
+            "transcript_quote": "make sure that you are putting more emphasis on the candles closing on the larger time frame.",
+            "name": "larger_timeframe_close",
+            "description": "The entry must be confirmed by the close of the larger timeframe candle.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Top Down Analysis",
+            "role": "model",
+            "verbatim_description": "Zoom out and analyze via top down analysis what the larger point of view trend is as well as develop a daily biased.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Daily Bias",
+            "role": "phase",
+            "verbatim_description": "Having a daily bias is what's going to give you the conviction in your trades on that smaller time frame.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "KPL",
+            "role": "zone",
+            "verbatim_description": "KPL stands for key pivot levels and that is just going to be dependent on your strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Structure",
+            "role": "model",
+            "verbatim_description": "When we start to form things like higher lows, we are in a bullish uptrend. The opposite can be said for bearish.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Range",
+            "role": "zone",
+            "verbatim_description": "I need to look left and look at this range because that's the one that we're in.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line",
+            "role": "indicator",
+            "verbatim_description": "I like to branch off my trend lines.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "KPLs",
+            "role": "zone",
+            "verbatim_description": "These are key pivot levels.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "multi-touch point levels",
+            "role": "zone",
+            "verbatim_description": "This is where price has reacted off of a level multiple times and it's reacted with significance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "psych level",
+            "role": "zone",
+            "verbatim_description": "Usually your fives and your zeros, 60, 65, 50, 55, those are considered psych levels.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "simple moving average",
+            "role": "indicator",
+            "verbatim_description": "I only use these on larger time frames... they're a great way for you to dictate from that larger point of view chart if we are bearish or bullish.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "golden ratios",
+            "role": "zone",
+            "verbatim_description": "They're mathematical levels that I use to help determine when we are retracing into a range where I think price will pivot from.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "death cross",
+            "role": "entry_step",
+            "verbatim_description": "When the 50 cross back below the 200, which is which is a death cross if I can talk.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "SMA (from 1 hour and 4 hour)",
+            "role": "indicator",
+            "verbatim_description": "These are SMAs that are being taken into factor from the 1 hour and 4 hour. This indicator is just so amazing because I was actually manually drawing these levels from that larger point of view.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Micro range of 50 to 61.8",
+            "role": "zone",
+            "verbatim_description": "We have caught buyers in my micro range of 50 to 61.8 which ended up being a really nice buying opportunity from this overreaction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break market structure",
+            "role": "entry_step",
+            "verbatim_description": "We are no longer making lower highs. So that means that officially the market has shifted direction from bearish to bullish.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Support over",
+            "role": "entry_step",
+            "verbatim_description": "We dipped down, attempted to close under, quickly recovered, formed support over, and boom, we have melted up ever since.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Old resistance turn support",
+            "role": "zone",
+            "verbatim_description": "I now want to see that old resistance turn support.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation",
+            "role": "phase",
+            "verbatim_description": "If we're consolidating near those levels, allow those larger point of view candles like a 1 hour candle to close to actually tell you the story of what price is doing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Timeframe Candle/Box",
+            "role": "indicator",
+            "verbatim_description": "Timeframe Candle/Box (mentioned 8\u00c3\u2014 in transcript)",
+            "transcript_quote": "iveinut chart, right? But the 1hour chart is in an uptrend. Do you think that you are trading with a trend? If the five-minute char",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 7\u00c3\u2014 in transcript)",
+            "transcript_quote": "to look left and look at this range because that's the one that we're in. And I'm just going to do things like observe where p",
+            "occurrences": 7,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "to 602 and then looking for a rejection down. Um, I had actually been looking for a potential larger point of view short on oil f",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Peachy Investor",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"Peachy Investor\" (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "the Peachy Investor",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "as a lot of consolidation and chop on smaller time frames. But overall, as the candles were closing on that larger one hour,",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "60 to 601",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"60 to 601\"",
+            "transcript_quote": "60 to 601 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "50 to 61",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"50 to 61\"",
+            "transcript_quote": "50 to 61",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "video_id": "jlShztsY3oA",
+  "extracted_at": 1787110050.9572408,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "5a90de90d0b24e2f9316bbdc00f747c864e0b283a96155f33f08b5eba3f9b523",
+  "extraction": {
+    "video_id": "jlShztsY3oA",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Mark the high and the low of the first 15-minute candle after the New York open from 9:30 to 9:45 Eastern Standard Time.",
+            "step": 1,
+            "action": "Mark the high and low of the first 15-minute candle after the New York open (9:30-9:45 ET) to define the initial range.",
+            "rationale": "This range serves as the initial liquidity pool for the breakout trade."
+          },
+          {
+            "transcript_quote": "If the price breaks above, go long. If the price breaks below, go short.",
+            "step": 2,
+            "action": "Wait for the price to break above the range high (for long) or below the range low (for short).",
+            "rationale": "The initial breakout signals a potential directional move, though the speaker notes this is often a trap."
+          },
+          {
+            "transcript_quote": "Watch for fakeouts and then trade the re-entry back inside the range and add confirmation structure breaks, liquidity sweeps, or even tools and tools.",
+            "step": 3,
+            "action": "Wait for a fakeout (stop-loss grab) and then trade the re-entry back inside the range, confirming the reversal with structure breaks or liquidity sweeps.",
+            "rationale": "The speaker advises against trading the initial breakout due to institutional traps and suggests waiting for a reversal entry."
+          },
+          {
+            "transcript_quote": "after a large move, price is likely to pull back to a Fibonacci retracement level and also reject off of that.",
+            "step": 4,
+            "action": "Use Fibonacci retracement levels as a confirmation tool, waiting for price to pull back and reject off the level after a large move.",
+            "rationale": "Fibonacci retracements provide a key zone for price reversal and entry confirmation."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "transcript_quote": "to not trade within the range, you put your stop loss below the range.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The initial stop is placed below the range low to avoid trading within the range."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 1.5,
+            "rationale": "The speaker uses a 1:1.5 risk-to-reward ratio for the trade."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Only trade orb in the direction of the higher time frame trend like the 15minute or the 1 hour bias.",
+            "name": "htf_trend_alignment",
+            "description": "The trade must be taken in the direction of the higher timeframe trend (15m or 1h bias).",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "after a large move, price is likely to pull back to a Fibonacci retracement level and also reject off of that.",
+            "name": "fibonacci_retracement_rejection",
+            "description": "Price should pull back to a Fibonacci retracement level and reject off that level.",
+            "canonical_match": "vp_level_proximity"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "15minute orb strategy",
+            "role": "model",
+            "verbatim_description": "The strategy sounds simple. Mark the high and the low of the first 15-minute candle after the New York open from 9:30 to 9:45 Eastern Standard Time.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity pools",
+            "role": "zone",
+            "verbatim_description": "Liquidity pools live above and below ranges.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fake outs",
+            "role": "entry_step",
+            "verbatim_description": "Fake outs trigger breakouts which leads to a reversal.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Higher time frame trend",
+            "role": "filter",
+            "verbatim_description": "Only trade orb in the direction of the higher time frame trend like the 15minute or the 1 hour bias.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Confirmation structure breaks",
+            "role": "entry_step",
+            "verbatim_description": "Watch for fakeouts and then trade the re-entry back inside the range and add confirmation structure breaks, liquidity sweeps, or even tools and indicators.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity sweeps",
+            "role": "entry_step",
+            "verbatim_description": "Watch for fakeouts and then trade the re-entry back inside the range and add confirmation structure breaks, liquidity sweeps, or even tools and indicators.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "price is likely to pull back to a Fibonacci retracement level and also reject off of that.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market structure",
+            "role": "model",
+            "verbatim_description": "Orb has no context, no trend, no structure, and no liquidity. It's not keeping these in mind.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Supply and demand",
+            "role": "model",
+            "verbatim_description": "Learn about the key Fibonacci zones that price likes to retrace to based on supply and demand of that asset in that time frame.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "end line and using tools like Fibonacci is going to keep you out of these useless trades when you know that after a large move, p",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "ute candle of the day. Draw a range across this candle. If a candle breaks out of this range and closes above this range, you",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "Which is why after we had the rejection, we had a winning trade using the Orb strategy. On this example, we've broken the downtre",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

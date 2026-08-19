@@ -1,0 +1,243 @@
+{
+  "video_id": "z3Qn3fBoe2I",
+  "extracted_at": 1787109761.4987967,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "9866780e5d6abab3eb742bb14b3770ecf7cd1254de273a53e9e5615525d08e3b",
+  "extraction": {
+    "video_id": "z3Qn3fBoe2I",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Our goal here is to identify a P or a B shape profile matching trap scenarios",
+            "step": 1,
+            "action": "Identify a P-shape (bullish) or B-shape (bearish) profile, which indicates an area of imbalance (Low Volume Node).",
+            "rationale": "These shapes show where the market consolidated or moved quickly through an area of low volume."
+          },
+          {
+            "transcript_quote": "So, you're asking yourself always, what is smart money doing right now? Are they on offense or are they on defense?",
+            "step": 2,
+            "action": "Determine if the profile was formed by smart money exiting (defensive move/trap) or entering (offensive move/continuation).",
+            "rationale": "Defensive moves (covering/exiting) are likely to fail, creating a trap."
+          },
+          {
+            "transcript_quote": "So, anytime we see a scenario where we think that shorts are trapped, and we see more downwards move, we're not panicking.",
+            "step": 3,
+            "action": "Wait for the market to fake out in the direction of the initial bias (the trap).",
+            "rationale": "The fakeout is the signal that the opposing side is trapped."
+          },
+          {
+            "transcript_quote": "you're just going to put your stop right below that point of control",
+            "step": 4,
+            "action": "Enter on the reversal/break of the Point of Control (POC) or a key level (VAH/VAL) after the fakeout.",
+            "rationale": "The POC failure indicates the initial directional bias is failing."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed below the Point of Control to invalidate the trap."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "low_volume_node",
+            "r_multiple": null,
+            "rationale": "The target is the end of the area of imbalance (the vacuum)."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Low volume nodes means that the market moved really quickly through these areas",
+            "name": "low_volume_node_imbalance",
+            "description": "The market moved quickly through areas of low volume, indicating imbalance.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "Our goal here is to identify a P or a B shape profile matching trap scenarios",
+            "name": "p_or_b_shape_profile",
+            "description": "The profile must match a P or B shape, indicating a potential trap.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "So, you're asking yourself always, what is smart money doing right now? Are they on offense or are they on defense?",
+            "name": "smart_money_intent",
+            "description": "The trade must be taken based on whether smart money is exiting (defensive) or entering (offensive).",
+            "canonical_match": "regime_match"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Vacuum Method",
+            "role": "model",
+            "verbatim_description": "I call this strategy the vacuum model because once you're in a trade, price moves rapidly fast as if it was getting sucked through a vacuum.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume Profile",
+            "role": "indicator",
+            "verbatim_description": "The volume profile just shows volume at price.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value Area",
+            "role": "zone",
+            "verbatim_description": "where the market established a fair value.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value Area High",
+            "role": "zone",
+            "verbatim_description": "shows the high area of where the market had established fair value.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value Area Low",
+            "role": "zone",
+            "verbatim_description": "shows where 70% of all volume was traded.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point of Control",
+            "role": "zone",
+            "verbatim_description": "the area where the most volume was traded.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "High Volume Node",
+            "role": "zone",
+            "verbatim_description": "an area where there's a lot of volume.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Low Volume Node",
+            "role": "zone",
+            "verbatim_description": "means that the market moved really quickly through these areas.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gaps",
+            "role": "entry_step",
+            "verbatim_description": "Typically, this is where you're going to have your fair value gaps, and it's just showing you that the market was in a state of imbalance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Balance",
+            "role": "phase",
+            "verbatim_description": "the consolidation, usually found in a value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Imbalance",
+            "role": "phase",
+            "verbatim_description": "where we have low volume nodes.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "P Shape Profile",
+            "role": "model",
+            "verbatim_description": "we saw imbalance to the upside and then we saw the market consolidate and kind of accept these higher prices.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "B Shape Profile",
+            "role": "model",
+            "verbatim_description": "they're shaped like a lower case And what this shows typically is a bearish move down, and then we'll see some kind of consolidation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Defensive Move",
+            "role": "phase",
+            "verbatim_description": "when smart money is just covering or getting out of their trades.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Offensive Move",
+            "role": "phase",
+            "verbatim_description": "when smart money is entering new positions.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "End of Day Covering",
+            "role": "entry_step",
+            "verbatim_description": "when smart money is exiting their trades, okay? They're not entering new trades, they're exiting.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Vacuum",
+            "role": "zone",
+            "verbatim_description": "the market had already sold off and went through that vacuum.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fake P-shape",
+            "role": "model",
+            "verbatim_description": "we had a fake P-shape, right?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "P-shape profile",
+            "role": "model",
+            "verbatim_description": "huge P-shape profile with little to no volume on this up move.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Overnight Unwind",
+            "role": "phase",
+            "verbatim_description": "scenario three, which is the most common that I see, is the overnight unwind.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ Entry",
+            "role": "entry_step",
+            "verbatim_description": "an A+ entry is really, really simple, okay?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point of Control Fail",
+            "role": "entry_step",
+            "verbatim_description": "you want to see the point of control fail.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "B-shape profile",
+            "role": "model",
+            "verbatim_description": "if we're not seeing that in a B-shape profile, that can tell you, along with the fact that we're in a scenario where a trap is likely, that it is a trap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "End of Low Volume Node",
+            "role": "target",
+            "verbatim_description": "you're just going to target the end of the low volume node.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Range",
+            "role": "phase",
+            "verbatim_description": "price moves aggressively because this is a move based on traders being trapped all within this range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "lume was traded and we have a range for that, we can determine where smart money is being positioned and how the market is rea",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

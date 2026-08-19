@@ -1,0 +1,428 @@
+{
+  "video_id": "7ieYBa7Z-Hg",
+  "extracted_at": 1787109500.7183511,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "db71d278407ddb8fd5e8883b1a62bd70fc42b31564c1b7364baa3060b868f3d6",
+  "extraction": {
+    "video_id": "7ieYBa7Z-Hg",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I look for that. Then I go into the 4 hour and look at what the 4 hour is doing. Is the 4 hour wicking? Has the 4 hour swept something?",
+            "step": 1,
+            "action": "Identify the current Point of Interest (POI) on the higher timeframe (e.g., 4H) by observing wicks or sweeps.",
+            "rationale": "The higher timeframe provides the directional context and identifies potential structural shifts."
+          },
+          {
+            "transcript_quote": "I'm expecting price to drop back into that previous range by about 30, 50, or 70% somewhere within there.",
+            "step": 2,
+            "action": "Wait for price to break out of the previous range (defined by the swing high/low) and then pull back into that same range.",
+            "rationale": "The pullback into the previous range is the high-probability entry zone for a reversal."
+          },
+          {
+            "transcript_quote": "I'm looking to trade price back to the high that it retraced from.",
+            "step": 3,
+            "action": "Enter a trade (long or short) when price retests the high or low of the previous range.",
+            "rationale": "The retest confirms the structural validity of the previous range as a reversal zone."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "transcript_quote": "The whole POI.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed behind the entire Point of Interest (POI) or the swing that defined the range."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "transcript_quote": "I'm looking to take profit at the beginning of this week. I'm looking to take profit maybe at this high.",
+            "r_multiple": null,
+            "rationale": "Targets are set at significant structural levels, such as previous daily highs or lows."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "I always talk about the pullback being where your profit is.",
+            "name": "pullback_to_poi",
+            "description": "The trade is executed during the pullback into the previous range, which is considered the highest probability zone.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "I need to see structure component first. Time just adds a volatility, the speed in which it gets to where it's already going.",
+            "name": "market_structure_alignment",
+            "description": "The trade must be aligned with the overall market structure (higher highs and higher lows).",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Market Structure",
+            "role": "model",
+            "verbatim_description": "Market structure is the crux of what I trade. Price for me, I have to see structure component first.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Quality POI",
+            "role": "zone",
+            "verbatim_description": "A quality POI is more of a previous range that is the only thing that I use.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous Range",
+            "role": "zone",
+            "verbatim_description": "It meaning previous consolidation. No, this would be that price broke up above a previous swing high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "No Man's Land",
+            "role": "zone",
+            "verbatim_description": "When something is not in a point of interest, let's say you do your daily analysis and and price is in no man's land.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Bar Pattern",
+            "role": "entry_step",
+            "verbatim_description": "We know it as a three bar pattern, right? So basically, you're not taking the first M1 breakup structure in a daily zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sweep",
+            "role": "entry_step",
+            "verbatim_description": "You need first a sweep, a manipulation, and then you trade in the direction that price is going in.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Manipulation",
+            "role": "entry_step",
+            "verbatim_description": "You need first a sweep, a manipulation, and then you trade in the direction that price is going in.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Breakup Structure",
+            "role": "entry_step",
+            "verbatim_description": "This initial break of structure and change in state therefore and then a larger targets of course there's the falling life kind of view.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Change in State",
+            "role": "entry_step",
+            "verbatim_description": "This initial break of structure and change in state therefore and then a larger targets of course there's the falling life kind of view.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Pullback",
+            "role": "target",
+            "verbatim_description": "I always talk about the pullback being where your profit is.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Asia Range",
+            "role": "phase",
+            "verbatim_description": "Asia is where I became profitable how interesting yeah yeah yeah that um Asia taught me the market Asia taught me the different trend changes in the market as always within a range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Age Range",
+            "role": "zone",
+            "verbatim_description": "A level above that is like you're you're um in a range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "First hour of the New York open",
+            "role": "filter",
+            "verbatim_description": "That first hour of trading, I usually tell students to stay out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "POI",
+            "role": "zone",
+            "verbatim_description": "If it's going to a higher time frame POI between where I'm getting in and where I expect price to go, I'm looking to pay myself somewhere in there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation",
+            "role": "phase",
+            "verbatim_description": "The market is um expanding or consolidating.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Second swing",
+            "role": "entry_step",
+            "verbatim_description": "The preferred portion is the second swing. So you have price break up above the range and then you see it put in a low through the low of the range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break test continuation",
+            "role": "entry_step",
+            "verbatim_description": "It's you're more it's almost like a break test continuation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "MMS",
+            "role": "zone",
+            "verbatim_description": "I call them mms, right? This is where price tends to mitigate a specific area multiple times.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inflection points",
+            "role": "zone",
+            "verbatim_description": "When you have a range, I call them inflection points and I'll elaborate.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rounding",
+            "role": "filter",
+            "verbatim_description": "What helps you differentiate or invalidate um buying when it should have been selling and vice versa. It's the rounding that occurs.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "S accumulation",
+            "role": "phase",
+            "verbatim_description": "when we have that rounding and we see a little fractal or like a down move created just before the rounding, price breaks up above the rounding and comes right back to that spot that sent it up.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Catalyst",
+            "role": "entry_step",
+            "verbatim_description": "You're waiting for a range and waiting for a catalyst to break out of the range. You're waiting for a break of structure, meaning a catalyst in a new direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Generation of liquidity",
+            "role": "phase",
+            "verbatim_description": "by generation of liquidity, I mean that we're we're putting in lows, but we're not going below that.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Prominent wick",
+            "role": "target",
+            "verbatim_description": "if there's a wick to the left, I call it a prominent wick. This is a wick that stands out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity pools",
+            "role": "zone",
+            "verbatim_description": "When we talk about liquidity, you can get a long list and that long list can also mean well there's an opportunity on every single one of them.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 45\u00c3\u2014 in transcript)",
+            "transcript_quote": "asy to get lost on any little impulse going one way or another. Most people tend to chase what they call displacement and then t",
+            "occurrences": 45,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "higher_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "as price is making higher highs and higher lows trading to a supply, you should at least have four to six swings before price actually turns and goes",
+            "step": 1,
+            "action": "Wait for the market to complete a minimum of four to six swings before attempting to trade a Point of Interest (POI).",
+            "rationale": "The swing count acts as a filter to ensure the POI has matured and is ready for a reversal."
+          },
+          {
+            "transcript_quote": "After that fourth swing, you might get a little consolidation and then you see price actually trade the other way.",
+            "step": 2,
+            "action": "Enter the trade in the direction of the reversal after the swing count is met and consolidation occurs.",
+            "rationale": "The reversal is confirmed after the required number of swings and a period of consolidation."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "transcript_quote": "The whole POI.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed behind the Point of Interest (POI) or the swing that defined the reversal."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "as price is making higher highs and higher lows trading to a supply, you should at least have four to six swings before price actually turns and goes",
+            "name": "swing_count_filter",
+            "description": "The market must complete a minimum of four to six swings before a reversal trade is considered.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Market Structure",
+            "role": "model",
+            "verbatim_description": "Market structure is the crux of what I trade. Price for me, I have to see structure component first.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Quality POI",
+            "role": "zone",
+            "verbatim_description": "A quality POI is more of a previous range that is the only thing that I use.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous Range",
+            "role": "zone",
+            "verbatim_description": "It meaning previous consolidation. No, this would be that price broke up above a previous swing high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "No Man's Land",
+            "role": "zone",
+            "verbatim_description": "When something is not in a point of interest, let's say you do your daily analysis and and price is in no man's land.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Bar Pattern",
+            "role": "entry_step",
+            "verbatim_description": "We know it as a three bar pattern, right? So basically, you're not taking the first M1 breakup structure in a daily zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sweep",
+            "role": "entry_step",
+            "verbatim_description": "You need first a sweep, a manipulation, and then you trade in the direction that price is going in.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Manipulation",
+            "role": "entry_step",
+            "verbatim_description": "You need first a sweep, a manipulation, and then you trade in the direction that price is going in.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Breakup Structure",
+            "role": "entry_step",
+            "verbatim_description": "This initial break of structure and change in state therefore and then a larger targets of course there's the falling life kind of view.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Change in State",
+            "role": "entry_step",
+            "verbatim_description": "This initial break of structure and change in state therefore and then a larger targets of course there's the falling life kind of view.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Pullback",
+            "role": "target",
+            "verbatim_description": "I always talk about the pullback being where your profit is.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Asia Range",
+            "role": "phase",
+            "verbatim_description": "Asia is where I became profitable how interesting yeah yeah yeah that um Asia taught me the market Asia taught me the different trend changes in the market as always within a range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Age Range",
+            "role": "zone",
+            "verbatim_description": "A level above that is like you're you're um in a range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "First hour of the New York open",
+            "role": "filter",
+            "verbatim_description": "That first hour of trading, I usually tell students to stay out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "POI",
+            "role": "zone",
+            "verbatim_description": "If it's going to a higher time frame POI between where I'm getting in and where I expect price to go, I'm looking to pay myself somewhere in there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation",
+            "role": "phase",
+            "verbatim_description": "The market is um expanding or consolidating.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Second swing",
+            "role": "entry_step",
+            "verbatim_description": "The preferred portion is the second swing. So you have price break up above the range and then you see it put in a low through the low of the range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break test continuation",
+            "role": "entry_step",
+            "verbatim_description": "It's you're more it's almost like a break test continuation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "MMS",
+            "role": "zone",
+            "verbatim_description": "I call them mms, right? This is where price tends to mitigate a specific area multiple times.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inflection points",
+            "role": "zone",
+            "verbatim_description": "When you have a range, I call them inflection points and I'll elaborate.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rounding",
+            "role": "filter",
+            "verbatim_description": "What helps you differentiate or invalidate um buying when it should have been selling and vice versa. It's the rounding that occurs.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "S accumulation",
+            "role": "phase",
+            "verbatim_description": "when we have that rounding and we see a little fractal or like a down move created just before the rounding, price breaks up above the rounding and comes right back to that spot that sent it up.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Catalyst",
+            "role": "entry_step",
+            "verbatim_description": "You're waiting for a range and waiting for a catalyst to break out of the range. You're waiting for a break of structure, meaning a catalyst in a new direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Generation of liquidity",
+            "role": "phase",
+            "verbatim_description": "by generation of liquidity, I mean that we're we're putting in lows, but we're not going below that.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Prominent wick",
+            "role": "target",
+            "verbatim_description": "if there's a wick to the left, I call it a prominent wick. This is a wick that stands out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity pools",
+            "role": "zone",
+            "verbatim_description": "When we talk about liquidity, you can get a long list and that long list can also mean well there's an opportunity on every single one of them.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 45\u00c3\u2014 in transcript)",
+            "transcript_quote": "asy to get lost on any little impulse going one way or another. Most people tend to chase what they call displacement and then t",
+            "occurrences": 45,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

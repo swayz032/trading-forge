@@ -1,0 +1,179 @@
+{
+  "video_id": "e5HQXYBUW-Q",
+  "extracted_at": 1787110397.117736,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "cd3968cc82a1fb1feeae71f1d8fdc7d95c02e79e3fc12d36106c2de17c37fd6a",
+  "extraction": {
+    "video_id": "e5HQXYBUW-Q",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "mark the high and the low of the first 15 minutes of the New York open",
+            "step": 1,
+            "action": "Mark the high and low of the first 15 minutes of the New York open to define the Opening Range Breakout (ORB).",
+            "rationale": "Establishes the initial range for the breakout strategy."
+          },
+          {
+            "transcript_quote": "Zoom out to the higher time frame and look at VWAP",
+            "step": 2,
+            "action": "Zoom out to the higher time frame (e.g., 1H, 4H) to check the trend, VWAP, and liquidity zones.",
+            "rationale": "Context provides clarity and helps avoid trading blind."
+          },
+          {
+            "transcript_quote": "wait for a candle to actually close and confirm that it's a breakout",
+            "step": 3,
+            "action": "Wait for a candle to actually close and confirm the breakout outside the 15-minute range.",
+            "rationale": "Confirmation helps avoid fakeouts and provides a clear risk-to-reward."
+          },
+          {
+            "transcript_quote": "If the higher time frame is trending up, only look for long breakouts of the orb",
+            "step": 4,
+            "action": "If the higher time frame is trending up, only look for long breakouts of the ORB; align with the trend.",
+            "rationale": "Alignments with the trend massively increase the edge of the strategy."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "swing_high_above_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker uses a stop loss above the previous five minute high in examples."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "speaker's own term",
+            "r_multiple": null,
+            "rationale": "The speaker targets the regular trading hours gap fill."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Zoom out to the higher time frame and look at VWAP",
+            "name": "htf_vwap_context",
+            "description": "Check the higher time frame for VWAP alignment and overall market context.",
+            "canonical_match": "vwap_alignment"
+          },
+          {
+            "transcript_quote": "Use volume profile and look at liquidity zones",
+            "name": "liquidity_zone_context",
+            "description": "Overlay volume profile to identify liquidity zones and avoid fakeouts into supply or demand.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "If the higher time frame is trending up, only look for long breakouts of the orb",
+            "name": "trend_alignment",
+            "description": "The higher time frame trend must align with the intended entry direction.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "15-minute orb",
+            "role": "model",
+            "verbatim_description": "The 15minute orb or the opening range breakout is a strategy where you mark the high and the low of the first 15 minutes of the New York open.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop run",
+            "role": "entry_step",
+            "verbatim_description": "There's a quick breakout, fake out, and then it violently reverses to the other side. That's called a stop run, and you're the liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity",
+            "role": "zone",
+            "verbatim_description": "The speaker refers to traders who are faked out as 'liquidity' because institutions know that people are trading the strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "Zoom out to the higher time frame and look at VWAP. Are we above VWOP? Are we below VWOP?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume Profile",
+            "role": "indicator",
+            "verbatim_description": "Use volume profile and look at liquidity zones. It might fake out to the downside or the upside, grab some liquidity real quick, and then quickly reverse to the other side.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity zones",
+            "role": "zone",
+            "verbatim_description": "If you zoom out and look at those liquidity zones and overlay some volume profile, that will give you some context so you can avoid those fake outs into supply or demand zones.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Structure",
+            "role": "entry_step",
+            "verbatim_description": "Wait for a structure to form. That'll give you a clear risk-to-reward.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Regular trading hours gap fill",
+            "role": "zone",
+            "verbatim_description": "You can see that there was a potential regular trading hours gap fill there. So, possibly short, but it also there's a a regular trading hours gap fill there. So, possibly long.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Momentum",
+            "role": "phase",
+            "verbatim_description": "15-minute opening range break trades work a lot better in a trending market when there's momentum in one direction or the other.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 9\u00c3\u2014 in transcript)",
+            "transcript_quote": "out by the 15-minute opening range breakout? You've seen others make it work, but every time you try to trade it, boom, you j",
+            "occurrences": 9,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "f wicks and bounces, wick and bounce, wick and bounce. it keeps bouncing off that area and that's really close to where it bou",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "ing up with low volatility or chop because they keep trying to force trades. All right, so how to actually fix it and become",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Timeframe Candle/Box",
+            "role": "indicator",
+            "verbatim_description": "Timeframe Candle/Box (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "the one hour chart. Check the 4 hour chart. Check the 15, the 30 minute. I don't care. Zoom out. Don't trade this on just looking at",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

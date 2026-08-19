@@ -1,0 +1,239 @@
+{
+  "video_id": "m-G1ag77aVc",
+  "extracted_at": 1787108564.3479137,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "afc8e074abfdd06bc6a5760a1044fcbbf2197d64da4687efd56770847fa4b9a7",
+  "extraction": {
+    "video_id": "m-G1ag77aVc",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I used the rule of using the last candle before the impulse to mark my supply zones.",
+            "step": 1,
+            "action": "Identify the initial supply or demand zone on the higher timeframe using the last candle before the impulse.",
+            "rationale": "The last candle before the impulse marks the zone where institutional buying or selling took place."
+          },
+          {
+            "transcript_quote": "What we can do is zoom in to the 1 hour time frame to identify smaller supply zones inside of this 4hour zone.",
+            "step": 2,
+            "action": "Zoom into a lower timeframe (e.g., 1H) to identify smaller supply or demand zones inside the initial higher timeframe zone.",
+            "rationale": "Refining the zone to a smaller timeframe allows for a more precise entry and amplified risk-to-reward."
+          },
+          {
+            "transcript_quote": "The extreme zone is going to be the furthest zone from price in the leg of price movement.",
+            "step": 3,
+            "action": "Select the 'extreme zone,' which is the zone furthest from price within the current leg of price movement.",
+            "rationale": "The extreme zone is chosen because it offers the best risk-reward and is considered the safest entry point."
+          },
+          {
+            "transcript_quote": "we would see if this lower time frame structure changes in agreement with our larger trend direction.",
+            "step": 4,
+            "action": "Wait for the lower timeframe structure to change in agreement with the larger trend direction (Standard Confirmation).",
+            "rationale": "Standard confirmation confirms that the zone has enough strength to reshape the trend."
+          },
+          {
+            "transcript_quote": "So, from there we would identify demand and we would buy from that point to take the trade up towards our target.",
+            "step": 5,
+            "action": "Enter a buy limit order at the refined zone (extreme zone) upon confirmation of a structural shift.",
+            "rationale": "Entering at the refined zone captures the wick and secures a sniper entry."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "transcript_quote": "stop loss under there",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss is placed structurally below the zone for long entries."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "transcript_quote": "take the trade up towards our target",
+            "r_multiple": null,
+            "rationale": "The target is set up into the structural high of the initial zone."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "a demand zone is an area of consolidation before a strong upward move.",
+            "name": "demand_zone_identification",
+            "description": "A demand zone is an area of consolidation before a strong upward move.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "What we can do is zoom in to the 1 hour time frame to identify smaller supply zones inside of this 4hour zone.",
+            "name": "zone_refinement",
+            "description": "Zooming into a lower timeframe allows for the identification of smaller zones inside the initial zone.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "transcript_quote": "The extreme zone is going to be the furthest zone from price in the leg of price movement.",
+            "name": "extreme_zone_selection",
+            "description": "The extreme zone is the furthest zone from price in the leg of price movement.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "we would see if this lower time frame structure changes in agreement with our larger trend direction.",
+            "name": "standard_confirmation",
+            "description": "Wait for the lower timeframe structure to change in agreement with the larger trend direction.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Demand Zone",
+            "role": "zone",
+            "verbatim_description": "an area of consolidation before a strong upward move... shows a price that institutional buying took place previously.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Supply Zone",
+            "role": "zone",
+            "verbatim_description": "an area of consolidation before a strong downward move... shows a price that institutional selling took place at previously.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Impulse",
+            "role": "entry_step",
+            "verbatim_description": "the large push upwards",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Zone Refinement",
+            "role": "entry_step",
+            "verbatim_description": "look inside of the 4hour time frame to carry out zone refinement... identify smaller zones.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Extreme Zone",
+            "role": "zone",
+            "verbatim_description": "the furthest zone from price in the leg of price movement... the lowest possible zone in a buying scenario.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Standard Confirmation",
+            "role": "entry_step",
+            "verbatim_description": "when the market reaches this level, we would see if this lower time frame structure changes in agreement with our larger trend direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Leg of Price Movement",
+            "role": "phase",
+            "verbatim_description": "the leg of price movement",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Structural Shift",
+            "role": "entry_step",
+            "verbatim_description": "a break of structure here which has taken us from lower lows and lower highs into higher highs and hopefully a higher low for us to take a trade from.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "1 hour extreme zone",
+            "role": "zone",
+            "verbatim_description": "The idea here is then that we've actually managed to refine the trade down and rather than getting in at this high, we're going to be getting in at the extreme, the refined area, which is going to give us the best riskreward for this trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "refined area",
+            "role": "zone",
+            "verbatim_description": "The refined area, which is going to give us the best riskreward for this trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "sniper entries",
+            "role": "entry_step",
+            "verbatim_description": "We've captured the wicks and we've secured a sniper entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "over refinement",
+            "role": "filter",
+            "verbatim_description": "You need to make sure that you don't refine your zones too far.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "two steps down",
+            "role": "model",
+            "verbatim_description": "A simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "stops under the low",
+            "role": "stop_anchor",
+            "verbatim_description": "I still am a fan of putting stops under the low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 5\u00c3\u2014 in transcript)",
+            "transcript_quote": "se the last candle before the impulse away. So, I'm looking for a sideways candle like this with wicks either side and little to",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Timeframe Candle/Box",
+            "role": "indicator",
+            "verbatim_description": "Timeframe Candle/Box (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "r candles per each individual 4hour candle. Now, we have two areas. One area of demand here, which is the last candle before this im",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "nd direction. And so we see a break of structure here which has taken us from lower lows and lower highs into higher highs and hopefully a",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "e had a drive down from here, retest of this level, and then a push back above this point, this would confirm that the top zon",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "e basically now looking for a retracement opportunity to then buy from further inside of the first leg of price action which is thi",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "e away. So, I'm looking for a sideways candle like this with wicks either side and little to no movement just before a large pus",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "3 to 5",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"3 to 5\"",
+            "transcript_quote": "3 to 5",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

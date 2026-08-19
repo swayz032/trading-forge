@@ -1,0 +1,231 @@
+{
+  "video_id": "1HFoStW_wsc",
+  "extracted_at": 1787109579.3362596,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "e3d26e7dc0d2ca8fb1296c8f9d0644844cb4dd9542b4be34b67939f5e3a97abb",
+  "extraction": {
+    "video_id": "1HFoStW_wsc",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1d",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "When all three VWAPs are stacked bullishly, daily above weekly above monthly, and price is above all three, you have what we call institutional",
+            "step": 1,
+            "action": "Identify institutional consensus by confirming the multi-timeframe VWAP stack (Daily > Weekly > Monthly) is aligned with the desired direction.",
+            "rationale": "This alignment indicates institutional commitment to the move."
+          },
+          {
+            "transcript_quote": "The opposite is true for bearish stacks. When monthly is above weekly is above daily and price is below all three, institutional money is aligned to",
+            "step": 2,
+            "action": "Confirm the bearish stack by ensuring the Monthly VWAP is above the Weekly, which is above the Daily, and price is below all three.",
+            "rationale": "This confirms institutional alignment to the downside."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "fvg_low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Your stop goes at the next significant VWAP band or volume node."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "vwap_level",
+            "r_multiple": null,
+            "rationale": "Your first target is the next VWAP level or standard deviation band."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "When all three VWAPs are stacked bullishly, daily above weekly above monthly, and price is above all three, you have what we call institutional",
+            "name": "multi_timeframe_vwap_stack_bullish",
+            "description": "The Daily, Weekly, and Monthly VWAPs are stacked in a bullish order, and price is above all three.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "The opposite is true for bearish stacks. When monthly is above weekly is above daily and price is below all three, institutional money is aligned to",
+            "name": "multi_timeframe_vwap_stack_bearish",
+            "description": "The Daily, Weekly, and Monthly VWAPs are stacked in a bearish order, and price is below all three.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "High volume at VWAP means institutions are active. They're either accumulating or distributing, but they're definitely participating.",
+            "name": "volume_confirmation_at_vwap",
+            "description": "High volume at the VWAP level indicates active institutional accumulation or distribution.",
+            "canonical_match": "delta_or_volume_signature"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "VWAP",
+            "role": "model",
+            "verbatim_description": "It shows the average price where real money actually changed hands throughout the day. VWAP is actually the institutional anchor point.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Daily VWAP",
+            "role": "indicator",
+            "verbatim_description": "resets every session and shows you intraday institutional activity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Weekly VWAP",
+            "role": "indicator",
+            "verbatim_description": "captures the bigger swing trade positioning.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Monthly VWAP",
+            "role": "indicator",
+            "verbatim_description": "reveals the major trend and where long-term players are anchored.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Confluence Anchor",
+            "role": "zone",
+            "verbatim_description": "When VWAP intersects with a high volume node from the volume profile, you get what institutions call a confluence anchor. This is where massive institutional orders are likely sitting.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Flat VWAP",
+            "role": "zone",
+            "verbatim_description": "means the market is in balance. Buyers and sellers are evenly matched. Price will likely chop around this level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Steep VWAP slope",
+            "role": "zone",
+            "verbatim_description": "means one side is winning decisively. The steeper the angle, the stronger the institutional flow.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Institutional Alignment",
+            "role": "phase",
+            "verbatim_description": "When daily, weekly, and monthly VWAP all point in the same direction, you have institutional alignment.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Institutional Consensus",
+            "role": "phase",
+            "verbatim_description": "When all three VWAPs are stacked bullishly, daily above weekly above monthly, and price is above all three, you have what we call institutional consensus.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Custom Anchor Points",
+            "role": "zone",
+            "verbatim_description": "VWAP anchored to major events, earnings announcements, Fed meetings, company keynotes. These create much more powerful levels than random daily resets.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Event-anchored VWAP",
+            "role": "zone",
+            "verbatim_description": "shows you where the big money positioned themselves around major news.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Standard deviation bands",
+            "role": "zone",
+            "verbatim_description": "showing you mathematical probability in real time, the statistical boundaries of normal price action.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Normal trading range",
+            "role": "zone",
+            "verbatim_description": "The plus one and minus one bands contain about 68% of price action. This is the normal trading range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Mean reversion signals",
+            "role": "entry_step",
+            "verbatim_description": "When price hits these levels [plus two/minus two], you get mean reversion signals.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Extreme levels",
+            "role": "zone",
+            "verbatim_description": "The plus three and minus three bands are the extreme levels. Only 0.3% of price action should reach here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Band walk",
+            "role": "phase",
+            "verbatim_description": "In strong trends, price will ride along the plus one or minus one band. It doesn't return to VWAP. Instead, it uses the band as dynamic support or resistance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Long wick rejection",
+            "role": "entry_step",
+            "verbatim_description": "shows institutional defense. They're actively protecting that level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Weak doji",
+            "role": "entry_step",
+            "verbatim_description": "shows uncertainty.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Capitulation",
+            "role": "entry_step",
+            "verbatim_description": "a strong close through VWAP with volume, that's capitulation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "False break trap",
+            "role": "filter",
+            "verbatim_description": "Price breaks below VWAP by a few candles, triggers all the stops, then immediately reverses back above. This isn't random. It's institutions grabbing liquidity before the real move higher.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Yearly VWAP",
+            "role": "zone",
+            "verbatim_description": "Bull market, price stays above yearly VWAP for months, even during corrections. Bear market, yearly VWAP becomes impenetrable resistance that caps every rally.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Quarterly VWAP",
+            "role": "zone",
+            "verbatim_description": "The quarterly VWAP strategy is pure gold during earning season. Institutions position their portfolios around quarterly performance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP Hierarchy",
+            "role": "model",
+            "verbatim_description": "When daily says buy, but weekly says sell, weekly wins. When weekly says buy, but monthly says sell, monthly wins. The longer time frame always has more institutional commitment behind it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Institutional Herding",
+            "role": "phase",
+            "verbatim_description": "When all time frames align, daily, weekly, monthly, and yearly VWAP all broken in the same direction, you're witnessing institutional herding.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Dead Zones",
+            "role": "zone",
+            "verbatim_description": "During these dead zones, price can drift through VWAP with zero resistance because no institutions are participating.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 6\u00c3\u2014 in transcript)",
+            "transcript_quote": "on my chart that price would bounce off sometimes. Then I watched a former institutional trader execute a massive position an",
+            "occurrences": 6,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

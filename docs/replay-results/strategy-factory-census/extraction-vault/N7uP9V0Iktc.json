@@ -1,0 +1,113 @@
+{
+  "video_id": "N7uP9V0Iktc",
+  "extracted_at": 1787108703.6220713,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "b1b55aff664ba878a6e7a8742d4f26527dfa4e09b3e279750baaddd70d28b169",
+  "extraction": {
+    "video_id": "N7uP9V0Iktc",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "So, if a stock's retesting pre-market high, but it's under VWOP, we're not going to take calls on it.",
+            "step": 1,
+            "action": "Identify if the trade setup is valid by checking if the price retesting a pre-market extreme is aligned with the VWAP position.",
+            "rationale": "The VWAP determines whether calls or puts are valid based on the pre-market extreme."
+          },
+          {
+            "transcript_quote": "VWOP's a volume weighted average price. What this basically means is that VWAP tells us what the average trading price of the day is for a certain... ",
+            "step": 2,
+            "action": "Execute the trade on a VWAP retest, provided the VWAP is positioned correctly relative to the pre-market high or low.",
+            "rationale": "VWAP serves as a major area of interest and a retest spot for the day's average price."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": null,
+          "transcript_quote": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker does not define a fixed structural stop for the initial entry."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "if VWAP is under the pre-market low, then I'm looking to take puts on a VWOP retest, not a pre-market low retest, which I'll go over the full strategy",
+            "name": "vwap_vs_premarket_extreme",
+            "description": "The VWAP must be under the pre-market low for a put setup, or above the pre-market high for a call setup.",
+            "canonical_match": "vwap_alignment"
+          },
+          {
+            "transcript_quote": "as long as the stock stays above the EMA on a 5m minute, then I'll stay in.",
+            "name": "ema_trailing_stop",
+            "description": "The EMA acts as a trailing stop loss, and the position is held as long as the price remains on the correct side of the EMA.",
+            "canonical_match": "regime_match"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "VWOP",
+            "role": "indicator",
+            "verbatim_description": "VWAP tells us what the average trading price of the day is for a certain stock.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "EMA",
+            "role": "indicator",
+            "verbatim_description": "The EMA can help you catch huge wins because what it basically does is my rule with it is when I'm holding runners on a stock, as long as the stock stays above the EMA on a 5m minute, then I'll stay in.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWOP retest",
+            "role": "entry_step",
+            "verbatim_description": "VWOP is always a big retest spot.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "EMA retest",
+            "role": "entry_step",
+            "verbatim_description": "You'd also trade EMA retest, but those are more scalps.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Holding runners",
+            "role": "phase",
+            "verbatim_description": "when I'm holding runners on a stock, as long as the stock stays above the EMA on a 5m minute, then I'll stay in.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Pre-market high",
+            "role": "zone",
+            "verbatim_description": "We kind of retest this pre-market high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 29\u00c3\u2014 in transcript)",
+            "transcript_quote": "well as VWAP is always a big retest spot. So, if VWAP is under the pre-market low, then I'm looking to take puts on a VWOP re",
+            "occurrences": 29,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "VWAP (mentioned 20\u00c3\u2014 in transcript)",
+            "transcript_quote": "View, we're going to click on VWAP. We're going to click on settings. Then, we're going to go to style. You see how it says",
+            "occurrences": 20,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "video_id": "LOcaRWcc1xI",
+  "extracted_at": 1787108222.6159794,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "93b9d5864d4357b38704dd56e43b01d20cf738361316f5000c6491d56402ed56",
+  "extraction": {
+    "video_id": "LOcaRWcc1xI",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Step one, we're going to mark out 10:00 a.m. Eastern. So, here we are. Right here, we're about to open a new 4-hour candle at 10:00 a.m. Eastern",
+            "step": 1,
+            "action": "Mark the start of the new 4-hour candle at 10:00 a.m. Eastern.",
+            "rationale": "This time is used to define the start of the trading window for the pattern."
+          },
+          {
+            "transcript_quote": "Go to the 15-minute time frame and look for the most recent 15-minute fair value gap that's going to be closest to price. I'm on the 15-minute time",
+            "step": 2,
+            "action": "Identify the most recent 15-minute fair value gap (FVG) closest to the current price.",
+            "rationale": "The FVG provides the structural target for the manipulation phase."
+          },
+          {
+            "transcript_quote": "Step three is you want to see a PO3 on the 1-minute time frame tapping into that 15-minute gap.",
+            "step": 3,
+            "action": "Wait for a Power of Three (PO3) pattern to form on the 1-minute timeframe, manipulating into the identified 15-minute FVG.",
+            "rationale": "The PO3 signals the accumulation and manipulation phase before the real move."
+          },
+          {
+            "transcript_quote": "The second I see a candle body close through that fair value gap, I'm entering my trade.",
+            "step": 4,
+            "action": "Enter the trade when a candle body closes through the 15-minute fair value gap.",
+            "rationale": "The candle body closure confirms the entry trigger after the manipulation."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_high_above_entry",
+          "transcript_quote": "leave my stop loss at that manipulation high that we just made, the top of the 4-hour candle.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed at the high of the 4-hour candle created during the manipulation."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_low",
+            "transcript_quote": "You can take the bottom of the accumulation range if you do have the risk reward",
+            "r_multiple": null,
+            "rationale": "The primary target is the bottom of the accumulation range."
+          },
+          {
+            "priority": 2,
+            "type": "liquidity_target_clear",
+            "transcript_quote": "or you can even target some liquidity lower down here",
+            "r_multiple": null,
+            "rationale": "Secondary targets are based on structural liquidity lower down."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "The first step of this strategy is going to the 4-hour time frame and finding the most recent 4-hour candlestick that has formed and closed.",
+            "name": "4h_candle_context",
+            "description": "The strategy requires the identification of the most recent 4-hour candlestick to establish context.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "Go to the 15-minute time frame and look for the most recent 15-minute fair value gap that's going to be closest to price.",
+            "name": "15m_fvg_proximity",
+            "description": "Price must be near a recent 15-minute fair value gap.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "transcript_quote": "We see a PO3 pattern straight into this 15-minute gap, right? We manipulate into that 15-minute gap.",
+            "name": "1m_po3_manipulation",
+            "description": "A Power of Three (PO3) pattern must form on the 1-minute timeframe, manipulating into the 15-minute FVG.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "4-hour pattern",
+            "role": "model",
+            "verbatim_description": "The first step of this strategy is going to the 4-hour time frame and finding the most recent 4-hour candlestick that has formed and closed.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "10:00 a.m. Eastern",
+            "role": "filter",
+            "verbatim_description": "We want to be focusing on the 4-hour candle that opens at 10:00 a.m. Eastern.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "HTF power 3",
+            "role": "indicator",
+            "verbatim_description": "First thing you're going to do is go to indicators and look up HTF power 3. This is going to make sure you can see a high time frame candle beside your low time frame.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "15-minute fair value gap",
+            "role": "zone",
+            "verbatim_description": "Go to the 15-minute time frame and look for the most recent 15-minute fair value gap that's going to be closest to price.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "PO3 on the 1-minute time frame",
+            "role": "model",
+            "verbatim_description": "Step three is you want to see a PO3 on the 1-minute time frame tapping into that 15-minute gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "phase one of the power of three",
+            "role": "phase",
+            "verbatim_description": "We can already see on the 1-minute time frame we're starting to form phase one of the power of three.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "accumulation",
+            "role": "phase",
+            "verbatim_description": "If you don't know what the power of three is, all it is is price moves sideways and accumulates.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "manipulation",
+            "role": "phase",
+            "verbatim_description": "It then manipulates or has a fakeout and then puts in the real move to distribute.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "distribution",
+            "role": "phase",
+            "verbatim_description": "It then manipulates or has a fakeout and then puts in the real move to distribute.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "inversion fair value gaps",
+            "role": "zone",
+            "verbatim_description": "For me I will like to take inversion fair value gaps typically.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "top of the 4-hour candle",
+            "role": "stop_anchor",
+            "verbatim_description": "I'm going to put my short position there and leave my stop loss at that manipulation high that we just made, the top of the 4-hour candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "bottom of the accumulation range",
+            "role": "target",
+            "verbatim_description": "Targets for this trade can be really easy. You can take the bottom of the accumulation range if you do have the risk reward.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "point of liquidity",
+            "role": "target",
+            "verbatim_description": "I'm probably going to take that trade to the nearest point of liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "change in the state of delivery",
+            "role": "entry_step",
+            "verbatim_description": "Here we can clearly see a change in the state of delivery back to the downside.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "top or bottom tick account",
+            "role": "model",
+            "verbatim_description": "Having a top or a bottom tick account basically means that you are cutting out entry confirmations.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 6\u00c3\u2014 in transcript)",
+            "transcript_quote": "f three, which is going to be accumulation. If you don't know what the power of three is, all it is is price moves sideways and accu",
+            "occurrences": 6,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Power of 3",
+            "role": "model",
+            "verbatim_description": "Power of 3 (mentioned 5\u00c3\u2014 in transcript)",
+            "transcript_quote": "ep three is you want to see a PO3 on the 1-minute time frame tapping into that 15-minute gap. And step four is going to be",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "for the most recent 15-minute fair value gap that's going to be closest to price. I'm on the 15-minute time frame. I can very clearly",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "ing to be in that candle body range of the last 4-hour candle. Okay, I know exactly what questions you're thinking right now.",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "is, all it is is price moves sideways and accumulates. It then manipulates or has a fakeout and then puts in the real move to d",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

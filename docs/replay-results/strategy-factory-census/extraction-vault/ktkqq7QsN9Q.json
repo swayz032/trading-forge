@@ -1,0 +1,799 @@
+{
+  "video_id": "ktkqq7QsN9Q",
+  "extracted_at": 1787110815.6929846,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "36f75d6cec31b97e9c39f95a65910933422ec1e25f119b598f4991b8d6a5575d",
+  "extraction": {
+    "video_id": "ktkqq7QsN9Q",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "5m",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "transcript_quote": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "step": 1,
+            "action": "Wait for price to break out of the VWAP value area and achieve acceptance (multiple consecutive candles outside the band or significant time outside).",
+            "rationale": "Acceptance confirms the move is real and the market is in price discovery."
+          },
+          {
+            "transcript_quote": "Once we have acceptance, entry is on the first back test of the band.",
+            "step": 2,
+            "action": "Enter long on the first sign of strength or the first touch of the VWAP band after acceptance.",
+            "rationale": "The first pullback after a strong break is the highest probability setup."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop goes a few points below the testing candle."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "r_multiple": null,
+            "rationale": "The target is either a revisit of the recent highs."
+          },
+          {
+            "priority": 2,
+            "type": "range_high",
+            "r_multiple": null,
+            "rationale": "The target is scalp to the midpoint of the distance."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "name": "value_area_breakout",
+            "description": "Price must break out of the VWAP value area to initiate price discovery.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "We're not always looking for the first break. First breaks fail most of the time. We need to accept that we're now in price discovery.",
+            "name": "price_discovery_acceptance",
+            "description": "Price must spend significant time or close multiple consecutive candles outside the VWAP value area.",
+            "canonical_match": "regime_match"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "VWAP wave system",
+            "role": "model",
+            "verbatim_description": "The VWAP wave system provides a structured way to interpret market behavior.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP value area",
+            "role": "zone",
+            "verbatim_description": "The VWAP value area is the space between the two bands on the VWAP. That's one standard deviation above and below.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point of control",
+            "role": "zone",
+            "verbatim_description": "This is the price level where most business was transacted. The most buyers and sellers are getting in and out at this price level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three brains framework",
+            "role": "model",
+            "verbatim_description": "I call this the three brains framework. Brain one is the market brain... Brain two is the crowd brain... and brain three, this is your brain.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market brain",
+            "role": "model",
+            "verbatim_description": "This is what price is actually doing, not what you want it to do, not what you hope it will do. What it's actually doing right now, right in front of you.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Crowd brain",
+            "role": "model",
+            "verbatim_description": "This is where most traders are wrong. They're buying the top, shorting the bottoms, and they're getting trapped. Your opportunity is on the other side of what the crowd is doing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Price discovery",
+            "role": "phase",
+            "verbatim_description": "If we're in price discovery, you're going to expect continued price discovery.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ setup",
+            "role": "entry_step",
+            "verbatim_description": "This right here is an A+ setup. It's the highest probability with the highest expectancy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Contextual shifts",
+            "role": "entry_step",
+            "verbatim_description": "The highest quality setups emerge near fresh contextual shifts. This one is really important.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Acceptance",
+            "role": "entry_step",
+            "verbatim_description": "When I say acceptance, here's what I'm looking for. Either price closes multiple consecutive candles outside the band or price spends a significant time trading outside of the value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value area high",
+            "role": "zone",
+            "verbatim_description": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Upper VWAP deviation band",
+            "role": "zone",
+            "verbatim_description": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fade value area extremes",
+            "role": "setup",
+            "verbatim_description": "This is when we're trading in fair market value.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair market value",
+            "role": "phase",
+            "verbatim_description": "This is when we're trading in fair market value. That's where a lot of business and transaction is taking place.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP deviation area",
+            "role": "zone",
+            "verbatim_description": "Entry is in the first sign of weakness or rejection on the test of the VWAP deviation area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Return to value",
+            "role": "setup",
+            "verbatim_description": "And this is where we've been in price discovery and then we break back into the value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP bounce",
+            "role": "setup",
+            "verbatim_description": "Setup number four is the VWAP bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sub VWAP traps",
+            "role": "entry_step",
+            "verbatim_description": "This is where price breaks through the VWAP. Sometimes it'll even spend a little time above or below it and then it fails and reclaims the VWAP.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "First 15 minutes of the open",
+            "role": "filter",
+            "verbatim_description": "First, the first 15 minutes of the open. This can be sometimes really volatile.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 to 10 minutes before major news drops",
+            "role": "filter",
+            "verbatim_description": "Second, 5 to 10 minutes before major news drops.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume is 30% below average",
+            "role": "filter",
+            "verbatim_description": "Third, when the volume is 30% below average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "After two consecutive losses",
+            "role": "filter",
+            "verbatim_description": "And fourth, after two consecutive losses, that's not the setup failing, that's me. I need to stop trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "VWAP (mentioned 51\u00c3\u2014 in transcript)",
+            "transcript_quote": "n 3 weeks because I was using VWAP as support and resistance. I thought I understood it. Every course I bought, every video",
+            "occurrences": 51,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 10\u00c3\u2014 in transcript)",
+            "transcript_quote": "support. VWAP is resistance. Bounce off of VWAP, you buy. Break VWAP, you sell. And for a while, it kind of worked. Just enou",
+            "occurrences": 10,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "g place. These are considered range days or balance days. We're not making a big move here. The market is stuck between levels",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "higher_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Entry is in the first sign of weakness or rejection on the test of the VWAP deviation area.",
+            "step": 1,
+            "action": "Wait for the first sign of weakness or rejection on the test of the VWAP deviation area.",
+            "rationale": "The goal is to fade the value area extreme when the market is in fair market value."
+          }
+        ],
+        "preferred_regime": "ranging",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is going to go beyond the price level or beyond the testing candle wick."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "First, price has obviously been spending a lot of time within the VWAP value area. It must show price acceptance.",
+            "name": "value_area_acceptance",
+            "description": "Price must show time and distance inside the VWAP value area before fading the extreme.",
+            "canonical_match": "regime_match"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "VWAP wave system",
+            "role": "model",
+            "verbatim_description": "The VWAP wave system provides a structured way to interpret market behavior.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP value area",
+            "role": "zone",
+            "verbatim_description": "The VWAP value area is the space between the two bands on the VWAP. That's one standard deviation above and below.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point of control",
+            "role": "zone",
+            "verbatim_description": "This is the price level where most business was transacted. The most buyers and sellers are getting in and out at this price level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three brains framework",
+            "role": "model",
+            "verbatim_description": "I call this the three brains framework. Brain one is the market brain... Brain two is the crowd brain... and brain three, this is your brain.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market brain",
+            "role": "model",
+            "verbatim_description": "This is what price is actually doing, not what you want it to do, not what you hope it will do. What it's actually doing right now, right in front of you.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Crowd brain",
+            "role": "model",
+            "verbatim_description": "This is where most traders are wrong. They're buying the top, shorting the bottoms, and they're getting trapped. Your opportunity is on the other side of what the crowd is doing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Price discovery",
+            "role": "phase",
+            "verbatim_description": "If we're in price discovery, you're going to expect continued price discovery.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ setup",
+            "role": "entry_step",
+            "verbatim_description": "This right here is an A+ setup. It's the highest probability with the highest expectancy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Contextual shifts",
+            "role": "entry_step",
+            "verbatim_description": "The highest quality setups emerge near fresh contextual shifts. This one is really important.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Acceptance",
+            "role": "entry_step",
+            "verbatim_description": "When I say acceptance, here's what I'm looking for. Either price closes multiple consecutive candles outside the band or price spends a significant time trading outside of the value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value area high",
+            "role": "zone",
+            "verbatim_description": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Upper VWAP deviation band",
+            "role": "zone",
+            "verbatim_description": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fade value area extremes",
+            "role": "setup",
+            "verbatim_description": "This is when we're trading in fair market value.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair market value",
+            "role": "phase",
+            "verbatim_description": "This is when we're trading in fair market value. That's where a lot of business and transaction is taking place.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP deviation area",
+            "role": "zone",
+            "verbatim_description": "Entry is in the first sign of weakness or rejection on the test of the VWAP deviation area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Return to value",
+            "role": "setup",
+            "verbatim_description": "And this is where we've been in price discovery and then we break back into the value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP bounce",
+            "role": "setup",
+            "verbatim_description": "Setup number four is the VWAP bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sub VWAP traps",
+            "role": "entry_step",
+            "verbatim_description": "This is where price breaks through the VWAP. Sometimes it'll even spend a little time above or below it and then it fails and reclaims the VWAP.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "First 15 minutes of the open",
+            "role": "filter",
+            "verbatim_description": "First, the first 15 minutes of the open. This can be sometimes really volatile.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 to 10 minutes before major news drops",
+            "role": "filter",
+            "verbatim_description": "Second, 5 to 10 minutes before major news drops.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume is 30% below average",
+            "role": "filter",
+            "verbatim_description": "Third, when the volume is 30% below average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "After two consecutive losses",
+            "role": "filter",
+            "verbatim_description": "And fourth, after two consecutive losses, that's not the setup failing, that's me. I need to stop trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "VWAP (mentioned 51\u00c3\u2014 in transcript)",
+            "transcript_quote": "n 3 weeks because I was using VWAP as support and resistance. I thought I understood it. Every course I bought, every video",
+            "occurrences": 51,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 10\u00c3\u2014 in transcript)",
+            "transcript_quote": "support. VWAP is resistance. Bounce off of VWAP, you buy. Break VWAP, you sell. And for a while, it kind of worked. Just enou",
+            "occurrences": 10,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "g place. These are considered range days or balance days. We're not making a big move here. The market is stuck between levels",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "higher_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Entry is on the back test or pullback of the VWAP deviation band after price breaks into value and shows acceptance.",
+            "step": 1,
+            "action": "Wait for price to break into the VWAP value area and show acceptance.",
+            "rationale": "The market is returning to the value area after a price discovery move."
+          },
+          {
+            "transcript_quote": "Entry is on the back test or pullback of the VWAP deviation band after price breaks into value and shows acceptance.",
+            "step": 2,
+            "action": "Enter on the back test or pullback of the VWAP deviation band after price breaks into value.",
+            "rationale": "The pullback provides a high-probability entry point for the return to value."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is always going to go below or above the testing candle wick."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "We spent some time and distance outside in price discovery and now it's ready to come back in.",
+            "name": "price_discovery_completion",
+            "description": "Price must have completed a price discovery move outside the value area before returning.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "VWAP wave system",
+            "role": "model",
+            "verbatim_description": "The VWAP wave system provides a structured way to interpret market behavior.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP value area",
+            "role": "zone",
+            "verbatim_description": "The VWAP value area is the space between the two bands on the VWAP. That's one standard deviation above and below.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point of control",
+            "role": "zone",
+            "verbatim_description": "This is the price level where most business was transacted. The most buyers and sellers are getting in and out at this price level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three brains framework",
+            "role": "model",
+            "verbatim_description": "I call this the three brains framework. Brain one is the market brain... Brain two is the crowd brain... and brain three, this is your brain.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market brain",
+            "role": "model",
+            "verbatim_description": "This is what price is actually doing, not what you want it to do, not what you hope it will do. What it's actually doing right now, right in front of you.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Crowd brain",
+            "role": "model",
+            "verbatim_description": "This is where most traders are wrong. They're buying the top, shorting the bottoms, and they're getting trapped. Your opportunity is on the other side of what the crowd is doing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Price discovery",
+            "role": "phase",
+            "verbatim_description": "If we're in price discovery, you're going to expect continued price discovery.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ setup",
+            "role": "entry_step",
+            "verbatim_description": "This right here is an A+ setup. It's the highest probability with the highest expectancy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Contextual shifts",
+            "role": "entry_step",
+            "verbatim_description": "The highest quality setups emerge near fresh contextual shifts. This one is really important.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Acceptance",
+            "role": "entry_step",
+            "verbatim_description": "When I say acceptance, here's what I'm looking for. Either price closes multiple consecutive candles outside the band or price spends a significant time trading outside of the value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value area high",
+            "role": "zone",
+            "verbatim_description": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Upper VWAP deviation band",
+            "role": "zone",
+            "verbatim_description": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fade value area extremes",
+            "role": "setup",
+            "verbatim_description": "This is when we're trading in fair market value.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair market value",
+            "role": "phase",
+            "verbatim_description": "This is when we're trading in fair market value. That's where a lot of business and transaction is taking place.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP deviation area",
+            "role": "zone",
+            "verbatim_description": "Entry is in the first sign of weakness or rejection on the test of the VWAP deviation area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Return to value",
+            "role": "setup",
+            "verbatim_description": "And this is where we've been in price discovery and then we break back into the value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP bounce",
+            "role": "setup",
+            "verbatim_description": "Setup number four is the VWAP bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sub VWAP traps",
+            "role": "entry_step",
+            "verbatim_description": "This is where price breaks through the VWAP. Sometimes it'll even spend a little time above or below it and then it fails and reclaims the VWAP.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "First 15 minutes of the open",
+            "role": "filter",
+            "verbatim_description": "First, the first 15 minutes of the open. This can be sometimes really volatile.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 to 10 minutes before major news drops",
+            "role": "filter",
+            "verbatim_description": "Second, 5 to 10 minutes before major news drops.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume is 30% below average",
+            "role": "filter",
+            "verbatim_description": "Third, when the volume is 30% below average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "After two consecutive losses",
+            "role": "filter",
+            "verbatim_description": "And fourth, after two consecutive losses, that's not the setup failing, that's me. I need to stop trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "VWAP (mentioned 51\u00c3\u2014 in transcript)",
+            "transcript_quote": "n 3 weeks because I was using VWAP as support and resistance. I thought I understood it. Every course I bought, every video",
+            "occurrences": 51,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 10\u00c3\u2014 in transcript)",
+            "transcript_quote": "support. VWAP is resistance. Bounce off of VWAP, you buy. Break VWAP, you sell. And for a while, it kind of worked. Just enou",
+            "occurrences": 10,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "g place. These are considered range days or balance days. We're not making a big move here. The market is stuck between levels",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "higher_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Entry is on the first test of VWAP after price breaks into value on a trending day.",
+            "step": 1,
+            "action": "Wait for price to break into the VWAP value area and then test the VWAP line.",
+            "rationale": "The VWAP acts as a magnet during a trending day."
+          },
+          {
+            "transcript_quote": "After the test of VWAP, we enter on strength in the direction away from the VWAP.",
+            "step": 2,
+            "action": "Enter on strength in the direction away from the VWAP after the first test.",
+            "rationale": "The test of VWAP confirms the trend and provides a high-probability entry."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop goes above or below the testing candle at the VWAP."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "VWAP plays a better magnet than it does a trading level except in a trend.",
+            "name": "trend_context",
+            "description": "The strategy is only effective when the market is in a trending day or high volatility.",
+            "canonical_match": "regime_match"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "VWAP wave system",
+            "role": "model",
+            "verbatim_description": "The VWAP wave system provides a structured way to interpret market behavior.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP value area",
+            "role": "zone",
+            "verbatim_description": "The VWAP value area is the space between the two bands on the VWAP. That's one standard deviation above and below.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point of control",
+            "role": "zone",
+            "verbatim_description": "This is the price level where most business was transacted. The most buyers and sellers are getting in and out at this price level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three brains framework",
+            "role": "model",
+            "verbatim_description": "I call this the three brains framework. Brain one is the market brain... Brain two is the crowd brain... and brain three, this is your brain.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market brain",
+            "role": "model",
+            "verbatim_description": "This is what price is actually doing, not what you want it to do, not what you hope it will do. What it's actually doing right now, right in front of you.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Crowd brain",
+            "role": "model",
+            "verbatim_description": "This is where most traders are wrong. They're buying the top, shorting the bottoms, and they're getting trapped. Your opportunity is on the other side of what the crowd is doing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Price discovery",
+            "role": "phase",
+            "verbatim_description": "If we're in price discovery, you're going to expect continued price discovery.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ setup",
+            "role": "entry_step",
+            "verbatim_description": "This right here is an A+ setup. It's the highest probability with the highest expectancy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Contextual shifts",
+            "role": "entry_step",
+            "verbatim_description": "The highest quality setups emerge near fresh contextual shifts. This one is really important.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Acceptance",
+            "role": "entry_step",
+            "verbatim_description": "When I say acceptance, here's what I'm looking for. Either price closes multiple consecutive candles outside the band or price spends a significant time trading outside of the value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value area high",
+            "role": "zone",
+            "verbatim_description": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Upper VWAP deviation band",
+            "role": "zone",
+            "verbatim_description": "The best places to go long are off the value area high or the upper VWAP deviation band.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fade value area extremes",
+            "role": "setup",
+            "verbatim_description": "This is when we're trading in fair market value.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair market value",
+            "role": "phase",
+            "verbatim_description": "This is when we're trading in fair market value. That's where a lot of business and transaction is taking place.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP deviation area",
+            "role": "zone",
+            "verbatim_description": "Entry is in the first sign of weakness or rejection on the test of the VWAP deviation area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Return to value",
+            "role": "setup",
+            "verbatim_description": "And this is where we've been in price discovery and then we break back into the value area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP bounce",
+            "role": "setup",
+            "verbatim_description": "Setup number four is the VWAP bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sub VWAP traps",
+            "role": "entry_step",
+            "verbatim_description": "This is where price breaks through the VWAP. Sometimes it'll even spend a little time above or below it and then it fails and reclaims the VWAP.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "First 15 minutes of the open",
+            "role": "filter",
+            "verbatim_description": "First, the first 15 minutes of the open. This can be sometimes really volatile.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 to 10 minutes before major news drops",
+            "role": "filter",
+            "verbatim_description": "Second, 5 to 10 minutes before major news drops.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume is 30% below average",
+            "role": "filter",
+            "verbatim_description": "Third, when the volume is 30% below average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "After two consecutive losses",
+            "role": "filter",
+            "verbatim_description": "And fourth, after two consecutive losses, that's not the setup failing, that's me. I need to stop trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "VWAP (mentioned 51\u00c3\u2014 in transcript)",
+            "transcript_quote": "n 3 weeks because I was using VWAP as support and resistance. I thought I understood it. Every course I bought, every video",
+            "occurrences": 51,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 10\u00c3\u2014 in transcript)",
+            "transcript_quote": "support. VWAP is resistance. Bounce off of VWAP, you buy. Break VWAP, you sell. And for a while, it kind of worked. Just enou",
+            "occurrences": 10,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "g place. These are considered range days or balance days. We're not making a big move here. The market is stuck between levels",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

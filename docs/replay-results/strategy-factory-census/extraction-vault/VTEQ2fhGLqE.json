@@ -1,0 +1,621 @@
+{
+  "video_id": "VTEQ2fhGLqE",
+  "extracted_at": 1787108156.663527,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "4df1ef324219f9455d1779aef4678480ed698b2f9f209e7ca9db257ceb003e39",
+  "extraction": {
+    "video_id": "VTEQ2fhGLqE",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I'm just trying to identify a trend.",
+            "step": 1,
+            "action": "Identify a trend (upward or downward) on the chart.",
+            "rationale": "The strategy begins with identifying the overall trend."
+          },
+          {
+            "transcript_quote": "I would essentially draw a trend line from the lowest point I can see on the screen coming up trying to capture as many touch points as I can.",
+            "step": 2,
+            "action": "Draw a trend line (Action Line) using at least two touch points (Point A and Point B).",
+            "rationale": "The trend line is drawn to capture as many touch points as possible."
+          },
+          {
+            "transcript_quote": "every time price gets to or close enough to the trend line, you're thinking it's going to respect it and you get into that trade.",
+            "step": 3,
+            "action": "Enter a trade when price gets to or close enough to the trend line, anticipating respect.",
+            "rationale": "The entry is based on price approaching the established trend line."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "transcript_quote": "this one tells me when to place a trade and this one tells me how I'm going to manage my risk and when I'm going to exit.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is managed by the 'Safety Line' which dictates risk management and exit."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "I've given these trend lines names. So, we'll always have an action line, which is the Did I spell that right? Act. Yep. Oh, boy. And then we've got a",
+            "name": "action_and_safety_lines",
+            "description": "The trend line must be designated as both an action line (entry) and a safety line (stop/exit).",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "I'm going to put a plus because platinum will normally like we get three, four, five touch points on a regular basis.",
+            "name": "three_plus_touch_points",
+            "description": "The trend line should have three or more touch points.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Action Line",
+            "role": "entry_step",
+            "verbatim_description": "This one tells me when to place a trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Safety Line",
+            "role": "stop_anchor",
+            "verbatim_description": "This one tells me how I'm going to manage my risk and when I'm going to exit.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line Bounce",
+            "role": "model",
+            "verbatim_description": "The bounce is going to be looking for places to buy when price gets to a trend line close enough here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line Break",
+            "role": "model",
+            "verbatim_description": "One is going to be a trend line break and the second one's going to be a trend line bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Naked Chart",
+            "role": "phase",
+            "verbatim_description": "I use trend lines and no indicators, which is great. Don't have to try to draw indicators on a whiteboard. Um, nothing. It's purely a naked chart.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point A",
+            "role": "model",
+            "verbatim_description": "You've got point A, point B. This is telling us the direction of the line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point B",
+            "role": "model",
+            "verbatim_description": "You've got point A, point B. This is telling us the direction of the line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Platinum",
+            "role": "filter",
+            "verbatim_description": "You've just got to trade an instrument that is that truly just respects trend lines on a regular basis, which is platinum.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Playbooks",
+            "role": "model",
+            "verbatim_description": "adding a playbook, adding entry criteria, adding confirmation changed everything about my trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Entry criteria",
+            "role": "entry_step",
+            "verbatim_description": "all of the things that need to be met when I'm getting into a bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ setup",
+            "role": "entry_step",
+            "verbatim_description": "this would be my A+ setup for a trend line bounce right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend line bounce scenario",
+            "role": "phase",
+            "verbatim_description": "this is essentially the the trend line bounce scenario.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Data behind the trend line",
+            "role": "filter",
+            "verbatim_description": "If from here to where I entered is a week's worth of data... How much time has gone by?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend line alerts",
+            "role": "indicator",
+            "verbatim_description": "I have alerts on all of my trend lines... when price gets to or touches my trend line, I get an alert.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Action Lines",
+            "role": "zone",
+            "verbatim_description": "The action line I have cuz price broke. So, that's telling me to take action.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Safety Lines",
+            "role": "zone",
+            "verbatim_description": "The safety line is what I don't have.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Touch Point",
+            "role": "zone",
+            "verbatim_description": "We're going to call this a three touch point.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Plus Trend Line Break",
+            "role": "model",
+            "verbatim_description": "We're going to do the three plus trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Monday to Monday",
+            "role": "filter",
+            "verbatim_description": "If this ended up being Monday to Monday, you're looking at plenty of data.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point A and Point B",
+            "role": "zone",
+            "verbatim_description": "Now I have a point A and a point B. Amazing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Two Touch Point Trend Line Break",
+            "role": "entry_step",
+            "verbatim_description": "This is a scenario where I am taking the we're going to go back on my word and say that this is now a two touch point trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Touch Point Trend Line Break",
+            "role": "entry_step",
+            "verbatim_description": "My win rate is higher on my two touch point trend line break versus the three touch point trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Top Down Analysis",
+            "role": "model",
+            "verbatim_description": "When I am marking up charts, I do a top down analysis and I am essentially trying to create like a a fan of trend lines.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fan of Trend Lines",
+            "role": "model",
+            "verbatim_description": "My trend lines will always be like a fan of upper trend lines. I'm trying to maintain point A and just pivot from there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation",
+            "role": "phase",
+            "verbatim_description": "I would say when I do have double confirmation, it's only when we are in consolidation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 40\u00c3\u2014 in transcript)",
+            "transcript_quote": "ne's going to be a trend line bounce. I utilize this one the most, but when I started, I used both. Okay, so the bounce is goi",
+            "occurrences": 40,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I'm going to put a plus because platinum will normally like we get three, four, five touch points on a regular basis.",
+            "step": 1,
+            "action": "Ensure the trend line has three or more touch points.",
+            "rationale": "The strategy requires a minimum of three touch points to establish the trend line."
+          },
+          {
+            "transcript_quote": "And then the next one is has to have over a week's worth of data.",
+            "step": 2,
+            "action": "Verify the trend line has over a week's worth of data.",
+            "rationale": "The data behind the trend line must span at least one week."
+          },
+          {
+            "transcript_quote": "So, we've got a break and when price made that break, I'll try to do some examples, but it was just way too far away.",
+            "step": 3,
+            "action": "Enter a trade upon the trend line break.",
+            "rationale": "The entry is triggered by the price breaking the established trend line."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "transcript_quote": "The opposing trend line is going to be the safety line. So your up safety line action line is the one that broke.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The opposing trend line serves as the safety line to mitigate risk."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "And then the next one is has to have over a week's worth of data.",
+            "name": "over_a_week_of_data",
+            "description": "The trend line must have over a week's worth of data.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "And then the last one is it has to be low risk.",
+            "name": "low_risk_setup",
+            "description": "The setup must be low risk, determined by the distance between the break and the safety line.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Action Line",
+            "role": "entry_step",
+            "verbatim_description": "This one tells me when to place a trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Safety Line",
+            "role": "stop_anchor",
+            "verbatim_description": "This one tells me how I'm going to manage my risk and when I'm going to exit.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line Bounce",
+            "role": "model",
+            "verbatim_description": "The bounce is going to be looking for places to buy when price gets to a trend line close enough here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line Break",
+            "role": "model",
+            "verbatim_description": "One is going to be a trend line break and the second one's going to be a trend line bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Naked Chart",
+            "role": "phase",
+            "verbatim_description": "I use trend lines and no indicators, which is great. Don't have to try to draw indicators on a whiteboard. Um, nothing. It's purely a naked chart.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point A",
+            "role": "model",
+            "verbatim_description": "You've got point A, point B. This is telling us the direction of the line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point B",
+            "role": "model",
+            "verbatim_description": "You've got point A, point B. This is telling us the direction of the line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Platinum",
+            "role": "filter",
+            "verbatim_description": "You've just got to trade an instrument that is that truly just respects trend lines on a regular basis, which is platinum.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Playbooks",
+            "role": "model",
+            "verbatim_description": "adding a playbook, adding entry criteria, adding confirmation changed everything about my trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Entry criteria",
+            "role": "entry_step",
+            "verbatim_description": "all of the things that need to be met when I'm getting into a bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ setup",
+            "role": "entry_step",
+            "verbatim_description": "this would be my A+ setup for a trend line bounce right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend line bounce scenario",
+            "role": "phase",
+            "verbatim_description": "this is essentially the the trend line bounce scenario.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Data behind the trend line",
+            "role": "filter",
+            "verbatim_description": "If from here to where I entered is a week's worth of data... How much time has gone by?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend line alerts",
+            "role": "indicator",
+            "verbatim_description": "I have alerts on all of my trend lines... when price gets to or touches my trend line, I get an alert.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Action Lines",
+            "role": "zone",
+            "verbatim_description": "The action line I have cuz price broke. So, that's telling me to take action.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Safety Lines",
+            "role": "zone",
+            "verbatim_description": "The safety line is what I don't have.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Touch Point",
+            "role": "zone",
+            "verbatim_description": "We're going to call this a three touch point.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Plus Trend Line Break",
+            "role": "model",
+            "verbatim_description": "We're going to do the three plus trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Monday to Monday",
+            "role": "filter",
+            "verbatim_description": "If this ended up being Monday to Monday, you're looking at plenty of data.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point A and Point B",
+            "role": "zone",
+            "verbatim_description": "Now I have a point A and a point B. Amazing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Two Touch Point Trend Line Break",
+            "role": "entry_step",
+            "verbatim_description": "This is a scenario where I am taking the we're going to go back on my word and say that this is now a two touch point trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Touch Point Trend Line Break",
+            "role": "entry_step",
+            "verbatim_description": "My win rate is higher on my two touch point trend line break versus the three touch point trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Top Down Analysis",
+            "role": "model",
+            "verbatim_description": "When I am marking up charts, I do a top down analysis and I am essentially trying to create like a a fan of trend lines.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fan of Trend Lines",
+            "role": "model",
+            "verbatim_description": "My trend lines will always be like a fan of upper trend lines. I'm trying to maintain point A and just pivot from there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation",
+            "role": "phase",
+            "verbatim_description": "I would say when I do have double confirmation, it's only when we are in consolidation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 40\u00c3\u2014 in transcript)",
+            "transcript_quote": "ne's going to be a trend line bounce. I utilize this one the most, but when I started, I used both. Okay, so the bounce is goi",
+            "occurrences": 40,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "So, we've got a break and when price made that break, I'll try to do some examples, but it was just way too far away.",
+            "step": 1,
+            "action": "Enter a trade upon the trend line break.",
+            "rationale": "The entry is triggered by the price breaking the established trend line."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "transcript_quote": "The opposing trend line is going to be the safety line. So your up safety line action line is the one that broke.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The opposing trend line serves as the safety line to mitigate risk."
+        },
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "So, we've got a break and when price made that break, I'll try to do some examples, but it was just way too far away.",
+            "name": "two_touch_points",
+            "description": "The trend line must have only two touch points, resulting in a higher risk setup.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Action Line",
+            "role": "entry_step",
+            "verbatim_description": "This one tells me when to place a trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Safety Line",
+            "role": "stop_anchor",
+            "verbatim_description": "This one tells me how I'm going to manage my risk and when I'm going to exit.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line Bounce",
+            "role": "model",
+            "verbatim_description": "The bounce is going to be looking for places to buy when price gets to a trend line close enough here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Line Break",
+            "role": "model",
+            "verbatim_description": "One is going to be a trend line break and the second one's going to be a trend line bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Naked Chart",
+            "role": "phase",
+            "verbatim_description": "I use trend lines and no indicators, which is great. Don't have to try to draw indicators on a whiteboard. Um, nothing. It's purely a naked chart.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point A",
+            "role": "model",
+            "verbatim_description": "You've got point A, point B. This is telling us the direction of the line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point B",
+            "role": "model",
+            "verbatim_description": "You've got point A, point B. This is telling us the direction of the line.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Platinum",
+            "role": "filter",
+            "verbatim_description": "You've just got to trade an instrument that is that truly just respects trend lines on a regular basis, which is platinum.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Playbooks",
+            "role": "model",
+            "verbatim_description": "adding a playbook, adding entry criteria, adding confirmation changed everything about my trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Entry criteria",
+            "role": "entry_step",
+            "verbatim_description": "all of the things that need to be met when I'm getting into a bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ setup",
+            "role": "entry_step",
+            "verbatim_description": "this would be my A+ setup for a trend line bounce right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend line bounce scenario",
+            "role": "phase",
+            "verbatim_description": "this is essentially the the trend line bounce scenario.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Data behind the trend line",
+            "role": "filter",
+            "verbatim_description": "If from here to where I entered is a week's worth of data... How much time has gone by?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend line alerts",
+            "role": "indicator",
+            "verbatim_description": "I have alerts on all of my trend lines... when price gets to or touches my trend line, I get an alert.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Action Lines",
+            "role": "zone",
+            "verbatim_description": "The action line I have cuz price broke. So, that's telling me to take action.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Safety Lines",
+            "role": "zone",
+            "verbatim_description": "The safety line is what I don't have.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Touch Point",
+            "role": "zone",
+            "verbatim_description": "We're going to call this a three touch point.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Plus Trend Line Break",
+            "role": "model",
+            "verbatim_description": "We're going to do the three plus trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Monday to Monday",
+            "role": "filter",
+            "verbatim_description": "If this ended up being Monday to Monday, you're looking at plenty of data.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Point A and Point B",
+            "role": "zone",
+            "verbatim_description": "Now I have a point A and a point B. Amazing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Two Touch Point Trend Line Break",
+            "role": "entry_step",
+            "verbatim_description": "This is a scenario where I am taking the we're going to go back on my word and say that this is now a two touch point trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Three Touch Point Trend Line Break",
+            "role": "entry_step",
+            "verbatim_description": "My win rate is higher on my two touch point trend line break versus the three touch point trend line break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Top Down Analysis",
+            "role": "model",
+            "verbatim_description": "When I am marking up charts, I do a top down analysis and I am essentially trying to create like a a fan of trend lines.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fan of Trend Lines",
+            "role": "model",
+            "verbatim_description": "My trend lines will always be like a fan of upper trend lines. I'm trying to maintain point A and just pivot from there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Consolidation",
+            "role": "phase",
+            "verbatim_description": "I would say when I do have double confirmation, it's only when we are in consolidation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 40\u00c3\u2014 in transcript)",
+            "transcript_quote": "ne's going to be a trend line bounce. I utilize this one the most, but when I started, I used both. Okay, so the bounce is goi",
+            "occurrences": 40,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

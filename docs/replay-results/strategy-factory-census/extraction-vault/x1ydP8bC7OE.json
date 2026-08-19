@@ -1,0 +1,22 @@
+{
+  "video_id": "x1ydP8bC7OE",
+  "extracted_at": 1787108452.34266,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "aa95de0706ffb04b518947e6e6c63b14f622954726b890b38d7918b260c91725",
+  "extraction": {
+    "video_id": "x1ydP8bC7OE",
+    "instrument_classification": "futures_primary",
+    "strategies": [],
+    "rejected_strategies": [
+      {
+        "reason": "fixed_point_stop_not_supported",
+        "detail": "Both the Engulfing Bar Play and the Pin Bar setup rely on fixed percentage stops (e.g., 'just above the 0.75' or 'a few points below the 75%'), which are banned per CLAUDE.md \u00c2\u00a713."
+      }
+    ],
+    "empty_reason": null
+  }
+}

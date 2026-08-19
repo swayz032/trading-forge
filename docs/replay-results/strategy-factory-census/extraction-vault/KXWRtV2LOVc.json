@@ -1,0 +1,249 @@
+{
+  "video_id": "KXWRtV2LOVc",
+  "extracted_at": 1787109925.5106244,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "e545572633fdd732e0498b3595960ec14282d45f2bd655ded8d582cdabde6bac",
+  "extraction": {
+    "video_id": "KXWRtV2LOVc",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "we want to locate the 6 a.m. 4H hour CRT this means means locate the 6 a.m. 4H hour candle",
+            "step": 1,
+            "action": "Locate the 6:00 AM 4H candle to define the CRT range.",
+            "rationale": "This candle establishes the high and low range for the entire trade setup."
+          },
+          {
+            "transcript_quote": "The Purge will occur during the 10: a.m. hour up until 11:30 is accepted sometimes even 12",
+            "step": 2,
+            "action": "Wait for the Purge (Turtle Soup) to occur between 10:00 AM and 12:00 PM.",
+            "rationale": "The Purge acts as a timed filter, narrowing the high-probability trading window."
+          },
+          {
+            "transcript_quote": "wait for a 15minute CRT at the highs or lows of the 4our CRT",
+            "step": 3,
+            "action": "Locate a 15-minute CRT at the high or low of the 4H CRT range.",
+            "rationale": "This confirms the lower timeframe is reacting to the higher timeframe's established range."
+          },
+          {
+            "transcript_quote": "enter when the second candle of the 15minute CRT closes or enter off of a 15 minute or 5 minute 4 minute 3 minute 1 minute order block",
+            "step": 4,
+            "action": "Enter on the second candle close, or enter off a 1-15 minute Order Block following the CRT sweep.",
+            "rationale": "Multiple entry methods are provided to refine the entry based on LTF structure."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Stop loss is placed at the swing high or low of the CRT sweep."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_low",
+            "r_multiple": null,
+            "rationale": "Targeting the opposing end of the 4H CRT range."
+          },
+          {
+            "priority": 1,
+            "type": "range_high",
+            "r_multiple": null,
+            "rationale": "Targeting the opposing end of the 4H CRT range."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "we have a timed CRT we are using the specific time of 6 a.m. the 4H hour 6 a.m. candle as our larger time frame CRT range",
+            "name": "higher_timeframe_crt",
+            "description": "The strategy uses a specific 6:00 AM 4H candle to define the primary range.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "a timed Purge a timed turtle soup of the range happening between 10:00 a.m. up until 12:00 a.m.",
+            "name": "timed_purge",
+            "description": "The trade must occur during the Purge window, which is between 10:00 AM and 12:00 PM.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "a lower time frame CRT within the higher time frame CRT that is confirmation number three",
+            "name": "ltf_crt_within_htf_crt",
+            "description": "A lower timeframe CRT must occur within the boundaries of the higher timeframe CRT.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "using a key level will drastically increase your win rate and your overall success in the markets",
+            "name": "daily_key_level_confirmation",
+            "description": "The trade is strengthened by aligning with a daily key level, such as a Daily Fair Value Gap.",
+            "canonical_match": "vp_level_proximity"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "4H hour CRT model",
+            "role": "model",
+            "verbatim_description": "This is a very straightforward and direct model designed for futures.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "6 a.m. 4H hour CRT",
+            "role": "zone",
+            "verbatim_description": "This means locate the 6 a.m. 4H hour candle in this scenario, this is the 4H hour candle of 6 a.m.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "15minute CRT",
+            "role": "zone",
+            "verbatim_description": "You then wait for a 15minute CRT at the highs or lows of the 6 a.m. CRT in this scenario.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "The Purge",
+            "role": "phase",
+            "verbatim_description": "The Purge will occur during the 10: a.m. hour up until 11:30 is accepted sometimes even 12.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Timed Purge",
+            "role": "phase",
+            "verbatim_description": "A timed turtle soup of the range happening between 10:00 a.m. up until 12:00 a.m.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Lower time frame CRT within the higher time frame CRT",
+            "role": "model",
+            "verbatim_description": "This being the 15minute CRT either at the highs or lows of the 4our CRT that is confirmation number three.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Key level",
+            "role": "zone",
+            "verbatim_description": "Using a key level will drastically increase your win rate and your overall success in the markets.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Daily fair value Gap",
+            "role": "zone",
+            "verbatim_description": "This will be our key level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Turtle soup",
+            "role": "entry_step",
+            "verbatim_description": "The second candle of the 15minute CRT closes or enter off of a 15 minute or 5 minute 4 minute 3 minute 1 minute order block recognize how I said 5 minute 4 minute 3 minute 2 minute 1 minute order block.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "4-Hour CRT range",
+            "role": "zone",
+            "verbatim_description": "The 4H hour CRT range so you have multiple forms of Entry here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fibonacci time zone",
+            "role": "tool",
+            "verbatim_description": "We will use the small trick right here of the Fibonacci time zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order block",
+            "role": "entry_step",
+            "verbatim_description": "Enter off of a 15 minute or 5 minute 4 minute 3 minute 1 minute order block.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "PDRA",
+            "role": "entry_step",
+            "verbatim_description": "The next candle opens traces above its open into a bearish pdra and expands to the opposing end of the range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Failure swing",
+            "role": "entry_step",
+            "verbatim_description": "the more advanced students will be executing trades down here this is what's called the failure swing.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market structure shift",
+            "role": "entry_step",
+            "verbatim_description": "we really need price to close above these highs right here this would confirm a market structure shift targeting opposing higher levels.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Midpoint",
+            "role": "phase",
+            "verbatim_description": "the midpoint the equilibrium has already been hit that means partials are out and um this is a free trade basically meaning even if your stop-loss is hit you should still be in profit.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "CRT (Candle Range Theory)",
+            "role": "model",
+            "verbatim_description": "CRT (Candle Range Theory) (mentioned 51\u00c3\u2014 in transcript)",
+            "transcript_quote": "will be discussing a 4H hour CRT model specifically for futures in this lecture we will talk about indices in specific man",
+            "occurrences": 51,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 20\u00c3\u2014 in transcript)",
+            "transcript_quote": "as our larger time frame CRT range we have a timed Purge a timed turtle soup of the range happening between 10:00 a.m. up unt",
+            "occurrences": 20,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 12\u00c3\u2014 in transcript)",
+            "transcript_quote": "te 4 minute 3 minute 1 minute order block recognize how I said 5 minute 4 minute 3 minute 2 minute 1 minute order block that is bec",
+            "occurrences": 12,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 7\u00c3\u2014 in transcript)",
+            "transcript_quote": "y level here which is a daily fair value Gap this will be our key level your goal is to enter short as soon as the key level is tapped",
+            "occurrences": 7,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Equal Highs/Lows",
+            "role": "target",
+            "verbatim_description": "Equal Highs/Lows (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "levels ultimately we have uh equal highs above us I did say this was going to be a quicker video however it's already 20 something",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "ght here this would confirm a market structure shift targeting opposing uh higher levels ultimately we have uh equal highs above us I did say",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "ll trick right here of uh the Fibonacci time zone let's head over to 6: a.m. let's not use today as the example as a I am current",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

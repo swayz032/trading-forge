@@ -1,0 +1,186 @@
+{
+  "video_id": "xTTDH5iRhJc",
+  "extracted_at": 1787108778.927976,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "4f296204cdd8965d698b5a11202f1c3edb9b8508a907b82e6ee65c0016e3e3c2",
+  "extraction": {
+    "video_id": "xTTDH5iRhJc",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "1d",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "take our box drawing tool and we draw a box from the high of the day, so the very top of this week, to the low of the day, so the very bottom of this",
+            "step": 1,
+            "action": "Draw a box using the high and low of the previous day and extend it one day into the future.",
+            "rationale": "The daily candle defines the range and provides liquidity targets."
+          },
+          {
+            "transcript_quote": "if we have a close of the 15-minute candle above the high level, or if we have a close of the 15-minute candle below the low level",
+            "step": 2,
+            "action": "Wait for a confirmed breakout by waiting for a full 15-minute candle close above the daily high or below the daily low.",
+            "rationale": "A full candle close confirms the breakout from the daily range."
+          },
+          {
+            "transcript_quote": "we want one of these two candles to appear at this key level. ... either the hammer or the inverted hammer candle, or the bullish or bearish engulfing",
+            "step": 3,
+            "action": "Wait for a reversal candle (Hammer, Inverted Hammer, or Engulfing) to appear at the breakout level.",
+            "rationale": "The reversal candle signals potential market exhaustion and a bounce."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "transcript_quote": "the stop loss would be set at the low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed at the low of the reversal candle for long entries, or slightly above the high for short entries."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 3,
+            "rationale": "The speaker suggests setting the target profit to three times the stop loss."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Also, remember we will only take the trade if this happens within the first 2 and 1/2 hours of the market open",
+            "name": "market_open_window",
+            "description": "The trade must be taken within the first two and a half hours of the market open.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "if we have a close of the 15-minute candle above the high level, or if we have a close of the 15-minute candle below the low level",
+            "name": "daily_range_breakout",
+            "description": "A confirmed 15-minute candle close must occur outside the previous day's high or low.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "we want one of these two candles to appear at this key level",
+            "name": "reversal_candle_confirmation",
+            "description": "A reversal candle (Hammer, Inverted Hammer, or Engulfing) must appear at the breakout level.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "break and bounce strategy",
+            "role": "model",
+            "verbatim_description": "It's called the break and bounce strategy, and in today's video, I will explain this daily pattern in three simple steps.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "box drawing tool",
+            "role": "indicator",
+            "verbatim_description": "we take our box drawing tool and we draw a box from the high of the day, so the very top of this week, to the low of the day, so the very bottom of this week.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "daily candle is the blueprint",
+            "role": "phase",
+            "verbatim_description": "The daily candle is the blueprint for this strategy, and it's so important because there is liquidity resting above your previous day high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "liquidity resting above your previous day high",
+            "role": "zone",
+            "verbatim_description": "there is liquidity resting above your previous day high, and there's liquidity resting below the previous day's low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "liquidity resting below the previous day's low",
+            "role": "zone",
+            "verbatim_description": "there's liquidity resting below the previous day's low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "breakout from the range",
+            "role": "entry_step",
+            "verbatim_description": "this step is to identify when we have a breakout from the range that we boxed in in step one.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "retest of this level and a bounce",
+            "role": "phase",
+            "verbatim_description": "the reason that this strategy is called the break and bounce is because what usually happens is that if the price breaks out of the level, it will usually retest the breakout level and then bounce on that level back up into the direction of the breakout.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "hammer candle",
+            "role": "entry_step",
+            "verbatim_description": "The two types of candles that I'm going to be looking for are either the hammer or the inverted hammer candle... Let's start with the hammer candle to the long side.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "inverted hammer candle",
+            "role": "entry_step",
+            "verbatim_description": "The inverted hammer would be something that comes after a clear green positive movement.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "bullish engulfing candle",
+            "role": "entry_step",
+            "verbatim_description": "The two types of candles that I'm going to be looking for are either the hammer or the inverted hammer candle, or the bullish or bearish engulfing candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "bearish engulfing candle",
+            "role": "entry_step",
+            "verbatim_description": "The two types of candles that I'm going to be looking for are either the hammer or the inverted hammer candle, or the bullish or bearish engulfing candle.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "box in yesterday's trading range",
+            "role": "zone",
+            "verbatim_description": "we take our box drawing tool. We draw a box from the high to the low and we extend it until today.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "confirmed breakout",
+            "role": "entry_step",
+            "verbatim_description": "we have a 15-minute candle close here above the range around 75 minutes after the market open.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "dial in that perfect trade",
+            "role": "entry_step",
+            "verbatim_description": "we go into the 5-minute timeframe and we wait for a hammer or a bullish engulfing candlestick and we wait for it to happen around this level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "manual close of the trade",
+            "role": "filter",
+            "verbatim_description": "if we are still in position by the time the market closes, we want to manually close the trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 14\u00c3\u2014 in transcript)",
+            "transcript_quote": "called the break and [music] bounce strategy, and in today's video, I will explain this daily pattern in three simple steps,",
+            "occurrences": 14,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 9\u00c3\u2014 in transcript)",
+            "transcript_quote": "n we have a breakout from the range that we boxed in in [music] step one. And what we are looking for is either a breakout abo",
+            "occurrences": 9,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

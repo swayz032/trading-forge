@@ -1,0 +1,30 @@
+{
+  "video_id": "WV1fyudd7fw",
+  "extracted_at": 1787109235.2738926,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "21f49d76c005086f82d8046804a3383f97f6ae7c4f93b5cfc6e14453bef01046",
+  "extraction": {
+    "video_id": "WV1fyudd7fw",
+    "instrument_classification": "futures_primary",
+    "strategies": [],
+    "rejected_strategies": [
+      {
+        "reason": "fixed_point_stop_not_supported",
+        "detail": "The speaker uses fixed point stops (5 to 10 points) for the opening range break and retest setup."
+      },
+      {
+        "reason": "fixed_point_stop_not_supported",
+        "detail": "The speaker uses fixed point stops (10 points) for the untested session low bounce setup."
+      },
+      {
+        "reason": "fixed_point_stop_not_supported",
+        "detail": "The speaker uses fixed point stops (10 points) for the untested session high rejection setup."
+      }
+    ],
+    "empty_reason": null
+  }
+}
