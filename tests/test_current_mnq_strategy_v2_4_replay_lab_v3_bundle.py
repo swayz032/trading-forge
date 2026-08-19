@@ -10,7 +10,8 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     html.write_text(
         '<html><head><script src="lightweight-charts.standalone.production.js"></script></head>'
         '<body><script>'
-        "const storeKey='k';let saved=JSON.parse(localStorage.getItem(storeKey)||'{}');"
+        "const storeKey='mnq-replay-v3:'+pack.pack_id;"
+        "let saved=JSON.parse(localStorage.getItem(storeKey)||'{}');"
         "let idx=saved.idx||0;let labels=saved.labels||{};"
         "function save(){localStorage.setItem(storeKey,JSON.stringify({idx,labels}))}"
         '</script><script src="replay_v3_enhance.js"></script></body></html>',
@@ -44,6 +45,7 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "function save(){localStorage.setItem" not in out
     assert "try{saved=JSON.parse(window.localStorage.getItem(storeKey)||'{}')}" in out
     assert "if(!storageAvailable)return" in out
+    assert "const TICK=0.25;" in out
     assert "renderClock();\n    renderLabels();" in out
 
 
