@@ -5,6 +5,12 @@ Chat/file viewers do not reliably serve sibling JavaScript files next to an HTML
 artifact. The trader-facing page must therefore inline both the pinned TradingView
 Lightweight Charts runtime and our replay enhancement layer. Bot answers are never
 read or embedded by this bundler.
+
+The final trader page must also work when opened as a downloaded local HTML file
+or inside an opaque/sandboxed document where the browser denies localStorage.
+Denied localStorage used to abort the core script before event handlers were bound,
+which made every visible button look normal but do nothing. The bundler patches the
+core storage access to fail over to in-memory state instead of aborting the page.
 """
 from __future__ import annotations
 
@@ -17,6 +23,23 @@ ENHANCE = PACK / "replay_v3_enhance.js"
 
 LWC_MARKER = '<script src="lightweight-charts.standalone.production.js"></script>'
 ENHANCE_MARKER = '<script src="replay_v3_enhance.js"></script>'
+VULNERABLE_STORAGE_READ = "let saved=JSON.parse(localStorage.getItem(storeKey)||'{}');"
+SAFE_STORAGE_READ = (
+    "let storageAvailable=true;let saved={};"
+    "try{saved=JSON.parse(window.localStorage.getItem(storeKey)||'{}')}"
+    "catch(e){storageAvailable=false;saved={};"
+    "console.warn('REPLAY_STORAGE_DISABLED_USING_MEMORY',e)};"
+)
+VULNERABLE_STORAGE_SAVE = (
+    "function save(){localStorage.setItem(storeKey,JSON.stringify({idx,labels}))}"
+)
+SAFE_STORAGE_SAVE = (
+    "function save(){if(!storageAvailable)return;"
+    "try{window.localStorage.setItem(storeKey,JSON.stringify({idx,labels}))}"
+    "catch(e){storageAvailable=false;"
+    "console.warn('REPLAY_STORAGE_DISABLED_USING_MEMORY',e)}}"
+)
+SAFE_STORAGE_MARKER = "REPLAY_STORAGE_DISABLED_USING_MEMORY"
 UNIFIED_MARKERS = (
     "Main Structure / Key Zones + TP Reaction Cluster",
     "15m CONTEXT",
@@ -25,6 +48,18 @@ UNIFIED_MARKERS = (
     "drawZone.onclick = () => beginDraw('main-zone', ov5)",
     "drawTp.onclick = () => beginDraw('main-tp', ov5)",
 )
+
+
+def _patch_local_storage_fail_closed(html: str) -> str:
+    if VULNERABLE_STORAGE_READ not in html:
+        raise RuntimeError("REPLAY_V3_STORAGE_READ_MARKER_MISSING")
+    if VULNERABLE_STORAGE_SAVE not in html:
+        raise RuntimeError("REPLAY_V3_STORAGE_SAVE_MARKER_MISSING")
+    html = html.replace(VULNERABLE_STORAGE_READ, SAFE_STORAGE_READ, 1)
+    html = html.replace(VULNERABLE_STORAGE_SAVE, SAFE_STORAGE_SAVE, 1)
+    if VULNERABLE_STORAGE_READ in html or VULNERABLE_STORAGE_SAVE in html:
+        raise RuntimeError("REPLAY_V3_UNSAFE_STORAGE_ACCESS_REMAINS")
+    return html
 
 
 def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = ENHANCE) -> str:
@@ -40,10 +75,15 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
             raise RuntimeError(f"REPLAY_V3_{name}_SCRIPT_EMPTY")
         if "</script>" in js.lower():
             raise RuntimeError(f"REPLAY_V3_{name}_SCRIPT_UNSAFE_CLOSE_TAG")
+
+    html = _patch_local_storage_fail_closed(html)
     html = html.replace(LWC_MARKER, f"<script>\n{lwc}\n</script>", 1)
     html = html.replace(ENHANCE_MARKER, f"<script>\n{enhance}\n</script>", 1)
+
     if 'script src="lightweight-charts' in html or 'script src="replay_v3_enhance' in html:
         raise RuntimeError("REPLAY_V3_EXTERNAL_RUNTIME_DEPENDENCY_REMAINS")
+    if SAFE_STORAGE_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_STORAGE_FALLBACK_NOT_BUNDLED")
     if "RESET DECISION" not in html or "if (l.final_action) return;" not in html:
         raise RuntimeError("REPLAY_V3_SINGLE_TRADE_INTERACTION_NOT_BUNDLED")
     missing = [marker for marker in UNIFIED_MARKERS if marker not in html]
