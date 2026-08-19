@@ -125,8 +125,6 @@ def reversal_story_v24(full5: pd.DataFrame, ts: pd.Timestamp, row,
         return core.Story(False, False, False, False, False, False,
                           False, False, False, False, False)
 
-    # The rejection/control event must precede the current momentum trigger.
-    # Search only the preceding three completed 5m bars, never the trigger bar.
     start = max(0, len(q) - 4)
     event_pos = None
     for j in range(len(q) - 2, start - 1, -1):
@@ -162,8 +160,6 @@ def reversal_story_v24(full5: pd.DataFrame, ts: pd.Timestamp, row,
     pattern_story = bool(ev.indecision or directional_pattern or ev.compression or inside)
     fight = bool(reclaimed and (wick_rejection or pattern_story or shrink or first_momentum))
 
-    # Displacement is retained as evidence, but it is no longer required for a
-    # valid rejection trigger. Reference only information available before ts.
     prior_ranges = [_geom(r).range for _, r in prior.tail(3).iterrows()]
     ref = float(np.median(prior_ranges)) if prior_ranges else None
     disp = displacement_bar(row, direction, p, ref)
@@ -191,6 +187,16 @@ def first_break_print(full5: pd.DataFrame, ts: pd.Timestamp, row,
     if prior.empty:
         return True
     return not _outside(prior.iloc[-1], loc, direction)
+
+
+def weak_first_break_print(full5: pd.DataFrame, ts: pd.Timestamp, row,
+                           direction: str, loc: core.Location,
+                           p: core.Params) -> bool:
+    """A weak first break is a new close beyond the zone without momentum geometry."""
+    return bool(
+        first_break_print(full5, ts, row, direction, loc)
+        and not momentum_bar(row, direction, p)
+    )
 
 
 def breakout_followthrough_after_first_print(full5: pd.DataFrame, ts: pd.Timestamp,
@@ -251,12 +257,7 @@ def breakout_failed(row, direction: str, zone_lo: float, zone_hi: float) -> bool
 def fifteen_minute_three_bar_continuation(h15: pd.DataFrame, pending,
                                            known_at: pd.Timestamp,
                                            p: core.Params) -> pd.Timestamp | None:
-    """Weak break -> pullback -> 15m bar-3 momentum continuation.
-
-    Bar 1 establishes the break. Bar 2 retraces without invalidating through the
-    opposite side of the exact attempted zone. Bar 3 resumes with momentum and
-    closes beyond Bar 1 in the breakout direction.
-    """
+    """Weak break -> pullback -> 15m bar-3 momentum continuation."""
     q = h15[(h15.index + pd.Timedelta(minutes=15) >= pending.attempted_at) &
             (h15.index + pd.Timedelta(minutes=15) <= known_at)].copy()
     if len(q) < 3:

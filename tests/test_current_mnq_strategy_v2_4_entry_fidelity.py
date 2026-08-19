@@ -14,6 +14,7 @@ from research.current_mnq_strategy_v2_4_entries import (
     momentum_bar,
     repeat_test_momentum_prebreak,
     reversal_story_v24,
+    weak_first_break_print,
 )
 from research.current_mnq_strategy_v2_4_levels import _range_room_authorization
 
@@ -85,6 +86,25 @@ def test_first_break_print_is_setup_then_next_momentum_confirms():
     assert breakout_followthrough_after_first_print(
         q, q.index[-1], q.iloc[-1], "L", resistance, p,
     )
+
+
+def test_only_non_momentum_first_break_arms_weak_15m_path():
+    p = core.Params()
+    resistance = loc("R", 100.0, 101.0)
+    weak = frame([
+        (99.5, 100.5, 99.0, 100.2),
+        (101.0, 102.0, 100.8, 101.2),
+    ])
+    strong = frame([
+        (99.5, 100.5, 99.0, 100.2),
+        (100.2, 102.5, 100.0, 102.3),
+    ])
+    assert first_break_print(weak, weak.index[-1], weak.iloc[-1], "L", resistance)
+    assert not momentum_bar(weak.iloc[-1], "L", p)
+    assert weak_first_break_print(weak, weak.index[-1], weak.iloc[-1], "L", resistance, p)
+    assert first_break_print(strong, strong.index[-1], strong.iloc[-1], "L", resistance)
+    assert momentum_bar(strong.iloc[-1], "L", p)
+    assert not weak_first_break_print(strong, strong.index[-1], strong.iloc[-1], "L", resistance, p)
 
 
 def test_repeat_test_momentum_is_allowed_prebreak_but_first_approach_is_not():

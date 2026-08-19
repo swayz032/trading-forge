@@ -9,7 +9,7 @@ Trader-fidelity rules:
 - rejection entries use a zone story followed by momentum;
 - a normal first close beyond a key zone is setup only, with the next momentum
   candle providing confirmation;
-- a weak break may mature into a 15m three-bar continuation after pullback;
+- only a weak first break may arm the 15m pullback/three-bar continuation path;
 - only two pre-break early entries exist: repeat-test momentum attack and a
   genuine displacement sequence whose third candle retains momentum.
 """
@@ -27,9 +27,9 @@ from research.current_mnq_strategy_v2_4_entries import (
     breakout_followthrough_after_first_print,
     displacement_sequence_prebreak,
     fifteen_minute_three_bar_continuation,
-    first_break_print,
     repeat_test_momentum_prebreak,
     reversal_story_v24,
+    weak_first_break_print,
 )
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
 from research.current_mnq_strategy_v2_4_premarket import plan_allows_v24
@@ -93,9 +93,6 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         candidates: list[core.Candidate] = []
         pad = max(core.TICK * 2, p.touch_pad_atr * float(r.atr))
 
-        # REJECTION FAMILY: the zone event may occur on an earlier candle; the
-        # current candle is the directional momentum trigger. Displacement is
-        # supporting evidence only and is not mandatory for rejection entries.
         for direction, side in (("L", "S"), ("S", "R")):
             for loc in [x for x in reversal_locs if x.side == side]:
                 story = reversal_story_v24(full5, ts, r, direction, loc, p, pad)
@@ -105,10 +102,6 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                         "ZONE_REJECTION_STORY_THEN_MOMENTUM",
                     ))
 
-        # BREAKOUT FAMILY. A first completed close beyond the level is not an
-        # entry by itself. The next momentum candle confirms the normal breakout.
-        # Before the close-through, only the two trader-approved exceptions can
-        # create a candidate.
         for direction, side in (("L", "R"), ("S", "S")):
             for loc in [x for x in breakout_locs if x.side == side]:
                 key = (direction, loc.id)
@@ -139,25 +132,19 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                     pending.pop(key, None)
                     pending_locs.pop(key, None)
 
-                # Every first print can seed the weak-break continuation question.
-                # A normal momentum follow-through on the next 5m candle resolves
-                # it earlier; otherwise the 15m three-bar path remains available.
-                if first_break_print(full5, ts, r, direction, loc):
+                # Only a weak first print arms the 15m pullback continuation path.
+                if weak_first_break_print(full5, ts, r, direction, loc, p):
                     if key not in pending:
                         pending[key] = core.PendingBreakout(
                             direction, loc.id, bar_close, loc.lo, loc.hi,
                         )
                         pending_locs[key] = loc
 
-        # WEAK BREAK -> PULLBACK -> 15m THREE-BAR CONTINUATION.
         for key, pen in list(pending.items()):
             loc = pending_locs[key]
             if breakout_failed(r, pen.direction, pen.zone_lo, pen.zone_hi):
                 pending.pop(key, None); pending_locs.pop(key, None)
                 continue
-            # Four 15m slots cover a three-bar continuation despite alignment of
-            # the initial 5m break inside a 15m candle. This is structural timing,
-            # not a fitted performance threshold.
             if bar_close - pen.attempted_at > pd.Timedelta(minutes=60):
                 pending.pop(key, None); pending_locs.pop(key, None)
                 continue
