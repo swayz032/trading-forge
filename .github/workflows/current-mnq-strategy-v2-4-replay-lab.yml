@@ -12,6 +12,8 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py'
+      - 'research/START_MNQ_REPLAY_LAB.bat'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
@@ -30,6 +32,8 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py'
+      - 'research/START_MNQ_REPLAY_LAB.bat'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
@@ -97,11 +101,14 @@ jobs:
           cp package/dist/lightweight-charts.standalone.production.js \
             "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
           test -s "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
-      - name: Bundle one-file standalone trader page
+      - name: Bundle one-file standalone trader page and localhost launcher
         run: |
           set -euo pipefail
+          pack="research/_mnq_v24_replay_lab_v3/pack"
           PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_bundle
-          html="research/_mnq_v24_replay_lab_v3/pack/review_v3.html"
+          cp research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py "$pack/serve_replay_lab.py"
+          cp research/START_MNQ_REPLAY_LAB.bat "$pack/START_REPLAY_LAB.bat"
+          html="$pack/review_v3.html"
           ! grep -q 'src="lightweight-charts.standalone.production.js"' "$html"
           ! grep -q 'src="replay_v3_enhance.js"' "$html"
           grep -q 'RESET DECISION' "$html"
@@ -109,6 +116,13 @@ jobs:
           grep -q 'Main Structure / Key Zones + TP Reaction Cluster' "$html"
           grep -q '15m CONTEXT' "$html"
           grep -q 'MOVE_AWAY_REJECTION_ORIGIN' "$html"
+          grep -q 'MNQ_CONTROLS_READY' "$html"
+          grep -q "updateMainControlStatus('TIMEFRAME')" "$html"
+          grep -q "updateMainControlStatus('FIT ALL')" "$html"
+          test -s "$pack/serve_replay_lab.py"
+          test -s "$pack/START_REPLAY_LAB.bat"
+          grep -q '127.0.0.1' "$pack/serve_replay_lab.py"
+          grep -q 'serve_replay_lab.py' "$pack/START_REPLAY_LAB.bat"
       - name: Syntax-check generated V3 browser JavaScript
         run: |
           set -euo pipefail
@@ -126,7 +140,8 @@ jobs:
           PY
           node --check /tmp/replay_v3_core.js
           node --check /tmp/replay_v3_enhance.js
-      - name: Prove fresh sessions, unified layout, and standalone receipt
+          python -m py_compile research/_mnq_v24_replay_lab_v3/pack/serve_replay_lab.py
+      - name: Prove fresh sessions, unified layout, visible controls, and standalone receipt
         run: |
           python - <<'PY'
           import json
@@ -160,9 +175,17 @@ jobs:
           html = (pack/'review_v3.html').read_text(encoding='utf-8')
           if 'src="lightweight-charts.standalone.production.js"' in html or 'src="replay_v3_enhance.js"' in html:
               raise SystemExit('REPLAY_V3_NOT_STANDALONE')
-          for marker in ('Main Structure / Key Zones + TP Reaction Cluster', '15m CONTEXT', '− ZOOM OUT', 'MOVE_AWAY_REJECTION_ORIGIN'):
+          for marker in (
+              'Main Structure / Key Zones + TP Reaction Cluster', '15m CONTEXT',
+              '− ZOOM OUT', 'MOVE_AWAY_REJECTION_ORIGIN', 'MNQ_CONTROLS_READY',
+              "updateMainControlStatus('TIMEFRAME')", "updateMainControlStatus('FIT ALL')",
+              "updateMainControlStatus('REPLAY')",
+          ):
               if marker not in html:
-                  raise SystemExit('REPLAY_V3_UNIFIED_HTML_MISSING:' + marker)
+                  raise SystemExit('REPLAY_V3_CONTROL_HTML_MISSING:' + marker)
+          for launcher in ('serve_replay_lab.py', 'START_REPLAY_LAB.bat'):
+              if not (pack/launcher).is_file():
+                  raise SystemExit('REPLAY_V3_LAUNCHER_MISSING:' + launcher)
           PY
       - name: Upload V3 trader replay pack — safe bot answers withheld
         uses: actions/upload-artifact@v4
@@ -173,6 +196,8 @@ jobs:
             research/_mnq_v24_replay_lab_v3/pack/review_pack_v3.json
             research/_mnq_v24_replay_lab_v3/pack/labels_template_v3.json
             research/_mnq_v24_replay_lab_v3/pack/receipt_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/serve_replay_lab.py
+            research/_mnq_v24_replay_lab_v3/pack/START_REPLAY_LAB.bat
           if-no-files-found: error
       - name: Upload hidden V3 bot answer key — do not open before labels freeze
         uses: actions/upload-artifact@v4
