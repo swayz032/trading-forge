@@ -3,13 +3,17 @@ from pathlib import Path
 from research.current_mnq_strategy_v2_4_replay_lab_v3_bundle import bundle
 
 
-def test_v3_bundle_inlines_required_browser_runtimes_and_unified_main_controls(tmp_path):
+def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storage_fallback(tmp_path):
     html = tmp_path / "review_v3.html"
     lwc = tmp_path / "lightweight-charts.standalone.production.js"
     enhance = tmp_path / "replay_v3_enhance.js"
     html.write_text(
         '<html><head><script src="lightweight-charts.standalone.production.js"></script></head>'
-        '<body><script src="replay_v3_enhance.js"></script></body></html>',
+        '<body><script>'
+        "const storeKey='k';let saved=JSON.parse(localStorage.getItem(storeKey)||'{}');"
+        "let idx=saved.idx||0;let labels=saved.labels||{};"
+        "function save(){localStorage.setItem(storeKey,JSON.stringify({idx,labels}))}"
+        '</script><script src="replay_v3_enhance.js"></script></body></html>',
         encoding="utf-8",
     )
     lwc.write_text("window.LightweightCharts={};", encoding="utf-8")
@@ -31,6 +35,11 @@ def test_v3_bundle_inlines_required_browser_runtimes_and_unified_main_controls(t
     assert "MOVE_AWAY_REJECTION_ORIGIN" in out
     assert "beginDraw('main-zone', ov5)" in out
     assert "beginDraw('main-tp', ov5)" in out
+    assert "REPLAY_STORAGE_DISABLED_USING_MEMORY" in out
+    assert "JSON.parse(localStorage.getItem(storeKey)" not in out
+    assert "function save(){localStorage.setItem" not in out
+    assert "try{saved=JSON.parse(window.localStorage.getItem(storeKey)||'{}')}" in out
+    assert "if(!storageAvailable)return" in out
 
 
 def test_v3_generator_explicitly_excludes_all_prior_v2_review_sessions():
