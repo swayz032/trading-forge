@@ -53,12 +53,6 @@ def _reference_threshold(q: pd.DataFrame, floor_atr: float,
 def _candidate_prior_reference_set(history: pd.DataFrame, side: str,
                                    candidate_confirm: pd.Timestamp,
                                    look_days: int) -> pd.DataFrame:
-    """Return only information that existed in the candidate's own lookback window.
-
-    This deliberately anchors the window at candidate_confirm rather than the
-    current `asof`. Both boundaries use the confirmation clock—the instant a
-    pivot became knowable—rather than the raw swing timestamp.
-    """
     start = candidate_confirm - pd.Timedelta(days=int(look_days))
     return history[
         (history.side == side) &
@@ -184,6 +178,17 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
     return sorted(chosen, key=lambda x: (x.mid, x.id))
 
 
+def _previous_close_map(full5: pd.DataFrame, supplied: dict | None) -> dict:
+    """Use supplied causal map or reconstruct it from already-present bars."""
+    if supplied is not None:
+        return supplied
+    try:
+        _, _, pcm = core.prev_maps(full5)
+        return pcm
+    except Exception:
+        return {}
+
+
 def _range_room_authorization(locations: list[core.Location], env: dict, dte,
                               open_ts: pd.Timestamp, p: core.Params) -> list[core.Location]:
     """On a causal ranging/mixed morning, do not crowd fresh entry zones.
@@ -193,7 +198,8 @@ def _range_room_authorization(locations: list[core.Location], env: dict, dte,
     range label is used.
     """
     full5 = env["full5"]
-    plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], env["pcm"])
+    pcm = _previous_close_map(full5, env.get("pcm"))
+    plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], pcm)
     if str(plan.pm_structure) != "MIXED":
         return locations
     pm = full5[
