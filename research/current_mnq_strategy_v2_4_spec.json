@@ -5,7 +5,7 @@
   "supersedes_semantics": "MNQ-V2.4-ZONE-CANDLE-PC2-ENTRY1",
   "frozen_at": "2026-08-19",
   "instrument": "MNQ",
-  "semantic_correction_reason": "Trader supplied two additional real screen-recording videos and direct labels before any clean v2.4 performance result was observed. A prior sealed attempt aborted with an ArrayMemoryError before a ledger/edge result was produced. The new evidence clarifies that momentum is watched while the trigger candle is forming: the trader enters before the parent 5m/15m close once sustained buyer/seller force is proven because waiting for the close can be materially late against the frozen 17.25-point stop. Historical/live parity therefore uses only completed 1m sub-bars available at each decision clock, penalizes tug-of-war/giveback, and forbids final parent-candle OHLC from backdating an earlier entry. All existing location, displacement, breakout, range-room, first-reaction TP, risk and edge gates remain unchanged.",
+  "semantic_correction_reason": "Trader supplied two additional real screen-recording videos and direct labels after a clean v2.4 runner had begun but after that runner aborted with ArrayMemoryError and before any clean ledger, report, edge certificate, fold result or strategy performance result was observed. The new evidence clarifies that momentum is watched while the trigger candle is forming: the trader enters before the parent 5m/15m close once sustained buyer/seller force is proven because waiting for the close can be materially late against the frozen 17.25-point stop. Historical/live parity therefore uses only completed 1m sub-bars available at each decision clock, penalizes tug-of-war/giveback, and forbids final parent-candle OHLC from backdating an earlier entry. All existing location, displacement, breakout, range-room, first-reaction TP, risk and edge gates remain unchanged.",
   "source_model": {
     "candlestick_video_pack_is_joint_candle_and_key_level_evidence": true,
     "live_force_video_pair_is_entry_clock_evidence": true,
@@ -257,6 +257,7 @@
     "new_PnL_selected_force_threshold_added": false,
     "structural_force_min_completed_1m_observations": 2,
     "prior_clean_attempt_status": "ABORTED_PRE_RESULT_ARRAY_MEMORY_ERROR_NO_LEDGER_OR_EDGE_RESULT_OBSERVED",
+    "clean_performance_observed_before_force_correction": false,
     "reason": "Entry-fidelity, live-force timing, range-room, zone-first candle semantics and first-reaction TP hierarchy were corrected from direct trader evidence before any clean performance result was observed. The force equation reuses frozen body/close geometry and uses a structural two-completed-1m minimum to distinguish persistence from giveback; neither was selected from PnL. No edge, stop, target, room, session or robustness gate was relaxed.",
     "contaminated_score_ranges": [
       {"start": "2020-02-27", "end": "2020-04-08", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-02-27 and 2020-02-28 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
