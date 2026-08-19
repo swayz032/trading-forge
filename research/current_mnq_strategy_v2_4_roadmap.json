@@ -121,6 +121,22 @@
     "C_EVIDENCE": "Causality, fingerprints, receipts, data integrity, clean-exam readiness.",
     "D_EXECUTION": "Shadow/runtime parity and broker safety may be prepared in parallel but may not alter frozen trading semantics."
   },
+  "supporting_visual_evidence": {
+    "artifact": "research/current_mnq_strategy_v2_4_supporting_visual_examples.md",
+    "classification": "SUPPORTING_ONLY_NON_AUTHORITATIVE",
+    "allowed_use": [
+      "replay-lab reviewer prompts",
+      "level/zone disagreement taxonomy",
+      "UI explanation of support-resistance zones"
+    ],
+    "forbidden_use": [
+      "new trading thresholds",
+      "strategy-rule override",
+      "clean-edge certification",
+      "PnL tuning"
+    ],
+    "authority_rule": "Direct trader-labeled MNQ evidence and executable frozen semantics outrank generic teaching examples."
+  },
   "speed_rules": [
     "Prefer parallel independent lanes over serial waiting.",
     "Diagnose -> fix -> commit -> rerun -> inspect -> repeat until green or a genuine external/tool/permission blocker.",
