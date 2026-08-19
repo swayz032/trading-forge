@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "status": "LOCKED_FAST_ROBUST_CRITICAL_PATH",
+  "locked_at": "2026-08-19",
+  "strategy_release_id": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
+  "strategy_id": "CURRENT_MNQ_DISCRETIONARY_TRANSLATION",
+  "instrument": "MNQ",
+  "purpose": "Freeze the shortest responsible engineering path from trader-fidelity proof to production eligibility. This roadmap is governance, not a source of trading thresholds and not a license to weaken evidence gates for speed.",
+  "current_stage": "FIDELITY",
+  "critical_path": [
+    "FIDELITY",
+    "FREEZE",
+    "CLEAN_EDGE",
+    "ROBUSTNESS",
+    "EXECUTION",
+    "SHADOW",
+    "PRODUCTION"
+  ],
+  "stage_contracts": {
+    "FIDELITY": {
+      "goal": "Prove the algorithm translates the trader's actual key-zone, TP/first-reaction, candle-story, live-force and entry-clock decisions without hindsight.",
+      "required_work": [
+        "complete exact-head FORCE1 mechanical replay/timing audit",
+        "complete blind Human-vs-Bot replay lab",
+        "compare trader and bot key zones geometrically",
+        "compare trader and bot TP/first-reaction zones geometrically",
+        "compare action, force state and exact entry clock",
+        "mine disagreements and repair only demonstrated strategy-fidelity defects",
+        "turn every accepted fidelity repair into permanent regression evidence"
+      ],
+      "exit_rule": "No known material trader-vs-bot semantic disagreement remains unresolved and all exact-head fidelity/architecture tests are green."
+    },
+    "FREEZE": {
+      "goal": "Stop strategy motion on one exact SHA before performance certification.",
+      "required_work": [
+        "lock executable semantics and release identity",
+        "bind exact strategy/evidence fingerprints",
+        "refresh architecture receipt on exact head",
+        "forbid post-freeze rule rescue from observed PnL"
+      ],
+      "exit_rule": "One exact immutable strategy SHA is designated for the clean edge exam."
+    },
+    "CLEAN_EDGE": {
+      "goal": "Run the preregistered clean MNQ evidence exam without parameter search or best-variant selection.",
+      "dataset": {
+        "instrument": "MNQ",
+        "range": "2019-05-06..2021-12-31",
+        "dataset_sha256": "45c792819f1f4680a7d50051abda85a3c2e4ca617c749940a2aa4b7c88b6c4af",
+        "scoreable_sessions": 547
+      },
+      "hard_gates": [
+        ">=500 clean score sessions",
+        ">=100 trades",
+        "exactly 4 chronological folds",
+        ">=3 positive folds",
+        "bootstrap LCB95 > 0",
+        "highest declared cost-stress expectancy > 0",
+        "top-5%-winners-removed expectancy > 0",
+        "leave-best-month-out expectancy > 0",
+        "break-even margin > 0",
+        "weakest-link robust expectancy > 0"
+      ],
+      "exit_rule": "Pass all preregistered clean evidence gates or stop promotion."
+    },
+    "ROBUSTNESS": {
+      "goal": "Try to break a passing clean edge without changing the strategy to rescue results.",
+      "priority_attacks": [
+        "chronological fold stability",
+        "moving-block bootstrap",
+        "declared cost/slippage stress",
+        "top-winner dependency removal",
+        "leave-best-month-out",
+        "entry-delay sensitivity",
+        "small parameter-neighborhood stability where allowed without clean-result selection",
+        "causal/lookahead audit"
+      ],
+      "exit_rule": "Edge remains positive under every required weakest-link attack."
+    },
+    "EXECUTION": {
+      "goal": "Prove theoretical signals survive realistic order and broker mechanics.",
+      "required_work": [
+        "historical/live/shared-kernel parity",
+        "MNQ tick/grid validation",
+        "commission/slippage/latency and fill stress",
+        "duplicate-order protection",
+        "stale-data and contract-identity refusal",
+        "broker reconciliation",
+        "server-side stop/TP and emergency-flatten drills"
+      ],
+      "exit_rule": "Execution defects cannot silently change certified signal semantics or create unreconciled risk."
+    },
+    "SHADOW": {
+      "goal": "Run the exact certified engine beside the live market without real-money promotion.",
+      "minimum_campaign": {
+        "full_sessions": 10,
+        "execution_window": "09:30-12:00 America/New_York",
+        "minimum_would_trades": 5,
+        "required_zero_events": [
+          "missed-first-A-plus",
+          "rule-change",
+          "historical-live parity mismatch",
+          "unreconciled state"
+        ]
+      },
+      "exit_rule": "Shadow campaign and operational evidence pass on the exact certified build."
+    },
+    "PRODUCTION": {
+      "goal": "Allow production eligibility only after every upstream gate passes.",
+      "required_work": [
+        "device/account-bound promotion receipt",
+        "runtime fingerprint verification",
+        "risk and daily-bullet enforcement",
+        "emergency procedures verified"
+      ],
+      "exit_rule": "Production eligibility receipt exists for the intended exact build/account/device; PR merge remains a separate explicit decision."
+    }
+  },
+  "parallel_lanes": {
+    "A_STRATEGY_FIDELITY": "Human-vs-Bot replay, disagreement mining, fidelity regression repairs.",
+    "B_INFRASTRUCTURE": "Runtime/memory performance, CI speed, deterministic replay and data-loading reliability. Infrastructure work must not change strategy semantics silently.",
+    "C_EVIDENCE": "Causality, fingerprints, receipts, data integrity, clean-exam readiness.",
+    "D_EXECUTION": "Shadow/runtime parity and broker safety may be prepared in parallel but may not alter frozen trading semantics."
+  },
+  "speed_rules": [
+    "Prefer parallel independent lanes over serial waiting.",
+    "Diagnose -> fix -> commit -> rerun -> inspect -> repeat until green or a genuine external/tool/permission blocker.",
+    "Do not stop at an intermediate discovery when the repair can be completed safely in the same engineering chain.",
+    "Build only work that materially advances the current critical path or removes a real blocker.",
+    "Never trade correctness, causality, evidence integrity or safety for calendar speed."
+  ],
+  "hard_non_goals_until_v24_is_decided": [
+    "new indicators",
+    "new strategy families",
+    "parameter optimization from observed performance",
+    "machine-learning optimization",
+    "quantum optimization",
+    "large FORCE1 variant search",
+    "widening the 17.25-point stop to rescue performance",
+    "moving TP farther because historical PnL looks better",
+    "using future candles or final parent OHLC to backdate an entry",
+    "substituting NQ or synthetic pre-launch MNQ for required clean MNQ evidence"
+  ],
+  "frozen_strategy_invariants": {
+    "master_equation": "TRADE = SESSION AND PREMARKET_PRIOR AND VALID_KEY_LOCATION_OR_APPROVED_PREBREAK_EXCEPTION AND VALID_CANDLE_STORY AND SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE AND ROOM_TO_FIRST_REACTION AND FIRST_A_PLUS AND DAILY_BULLET_UNUSED",
+    "stop_points": 17.25,
+    "max_trades_per_session": 1,
+    "only_two_prebreak_exceptions": [
+      "REPEAT_TEST_MOMENTUM_ATTACK",
+      "DISPLACEMENT_SEQUENCE_INTO_LEVEL"
+    ],
+    "momentum_is_not_automatic_displacement": true,
+    "fvg_required_for_displacement_entry": false,
+    "target_rule": "FIRST_MEANINGFUL_PHYSICAL_REACTION_WINS",
+    "live_force_uses_causal_completed_1m_subbars": true,
+    "future_next_candle_forbidden": true
+  },
+  "evidence_chronology": {
+    "seen_development_data": "2022-01-01..2026-08-17 and Jan-Apr 2026 M26 are development/seen only; never promote or tune from their PnL.",
+    "prior_clean_attempt_status": "ABORTED_PRE_RESULT_ARRAY_MEMORY_ERROR_NO_LEDGER_OR_EDGE_RESULT_OBSERVED",
+    "prior_clean_attempt_rule": "Preserve the aborted seal evidence. It produced no ledger/report/folds/edge result and may not be described as a completed edge exam.",
+    "semantic_change_rule": "Any material trading-semantic change invalidates prior evidence for promotion and requires a new exact-head evidence chain."
+  },
+  "repository_governance": {
+    "repo": "swayz032/trading-forge",
+    "branch": "research/current-mnq-strategy-v2-4-zone-first-candles",
+    "pull_request": 38,
+    "pull_request_must_remain_draft_during_research": true,
+    "do_not_merge_until_explicitly_authorized_after_gates": true
+  }
+}
