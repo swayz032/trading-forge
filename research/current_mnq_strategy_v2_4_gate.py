@@ -5,8 +5,8 @@ The shared kernel owns the full trader-fidelity sequence. This gate remains a
 small deterministic contract for unit/integration callers:
 - REV: current zone rejection/control evidence may pass to the wider story gate;
 - BRK5: a first break print is setup only; a subsequent momentum candle confirms;
-- BRK15: the caller must prove the completed 15m three-bar continuation, not a
-  generic single acceptance candle.
+- BRK15: the caller must prove BOTH that the first break was weak and that the
+  completed 15m three-bar continuation occurred. Generic acceptance is not enough.
 """
 from __future__ import annotations
 
@@ -34,12 +34,13 @@ def _break_close(row, direction: str, lo: float, hi: float) -> bool:
 def gate_candidate(*, bars: pd.DataFrame, zone_side: str, zone_lo: float,
                    zone_hi: float, direction: str, setup: str,
                    pad: float = 0.0, fifteen_minute_acceptance: bool = False,
+                   weak_first_break: bool | None = None,
                    fifteen_minute_three_bar_continuation: bool | None = None) -> CandidateGate:
     """Fail closed unless the requested setup's local sequence is proven.
 
     `fifteen_minute_acceptance` is retained only as a compatibility argument; it
-    no longer grants BRK15 authority. New callers must pass
-    `fifteen_minute_three_bar_continuation=True` after proving that sequence.
+    grants no BRK15 authority. New BRK15 callers must prove both
+    `weak_first_break=True` and `fifteen_minute_three_bar_continuation=True`.
     """
     if direction not in {"L", "S"}:
         raise ValueError("direction must be L or S")
@@ -59,9 +60,6 @@ def gate_candidate(*, bars: pd.DataFrame, zone_side: str, zone_lo: float,
         return CandidateGate(allowed, ev.reason if allowed else "ZONE_REACHED_REVERSAL_NOT_CONFIRMED", ev)
 
     if setup == "BRK5":
-        # First print beyond the level is setup only. Use the first-break bar as
-        # zone evidence and require the immediately following candle to carry
-        # directional momentum while remaining beyond the broken zone.
         if len(bars) < 3:
             ev = evaluate_at_zone(bars, zone_side, zone_lo, zone_hi, pad)
             return CandidateGate(False, "WAIT_FOR_POST_BREAK_MOMENTUM", ev)
@@ -81,13 +79,12 @@ def gate_candidate(*, bars: pd.DataFrame, zone_side: str, zone_lo: float,
             ev,
         )
 
-    # BRK15 is specifically the trader's weak-break -> pullback -> completed 15m
-    # three-bar continuation path. A generic new 15m acceptance boolean is no
-    # longer sufficient, even for backwards-compatible callers.
     ev = evaluate_at_zone(bars, zone_side, zone_lo, zone_hi, pad)
     expected = Interaction.BREAK_CLOSE_UP.value if direction == "L" else Interaction.BREAK_CLOSE_DOWN.value
     if ev.interaction != expected:
         return CandidateGate(False, "WEAK_BREAKOUT_ATTEMPT_DID_NOT_BREAK_ZONE", ev)
+    if weak_first_break is not True:
+        return CandidateGate(False, "BRK15_REQUIRES_WEAK_FIRST_BREAK", ev)
     if fifteen_minute_three_bar_continuation is not True:
         return CandidateGate(False, "WAIT_FOR_COMPLETED_15M_THREE_BAR_CONTINUATION", ev)
     return CandidateGate(True, "WEAK_BREAK_CONFIRMED_BY_15M_THREE_BAR_CONTINUATION", ev)

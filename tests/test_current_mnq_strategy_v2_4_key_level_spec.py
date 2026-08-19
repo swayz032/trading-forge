@@ -23,6 +23,7 @@ def test_key_level_semantics_require_quality_not_random_chart_lines():
     assert "strong_displacement_away_from_swing_high_or_low" in k["secondary_quality_evidence"]
     assert k["active_map_policy"]["avoid_chart_clutter"] is True
     assert k["active_map_policy"]["do_not_delete_farther_meaningful_destination"] is True
+    assert k["active_map_policy"]["no_hindsight_full_day_range_label"] is True
 
 
 def test_role_flip_and_reclaim_require_evidence():
@@ -40,7 +41,12 @@ def test_break_retest_still_requires_candle_control():
     assert b["candle_control_still_required"] is True
 
 
-def test_hard_order_builds_key_level_map_before_candles():
+def test_hard_order_builds_range_aware_key_map_before_candle_story():
     order = spec()["hard_entry_order"]
-    assert order.index("BUILD_CAUSAL_KEY_LEVEL_MAP") < order.index("PRICE_REACHES_AUTHORIZED_ZONE")
-    assert order.index("PRICE_REACHES_AUTHORIZED_ZONE") < order.index("READ_CANDLESTICK_PATTERN_AND_MULTI_CANDLE_CONTROL_STORY")
+    build = "BUILD_CAUSAL_KEY_LEVEL_MAP_WITH_RANGE_ROOM_AUTHORIZATION"
+    reach = "PRICE_REACHES_AUTHORIZED_ZONE_OR_MATCHES_ONE_OF_TWO_FROZEN_PREBREAK_EXCEPTIONS"
+    story = "READ_CANDLESTICK_GEOMETRY_AND_MULTI_CANDLE_CONTROL_STORY"
+    momentum = "REQUIRE_DIRECTIONAL_MOMENTUM_TRIGGER"
+    assert order.index(build) < order.index(reach)
+    assert order.index(reach) < order.index(story)
+    assert order.index(story) < order.index(momentum)

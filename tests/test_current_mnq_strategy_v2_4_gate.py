@@ -34,20 +34,37 @@ def test_support_rejection_plus_bullish_control_allows_reversal_long():
     assert g.allowed
 
 
-def test_weak_breakout_requires_completed_15m_three_bar_not_generic_acceptance():
+def test_brk15_requires_weak_first_break_and_completed_three_bar():
     q = bars([
         (99.0, 100.0, 98.75, 99.5),
         (99.5, 102.0, 99.25, 101.25),
     ])
-    waiting = gate_candidate(
+    generic_acceptance = gate_candidate(
         bars=q, zone_side="R", zone_lo=100, zone_hi=101,
         direction="L", setup="BRK15", fifteen_minute_acceptance=True,
     )
+    assert not generic_acceptance.allowed
+    assert generic_acceptance.reason == "BRK15_REQUIRES_WEAK_FIRST_BREAK"
+
+    strong_first_break = gate_candidate(
+        bars=q, zone_side="R", zone_lo=100, zone_hi=101,
+        direction="L", setup="BRK15", weak_first_break=False,
+        fifteen_minute_three_bar_continuation=True,
+    )
+    assert not strong_first_break.allowed
+    assert strong_first_break.reason == "BRK15_REQUIRES_WEAK_FIRST_BREAK"
+
+    waiting = gate_candidate(
+        bars=q, zone_side="R", zone_lo=100, zone_hi=101,
+        direction="L", setup="BRK15", weak_first_break=True,
+    )
     assert not waiting.allowed
     assert waiting.reason == "WAIT_FOR_COMPLETED_15M_THREE_BAR_CONTINUATION"
+
     confirmed = gate_candidate(
         bars=q, zone_side="R", zone_lo=100, zone_hi=101,
-        direction="L", setup="BRK15", fifteen_minute_three_bar_continuation=True,
+        direction="L", setup="BRK15", weak_first_break=True,
+        fifteen_minute_three_bar_continuation=True,
     )
     assert confirmed.allowed
     assert confirmed.reason == "WEAK_BREAK_CONFIRMED_BY_15M_THREE_BAR_CONTINUATION"
@@ -67,7 +84,6 @@ def test_touch_without_control_does_not_become_trade():
 
 
 def test_real_user_range_on_key_level_first_break_waits_for_next_momentum():
-    """User gold: chop waits; even first break print is setup until follow-through."""
     ranging = bars([
         (100.8, 101.2, 99.4, 100.2),
         (100.2, 100.9, 99.2, 100.5),
