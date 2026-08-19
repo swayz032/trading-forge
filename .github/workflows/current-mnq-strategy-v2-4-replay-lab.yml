@@ -73,6 +73,21 @@ jobs:
           grep -q 'replay_v3_enhance.js' "$pack/review_v3.html"
           grep -q 'paintLayer(ov5, c5, l.trader_zones, l.trader_tp_reaction_cluster)' "$pack/replay_v3_enhance.js"
           grep -q 'Date.UTC' "$pack/replay_v3_enhance.js"
+      - name: Syntax-check generated V3 browser JavaScript
+        run: |
+          set -euo pipefail
+          node --check research/_mnq_v24_replay_lab_v3/pack/replay_v3_enhance.js
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html').read_text(encoding='utf-8')
+          blocks = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S|re.I)
+          inline = [b for b in blocks if b.strip()]
+          if not inline:
+              raise SystemExit('REPLAY_V3_NO_INLINE_BROWSER_RUNTIME')
+          Path('/tmp/replay_v3_core.js').write_text(inline[-1], encoding='utf-8')
+          PY
+          node --check /tmp/replay_v3_core.js
       - name: Vendor pinned TradingView Lightweight Charts 5.2.0
         run: |
           set -euo pipefail
