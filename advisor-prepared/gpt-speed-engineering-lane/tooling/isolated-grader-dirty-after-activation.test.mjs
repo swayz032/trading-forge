@@ -52,7 +52,9 @@ function manifestFile() {
       expected_head: 'claude/worker1-test',
       require_clean: true,
     },
-    edit_scope: { allowed_exact: [], allowed_prefixes: [] },
+    // Non-empty by construction: edit-scope-guard correctly rejects an empty scope before the
+    // isolated-grader logic runs. AR-1358 proved the old empty fixture made this test vacuous.
+    edit_scope: { allowed_exact: ['generated.json'], allowed_prefixes: [] },
     finish: { enabled: false },
   }, null, 2));
   return file;
