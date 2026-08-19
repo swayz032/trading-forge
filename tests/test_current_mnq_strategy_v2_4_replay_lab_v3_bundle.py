@@ -9,7 +9,8 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     enhance = tmp_path / "replay_v3_enhance.js"
     html.write_text(
         '<html><head><script src="lightweight-charts.standalone.production.js"></script>'
-        '<style>.overlay{position:absolute;inset:0;z-index:5;pointer-events:none}</style></head>'
+        '<style>.overlay{position:absolute;inset:0;z-index:5;pointer-events:none}'
+        '.overlay.draw{pointer-events:auto;cursor:crosshair}</style></head>'
         '<body><script>'
         "const storeKey='mnq-replay-v3:'+pack.pack_id;"
         "let saved=JSON.parse(localStorage.getItem(storeKey)||'{}');"
@@ -24,6 +25,7 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
         "/* Main Structure / Key Zones + TP Reaction Cluster */\n"
         "/* 15m CONTEXT · − ZOOM OUT · MOVE_AWAY_REJECTION_ORIGIN */\n"
         "  panel5.appendChild(mainTools);\n"
+        "  zoneHelp.textContent = 'Choose how you found the level, then draw it on the big main chart.';\n"
         "  function setMainTf(tf) {\n"
         "    mainTf = tf;\n"
         "    document.getElementById('main5m').classList.toggle('active', tf === '5m');\n"
@@ -49,6 +51,12 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
         "  document.getElementById('mainFit').onclick = () => { main.chart.timeScale().fitContent(); drawOverlays(); };\n"
         "  drawZone.onclick = () => beginDraw('main-zone', ov5);\n"
         "  drawTp.onclick = () => beginDraw('main-tp', ov5);\n"
+        "        const top = Math.min(y1, y2);\n"
+        "        const height = Math.abs(y2 - y1);\n"
+        "        ctx.fillStyle = 'rgba(229,161,92,.17)';\n"
+        "        ctx.strokeStyle = 'rgba(229,161,92,.94)';\n"
+        "        ctx.fillRect(0, top, d.w, height);\n"
+        "        ctx.strokeRect(0, top, d.w, height);\n"
         "setData = function (fit) {\n"
         "    refreshMain(Boolean(fit));\n"
         "    renderClock();\n"
@@ -72,16 +80,24 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "if(!storageAvailable)return" in out
     assert "const TICK=0.25;" in out
     assert "width:100%;height:100%;z-index:5;pointer-events:none" in out
+    assert ".overlay.draw{pointer-events:none;cursor:crosshair}" in out
+    assert ".overlay.draw{pointer-events:auto;cursor:crosshair}" not in out
     assert "renderClock();\n    renderLabels();\n    updateMainControlStatus('REPLAY');" in out
     assert "MNQ_CONTROLS_READY" in out
     assert "updateMainControlStatus('TIMEFRAME')" in out
     assert "updateMainControlStatus(multiplier > 1 ? 'ZOOM OUT' : 'ZOOM IN')" in out
     assert "updateMainControlStatus('FIT ALL')" in out
-    assert "subscribeVisibleLogicalRangeChange" in out
     assert "addEventListener('click', () => setMainTf('15m'))" in out
-    assert "panel5.scrollIntoView({behavior: 'auto', block: 'center'})" in out
-    assert "drawZone.onclick = () => revealMainForDraw('main-zone')" in out
-    assert "drawTp.onclick = () => revealMainForDraw('main-tp')" in out
+    assert "main.chart.subscribeClick((param) =>" in out
+    assert "drawZone.onclick = () => armNativeMark('zone')" in out
+    assert "drawTp.onclick = () => armNativeMark('tp')" in out
+    assert "CLICK KEY ZONE EDGE 1" in out
+    assert "CLICK TP LEVEL" in out
+    assert "TRADER_REACTION_CLUSTER_EXACT_LEVEL" in out
+    assert "Key zone: click one edge, then the other edge" in out
+    assert "if (height < 1)" in out
+    assert "setInterval(() =>" in out
+    assert "scrollIntoView" not in out
 
 
 def test_v3_generator_explicitly_excludes_all_prior_v2_review_sessions():
