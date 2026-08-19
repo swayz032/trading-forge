@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `16bef7f8426bc4715d6fc8915ff0457d4095f9b1`
+> Generated at commit `e4c721b57845bf727b4d6d047d8ed895d3502359`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 315 | 413 | 130217 | 2035 |
+| `src/` | Python | 315 | 413 | 130225 | 2035 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -3995,12 +3995,12 @@ This is the *we already have this* list.  Check it before writing anything.
 | `AnchorResult` | class | `src/engine/extraction/anchor_locator.py:76` | 1 | unique |
 | `_build_user_message` | function | `src/engine/extraction/anchor_locator.py:126` | 5 | AMBIG |
 | `_default_propose_fn` | function | `src/engine/extraction/anchor_locator.py:134` | 5 | unique |
-| `_propose_quote` | function | `src/engine/extraction/anchor_locator.py:161` | 0 | unique |
-| `_normalize_with_spans` | function | `src/engine/extraction/anchor_locator.py:174` | 0 | unique |
-| `_normalize_query` | function | `src/engine/extraction/anchor_locator.py:202` | 0 | unique |
-| `_resolves_as_anchor` | function | `src/engine/extraction/anchor_locator.py:211` | 0 | unique |
-| `_verify_and_locate` | function | `src/engine/extraction/anchor_locator.py:225` | 3 | unique |
-| `locate_anchor` | function | `src/engine/extraction/anchor_locator.py:259` | 8 | unique |
+| `_propose_quote` | function | `src/engine/extraction/anchor_locator.py:169` | 0 | unique |
+| `_normalize_with_spans` | function | `src/engine/extraction/anchor_locator.py:182` | 0 | unique |
+| `_normalize_query` | function | `src/engine/extraction/anchor_locator.py:210` | 0 | unique |
+| `_resolves_as_anchor` | function | `src/engine/extraction/anchor_locator.py:219` | 0 | unique |
+| `_verify_and_locate` | function | `src/engine/extraction/anchor_locator.py:233` | 3 | unique |
+| `locate_anchor` | function | `src/engine/extraction/anchor_locator.py:267` | 8 | unique |
 | `sha256` | function | `src/engine/extraction/batch_locator.py:76` | 67 | unique |
 | `production_rules_block` | function | `src/engine/extraction/batch_locator.py:85` | 0 | unique |
 | `build_batch_brief` | function | `src/engine/extraction/batch_locator.py:103` | 1 | unique |
