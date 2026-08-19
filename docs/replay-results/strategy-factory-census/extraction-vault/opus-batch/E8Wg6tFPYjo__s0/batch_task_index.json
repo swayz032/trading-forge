@@ -1,0 +1,101 @@
+{
+  "video_id": "E8Wg6tFPYjo",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "entry_sequence[4].action",
+    "entry_sequence[4].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "confluences[3].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Determine the higher timeframe bias by identifying if the price is in a premium (above 50% of range) or discount (below 50% of range) zone."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "The strategy is based on the principle of buying low and selling high relative to the trading range."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for a liquidity sweep, specifically a major high or low to be purged by a large wick or candle body closure."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "Liquidity sweeps signal that resting money has been purged, fueling the next directional move."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for a Break of Structure (BOS) to occur, signaling a significant movement in price."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "BOS confirms a potential trading opportunity has been created."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Wait for price to retrace into a Fair Value Gap (FVG) or Imbalance after the BOS."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "The market tends to fill inefficiencies (gaps) before continuing its move."
+    },
+    {
+      "condition_ref": "entry_sequence[4].action",
+      "condition_text": "Enter the trade at the 71% retracement level of the measured Fibonacci range."
+    },
+    {
+      "condition_ref": "entry_sequence[4].rationale",
+      "condition_text": "The 71% retracement is used as the entry point to achieve a favorable risk-to-reward ratio."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The higher timeframe must be aligned with premium (sell) or discount (buy) pricing."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "A major high or low must be swept to purge resting liquidity."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "A break of structure must occur to signal a potential trading opportunity."
+    },
+    {
+      "condition_ref": "confluences[3].description",
+      "condition_text": "The Fibonacci retracement level must align with a Fair Value Gap or Imbalance."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The initial stop is placed at the extreme high or low of the measured Fibonacci range."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The 71% retracement entry provides a risk-to-reward ratio of 2.45."
+    }
+  ],
+  "task_sha256": "062d61d2ae92cbf3ce386da7d5e393246a4d032395582aecb7586ff685c42a4e",
+  "task_char_len": 26326,
+  "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+  "transcript_char_len": 22830,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}
