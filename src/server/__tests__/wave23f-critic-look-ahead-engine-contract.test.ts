@@ -19,11 +19,11 @@ import { resolve } from "node:path";
 
 const CATALOG_PATH = resolve(__dirname, "../../agents/kb/anti-pattern-catalog.md");
 const BACKTESTER_PATH = resolve(__dirname, "../../engine/backtester.py");
-const CLAUDE_MD_PATH = resolve(__dirname, "../../../CLAUDE.md");
+const SCOUT_REFERENCE_PATH = resolve(process.cwd(), "docs/reference/claude-md-scout-architecture.md");
 
 const catalogSrc = readFileSync(CATALOG_PATH, "utf8");
 const backtesterSrc = readFileSync(BACKTESTER_PATH, "utf8");
-const claudeMdSrc = readFileSync(CLAUDE_MD_PATH, "utf8");
+const scoutReferenceSrc = readFileSync(SCOUT_REFERENCE_PATH, "utf8");
 
 describe("W23F look-ahead critic — engine-aware contract", () => {
   it("anti-pattern-catalog §3 documents the engine's auto-shift", () => {
@@ -47,9 +47,9 @@ describe("W23F look-ahead critic — engine-aware contract", () => {
     expect(backtesterSrc).toMatch(/MUST NOT reject strategies for bare close\/high\/low/i);
   });
 
-  it("CLAUDE.md pinned-facts section documents the auto-shift contract", () => {
-    expect(claudeMdSrc).toMatch(/Backtest engine auto-shifts entries \+1 bar/);
-    expect(claudeMdSrc).toMatch(/anti-pattern-catalog\.md/);
+  it("canonical scout reference documents the auto-shift contract", () => {
+    expect(scoutReferenceSrc).toMatch(/Backtest engine auto-shifts entries \+1 bar/);
+    expect(scoutReferenceSrc).toMatch(/anti-pattern-catalog\.md/);
   });
 
   // Smoke-test the new narrow detection function against real DSL shapes

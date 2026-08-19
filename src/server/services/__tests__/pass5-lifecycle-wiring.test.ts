@@ -425,14 +425,14 @@ describe("Pass 5 Track C — Cron sweep / PATCH parity (structural)", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("Pass 5 Track D — CLAUDE.md §8 engine authority declaration", () => {
-  it("CLAUDE.md documents paper-engine authority declaration", () => {
+  it("CLAUDE.md documents internal PAPER engine authority", () => {
     const claudeMd = readFileSync(
       resolve(process.cwd(), "CLAUDE.md"),
       "utf8",
     );
     expect(claudeMd).toContain("TradersPost");
-    // Must mention paper-engine authority (case-insensitive — CLAUDE.md uses "Paper-engine authority")
-    expect(claudeMd.toLowerCase()).toContain("paper-engine authority");
+    // The compact CLAUDE.md kernel states the same authority doctrine directly.
+    expect(claudeMd.toLowerCase()).toContain("paper is internal-engine-only");
   });
 });
 
