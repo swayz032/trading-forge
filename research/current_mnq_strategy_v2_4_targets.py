@@ -365,6 +365,11 @@ def classify_first_reaction_destination(destinations: list[ReactionDestination],
             d.location, raw, px, actual_target_distance, d.quality,
             False, True, bool(d.fvg_confluent),
         )
+        # Replay/fidelity diagnostics need the semantic reaction owner and its
+        # physical near-edge distance. These are metadata only: executable target
+        # price, room classification and strategy decisions above are unchanged.
+        target.kind = d.kind
+        target.first_contact_distance = float(d.first_contact_distance)
         return target, f"FIRST_REACTION:{d.kind}"
     return None, "NO_MEANINGFUL_DESTINATION"
 
