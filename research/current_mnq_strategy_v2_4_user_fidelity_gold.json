@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "status": "IMMUTABLE_HASHED_V24_USER_FIDELITY_SET_V1",
+  "schema_version": 2,
+  "status": "IMMUTABLE_HASHED_V24_USER_FIDELITY_SET_V2",
   "frozen_at": "2026-08-18",
   "privacy": "No user screenshot bytes are committed. Only cryptographic hashes and trader-confirmed semantic labels are stored.",
   "source_archive": {
@@ -28,15 +28,15 @@
       "must_not_do": ["classify_every_strong_red_or_green_candle_as_displacement"]
     },
     {
-      "id": "V24G03_PREBREAK_DISPLACEMENT_SEQUENCE",
+      "id": "V24G03_PREBREAK_DISPLACEMENT_THIRD_CANDLE",
       "source_kind": "user_screenshot_pair_plus_direct_label",
       "source_files": [
         {"name": "Screenshot 2026-08-16 075020.png", "sha256": "db867045aff322df5b6a5db050afb6cc1354b6d115700f7c8391090fca9e24e4"},
         {"name": "Screenshot 2026-08-17 221445.png", "sha256": "8ac406fe0d713c632415d380f03f9068e273374e3de792f26554fbdc80dcb562"}
       ],
-      "trader_label": "One of only two pre-break exceptions: genuine strong displacement drives toward the key level; wait for the third candle to retain momentum because the third candle can reverse, then an early entry may occur before a candle has printed beyond the level.",
-      "must_have": ["genuine_displacement_sequence", "third_candle_directional_momentum", "approaching_authorized_key_zone"],
-      "must_not_do": ["front_run_level_on_ordinary_strong_candle", "enter_if_third_candle_reverses_control"]
+      "trader_label": "One of only two pre-break exceptions: genuine displacement drives toward the key level; the trader watches the THIRD candle of that displacement drive and enters early only if that third candle is still a directional momentum candle near the key level. If the third candle reverses control, no entry. FVG formation is irrelevant to this entry rule and is not required.",
+      "must_have": ["genuine_displacement_drive", "third_candle_directional_momentum", "approaching_authorized_key_zone"],
+      "must_not_do": ["front_run_level_on_ordinary_strong_candle", "enter_if_third_candle_reverses_control", "require_fvg_for_displacement_entry"]
     },
     {
       "id": "V24G04_REPEAT_TEST_PREBREAK_MOMENTUM",
