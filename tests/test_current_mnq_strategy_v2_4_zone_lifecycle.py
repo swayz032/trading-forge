@@ -107,3 +107,18 @@ def test_origin_side_is_immutable_even_if_returned_zone_side_has_flipped():
     z = zone_state_at_v24(zone("S"), q, ts("2026-08-10 10:15"), core.Params())
     assert z.side == "R"
     assert origin_side(z) == "S"
+
+
+def test_lifecycle_ignores_unrelated_wide_object_columns():
+    """Production replay must not materialize unrelated mixed-type columns."""
+    q = bars([
+        ("2026-08-10 10:05", 100.0, 100.5, 97.5, 98.0),
+        ("2026-08-10 10:10", 98.0, 100.5, 97.75, 99.5),
+    ])
+    expected = zone_state_at_v24(zone("S"), q, ts("2026-08-10 10:15"), core.Params())
+    for i in range(64):
+        q[f"unused_object_{i}"] = [f"left-{i}", f"right-{i}"]
+    actual = zone_state_at_v24(zone("S"), q, ts("2026-08-10 10:15"), core.Params())
+    assert (actual.side, actual.state, actual.active) == (
+        expected.side, expected.state, expected.active,
+    )
