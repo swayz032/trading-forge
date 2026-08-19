@@ -9,11 +9,14 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_generate.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   pull_request:
@@ -24,11 +27,14 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_generate.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   workflow_dispatch:
@@ -53,10 +59,11 @@ jobs:
           PYTHONPATH=. pytest --confcutdir=tests -q \
             tests/test_current_mnq_strategy_v2_4_replay_lab.py \
             tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py \
-            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py
-      - name: Generate interactive V3 replay pack on contaminated development data
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py
+      - name: Generate fresh-session interactive V3 replay pack on contaminated development data
         run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_generate
-      - name: Bind cross-timeframe trader drawing layer
+      - name: Bind single-trade cross-timeframe interaction layer
         run: |
           set -euo pipefail
           pack="research/_mnq_v24_replay_lab_v3/pack"
@@ -72,22 +79,9 @@ jobs:
           PY
           grep -q 'replay_v3_enhance.js' "$pack/review_v3.html"
           grep -q 'paintLayer(ov5, c5, l.trader_zones, l.trader_tp_reaction_cluster)' "$pack/replay_v3_enhance.js"
+          grep -q 'if (l.final_action) return;' "$pack/replay_v3_enhance.js"
+          grep -q 'RESET DECISION' "$pack/replay_v3_enhance.js"
           grep -q 'Date.UTC' "$pack/replay_v3_enhance.js"
-      - name: Syntax-check generated V3 browser JavaScript
-        run: |
-          set -euo pipefail
-          node --check research/_mnq_v24_replay_lab_v3/pack/replay_v3_enhance.js
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          html = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html').read_text(encoding='utf-8')
-          blocks = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S|re.I)
-          inline = [b for b in blocks if b.strip()]
-          if not inline:
-              raise SystemExit('REPLAY_V3_NO_INLINE_BROWSER_RUNTIME')
-          Path('/tmp/replay_v3_core.js').write_text(inline[-1], encoding='utf-8')
-          PY
-          node --check /tmp/replay_v3_core.js
       - name: Vendor pinned TradingView Lightweight Charts 5.2.0
         run: |
           set -euo pipefail
@@ -98,6 +92,54 @@ jobs:
           cp package/dist/lightweight-charts.standalone.production.js \
             "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
           test -s "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
+      - name: Bundle one-file standalone trader page
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_bundle
+          html="research/_mnq_v24_replay_lab_v3/pack/review_v3.html"
+          ! grep -q 'src="lightweight-charts.standalone.production.js"' "$html"
+          ! grep -q 'src="replay_v3_enhance.js"' "$html"
+          grep -q 'RESET DECISION' "$html"
+          grep -q 'if (l.final_action) return;' "$html"
+      - name: Syntax-check generated V3 browser JavaScript
+        run: |
+          set -euo pipefail
+          node --check research/_mnq_v24_replay_lab_v3/pack/replay_v3_enhance.js
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html').read_text(encoding='utf-8')
+          blocks = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S|re.I)
+          inline = [b for b in blocks if b.strip()]
+          if len(inline) < 3:
+              raise SystemExit(f'REPLAY_V3_EXPECTED_3_INLINE_SCRIPTS:{len(inline)}')
+          # The generated core is the middle script; the last is our enhancement.
+          Path('/tmp/replay_v3_core.js').write_text(inline[-2], encoding='utf-8')
+          Path('/tmp/replay_v3_enhance.js').write_text(inline[-1], encoding='utf-8')
+          PY
+          node --check /tmp/replay_v3_core.js
+          node --check /tmp/replay_v3_enhance.js
+      - name: Prove fresh sessions and standalone receipt
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pack = Path('research/_mnq_v24_replay_lab_v3/pack')
+          review = json.loads((pack/'review_pack_v3.json').read_text())
+          receipt = json.loads((pack/'receipt_v3.json').read_text())
+          old = set(receipt['prior_v2_review_sessions_excluded'])
+          new = {c['session'] for c in review['cases']}
+          overlap = old & new
+          if overlap:
+              raise SystemExit('REPLAY_V3_PRIOR_OVERLAP:' + ','.join(sorted(overlap)))
+          if len(new) != 16:
+              raise SystemExit(f'REPLAY_V3_NOT_16_FRESH_SESSIONS:{len(new)}')
+          if receipt['prior_v2_session_overlap_count'] != 0:
+              raise SystemExit('REPLAY_V3_RECEIPT_OVERLAP_NOT_ZERO')
+          html = (pack/'review_v3.html').read_text(encoding='utf-8')
+          if 'src="lightweight-charts.standalone.production.js"' in html or 'src="replay_v3_enhance.js"' in html:
+              raise SystemExit('REPLAY_V3_NOT_STANDALONE')
+          PY
       - name: Upload V3 trader replay pack — safe bot answers withheld
         uses: actions/upload-artifact@v4
         with:
@@ -107,8 +149,6 @@ jobs:
             research/_mnq_v24_replay_lab_v3/pack/review_pack_v3.json
             research/_mnq_v24_replay_lab_v3/pack/labels_template_v3.json
             research/_mnq_v24_replay_lab_v3/pack/receipt_v3.json
-            research/_mnq_v24_replay_lab_v3/pack/replay_v3_enhance.js
-            research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js
           if-no-files-found: error
       - name: Upload hidden V3 bot answer key — do not open before labels freeze
         uses: actions/upload-artifact@v4
