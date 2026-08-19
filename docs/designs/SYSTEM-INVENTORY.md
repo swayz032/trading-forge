@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `538eaf582f594f1602c93ce82da90806fd8c7cdc`
+> Generated at commit `c9e5b6fba2e7cb477d68dff084350d6a40a4499d`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -42,10 +42,10 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
 | `src/` | 1915 | 777 |
-| `scripts/` | 285 | 283 |
+| `scripts/` | 286 | 284 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2235** | **1060** |
+| **TOTAL** | **2236** | **1061** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **219**.  Modules reachable from them: **775** of **2235** parsed files.
+Total entry points: **219**.  Modules reachable from them: **775** of **2236** parsed files.
 
 <details><summary>All 219 entry points and why each was counted</summary>
 
@@ -325,7 +325,7 @@ table below it.**
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
 | C2 | WIRED is reachable by the classifier | PASS | WIRED=3795 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1167 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5018 rows |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5019 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=219 |
 | C6 | a registered route module is reachable | PASS | modules reachable=775 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=130, ts=346 |
@@ -334,7 +334,7 @@ table below it.**
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
 | C12 | symbols enumerated in both languages | PASS | py=2035 ts=2933 |
-| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=43 (probe runs; 0 would be a legitimate reading) |
+| C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=44 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6626/6626 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
 | C16 | TypeScript modules are reachable, not just Python | PASS | reachable TS modules=415 |
@@ -372,9 +372,9 @@ table below it.**
 | `WIRED` | 3795 | 75.6% |
 | `FLAG-GATED` | 6 | 0.1% |
 | `BUILT-UNREACHABLE` | 1167 | 23.3% |
-| `DECLARED-ABSENT` | 43 | 0.9% |
+| `DECLARED-ABSENT` | 44 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **5018** | |
+| **TOTAL** | **5019** | |
 
 ---
 
@@ -382,6 +382,7 @@ table below it.**
 
 | Subsystem | WIRED | FLAG-GATED | BUILT-UNREACHABLE | DECLARED-ABSENT | UNCLASSIFIED | Total |
 |---|---:|---:|---:|---:|---:|---:|
+| `scripts/_worker1_novel_attack_scratch.py` | 0 | 0 | 0 | 1 | 0 | 1 |
 | `scripts/h1-frontier-designpool.ts` | 0 | 0 | 0 | 1 | 0 | 1 |
 | `scripts/h1-grant-completion-ticket.ts` | 0 | 0 | 0 | 1 | 0 | 1 |
 | `scripts/h1-grant-configpass-burst.ts` | 0 | 0 | 0 | 1 | 0 | 1 |
@@ -1045,12 +1046,13 @@ invisible for weeks.
 
 ## 6. DECLARED-ABSENT - referenced, but not on disk
 
-**43 rows.**  Two probes feed this: unresolvable internal import specifiers, and
+**44 rows.**  Two probes feed this: unresolvable internal import specifiers, and
 repo-relative path literals (`src/**.py`, `scripts/**`) naming a file that does not exist -
 the latter is the TS->Python subprocess seam, where a typo fails only at runtime.
 
 | Referenced as | Kind | Referenced from | Why flagged |
 |---|---|---|---|
+| `scripts/strategy_factory_opus_transcript_first_diagnostic.py` | path-literal | `scripts/_worker1_novel_attack_scratch.py:8` | repo-relative path literal with no file on disk |
 | `scripts/frontier-daily-ledger.json` | path-literal | `scripts/h1-frontier-designpool.ts:99` | repo-relative path literal with no file on disk |
 | `scripts/frontier-daily-ledger.json` | path-literal | `scripts/h1-grant-completion-ticket.ts:3` | repo-relative path literal with no file on disk |
 | `scripts/frontier-daily-ledger.json` | path-literal | `scripts/h1-grant-configpass-burst.ts:2` | repo-relative path literal with no file on disk |
