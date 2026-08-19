@@ -1,0 +1,90 @@
+name: Indicator Reference Verification
+
+on:
+  pull_request:
+    paths:
+      - 'indicator/**'
+      - '.github/workflows/indicator-reference.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'indicator/**'
+      - '.github/workflows/indicator-reference.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indicator-reference-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reference-unit-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+        hashseed: ['0', '42']
+    env:
+      PYTHONHASHSEED: ${{ matrix.hashseed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Compile reference and tests
+        run: python -m compileall -q indicator/reference indicator/tests
+
+      - name: Unit and property tests
+        run: python -m unittest discover -s indicator/tests -p 'test_*.py' -v
+
+      - name: Emit verification manifest
+        env:
+          INDICATOR_VERIFICATION_SUITE: unit-py${{ matrix.python-version }}-hashseed-${{ matrix.hashseed }}
+        run: python -m indicator.tests.emit_ci_manifest indicator-verification-manifest.json
+
+      - name: Retain verification manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: indicator-unit-py${{ matrix.python-version }}-seed-${{ matrix.hashseed }}
+          path: indicator-verification-manifest.json
+          if-no-files-found: error
+          retention-days: 30
+
+  reference-stress:
+    needs: reference-unit-matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONHASHSEED: '0'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Randomized invariant stress
+        run: python -m indicator.tests.stress_reference_engine
+
+      - name: Emit stress verification manifest
+        env:
+          INDICATOR_VERIFICATION_SUITE: stress-reference-engine
+        run: python -m indicator.tests.emit_ci_manifest indicator-stress-verification-manifest.json
+
+      - name: Retain stress verification manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: indicator-stress-verification
+          path: indicator-stress-verification-manifest.json
+          if-no-files-found: error
+          retention-days: 30

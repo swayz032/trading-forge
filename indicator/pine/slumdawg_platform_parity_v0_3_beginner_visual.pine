@@ -1,0 +1,327 @@
+//@version=6
+indicator("Slumdawg NQ/MNQ v0.3 — Beginner Visual Parity", overlay = true, max_labels_count = 120, max_lines_count = 120)
+
+// =============================================================================
+// SAFETY CLASSIFICATION
+// =============================================================================
+const string BUILD_CLASSIFICATION = "PLATFORM_PARITY_ONLY"
+const bool LIVE_DECISION_SUPPORT_APPROVED = false
+const float EXPECTED_TICK = 0.25
+
+// v0.3 changes PRESENTATION, not trading semantics.
+// Goal: beginner-readable chart with big labels, few colors, and plain-English state.
+
+// =============================================================================
+// INPUTS
+// =============================================================================
+string g1 = "1 — SIMPLE SETUP"
+string tradeSide = input.string("LONG", "Plan", options = ["LONG", "SHORT"], group = g1)
+string overallDirection = input.string("UNKNOWN", "Overall market", options = ["BULLISH", "BEARISH", "UNKNOWN"], group = g1)
+float proofLevel = input.price(0.0, "Yellow entry / proof price", group = g1, tooltip = "Manual yellow proof level for this parity build. Automatic selection is not enabled yet.")
+
+string g2 = "2 — PARITY TEST SAFETY"
+bool enableParityEngine = input.bool(false, "Enable test engine", group = g2)
+string runtimeMode = input.string("STUDY", "Runtime", options = ["STUDY", "LIVE_DECISION_SUPPORT"], group = g2)
+string feedAttestation = input.string("UNKNOWN", "Feed", options = ["UNKNOWN", "REALTIME", "DELAYED"], group = g2)
+
+string g3 = "3 — TEST-ONLY CALIBRATION"
+float minBreak = input.float(0.25, "BREAK distance", minval = 0.25, step = 0.25, group = g3)
+float minPush = input.float(0.25, "PUSH distance", minval = 0.25, step = 0.25, group = g3)
+float maxRecoil = input.float(2.00, "Max recoil", minval = 0.0, step = 0.25, group = g3)
+float maxPushSeconds = input.float(60.0, "Max seconds per push", minval = 0.1, step = 0.1, group = g3)
+float dojiBodyFraction = input.float(0.10, "Doji body/range", minval = 0.0, maxval = 1.0, step = 0.01, group = g3)
+
+string g4 = "4 — WHAT YOU SEE"
+bool showDayWeekLevels = input.bool(true, "Blue PDH / PDL / PWH / PWL", group = g4)
+bool showBigCoach = input.bool(true, "BIG beginner coach panel", group = g4)
+bool showColorKey = input.bool(true, "Color key", group = g4)
+bool showEngineering = input.bool(false, "Engineering diagnostics", group = g4)
+bool showDebugMarkers = input.bool(false, "Tiny test markers", group = g4)
+
+// =============================================================================
+// CURRENT CONFIRMED D/W LEVELS
+// =============================================================================
+float pdh = request.security(syminfo.tickerid, "D", high[1], lookahead = barmerge.lookahead_on)
+float pdl = request.security(syminfo.tickerid, "D", low[1], lookahead = barmerge.lookahead_on)
+float pwh = request.security(syminfo.tickerid, "W", high[1], lookahead = barmerge.lookahead_on)
+float pwl = request.security(syminfo.tickerid, "W", low[1], lookahead = barmerge.lookahead_on)
+
+// Hidden data plots preserve values for Data Window / parity without stair-step clutter.
+plot(pdh, "PDH data", display = display.none)
+plot(pdl, "PDL data", display = display.none)
+plot(pwh, "PWH data", display = display.none)
+plot(pwl, "PWL data", display = display.none)
+
+color BLUE_MAJOR = color.rgb(35, 112, 255)
+color BLUE_WEEK = color.rgb(91, 82, 230)
+color YELLOW_ENTRY = color.rgb(255, 215, 0)
+color GREEN_READY = color.rgb(0, 200, 90)
+color RED_BEAR = color.rgb(230, 55, 70)
+color PANEL_DARK = color.rgb(22, 24, 30)
+
+var line pdhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
+var line pdlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
+var line pwhLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
+var line pwlLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
+var line proofLine = line.new(na, na, na, na, xloc = xloc.bar_index, extend = extend.right)
+
+var label pdhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pdlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pwhLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label pwlLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+var label proofLabel = label.new(na, na, "", xloc = xloc.bar_index, yloc = yloc.price, style = label.style_label_left)
+
+f_big_level(line ln, label lb, float price, string name, color c, bool visible, int width) =>
+    int leftBars = math.min(bar_index, 140)
+    line.set_xy1(ln, bar_index - leftBars, price)
+    line.set_xy2(ln, bar_index + 1, price)
+    line.set_width(ln, width)
+    line.set_color(ln, visible ? c : color.new(c, 100))
+    label.set_xy(lb, bar_index + 3, price)
+    label.set_text(lb, visible ? name + "  " + str.tostring(price, format.mintick) : "")
+    label.set_size(lb, size.large)
+    label.set_textcolor(lb, name == "YELLOW ENTRY" ? color.black : color.white)
+    label.set_color(lb, visible ? c : color.new(c, 100))
+
+bool proofSet = proofLevel > 0
+if barstate.islast
+    f_big_level(pdhLine, pdhLabel, pdh, "PDH", BLUE_MAJOR, showDayWeekLevels, 2)
+    f_big_level(pdlLine, pdlLabel, pdl, "PDL", BLUE_MAJOR, showDayWeekLevels, 2)
+    f_big_level(pwhLine, pwhLabel, pwh, "PWH", BLUE_WEEK, showDayWeekLevels, 2)
+    f_big_level(pwlLine, pwlLabel, pwl, "PWL", BLUE_WEEK, showDayWeekLevels, 2)
+    f_big_level(proofLine, proofLabel, proofLevel, "YELLOW ENTRY", YELLOW_ENTRY, proofSet, 4)
+
+// =============================================================================
+// FAIL-CLOSED RUNTIME CHECKS
+// =============================================================================
+bool isFiveMinute = timeframe.isminutes and timeframe.multiplier == 5
+bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
+bool tickGridExpected = math.abs(syminfo.mintick - EXPECTED_TICK) < 1e-6
+float proofTicks = proofSet ? proofLevel / syminfo.mintick : na
+bool proofOnGrid = proofSet and math.abs(proofTicks - math.round(proofTicks)) < 1e-7
+bool liveFeedAttested = feedAttestation == "REALTIME"
+bool delayedLiveBlock = runtimeMode == "LIVE_DECISION_SUPPORT" and not liveFeedAttested
+bool contextValid = isFiveMinute and isNqMnq and tickGridExpected and proofSet and proofOnGrid
+bool exactIntrabarAvailable = barstate.isrealtime
+bool engineRuntimeAllowed = enableParityEngine and contextValid and not delayedLiveBlock
+bool actionableAllowed = LIVE_DECISION_SUPPORT_APPROVED and runtimeMode == "LIVE_DECISION_SUPPORT" and engineRuntimeAllowed and exactIntrabarAvailable
+
+string runtimeReason = not isNqMnq ? "WRONG SYMBOL — USE NQ/MNQ" : not isFiveMinute ? "CHANGE CHART TO 5 MIN" : not tickGridExpected ? "TICK DATA CHECK NEEDED" : not proofSet ? "SET YOUR YELLOW ENTRY" : not proofOnGrid ? "YELLOW PRICE MUST BE .00/.25/.50/.75" : delayedLiveBlock ? "LIVE FEED NOT CONFIRMED" : not enableParityEngine ? "TEST ENGINE IS OFF" : not exactIntrabarAvailable ? "WAITING FOR LIVE 5M CANDLE" : "TEST ENGINE RUNNING"
+
+// =============================================================================
+// CANDLE / MOMENTUM STATE
+// =============================================================================
+f_is_doji_like(float o, float h, float l, float c, float threshold) =>
+    float r = h - l
+    r <= 0.0 ? true : math.abs(c - o) / r <= threshold
+
+bool currentDojiLike = f_is_doji_like(open, high, low, close, dojiBodyFraction)
+
+const string WAIT_REFERENCE = "WAIT_REFERENCE"
+const string WAIT_BREAK = "WAIT_BREAK"
+const string BREAK_STAGE = "BREAK"
+const string PUSH_1 = "PUSH_1"
+const string ENTRY_READY = "ENTRY_READY"
+
+varip string stage = WAIT_REFERENCE
+varip bool referenceArmed = false
+varip float reference = na
+varip float anchor = na
+varip int referenceSourceBar = na
+varip float currentLow = na
+varip float currentHigh = na
+varip int lastStageTimeMs = na
+varip int entryCount = 0
+varip string lastTransition = "NONE"
+
+bool eventReference = false
+bool eventDojiVeto = false
+bool eventBreak = false
+bool eventPush1 = false
+bool eventReady = false
+bool eventRecoil = false
+bool eventBarReset = false
+
+if barstate.isnew
+    currentLow := low
+    currentHigh := high
+else
+    currentLow := na(currentLow) ? low : math.min(currentLow, low)
+    currentHigh := na(currentHigh) ? high : math.max(currentHigh, high)
+
+float direction = tradeSide == "LONG" ? 1.0 : -1.0
+float favorable = direction * close
+float referenceFav = direction * reference
+float anchorFav = direction * anchor
+
+// One realtime update can advance at most one state.
+if engineRuntimeAllowed and exactIntrabarAvailable and referenceArmed and bar_index > referenceSourceBar and stage != ENTRY_READY
+    bool recoilEligible = stage == BREAK_STAGE or stage == PUSH_1
+    float recoil = recoilEligible and not na(anchor) ? anchorFav - favorable : 0.0
+    if recoilEligible and recoil >= maxRecoil
+        stage := WAIT_BREAK
+        anchor := reference
+        lastStageTimeMs := na
+        lastTransition := "RECOIL — START PUSH TEST OVER"
+        eventRecoil := true
+    else if stage == WAIT_BREAK
+        if favorable >= referenceFav + minBreak
+            stage := BREAK_STAGE
+            anchor := close
+            lastStageTimeMs := timenow
+            lastTransition := "BREAK"
+            eventBreak := true
+    else if stage == BREAK_STAGE
+        if favorable >= anchorFav + minPush
+            float sec1 = na(lastStageTimeMs) ? 0.0 : (timenow - lastStageTimeMs) / 1000.0
+            if sec1 <= maxPushSeconds
+                stage := PUSH_1
+                anchor := close
+                lastStageTimeMs := timenow
+                lastTransition := "PUSH 1"
+                eventPush1 := true
+            else
+                lastTransition := "PUSH TOO SLOW"
+    else if stage == PUSH_1
+        if favorable >= anchorFav + minPush
+            float sec2 = na(lastStageTimeMs) ? 0.0 : (timenow - lastStageTimeMs) / 1000.0
+            if sec2 <= maxPushSeconds
+                stage := ENTRY_READY
+                anchor := close
+                lastStageTimeMs := timenow
+                entryCount += 1
+                lastTransition := "ENTRY READY — TEST ONLY"
+                eventReady := true
+            else
+                lastTransition := "PUSH 2 TOO SLOW"
+
+if engineRuntimeAllowed and exactIntrabarAvailable and barstate.isconfirmed
+    bool beyondProof = tradeSide == "LONG" ? close > proofLevel : close < proofLevel
+    if not referenceArmed
+        if beyondProof
+            if currentDojiLike
+                stage := WAIT_REFERENCE
+                lastTransition := "DOJI — NO ENTRY"
+                eventDojiVeto := true
+            else
+                reference := tradeSide == "LONG" ? high : low
+                anchor := reference
+                referenceSourceBar := bar_index
+                referenceArmed := true
+                stage := WAIT_BREAK
+                lastStageTimeMs := na
+                lastTransition := "REFERENCE CANDLE SET"
+                eventReference := true
+    else if bar_index > referenceSourceBar and stage != ENTRY_READY
+        reference := tradeSide == "LONG" ? high : low
+        anchor := reference
+        referenceSourceBar := bar_index
+        stage := WAIT_BREAK
+        lastStageTimeMs := na
+        lastTransition := "NEW CANDLE — RESET TEST"
+        eventBarReset := true
+
+if not contextValid or delayedLiveBlock or not enableParityEngine
+    stage := WAIT_REFERENCE
+    referenceArmed := false
+    reference := na
+    anchor := na
+    referenceSourceBar := na
+    lastStageTimeMs := na
+    lastTransition := runtimeReason
+
+// =============================================================================
+// BEGINNER LANGUAGE / COLORS
+// =============================================================================
+bool countertrend = (tradeSide == "LONG" and overallDirection == "BEARISH") or (tradeSide == "SHORT" and overallDirection == "BULLISH")
+string planText = countertrend ? tradeSide + " PULLBACK / COUNTERTREND" : tradeSide + " WITH OVERALL TREND"
+string stageText = stage == WAIT_REFERENCE ? "1  WAIT FOR A CANDLE PAST YELLOW" : stage == WAIT_BREAK ? "2  REFERENCE SET — WAIT FOR BREAK" : stage == BREAK_STAGE ? "3  BREAK — NOW WATCH PUSH 1" : stage == PUSH_1 ? "4  PUSH 1 — NOW WATCH PUSH 2" : "5  ENTRY READY — TEST ONLY"
+color stageColor = stage == ENTRY_READY ? GREEN_READY : stage == PUSH_1 ? color.aqua : stage == BREAK_STAGE ? YELLOW_ENTRY : color.rgb(255, 150, 30)
+color overallColor = overallDirection == "BULLISH" ? GREEN_READY : overallDirection == "BEARISH" ? RED_BEAR : color.gray
+color planColor = tradeSide == "LONG" ? GREEN_READY : RED_BEAR
+
+// =============================================================================
+// BIG COACH PANEL — designed to be read at a glance
+// =============================================================================
+var table coach = table.new(position.top_right, 2, 7, border_width = 2, frame_width = 2, bgcolor = PANEL_DARK)
+if barstate.islast
+    if showBigCoach
+        table.cell(coach, 0, 0, "SLUMDAWG", text_color = color.white, bgcolor = color.rgb(45, 48, 58), text_size = 20)
+        table.cell(coach, 1, 0, "5M COACH", text_color = color.white, bgcolor = color.rgb(45, 48, 58), text_size = 20)
+
+        table.cell(coach, 0, 1, "OVERALL", text_color = color.white, text_size = 18)
+        table.cell(coach, 1, 1, overallDirection, text_color = color.white, bgcolor = overallColor, text_size = 20)
+
+        table.cell(coach, 0, 2, "PLAN", text_color = color.white, text_size = 18)
+        table.cell(coach, 1, 2, planText, text_color = color.white, bgcolor = planColor, text_size = 18)
+
+        table.cell(coach, 0, 3, "YELLOW ENTRY", text_color = color.black, bgcolor = YELLOW_ENTRY, text_size = 18)
+        table.cell(coach, 1, 3, proofSet ? str.tostring(proofLevel, format.mintick) : "NOT SET", text_color = color.black, bgcolor = YELLOW_ENTRY, text_size = 20)
+
+        table.cell(coach, 0, 4, "NOW", text_color = color.white, text_size = 18)
+        table.cell(coach, 1, 4, stageText, text_color = color.black, bgcolor = stageColor, text_size = 18)
+
+        table.cell(coach, 0, 5, "LAST", text_color = color.white, text_size = 16)
+        table.cell(coach, 1, 5, lastTransition, text_color = color.white, text_size = 16)
+
+        table.cell(coach, 0, 6, "SYSTEM", text_color = color.white, text_size = 16)
+        table.cell(coach, 1, 6, runtimeReason, text_color = runtimeReason == "TEST ENGINE RUNNING" ? color.lime : color.orange, text_size = 16)
+    else
+        for r = 0 to 6
+            table.cell(coach, 0, r, "")
+            table.cell(coach, 1, r, "")
+
+// =============================================================================
+// SIMPLE COLOR KEY
+// =============================================================================
+var table key = table.new(position.bottom_right, 1, 4, border_width = 1, bgcolor = PANEL_DARK)
+if barstate.islast
+    if showColorKey
+        table.cell(key, 0, 0, "RED = OVERALL MARKET", text_color = color.white, bgcolor = RED_BEAR, text_size = 14)
+        table.cell(key, 0, 1, "BLUE = MARKET MAP / LEVELS", text_color = color.white, bgcolor = BLUE_MAJOR, text_size = 14)
+        table.cell(key, 0, 2, "YELLOW = ENTRY / PROOF", text_color = color.black, bgcolor = YELLOW_ENTRY, text_size = 14)
+        table.cell(key, 0, 3, "GREEN = ENTRY READY", text_color = color.white, bgcolor = GREEN_READY, text_size = 14)
+    else
+        for r = 0 to 3
+            table.cell(key, 0, r, "")
+
+// =============================================================================
+// ENGINEERING DIAGNOSTICS — hidden by default
+// =============================================================================
+var table eng = table.new(position.bottom_left, 2, 8, border_width = 1, bgcolor = PANEL_DARK)
+if barstate.islast
+    if showEngineering
+        table.cell(eng, 0, 0, "BUILD")
+        table.cell(eng, 1, 0, BUILD_CLASSIFICATION)
+        table.cell(eng, 0, 1, "LIVE APPROVED")
+        table.cell(eng, 1, 1, LIVE_DECISION_SUPPORT_APPROVED ? "YES" : "NO")
+        table.cell(eng, 0, 2, "ROOT / TF")
+        table.cell(eng, 1, 2, syminfo.root + " / " + timeframe.period)
+        table.cell(eng, 0, 3, "PLATFORM TICK")
+        table.cell(eng, 1, 3, str.tostring(syminfo.mintick))
+        table.cell(eng, 0, 4, "EXPECTED TICK")
+        table.cell(eng, 1, 4, str.tostring(EXPECTED_TICK))
+        table.cell(eng, 0, 5, "REFERENCE")
+        table.cell(eng, 1, 5, na(reference) ? "NA" : str.tostring(reference, format.mintick))
+        table.cell(eng, 0, 6, "ANCHOR")
+        table.cell(eng, 1, 6, na(anchor) ? "NA" : str.tostring(anchor, format.mintick))
+        table.cell(eng, 0, 7, "LAST RAW CODE")
+        table.cell(eng, 1, 7, lastTransition)
+    else
+        for r = 0 to 7
+            table.cell(eng, 0, r, "")
+            table.cell(eng, 1, r, "")
+
+// Optional tiny parity markers. OFF by default so beginner charts stay clean.
+plotshape(showDebugMarkers and eventReference, title = "Reference", text = "REF", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.orange, textcolor = color.black)
+plotshape(showDebugMarkers and eventDojiVeto, title = "Doji veto", text = "DOJI", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = color.gray, textcolor = color.white)
+plotshape(showDebugMarkers and eventBreak, title = "Break", text = "BREAK", style = shape.labelup, location = location.belowbar, size = size.tiny, color = YELLOW_ENTRY, textcolor = color.black)
+plotshape(showDebugMarkers and eventPush1, title = "Push 1", text = "P1", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.aqua, textcolor = color.black)
+plotshape(showDebugMarkers and eventReady, title = "Entry ready", text = "READY", style = shape.labelup, location = location.belowbar, size = size.tiny, color = GREEN_READY, textcolor = color.white)
+plotshape(showDebugMarkers and eventRecoil, title = "Recoil reset", text = "RESET", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = RED_BEAR, textcolor = color.white)
+plotshape(showDebugMarkers and eventBarReset, title = "New candle reset", text = "NEW\nCANDLE", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = color.purple, textcolor = color.white)
+
+alertcondition(eventBreak, "PARITY DEBUG — BREAK", "NON-ACTIONABLE parity event: BREAK")
+alertcondition(eventPush1, "PARITY DEBUG — PUSH_1", "NON-ACTIONABLE parity event: PUSH_1")
+alertcondition(eventReady, "PARITY DEBUG — ENTRY_READY", "NON-ACTIONABLE parity event: ENTRY_READY")
+alertcondition(eventRecoil, "PARITY DEBUG — RECOIL_RESET", "NON-ACTIONABLE parity event: RECOIL_RESET")

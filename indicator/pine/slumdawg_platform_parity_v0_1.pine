@@ -1,0 +1,278 @@
+//@version=6
+indicator("Slumdawg NQ/MNQ Platform Parity v0.1", overlay = true, max_labels_count = 100, max_lines_count = 100)
+
+// -----------------------------------------------------------------------------
+// CLASSIFICATION
+// -----------------------------------------------------------------------------
+// This script is a PLATFORM-PARITY vertical slice of the deterministic Python
+// reference engine. It is NOT live-trading approved and contains calibration
+// placeholders that are disabled by default.
+//
+// Source-of-truth semantics:
+//   indicator/spec/V1_RULEBOOK.md
+//   indicator/reference/momentum_engine.py
+//   indicator/reference/runtime_guard.py
+//   indicator/reference/price_grid.py
+//
+// Critical invariant: a single realtime execution can advance at most one
+// momentum stage. Historical bars are never treated as if their intrabar tick
+// order were known.
+
+const string BUILD_CLASSIFICATION = "PLATFORM_PARITY_ONLY"
+const bool LIVE_DECISION_SUPPORT_APPROVED = false
+const float EXPECTED_TICK = 0.25
+
+// -----------------------------------------------------------------------------
+// INPUTS — semantics / runtime
+// -----------------------------------------------------------------------------
+string groupRuntime = "Runtime / Safety"
+string runtimeMode = input.string("STUDY", "Runtime mode", options = ["STUDY", "LIVE_DECISION_SUPPORT"], group = groupRuntime)
+string feedAttestation = input.string("UNKNOWN", "Feed attestation", options = ["UNKNOWN", "REALTIME", "DELAYED"], group = groupRuntime, tooltip = "Pine does not expose a reliable delayed-vs-realtime entitlement flag. LIVE mode therefore fails closed unless the operator explicitly attests REALTIME.")
+bool enableParityEngine = input.bool(false, "Enable uncalibrated parity engine", group = groupRuntime, tooltip = "OFF by default. Enables state-machine verification only. Does not grant live-trading approval.")
+bool showDashboard = input.bool(true, "Show audit dashboard", group = groupRuntime)
+
+string groupContext = "Trading Context"
+string tradeSide = input.string("LONG", "Active plan", options = ["LONG", "SHORT"], group = groupContext)
+string overallDirection = input.string("UNKNOWN", "Overall direction", options = ["BULLISH", "BEARISH", "UNKNOWN"], group = groupContext, tooltip = "Direction context only. Crossing a red trendline never flips intraday direction in V1.")
+float proofLevel = input.price(0.0, "Yellow proof level", group = groupContext, tooltip = "Manual proof level for this parity slice. Automatic structural proof selection remains calibration-gated.")
+
+string groupCalibration = "UNRESOLVED CALIBRATION — PARITY TEST ONLY"
+float minBreak = input.float(0.25, "Minimum BREAK displacement (points)", minval = 0.25, step = 0.25, group = groupCalibration)
+float minPush = input.float(0.25, "Minimum PUSH displacement (points)", minval = 0.25, step = 0.25, group = groupCalibration)
+float maxRecoil = input.float(2.00, "Maximum recoil before reset (points)", minval = 0.0, step = 0.25, group = groupCalibration)
+float maxPushSeconds = input.float(60.0, "Maximum seconds per push", minval = 0.1, step = 0.1, group = groupCalibration)
+float dojiBodyFraction = input.float(0.10, "DOJI_LIKE max body/range", minval = 0.0, maxval = 1.0, step = 0.01, group = groupCalibration)
+
+string groupVisual = "Visuals"
+bool showNativeLevels = input.bool(true, "Show prior completed D/W levels", group = groupVisual)
+bool showDebugMarkers = input.bool(true, "Show parity transition markers", group = groupVisual)
+
+// -----------------------------------------------------------------------------
+// PLATFORM-NATIVE PRIOR COMPLETED D/W LEVELS
+// Non-repainting pattern: prior HTF value + lookahead_on.
+// -----------------------------------------------------------------------------
+float pdh = request.security(syminfo.tickerid, "D", high[1], lookahead = barmerge.lookahead_on)
+float pdl = request.security(syminfo.tickerid, "D", low[1], lookahead = barmerge.lookahead_on)
+float pwh = request.security(syminfo.tickerid, "W", high[1], lookahead = barmerge.lookahead_on)
+float pwl = request.security(syminfo.tickerid, "W", low[1], lookahead = barmerge.lookahead_on)
+
+plot(showNativeLevels ? pdh : na, "PDH", color = color.new(color.blue, 15), linewidth = 1, style = plot.style_linebr)
+plot(showNativeLevels ? pdl : na, "PDL", color = color.new(color.blue, 15), linewidth = 1, style = plot.style_linebr)
+plot(showNativeLevels ? pwh : na, "PWH", color = color.new(color.blue, 45), linewidth = 1, style = plot.style_linebr)
+plot(showNativeLevels ? pwl : na, "PWL", color = color.new(color.blue, 45), linewidth = 1, style = plot.style_linebr)
+plot(proofLevel > 0 ? proofLevel : na, "Manual Yellow Proof Level", color = color.yellow, linewidth = 2, style = plot.style_linebr)
+
+// -----------------------------------------------------------------------------
+// FAIL-CLOSED RUNTIME GUARDS
+// -----------------------------------------------------------------------------
+bool isFiveMinute = timeframe.isminutes and timeframe.multiplier == 5
+bool isNqMnq = syminfo.root == "NQ" or syminfo.root == "MNQ"
+bool tickGridExpected = math.abs(syminfo.mintick - EXPECTED_TICK) < 1e-10
+bool proofSet = proofLevel > 0
+float proofTicks = proofSet ? proofLevel / syminfo.mintick : na
+bool proofOnGrid = proofSet and math.abs(proofTicks - math.round(proofTicks)) < 1e-7
+bool liveFeedAttested = feedAttestation == "REALTIME"
+bool delayedLiveBlock = runtimeMode == "LIVE_DECISION_SUPPORT" and not liveFeedAttested
+bool contextValid = isFiveMinute and isNqMnq and tickGridExpected and proofSet and proofOnGrid
+bool engineRuntimeAllowed = enableParityEngine and contextValid and not delayedLiveBlock
+bool exactIntrabarAvailable = barstate.isrealtime
+bool actionableAllowed = LIVE_DECISION_SUPPORT_APPROVED and runtimeMode == "LIVE_DECISION_SUPPORT" and engineRuntimeAllowed and exactIntrabarAvailable
+
+string runtimeReason = not isNqMnq ? "WRONG_SYMBOL" : not isFiveMinute ? "WRONG_EXECUTION_TIMEFRAME" : not tickGridExpected ? "UNEXPECTED_TICK_GRID" : not proofSet ? "PROOF_LEVEL_NOT_SET" : not proofOnGrid ? "OFF_TICK_GRID_PROOF" : delayedLiveBlock ? "LIVE_FEED_NOT_ATTESTED_REALTIME" : not enableParityEngine ? "PARITY_ENGINE_DISABLED" : not exactIntrabarAvailable ? "HISTORICAL_INTRABAR_ORDER_UNKNOWN" : "RUNTIME_OK_NONACTIONABLE"
+
+// -----------------------------------------------------------------------------
+// CANDLE GEOMETRY
+// -----------------------------------------------------------------------------
+f_is_doji_like(float o, float h, float l, float c, float threshold) =>
+    float r = h - l
+    r <= 0.0 ? true : math.abs(c - o) / r <= threshold
+
+bool currentDojiLike = f_is_doji_like(open, high, low, close, dojiBodyFraction)
+
+// -----------------------------------------------------------------------------
+// MOMENTUM STATE — mirrors Python reference vertical slice
+// -----------------------------------------------------------------------------
+const string STAGE_WAIT_REFERENCE = "WAIT_REFERENCE"
+const string STAGE_WAIT_BREAK = "WAIT_BREAK"
+const string STAGE_BREAK = "BREAK"
+const string STAGE_PUSH_1 = "PUSH_1"
+const string STAGE_ENTRY_READY = "ENTRY_READY"
+
+varip string stage = STAGE_WAIT_REFERENCE
+varip bool referenceArmed = false
+varip float reference = na
+varip float anchor = na
+varip int referenceSourceBar = na
+varip float currentLow = na
+varip float currentHigh = na
+varip int lastStageTimeMs = na
+varip int executionSeq = 0
+varip int entryCount = 0
+varip string lastTransition = "NONE"
+
+// Per-execution event flags. They intentionally reset each execution.
+bool eventReferenceArmed = false
+bool eventReferenceDojiVeto = false
+bool eventBreak = false
+bool eventPush1 = false
+bool eventEntryReady = false
+bool eventRecoilReset = false
+bool eventSlowPush = false
+bool eventSlowPush2 = false
+bool eventBarReset = false
+
+executionSeq += 1
+
+if barstate.isnew
+    currentLow := low
+    currentHigh := high
+else
+    currentLow := na(currentLow) ? low : math.min(currentLow, low)
+    currentHigh := na(currentHigh) ? high : math.max(currentHigh, high)
+
+float direction = tradeSide == "LONG" ? 1.0 : -1.0
+float favorable = direction * close
+float referenceFavorable = direction * reference
+float anchorFavorable = direction * anchor
+
+// Exact intrabar transitions are allowed only on realtime executions.
+// One execution enters at most one branch below, preventing a giant single update
+// from manufacturing BREAK + PUSH_1 + ENTRY_READY simultaneously.
+if engineRuntimeAllowed and exactIntrabarAvailable and referenceArmed and bar_index > referenceSourceBar and stage != STAGE_ENTRY_READY
+    bool recoilEligible = stage == STAGE_BREAK or stage == STAGE_PUSH_1
+    float recoil = recoilEligible and not na(anchor) ? anchorFavorable - favorable : 0.0
+
+    if recoilEligible and recoil >= maxRecoil
+        stage := STAGE_WAIT_BREAK
+        anchor := reference
+        lastStageTimeMs := na
+        lastTransition := "RECOIL_RESET"
+        eventRecoilReset := true
+    else if stage == STAGE_WAIT_BREAK
+        if favorable >= referenceFavorable + minBreak
+            stage := STAGE_BREAK
+            anchor := close
+            lastStageTimeMs := timenow
+            lastTransition := "BREAK"
+            eventBreak := true
+    else if stage == STAGE_BREAK
+        if favorable >= anchorFavorable + minPush
+            float elapsedSeconds = na(lastStageTimeMs) ? 0.0 : (timenow - lastStageTimeMs) / 1000.0
+            if elapsedSeconds > maxPushSeconds
+                lastTransition := "SLOW_PUSH"
+                eventSlowPush := true
+            else
+                stage := STAGE_PUSH_1
+                anchor := close
+                lastStageTimeMs := timenow
+                lastTransition := "PUSH_1"
+                eventPush1 := true
+    else if stage == STAGE_PUSH_1
+        if favorable >= anchorFavorable + minPush
+            float elapsedSeconds2 = na(lastStageTimeMs) ? 0.0 : (timenow - lastStageTimeMs) / 1000.0
+            if elapsedSeconds2 > maxPushSeconds
+                lastTransition := "SLOW_PUSH_2"
+                eventSlowPush2 := true
+            else
+                stage := STAGE_ENTRY_READY
+                anchor := close
+                lastStageTimeMs := timenow
+                entryCount += 1
+                lastTransition := "ENTRY_READY_NONACTIONABLE"
+                eventEntryReady := true
+
+// Completed realtime candle semantics:
+// 1) Before a reference exists, only a completed candle beyond proof may arm it.
+// 2) DOJI_LIKE reference candles are vetoed.
+// 3) If the active live candle ends without ENTRY_READY, its completed extreme is
+//    promoted as the next reference (Candle-2 -> Candle-3 reset).
+if engineRuntimeAllowed and exactIntrabarAvailable and barstate.isconfirmed
+    bool completedBeyondProof = tradeSide == "LONG" ? close > proofLevel : close < proofLevel
+
+    if not referenceArmed
+        if completedBeyondProof
+            if currentDojiLike
+                stage := STAGE_WAIT_REFERENCE
+                lastTransition := "REFERENCE_DOJI_VETO"
+                eventReferenceDojiVeto := true
+            else
+                reference := tradeSide == "LONG" ? high : low
+                anchor := reference
+                referenceSourceBar := bar_index
+                referenceArmed := true
+                stage := STAGE_WAIT_BREAK
+                lastStageTimeMs := na
+                lastTransition := "REFERENCE_ARMED"
+                eventReferenceArmed := true
+    else if bar_index > referenceSourceBar and stage != STAGE_ENTRY_READY
+        reference := tradeSide == "LONG" ? high : low
+        anchor := reference
+        referenceSourceBar := bar_index
+        stage := STAGE_WAIT_BREAK
+        lastStageTimeMs := na
+        lastTransition := "BAR_RESET"
+        eventBarReset := true
+
+// If any required context becomes invalid, fail closed rather than preserve a stale
+// actionable-looking state. This intentionally does not invent a replacement level.
+if not contextValid or delayedLiveBlock or not enableParityEngine
+    stage := STAGE_WAIT_REFERENCE
+    referenceArmed := false
+    reference := na
+    anchor := na
+    referenceSourceBar := na
+    lastStageTimeMs := na
+    lastTransition := runtimeReason
+
+// -----------------------------------------------------------------------------
+// NON-ACTIONABLE PARITY VISUALS / ALERTS
+// -----------------------------------------------------------------------------
+plot(referenceArmed ? reference : na, "Reference Extreme", color = color.new(color.orange, 0), linewidth = 2, style = plot.style_linebr)
+plot(referenceArmed ? anchor : na, "Live Anchor", color = color.new(color.aqua, 0), linewidth = 1, style = plot.style_circles)
+
+plotshape(showDebugMarkers and eventReferenceArmed, title = "Reference armed", text = "REF", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.new(color.orange, 0), textcolor = color.black)
+plotshape(showDebugMarkers and eventReferenceDojiVeto, title = "Reference doji veto", text = "DOJI\nVETO", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = color.new(color.gray, 0), textcolor = color.white)
+plotshape(showDebugMarkers and eventBreak, title = "BREAK parity event", text = "BREAK", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.new(color.yellow, 0), textcolor = color.black)
+plotshape(showDebugMarkers and eventPush1, title = "PUSH_1 parity event", text = "P1", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.new(color.aqua, 0), textcolor = color.black)
+plotshape(showDebugMarkers and eventEntryReady, title = "ENTRY_READY parity event", text = "ENTRY\nPARITY", style = shape.labelup, location = location.belowbar, size = size.tiny, color = color.new(color.lime, 0), textcolor = color.black)
+plotshape(showDebugMarkers and eventRecoilReset, title = "Recoil reset", text = "RECOIL\nRESET", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = color.new(color.red, 0), textcolor = color.white)
+plotshape(showDebugMarkers and eventBarReset, title = "Bar reset", text = "BAR\nRESET", style = shape.labeldown, location = location.abovebar, size = size.tiny, color = color.new(color.purple, 0), textcolor = color.white)
+
+alertcondition(eventBreak, "PARITY DEBUG — BREAK", "NON-ACTIONABLE parity event: BREAK")
+alertcondition(eventPush1, "PARITY DEBUG — PUSH_1", "NON-ACTIONABLE parity event: PUSH_1")
+alertcondition(eventEntryReady, "PARITY DEBUG — ENTRY_READY", "NON-ACTIONABLE parity event: ENTRY_READY")
+alertcondition(eventRecoilReset, "PARITY DEBUG — RECOIL_RESET", "NON-ACTIONABLE parity event: RECOIL_RESET")
+
+// -----------------------------------------------------------------------------
+// AUDIT DASHBOARD
+// -----------------------------------------------------------------------------
+var table audit = table.new(position.top_right, 2, 14, border_width = 1)
+if showDashboard and barstate.islast
+    table.cell(audit, 0, 0, "BUILD")
+    table.cell(audit, 1, 0, BUILD_CLASSIFICATION)
+    table.cell(audit, 0, 1, "LIVE APPROVED")
+    table.cell(audit, 1, 1, LIVE_DECISION_SUPPORT_APPROVED ? "YES" : "NO")
+    table.cell(audit, 0, 2, "ROOT / TF")
+    table.cell(audit, 1, 2, syminfo.root + " / " + timeframe.period)
+    table.cell(audit, 0, 3, "RUNTIME")
+    table.cell(audit, 1, 3, runtimeReason)
+    table.cell(audit, 0, 4, "OVERALL")
+    table.cell(audit, 1, 4, overallDirection)
+    table.cell(audit, 0, 5, "PLAN")
+    table.cell(audit, 1, 5, tradeSide)
+    table.cell(audit, 0, 6, "STAGE")
+    table.cell(audit, 1, 6, stage)
+    table.cell(audit, 0, 7, "LAST EVENT")
+    table.cell(audit, 1, 7, lastTransition)
+    table.cell(audit, 0, 8, "PROOF")
+    table.cell(audit, 1, 8, proofSet ? str.tostring(proofLevel, format.mintick) : "NOT SET")
+    table.cell(audit, 0, 9, "REFERENCE")
+    table.cell(audit, 1, 9, na(reference) ? "NA" : str.tostring(reference, format.mintick))
+    table.cell(audit, 0, 10, "ANCHOR")
+    table.cell(audit, 1, 10, na(anchor) ? "NA" : str.tostring(anchor, format.mintick))
+    table.cell(audit, 0, 11, "DOJI_LIKE")
+    table.cell(audit, 1, 11, currentDojiLike ? "YES" : "NO")
+    table.cell(audit, 0, 12, "ENTRY COUNT")
+    table.cell(audit, 1, 12, str.tostring(entryCount))
+    table.cell(audit, 0, 13, "ACTIONABLE")
+    table.cell(audit, 1, 13, actionableAllowed ? "YES" : "NO — PARITY ONLY")
