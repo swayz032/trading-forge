@@ -46,7 +46,7 @@ def test_hard_order_builds_range_aware_key_map_before_candle_story():
     build = "BUILD_CAUSAL_KEY_LEVEL_MAP_WITH_RANGE_ROOM_AUTHORIZATION"
     reach = "PRICE_REACHES_AUTHORIZED_ZONE_OR_MATCHES_ONE_OF_TWO_FROZEN_PREBREAK_EXCEPTIONS"
     story = "READ_CANDLESTICK_GEOMETRY_AND_MULTI_CANDLE_CONTROL_STORY"
-    momentum = "REQUIRE_DIRECTIONAL_MOMENTUM_TRIGGER"
+    force = "REQUIRE_SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE"
     assert order.index(build) < order.index(reach)
     assert order.index(reach) < order.index(story)
-    assert order.index(story) < order.index(momentum)
+    assert order.index(story) < order.index(force)
