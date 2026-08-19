@@ -4,8 +4,9 @@
 The page must work when opened as a downloaded local HTML file or inside an
 opaque/sandboxed document. The bundler therefore inlines the chart/runtime JS,
 falls back to in-memory state when localStorage is denied, binds the frozen MNQ
-tick size, and patches the trader controls so every click has visible feedback.
-Bot answers are never read or embedded by this bundler.
+tick size, makes the chart overlays cover the full chart, and patches the trader
+controls so every click has visible feedback. Bot answers are never read or
+embedded by this bundler.
 """
 from __future__ import annotations
 
@@ -21,6 +22,9 @@ ENHANCE_MARKER = '<script src="replay_v3_enhance.js"></script>'
 STORE_KEY_MARKER = "const storeKey='mnq-replay-v3:'+pack.pack_id;"
 SAFE_TICK_STORE_KEY = "const TICK=0.25;const storeKey='mnq-replay-v3:'+pack.pack_id;"
 TICK_MARKER = "const TICK=0.25;"
+OVERLAY_STYLE_OLD = ".overlay{position:absolute;inset:0;z-index:5;pointer-events:none}"
+OVERLAY_STYLE_NEW = ".overlay{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}"
+OVERLAY_STYLE_MARKER = "width:100%;height:100%;z-index:5;pointer-events:none"
 VULNERABLE_STORAGE_READ = "let saved=JSON.parse(localStorage.getItem(storeKey)||'{}');"
 SAFE_STORAGE_READ = (
     "let storageAvailable=true;let saved={};"
@@ -127,18 +131,31 @@ HANDLERS_NEW = """  document.getElementById('main5m').addEventListener('click', 
   main.chart.timeScale().subscribeVisibleLogicalRangeChange(() => updateMainControlStatus('VIEW'));
 """
 
+DRAW_HANDLERS_OLD = """  drawZone.onclick = () => beginDraw('main-zone', ov5);
+  drawTp.onclick = () => beginDraw('main-tp', ov5);
+"""
+DRAW_HANDLERS_NEW = """  function revealMainForDraw(mode) {
+    beginDraw(mode, ov5);
+    panel5.scrollIntoView({behavior: 'auto', block: 'center'});
+    updateMainControlStatus(mode === 'main-zone' ? 'DRAW KEY ZONE' : 'DRAW TP');
+  }
+  drawZone.onclick = () => revealMainForDraw('main-zone');
+  drawTp.onclick = () => revealMainForDraw('main-tp');
+"""
+
 FINAL_OLD = "  drawOverlays();\n})();"
 FINAL_NEW = "  drawOverlays();\n  updateMainControlStatus('READY');\n})();"
 
 CONTROL_READY_MARKER = "MNQ_CONTROLS_READY"
+DRAW_READY_MARKER = "panel5.scrollIntoView({behavior: 'auto', block: 'center'})"
 PROGRESS_MARKER = "renderClock();\n    renderLabels();\n    updateMainControlStatus('REPLAY');"
 UNIFIED_MARKERS = (
     "Main Structure / Key Zones + TP Reaction Cluster",
     "15m CONTEXT",
     "− ZOOM OUT",
     "MOVE_AWAY_REJECTION_ORIGIN",
-    "drawZone.onclick = () => beginDraw('main-zone', ov5)",
-    "drawTp.onclick = () => beginDraw('main-tp', ov5)",
+    "drawZone.onclick = () => revealMainForDraw('main-zone')",
+    "drawTp.onclick = () => revealMainForDraw('main-tp')",
 )
 
 
@@ -149,13 +166,18 @@ def _patch_browser_runtime(html: str) -> str:
         raise RuntimeError("REPLAY_V3_STORAGE_READ_MARKER_MISSING")
     if VULNERABLE_STORAGE_SAVE not in html:
         raise RuntimeError("REPLAY_V3_STORAGE_SAVE_MARKER_MISSING")
+    if OVERLAY_STYLE_OLD not in html:
+        raise RuntimeError("REPLAY_V3_OVERLAY_STYLE_MARKER_MISSING")
     html = html.replace(STORE_KEY_MARKER, SAFE_TICK_STORE_KEY, 1)
     html = html.replace(VULNERABLE_STORAGE_READ, SAFE_STORAGE_READ, 1)
     html = html.replace(VULNERABLE_STORAGE_SAVE, SAFE_STORAGE_SAVE, 1)
+    html = html.replace(OVERLAY_STYLE_OLD, OVERLAY_STYLE_NEW, 1)
     if VULNERABLE_STORAGE_READ in html or VULNERABLE_STORAGE_SAVE in html:
         raise RuntimeError("REPLAY_V3_UNSAFE_STORAGE_ACCESS_REMAINS")
     if TICK_MARKER not in html:
         raise RuntimeError("REPLAY_V3_BROWSER_TICK_NOT_BOUND")
+    if OVERLAY_STYLE_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_FULL_CHART_OVERLAY_NOT_BOUND")
     return html
 
 
@@ -173,6 +195,7 @@ def _patch_enhance_runtime(enhance: str) -> str:
     enhance = _replace_once(enhance, SET_MAIN_TF_OLD, SET_MAIN_TF_NEW, "REPLAY_V3_TIMEFRAME_CONTROL")
     enhance = _replace_once(enhance, ZOOM_MAIN_OLD, ZOOM_MAIN_NEW, "REPLAY_V3_ZOOM_CONTROL")
     enhance = _replace_once(enhance, HANDLERS_OLD, HANDLERS_NEW, "REPLAY_V3_CONTROL_HANDLERS")
+    enhance = _replace_once(enhance, DRAW_HANDLERS_OLD, DRAW_HANDLERS_NEW, "REPLAY_V3_DRAW_HANDLERS")
     enhance = _replace_once(enhance, ENHANCE_PROGRESS_OLD, ENHANCE_PROGRESS_NEW, "REPLAY_V3_PROGRESS_REFRESH")
     enhance = _replace_once(enhance, FINAL_OLD, FINAL_NEW, "REPLAY_V3_CONTROL_READY")
     return enhance
@@ -203,10 +226,14 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         raise RuntimeError("REPLAY_V3_STORAGE_FALLBACK_NOT_BUNDLED")
     if TICK_MARKER not in html:
         raise RuntimeError("REPLAY_V3_BROWSER_TICK_NOT_BUNDLED")
+    if OVERLAY_STYLE_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_FULL_CHART_OVERLAY_NOT_BUNDLED")
     if PROGRESS_MARKER not in html:
         raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_BUNDLED")
     if CONTROL_READY_MARKER not in html:
         raise RuntimeError("REPLAY_V3_VISIBLE_CONTROL_READY_MARKER_MISSING")
+    if DRAW_READY_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_DRAW_SCROLL_TO_MAIN_MISSING")
     if "RESET DECISION" not in html or "if (l.final_action) return;" not in html:
         raise RuntimeError("REPLAY_V3_SINGLE_TRADE_INTERACTION_NOT_BUNDLED")
     missing = [marker for marker in UNIFIED_MARKERS if marker not in html]
