@@ -74,24 +74,38 @@ jobs:
       - name: Prove corrected semantic and weakest-link edge contract
         run: |
           PYTHONPATH=. python - <<'PY'
+          import json
+          from pathlib import Path
           from research.current_mnq_strategy_v2_4_policy import (
               load_spec, load_fvg_spec, load_edge_spec, load_key_level_spec,
               fingerprinted_files,
           )
           p=load_spec(); f=load_fvg_spec(); e=load_edge_spec(); k=load_key_level_spec()
+          entry=json.loads(Path('research/current_mnq_strategy_v2_4_entry_semantics.json').read_text())
+          assert p['release_id']=='MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1'
           assert p['zone_gate']['mandatory'] is True
           assert p['zone_gate']['pattern_without_zone_interaction']=='NO_TRADE'
           assert p['zone_gate']['mere_approach_without_touch']=='NO_TRADE_EXCEPT_TWO_FROZEN_PREBREAK_FAMILIES'
           assert p['zone_gate']['mid_range_pattern']=='NO_TRADE'
           assert p['candlestick_semantics']['role']=='CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL'
-          assert p['entry_trigger_semantics']['normal_breakout']=='first completed print beyond zone is setup only -> subsequent momentum candle confirms'
-          assert p['entry_trigger_semantics']['weak_breakout']=='weak first break -> controlled pullback -> completed 15m three-bar continuation'
+          assert 'REQUIRE_SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE' in p['hard_entry_order']
+          assert p['risk_intent']['stop_points']==17.25
+          assert p['risk_intent']['late_entry_drawdown_sensitive'] is True
+          assert p['entry_trigger_semantics']['normal_breakout']=='first completed print beyond zone is setup only -> following forming 5m candle may trigger when sustained intra5 directional force is proven'
+          assert p['entry_trigger_semantics']['weak_breakout']=='weak first break -> controlled completed pullback -> forming 15m bar3 may trigger when sustained intra15 directional force is proven'
+          assert p['entry_trigger_semantics']['historical_force_resolution']=='completed 1m sub-bars only; no tick-order inference and no final parent OHLC backdating'
           assert p['entry_trigger_semantics']['prebreak_early_entry_exceptions_only']==[
               'repeat_test_momentum_attack',
               'true_displacement_sequence_into_level_with_third_candle_momentum',
           ]
+          assert entry['live_force_equation']['historical_resolution']=='COMPLETED_1M_SUBBARS_ONLY'
+          assert entry['live_force_equation']['minimum_completed_1m_observations']==2
+          assert entry['live_force_equation']['future_next_candle_forbidden'] is True
+          assert entry['live_force_equation']['tick_order_inference_forbidden'] is True
+          assert entry['anti_overfit']['prior_clean_attempt_status']=='ABORTED_PRE_RESULT_ARRAY_MEMORY_ERROR_NO_LEDGER_OR_EDGE_RESULT_OBSERVED'
           assert p['key_level_semantics']['active_map_policy']['no_hindsight_full_day_range_label'] is True
           assert p['anti_overfit']['v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4'] is True
+          assert p['anti_overfit']['new_PnL_selected_force_threshold_added'] is False
           assert f['detector_authority']['repository_path']=='src/engine/indicators/fvg_native.py'
           assert f['detector_authority']['timeframe_for_current_strategy']=='15m'
           assert f['trader_target_rule']['liquidity_cluster_before_fvg']=='TARGET_LIQUIDITY_CLUSTER'
@@ -108,8 +122,8 @@ jobs:
           assert e['anti_overfit']['no_threshold_rescue_after_result'] is True
           seen=e['anti_overfit']['known_seen_performance_ranges']
           assert any(x['start']=='2022-01-01' and x['end']=='2026-08-17' for x in seen)
-          assert len(fingerprinted_files()) >= 42
-          print('PASS: v2.4 entry fidelity + full equation + executable fingerprint are frozen')
+          assert len(fingerprinted_files()) >= 43
+          print('PASS: v2.4 live-force entry fidelity + full equation + executable fingerprint are frozen')
           PY
       - name: Verify read-only SignalR sidecar and hosted-runtime refusal
         working-directory: research/mnq_v23_realtime
@@ -163,8 +177,11 @@ jobs:
               'patterns_away_from_zone_refused':True,
               'shared_historical_live_candidate_kernel':True,
               'momentum_displacement_separated':True,
-              'first_break_requires_followthrough_momentum':True,
-              'weak_break_15m_three_bar_continuation':True,
+              'intra_candle_force_before_parent_close':True,
+              'force_historical_resolution':'COMPLETED_1M_SUBBARS_ONLY',
+              'force_min_completed_1m_observations':2,
+              'first_break_requires_following_intra5_force':True,
+              'weak_break_15m_bar3_intra_force':True,
               'prebreak_exception_count':2,
               'range_day_entry_zone_room_gate':True,
               'established_zone_min_independent_rejections':key['established_zone_path']['minimum_independent_rejections'],
@@ -172,6 +189,7 @@ jobs:
               'native_fvg_detector':fvg['detector_authority']['repository_path'],
               'native_fvg_timeframe':'15m',
               'first_reaction_target_ordering':True,
+              'prior_clean_attempt_status':spec['anti_overfit']['prior_clean_attempt_status'],
               'edge_equation':edge['equation']['definition'],
               'clean_oos_seen_history_exclusion':edge['anti_overfit']['known_seen_performance_ranges'],
               'signalr_sidecar_ci_automation_refused':True,
