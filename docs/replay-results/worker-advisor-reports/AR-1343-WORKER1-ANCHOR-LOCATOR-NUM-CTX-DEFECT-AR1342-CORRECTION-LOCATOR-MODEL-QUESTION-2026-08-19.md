@@ -105,3 +105,98 @@ STOP   : yes -- awaiting grader verdict + GPT ruling on the locator-model questi
 NEXT   : once both land, re-run certification prep for every video whose transcript exceeds
          ~4096 tokens under whichever locator config GPT authorizes, before trusting any further
          `unanchored` count.
+
+## FOLLOW-UP: INDEPENDENT GRADER'S FULL VERDICT (landed 2026-08-19, agent `a7eff24beeef6d679`)
+
+Per this report's own promise above and worker-onboarding S3's durable-grader-report rule: full
+verdict, verbatim, not summarized-only.
+
+**VERDICT: PASS (BOUNDED), band 8** for the `num_ctx` fix itself (`anchor_locator.py` blob
+`af71f710ee15c18b9beaea506eca3db278bd550b`) -- the fix claim (diff scope, E8Wg6tFPYjo 9->0,
+N7uP9V0Iktc crash causation, `32768` legitimacy) is CONFIRMED via 2+ non-overlapping paths each,
+including a runtime witness (`/api/ps` `context_length` flipping 4096 <-> 32768 under a
+seam-injected control). Band 8 not 9: independent re-scan done, but real open HIGH items remain
+(below).
+
+**AR-1344A Step C "long-input capacity proof" is graded band 3, UNVERIFIED -- FALSE GREEN.** The
+grader ran `scripts/_ar1344a_step_c_capacity_proof.py` itself: all 3 attempts located the witness
+quote at char 13269-13523, INSIDE the old ~16,384-char window the proof exists to test past (the
+witness was pinned at char 30714). The script's only check is "is this string a literal span",
+never "is it AT the witness offset", so it prints `all_located_and_verified: true` regardless of
+where the match lands. **Long-input capacity beyond ~16K chars remains UNPROVEN**, contrary to
+this report's earlier claim (`## THE FIX` section above, capacity proof reference). Commit
+`547742e9` additionally claims "4/5 real calls" while the committed script runs 3 -- a second,
+smaller discrepancy in the same artifact.
+
+**NOVEL findings, beyond the graded claim (found by the grader's own hunting, not asked for):**
+
+- **N-1 (HIGH):** the identical missing-`options.num_ctx` defect is live in ~10 other production
+  call sites, most notably `src/engine/extraction/tier2_discourse.py:453` -- the EXACT file
+  `anchor_locator.py`'s own docstring names as its template -- and
+  `src/server/services/model-router.ts:1939`, which passes `options` as literal `undefined` for
+  the `transcript_extractor` role (full transcript, higher exposure than anchor_locator's
+  quote+8-rules payload). Also: `pattern-aggregator-service.ts`, `nightly-critique-service.ts`,
+  `prompt-evolution-service.ts`, `trade-critique-service.ts`, `carter-research.ts`,
+  `critic-optimizer-service.ts`, `agent-service.ts` (x3), `parameter_evolver.py`.
+  `OllamaClient.embed()` has no `options` parameter at all.
+- **N-2 (HIGH):** the pre-fix blast radius this report retracted was too narrow. Measured: 23 of
+  25 cached preps were generated before the fix; 15 have transcripts over 16,384 chars, carrying
+  **47 unanchored verdicts across 11 videos** -- qLtq73bTPBA 9/15, dHmOosYof48 8/14, oDLt9zh33LE
+  6/15, lRMFcsqhYBU 5/16, FAKWJ-1NlLE 5/13, m-G1ag77aVc 4/16, nV9gknhy2Ew 3/16, aHLIE_TXjpo 3/11,
+  dE4lPhAWke8 2/19, N7SM8a7Dc9s 1/15, KXWRtV2LOVc 1/15. All 11 are suspect (by the E8Wg6tFPYjo
+  9->0 precedent) and need regeneration before any disposition on them is trusted. (4 other exposed
+  preps showed 0 unanchored already -- exposure does not automatically mean corruption, but these
+  11 are unresolved.)
+- **N-3 (MEDIUM):** `32768` is hardcoded in `anchor_locator.py` with no env override reaching it
+  (unlike `pilot_conveyor.py`, which does read env), against a documented OOM band --
+  `transcript-chunker.ts` exists specifically to avoid a `GGML_ASSERT` OOM at exactly 32768 ctx on
+  an RTX 5060 8GB for 24K-37K-char transcripts. 12 of 40 corpus transcripts sit in/above that band,
+  including `gddYspvW0_w` (24,720 chars, a previously known-failing fixture). The grader's own 3
+  sequential 32768-ctx calls on a 76,723-char transcript did NOT OOM, but 16 sequential calls per
+  video across the long tail remains untested.
+- **N-4 (closed during the grade):** at the original pin the changed line had zero test coverage;
+  `test_anchor_locator.py`'s two new tests (already committed, both passing) closed this gap
+  during the grade window.
+- **N-5 (MEDIUM, process):** `proposed_quote_not_literal_substring` is NOT diagnostic of
+  truncation specifically -- it fires for any non-literal proposal, including on
+  N7uP9V0Iktc post-fix (a transcript that fits in 4096 tokens). Treat it only as "not a literal
+  substring", never as truncation evidence on its own.
+- **N-6 (MEDIUM, process hygiene):** a concurrent `auto-wip` safety commit and a separate
+  concurrent process rewrote `E8Wg6tFPYjo__s0.pkl` while the grader's controls ran on the same
+  Ollama instance. Verified confound-free for the RED/GREEN discrimination itself, but
+  artifact-level attribution during concurrent runs is unreliable -- a process-hygiene note, not a
+  defect in the fix.
+
+**What the grader explicitly did NOT verify** (stated in its own coverage section, carried here
+verbatim rather than dropped): the truncation MECHANISM (only the effect, not `prompt_eval_count`
+or which end Ollama drops); whether 32768 lets the model ground beyond ~16,384 chars (Step C fails
+to show this); OOM behavior on the 12 in-band transcripts under realistic sequential-call load;
+whether the 11 N-2 videos are actually corrupted (only E8Wg6tFPYjo is a proven case, the other 11
+are exposure, not proof); N7uP9V0Iktc's original "5/5" pre-fix crash count (reproduced 1/1, not
+5/5); the ~10 sibling call sites' live runtime impact (read statically, never executed); any
+live-capital or broker-path surface (none touched).
+
+## RELATION TO AR-1345A (locator authority correction, landed same window)
+
+AR-1345A subsequently ruled Opus, not Gemma, is the authorized load-bearing locator (recovering
+AR-1234). Per AR-1345A this `num_ctx` fix is downgraded from "the certification-resume path" to a
+**defensive fix for non-load-bearing Gemma utility paths** -- it stays committed and independently
+graded (band 8, correctly scoped and real) but does not itself authorize resuming certification.
+
+**N-2's 11-video list is folded into AR-1345A's step-12 regeneration obligation as-is**: every one
+of those 11 videos was Gemma-path-generated during the authority-regression window regardless of
+its `num_ctx` exposure status, so all 11 require full-unit regeneration under the newly-authorized
+Opus batch locator path (`batch_locator.py` + `opus_phase1_route.py`, AR-1234 LANE O1) -- not a
+Gemma rerun with the num_ctx fix applied. This closes the "await grader verdict" STOP condition
+above; the remaining STOP condition (GPT ruling on locator-model authority) is already satisfied by
+AR-1345A. Resuming the Opus-path recovery now.
+
+**Carried forward, NOT closed by this note** (F-1, N-1, N-3 are real open findings independent of
+the locator-authority question and must not be silently dropped per CLAUDE.md §11c zero
+carry-forwards): F-1 (fix the false-green Step C assertion or retire the script) and N-1 (patch the
+~10 sibling call sites, at minimum `tier2_discourse.py:453` and `model-router.ts:1939`) are
+Gemma/Ollama-transport defects independent of which model is the load-bearing locator -- Gemma
+remains in active use for non-load-bearing paths (tier2_discourse, other services), so these are
+real production defects, not moot. Filing as immediate follow-on work this same session once the
+Opus recovery driver is running, per the zero-carry-forward rule -- named owner: worker-1, same
+session, not parked.
