@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `0e0b904093dd0297cd39ce0c40ce980213bcf256`
+> Generated at commit `538eaf582f594f1602c93ce82da90806fd8c7cdc`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -4004,7 +4004,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_resolves_as_anchor` | function | `src/engine/extraction/anchor_locator.py:219` | 0 | unique |
 | `_verify_and_locate` | function | `src/engine/extraction/anchor_locator.py:233` | 3 | unique |
 | `locate_anchor` | function | `src/engine/extraction/anchor_locator.py:267` | 9 | unique |
-| `sha256` | function | `src/engine/extraction/batch_locator.py:76` | 70 | unique |
+| `sha256` | function | `src/engine/extraction/batch_locator.py:76` | 71 | unique |
 | `production_rules_block` | function | `src/engine/extraction/batch_locator.py:85` | 0 | unique |
 | `build_batch_brief` | function | `src/engine/extraction/batch_locator.py:103` | 2 | unique |
 | `build_batch_task` | function | `src/engine/extraction/batch_locator.py:148` | 2 | unique |
