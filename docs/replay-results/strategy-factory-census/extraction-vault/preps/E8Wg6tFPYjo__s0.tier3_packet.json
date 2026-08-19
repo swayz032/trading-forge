@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, the premise of higher time frame alignment is premium and discount. Whenever we have a trading range, we want to gauge premium and discount pricing. So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities."
+            "verbatim": "So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "this large wick right here pierced above that previous high, purging all of that liquidity, bringing that money back into the market, adding fuel for the next upcoming move."
+            "verbatim": "The most common area to find resting liquidity is major highs and major lows."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The simple way to describe liquidity is just resting money in the market. And the market wants to purge that liquidity and bring that money back in to add fuel for the next move."
+            "verbatim": "And the market wants to purge that liquidity and bring that money back in to add fuel for the next move."
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure. That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon."
+            "verbatim": "That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure. That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon."
+            "verbatim": "So this is the actual criteria that basically signals a trading opportunity."
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now, typically that retracement ends up being towards a fair value gap or an imbalance."
+            "verbatim": "So when a break of structure occurs, we need to patiently wait for a retracement. Now, typically that retracement ends up being towards a fair value gap or an imbalance."
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now, whenever this occurs on the chart, price is drawn back towards it. So, after we move away from it significantly, typically price will retrace until it fills that gap and then it will often continue in its intended direction."
+            "verbatim": "The best way I can explain why this happens is that the market doesn't like inefficiencies."
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So now that the fib tool is all set up, I can then click the long position tool on trading view and place my entry at the 71%."
+            "verbatim": "I place my entry at the 71% right here."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "My favorite number to use is 71%. And what that does is it allows me to get a really nice risk-to-reward ratio. If I target the 71% from my entry, I get a risk-to-reward ratio of 2.45."
+            "verbatim": "My favorite number to use is 71%. And what that does is it allows me to get a really nice risk-to-reward ratio."
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, the premise of higher time frame alignment is premium and discount. Whenever we have a trading range, we want to gauge premium and discount pricing. So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities."
+            "verbatim": "So, the premise of higher time frame alignment is premium and discount."
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And so if we look all the way to the right, this large wick right here pierced above that previous high, purging all of that liquidity, bringing that money back into the market, adding fuel for the next upcoming move."
+            "verbatim": "this large wick right here pierced above that previous high, purging all of that liquidity"
           },
           "rater_response": {
             "role": null,
@@ -421,7 +421,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Make your Fibonacci numbers line up with the fair value gap or imbalance."
+            "verbatim": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap."
           },
           "rater_response": {
             "role": null,
@@ -474,7 +474,7 @@
     "items": [
       {
         "item_id": "E8Wg6tFPYjo-S0-B000",
-        "extracted_condition_text": "The higher timeframe must be aligned with premium (sell) or discount (buy) pricing.",
+        "extracted_condition_text": "Determine the higher timeframe bias by identifying if the price is in a premium (above 50% of range) or discount (below 50% of range) zone.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -506,7 +506,7 @@
       },
       {
         "item_id": "E8Wg6tFPYjo-S0-B004",
-        "extracted_condition_text": "BOS confirms a potential trading opportunity has been created.",
+        "extracted_condition_text": "Wait for a Break of Structure (BOS) to occur, signaling a significant movement in price.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
