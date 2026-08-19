@@ -1,0 +1,148 @@
+{
+  "artifact": "strategy-factory-pilot-b-disposition",
+  "search_methodology_positive_control": {
+    "target": "sVkmZklJDHI",
+    "expected_file": "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json",
+    "found": [
+      "docs/replay-results/svkm-extraction-certified/grade/phase1.json",
+      "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json"
+    ],
+    "passed": true
+  },
+  "external_positive_control": {
+    "role": "EXTERNAL_POSITIVE_CONTROL",
+    "video_id": "sVkmZklJDHI",
+    "compiled_name": null,
+    "committed_spec_hash": "dc9d12a78be85c62c1ae02930b3d36ddd1214a40fe98abef2a52b70b4d619749",
+    "freshly_compiled_spec_hash": "dc9d12a78be85c62c1ae02930b3d36ddd1214a40fe98abef2a52b70b4d619749",
+    "drift_detected": false,
+    "disposition": "FAITHFUL_COMPILE_READY_FOR_BACKTEST",
+    "evidence": {
+      "compiler_path": "svkm_v2_1_compile.compile_svkm_v2_1_vertical -> compile_certified_record.compile_record_to_artifact [SPINE-A, unchanged] -> spec_producer.produce_spec_artifact_from_record [canonical producer, unchanged]",
+      "committed_artifact_path": "src/engine/extraction/fixtures/svkm_v2_1_compiled/sVkmZklJDHI__s0.spec.json",
+      "freshly_compiled_artifact_path": "src\\engine\\extraction\\fixtures\\svkm_v2_1_compiled\\sVkmZklJDHI__s0.spec.json"
+    }
+  },
+  "manifest_members_in": 9,
+  "manifest_members_out": 9,
+  "missing_ids": [],
+  "extra_ids": [],
+  "duplicate_output_ids": false,
+  "disposition_counts": {
+    "EXTRACTION_MISSING_REQUIRED_INFORMATION": 9
+  },
+  "members": [
+    {
+      "strategy_id": "97fabc41-f55b-4a20-a020-c28d6b7ffb54",
+      "name": "5m_minute_support_level_mcl_5m",
+      "video_id": "75DJN5UVQnw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked JSON file contains this video_id alongside the modern extraction schema marker 'entry_sequence' -- no raw or certified extraction record exists to compile from",
+        "search_population_size": 1382,
+        "candidate_files_found": 0
+      }
+    },
+    {
+      "strategy_id": "9f38ab7a-9a3d-4771-bdfb-13c1cd067536",
+      "name": "5m_minute_support_level_mes_5m",
+      "video_id": "75DJN5UVQnw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked JSON file contains this video_id alongside the modern extraction schema marker 'entry_sequence' -- no raw or certified extraction record exists to compile from",
+        "search_population_size": 1382,
+        "candidate_files_found": 0
+      }
+    },
+    {
+      "strategy_id": "6c755822-713d-48f9-867e-cf399722e69a",
+      "name": "5m_minute_support_level_mnq_5m",
+      "video_id": "75DJN5UVQnw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked JSON file contains this video_id alongside the modern extraction schema marker 'entry_sequence' -- no raw or certified extraction record exists to compile from",
+        "search_population_size": 1382,
+        "candidate_files_found": 0
+      }
+    },
+    {
+      "strategy_id": "4c61be86-5940-4bec-a8a0-87328b2cafe8",
+      "name": "avoiding_two_mistakes_mcl_1m",
+      "video_id": "sVkmZklJDHI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "a modern extraction record exists for this source video, but does not name this row's specific strategy -- the video was extracted under the modern pipeline for a DIFFERENT taught concept; this row's old (spec_onboarding, corpus_version pre-dating the certified pipeline) compiled_spec is not proof of a new certified-source-graph compile (AR-1333A S1)",
+        "candidate_files_and_named_strategies": {
+          "docs/replay-results/svkm-extraction-certified/grade/phase1.json": [],
+          "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json": [
+            "fvg_breakout_range_1m_5m"
+          ]
+        }
+      }
+    },
+    {
+      "strategy_id": "589ec512-eecf-4d49-879f-7ec0e8d2b8f2",
+      "name": "avoiding_two_mistakes_mes_1m",
+      "video_id": "sVkmZklJDHI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "a modern extraction record exists for this source video, but does not name this row's specific strategy -- the video was extracted under the modern pipeline for a DIFFERENT taught concept; this row's old (spec_onboarding, corpus_version pre-dating the certified pipeline) compiled_spec is not proof of a new certified-source-graph compile (AR-1333A S1)",
+        "candidate_files_and_named_strategies": {
+          "docs/replay-results/svkm-extraction-certified/grade/phase1.json": [],
+          "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json": [
+            "fvg_breakout_range_1m_5m"
+          ]
+        }
+      }
+    },
+    {
+      "strategy_id": "ca5564d8-f6a2-46f5-9f2f-e678572ccf48",
+      "name": "avoiding_two_mistakes_mnq_1m",
+      "video_id": "sVkmZklJDHI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "a modern extraction record exists for this source video, but does not name this row's specific strategy -- the video was extracted under the modern pipeline for a DIFFERENT taught concept; this row's old (spec_onboarding, corpus_version pre-dating the certified pipeline) compiled_spec is not proof of a new certified-source-graph compile (AR-1333A S1)",
+        "candidate_files_and_named_strategies": {
+          "docs/replay-results/svkm-extraction-certified/grade/phase1.json": [],
+          "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json": [
+            "fvg_breakout_range_1m_5m"
+          ]
+        }
+      }
+    },
+    {
+      "strategy_id": "e27546e4-fd8d-49d1-a359-5a0ed9a9411b",
+      "name": "ballinger_bands_mcl_5m",
+      "video_id": "FqxEKDxemtI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked JSON file contains this video_id alongside the modern extraction schema marker 'entry_sequence' -- no raw or certified extraction record exists to compile from",
+        "search_population_size": 1382,
+        "candidate_files_found": 0
+      }
+    },
+    {
+      "strategy_id": "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa",
+      "name": "ballinger_bands_mes_5m",
+      "video_id": "FqxEKDxemtI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked JSON file contains this video_id alongside the modern extraction schema marker 'entry_sequence' -- no raw or certified extraction record exists to compile from",
+        "search_population_size": 1382,
+        "candidate_files_found": 0
+      }
+    },
+    {
+      "strategy_id": "b5871142-d5e4-4d8b-a7da-3033719d762f",
+      "name": "ballinger_bands_mnq_5m",
+      "video_id": "FqxEKDxemtI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked JSON file contains this video_id alongside the modern extraction schema marker 'entry_sequence' -- no raw or certified extraction record exists to compile from",
+        "search_population_size": 1382,
+        "candidate_files_found": 0
+      }
+    }
+  ],
+  "pilot_verdict": "PASS"
+}
