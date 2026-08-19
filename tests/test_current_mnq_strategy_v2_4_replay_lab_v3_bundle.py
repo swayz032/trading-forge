@@ -22,12 +22,38 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
         "if (l.final_action) return; /* RESET DECISION */\n"
         "/* Main Structure / Key Zones + TP Reaction Cluster */\n"
         "/* 15m CONTEXT · − ZOOM OUT · MOVE_AWAY_REJECTION_ORIGIN */\n"
+        "  panel5.appendChild(mainTools);\n"
+        "  function setMainTf(tf) {\n"
+        "    mainTf = tf;\n"
+        "    document.getElementById('main5m').classList.toggle('active', tf === '5m');\n"
+        "    document.getElementById('main15m').classList.toggle('active', tf === '15m');\n"
+        "    refreshMain(false);\n"
+        "    focusDecisionArea();\n"
+        "  }\n"
+        "  function zoomMain(multiplier) {\n"
+        "    const scale = main.chart.timeScale();\n"
+        "    const r = scale.getVisibleLogicalRange();\n"
+        "    if (!r) {\n"
+        "      scale.fitContent();\n"
+        "      return;\n"
+        "    }\n"
+        "    const mid = (r.from + r.to) / 2;\n"
+        "    const half = Math.max(4, (r.to - r.from) * multiplier / 2);\n"
+        "    scale.setVisibleLogicalRange({from: mid - half, to: mid + half});\n"
+        "  }\n"
+        "  document.getElementById('main5m').onclick = () => setMainTf('5m');\n"
+        "  document.getElementById('main15m').onclick = () => setMainTf('15m');\n"
+        "  document.getElementById('mainZoomOut').onclick = () => zoomMain(1.55);\n"
+        "  document.getElementById('mainZoomIn').onclick = () => zoomMain(0.68);\n"
+        "  document.getElementById('mainFit').onclick = () => { main.chart.timeScale().fitContent(); drawOverlays(); };\n"
         "drawZone.onclick = () => beginDraw('main-zone', ov5);\n"
         "drawTp.onclick = () => beginDraw('main-tp', ov5);\n"
         "setData = function (fit) {\n"
         "    refreshMain(Boolean(fit));\n"
         "    renderClock();\n"
-        "  };\n",
+        "  };\n"
+        "  drawOverlays();\n"
+        "})();\n",
         encoding="utf-8",
     )
     out = bundle(html, lwc, enhance)
@@ -46,7 +72,13 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "try{saved=JSON.parse(window.localStorage.getItem(storeKey)||'{}')}" in out
     assert "if(!storageAvailable)return" in out
     assert "const TICK=0.25;" in out
-    assert "renderClock();\n    renderLabels();" in out
+    assert "renderClock();\n    renderLabels();\n    updateMainControlStatus('REPLAY');" in out
+    assert "MNQ_CONTROLS_READY" in out
+    assert "updateMainControlStatus('TIMEFRAME')" in out
+    assert "updateMainControlStatus(multiplier > 1 ? 'ZOOM OUT' : 'ZOOM IN')" in out
+    assert "updateMainControlStatus('FIT ALL')" in out
+    assert "subscribeVisibleLogicalRangeChange" in out
+    assert "addEventListener('click', () => setMainTf('15m'))" in out
 
 
 def test_v3_generator_explicitly_excludes_all_prior_v2_review_sessions():
