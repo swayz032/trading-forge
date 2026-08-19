@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `04c83435dad3ea73eb91039a2d9f9cee4b76fb2a`  (worktree DIRTY at generation time)
+> Generated at commit `547742e97ee4ffb19d1c1fd8353d0a5eac9b4567`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -42,10 +42,10 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
 | `src/` | 1915 | 777 |
-| `scripts/` | 278 | 276 |
+| `scripts/` | 280 | 278 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2228** | **1053** |
+| **TOTAL** | **2230** | **1055** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **216**.  Modules reachable from them: **772** of **2228** parsed files.
+Total entry points: **216**.  Modules reachable from them: **772** of **2230** parsed files.
 
 <details><summary>All 216 entry points and why each was counted</summary>
 
@@ -4000,7 +4000,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_normalize_query` | function | `src/engine/extraction/anchor_locator.py:210` | 0 | unique |
 | `_resolves_as_anchor` | function | `src/engine/extraction/anchor_locator.py:219` | 0 | unique |
 | `_verify_and_locate` | function | `src/engine/extraction/anchor_locator.py:233` | 3 | unique |
-| `locate_anchor` | function | `src/engine/extraction/anchor_locator.py:267` | 8 | unique |
+| `locate_anchor` | function | `src/engine/extraction/anchor_locator.py:267` | 9 | unique |
 | `sha256` | function | `src/engine/extraction/batch_locator.py:76` | 67 | unique |
 | `production_rules_block` | function | `src/engine/extraction/batch_locator.py:85` | 0 | unique |
 | `build_batch_brief` | function | `src/engine/extraction/batch_locator.py:103` | 1 | unique |
