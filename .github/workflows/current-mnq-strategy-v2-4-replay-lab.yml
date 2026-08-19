@@ -113,7 +113,6 @@ jobs:
           inline = [b for b in blocks if b.strip()]
           if len(inline) < 3:
               raise SystemExit(f'REPLAY_V3_EXPECTED_3_INLINE_SCRIPTS:{len(inline)}')
-          # The generated core is the middle script; the last is our enhancement.
           Path('/tmp/replay_v3_core.js').write_text(inline[-2], encoding='utf-8')
           Path('/tmp/replay_v3_enhance.js').write_text(inline[-1], encoding='utf-8')
           PY
@@ -132,10 +131,16 @@ jobs:
           overlap = old & new
           if overlap:
               raise SystemExit('REPLAY_V3_PRIOR_OVERLAP:' + ','.join(sorted(overlap)))
-          if len(new) != 16:
-              raise SystemExit(f'REPLAY_V3_NOT_16_FRESH_SESSIONS:{len(new)}')
+          if len(new) != receipt['case_count'] or len(new) != receipt['session_count']:
+              raise SystemExit('REPLAY_V3_CASE_SESSION_COUNT_MISMATCH')
+          if not new:
+              raise SystemExit('REPLAY_V3_NO_FRESH_CASES')
+          if receipt['case_count'] != receipt['available_fresh_scoreable_sessions']:
+              raise SystemExit('REPLAY_V3_DID_NOT_USE_ALL_FRESH_SESSIONS')
           if receipt['prior_v2_session_overlap_count'] != 0:
               raise SystemExit('REPLAY_V3_RECEIPT_OVERLAP_NOT_ZERO')
+          if receipt['repeated_old_sessions_used_to_fill_case_count'] is not False:
+              raise SystemExit('REPLAY_V3_OLD_SESSION_FILL_NOT_FALSE')
           html = (pack/'review_v3.html').read_text(encoding='utf-8')
           if 'src="lightweight-charts.standalone.production.js"' in html or 'src="replay_v3_enhance.js"' in html:
               raise SystemExit('REPLAY_V3_NOT_STANDALONE')
