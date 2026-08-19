@@ -40,31 +40,40 @@ def origin_side(zone: core.Zone) -> str:
     raise RuntimeError(f"V24_ZONE_ORIGIN_SIDE_UNKNOWN:{zone.id}:{zone.side}")
 
 
-def _breaks(role: str, row, lo: float, hi: float, clear: float) -> bool:
+def _breaks(role: str, close: float, lo: float, hi: float, clear: float) -> bool:
     if role == "S":
-        return bool(float(row.close) < float(lo) - float(clear))
-    return bool(float(row.close) > float(hi) + float(clear))
+        return bool(float(close) < float(lo) - float(clear))
+    return bool(float(close) > float(hi) + float(clear))
 
 
 def zone_state_at_v24(zone: core.Zone, bars5: pd.DataFrame,
                       asof: pd.Timestamp, p: core.Params) -> core.Zone:
-    """Replay zone role causally from creation through bars strictly before asof."""
+    """Replay zone role causally from creation through bars strictly before asof.
+
+    Only the four numeric fields used by the lifecycle equation are materialized.
+    This is behavior-preserving but avoids pandas ``iterrows()`` constructing a
+    wide object array for every repeated replay on production history.
+    """
     origin = origin_side(zone)
     role = origin
     state = core.ZoneState.ACTIVE_SUPPORT if role == "S" else core.ZoneState.ACTIVE_RESISTANCE
     pending_broken_role: str | None = None
 
-    q = bars5[(bars5.index >= zone.created) & (bars5.index < asof)]
+    q = bars5.loc[
+        (bars5.index >= zone.created) & (bars5.index < asof),
+        ["low", "high", "close", "atr"],
+    ]
     if q.empty:
         return replace(zone, side=role, state=state)
 
-    for _, r in q.iterrows():
-        atr = float(r.get("atr", np.nan))
+    for r in q.itertuples(index=False, name=None):
+        low, high, close, atr_raw = r
+        atr = float(atr_raw) if pd.notna(atr_raw) else np.nan
         clear = p.breakout_clear_atr * atr if np.isfinite(atr) else core.TICK * 2
-        interacts = bool(float(r.low) <= float(zone.hi) and float(r.high) >= float(zone.lo))
+        interacts = bool(float(low) <= float(zone.hi) and float(high) >= float(zone.lo))
 
         if pending_broken_role is None:
-            if _breaks(role, r, zone.lo, zone.hi, clear):
+            if _breaks(role, close, zone.lo, zone.hi, clear):
                 pending_broken_role = role
                 state = core.ZoneState.BROKEN
                 continue
@@ -76,26 +85,26 @@ def zone_state_at_v24(zone: core.Zone, bars5: pd.DataFrame,
         if old == "S":
             # Failed support break: price reclaimed the zone. Location is support
             # again, but entry still needs the separate candle/control gate.
-            if float(r.close) >= float(zone.mid):
+            if float(close) >= float(zone.mid):
                 role = "S"
                 pending_broken_role = None
                 state = core.ZoneState.TESTED
                 continue
             # Accepted break followed by a retest from below -> resistance.
-            if interacts and float(r.close) <= float(zone.mid):
+            if interacts and float(close) <= float(zone.mid):
                 role = "R"
                 pending_broken_role = None
                 state = core.ZoneState.FLIPPED_RETEST
                 continue
         else:
             # Failed resistance break: close back down restores resistance.
-            if float(r.close) <= float(zone.mid):
+            if float(close) <= float(zone.mid):
                 role = "R"
                 pending_broken_role = None
                 state = core.ZoneState.TESTED
                 continue
             # Accepted break followed by a retest from above -> support.
-            if interacts and float(r.close) >= float(zone.mid):
+            if interacts and float(close) >= float(zone.mid):
                 role = "S"
                 pending_broken_role = None
                 state = core.ZoneState.FLIPPED_RETEST
