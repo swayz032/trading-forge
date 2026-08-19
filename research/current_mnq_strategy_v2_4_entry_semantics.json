@@ -20,7 +20,7 @@
     "tug_of_war": "Large giveback/back-and-forth increases path distance without equal directional progress and therefore lowers efficiency.",
     "directional_extreme": "For longs, latest completed 1m close must equal/regain the strongest completed 1m close so far; shorts are the mirror image.",
     "minimum_completed_1m_observations": 2,
-    "minimum_observation_reason": "Two completed sub-bars are the structural minimum needed to observe persistence versus giveback; this value was fixed from semantics before any clean performance result and is not PnL-selected.",
+    "minimum_observation_reason": "Two completed sub-bars are the structural minimum needed to observe persistence versus giveback; this value was fixed from semantics before any clean performance result was observed and is not PnL-selected.",
     "parent_close_policy": "If force was not proven before the parent candle close, that candle does not receive the trader's early momentum-entry privilege.",
     "future_next_candle_forbidden": true,
     "tick_order_inference_forbidden": true
@@ -90,7 +90,7 @@
     "structural_minimum_completed_1m_observations": 2,
     "reuses_existing_frozen_geometry_thresholds_for_force": true,
     "no_PnL_selection": true,
-    "video_and_direct_trader_labels_arrived_before_any_clean_v2_4_performance_result_was_observed": true,
+    "video_and_direct_trader_labels_arrived_after_clean_runner_start_but_before_any_clean_performance_result_was_observed": true,
     "prior_clean_attempt_status": "ABORTED_PRE_RESULT_ARRAY_MEMORY_ERROR_NO_LEDGER_OR_EDGE_RESULT_OBSERVED",
     "changing_this_contract_invalidates_prior_v2_4_evidence": true
   }
