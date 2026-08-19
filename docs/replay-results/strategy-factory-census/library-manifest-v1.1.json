@@ -1,0 +1,3482 @@
+[
+  {
+    "strategy_id": "97fabc41-f55b-4a20-a020-c28d6b7ffb54",
+    "name": "5m_minute_support_level_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "spec_video:75DJN5UVQnw",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=75DJN5UVQnw",
+      "extraction_provenance": "spec:75DJN5UVQnw:a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "spec_hash": "a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "graph_canonical_hash": "b76e1d9ce4df306a",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:48.336Z"
+  },
+  {
+    "strategy_id": "9f38ab7a-9a3d-4771-bdfb-13c1cd067536",
+    "name": "5m_minute_support_level_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "spec_video:75DJN5UVQnw",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=75DJN5UVQnw",
+      "extraction_provenance": "spec:75DJN5UVQnw:a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "spec_hash": "a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "graph_canonical_hash": "b76e1d9ce4df306a",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:46.438Z"
+  },
+  {
+    "strategy_id": "6c755822-713d-48f9-867e-cf399722e69a",
+    "name": "5m_minute_support_level_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "spec_video:75DJN5UVQnw",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=75DJN5UVQnw",
+      "extraction_provenance": "spec:75DJN5UVQnw:a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "spec_hash": "a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+      "graph_canonical_hash": "b76e1d9ce4df306a",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:47.376Z"
+  },
+  {
+    "strategy_id": "4c61be86-5940-4bec-a8a0-87328b2cafe8",
+    "name": "avoiding_two_mistakes_mcl_1m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "spec_video:sVkmZklJDHI",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=sVkmZklJDHI",
+      "extraction_provenance": "spec:sVkmZklJDHI:0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "spec_hash": "0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "graph_canonical_hash": "999c125cbe9f3b71",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:21.693Z"
+  },
+  {
+    "strategy_id": "589ec512-eecf-4d49-879f-7ec0e8d2b8f2",
+    "name": "avoiding_two_mistakes_mes_1m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "spec_video:sVkmZklJDHI",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=sVkmZklJDHI",
+      "extraction_provenance": "spec:sVkmZklJDHI:0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "spec_hash": "0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "graph_canonical_hash": "999c125cbe9f3b71",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:19.801Z"
+  },
+  {
+    "strategy_id": "ca5564d8-f6a2-46f5-9f2f-e678572ccf48",
+    "name": "avoiding_two_mistakes_mnq_1m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "spec_video:sVkmZklJDHI",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=sVkmZklJDHI",
+      "extraction_provenance": "spec:sVkmZklJDHI:0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "spec_hash": "0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+      "graph_canonical_hash": "999c125cbe9f3b71",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:20.745Z"
+  },
+  {
+    "strategy_id": "e27546e4-fd8d-49d1-a359-5a0ed9a9411b",
+    "name": "ballinger_bands_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "spec_video:FqxEKDxemtI",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=FqxEKDxemtI",
+      "extraction_provenance": "spec:FqxEKDxemtI:23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "spec_hash": "23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "graph_canonical_hash": "5bfb474166ad8014",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:21.571Z"
+  },
+  {
+    "strategy_id": "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa",
+    "name": "ballinger_bands_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "spec_video:FqxEKDxemtI",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=FqxEKDxemtI",
+      "extraction_provenance": "spec:FqxEKDxemtI:23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "spec_hash": "23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "graph_canonical_hash": "5bfb474166ad8014",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:19.676Z"
+  },
+  {
+    "strategy_id": "b5871142-d5e4-4d8b-a7da-3033719d762f",
+    "name": "ballinger_bands_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "spec_video:FqxEKDxemtI",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=FqxEKDxemtI",
+      "extraction_provenance": "spec:FqxEKDxemtI:23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "spec_hash": "23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+      "graph_canonical_hash": "5bfb474166ad8014",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:20.618Z"
+  },
+  {
+    "strategy_id": "3af883fa-9c50-45de-9076-214136f44b8a",
+    "name": "bos_and_fvg_or_fvg_mcl_15m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "spec_video:E8Wg6tFPYjo",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=E8Wg6tFPYjo",
+      "extraction_provenance": "spec:E8Wg6tFPYjo:aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "spec_hash": "aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "graph_canonical_hash": "9682c2805312e2b2",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:15.817Z"
+  },
+  {
+    "strategy_id": "4be0db1d-b6fe-46c4-8251-fd721b1b0992",
+    "name": "bos_and_fvg_or_fvg_mes_15m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "spec_video:E8Wg6tFPYjo",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=E8Wg6tFPYjo",
+      "extraction_provenance": "spec:E8Wg6tFPYjo:aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "spec_hash": "aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "graph_canonical_hash": "9682c2805312e2b2",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:13.943Z"
+  },
+  {
+    "strategy_id": "913f40c4-6d3d-4c71-81da-109631f38873",
+    "name": "bos_and_fvg_or_fvg_mnq_15m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "spec_video:E8Wg6tFPYjo",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=E8Wg6tFPYjo",
+      "extraction_provenance": "spec:E8Wg6tFPYjo:aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "spec_hash": "aa281e48521624b25e75c9f93be46e7ed02d59bbeaa80bcf87a2c3d492bfe6b0",
+      "graph_canonical_hash": "9682c2805312e2b2",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:14.872Z"
+  },
+  {
+    "strategy_id": "6491538e-aff0-4ed8-b0c6-67a36e6cf84f",
+    "name": "breakout_capture_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "spec_video:VTEQ2fhGLqE",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=VTEQ2fhGLqE",
+      "extraction_provenance": "spec:VTEQ2fhGLqE:769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "spec_hash": "769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "graph_canonical_hash": "1f2701be99e1e2d1",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:27.321Z"
+  },
+  {
+    "strategy_id": "85776068-64f5-4877-b99b-026de2c49201",
+    "name": "breakout_capture_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "spec_video:VTEQ2fhGLqE",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=VTEQ2fhGLqE",
+      "extraction_provenance": "spec:VTEQ2fhGLqE:769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "spec_hash": "769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "graph_canonical_hash": "1f2701be99e1e2d1",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:25.422Z"
+  },
+  {
+    "strategy_id": "ff718865-0876-4cdb-a84a-cc88eaf32cd7",
+    "name": "breakout_capture_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "spec_video:VTEQ2fhGLqE",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=VTEQ2fhGLqE",
+      "extraction_provenance": "spec:VTEQ2fhGLqE:769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "spec_hash": "769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+      "graph_canonical_hash": "1f2701be99e1e2d1",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:26.366Z"
+  },
+  {
+    "strategy_id": "1b256347-a65c-4ec0-a73b-77c2c01cc29e",
+    "name": "bullish_candle_formation_mcl_1m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "spec_video:LOcaRWcc1xI",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=LOcaRWcc1xI",
+      "extraction_provenance": "spec:LOcaRWcc1xI:84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "spec_hash": "84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "graph_canonical_hash": "cf86660f574df378",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:47.190Z"
+  },
+  {
+    "strategy_id": "f3babbdd-2e2e-4adb-b449-dc1590f569e2",
+    "name": "bullish_candle_formation_mes_1m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "spec_video:LOcaRWcc1xI",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=LOcaRWcc1xI",
+      "extraction_provenance": "spec:LOcaRWcc1xI:84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "spec_hash": "84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "graph_canonical_hash": "cf86660f574df378",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:45.294Z"
+  },
+  {
+    "strategy_id": "67d67ba0-c0b4-4dab-ba00-a25c331ae4d5",
+    "name": "bullish_candle_formation_mnq_1m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "spec_video:LOcaRWcc1xI",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=LOcaRWcc1xI",
+      "extraction_provenance": "spec:LOcaRWcc1xI:84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "spec_hash": "84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+      "graph_canonical_hash": "cf86660f574df378",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:46.237Z"
+  },
+  {
+    "strategy_id": "91bfb9e4-bb54-4a80-842e-3522bb1b0527",
+    "name": "buy_bias_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "spec_video:mNcoaNdAyIE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=mNcoaNdAyIE",
+      "extraction_provenance": "spec:mNcoaNdAyIE:a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "spec_hash": "a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "graph_canonical_hash": "1be73f53898a6881",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:55.974Z"
+  },
+  {
+    "strategy_id": "b238477c-71a4-4fa0-bb50-5f67c1b2c865",
+    "name": "buy_bias_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "spec_video:mNcoaNdAyIE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=mNcoaNdAyIE",
+      "extraction_provenance": "spec:mNcoaNdAyIE:a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "spec_hash": "a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "graph_canonical_hash": "1be73f53898a6881",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:54.002Z"
+  },
+  {
+    "strategy_id": "2c64c7c5-5d5d-4ba3-9995-cc5ab2fcfa1f",
+    "name": "buy_bias_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "spec_video:mNcoaNdAyIE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=mNcoaNdAyIE",
+      "extraction_provenance": "spec:mNcoaNdAyIE:a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "spec_hash": "a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+      "graph_canonical_hash": "1be73f53898a6881",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:54.954Z"
+  },
+  {
+    "strategy_id": "162e6fdd-e4c9-4335-b6da-bb8c3f8cb59d",
+    "name": "buy_trades_in_counter_trend_trading_environment_mcl_4h",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "spec_video:lRMFcsqhYBU",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=lRMFcsqhYBU",
+      "extraction_provenance": "spec:lRMFcsqhYBU:3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "spec_hash": "3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "graph_canonical_hash": "7262b87b72a5a54e",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:50.113Z"
+  },
+  {
+    "strategy_id": "534ca8ea-32d8-4c94-8f09-d851a78d795f",
+    "name": "buy_trades_in_counter_trend_trading_environment_mes_4h",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "spec_video:lRMFcsqhYBU",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=lRMFcsqhYBU",
+      "extraction_provenance": "spec:lRMFcsqhYBU:3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "spec_hash": "3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "graph_canonical_hash": "7262b87b72a5a54e",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:48.151Z"
+  },
+  {
+    "strategy_id": "0f3a1418-992a-427e-818a-6d427fe11173",
+    "name": "buy_trades_in_counter_trend_trading_environment_mnq_4h",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "spec_video:lRMFcsqhYBU",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=lRMFcsqhYBU",
+      "extraction_provenance": "spec:lRMFcsqhYBU:3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "spec_hash": "3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+      "graph_canonical_hash": "7262b87b72a5a54e",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:49.096Z"
+  },
+  {
+    "strategy_id": "229770b3-860c-49c3-820e-0d3ff1348704",
+    "name": "buying_opportunity_mcl_15m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "spec_video:x1ydP8bC7OE",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=x1ydP8bC7OE",
+      "extraction_provenance": "spec:x1ydP8bC7OE:c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "spec_hash": "c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "graph_canonical_hash": "c3e39b72af57f6ac",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:32.992Z"
+  },
+  {
+    "strategy_id": "88626172-8b82-4607-938c-fab7c8b9b3a9",
+    "name": "buying_opportunity_mes_15m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "spec_video:x1ydP8bC7OE",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=x1ydP8bC7OE",
+      "extraction_provenance": "spec:x1ydP8bC7OE:c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "spec_hash": "c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "graph_canonical_hash": "c3e39b72af57f6ac",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:31.052Z"
+  },
+  {
+    "strategy_id": "29a5a070-24e6-4fc4-ac0b-284d314039b6",
+    "name": "buying_opportunity_mnq_15m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "spec_video:x1ydP8bC7OE",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=x1ydP8bC7OE",
+      "extraction_provenance": "spec:x1ydP8bC7OE:c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "spec_hash": "c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+      "graph_canonical_hash": "c3e39b72af57f6ac",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:31.992Z"
+  },
+  {
+    "strategy_id": "52f9921d-619c-4cab-b845-bef642c7585f",
+    "name": "crossover_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "spec_video:snNkQSyWX4k",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=snNkQSyWX4k",
+      "extraction_provenance": "spec:snNkQSyWX4k:43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "spec_hash": "43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "graph_canonical_hash": "bf733f8c6e5d159d",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:18.783Z"
+  },
+  {
+    "strategy_id": "aae789b5-2d29-4558-a58b-7950ce5b9c0a",
+    "name": "crossover_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "spec_video:snNkQSyWX4k",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=snNkQSyWX4k",
+      "extraction_provenance": "spec:snNkQSyWX4k:43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "spec_hash": "43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "graph_canonical_hash": "bf733f8c6e5d159d",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:16.904Z"
+  },
+  {
+    "strategy_id": "8ec7f48d-59e8-4888-8ac7-9cdd875a78e2",
+    "name": "crossover_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "spec_video:snNkQSyWX4k",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=snNkQSyWX4k",
+      "extraction_provenance": "spec:snNkQSyWX4k:43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "spec_hash": "43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+      "graph_canonical_hash": "bf733f8c6e5d159d",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:17.835Z"
+  },
+  {
+    "strategy_id": "69b64551-05ad-41f6-b736-aeaab16d6bfb",
+    "name": "discount_price_to_buy_from_mcl_30m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "30m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "spec_video:m-G1ag77aVc",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=m-G1ag77aVc",
+      "extraction_provenance": "spec:m-G1ag77aVc:06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "spec_hash": "06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "graph_canonical_hash": "382b9bc3c58ff329",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:53.051Z"
+  },
+  {
+    "strategy_id": "979ba21b-66ca-4071-8e5e-ca96911a4cbd",
+    "name": "discount_price_to_buy_from_mes_30m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "30m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "spec_video:m-G1ag77aVc",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=m-G1ag77aVc",
+      "extraction_provenance": "spec:m-G1ag77aVc:06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "spec_hash": "06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "graph_canonical_hash": "382b9bc3c58ff329",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:51.094Z"
+  },
+  {
+    "strategy_id": "9b871b65-3a50-456d-accc-5269d59a3992",
+    "name": "discount_price_to_buy_from_mnq_30m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "30m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "spec_video:m-G1ag77aVc",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=m-G1ag77aVc",
+      "extraction_provenance": "spec:m-G1ag77aVc:06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "spec_hash": "06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+      "graph_canonical_hash": "382b9bc3c58ff329",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:52.048Z"
+  },
+  {
+    "strategy_id": "d8fe9ad2-da9a-463f-bcea-2b742601b028",
+    "name": "downside_delivery_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "spec_video:nV9gknhy2Ew",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=nV9gknhy2Ew",
+      "extraction_provenance": "spec:nV9gknhy2Ew:b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "spec_hash": "b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "graph_canonical_hash": "4df5edaf21d23e8d",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:07.474Z"
+  },
+  {
+    "strategy_id": "942f83cc-0a84-41d7-b11d-b3f3b88a6f2b",
+    "name": "downside_delivery_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "spec_video:nV9gknhy2Ew",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=nV9gknhy2Ew",
+      "extraction_provenance": "spec:nV9gknhy2Ew:b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "spec_hash": "b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "graph_canonical_hash": "4df5edaf21d23e8d",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:05.481Z"
+  },
+  {
+    "strategy_id": "232d9540-cbda-478e-93c4-9a35f6cf8a86",
+    "name": "downside_delivery_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "spec_video:nV9gknhy2Ew",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=nV9gknhy2Ew",
+      "extraction_provenance": "spec:nV9gknhy2Ew:b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "spec_hash": "b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+      "graph_canonical_hash": "4df5edaf21d23e8d",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:06.509Z"
+  },
+  {
+    "strategy_id": "a1d641ff-e35c-48f8-899f-9401e0c2c839",
+    "name": "ema_period_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "spec_video:N7uP9V0Iktc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=N7uP9V0Iktc",
+      "extraction_provenance": "spec:N7uP9V0Iktc:2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "spec_hash": "2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "graph_canonical_hash": "6e29e3300ac9e6e3",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:01.688Z"
+  },
+  {
+    "strategy_id": "cce3d9f0-e23e-473d-b841-8af2db3eab1a",
+    "name": "ema_period_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "spec_video:N7uP9V0Iktc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=N7uP9V0Iktc",
+      "extraction_provenance": "spec:N7uP9V0Iktc:2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "spec_hash": "2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "graph_canonical_hash": "6e29e3300ac9e6e3",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:59.787Z"
+  },
+  {
+    "strategy_id": "9d133b69-55ea-4eab-969f-c385eacbba21",
+    "name": "ema_period_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "spec_video:N7uP9V0Iktc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=N7uP9V0Iktc",
+      "extraction_provenance": "spec:N7uP9V0Iktc:2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "spec_hash": "2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+      "graph_canonical_hash": "6e29e3300ac9e6e3",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:00.755Z"
+  },
+  {
+    "strategy_id": "3e91ffe4-bd68-41bb-a364-d35968c0778f",
+    "name": "entry_at_key_levels_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "spec_video:xTTDH5iRhJc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=xTTDH5iRhJc",
+      "extraction_provenance": "spec:xTTDH5iRhJc:ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "spec_hash": "ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "graph_canonical_hash": "431e6c12369ea1de",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:35.829Z"
+  },
+  {
+    "strategy_id": "3f63d906-ce8e-4a9f-9e97-c3b6b075642d",
+    "name": "entry_at_key_levels_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "spec_video:xTTDH5iRhJc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=xTTDH5iRhJc",
+      "extraction_provenance": "spec:xTTDH5iRhJc:ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "spec_hash": "ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "graph_canonical_hash": "431e6c12369ea1de",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:33.930Z"
+  },
+  {
+    "strategy_id": "a71fb739-41de-45f3-af8f-1bec87338107",
+    "name": "entry_at_key_levels_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "spec_video:xTTDH5iRhJc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=xTTDH5iRhJc",
+      "extraction_provenance": "spec:xTTDH5iRhJc:ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "spec_hash": "ab8f496d3027c81ac5379618b3a7c370707cddfc3a3b2c2a2265ede05eec1071",
+      "graph_canonical_hash": "431e6c12369ea1de",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:34.888Z"
+  },
+  {
+    "strategy_id": "d2e71c2d-d8e9-4348-b7c4-1f53c2e9c67c",
+    "name": "entry_chart_timeframe_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "NEEDS_ARCHETYPE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "spec_video:aHLIE_TXjpo",
+      "needs_archetype"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=aHLIE_TXjpo",
+      "extraction_provenance": "spec:aHLIE_TXjpo:26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "spec_hash": "26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "graph_canonical_hash": "130e9b25288acd77",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:55.224Z"
+  },
+  {
+    "strategy_id": "5cd1ac73-8e89-4adc-83cc-63a700dc0196",
+    "name": "entry_chart_timeframe_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "NEEDS_ARCHETYPE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "spec_video:aHLIE_TXjpo",
+      "needs_archetype"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=aHLIE_TXjpo",
+      "extraction_provenance": "spec:aHLIE_TXjpo:26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "spec_hash": "26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "graph_canonical_hash": "130e9b25288acd77",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:52.257Z"
+  },
+  {
+    "strategy_id": "89ac9dea-ddb5-4779-b7ac-21d19feeee81",
+    "name": "entry_chart_timeframe_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "NEEDS_ARCHETYPE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "spec_video:aHLIE_TXjpo",
+      "needs_archetype"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=aHLIE_TXjpo",
+      "extraction_provenance": "spec:aHLIE_TXjpo:26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "spec_hash": "26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+      "graph_canonical_hash": "130e9b25288acd77",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:53.671Z"
+  },
+  {
+    "strategy_id": "1489bf44-a7de-4a68-b6c9-d4d4fe9ff390",
+    "name": "entry_condition_mcl_1h",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "1h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "spec_video:UBvfsImdI2U",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=UBvfsImdI2U",
+      "extraction_provenance": "spec:UBvfsImdI2U:cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "spec_hash": "cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "graph_canonical_hash": "09e789cb0afe9ad4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:24.490Z"
+  },
+  {
+    "strategy_id": "8148f3b5-8bc7-4d36-a1d4-0ed5e2802185",
+    "name": "entry_condition_mes_1h",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "1h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "spec_video:UBvfsImdI2U",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=UBvfsImdI2U",
+      "extraction_provenance": "spec:UBvfsImdI2U:cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "spec_hash": "cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "graph_canonical_hash": "09e789cb0afe9ad4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:22.618Z"
+  },
+  {
+    "strategy_id": "7ea22e05-b1b2-4be5-bd35-5f5f1bba5805",
+    "name": "entry_condition_mnq_1h",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "1h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "spec_video:UBvfsImdI2U",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=UBvfsImdI2U",
+      "extraction_provenance": "spec:UBvfsImdI2U:cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "spec_hash": "cf529b758ca46be59073fbfdbb5d7d8018ca5db91a701cfdb5dd1716a3a02beb",
+      "graph_canonical_hash": "09e789cb0afe9ad4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:23.557Z"
+  },
+  {
+    "strategy_id": "8a047fd8-148c-46b0-a268-717f826ff4d4",
+    "name": "expansion_higher_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "spec_video:FAKWJ-1NlLE",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=FAKWJ-1NlLE",
+      "extraction_provenance": "spec:FAKWJ-1NlLE:bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "spec_hash": "bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "graph_canonical_hash": "fa5ca583532c62d9",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:18.722Z"
+  },
+  {
+    "strategy_id": "63d50af3-5629-437d-9271-0b242b212458",
+    "name": "expansion_higher_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "spec_video:FAKWJ-1NlLE",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=FAKWJ-1NlLE",
+      "extraction_provenance": "spec:FAKWJ-1NlLE:bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "spec_hash": "bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "graph_canonical_hash": "fa5ca583532c62d9",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:16.746Z"
+  },
+  {
+    "strategy_id": "43d73bbc-2710-4d8f-89d0-bac8e60688c4",
+    "name": "expansion_higher_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "spec_video:FAKWJ-1NlLE",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=FAKWJ-1NlLE",
+      "extraction_provenance": "spec:FAKWJ-1NlLE:bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "spec_hash": "bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+      "graph_canonical_hash": "fa5ca583532c62d9",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:17.677Z"
+  },
+  {
+    "strategy_id": "e135491b-dedf-4c30-8614-9c74acc6055f",
+    "name": "hammer_candle_long_side_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "spec_video:NMUd0oX_7Pg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=NMUd0oX_7Pg",
+      "extraction_provenance": "spec:NMUd0oX_7Pg:abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "spec_hash": "abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "graph_canonical_hash": "753c0cb722aaebad",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:04.527Z"
+  },
+  {
+    "strategy_id": "710a9ed3-a3d0-4eb3-baa1-69085bf87dd1",
+    "name": "hammer_candle_long_side_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "spec_video:NMUd0oX_7Pg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=NMUd0oX_7Pg",
+      "extraction_provenance": "spec:NMUd0oX_7Pg:abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "spec_hash": "abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "graph_canonical_hash": "753c0cb722aaebad",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:02.633Z"
+  },
+  {
+    "strategy_id": "c1217b13-f0a5-4fa9-afaa-35da4ce3998f",
+    "name": "hammer_candle_long_side_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "spec_video:NMUd0oX_7Pg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=NMUd0oX_7Pg",
+      "extraction_provenance": "spec:NMUd0oX_7Pg:abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "spec_hash": "abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+      "graph_canonical_hash": "753c0cb722aaebad",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:03.566Z"
+  },
+  {
+    "strategy_id": "39eba5ec-6939-434a-a1cc-bcb19bee4606",
+    "name": "jump_in_downtrend_mcl_1h",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "1h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "spec_video:dHmOosYof48",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=dHmOosYof48",
+      "extraction_provenance": "spec:dHmOosYof48:9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "spec_hash": "9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "graph_canonical_hash": "7fee0bf3960e83f4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:10.189Z"
+  },
+  {
+    "strategy_id": "fb2e92ab-feda-4327-a524-4a557e859da7",
+    "name": "jump_in_downtrend_mes_1h",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "1h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "spec_video:dHmOosYof48",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=dHmOosYof48",
+      "extraction_provenance": "spec:dHmOosYof48:9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "spec_hash": "9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "graph_canonical_hash": "7fee0bf3960e83f4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:07.999Z"
+  },
+  {
+    "strategy_id": "0dfd11ee-d227-4ff0-a839-c1c78356d5e5",
+    "name": "jump_in_downtrend_mnq_1h",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "1h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "spec_video:dHmOosYof48",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=dHmOosYof48",
+      "extraction_provenance": "spec:dHmOosYof48:9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "spec_hash": "9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+      "graph_canonical_hash": "7fee0bf3960e83f4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:09.255Z"
+  },
+  {
+    "strategy_id": "ac4fe99d-1c97-42ee-8ce2-dafd6f18e0ea",
+    "name": "long_entry_mcl_15m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "spec_video:WV1fyudd7fw",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=WV1fyudd7fw",
+      "extraction_provenance": "spec:WV1fyudd7fw:fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "spec_hash": "fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "graph_canonical_hash": "dfd7856166d27c7f",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:30.123Z"
+  },
+  {
+    "strategy_id": "a18406a7-4f63-4d10-948b-228b9473ad5f",
+    "name": "long_entry_mes_15m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "spec_video:WV1fyudd7fw",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=WV1fyudd7fw",
+      "extraction_provenance": "spec:WV1fyudd7fw:fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "spec_hash": "fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "graph_canonical_hash": "dfd7856166d27c7f",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:28.251Z"
+  },
+  {
+    "strategy_id": "93534762-1b88-41c8-b5bf-32ba8584bc0e",
+    "name": "long_entry_mnq_15m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "spec_video:WV1fyudd7fw",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=WV1fyudd7fw",
+      "extraction_provenance": "spec:WV1fyudd7fw:fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "spec_hash": "fef889b0219b5e3b5386251814974207ece0161f9c5a4876439984b231187520",
+      "graph_canonical_hash": "dfd7856166d27c7f",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:29.186Z"
+  },
+  {
+    "strategy_id": "5b9fefce-ea5a-490c-a80e-8136272ddcf7",
+    "name": "long_entry_or_short_entry_mcl_15m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "spec_video:c8VLqF0XDR4",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=c8VLqF0XDR4",
+      "extraction_provenance": "spec:c8VLqF0XDR4:32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "spec_hash": "32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "graph_canonical_hash": "a36a2d4248819878",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:01.365Z"
+  },
+  {
+    "strategy_id": "ae7a2560-3569-4f29-b297-a4f3a60d1ca3",
+    "name": "long_entry_or_short_entry_mes_15m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "spec_video:c8VLqF0XDR4",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=c8VLqF0XDR4",
+      "extraction_provenance": "spec:c8VLqF0XDR4:32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "spec_hash": "32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "graph_canonical_hash": "a36a2d4248819878",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:59.465Z"
+  },
+  {
+    "strategy_id": "b2deddcb-57d4-4bc9-b750-39be0f8fe12a",
+    "name": "long_entry_or_short_entry_mnq_15m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "spec_video:c8VLqF0XDR4",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=c8VLqF0XDR4",
+      "extraction_provenance": "spec:c8VLqF0XDR4:32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "spec_hash": "32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+      "graph_canonical_hash": "a36a2d4248819878",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:00.416Z"
+  },
+  {
+    "strategy_id": "4be1fb85-0c34-4f2e-b326-9053440bdc64",
+    "name": "long_opportunities_mcl_4h",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "spec_video:HfZTCZTDfWk",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=HfZTCZTDfWk",
+      "extraction_provenance": "spec:HfZTCZTDfWk:29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "spec_hash": "29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "graph_canonical_hash": "dcf5946dd78af3f5",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:30.077Z"
+  },
+  {
+    "strategy_id": "5e5803d1-e255-4ee9-943f-02328deb5f14",
+    "name": "long_opportunities_mes_4h",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "spec_video:HfZTCZTDfWk",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=HfZTCZTDfWk",
+      "extraction_provenance": "spec:HfZTCZTDfWk:29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "spec_hash": "29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "graph_canonical_hash": "dcf5946dd78af3f5",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:28.202Z"
+  },
+  {
+    "strategy_id": "331fe15a-8560-4b46-88bb-4b01119b725a",
+    "name": "long_opportunities_mnq_4h",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "spec_video:HfZTCZTDfWk",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=HfZTCZTDfWk",
+      "extraction_provenance": "spec:HfZTCZTDfWk:29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "spec_hash": "29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+      "graph_canonical_hash": "dcf5946dd78af3f5",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:29.134Z"
+  },
+  {
+    "strategy_id": "971826d6-defb-4882-a634-5deeecad712f",
+    "name": "look_i_use_range_breakouts_confirmation_trend_direction_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "spec_video:deymRD3kSD0",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=deymRD3kSD0",
+      "extraction_provenance": "spec:deymRD3kSD0:f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "spec_hash": "f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "graph_canonical_hash": "f6bd877eae2b159c",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:07.038Z"
+  },
+  {
+    "strategy_id": "5591c0ba-a4ac-44eb-81c1-f26011774013",
+    "name": "look_i_use_range_breakouts_confirmation_trend_direction_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "spec_video:deymRD3kSD0",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=deymRD3kSD0",
+      "extraction_provenance": "spec:deymRD3kSD0:f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "spec_hash": "f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "graph_canonical_hash": "f6bd877eae2b159c",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:05.154Z"
+  },
+  {
+    "strategy_id": "47b1c45a-de30-498b-b630-0ab957395204",
+    "name": "look_i_use_range_breakouts_confirmation_trend_direction_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "spec_video:deymRD3kSD0",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=deymRD3kSD0",
+      "extraction_provenance": "spec:deymRD3kSD0:f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "spec_hash": "f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+      "graph_canonical_hash": "f6bd877eae2b159c",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:06.091Z"
+  },
+  {
+    "strategy_id": "c45b4718-07b1-4bea-baa3-1ee0a8e209b4",
+    "name": "manipulation_trade_mcl_1m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "spec_video:7ieYBa7Z-Hg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=7ieYBa7Z-Hg",
+      "extraction_provenance": "spec:7ieYBa7Z-Hg:4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "spec_hash": "4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "graph_canonical_hash": "7987de2de0a61adb",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:51.312Z"
+  },
+  {
+    "strategy_id": "81002a32-98fc-4a49-9079-14742224122a",
+    "name": "manipulation_trade_mes_1m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "spec_video:7ieYBa7Z-Hg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=7ieYBa7Z-Hg",
+      "extraction_provenance": "spec:7ieYBa7Z-Hg:4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "spec_hash": "4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "graph_canonical_hash": "7987de2de0a61adb",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:49.284Z"
+  },
+  {
+    "strategy_id": "c029e162-ecf9-4709-9820-baf60c6b7af0",
+    "name": "manipulation_trade_mnq_1m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "1m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "spec_video:7ieYBa7Z-Hg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=7ieYBa7Z-Hg",
+      "extraction_provenance": "spec:7ieYBa7Z-Hg:4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "spec_hash": "4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+      "graph_canonical_hash": "7987de2de0a61adb",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:50.314Z"
+  },
+  {
+    "strategy_id": "edbe2372-05b6-4388-afce-b99e754b7e04",
+    "name": "mean_reversion_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "spec_video:1HFoStW_wsc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=1HFoStW_wsc",
+      "extraction_provenance": "spec:1HFoStW_wsc:04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "spec_hash": "04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "graph_canonical_hash": "3841c659151ead15",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:45.483Z"
+  },
+  {
+    "strategy_id": "81663564-e5bc-42b6-8a51-548ba0bc55c3",
+    "name": "mean_reversion_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "spec_video:1HFoStW_wsc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=1HFoStW_wsc",
+      "extraction_provenance": "spec:1HFoStW_wsc:04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "spec_hash": "04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "graph_canonical_hash": "3841c659151ead15",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:43.479Z"
+  },
+  {
+    "strategy_id": "ad9811b7-10db-482e-afb8-d1158d5054ce",
+    "name": "mean_reversion_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "spec_video:1HFoStW_wsc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=1HFoStW_wsc",
+      "extraction_provenance": "spec:1HFoStW_wsc:04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "spec_hash": "04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+      "graph_canonical_hash": "3841c659151ead15",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:44.530Z"
+  },
+  {
+    "strategy_id": "8936bb44-8a0a-4a62-87fa-e8461215066e",
+    "name": "momentum_build_in_real_time_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "spec_video:h6TnE7QClJg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=h6TnE7QClJg",
+      "extraction_provenance": "spec:h6TnE7QClJg:eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "spec_hash": "eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "graph_canonical_hash": "1d6ef400b56135ac",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:27.272Z"
+  },
+  {
+    "strategy_id": "a2644bb7-943e-4247-8cc7-6ee385c53595",
+    "name": "momentum_build_in_real_time_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "spec_video:h6TnE7QClJg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=h6TnE7QClJg",
+      "extraction_provenance": "spec:h6TnE7QClJg:eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "spec_hash": "eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "graph_canonical_hash": "1d6ef400b56135ac",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:25.361Z"
+  },
+  {
+    "strategy_id": "05b069a6-a8e4-49bb-a933-846d6b4b6f02",
+    "name": "momentum_build_in_real_time_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "spec_video:h6TnE7QClJg",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=h6TnE7QClJg",
+      "extraction_provenance": "spec:h6TnE7QClJg:eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "spec_hash": "eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+      "graph_canonical_hash": "1d6ef400b56135ac",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:26.316Z"
+  },
+  {
+    "strategy_id": "30024153-c7ea-43bb-a430-7a900ddde667",
+    "name": "new_high_acceptance_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "spec_video:z3Qn3fBoe2I",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=z3Qn3fBoe2I",
+      "extraction_provenance": "spec:z3Qn3fBoe2I:76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "spec_hash": "76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "graph_canonical_hash": "c55eb6eda97c862b",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:38.625Z"
+  },
+  {
+    "strategy_id": "f6ff3004-361f-4c00-9235-fa233a57bac5",
+    "name": "new_high_acceptance_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "spec_video:z3Qn3fBoe2I",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=z3Qn3fBoe2I",
+      "extraction_provenance": "spec:z3Qn3fBoe2I:76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "spec_hash": "76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "graph_canonical_hash": "c55eb6eda97c862b",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:36.759Z"
+  },
+  {
+    "strategy_id": "84928232-2e58-4e6c-92d3-5e8631eb2138",
+    "name": "new_high_acceptance_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "spec_video:z3Qn3fBoe2I",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=z3Qn3fBoe2I",
+      "extraction_provenance": "spec:z3Qn3fBoe2I:76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "spec_hash": "76166d5061d117e0d445cbe8d2373ca9abcb292be98398b884c425459d99d6d3",
+      "graph_canonical_hash": "c55eb6eda97c862b",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:37.692Z"
+  },
+  {
+    "strategy_id": "1dd66daa-5066-4755-ba3a-4ca76017e57a",
+    "name": "opening_range_breakout_orb_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "spec_video:oDLt9zh33LE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=oDLt9zh33LE",
+      "extraction_provenance": "spec:oDLt9zh33LE:5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "spec_hash": "5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "graph_canonical_hash": "bbeacbc9860504c8",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:10.340Z"
+  },
+  {
+    "strategy_id": "fc4bf082-41d0-4030-b5a7-5494889139c0",
+    "name": "opening_range_breakout_orb_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "spec_video:oDLt9zh33LE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=oDLt9zh33LE",
+      "extraction_provenance": "spec:oDLt9zh33LE:5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "spec_hash": "5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "graph_canonical_hash": "bbeacbc9860504c8",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:08.441Z"
+  },
+  {
+    "strategy_id": "9955f721-7644-4e31-8d01-f34a109289b6",
+    "name": "opening_range_breakout_orb_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "spec_video:oDLt9zh33LE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=oDLt9zh33LE",
+      "extraction_provenance": "spec:oDLt9zh33LE:5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "spec_hash": "5cb76b21c0fe79905595311c73dbea454309a0bf86b661ceddd4302b72245438",
+      "graph_canonical_hash": "bbeacbc9860504c8",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:09.413Z"
+  },
+  {
+    "strategy_id": "93fe89cf-7491-4cfd-a645-e7291db36523",
+    "name": "order_block_entry_trigger_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "spec_video:KXWRtV2LOVc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=KXWRtV2LOVc",
+      "extraction_provenance": "spec:KXWRtV2LOVc:1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "spec_hash": "1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "graph_canonical_hash": "e85038e8924ac8f7",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:41.514Z"
+  },
+  {
+    "strategy_id": "6304525a-81a6-41ea-9bdc-d768ee5e9ee1",
+    "name": "order_block_entry_trigger_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "spec_video:KXWRtV2LOVc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=KXWRtV2LOVc",
+      "extraction_provenance": "spec:KXWRtV2LOVc:1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "spec_hash": "1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "graph_canonical_hash": "e85038e8924ac8f7",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:39.637Z"
+  },
+  {
+    "strategy_id": "c98d373d-fa40-4f87-b6ef-e6cb2d595d8d",
+    "name": "order_block_entry_trigger_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "spec_video:KXWRtV2LOVc",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=KXWRtV2LOVc",
+      "extraction_provenance": "spec:KXWRtV2LOVc:1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "spec_hash": "1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+      "graph_canonical_hash": "e85038e8924ac8f7",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:40.580Z"
+  },
+  {
+    "strategy_id": "321ef3d8-b0db-47ee-a365-7e9090fbfcee",
+    "name": "overall_trend_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "spec_video:bQp37aD1JLE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=bQp37aD1JLE",
+      "extraction_provenance": "spec:bQp37aD1JLE:ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "spec_hash": "ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "graph_canonical_hash": "ce42320c5b9daed4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:58.526Z"
+  },
+  {
+    "strategy_id": "3c6d439a-d49c-4124-a215-ff2577361480",
+    "name": "overall_trend_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "spec_video:bQp37aD1JLE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=bQp37aD1JLE",
+      "extraction_provenance": "spec:bQp37aD1JLE:ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "spec_hash": "ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "graph_canonical_hash": "ce42320c5b9daed4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:56.627Z"
+  },
+  {
+    "strategy_id": "6a03c714-45c5-4efe-81e2-5a6af5e554c0",
+    "name": "overall_trend_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "spec_video:bQp37aD1JLE",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=bQp37aD1JLE",
+      "extraction_provenance": "spec:bQp37aD1JLE:ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "spec_hash": "ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+      "graph_canonical_hash": "ce42320c5b9daed4",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:47:57.576Z"
+  },
+  {
+    "strategy_id": "7af16961-6df4-4038-b906-24e51cae1ede",
+    "name": "price_break_above_below_high_low_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "spec_video:jlShztsY3oA",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=jlShztsY3oA",
+      "extraction_provenance": "spec:jlShztsY3oA:30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "spec_hash": "30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "graph_canonical_hash": "824c969782f28473",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:35.779Z"
+  },
+  {
+    "strategy_id": "e596fbaf-a0c7-482c-8257-e581391a8e40",
+    "name": "price_break_above_below_high_low_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "spec_video:jlShztsY3oA",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=jlShztsY3oA",
+      "extraction_provenance": "spec:jlShztsY3oA:30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "spec_hash": "30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "graph_canonical_hash": "824c969782f28473",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:33.884Z"
+  },
+  {
+    "strategy_id": "0e2af137-890f-4202-962f-99ba4a3cf813",
+    "name": "price_break_above_below_high_low_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "spec_video:jlShztsY3oA",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=jlShztsY3oA",
+      "extraction_provenance": "spec:jlShztsY3oA:30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "spec_hash": "30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+      "graph_canonical_hash": "824c969782f28473",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:34.814Z"
+  },
+  {
+    "strategy_id": "562decbf-034d-412b-9210-4f87b7f86179",
+    "name": "price_break_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "spec_video:qLtq73bTPBA",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=qLtq73bTPBA",
+      "extraction_provenance": "spec:qLtq73bTPBA:1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "spec_hash": "1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "graph_canonical_hash": "f7e2a3e9d6df1d57",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:13.152Z"
+  },
+  {
+    "strategy_id": "2c7e78e7-0663-44f6-af18-0a5c68ad2f1d",
+    "name": "price_break_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "spec_video:qLtq73bTPBA",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=qLtq73bTPBA",
+      "extraction_provenance": "spec:qLtq73bTPBA:1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "spec_hash": "1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "graph_canonical_hash": "f7e2a3e9d6df1d57",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:11.279Z"
+  },
+  {
+    "strategy_id": "f8795a5d-2341-433a-bf77-6dc8dae4e32c",
+    "name": "price_break_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "spec_video:qLtq73bTPBA",
+      "archetype:bounce_off_level"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=qLtq73bTPBA",
+      "extraction_provenance": "spec:qLtq73bTPBA:1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "spec_hash": "1d0d86a6967921974b3f81619561e2c8ca976a4c28df9e54ee0cc3ed97131dee",
+      "graph_canonical_hash": "f7e2a3e9d6df1d57",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:12.212Z"
+  },
+  {
+    "strategy_id": "326fe955-50cc-4246-bdab-8976438b7c06",
+    "name": "put_limit_order_right_fvg_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "spec_video:Qxlu8v_6G3Y",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=Qxlu8v_6G3Y",
+      "extraction_provenance": "spec:Qxlu8v_6G3Y:1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "spec_hash": "1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "graph_canonical_hash": "c0049513c0cb5338",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:15.969Z"
+  },
+  {
+    "strategy_id": "d916b245-1562-4e82-9530-d7a79bc2c04c",
+    "name": "put_limit_order_right_fvg_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "spec_video:Qxlu8v_6G3Y",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=Qxlu8v_6G3Y",
+      "extraction_provenance": "spec:Qxlu8v_6G3Y:1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "spec_hash": "1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "graph_canonical_hash": "c0049513c0cb5338",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:14.085Z"
+  },
+  {
+    "strategy_id": "e28f6ea8-fbd1-4926-a68b-e2d7de48ba46",
+    "name": "put_limit_order_right_fvg_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "spec_video:Qxlu8v_6G3Y",
+      "archetype:fvg"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=Qxlu8v_6G3Y",
+      "extraction_provenance": "spec:Qxlu8v_6G3Y:1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "spec_hash": "1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+      "graph_canonical_hash": "c0049513c0cb5338",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:49:15.041Z"
+  },
+  {
+    "strategy_id": "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
+    "name": "retracement_opportunity_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "spec_video:gddYspvW0_w",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=gddYspvW0_w",
+      "extraction_provenance": "spec:gddYspvW0_w:ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "spec_hash": "ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "graph_canonical_hash": "5d7da4bfbda96a35",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:24.369Z"
+  },
+  {
+    "strategy_id": "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3",
+    "name": "retracement_opportunity_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "spec_video:gddYspvW0_w",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=gddYspvW0_w",
+      "extraction_provenance": "spec:gddYspvW0_w:ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "spec_hash": "ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "graph_canonical_hash": "5d7da4bfbda96a35",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:22.503Z"
+  },
+  {
+    "strategy_id": "58de00c3-308d-4f7a-9223-be161168e9ec",
+    "name": "retracement_opportunity_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "spec_video:gddYspvW0_w",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=gddYspvW0_w",
+      "extraction_provenance": "spec:gddYspvW0_w:ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "spec_hash": "ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+      "graph_canonical_hash": "5d7da4bfbda96a35",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:23.426Z"
+  },
+  {
+    "strategy_id": "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90",
+    "name": "short_entry_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "spec_video:e5HQXYBUW-Q",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=e5HQXYBUW-Q",
+      "extraction_provenance": "spec:e5HQXYBUW-Q:7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "spec_hash": "7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "graph_canonical_hash": "1ed5b2c334680563",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:13.010Z"
+  },
+  {
+    "strategy_id": "ebc8fff7-5459-427f-a4ad-a68a6366f6e0",
+    "name": "short_entry_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "spec_video:dE4lPhAWke8",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=dE4lPhAWke8",
+      "extraction_provenance": "spec:dE4lPhAWke8:36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "spec_hash": "36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "graph_canonical_hash": "1f47ddb985cef0b7",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:04.211Z"
+  },
+  {
+    "strategy_id": "1771442d-0138-4c22-8993-8acfe4c79fd3",
+    "name": "short_entry_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "spec_video:dE4lPhAWke8",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=dE4lPhAWke8",
+      "extraction_provenance": "spec:dE4lPhAWke8:36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "spec_hash": "36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "graph_canonical_hash": "1f47ddb985cef0b7",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:02.298Z"
+  },
+  {
+    "strategy_id": "594186e5-3249-40d7-8791-b46ea2c01b20",
+    "name": "short_entry_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "spec_video:e5HQXYBUW-Q",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=e5HQXYBUW-Q",
+      "extraction_provenance": "spec:e5HQXYBUW-Q:7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "spec_hash": "7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "graph_canonical_hash": "1ed5b2c334680563",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:11.117Z"
+  },
+  {
+    "strategy_id": "b18952c0-ae56-411c-ae06-017051083658",
+    "name": "short_entry_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "spec_video:e5HQXYBUW-Q",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=e5HQXYBUW-Q",
+      "extraction_provenance": "spec:e5HQXYBUW-Q:7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "spec_hash": "7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+      "graph_canonical_hash": "1ed5b2c334680563",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:12.053Z"
+  },
+  {
+    "strategy_id": "d36f9a97-ebbc-423b-b7a8-a1f06271f689",
+    "name": "short_entry_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "spec_video:dE4lPhAWke8",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=dE4lPhAWke8",
+      "extraction_provenance": "spec:dE4lPhAWke8:36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "spec_hash": "36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+      "graph_canonical_hash": "1f47ddb985cef0b7",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:03.248Z"
+  },
+  {
+    "strategy_id": "389d5007-430a-4919-84c4-8cd8467afa6b",
+    "name": "short_position_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "spec_video:l-2iKbcm5UI",
+      "archetype:break_of_structure"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=l-2iKbcm5UI",
+      "extraction_provenance": "spec:l-2iKbcm5UI:343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "spec_hash": "343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "graph_canonical_hash": "93d80b43c0cc8e5f",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:44.340Z"
+  },
+  {
+    "strategy_id": "335f7418-0417-4356-bf1c-701f53e51510",
+    "name": "short_position_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "spec_video:l-2iKbcm5UI",
+      "archetype:break_of_structure"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=l-2iKbcm5UI",
+      "extraction_provenance": "spec:l-2iKbcm5UI:343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "spec_hash": "343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "graph_canonical_hash": "93d80b43c0cc8e5f",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:42.449Z"
+  },
+  {
+    "strategy_id": "f8691d73-d03e-46b7-b3fd-1948be7fd8e7",
+    "name": "short_position_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "spec_video:l-2iKbcm5UI",
+      "archetype:break_of_structure"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=l-2iKbcm5UI",
+      "extraction_provenance": "spec:l-2iKbcm5UI:343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "spec_hash": "343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+      "graph_canonical_hash": "93d80b43c0cc8e5f",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:43.382Z"
+  },
+  {
+    "strategy_id": "b2f4630d-3540-4a33-94c9-ebbafdd9346f",
+    "name": "trade_era_scale_in_mcl_4h",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "spec_video:iU8ww5MC2FQ",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=iU8ww5MC2FQ",
+      "extraction_provenance": "spec:iU8ww5MC2FQ:5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "spec_hash": "5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "graph_canonical_hash": "be597006127f7d86",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:32.915Z"
+  },
+  {
+    "strategy_id": "543874f8-21ad-4bc8-b298-4f8c62a35f87",
+    "name": "trade_era_scale_in_mes_4h",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "spec_video:iU8ww5MC2FQ",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=iU8ww5MC2FQ",
+      "extraction_provenance": "spec:iU8ww5MC2FQ:5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "spec_hash": "5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "graph_canonical_hash": "be597006127f7d86",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:31.043Z"
+  },
+  {
+    "strategy_id": "d3d2d55f-30b1-4587-915e-af87e2dc2953",
+    "name": "trade_era_scale_in_mnq_4h",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "4h",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "spec_video:iU8ww5MC2FQ",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=iU8ww5MC2FQ",
+      "extraction_provenance": "spec:iU8ww5MC2FQ:5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "spec_hash": "5c2afe0d99073d079565d7a1fb37789088ac5a9b06766dde05c04660316b3d7a",
+      "graph_canonical_hash": "be597006127f7d86",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:31.975Z"
+  },
+  {
+    "strategy_id": "67c762e4-d2e0-4b57-ae72-6b8755007d36",
+    "name": "trading_session_time_mcl_5m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "spec_video:N7SM8a7Dc9s",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=N7SM8a7Dc9s",
+      "extraction_provenance": "spec:N7SM8a7Dc9s:4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "spec_hash": "4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "graph_canonical_hash": "a6552c268d86002b",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:58.796Z"
+  },
+  {
+    "strategy_id": "a20ecb89-a119-4c4c-958a-6558abb08a17",
+    "name": "trading_session_time_mes_5m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "spec_video:N7SM8a7Dc9s",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=N7SM8a7Dc9s",
+      "extraction_provenance": "spec:N7SM8a7Dc9s:4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "spec_hash": "4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "graph_canonical_hash": "a6552c268d86002b",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:56.918Z"
+  },
+  {
+    "strategy_id": "06ea64d3-155a-45a4-a233-53cac8a3584d",
+    "name": "trading_session_time_mnq_5m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "5m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "spec_video:N7SM8a7Dc9s",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=N7SM8a7Dc9s",
+      "extraction_provenance": "spec:N7SM8a7Dc9s:4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "spec_hash": "4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+      "graph_canonical_hash": "a6552c268d86002b",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:57.859Z"
+  },
+  {
+    "strategy_id": "f43088ac-49dc-4503-947f-6badf004a9e6",
+    "name": "vwap_cross_mcl_15m",
+    "symbol": "MCL",
+    "symbols": [
+      "MCL"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "spec_video:ktkqq7QsN9Q",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=ktkqq7QsN9Q",
+      "extraction_provenance": "spec:ktkqq7QsN9Q:59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "spec_hash": "59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "graph_canonical_hash": "2de82e1fb98ac4ae",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:38.692Z"
+  },
+  {
+    "strategy_id": "338f7e39-4932-48b3-a993-10afa1ed9b3e",
+    "name": "vwap_cross_mes_15m",
+    "symbol": "MES",
+    "symbols": [
+      "MES"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "spec_video:ktkqq7QsN9Q",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=ktkqq7QsN9Q",
+      "extraction_provenance": "spec:ktkqq7QsN9Q:59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "spec_hash": "59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "graph_canonical_hash": "2de82e1fb98ac4ae",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:36.722Z"
+  },
+  {
+    "strategy_id": "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411",
+    "name": "vwap_cross_mnq_15m",
+    "symbol": "MNQ",
+    "symbols": [
+      "MNQ"
+    ],
+    "timeframe": "15m",
+    "lifecycle_state": "CANDIDATE",
+    "tags": [
+      "cross-validated",
+      "spec-onboarding",
+      "spec_hash:59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "spec_video:ktkqq7QsN9Q",
+      "condition_compiled"
+    ],
+    "generation": 0,
+    "parent_strategy_id": null,
+    "source": {
+      "source_url": "https://www.youtube.com/watch?v=ktkqq7QsN9Q",
+      "extraction_provenance": "spec:ktkqq7QsN9Q:59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "spec_hash": "59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+      "graph_canonical_hash": "2de82e1fb98ac4ae",
+      "corpus_version": "v2-2026-07-04",
+      "pipeline_version": null,
+      "metadata_source": "spec_onboarding"
+    },
+    "created_at": "2026-07-03T17:48:37.720Z"
+  }
+]

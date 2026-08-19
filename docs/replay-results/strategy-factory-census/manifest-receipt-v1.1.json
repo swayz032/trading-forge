@@ -1,0 +1,30 @@
+{
+  "artifact": "strategy-factory-library-manifest-v1.1",
+  "fetched_at_utc": "2026-08-19T00:34:12Z",
+  "endpoint": "GET /api/strategies?includeArchived=true",
+  "authority": "AR-1333A S1 -- live strategies DB table, membership identity = strategy.id",
+  "raw_snapshot_path": "docs/replay-results/strategy-factory-census\\raw-snapshot-v1.1.json",
+  "raw_snapshot_sha256": "c32bd9a0d9551df1176ece01ecd11189963cc7a5612edb12702285354e737262",
+  "raw_snapshot_bytes": 2002776,
+  "manifest_path": "docs/replay-results/strategy-factory-census\\library-manifest-v1.1.json",
+  "manifest_sha256": "3b479d5e07896ed3bea066bd4e4233a32cceb15e6cb599628fc1bcc243340f0d",
+  "manifest_member_count": 120,
+  "ordering": "(name, strategy_id) ascending",
+  "stats": {
+    "total_rows": 120,
+    "unique_ids": 120,
+    "unique_names": 117,
+    "duplicate_name_groups": {
+      "short_entry_mes_5m": 2,
+      "short_entry_mnq_5m": 2,
+      "short_entry_mcl_5m": 2
+    },
+    "lifecycle_distribution": {
+      "CANDIDATE": 117,
+      "NEEDS_ARCHETYPE": 3
+    },
+    "archived_duplicate_tagged": 0,
+    "missing_source_url": 0,
+    "historical_pop_120_live_delta": 0
+  }
+}
