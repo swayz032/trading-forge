@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
 """Bundle the V3 trader replay into one self-contained HTML file.
 
-Chat/file viewers do not reliably serve sibling JavaScript files next to an HTML
-artifact. The trader-facing page must therefore inline both the pinned TradingView
-Lightweight Charts runtime and our replay enhancement layer. Bot answers are never
-read or embedded by this bundler.
-
-The final trader page must also work when opened as a downloaded local HTML file
-or inside an opaque/sandboxed document where the browser denies localStorage.
-Denied localStorage used to abort the core script before event handlers were bound,
-which made every visible button look normal but do nothing. The bundler patches the
-core storage access to fail over to in-memory state instead of aborting the page.
-It also refreshes the replay counter on every +1m/+5m/play step so a successful
-button press is visibly obvious instead of looking frozen, and binds the frozen
-MNQ 0.25-point tick into the browser runtime so zone/TP drawing cannot fail on an
-undefined TICK symbol.
+The page must work when opened as a downloaded local HTML file or inside an
+opaque/sandboxed document. The bundler therefore inlines the chart/runtime JS,
+falls back to in-memory state when localStorage is denied, binds the frozen MNQ
+tick size, and patches the trader controls so every click has visible feedback.
+Bot answers are never read or embedded by this bundler.
 """
 from __future__ import annotations
 
@@ -37,9 +28,7 @@ SAFE_STORAGE_READ = (
     "catch(e){storageAvailable=false;saved={};"
     "console.warn('REPLAY_STORAGE_DISABLED_USING_MEMORY',e)};"
 )
-VULNERABLE_STORAGE_SAVE = (
-    "function save(){localStorage.setItem(storeKey,JSON.stringify({idx,labels}))}"
-)
+VULNERABLE_STORAGE_SAVE = "function save(){localStorage.setItem(storeKey,JSON.stringify({idx,labels}))}"
 SAFE_STORAGE_SAVE = (
     "function save(){if(!storageAvailable)return;"
     "try{window.localStorage.setItem(storeKey,JSON.stringify({idx,labels}))}"
@@ -47,9 +36,102 @@ SAFE_STORAGE_SAVE = (
     "console.warn('REPLAY_STORAGE_DISABLED_USING_MEMORY',e)}}"
 )
 SAFE_STORAGE_MARKER = "REPLAY_STORAGE_DISABLED_USING_MEMORY"
+
 ENHANCE_PROGRESS_OLD = "refreshMain(Boolean(fit));\n    renderClock();\n  };"
-ENHANCE_PROGRESS_NEW = "refreshMain(Boolean(fit));\n    renderClock();\n    renderLabels();\n  };"
-PROGRESS_MARKER = "renderClock();\n    renderLabels();"
+ENHANCE_PROGRESS_NEW = (
+    "refreshMain(Boolean(fit));\n"
+    "    renderClock();\n"
+    "    renderLabels();\n"
+    "    updateMainControlStatus('REPLAY');\n"
+    "  };"
+)
+
+CONTROL_INSERT_OLD = "  panel5.appendChild(mainTools);\n"
+CONTROL_INSERT_NEW = """  panel5.appendChild(mainTools);
+  const mainControlStatus = document.createElement('span');
+  mainControlStatus.id = 'mainControlStatus';
+  mainControlStatus.style.cssText = 'padding:5px 8px;border:1px solid #4f6a55;border-radius:6px;background:#102018;color:#8ed09f;font:700 11px ui-monospace,monospace;white-space:nowrap';
+  mainControlStatus.textContent = 'MNQ_CONTROLS_READY · READY · 5M';
+  mainTools.appendChild(mainControlStatus);
+  function updateMainControlStatus(action) {
+    const r = main.chart.timeScale().getVisibleLogicalRange();
+    const bars = r ? Math.max(1, Math.round(r.to - r.from)) : 0;
+    mainControlStatus.textContent = `MNQ_CONTROLS_READY · ${action} · ${mainTf.toUpperCase()}${bars ? ` · ${bars} BARS` : ''}`;
+  }
+"""
+
+SET_MAIN_TF_OLD = """  function setMainTf(tf) {
+    mainTf = tf;
+    document.getElementById('main5m').classList.toggle('active', tf === '5m');
+    document.getElementById('main15m').classList.toggle('active', tf === '15m');
+    refreshMain(false);
+    focusDecisionArea();
+  }
+"""
+SET_MAIN_TF_NEW = """  function setMainTf(tf) {
+    mainTf = tf;
+    document.getElementById('main5m').classList.toggle('active', tf === '5m');
+    document.getElementById('main15m').classList.toggle('active', tf === '15m');
+    refreshMain(false);
+    focusDecisionArea();
+    renderLabels();
+    updateMainControlStatus('TIMEFRAME');
+  }
+"""
+
+ZOOM_MAIN_OLD = """  function zoomMain(multiplier) {
+    const scale = main.chart.timeScale();
+    const r = scale.getVisibleLogicalRange();
+    if (!r) {
+      scale.fitContent();
+      return;
+    }
+    const mid = (r.from + r.to) / 2;
+    const half = Math.max(4, (r.to - r.from) * multiplier / 2);
+    scale.setVisibleLogicalRange({from: mid - half, to: mid + half});
+  }
+"""
+ZOOM_MAIN_NEW = """  function zoomMain(multiplier) {
+    const scale = main.chart.timeScale();
+    const r = scale.getVisibleLogicalRange();
+    if (!r) {
+      scale.fitContent();
+      renderLabels();
+      updateMainControlStatus('FIT');
+      return;
+    }
+    const mid = (r.from + r.to) / 2;
+    const half = Math.max(4, (r.to - r.from) * multiplier / 2);
+    scale.setVisibleLogicalRange({from: mid - half, to: mid + half});
+    renderLabels();
+    updateMainControlStatus(multiplier > 1 ? 'ZOOM OUT' : 'ZOOM IN');
+  }
+"""
+
+HANDLERS_OLD = """  document.getElementById('main5m').onclick = () => setMainTf('5m');
+  document.getElementById('main15m').onclick = () => setMainTf('15m');
+  document.getElementById('mainZoomOut').onclick = () => zoomMain(1.55);
+  document.getElementById('mainZoomIn').onclick = () => zoomMain(0.68);
+  document.getElementById('mainFit').onclick = () => { main.chart.timeScale().fitContent(); drawOverlays(); };
+"""
+HANDLERS_NEW = """  document.getElementById('main5m').addEventListener('click', () => setMainTf('5m'));
+  document.getElementById('main15m').addEventListener('click', () => setMainTf('15m'));
+  document.getElementById('mainZoomOut').addEventListener('click', () => zoomMain(1.55));
+  document.getElementById('mainZoomIn').addEventListener('click', () => zoomMain(0.68));
+  document.getElementById('mainFit').addEventListener('click', () => {
+    main.chart.timeScale().fitContent();
+    drawOverlays();
+    renderLabels();
+    updateMainControlStatus('FIT ALL');
+  });
+  main.chart.timeScale().subscribeVisibleLogicalRangeChange(() => updateMainControlStatus('VIEW'));
+"""
+
+FINAL_OLD = "  drawOverlays();\n})();"
+FINAL_NEW = "  drawOverlays();\n  updateMainControlStatus('READY');\n})();"
+
+CONTROL_READY_MARKER = "MNQ_CONTROLS_READY"
+PROGRESS_MARKER = "renderClock();\n    renderLabels();\n    updateMainControlStatus('REPLAY');"
 UNIFIED_MARKERS = (
     "Main Structure / Key Zones + TP Reaction Cluster",
     "15m CONTEXT",
@@ -77,13 +159,23 @@ def _patch_browser_runtime(html: str) -> str:
     return html
 
 
-def _patch_visible_progress(enhance: str) -> str:
-    if ENHANCE_PROGRESS_OLD not in enhance:
-        raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_MARKER_MISSING")
-    out = enhance.replace(ENHANCE_PROGRESS_OLD, ENHANCE_PROGRESS_NEW, 1)
-    if PROGRESS_MARKER not in out:
-        raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_PATCHED")
+def _replace_once(text: str, old: str, new: str, code: str) -> str:
+    if old not in text:
+        raise RuntimeError(code + "_MARKER_MISSING")
+    out = text.replace(old, new, 1)
+    if new not in out:
+        raise RuntimeError(code + "_NOT_PATCHED")
     return out
+
+
+def _patch_enhance_runtime(enhance: str) -> str:
+    enhance = _replace_once(enhance, CONTROL_INSERT_OLD, CONTROL_INSERT_NEW, "REPLAY_V3_CONTROL_STATUS")
+    enhance = _replace_once(enhance, SET_MAIN_TF_OLD, SET_MAIN_TF_NEW, "REPLAY_V3_TIMEFRAME_CONTROL")
+    enhance = _replace_once(enhance, ZOOM_MAIN_OLD, ZOOM_MAIN_NEW, "REPLAY_V3_ZOOM_CONTROL")
+    enhance = _replace_once(enhance, HANDLERS_OLD, HANDLERS_NEW, "REPLAY_V3_CONTROL_HANDLERS")
+    enhance = _replace_once(enhance, ENHANCE_PROGRESS_OLD, ENHANCE_PROGRESS_NEW, "REPLAY_V3_PROGRESS_REFRESH")
+    enhance = _replace_once(enhance, FINAL_OLD, FINAL_NEW, "REPLAY_V3_CONTROL_READY")
+    return enhance
 
 
 def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = ENHANCE) -> str:
@@ -101,7 +193,7 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
             raise RuntimeError(f"REPLAY_V3_{name}_SCRIPT_UNSAFE_CLOSE_TAG")
 
     html = _patch_browser_runtime(html)
-    enhance = _patch_visible_progress(enhance)
+    enhance = _patch_enhance_runtime(enhance)
     html = html.replace(LWC_MARKER, f"<script>\n{lwc}\n</script>", 1)
     html = html.replace(ENHANCE_MARKER, f"<script>\n{enhance}\n</script>", 1)
 
@@ -113,6 +205,8 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         raise RuntimeError("REPLAY_V3_BROWSER_TICK_NOT_BUNDLED")
     if PROGRESS_MARKER not in html:
         raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_BUNDLED")
+    if CONTROL_READY_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_VISIBLE_CONTROL_READY_MARKER_MISSING")
     if "RESET DECISION" not in html or "if (l.final_action) return;" not in html:
         raise RuntimeError("REPLAY_V3_SINGLE_TRADE_INTERACTION_NOT_BUNDLED")
     missing = [marker for marker in UNIFIED_MARKERS if marker not in html]
