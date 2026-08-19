@@ -52,6 +52,7 @@
     handleScale: {axisPressedMouseMove: true, mouseWheel: true, pinch: true},
   });
 
+  const DRAW_TICK = 0.25;
   let mainTf = '5m';
   const mainTools = document.createElement('div');
   mainTools.className = 'mainTools';
@@ -68,7 +69,7 @@
 
   const hint = document.createElement('div');
   hint.className = 'mainHint';
-  hint.innerHTML = '<b>Main chart drawing:</b> blue = key zone · orange = first meaningful TP reaction cluster. Drawings stay at the same prices when you switch 5m ↔ 15m.';
+  hint.innerHTML = '<b>Main chart drawing:</b> blue = key zone · orange = TP. <b>Click once</b> to place an exact TP level; <b>drag</b> to mark a TP reaction area. Drawings are price-anchored and reproject after zoom/pan or 5m ↔ 15m switching.';
   panel5.insertAdjacentElement('afterend', hint);
 
   // Capture WHY the trader recognized the zone. This is fidelity metadata only;
@@ -88,6 +89,28 @@
   zoneHelp.textContent = 'Choose how you found the level, then draw it on the big main chart.';
   zoneRoleRow.parentElement.insertBefore(zoneHelp, document.getElementById('zones'));
 
+  function snapToTick(price) {
+    return Math.round(Number(price) / DRAW_TICK) * DRAW_TICK;
+  }
+
+  function paintBand(ctx, width, y1, y2, fill, stroke) {
+    const top = Math.min(y1, y2);
+    const height = Math.abs(y2 - y1);
+    ctx.strokeStyle = stroke;
+    if (height < 1.5) {
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, Math.round(top) + 0.5);
+      ctx.lineTo(width, Math.round(top) + 0.5);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      return;
+    }
+    ctx.fillStyle = fill;
+    ctx.fillRect(0, top, width, height);
+    ctx.strokeRect(0, top, width, height);
+  }
+
   function paintLayer(canvas, chartObj, zones, tp) {
     const d = canvasSize(canvas);
     const ctx = d.x;
@@ -96,23 +119,13 @@
       const y1 = chartObj.series.priceToCoordinate(z.hi);
       const y2 = chartObj.series.priceToCoordinate(z.lo);
       if (y1 == null || y2 == null) return;
-      const top = Math.min(y1, y2);
-      const height = Math.abs(y2 - y1);
-      ctx.fillStyle = 'rgba(75,125,205,.13)';
-      ctx.strokeStyle = 'rgba(105,155,235,.86)';
-      ctx.fillRect(0, top, d.w, height);
-      ctx.strokeRect(0, top, d.w, height);
+      paintBand(ctx, d.w, y1, y2, 'rgba(75,125,205,.13)', 'rgba(105,155,235,.86)');
     });
     if (tp) {
       const y1 = chartObj.series.priceToCoordinate(tp.hi);
       const y2 = chartObj.series.priceToCoordinate(tp.lo);
       if (y1 != null && y2 != null) {
-        const top = Math.min(y1, y2);
-        const height = Math.abs(y2 - y1);
-        ctx.fillStyle = 'rgba(229,161,92,.17)';
-        ctx.strokeStyle = 'rgba(229,161,92,.94)';
-        ctx.fillRect(0, top, d.w, height);
-        ctx.strokeRect(0, top, d.w, height);
+        paintBand(ctx, d.w, y1, y2, 'rgba(229,161,92,.17)', 'rgba(229,161,92,.94)');
       }
     }
   }
@@ -178,6 +191,25 @@
     paintLayer(ov1, c1, l.trader_zones, l.trader_tp_reaction_cluster);
   };
 
+  // Canvas drawings store PRICE, not screen Y. Lightweight Charts can autoscale
+  // its price axis after horizontal zoom/pan, so reproject every stored price onto
+  // the new axis after the chart finishes its own layout pass. Two animation frames
+  // make this deterministic instead of painting against the previous scale.
+  let overlaySyncFrame = null;
+  function scheduleOverlaySync() {
+    if (overlaySyncFrame != null) cancelAnimationFrame(overlaySyncFrame);
+    overlaySyncFrame = requestAnimationFrame(() => {
+      overlaySyncFrame = requestAnimationFrame(() => {
+        overlaySyncFrame = null;
+        drawOverlays();
+      });
+    });
+  }
+  main.chart.timeScale().subscribeVisibleLogicalRangeChange(scheduleOverlaySync);
+  panel5.addEventListener('wheel', scheduleOverlaySync, {passive: true});
+  panel5.addEventListener('pointermove', scheduleOverlaySync, {passive: true});
+  panel5.addEventListener('pointerup', scheduleOverlaySync, {passive: true});
+
   // Wrap the core data refresh. The hidden legacy charts continue to receive data,
   // while the trader-visible top chart receives either 5m or 15m on demand.
   const coreSetData = setData;
@@ -192,19 +224,30 @@
   let mainDragY = null;
   drawZone.onclick = () => beginDraw('main-zone', ov5);
   drawTp.onclick = () => beginDraw('main-tp', ov5);
+
+  function pointerY(e) {
+    const r = ov5.getBoundingClientRect();
+    return Math.max(0, Math.min(r.height, e.clientY - r.top));
+  }
+
   ov5.addEventListener('pointerdown', (e) => {
     if (drawMode !== 'main-zone' && drawMode !== 'main-tp') return;
-    mainDragY = e.offsetY;
+    mainDragY = pointerY(e);
+    if (ov5.setPointerCapture) ov5.setPointerCapture(e.pointerId);
   });
   ov5.addEventListener('pointerup', (e) => {
     if ((drawMode !== 'main-zone' && drawMode !== 'main-tp') || mainDragY == null) return;
+    const endY = pointerY(e);
+    const dragPixels = Math.abs(endY - mainDragY);
     let a = main.series.coordinateToPrice(mainDragY);
-    let b = main.series.coordinateToPrice(e.offsetY);
+    let b = main.series.coordinateToPrice(endY);
     if (a == null || b == null) return;
+    a = snapToTick(a);
+    b = snapToTick(b);
     let lo = Math.min(+a, +b);
     let hi = Math.max(+a, +b);
-    if (hi - lo < TICK) hi = lo + TICK;
     if (drawMode === 'main-zone') {
+      if (hi - lo < DRAW_TICK) hi = lo + DRAW_TICK;
       lab().trader_zones.push({
         lo, hi,
         role: zoneRole.value,
@@ -212,19 +255,33 @@
         marked_time: replayTime(),
         marked_main_timeframe: mainTf,
       });
+    } else if (dragPixels <= 4) {
+      const price = snapToTick(b);
+      lab().trader_tp_reaction_cluster = {
+        lo: price,
+        hi: price,
+        source_method: 'TRADER_TP_LEVEL_CLICK',
+        marked_time: replayTime(),
+        marked_main_timeframe: mainTf,
+      };
     } else {
+      if (hi - lo < DRAW_TICK) hi = lo + DRAW_TICK;
       lab().trader_tp_reaction_cluster = {
         lo, hi,
-        source_method: 'TRADER_REACTION_CLUSTER',
+        source_method: 'TRADER_REACTION_CLUSTER_DRAG',
         marked_time: replayTime(),
         marked_main_timeframe: mainTf,
       };
     }
     drawMode = null;
     mainDragY = null;
+    if (ov5.releasePointerCapture && ov5.hasPointerCapture && ov5.hasPointerCapture(e.pointerId)) {
+      ov5.releasePointerCapture(e.pointerId);
+    }
     ov5.classList.remove('draw');
     save();
     renderLabels();
+    scheduleOverlaySync();
   });
 
   // A scenario is ONE trade opportunity. WAIT is observational and may be updated
@@ -308,6 +365,12 @@
     zones.innerHTML = l.trader_zones.length ? l.trader_zones.map((z, i) =>
       `<div class="zoneRow"><b>${z.role}</b>${z.lo.toFixed(2)} – ${z.hi.toFixed(2)}<span class="muted">${prettyMethod(z.source_method)}</span><button onclick="removeZone(${i})">Remove</button></div>`
     ).join('') : '<span class="muted small">None marked</span>';
+    if (l.trader_tp_reaction_cluster) {
+      const tp = l.trader_tp_reaction_cluster;
+      tpStatus.textContent = tp.lo === tp.hi
+        ? `${tp.lo.toFixed(2)} · exact TP level`
+        : `${tp.lo.toFixed(2)} – ${tp.hi.toFixed(2)} · reaction area`;
+    }
     let progress = document.getElementById('replayProgress');
     if (!progress) {
       progress = document.createElement('span');
@@ -326,6 +389,7 @@
     focusDecisionArea();
     renderLabels();
     drawOverlays();
+    scheduleOverlaySync();
   };
 
   // Rebuild once with corrected New York wall-clock timestamps and the unified UI.
@@ -333,5 +397,6 @@
   setData(false);
   focusDecisionArea();
   renderLabels();
+  scheduleOverlaySync();
   drawOverlays();
 })();
