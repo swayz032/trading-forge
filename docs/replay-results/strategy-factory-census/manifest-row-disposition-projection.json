@@ -1,17 +1,22 @@
 {
   "artifact": "ar-1349a-manifest-row-disposition-projection",
-  "authority": "AR-1349A SS9.B -- rebuild from now-authoritative frozen certificates, AR-1340A steady-state disposition law, no invented names/markets/eligibility",
+  "authority": "AR-1349A SS9.B / AR-1350A SS6 -- rebuild from now-authoritative frozen certificates, AR-1340A steady-state disposition law, no invented names/markets/eligibility; multi-strategy videos fail closed rather than assume strategy_index=0 without a proven crosswalk",
   "manifest_source": "docs\\replay-results\\strategy-factory-census\\library-manifest-v1.1.json",
   "inventory_source": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\prep-provenance-inventory.json",
   "summary": {
     "total_manifest_rows": 120,
-    "rows_projected": 117,
+    "rows_projected": 102,
+    "rows_identity_unresolved": 15,
     "rows_out_of_scope": 3,
     "disposition_counts": {
-      "OTHER_MEASURED_REFUSAL": 105,
-      "EXTRACTION_MISSING_REQUIRED_INFORMATION": 12
+      "OTHER_MEASURED_REFUSAL": 93,
+      "EXTRACTION_MISSING_REQUIRED_INFORMATION": 9,
+      "IDENTITY_MATERIALIZATION_UNRESOLVED": 15
     },
-    "strategy_indices_unrepresented_in_frozen_manifest": 8
+    "multi_strategy_videos_failed_closed": 5,
+    "rows_crosswalked_single_strategy": 102,
+    "rows_failed_closed_multi_strategy": 15,
+    "strategy_indices_unrepresented_total": 13
   },
   "rows": [
     {
@@ -103,36 +108,6 @@
       "locator_backend": "opus_batch",
       "disposition": "OTHER_MEASURED_REFUSAL",
       "disposition_reason": "4 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
-      "strategy_id": "6491538e-aff0-4ed8-b0c6-67a36e6cf84f",
-      "name": "breakout_capture_mcl_5m",
-      "symbol": "MCL",
-      "timeframe": "5m",
-      "spec_video": "VTEQ2fhGLqE",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "1 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
-      "strategy_id": "85776068-64f5-4877-b99b-026de2c49201",
-      "name": "breakout_capture_mes_5m",
-      "symbol": "MES",
-      "timeframe": "5m",
-      "spec_video": "VTEQ2fhGLqE",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "1 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
-      "strategy_id": "ff718865-0876-4cdb-a84a-cc88eaf32cd7",
-      "name": "breakout_capture_mnq_5m",
-      "symbol": "MNQ",
-      "timeframe": "5m",
-      "spec_video": "VTEQ2fhGLqE",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "1 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
     },
     {
       "strategy_id": "1b256347-a65c-4ec0-a73b-77c2c01cc29e",
@@ -645,66 +620,6 @@
       "disposition_reason": "fixed_point_stop_not_supported: The speaker suggests using a fixed 30-pip stop loss for day traders, which violates the framework's ban on fixed-point stops."
     },
     {
-      "strategy_id": "971826d6-defb-4882-a634-5deeecad712f",
-      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mcl_5m",
-      "symbol": "MCL",
-      "timeframe": "5m",
-      "spec_video": "deymRD3kSD0",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "5 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
-      "strategy_id": "5591c0ba-a4ac-44eb-81c1-f26011774013",
-      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mes_5m",
-      "symbol": "MES",
-      "timeframe": "5m",
-      "spec_video": "deymRD3kSD0",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "5 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
-      "strategy_id": "47b1c45a-de30-498b-b630-0ab957395204",
-      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mnq_5m",
-      "symbol": "MNQ",
-      "timeframe": "5m",
-      "spec_video": "deymRD3kSD0",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "5 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
-      "strategy_id": "c45b4718-07b1-4bea-baa3-1ee0a8e209b4",
-      "name": "manipulation_trade_mcl_1m",
-      "symbol": "MCL",
-      "timeframe": "1m",
-      "spec_video": "7ieYBa7Z-Hg",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "7 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
-      "strategy_id": "81002a32-98fc-4a49-9079-14742224122a",
-      "name": "manipulation_trade_mes_1m",
-      "symbol": "MES",
-      "timeframe": "1m",
-      "spec_video": "7ieYBa7Z-Hg",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "7 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
-      "strategy_id": "c029e162-ecf9-4709-9820-baf60c6b7af0",
-      "name": "manipulation_trade_mnq_1m",
-      "symbol": "MNQ",
-      "timeframe": "1m",
-      "spec_video": "7ieYBa7Z-Hg",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "7 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
-    },
-    {
       "strategy_id": "edbe2372-05b6-4388-afce-b99e754b7e04",
       "name": "mean_reversion_mcl_5m",
       "symbol": "MCL",
@@ -975,36 +890,6 @@
       "disposition_reason": "5 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
     },
     {
-      "strategy_id": "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
-      "name": "retracement_opportunity_mcl_5m",
-      "symbol": "MCL",
-      "timeframe": "5m",
-      "spec_video": "gddYspvW0_w",
-      "locator_backend": "opus_batch",
-      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
-      "disposition_reason": "1/9 conditions have no literal transcript evidence the mechanical verifier can confirm under the authorized Opus locator"
-    },
-    {
-      "strategy_id": "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3",
-      "name": "retracement_opportunity_mes_5m",
-      "symbol": "MES",
-      "timeframe": "5m",
-      "spec_video": "gddYspvW0_w",
-      "locator_backend": "opus_batch",
-      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
-      "disposition_reason": "1/9 conditions have no literal transcript evidence the mechanical verifier can confirm under the authorized Opus locator"
-    },
-    {
-      "strategy_id": "58de00c3-308d-4f7a-9223-be161168e9ec",
-      "name": "retracement_opportunity_mnq_5m",
-      "symbol": "MNQ",
-      "timeframe": "5m",
-      "spec_video": "gddYspvW0_w",
-      "locator_backend": "opus_batch",
-      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
-      "disposition_reason": "1/9 conditions have no literal transcript evidence the mechanical verifier can confirm under the authorized Opus locator"
-    },
-    {
       "strategy_id": "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90",
       "name": "short_entry_mcl_5m",
       "symbol": "MCL",
@@ -1153,6 +1038,116 @@
       "locator_backend": "opus_batch",
       "disposition": "OTHER_MEASURED_REFUSAL",
       "disposition_reason": "6 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
+    }
+  ],
+  "identity_unresolved_rows": [
+    {
+      "strategy_id": "6491538e-aff0-4ed8-b0c6-67a36e6cf84f",
+      "name": "breakout_capture_mcl_5m",
+      "symbol": "MCL",
+      "timeframe": "5m",
+      "spec_video": "VTEQ2fhGLqE",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 3 modern strategy indices ([0, 1, 2]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "85776068-64f5-4877-b99b-026de2c49201",
+      "name": "breakout_capture_mes_5m",
+      "symbol": "MES",
+      "timeframe": "5m",
+      "spec_video": "VTEQ2fhGLqE",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 3 modern strategy indices ([0, 1, 2]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "ff718865-0876-4cdb-a84a-cc88eaf32cd7",
+      "name": "breakout_capture_mnq_5m",
+      "symbol": "MNQ",
+      "timeframe": "5m",
+      "spec_video": "VTEQ2fhGLqE",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 3 modern strategy indices ([0, 1, 2]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "971826d6-defb-4882-a634-5deeecad712f",
+      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mcl_5m",
+      "symbol": "MCL",
+      "timeframe": "5m",
+      "spec_video": "deymRD3kSD0",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "5591c0ba-a4ac-44eb-81c1-f26011774013",
+      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mes_5m",
+      "symbol": "MES",
+      "timeframe": "5m",
+      "spec_video": "deymRD3kSD0",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "47b1c45a-de30-498b-b630-0ab957395204",
+      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mnq_5m",
+      "symbol": "MNQ",
+      "timeframe": "5m",
+      "spec_video": "deymRD3kSD0",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "c45b4718-07b1-4bea-baa3-1ee0a8e209b4",
+      "name": "manipulation_trade_mcl_1m",
+      "symbol": "MCL",
+      "timeframe": "1m",
+      "spec_video": "7ieYBa7Z-Hg",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "81002a32-98fc-4a49-9079-14742224122a",
+      "name": "manipulation_trade_mes_1m",
+      "symbol": "MES",
+      "timeframe": "1m",
+      "spec_video": "7ieYBa7Z-Hg",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "c029e162-ecf9-4709-9820-baf60c6b7af0",
+      "name": "manipulation_trade_mnq_1m",
+      "symbol": "MNQ",
+      "timeframe": "1m",
+      "spec_video": "7ieYBa7Z-Hg",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
+      "name": "retracement_opportunity_mcl_5m",
+      "symbol": "MCL",
+      "timeframe": "5m",
+      "spec_video": "gddYspvW0_w",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3",
+      "name": "retracement_opportunity_mes_5m",
+      "symbol": "MES",
+      "timeframe": "5m",
+      "spec_video": "gddYspvW0_w",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
+    },
+    {
+      "strategy_id": "58de00c3-308d-4f7a-9223-be161168e9ec",
+      "name": "retracement_opportunity_mnq_5m",
+      "symbol": "MNQ",
+      "timeframe": "5m",
+      "spec_video": "gddYspvW0_w",
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 2 modern strategy indices ([0, 1]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
     },
     {
       "strategy_id": "f43088ac-49dc-4503-947f-6badf004a9e6",
@@ -1160,9 +1155,8 @@
       "symbol": "MCL",
       "timeframe": "15m",
       "spec_video": "ktkqq7QsN9Q",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "2 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 4 modern strategy indices ([0, 1, 2, 3]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
     },
     {
       "strategy_id": "338f7e39-4932-48b3-a993-10afa1ed9b3e",
@@ -1170,9 +1164,8 @@
       "symbol": "MES",
       "timeframe": "15m",
       "spec_video": "ktkqq7QsN9Q",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "2 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 4 modern strategy indices ([0, 1, 2, 3]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
     },
     {
       "strategy_id": "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411",
@@ -1180,9 +1173,8 @@
       "symbol": "MNQ",
       "timeframe": "15m",
       "spec_video": "ktkqq7QsN9Q",
-      "locator_backend": "opus_batch",
-      "disposition": "OTHER_MEASURED_REFUSAL",
-      "disposition_reason": "2 condition(s) show extractor-paraphrase drift from what the located quote literally supports (Stage-2 partial/unresolved support) -- not covered by any other named disposition category"
+      "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+      "disposition_reason": "this video now has 4 modern strategy indices ([0, 1, 2, 3]) but the frozen manifest row predates multi-strategy extraction and carries no field identifying which one it represents. No durable crosswalk proving that identity exists in this repository. Failing closed per AR-1350A SS6 Option 2 rather than assuming strategy_index=0 by convenience."
     }
   ],
   "out_of_scope": [
@@ -1208,43 +1200,81 @@
   "unrepresented_strategy_indices": [
     {
       "video_id": "7ieYBa7Z-Hg",
+      "strategy_index": 0,
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
+    },
+    {
+      "video_id": "7ieYBa7Z-Hg",
       "strategy_index": 1,
-      "locator_backend": "opus_batch"
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
+    },
+    {
+      "video_id": "VTEQ2fhGLqE",
+      "strategy_index": 0,
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
     },
     {
       "video_id": "VTEQ2fhGLqE",
       "strategy_index": 1,
-      "locator_backend": "opus_batch"
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
     },
     {
       "video_id": "VTEQ2fhGLqE",
       "strategy_index": 2,
-      "locator_backend": "opus_batch"
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
+    },
+    {
+      "video_id": "deymRD3kSD0",
+      "strategy_index": 0,
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
     },
     {
       "video_id": "deymRD3kSD0",
       "strategy_index": 1,
-      "locator_backend": "opus_batch"
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
+    },
+    {
+      "video_id": "gddYspvW0_w",
+      "strategy_index": 0,
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
     },
     {
       "video_id": "gddYspvW0_w",
       "strategy_index": 1,
-      "locator_backend": "opus_batch"
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
+    },
+    {
+      "video_id": "ktkqq7QsN9Q",
+      "strategy_index": 0,
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
     },
     {
       "video_id": "ktkqq7QsN9Q",
       "strategy_index": 1,
-      "locator_backend": "opus_batch"
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
     },
     {
       "video_id": "ktkqq7QsN9Q",
       "strategy_index": 2,
-      "locator_backend": "opus_batch"
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
     },
     {
       "video_id": "ktkqq7QsN9Q",
       "strategy_index": 3,
-      "locator_backend": "opus_batch"
+      "locator_backend": "opus_batch",
+      "reason": "multi-strategy video, no row assigned to any index (fail-closed)"
     }
   ]
 }

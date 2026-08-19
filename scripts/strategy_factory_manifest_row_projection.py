@@ -84,8 +84,24 @@ def main() -> int:
     }
     inventory_video_ids = {u["video_id"] for u in inventory["units"]}
 
+    # AR-1350A SS5/6: count how many modern strategy_index units this session's re-extraction
+    # found per video. The frozen manifest predates multi-strategy extraction -- every row was
+    # authored when each video had exactly one strategy. Silently projecting a multi-strategy
+    # video's rows onto strategy_index=0 would assume, without proof, that modern index 0 is the
+    # SAME source strategy the frozen row represents. No crosswalk mechanism exists in this
+    # pipeline that proves that identity (the manifest carries no modern-strategy-index field at
+    # all), so for any video with MORE THAN ONE strategy_index unit, every one of that video's
+    # manifest rows fails closed as IDENTITY_UNRESOLVED rather than guessing index 0.
+    strategy_indices_by_video: dict[str, list[int]] = {}
+    for u in inventory["units"]:
+        strategy_indices_by_video.setdefault(u["video_id"], []).append(u["strategy_index"])
+    multi_strategy_videos = {v for v, idxs in strategy_indices_by_video.items() if len(idxs) > 1}
+
     rows = []
     out_of_scope = []
+    identity_unresolved = []
+    crosswalked_count = 0
+    fail_closed_count = 0
     for row in manifest:
         spec_video = None
         for t in row.get("tags", []):
@@ -105,6 +121,31 @@ def main() -> int:
                           "(e.g. sVkm/G2-D), not a gap in this factory's own population",
             })
             continue
+
+        if spec_video in multi_strategy_videos:
+            # No durable crosswalk exists (per the module docstring's Option 1/Option 2 rule) --
+            # fail closed rather than pick strategy_index=0 by convenience. Every modern strategy
+            # index for this video is still named here, so none silently disappears from
+            # diagnostics even though no row is assigned to any of them.
+            fail_closed_count += 1
+            identity_unresolved.append({
+                "strategy_id": row["strategy_id"],
+                "name": row.get("name"),
+                "symbol": row.get("symbol"),
+                "timeframe": row.get("timeframe"),
+                "spec_video": spec_video,
+                "disposition": "IDENTITY_MATERIALIZATION_UNRESOLVED",
+                "disposition_reason": (
+                    f"this video now has {len(strategy_indices_by_video[spec_video])} modern "
+                    f"strategy indices ({sorted(strategy_indices_by_video[spec_video])}) but the "
+                    "frozen manifest row predates multi-strategy extraction and carries no field "
+                    "identifying which one it represents. No durable crosswalk proving that "
+                    "identity exists in this repository. Failing closed per AR-1350A SS6 Option "
+                    "2 rather than assuming strategy_index=0 by convenience."
+                ),
+            })
+            continue
+
         unit = units_by_video_s0.get(spec_video)
         if unit is None:
             out_of_scope.append({
@@ -114,6 +155,10 @@ def main() -> int:
                           "(unexpected -- flag for investigation)",
             })
             continue
+        # Single-strategy video: strategy_index=0 IS the only modern strategy that exists, so
+        # there is no ambiguity to cross a walk over -- this is not the guessed case AR-1350A
+        # objected to (that case never had a competing strategy_index to disambiguate from).
+        crosswalked_count += 1
         disposition, reason = disposition_for_unit(unit)
         rows.append({
             "strategy_id": row["strategy_id"],
@@ -126,33 +171,52 @@ def main() -> int:
             "disposition_reason": reason,
         })
 
-    # Strategy indices this session's re-extraction found that the FROZEN manifest (pre-dating
-    # multi-strategy extraction) has no row for -- a real, disclosed gap, not silently merged in.
+    # Every modern strategy_index for a multi-strategy video, INCLUDING index 0 -- once a video
+    # fails closed to IDENTITY_MATERIALIZATION_UNRESOLVED, none of its strategy indices (not even
+    # 0) may claim a manifest row, so all of them must stay visible here rather than index 0
+    # silently reading as "handled" while the others read as "extra". Single-strategy videos'
+    # index 0 is excluded -- it legitimately IS represented via the crosswalked row above.
     unrepresented = [
         {"video_id": u["video_id"], "strategy_index": u["strategy_index"],
-         "locator_backend": u["locator_backend"]}
+         "locator_backend": u["locator_backend"],
+         "reason": "multi-strategy video, no row assigned to any index (fail-closed)"}
         for u in inventory["units"]
-        if u.get("strategy_index") not in (0, None)
+        if u["video_id"] in multi_strategy_videos
+    ] + [
+        {"video_id": u["video_id"], "strategy_index": u["strategy_index"],
+         "locator_backend": u["locator_backend"],
+         "reason": "extra strategy index beyond the frozen manifest's single-strategy assumption"}
+        for u in inventory["units"]
+        if u["video_id"] not in multi_strategy_videos and u.get("strategy_index") not in (0, None)
     ]
 
     disposition_counts: dict[str, int] = {}
     for r in rows:
         disposition_counts[r["disposition"]] = disposition_counts.get(r["disposition"], 0) + 1
+    for r in identity_unresolved:
+        disposition_counts[r["disposition"]] = disposition_counts.get(r["disposition"], 0) + 1
 
     out = {
         "artifact": "ar-1349a-manifest-row-disposition-projection",
-        "authority": "AR-1349A SS9.B -- rebuild from now-authoritative frozen certificates, "
-                     "AR-1340A steady-state disposition law, no invented names/markets/eligibility",
+        "authority": "AR-1349A SS9.B / AR-1350A SS6 -- rebuild from now-authoritative frozen "
+                     "certificates, AR-1340A steady-state disposition law, no invented "
+                     "names/markets/eligibility; multi-strategy videos fail closed rather than "
+                     "assume strategy_index=0 without a proven crosswalk",
         "manifest_source": os.path.relpath(MANIFEST_PATH, REPO_ROOT),
         "inventory_source": os.path.relpath(INVENTORY_PATH, REPO_ROOT),
         "summary": {
             "total_manifest_rows": len(manifest),
             "rows_projected": len(rows),
+            "rows_identity_unresolved": len(identity_unresolved),
             "rows_out_of_scope": len(out_of_scope),
             "disposition_counts": disposition_counts,
-            "strategy_indices_unrepresented_in_frozen_manifest": len(unrepresented),
+            "multi_strategy_videos_failed_closed": len(multi_strategy_videos),
+            "rows_crosswalked_single_strategy": crosswalked_count,
+            "rows_failed_closed_multi_strategy": fail_closed_count,
+            "strategy_indices_unrepresented_total": len(unrepresented),
         },
         "rows": rows,
+        "identity_unresolved_rows": identity_unresolved,
         "out_of_scope": out_of_scope,
         "unrepresented_strategy_indices": unrepresented,
     }
