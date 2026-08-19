@@ -137,7 +137,25 @@ def test_repeat_test_momentum_is_allowed_prebreak_but_first_approach_is_not():
     )
 
 
-def test_displacement_prebreak_requires_two_expanded_bars_and_third_momentum():
+def test_adjacent_bars_sitting_on_level_do_not_fake_a_repeat_test():
+    p = core.Params()
+    resistance = loc("R", 100.0, 101.0)
+    q = frame([
+        (98.0, 98.6, 97.8, 98.4),
+        (98.4, 99.2, 98.2, 99.0),
+        (99.4, 100.4, 99.2, 100.1),
+        (100.0, 100.7, 99.7, 100.4),
+        (100.2, 100.8, 99.9, 100.5),
+        (99.7, 100.95, 99.6, 100.8),
+    ])
+    ts = q.index[-1]
+    assert momentum_bar(q.iloc[-1], "L", p)
+    assert not repeat_test_momentum_prebreak(
+        q, ts, q.iloc[-1], "L", resistance, p, pad=0.10,
+    )
+
+
+def test_displacement_prebreak_needs_genuine_displacement_in_drive_and_third_momentum():
     p = core.Params()
     resistance = loc("R", 105.0, 106.0)
     q = frame([
@@ -145,16 +163,30 @@ def test_displacement_prebreak_requires_two_expanded_bars_and_third_momentum():
         (100.5, 101.3, 100.3, 101.0),
         (101.0, 101.9, 100.8, 101.5),
         (101.5, 103.6, 101.4, 103.3),
-        (103.3, 104.7, 103.2, 104.5),
-        (104.4, 104.95, 104.35, 104.9),
+        (103.3, 104.2, 103.2, 104.1),
+        (104.05, 105.0, 104.0, 104.9),
     ])
     ts = q.index[-1]
+    # Bar 1 of the drive is true displacement. Bar 2 is strong momentum but not
+    # displacement. The third candle retains momentum into the key zone.
+    assert displacement_bar(q.iloc[-3], "L", p, reference_range=1.0)
+    assert momentum_bar(q.iloc[-2], "L", p)
+    assert not displacement_bar(q.iloc[-2], "L", p, reference_range=1.0)
+    assert momentum_bar(q.iloc[-1], "L", p)
     assert displacement_sequence_prebreak(q, ts, q.iloc[-1], "L", resistance, p, pad=0.10)
 
     reversed_third = q.copy()
-    reversed_third.iloc[-1] = (104.9, 104.95, 104.1, 104.2)
+    reversed_third.iloc[-1] = (104.9, 105.0, 104.1, 104.2)
     assert not displacement_sequence_prebreak(
         reversed_third, ts, reversed_third.iloc[-1], "L", resistance, p, pad=0.10,
+    )
+
+    no_displacement = q.copy()
+    no_displacement.iloc[-3] = (102.3, 103.3, 102.2, 103.1)
+    assert momentum_bar(no_displacement.iloc[-3], "L", p)
+    assert not displacement_bar(no_displacement.iloc[-3], "L", p, reference_range=1.0)
+    assert not displacement_sequence_prebreak(
+        no_displacement, ts, no_displacement.iloc[-1], "L", resistance, p, pad=0.10,
     )
 
 
