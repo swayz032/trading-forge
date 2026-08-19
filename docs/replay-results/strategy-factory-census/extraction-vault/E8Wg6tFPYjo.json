@@ -1,0 +1,256 @@
+{
+  "video_id": "E8Wg6tFPYjo",
+  "extracted_at": 1787106170.1965544,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "43684dfc20615f30f6e76629d7c06fadf9e26523bfe0b8b7ad29dc11a208c8c9",
+  "extraction": {
+    "video_id": "E8Wg6tFPYjo",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "higher_timeframe": "4h",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities.",
+            "step": 1,
+            "action": "Determine the higher timeframe bias by identifying if the price is in a premium (above 50% of range) or discount (below 50% of range) zone.",
+            "rationale": "The strategy is based on the principle of buying low and selling high relative to the trading range."
+          },
+          {
+            "transcript_quote": "this large wick right here pierced above that previous high, purging all of that liquidity, bringing that money back into the market, adding fuel for",
+            "step": 2,
+            "action": "Wait for a liquidity sweep, specifically a major high or low to be purged by a large wick or candle body closure.",
+            "rationale": "Liquidity sweeps signal that resting money has been purged, fueling the next directional move."
+          },
+          {
+            "transcript_quote": "whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of",
+            "step": 3,
+            "action": "Wait for a Break of Structure (BOS) to occur, signaling a significant movement in price.",
+            "rationale": "BOS confirms a potential trading opportunity has been created."
+          },
+          {
+            "transcript_quote": "typically price will retrace until it fills that gap and then it will often continue in its intended direction.",
+            "step": 4,
+            "action": "Wait for price to retrace into a Fair Value Gap (FVG) or Imbalance after the BOS.",
+            "rationale": "The market tends to fill inefficiencies (gaps) before continuing its move."
+          },
+          {
+            "transcript_quote": "I simply drag the stop-loss to the high of the Fibonacci range right here.",
+            "step": 5,
+            "action": "Enter the trade at the 71% retracement level of the measured Fibonacci range.",
+            "rationale": "The 71% retracement is used as the entry point to achieve a favorable risk-to-reward ratio."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "swing_high_above_entry",
+          "transcript_quote": "I simply drag the stop-loss to the high of the Fibonacci range right here.",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The initial stop is placed at the extreme high or low of the measured Fibonacci range."
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2.45,
+            "rationale": "The 71% retracement entry provides a risk-to-reward ratio of 2.45."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities.",
+            "name": "htf_premium_discount_bias",
+            "description": "The higher timeframe must be aligned with premium (sell) or discount (buy) pricing.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "transcript_quote": "this large wick right here pierced above that previous high, purging all of that liquidity, bringing that money back into the market, adding fuel for",
+            "name": "liquidity_sweep",
+            "description": "A major high or low must be swept to purge resting liquidity.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "transcript_quote": "whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of",
+            "name": "break_of_structure",
+            "description": "A break of structure must occur to signal a potential trading opportunity.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "when the Fibonacci retracement number lines up with the imbalance or fair value gap.",
+            "name": "fib_fvg_alignment",
+            "description": "The Fibonacci retracement level must align with a Fair Value Gap or Imbalance.",
+            "canonical_match": "vp_level_proximity"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Higher Time Frame Alignment",
+            "role": "model",
+            "verbatim_description": "If we can align our 15minute trade bias to a higher time frame bias, which is the overarching trend, then more times than not, we'll be on the right side of the market, and it'll prevent a lot of unnecessary losses.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium and Discount",
+            "role": "zone",
+            "verbatim_description": "Whenever we have a trading range, we want to gauge premium and discount pricing. So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Sweep",
+            "role": "entry_step",
+            "verbatim_description": "The market wants to purge that liquidity and bring that money back in to add fuel for the next move.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Buyside Liquidity",
+            "role": "zone",
+            "verbatim_description": "This is what's referred to as buyside liquidity because the liquidity was purged to the upside.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Structure",
+            "role": "entry_step",
+            "verbatim_description": "Whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure. That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Imbalance / Fair Value Gap",
+            "role": "zone",
+            "verbatim_description": "It's a three candlestick pattern. 1 2 3. And between the low of this first candle and the high of the third candle, we can see that there is a very large gap. That was a period of time where there was only a straight move to the downside. There was no equilibrium between buying and selling, which is why it's called imbalance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "71% Retracement",
+            "role": "target",
+            "verbatim_description": "My favorite number to use is 71%. And what that does is it allows me to get a really nice risk-to-reward ratio.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Hidden Confluence",
+            "role": "filter",
+            "verbatim_description": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "A+ Setup",
+            "role": "phase",
+            "verbatim_description": "So, if you can do that combined with the other things that I've listed here, that is what I like to call an A+ setup and you have a very high likelihood of success.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Draw Down",
+            "role": "filter",
+            "verbatim_description": "Anytime that price is spending in this dark gray area close to my stop loss, that's considered draw down.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap",
+            "role": "zone",
+            "verbatim_description": "You can see that my indicator is printing that very clearly. Kind of hard to miss.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount",
+            "role": "filter",
+            "verbatim_description": "My indicator is showing me that the 4hour time frame is currently at a discount, which means we should not be looking for selling opportunities.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Grab",
+            "role": "entry_step",
+            "verbatim_description": "I'm going to annotate that for you all. Just label it with a dollar sign there, showing that liquidity was purged from this low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Relative Equal Highs",
+            "role": "zone",
+            "verbatim_description": "So, this is actually another form of liquidity called relative equal highs.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sellside Liquidity",
+            "role": "zone",
+            "verbatim_description": "We know that sellside liquidity has already been purged, but buyside liquidity was not purged because these are relative equal highs.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Structure Plus Imbalance",
+            "role": "entry_step",
+            "verbatim_description": "Next up, we have to locate the break of structure plus imbalance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "75% Retracement",
+            "role": "zone",
+            "verbatim_description": "I have the 71% and the 75%.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 25\u00c3\u2014 in transcript)",
+            "transcript_quote": "ure plus imbalance, and a 71% retracement. I'm going to break down each of these line items one by one so you'll get the full exten",
+            "occurrences": 25,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 13\u00c3\u2014 in transcript)",
+            "transcript_quote": "e alignment, liquidity sweep, break of structure plus imbalance, and a 71% retracement. I'm going to break down each of these line items o",
+            "occurrences": 13,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 10\u00c3\u2014 in transcript)",
+            "transcript_quote": "ement ends up being towards a fair value gap or an imbalance. The two names are pretty interchangeable. Now, just to quickly explain w",
+            "occurrences": 10,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 9\u00c3\u2014 in transcript)",
+            "transcript_quote": "higher time frame alignment, liquidity sweep, break of structure plus imbalance, and a 71% retracement. I'm going to break down each o",
+            "occurrences": 9,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 6\u00c3\u2014 in transcript)",
+            "transcript_quote": "hing above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anythi",
+            "occurrences": 6,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Equal Highs/Lows",
+            "role": "target",
+            "verbatim_description": "Equal Highs/Lows (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "are pretty untested relative equal lows. And it's safe to say that the objective of price would be most likely to head in that di",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "SMC (Smart Money Concepts)",
+            "role": "model",
+            "verbatim_description": "SMC (Smart Money Concepts) (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "together to make the ultimate SMC tool. So whenever one of these structural lows or highs vice versa is violated, you'll se",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

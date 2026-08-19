@@ -1,0 +1,22 @@
+{
+  "video_id": "FqxEKDxemtI",
+  "extracted_at": 1787106078.8421032,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "7fa33ffaf87c9bfe66e5eebd41d2bc7dab2531d39b1d43b6c0b2fcf232d8aa89",
+  "extraction": {
+    "video_id": "FqxEKDxemtI",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [],
+    "rejected_strategies": [
+      {
+        "reason": "fixed_point_stop_not_supported",
+        "detail": "The speaker uses fixed pip distances for stop placement (e.g., '20 Pips below the swing low'), which violates the framework's ban on fixed-point stops."
+      }
+    ],
+    "empty_reason": null
+  }
+}

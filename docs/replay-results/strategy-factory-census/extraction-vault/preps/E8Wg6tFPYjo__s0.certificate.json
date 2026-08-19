@@ -1,0 +1,270 @@
+{
+  "conditions": [
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        21946,
+        22110
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        20847,
+        20950
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        20847,
+        20909
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        21108,
+        21238
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        20847,
+        20909
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        21108,
+        21238
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        20754,
+        20909
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "Determine the higher timeframe bias by identifying if the price is in a premium (above 50% of range) or discount (below 50% of range) zone.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "entry_sequence[0].action",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "Liquidity sweeps signal that resting money has been purged, fueling the next directional move.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "entry_sequence[1].rationale",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "Wait for a Break of Structure (BOS) to occur, signaling a significant movement in price.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "entry_sequence[2].action",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "BOS confirms a potential trading opportunity has been created.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "entry_sequence[2].rationale",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "Wait for price to retrace into a Fair Value Gap (FVG) or Imbalance after the BOS.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "entry_sequence[3].action",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "The market tends to fill inefficiencies (gaps) before continuing its move.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "entry_sequence[3].rationale",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "A major high or low must be swept to purge resting liquidity.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "confluences[1].description",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "A break of structure must occur to signal a potential trading opportunity.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "confluences[2].description",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "The Fibonacci retracement level must align with a Fair Value Gap or Imbalance.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "confluences[3].description",
+      "anchor_reason": "proposed_quote_not_literal_substring"
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "E8Wg6tFPYjo",
+    "full_transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 9,
+  "unanchored_reason_breakdown": {
+    "proposed_quote_not_literal_substring": 9
+  },
+  "diagnosis": {
+    "unanchored": 9,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 7,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 0
+  },
+  "dry_run": false
+}
