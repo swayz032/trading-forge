@@ -209,7 +209,7 @@ export function verifyActivationParentHistory({ input, manifest, repoRoot, now =
   const tokenHash = sha256(token);
   const permitFile = path.join(commonGitDir(repoRoot), 'tf-isolated-grader-permits', `${tokenHash}.json`);
   if (!fs.existsSync(permitFile)) {
-    return { applicable: true, ok: false, reason: 'activation token has no unconsumed permit witness' };
+    return { applicable: true, ok: false, reason: 'no unconsumed isolated-grader permit matches this activation token' };
   }
 
   let permit;
