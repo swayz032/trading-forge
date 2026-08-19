@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `a9c5d0bb551639e1046a318a9a6f086c6e76940f`  (worktree DIRTY at generation time)
+> Generated at commit `0e0b904093dd0297cd39ce0c40ce980213bcf256`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -42,10 +42,10 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
 | `src/` | 1915 | 777 |
-| `scripts/` | 286 | 284 |
+| `scripts/` | 285 | 283 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2236** | **1061** |
+| **TOTAL** | **2235** | **1060** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **219**.  Modules reachable from them: **775** of **2236** parsed files.
+Total entry points: **219**.  Modules reachable from them: **775** of **2235** parsed files.
 
 <details><summary>All 219 entry points and why each was counted</summary>
 
