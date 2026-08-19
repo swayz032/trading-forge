@@ -1,8 +1,8 @@
 {
-  "schema_version": 3,
-  "release_id": "MNQ-V2.4-KEY-LEVEL-EQUATION-3",
-  "frozen_at": "2026-08-17",
-  "purpose": "Encode the trader/video rule that a key zone can be established either by multiple independent rejections or by one exceptional swing rejection followed by drastic displacement, without PnL tuning or hindsight from later pivots.",
+  "schema_version": 4,
+  "release_id": "MNQ-V2.4-KEY-LEVEL-EQUATION-4",
+  "frozen_at": "2026-08-18",
+  "purpose": "Encode the trader/video rule that a key zone can be established either by multiple independent rejections or by one exceptional swing rejection followed by drastic displacement, without PnL tuning or hindsight from later pivots, and preserve trader-confirmed range-day travel room before fresh entry zones.",
   "established_zone_path": {
     "authority": "existing causal multi-rejection quality engine",
     "minimum_independent_rejections": 2,
@@ -34,6 +34,16 @@
     "no_overlap_duplicate_with_established_zone": true,
     "zone_half_width": "max(4_ticks,key_level_pad_atr*the_pivot_ATR)",
     "must_survive_zone_lifecycle_to_map_freeze": true
+  },
+  "range_day_zone_room": {
+    "enabled": true,
+    "causal_classifier": "premarket_plan.pm_structure == MIXED",
+    "rule": "On a ranging/mixed day, do not authorize fresh key zones crowded against or inside the active pre-open range. Prefer entry zones that leave room for price to break out and travel before reaching the key zone.",
+    "minimum_room": "Params.min_room_r * Params.stop",
+    "nearby_structure_is_preserved_for_reaction_or_tp_context": true,
+    "nearby_structure_is_not_deleted_from_market_map": true,
+    "no_hindsight_full_day_range_label": true,
+    "no_new_numeric_threshold": true
   },
   "confluence": {
     "prior_day_or_week_level_overlap_adds_one_vote": true,
