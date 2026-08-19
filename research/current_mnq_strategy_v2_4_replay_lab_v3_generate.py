@@ -16,8 +16,10 @@ from research import current_mnq_strategy_v2_4_engine as v24
 from research.current_mnq_strategy_v2_4_replay_lab_v3 import (
     LWC_FILE,
     LWC_VERSION,
-    build_replay_pack_v3,
     write_lab_v3,
+)
+from research.current_mnq_strategy_v2_4_replay_lab_v3_selection import (
+    build_replay_pack_v3_diverse,
 )
 
 ROOT = Path("research/_mnq_v24_replay_lab_v3")
@@ -51,9 +53,11 @@ def main():
     env = old.prepare(raw5, raw1)
     days = old.scoreable_days(env)
     # Scan the whole already-seen development sample. Selection is based on
-    # authoritative pre-entry semantics and session diversity, never PnL/outcomes.
-    review, answers = build_replay_pack_v3(
-        env, days, v24.Params(), max_cases=16, max_entry_cases=11, min_entry_cases=8,
+    # authoritative full entries plus real force candidates rejected by the final
+    # room/TP gate, all on different sessions. No PnL or exit outcome is read.
+    review, answers = build_replay_pack_v3_diverse(
+        env, days, v24.Params(), max_cases=16, max_entry_cases=11,
+        min_entry_cases=8, min_momentum_near_miss_cases=4,
     )
     if review["case_count"] != 16 or review["session_count"] != 16:
         raise RuntimeError(
@@ -62,12 +66,13 @@ def main():
     if answers.get("pack_id") != review.get("pack_id"):
         raise RuntimeError("REPLAY_V3_PACK_ID_MISMATCH")
 
-    entry_cases = sum(
-        1 for x in answers["answers"].values()
-        if x["bot_action"] in {"ENTER_LONG", "ENTER_SHORT"}
-    )
+    sampling = answers.get("sampling_receipt", {})
+    entry_cases = int(sampling.get("authoritative_entry_cases", 0))
+    near_miss_cases = int(sampling.get("momentum_near_miss_cases", 0))
     if entry_cases < 8:
         raise RuntimeError(f"REPLAY_V3_TOO_FEW_MOMENTUM_ENTRY_CASES:{entry_cases}")
+    if near_miss_cases < 4:
+        raise RuntimeError(f"REPLAY_V3_TOO_FEW_MOMENTUM_NEAR_MISSES:{near_miss_cases}")
 
     write_lab_v3(OUT, review, answers)
     html = (OUT / "review_v3.html").read_text(encoding="utf-8")
@@ -104,6 +109,7 @@ def main():
         "session_count": review["session_count"],
         "case_count": review["case_count"],
         "authoritative_entry_case_count": entry_cases,
+        "momentum_near_miss_case_count": near_miss_cases,
         "one_case_per_session": True,
         "tp_semantics": "FIRST_MEANINGFUL_REACTION_CLUSTER_NOT_SIDE_BY_SIDE_CANDLES",
         "user_gold_reference_manifest": str(GOLD),
