@@ -164,7 +164,7 @@ jobs:
               'clean_oos_seen_history_exclusion':edge['anti_overfit']['known_seen_performance_ranges'],
               'signalr_sidecar_ci_automation_refused':True,
               'automation_approved':False,
-              'reason':'v2.4 architecture only; clean sealed edge proof + real no-trade gold + local shadow/drills still required'
+              'reason':'v2.4 architecture only; clean sealed edge proof + local shadow/drills still required'
           }
           out=Path('research/_mnq_v24_architecture'); out.mkdir(parents=True,exist_ok=True)
           (out/'architecture_receipt.json').write_text(json.dumps(receipt,indent=2,sort_keys=True))
