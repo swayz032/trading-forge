@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-1",
+  "frozen_at": "2026-08-18",
+  "purpose": "Bind the trader-confirmed distinction between ordinary momentum, true displacement, rejection-trigger sequences, normal post-break continuation, 15m three-bar continuation after a weak break, and the only two permitted pre-break early-entry families.",
+  "core_equation": "AUTHORIZED_LOCATION_AND_ROOM + VALID_CANDLE_STORY + DIRECTIONAL_MOMENTUM_TRIGGER",
+  "momentum_vs_displacement": {
+    "momentum_candle": "Directional body/control candle using the existing frozen Params.body_frac and Params.close_loc geometry. Range expansion is NOT required.",
+    "displacement": "Momentum plus true range expansion using the existing frozen Params.range_ratio. Every strong bullish/red momentum candle is not displacement.",
+    "forbidden_equivalence": "STRONG_OR_MOMENTUM_CANDLE != AUTOMATIC_DISPLACEMENT"
+  },
+  "rejection_entry_family": {
+    "location_required": true,
+    "trigger": "momentum candle away from the rejected key zone",
+    "valid_pre_trigger_stories": [
+      "two_directional_momentum_candles_after_zone_rejection",
+      "doji_at_zone_then_momentum",
+      "pinbar_or_rejection_wick_at_zone_then_momentum",
+      "inside_bar_at_zone_then_momentum",
+      "shrinking_candles_heading_into_zone_then_rejection_then_reverse_momentum",
+      "other_geometry_equivalent_rejection_control_story_then_momentum"
+    ],
+    "rejection_without_momentum": "WAIT_OR_NO_TRADE",
+    "pattern_name_alone": "NO_TRADE"
+  },
+  "normal_breakout_family": {
+    "first_print_beyond_key_zone": "SETUP_ONLY",
+    "entry_trigger": "a subsequent momentum candle in the breakout direction",
+    "first_break_candle_alone": "NO_ENTRY",
+    "fake_break_protection": true
+  },
+  "weak_break_three_bar_continuation": {
+    "timeframe": "15m",
+    "sequence": [
+      "BAR1: completed candle establishes the break beyond the exact key zone",
+      "BAR2: controlled pullback toward the broken level without invalidating through the opposite side",
+      "BAR3: directional momentum resumes and re-establishes continuation beyond the broken level"
+    ],
+    "use_case": "When the initial break is not a strong move, do not chase. Let price pull back and use the 15m three-bar continuation structure as an entry path.",
+    "future_bars_forbidden": true
+  },
+  "pre_break_early_entry_exceptions": {
+    "exclusive": true,
+    "families": [
+      {
+        "name": "REPEAT_TEST_MOMENTUM_ATTACK",
+        "rule": "The key level has already been tested, price returns for another test/attack, and a momentum candle confirms the breakout attack before a completed candle has printed beyond the zone."
+      },
+      {
+        "name": "DISPLACEMENT_SEQUENCE_INTO_LEVEL",
+        "rule": "A genuine displacement sequence drives directly toward the key zone; the third candle must retain directional momentum. If the third candle reverses color/control, no early entry."
+      }
+    ],
+    "all_other_pre_break_entries": "NO_TRADE"
+  },
+  "range_day_key_zone_room": {
+    "rule": "When the causal pre-open structure is ranging/mixed, do not authorize key zones crowded against or inside the active range. Preserve meaningful nearby structure as reaction/target context, but fresh entry-authorized zones should leave breakout travel room from the range edge before price reaches the key zone.",
+    "range_classifier": "existing causal premarket plan pm_structure == MIXED",
+    "room_requirement": "reuse existing frozen Params.min_room_r * Params.stop; no new numeric threshold",
+    "no_hindsight_day_label": true
+  },
+  "target_rule_reconfirmed": {
+    "rule": "First meaningful reaction area in physical trade direction owns TP. Liquidity cluster before FVG -> liquidity cluster wins. FVG before liquidity cluster -> FVG wins.",
+    "farther_feature_may_not_leapfrog": true
+  },
+  "anti_overfit": {
+    "new_numeric_threshold_added": false,
+    "reuses_existing_frozen_geometry_and_room_parameters": true,
+    "no_PnL_selection": true,
+    "screenshots_and_direct_trader_labels_arrived_before_clean_v2_4_sealed_PnL": true,
+    "changing_this_contract_invalidates_prior_v2_4_evidence": true
+  }
+}
