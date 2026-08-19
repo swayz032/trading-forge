@@ -95,7 +95,14 @@ def main() -> int:
     strategy_indices_by_video: dict[str, list[int]] = {}
     for u in inventory["units"]:
         strategy_indices_by_video.setdefault(u["video_id"], []).append(u["strategy_index"])
-    multi_strategy_videos = {v for v, idxs in strategy_indices_by_video.items() if len(idxs) > 1}
+    # AR-1353 F-8: len(set(idxs)), not len(idxs) -- the inventory's own units list could in
+    # principle carry a duplicate (video_id, strategy_index) pair from an upstream defect, which
+    # would inflate a length-of-list count without indicating real multi-strategy ambiguity. A
+    # distinct-index count is the actual identity signal; errs fail-closed either way, but this
+    # makes the predicate correct rather than merely safe by accident.
+    multi_strategy_videos = {
+        v for v, idxs in strategy_indices_by_video.items() if len(set(idxs)) > 1
+    }
 
     rows = []
     out_of_scope = []

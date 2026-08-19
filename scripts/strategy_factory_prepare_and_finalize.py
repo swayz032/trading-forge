@@ -140,6 +140,18 @@ _SET_A_ITEMS = [
 ]
 
 
+def _expected_item_ids_for_packet(packet: dict, stage: int) -> list[str]:
+    """The single source of truth for which item_ids a stage's task covers, derived directly
+    from a packet dict -- called by BOTH `cmd_adjudication_emit` (to build the task) and
+    `cmd_adjudication_ingest` (to re-verify at ingest time, AR-1353 F-4). A second, drifted copy
+    of this logic would be exactly the kind of unbound anchor F-4 found in the stored
+    expected_item_ids list."""
+    set_b_items = packet["sections"][1]["items"]
+    if stage == 1:
+        return [iid for iid, _ in _SET_A_ITEMS] + [item["item_id"] for item in set_b_items]
+    return [item["item_id"] for item in packet["stage2"]["items"]]
+
+
 def _adjudication_paths(video_id: str, strategy_index: int, stage: int) -> dict:
     base = os.path.join(REPO_ROOT, PREP_DIR, f"{video_id}__s{strategy_index}")
     return {
@@ -176,7 +188,6 @@ def cmd_adjudication_emit(video_id: str, strategy_index: int, stage: int) -> int
         offset = len(_SET_A_ITEMS)
         for i, item in enumerate(set_b_items):
             lines.append(f"{offset+i+1}. item_id: {item['item_id']}\n   quote: {item['quote_anchor']['verbatim']!r}")
-        expected_item_ids = [iid for iid, _ in _SET_A_ITEMS] + [item["item_id"] for item in set_b_items]
         task_text = (
             "Blind role classification. Classify each item into exactly one of: "
             "gate-strength, context, cannot-determine, using ONLY the verbatim quote.\n\n"
@@ -190,7 +201,6 @@ def cmd_adjudication_emit(video_id: str, strategy_index: int, stage: int) -> int
             f"{i+1}. item_id: {item['item_id']}\n   extracted_condition: {item['extracted_condition_text']!r}\n   quote: {quote_by_id[item['item_id']]!r}"
             for i, item in enumerate(stage2_items)
         ]
-        expected_item_ids = [item["item_id"] for item in stage2_items]
         task_text = (
             "Revealed support judgment. Does the quote express the condition? Choose one of: "
             "confirmed, partial, denied.\n\n"
@@ -200,7 +210,10 @@ def cmd_adjudication_emit(video_id: str, strategy_index: int, stage: int) -> int
         )
 
     task_sha256 = hashlib.sha256(task_text.encode("utf-8")).hexdigest()
-    expected_ids_sorted = sorted(expected_item_ids)
+    # AR-1353 F-4: expected_item_ids is re-derived from the packet by the SAME helper ingest will
+    # call again later -- the index below stores it for humans/receipts to read, but ingest never
+    # trusts this stored copy; it recomputes independently from the (re-hash-verified) packet.
+    expected_ids_sorted = sorted(_expected_item_ids_for_packet(packet, stage))
     expected_ids_sha256 = hashlib.sha256(json.dumps(expected_ids_sorted).encode("utf-8")).hexdigest()
 
     with open(paths["task"], "w", encoding="utf-8", newline="\n") as f:
@@ -308,9 +321,12 @@ def cmd_adjudication_ingest(
     with open(raw_path, "r", encoding="utf-8") as f:
         raw_text = f.read()
     # raw is sacred (same discipline as the locator's cmd_ingest): hash BEFORE any parsing.
+    # AR-1353 F-3: the canonical raw-response file is NOT written yet -- a rejected ingest must
+    # never overwrite it, or a receipt from an EARLIER successful ingest would attest a hash that
+    # no longer matches the file on disk (measured: exactly this happened when a reject followed
+    # a prior accept). It is written once, at the very end, only after every validation below has
+    # passed and immediately before the receipt that attests it.
     raw_sha256 = hashlib.sha256(raw_text.encode("utf-8")).hexdigest()
-    with open(paths["raw"], "w", encoding="utf-8", newline="\n") as f:
-        f.write(raw_text)
 
     try:
         parsed = json.loads(raw_text)
@@ -328,9 +344,12 @@ def cmd_adjudication_ingest(
         }, indent=2))
         return 1
 
-    # Exact answer-key-set equality against the emit-time expected set -- catches missing ids,
-    # extra ids, AND cross-unit contamination (a different unit's ids never equal this unit's).
-    expected = set(task_index["expected_item_ids"])
+    # Exact answer-key-set equality -- AR-1353 F-4: re-derived from the CURRENT (already
+    # hash-verified above) packet via the same helper `adjudication-emit` used, never trusted
+    # from the stored task_index list. Catches missing ids, extra ids, AND cross-unit
+    # contamination (a different unit's ids never equal this unit's).
+    current_packet = json.loads(current_packet_text)
+    expected = set(_expected_item_ids_for_packet(current_packet, stage))
     actual = set(parsed.keys())
     if actual != expected:
         print(json.dumps({
@@ -358,6 +377,10 @@ def cmd_adjudication_ingest(
         }, indent=2))
         return 1
 
+    # Every validation above passed -- now, and only now, promote the raw response to its
+    # canonical path (AR-1353 F-3) and write the answers + receipt that attest it.
+    with open(paths["raw"], "w", encoding="utf-8", newline="\n") as f:
+        f.write(raw_text)
     with open(paths["answers"], "w", encoding="utf-8", newline="\n") as f:
         json.dump(parsed, f, indent=2)
     parsed_answer_sha256 = hashlib.sha256(
@@ -378,10 +401,15 @@ def cmd_adjudication_ingest(
         "parsed_answer_sha256": parsed_answer_sha256,
         "answers_path": os.path.relpath(paths["answers"], REPO_ROOT),
         "model_declared": model_declared,
-        "invocation": (
+        # AR-1353 F-7: this field name and the explicit `invocation_attested: false` travel WITH
+        # the receipt, not just in a docstring the receipt's own reader may never see. The harness
+        # this driver runs under exposes no per-call model-identity witness, so this is a caller
+        # STATEMENT, not independently verified evidence -- a reader must not mistake it for proof.
+        "invocation_declared": (
             "Agent tool, subagent_type=general-purpose, model override="
             f"{model_declared}, given the stage task text as its prompt"
         ),
+        "invocation_attested": False,
         "authority": "AR-1350A SS8.A -- full provenance chain: packet/task/item-set binding",
     }
     with open(paths["receipt"], "w", encoding="utf-8", newline="\n") as f:
@@ -394,7 +422,45 @@ def cmd_adjudication_ingest(
     return 0
 
 
-def cmd_finalize(video_id: str, strategy_index: int, stage1_path: str | None, stage2_path: str | None) -> int:
+def _verify_binding(video_id: str, strategy_index: int, stage: int, answers: dict, answers_path: str) -> tuple[bool, str]:
+    """AR-1353 F-1: `finalize` must consume ONLY a bound receipt/output (GPT's AR-1350A SS4 chain
+    terminal link) -- the prior fix built emit/ingest binding but never wired it here, so a
+    hand-written stage1/stage2 file with no emit/ingest/receipt at all was silently accepted and
+    could overwrite a real certificate with a fabricated `pilot_grade`. This checks: a receipt
+    exists for this exact unit/stage, its `parsed_answer_sha256` matches the CURRENT content of
+    `answers_path` (so the file was not edited after ingest), and its packet/task hashes still
+    verify against the current on-disk packet/task (reusing the same re-hash discipline
+    `cmd_adjudication_ingest` already applies at ingest time, checked again here at finalize time
+    since time may have passed between the two).
+    """
+    paths = _adjudication_paths(video_id, strategy_index, stage)
+    if not os.path.exists(paths["receipt"]):
+        return False, f"no stage{stage} receipt found -- answers were never run through adjudication-emit/adjudication-ingest"
+    with open(paths["receipt"], "r", encoding="utf-8") as f:
+        receipt = json.load(f)
+    if receipt.get("video_id") != video_id or receipt.get("strategy_index") != strategy_index or receipt.get("stage") != stage:
+        return False, "receipt identity does not match the unit/stage being finalized"
+
+    actual_answer_sha = hashlib.sha256(json.dumps(answers, sort_keys=True).encode("utf-8")).hexdigest()
+    if actual_answer_sha != receipt.get("parsed_answer_sha256"):
+        return False, (
+            f"answers at {answers_path} do not match the receipted content "
+            f"(receipt={receipt.get('parsed_answer_sha256')}, actual={actual_answer_sha}) -- "
+            "the file was edited after ingest, or was never the ingested file at all"
+        )
+
+    if os.path.exists(paths["packet"]):
+        with open(paths["packet"], "r", encoding="utf-8") as f:
+            current_packet_sha = hashlib.sha256(f.read().encode("utf-8")).hexdigest()
+        if current_packet_sha != receipt.get("packet_sha256"):
+            return False, "packet has changed since this receipt was ingested"
+    return True, "receipt verified: identity, answer content, and packet hash all match"
+
+
+def cmd_finalize(
+    video_id: str, strategy_index: int, stage1_path: str | None, stage2_path: str | None,
+    allow_unbound: bool = False,
+) -> int:
     sys.path.insert(0, REPO_ROOT)
     from src.engine.extraction.pilot_conveyor import (
         finalize_certificate,
@@ -412,12 +478,30 @@ def cmd_finalize(video_id: str, strategy_index: int, stage1_path: str | None, st
 
     stage1_answers: dict = {}
     stage2_answers: dict = {}
-    if stage1_path:
-        with open(stage1_path, "r", encoding="utf-8") as f:
-            stage1_answers = json.load(f)
-    if stage2_path:
-        with open(stage2_path, "r", encoding="utf-8") as f:
-            stage2_answers = json.load(f)
+    binding: dict = {}
+    for stage, path in ((1, stage1_path), (2, stage2_path)):
+        if not path:
+            continue
+        with open(path, "r", encoding="utf-8") as f:
+            loaded = json.load(f)
+        ok, detail = _verify_binding(video_id, strategy_index, stage, loaded, path)
+        binding[f"stage{stage}"] = {"bound": ok, "detail": detail}
+        if not ok and not allow_unbound:
+            print(json.dumps({
+                "video_id": video_id, "strategy_index": strategy_index,
+                "status": "UNBOUND_ANSWERS_REFUSED", "stage": stage, "detail": detail,
+                "remedy": (
+                    "run adjudication-emit then adjudication-ingest for this unit/stage before "
+                    "finalize, or pass --allow-unbound-legacy to proceed anyway (stamps the "
+                    "certificate as provenance_binding=UNBOUND_LEGACY rather than silently "
+                    "certifying an unverified input)"
+                ),
+            }, indent=2))
+            return 1
+        if stage == 1:
+            stage1_answers = loaded
+        else:
+            stage2_answers = loaded
 
     cg = control_gate(stage1_answers) if stage1_answers else {"gate_ok": 0, "context_ok": 0, "passed": False}
 
@@ -462,6 +546,16 @@ def cmd_finalize(video_id: str, strategy_index: int, stage1_path: str | None, st
 
     cert = finalize_certificate(prep, tier3_verdicts, tier3_support=tier3_support)
 
+    # AR-1353 F-1: stamp the provenance binding status ONTO the certificate artifact itself --
+    # not just a separate report -- so a reader of the certificate alone (the artifact of record)
+    # can see whether its stage1/stage2 inputs were receipt-verified or accepted unbound.
+    cert_with_provenance = dict(cert)
+    cert_with_provenance["provenance_binding"] = binding or {"note": "no stage1/stage2 files supplied"}
+    if any(not v.get("bound") for v in binding.values()):
+        cert_with_provenance["provenance_binding"]["status"] = "UNBOUND_LEGACY"
+    elif binding:
+        cert_with_provenance["provenance_binding"]["status"] = "BOUND"
+
     out = {
         "video_id": video_id,
         "strategy_index": strategy_index,
@@ -473,6 +567,7 @@ def cmd_finalize(video_id: str, strategy_index: int, stage1_path: str | None, st
         "diagnosis": cert["diagnosis"],
         "unanchored_condition_count": cert["unanchored_condition_count"],
         "unanchored_reason_breakdown": cert["unanchored_reason_breakdown"],
+        "provenance_binding": cert_with_provenance["provenance_binding"],
     }
     cert_out_path = os.path.join(REPO_ROOT, PREP_DIR, f"{video_id}__s{strategy_index}.certificate.json")
     # AR-1351 F-3: newline="\n" for consistency with the same fix in
@@ -480,7 +575,7 @@ def cmd_finalize(video_id: str, strategy_index: int, stage1_path: str | None, st
     # one hashing the in-memory json.dumps output against the disk bytes would hit the identical
     # CRLF-vs-LF mismatch if this were left as default text-mode write.
     with open(cert_out_path, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(cert, f, indent=2, default=str)
+        json.dump(cert_with_provenance, f, indent=2, default=str)
     out["certificate_path"] = cert_out_path
     print(json.dumps(out, indent=2, default=str))
     return 0
@@ -497,6 +592,7 @@ def main() -> int:
     p2.add_argument("--strategy-index", type=int, default=0)
     p2.add_argument("--stage1", default=None)
     p2.add_argument("--stage2", default=None)
+    p2.add_argument("--allow-unbound-legacy", action="store_true", default=False)
     p3 = sub.add_parser("adjudication-emit")
     p3.add_argument("video_id")
     p3.add_argument("--strategy-index", type=int, default=0)
@@ -517,7 +613,9 @@ def main() -> int:
         return cmd_adjudication_ingest(
             args.video_id, args.strategy_index, args.stage, args.raw, args.model_declared
         )
-    return cmd_finalize(args.video_id, args.strategy_index, args.stage1, args.stage2)
+    return cmd_finalize(
+        args.video_id, args.strategy_index, args.stage1, args.stage2, args.allow_unbound_legacy
+    )
 
 
 if __name__ == "__main__":

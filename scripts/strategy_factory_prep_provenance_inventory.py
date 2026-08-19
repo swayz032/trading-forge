@@ -103,7 +103,28 @@ def _validate_receipt(receipt_path: str, video_id: str, strategy_index: int, rep
             f"raw_response_sha256 MISMATCH: receipt claims {claimed_sha}, actual file at "
             f"{raw_response_path} hashes to {actual_sha}"
         )
-    return True, f"identity + raw_response_sha256 ({actual_sha}) both verified against disk"
+
+    # AR-1353 F-5: the task-sha join AR-1351's own fix point named but this check did not yet
+    # implement. Cross-check the receipt's claimed batch_task_sha256 against THIS unit's own
+    # batch_task_index.json -- a receipt whose identity fields and raw-response hash were both
+    # rewritten to match unit B, but whose task hash still names unit A's task, is caught here.
+    task_index_path = os.path.join(
+        repo_root, "docs/replay-results/strategy-factory-census/extraction-vault/opus-batch",
+        f"{video_id}__s{strategy_index}", "batch_task_index.json",
+    )
+    claimed_task_sha = receipt.get("batch_task_sha256")
+    if claimed_task_sha and os.path.exists(task_index_path):
+        with open(task_index_path, "r", encoding="utf-8") as f:
+            own_task_index = json.load(f)
+        own_task_sha = own_task_index.get("task_sha256")
+        if own_task_sha != claimed_task_sha:
+            return False, (
+                f"batch_task_sha256 MISMATCH: receipt claims {claimed_task_sha}, this unit's own "
+                f"batch_task_index.json records {own_task_sha}"
+            )
+    return True, (
+        f"identity + raw_response_sha256 ({actual_sha}) + batch_task_sha256 all verified against disk"
+    )
 
 
 def main() -> int:
@@ -145,6 +166,7 @@ def main() -> int:
                 "certificate_status": None,
                 "needs_regeneration": False,
                 "regeneration_reason": "no locator authority question applies -- nothing to locate",
+                "duplicate_condition_text_refs": [],
             })
             continue
 
@@ -171,6 +193,7 @@ def main() -> int:
                     "needs_regeneration": True,
                     "regeneration_reason": "never prepped -- must run through the authorized "
                                             "Opus locator path for the first time",
+                    "duplicate_condition_text_refs": [],
                 })
                 continue
 
@@ -234,6 +257,33 @@ def main() -> int:
                     "diagnosis": cert.get("diagnosis"),
                 }
 
+            # AR-1353 F-6: disclose, never silently accept, that this unit's batch task had two
+            # or more conditions sharing identical condition_text -- the F-2 desync guard (added
+            # AFTER this unit's own emit ran, for units regenerated under AR-1348A) could not
+            # have disambiguated a same-call misattribution between them. Bounded severity per
+            # AR-1353's own measurement: a same-text collision means the located quote is by
+            # construction equally valid for either condition_ref, so this is a REF-level
+            # attribution exposure, not a quote-correctness one -- disclosed, not grounds to
+            # mark the unit needing regeneration.
+            duplicate_condition_text_refs = []
+            if backend == "opus_batch":
+                task_index_path = os.path.join(
+                    REPO_ROOT, "docs/replay-results/strategy-factory-census/extraction-vault/opus-batch",
+                    f"{video_id}__s{i}", "batch_task_index.json",
+                )
+                if os.path.exists(task_index_path):
+                    with open(task_index_path, "r", encoding="utf-8") as f:
+                        task_index = json.load(f)
+                    seen_text: dict[str, str] = {}
+                    for c in task_index.get("conditions", []):
+                        prior = seen_text.get(c["condition_text"])
+                        if prior is not None:
+                            duplicate_condition_text_refs.append(
+                                {"ref_a": prior, "ref_b": c["condition_ref"]}
+                            )
+                        else:
+                            seen_text[c["condition_text"]] = c["condition_ref"]
+
             units.append({
                 "video_id": video_id,
                 "strategy_index": i,
@@ -249,6 +299,7 @@ def main() -> int:
                 "certificate_status": cert_status,
                 "needs_regeneration": needs,
                 "regeneration_reason": reason,
+                "duplicate_condition_text_refs": duplicate_condition_text_refs,
             })
 
     summary = {
