@@ -17,9 +17,28 @@
     "this seat. AR-1265 §5.7 holds full 'P1 NATIVE ACTIVE' back for exactly this reason.",
     "",
     "The command is a DOORWAY, not a second guard: scripts/claude_guard_hook.mjs materializes the",
-    "pinned toolbox and executes the pinned claude-hook-runner.mjs. The law lives at the pin."
+    "pinned toolbox and executes the pinned claude-hook-runner.mjs. The law lives at the pin.",
+    "",
+    "STOP -- scripts/wip-safety-commit.mjs -- added 2026-08-18 after Worker-2's SECOND ended-",
+    "without-committing recurrence (AR-1155/AR-1335A, following the AR-1334A precedent). Fires",
+    "after every turn; if the tracked tree is dirty it commits a checkpoint so a future SessionStart",
+    "never inherits more than one turn of drift. NOT a guard, no matcher (Stop has none), always",
+    "exits 0 -- it can never block a turn or brick the seat. Self-protected paths (guard manifest,",
+    ".claude/settings*.json, the pinned-toolbox doorway files) are deliberately left dirty for a",
+    "reviewed commit instead of being auto-committed. Same script, byte-identical, in Worker-2."
   ],
   "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/wip-safety-commit.mjs",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "startup|resume|fork",
