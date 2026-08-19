@@ -70,16 +70,18 @@ function verifyFactoryHandoff(args: Args): VerifiedHandoff {
   if (proc.error) {
     throw new Error(`factory_handoff_verifier_spawn_failed: ${proc.error.message}`);
   }
+  const stdout = proc.stdout ?? "";
+  const stderr = proc.stderr ?? "";
   if (proc.status !== 0) {
     throw new Error(
-      `factory_handoff_refused: exit=${proc.status} stdout=${proc.stdout.trim()} stderr=${proc.stderr.trim()}`,
+      `factory_handoff_refused: exit=${proc.status} stdout=${stdout.trim()} stderr=${stderr.trim()}`,
     );
   }
   let parsed: VerifiedHandoff;
   try {
-    parsed = JSON.parse(proc.stdout) as VerifiedHandoff;
+    parsed = JSON.parse(stdout) as VerifiedHandoff;
   } catch (err) {
-    throw new Error(`factory_handoff_verifier_non_json: ${String(err)} stdout=${proc.stdout}`);
+    throw new Error(`factory_handoff_verifier_non_json: ${String(err)} stdout=${stdout}`);
   }
   if (parsed.status !== "VERIFIED_FACTORY_FAITHFUL_HANDOFF") {
     throw new Error(`factory_handoff_verifier_wrong_status: ${parsed.status}`);
