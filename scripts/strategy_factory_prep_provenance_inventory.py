@@ -57,6 +57,55 @@ def sha256_file(path: str) -> str | None:
         return hashlib.sha256(f.read()).hexdigest()
 
 
+def _validate_receipt(receipt_path: str, video_id: str, strategy_index: int, repo_root: str) -> tuple[bool, str]:
+    """AR-1351 F-4: `os.path.exists(receipt_path)` alone proves nothing -- the independent
+    grader planted a receipt copied from a DIFFERENT unit and it passed the old check with 0
+    of the grader's own 4 content checks agreeing. This validates the receipt's CONTENT against
+    the unit it is being read for, not merely its presence:
+      1. receipt.video_id / receipt.strategy_index match the filename this receipt lives at
+         (catches a copy-pasted receipt from another unit).
+      2. receipt.raw_response_sha256 matches a fresh hash of the raw response file it claims to
+         describe, computed the same way the driver computed it at write time (text-mode read,
+         universal-newline-normalized, matching AR-1351 F-3's fix regardless of whether the file
+         on disk still carries pre-fix CRLF bytes or post-fix LF bytes).
+    Returns (ok, detail) -- detail is always populated, for both PASS and FAIL, so the caller
+    never has to guess what was actually checked.
+    """
+    if not os.path.exists(receipt_path):
+        return False, "no receipt file at this path"
+    try:
+        with open(receipt_path, "r", encoding="utf-8") as f:
+            receipt = json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        return False, f"receipt file unreadable/malformed: {e}"
+
+    if receipt.get("video_id") != video_id or receipt.get("strategy_index") != strategy_index:
+        return False, (
+            f"receipt identity mismatch: file claims video_id={receipt.get('video_id')!r} "
+            f"strategy_index={receipt.get('strategy_index')!r}, but lives at the path for "
+            f"video_id={video_id!r} strategy_index={strategy_index!r}"
+        )
+
+    raw_response_path = os.path.join(
+        repo_root, "docs/replay-results/strategy-factory-census/extraction-vault/opus-batch",
+        f"{video_id}__s{strategy_index}", "batch_raw_response.txt",
+    )
+    claimed_sha = receipt.get("raw_response_sha256")
+    if not claimed_sha:
+        return False, "receipt has no raw_response_sha256 to verify"
+    if not os.path.exists(raw_response_path):
+        return False, f"receipt claims raw_response_sha256={claimed_sha} but no raw response file exists at {raw_response_path}"
+    with open(raw_response_path, "r", encoding="utf-8") as f:
+        actual_text = f.read()
+    actual_sha = hashlib.sha256(actual_text.encode("utf-8")).hexdigest()
+    if actual_sha != claimed_sha:
+        return False, (
+            f"raw_response_sha256 MISMATCH: receipt claims {claimed_sha}, actual file at "
+            f"{raw_response_path} hashes to {actual_sha}"
+        )
+    return True, f"identity + raw_response_sha256 ({actual_sha}) both verified against disk"
+
+
 def main() -> int:
     sys.path.insert(0, REPO_ROOT)  # unpickling needs pilot_conveyor's dataclasses importable
     # Exclude this script's OWN output filename: it lives in the same VAULT_DIR it scans, so a
@@ -129,17 +178,35 @@ def main() -> int:
                 prep = pickle.load(f)
             spine_count = prep.get("spine_condition_count")
             unanchored_count = len(prep.get("unanchored_conditions") or [])
-            has_receipt = os.path.exists(receipt_path)
+            receipt_ok, receipt_check_detail = _validate_receipt(
+                receipt_path, video_id, i, REPO_ROOT
+            )
 
-            if has_receipt:
+            if receipt_ok:
                 with open(receipt_path, "r", encoding="utf-8") as f:
                     receipt = json.load(f)
                 backend = "opus_batch"
-                evidence = (f"sibling opus_batch_receipt.json present: raw_response_sha256="
+                evidence = (f"sibling opus_batch_receipt.json present AND CONTENT-VALIDATED "
+                            f"(AR-1351 F-4): {receipt_check_detail}. raw_response_sha256="
                             f"{receipt.get('raw_response_sha256')}, "
                             f"invocation={receipt.get('invocation')}")
                 needs = False
                 reason = "already regenerated under the authorized Opus batch locator"
+            elif os.path.exists(receipt_path):
+                # AR-1351 F-4: a receipt FILE exists but failed content validation (identity
+                # mismatch or hash mismatch against its own claimed raw response) -- treat as
+                # UNTRUSTED, not as evidence of regeneration. Existence alone proved nothing;
+                # this is the exact gap the independent grader's planted-bad control exploited
+                # (a receipt for a DIFFERENT unit copied into this one's directory fired 0 of the
+                # old existence-only check's signals).
+                backend = "gemma"
+                evidence = (f"opus_batch_receipt.json EXISTS but FAILED content validation: "
+                            f"{receipt_check_detail} -- not trusted as evidence of a real "
+                            f"regeneration for THIS unit")
+                needs = True
+                reason = ("a receipt file is present but its content does not verify against "
+                          "this unit's own identity/raw response -- must be regenerated for real "
+                          "rather than trusted on the basis of file existence alone")
             elif spine_count and spine_count > 0:
                 backend = "gemma"
                 evidence = (f"no opus_batch_receipt.json sibling and spine_condition_count="
@@ -196,6 +263,27 @@ def main() -> int:
         "artifact": "ar-1345a-step12-prep-provenance-inventory",
         "authority": "AR-1348A SS6.A/B -- classify by actual locator provenance, never by "
                      "unanchored_count or transcript length",
+        "scope": {
+            "enumeration_surface": (
+                f"every *.json file directly under {os.path.relpath(VAULT_DIR, REPO_ROOT)} "
+                "(this script's own output filename excluded), one video's extraction record "
+                "per file"
+            ),
+            "known_exclusions_not_a_gap": (
+                "AR-1351 F-5 (independent grader): two populations of prep units live OUTSIDE "
+                "this enumeration surface by design, not by accident -- (1) the sVkm/G2-D lane "
+                "(docs/replay-results/svkm-extraction-certified/), a separately-authorized, "
+                "already-certified AR-1234 pin video with its own dedicated toolchain "
+                "(svkm_opus_batch_locator.py etc.), never in scope for this factory's own "
+                "vault-driven population; (2) the sealed H1 pilot preps under "
+                "h1-scripts/pilot-run/preps/ (sealed 2026-07-12, commit 8f9c8c1d) -- sealed-pilot "
+                "integrity forbids regenerating a sealed artifact, so this cleanup does not "
+                "reach it. Neither exclusion is a contaminated unit hiding outside the count; "
+                "both were independently checked by the grader and found to carry no live "
+                "AR-1345A-authority-regression exposure. Any FUTURE population outside this "
+                "surface is a real gap and must be named, not silently assumed excluded."
+            ),
+        },
         "summary": summary,
         "units": units,
     }

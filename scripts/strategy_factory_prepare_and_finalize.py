@@ -181,7 +181,11 @@ def cmd_finalize(video_id: str, strategy_index: int, stage1_path: str | None, st
         "unanchored_reason_breakdown": cert["unanchored_reason_breakdown"],
     }
     cert_out_path = os.path.join(REPO_ROOT, PREP_DIR, f"{video_id}__s{strategy_index}.certificate.json")
-    with open(cert_out_path, "w", encoding="utf-8") as f:
+    # AR-1351 F-3: newline="\n" for consistency with the same fix in
+    # strategy_factory_opus_batch_locator.py -- no current caller hashes this file, but a future
+    # one hashing the in-memory json.dumps output against the disk bytes would hit the identical
+    # CRLF-vs-LF mismatch if this were left as default text-mode write.
+    with open(cert_out_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(cert, f, indent=2, default=str)
     out["certificate_path"] = cert_out_path
     print(json.dumps(out, indent=2, default=str))

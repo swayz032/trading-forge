@@ -111,6 +111,36 @@ def cmd_emit(video_id: str, strategy_index: int) -> int:
     conditions_for_batch = [
         {"condition_ref": c.condition_ref, "condition_text": c.text} for c in spine_conditions
     ]
+
+    # AR-1351 F-2: fail closed on duplicate condition_text within one batch. `cmd_prep`'s
+    # propose_fn desync guard (below) can only compare condition_text -- the anchor_locator.
+    # locate_anchor seam it must match passes `(transcript, condition_text)`, never
+    # condition_ref -- so two conditions sharing identical text are structurally indistinguishable
+    # to that guard and it cannot catch a same-call misattribution between them. MEASURED: a
+    # monkeypatch swap test on a real duplicate-text unit confirmed the guard does NOT fire in
+    # this case. Refusing here, at emit time, is the correct fail-closed point -- before any
+    # Opus dispatch is spent on a batch this driver cannot safely disambiguate.
+    seen_text: dict[str, str] = {}
+    dupes = []
+    for c in conditions_for_batch:
+        prior_ref = seen_text.get(c["condition_text"])
+        if prior_ref is not None:
+            dupes.append((prior_ref, c["condition_ref"], c["condition_text"]))
+        else:
+            seen_text[c["condition_text"]] = c["condition_ref"]
+    if dupes:
+        print(json.dumps({
+            "video_id": video_id, "strategy_index": strategy_index,
+            "status": "DUPLICATE_CONDITION_TEXT_REFUSED",
+            "duplicates": [{"ref_a": a, "ref_b": b, "condition_text": t} for a, b, t in dupes],
+            "reason": (
+                "two or more conditions share identical condition_text -- the propose_fn desync "
+                "guard cannot disambiguate between them by text alone (AR-1351 F-2). Refusing "
+                "before spending a dispatch on a batch this driver cannot safely verify."
+            ),
+        }, indent=2))
+        return 1
+
     task_text = bl.build_batch_task(al._SYSTEM_PROMPT, transcript, conditions_for_batch)
     brief = bl.build_batch_brief(al._SYSTEM_PROMPT)
 
@@ -125,7 +155,14 @@ def cmd_emit(video_id: str, strategy_index: int) -> int:
 
     out_dir = os.path.join(REPO_ROOT, OPUS_BATCH_DIR, f"{video_id}__s{strategy_index}")
     os.makedirs(out_dir, exist_ok=True)
-    with open(os.path.join(out_dir, "batch_task.txt"), "w", encoding="utf-8") as f:
+    # AR-1351 F-3: newline="\n" so the bytes written to disk are EXACTLY the string task_sha256
+    # below was computed from. Without this, Python's text-mode write translates "\n" -> "\r\n"
+    # on Windows, so a naive sha256(disk bytes) check would silently disagree with the recorded
+    # hash for every unit -- measured: 0/42 raw responses verified under a naive re-hash before
+    # this fix, 42/42 after (git's own eol=lf normalization on commit still made the COMMITTED
+    # blob hash-correct, which is why this was not caught by production evidence -- only by an
+    # independent re-hash of the literal on-disk bytes before commit).
+    with open(os.path.join(out_dir, "batch_task.txt"), "w", encoding="utf-8", newline="\n") as f:
         f.write(task_text)
     index = {
         "video_id": video_id,
@@ -177,7 +214,11 @@ def cmd_ingest(video_id: str, strategy_index: int, raw_path: str) -> int:
     # raw is sacred (batch_locator.py SS3): hash BEFORE any parsing/repair is attempted, and
     # persist the untouched text regardless of whether parsing below succeeds.
     raw_sha256 = hashlib.sha256(raw_text.encode("utf-8")).hexdigest()
-    with open(os.path.join(out_dir, "batch_raw_response.txt"), "w", encoding="utf-8") as f:
+    # AR-1351 F-3: newline="\n" -- see the matching note in cmd_emit above. raw_text was read via
+    # text-mode open() (universal newlines, always "\n" in memory) and hashed as that string;
+    # writing it back with default text-mode translation would silently CRLF the disk copy while
+    # the recorded hash stays LF-based, making a naive re-hash of the committed file disagree.
+    with open(os.path.join(out_dir, "batch_raw_response.txt"), "w", encoding="utf-8", newline="\n") as f:
         f.write(raw_text)
 
     expected_refs = index["condition_order"]

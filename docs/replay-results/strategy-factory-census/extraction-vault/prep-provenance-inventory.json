@@ -1,6 +1,10 @@
 {
   "artifact": "ar-1345a-step12-prep-provenance-inventory",
   "authority": "AR-1348A SS6.A/B -- classify by actual locator provenance, never by unanchored_count or transcript length",
+  "scope": {
+    "enumeration_surface": "every *.json file directly under docs\\replay-results\\strategy-factory-census\\extraction-vault (this script's own output filename excluded), one video's extraction record per file",
+    "known_exclusions_not_a_gap": "AR-1351 F-5 (independent grader): two populations of prep units live OUTSIDE this enumeration surface by design, not by accident -- (1) the sVkm/G2-D lane (docs/replay-results/svkm-extraction-certified/), a separately-authorized, already-certified AR-1234 pin video with its own dedicated toolchain (svkm_opus_batch_locator.py etc.), never in scope for this factory's own vault-driven population; (2) the sealed H1 pilot preps under h1-scripts/pilot-run/preps/ (sealed 2026-07-12, commit 8f9c8c1d) -- sealed-pilot integrity forbids regenerating a sealed artifact, so this cleanup does not reach it. Neither exclusion is a contaminated unit hiding outside the count; both were independently checked by the grader and found to carry no live AR-1345A-authority-regression exposure. Any FUTURE population outside this surface is a real gap and must be named, not silently assumed excluded."
+  },
   "summary": {
     "total_units": 47,
     "by_backend": {
@@ -21,7 +25,7 @@
       "spine_condition_count": 9,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=3ae45799841b03afdccd207dadd05721f8f2d9f4099e895f16d1caa71fd74b75, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (3ae45799841b03afdccd207dadd05721f8f2d9f4099e895f16d1caa71fd74b75) both verified against disk. raw_response_sha256=3ae45799841b03afdccd207dadd05721f8f2d9f4099e895f16d1caa71fd74b75, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -48,7 +52,7 @@
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=abde6aabe4d6e4bf98922a3b17e5367b14268836a29dfeb50e65bf28d3c8daec, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (abde6aabe4d6e4bf98922a3b17e5367b14268836a29dfeb50e65bf28d3c8daec) both verified against disk. raw_response_sha256=abde6aabe4d6e4bf98922a3b17e5367b14268836a29dfeb50e65bf28d3c8daec, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -75,7 +79,7 @@
       "spine_condition_count": 10,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=1c69635de8be07f1da8786ccc9d3f3df63ea4a64028fe0cacf92cf25e7de0b8f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (1c69635de8be07f1da8786ccc9d3f3df63ea4a64028fe0cacf92cf25e7de0b8f) both verified against disk. raw_response_sha256=1c69635de8be07f1da8786ccc9d3f3df63ea4a64028fe0cacf92cf25e7de0b8f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -102,7 +106,7 @@
       "spine_condition_count": 6,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=d488eda8268b7a4b83de30bc0a2508ab4c3a7ad56a0ba1fa6b24244c2dc227a1, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (d488eda8268b7a4b83de30bc0a2508ab4c3a7ad56a0ba1fa6b24244c2dc227a1) both verified against disk. raw_response_sha256=d488eda8268b7a4b83de30bc0a2508ab4c3a7ad56a0ba1fa6b24244c2dc227a1, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -129,7 +133,7 @@
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=faadfe00442326b02847289d4ef4f3c82aeb971504e9bfc678226c793eb0364f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (faadfe00442326b02847289d4ef4f3c82aeb971504e9bfc678226c793eb0364f) both verified against disk. raw_response_sha256=faadfe00442326b02847289d4ef4f3c82aeb971504e9bfc678226c793eb0364f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -156,7 +160,7 @@
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=a01b965c5d6eaa2564bafe662fc99e3e8d3b41cdff3ae5e73841fd97748320d2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (a01b965c5d6eaa2564bafe662fc99e3e8d3b41cdff3ae5e73841fd97748320d2) both verified against disk. raw_response_sha256=a01b965c5d6eaa2564bafe662fc99e3e8d3b41cdff3ae5e73841fd97748320d2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -215,7 +219,7 @@
       "spine_condition_count": 15,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=5e982bfc885c2fbfb525c7699d747baa55e678f94481995bd6d352fe194d0b4f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (5e982bfc885c2fbfb525c7699d747baa55e678f94481995bd6d352fe194d0b4f) both verified against disk. raw_response_sha256=5e982bfc885c2fbfb525c7699d747baa55e678f94481995bd6d352fe194d0b4f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -242,7 +246,7 @@
       "spine_condition_count": 14,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=2827b58a98217fc2135c317683e903da4bdc06dd34dd778e2af93ecebc113b63, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (2827b58a98217fc2135c317683e903da4bdc06dd34dd778e2af93ecebc113b63) both verified against disk. raw_response_sha256=2827b58a98217fc2135c317683e903da4bdc06dd34dd778e2af93ecebc113b63, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -269,7 +273,7 @@
       "spine_condition_count": 15,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=67f9e51b3c15abfc747cf6ad1d159f992c3d0cce0764f31a6bc734915c254308, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (67f9e51b3c15abfc747cf6ad1d159f992c3d0cce0764f31a6bc734915c254308) both verified against disk. raw_response_sha256=67f9e51b3c15abfc747cf6ad1d159f992c3d0cce0764f31a6bc734915c254308, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -296,7 +300,7 @@
       "spine_condition_count": 7,
       "unanchored_condition_count": 1,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=38ebabdf84287d6eb34a0242aab03bd9de540b3c03cbb06278472beda0eeeb92, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (38ebabdf84287d6eb34a0242aab03bd9de540b3c03cbb06278472beda0eeeb92) both verified against disk. raw_response_sha256=38ebabdf84287d6eb34a0242aab03bd9de540b3c03cbb06278472beda0eeeb92, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -323,7 +327,7 @@
       "spine_condition_count": 17,
       "unanchored_condition_count": 1,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=224206ec1828e64a436f1125b6d35f02cf7f0ea957f08bc4035d00ddc7d5f9cf, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (224206ec1828e64a436f1125b6d35f02cf7f0ea957f08bc4035d00ddc7d5f9cf) both verified against disk. raw_response_sha256=224206ec1828e64a436f1125b6d35f02cf7f0ea957f08bc4035d00ddc7d5f9cf, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -350,7 +354,7 @@
       "spine_condition_count": 11,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=aff27332c790ea03fd129d23a863fb81a555003245c1d61ac42bed49a8973f52, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (aff27332c790ea03fd129d23a863fb81a555003245c1d61ac42bed49a8973f52) both verified against disk. raw_response_sha256=aff27332c790ea03fd129d23a863fb81a555003245c1d61ac42bed49a8973f52, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -377,7 +381,7 @@
       "spine_condition_count": 15,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=c9d1db1d9bf791a49769a063073643b89023abf0bf74abb8ce11860ed1b3f1aa, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (c9d1db1d9bf791a49769a063073643b89023abf0bf74abb8ce11860ed1b3f1aa) both verified against disk. raw_response_sha256=c9d1db1d9bf791a49769a063073643b89023abf0bf74abb8ce11860ed1b3f1aa, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -404,7 +408,7 @@
       "spine_condition_count": 9,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=4e3bcdb5f0df5a52912b1449e950760b2b5b86013e1c6be6a1e87b2a711725e2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (4e3bcdb5f0df5a52912b1449e950760b2b5b86013e1c6be6a1e87b2a711725e2) both verified against disk. raw_response_sha256=4e3bcdb5f0df5a52912b1449e950760b2b5b86013e1c6be6a1e87b2a711725e2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -431,7 +435,7 @@
       "spine_condition_count": 9,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=18c006849233772aae710fb2ef70aff3b180ccd1c20cf9603979be7c06f741db, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (18c006849233772aae710fb2ef70aff3b180ccd1c20cf9603979be7c06f741db) both verified against disk. raw_response_sha256=18c006849233772aae710fb2ef70aff3b180ccd1c20cf9603979be7c06f741db, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -458,7 +462,7 @@
       "spine_condition_count": 4,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=ef5026c642ec6051e7e69a2bbbf290995f85509820e91411169d28c2fa83d185, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (ef5026c642ec6051e7e69a2bbbf290995f85509820e91411169d28c2fa83d185) both verified against disk. raw_response_sha256=ef5026c642ec6051e7e69a2bbbf290995f85509820e91411169d28c2fa83d185, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -501,7 +505,7 @@
       "spine_condition_count": 11,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=a42f9bdc343baeb369d855b289c1c4e65482e0531da90e8dfaae08343276019c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (a42f9bdc343baeb369d855b289c1c4e65482e0531da90e8dfaae08343276019c) both verified against disk. raw_response_sha256=a42f9bdc343baeb369d855b289c1c4e65482e0531da90e8dfaae08343276019c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -528,7 +532,7 @@
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=e6dc8339b4333cd5d7e23e4f44fa6557102b5994000b6115d5b446f76b6541cc, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (e6dc8339b4333cd5d7e23e4f44fa6557102b5994000b6115d5b446f76b6541cc) both verified against disk. raw_response_sha256=e6dc8339b4333cd5d7e23e4f44fa6557102b5994000b6115d5b446f76b6541cc, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -555,7 +559,7 @@
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=ea7cb1910b911308763c1ec3aa93c3e226fcc7b82845ea6428a05249e7bacac7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (ea7cb1910b911308763c1ec3aa93c3e226fcc7b82845ea6428a05249e7bacac7) both verified against disk. raw_response_sha256=ea7cb1910b911308763c1ec3aa93c3e226fcc7b82845ea6428a05249e7bacac7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -582,7 +586,7 @@
       "spine_condition_count": 19,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=5357b0ad6e3b99d0990bca5a366ed2e8887ee81d84115505362d7868e1e7f385, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (5357b0ad6e3b99d0990bca5a366ed2e8887ee81d84115505362d7868e1e7f385) both verified against disk. raw_response_sha256=5357b0ad6e3b99d0990bca5a366ed2e8887ee81d84115505362d7868e1e7f385, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -609,7 +613,7 @@
       "spine_condition_count": 14,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=36cc344e92490914bc7bb8b475c34e3aaee2a2ccabdaeeea6a96071b6c81cbf7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (36cc344e92490914bc7bb8b475c34e3aaee2a2ccabdaeeea6a96071b6c81cbf7) both verified against disk. raw_response_sha256=36cc344e92490914bc7bb8b475c34e3aaee2a2ccabdaeeea6a96071b6c81cbf7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -636,7 +640,7 @@
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=7f44834f82ac0298b7f4310fa87ff222db8e78e78ed8f134512e3a454b05634a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (7f44834f82ac0298b7f4310fa87ff222db8e78e78ed8f134512e3a454b05634a) both verified against disk. raw_response_sha256=7f44834f82ac0298b7f4310fa87ff222db8e78e78ed8f134512e3a454b05634a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -663,7 +667,7 @@
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=bea3aa1b2f7ea64102b51ca5d69239f951cd6768cceae6e0ba3edc004698813c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (bea3aa1b2f7ea64102b51ca5d69239f951cd6768cceae6e0ba3edc004698813c) both verified against disk. raw_response_sha256=bea3aa1b2f7ea64102b51ca5d69239f951cd6768cceae6e0ba3edc004698813c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -690,7 +694,7 @@
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=d9e428ad5535d1bc63f0bec721e61645cdcaaf649930c435e44ca777ec08392d, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (d9e428ad5535d1bc63f0bec721e61645cdcaaf649930c435e44ca777ec08392d) both verified against disk. raw_response_sha256=d9e428ad5535d1bc63f0bec721e61645cdcaaf649930c435e44ca777ec08392d, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -717,7 +721,7 @@
       "spine_condition_count": 9,
       "unanchored_condition_count": 1,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=46dfbeae7274db87784fa227100698ddf1efc6796a62b0f69967a0be74d8d36c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (46dfbeae7274db87784fa227100698ddf1efc6796a62b0f69967a0be74d8d36c) both verified against disk. raw_response_sha256=46dfbeae7274db87784fa227100698ddf1efc6796a62b0f69967a0be74d8d36c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -744,7 +748,7 @@
       "spine_condition_count": 9,
       "unanchored_condition_count": 1,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=e25a325d10f10a262781ae931e3fd8d0f9365fcf632bc702b48f5619a4910921, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (e25a325d10f10a262781ae931e3fd8d0f9365fcf632bc702b48f5619a4910921) both verified against disk. raw_response_sha256=e25a325d10f10a262781ae931e3fd8d0f9365fcf632bc702b48f5619a4910921, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -771,7 +775,7 @@
       "spine_condition_count": 19,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=106d350135c0f3aa57e392bbf8d345119cb2d62fc07e12dbbc69303b3999bae7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (106d350135c0f3aa57e392bbf8d345119cb2d62fc07e12dbbc69303b3999bae7) both verified against disk. raw_response_sha256=106d350135c0f3aa57e392bbf8d345119cb2d62fc07e12dbbc69303b3999bae7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -798,7 +802,7 @@
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=1d33b75b23817c3d7b60133bc5945abc37cae3dd3caca72f1d1714b7d64133d9, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (1d33b75b23817c3d7b60133bc5945abc37cae3dd3caca72f1d1714b7d64133d9) both verified against disk. raw_response_sha256=1d33b75b23817c3d7b60133bc5945abc37cae3dd3caca72f1d1714b7d64133d9, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -825,7 +829,7 @@
       "spine_condition_count": 12,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=adeaf423162db7e3e8c83ff9220f341be8468153e056e146bfd8f6b6ceccdffc, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (adeaf423162db7e3e8c83ff9220f341be8468153e056e146bfd8f6b6ceccdffc) both verified against disk. raw_response_sha256=adeaf423162db7e3e8c83ff9220f341be8468153e056e146bfd8f6b6ceccdffc, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -852,7 +856,7 @@
       "spine_condition_count": 9,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=50137879ca1e0ec9b0dbb766d26534209a7d1839ba9dec4196d414ee9ad54711, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (50137879ca1e0ec9b0dbb766d26534209a7d1839ba9dec4196d414ee9ad54711) both verified against disk. raw_response_sha256=50137879ca1e0ec9b0dbb766d26534209a7d1839ba9dec4196d414ee9ad54711, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -879,7 +883,7 @@
       "spine_condition_count": 4,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=8473e8fdc35f604a8c9376ac21ea1a6bd69de1a1f06f00f0082b6ee3bb6b0cf4, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (8473e8fdc35f604a8c9376ac21ea1a6bd69de1a1f06f00f0082b6ee3bb6b0cf4) both verified against disk. raw_response_sha256=8473e8fdc35f604a8c9376ac21ea1a6bd69de1a1f06f00f0082b6ee3bb6b0cf4, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -906,7 +910,7 @@
       "spine_condition_count": 6,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=3958a401e6456bb0ca56ba28b99b67d0ed7516b7e6a381691f026ee37248bb0a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (3958a401e6456bb0ca56ba28b99b67d0ed7516b7e6a381691f026ee37248bb0a) both verified against disk. raw_response_sha256=3958a401e6456bb0ca56ba28b99b67d0ed7516b7e6a381691f026ee37248bb0a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -933,7 +937,7 @@
       "spine_condition_count": 6,
       "unanchored_condition_count": 1,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=cb110a801109e183678b9e3ca9d481f7e0359d3f006fc4bd873b8565da28f010, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (cb110a801109e183678b9e3ca9d481f7e0359d3f006fc4bd873b8565da28f010) both verified against disk. raw_response_sha256=cb110a801109e183678b9e3ca9d481f7e0359d3f006fc4bd873b8565da28f010, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -960,7 +964,7 @@
       "spine_condition_count": 16,
       "unanchored_condition_count": 3,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=079a5fe641d6ad815a1bf129376232007177d150e9f808d35d92ca288c4fdb54, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (079a5fe641d6ad815a1bf129376232007177d150e9f808d35d92ca288c4fdb54) both verified against disk. raw_response_sha256=079a5fe641d6ad815a1bf129376232007177d150e9f808d35d92ca288c4fdb54, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -987,7 +991,7 @@
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=61a755d91639457e17259b709ba4d0f575b3ebaa8e40254658c4e8efc31ff995, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (61a755d91639457e17259b709ba4d0f575b3ebaa8e40254658c4e8efc31ff995) both verified against disk. raw_response_sha256=61a755d91639457e17259b709ba4d0f575b3ebaa8e40254658c4e8efc31ff995, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -1014,7 +1018,7 @@
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=714a09eff2a27c3604d65f6ae75c20e3e5fb62510e2dce3da39419314aa2d52a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (714a09eff2a27c3604d65f6ae75c20e3e5fb62510e2dce3da39419314aa2d52a) both verified against disk. raw_response_sha256=714a09eff2a27c3604d65f6ae75c20e3e5fb62510e2dce3da39419314aa2d52a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -1041,7 +1045,7 @@
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=b495c90abf6e6468925c6428471371e746dbda6281c4d0d2807474fa3a75efcd, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (b495c90abf6e6468925c6428471371e746dbda6281c4d0d2807474fa3a75efcd) both verified against disk. raw_response_sha256=b495c90abf6e6468925c6428471371e746dbda6281c4d0d2807474fa3a75efcd, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -1068,7 +1072,7 @@
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=01f61e9b3984d65ffda65f0f8bfa3654ba3319e1a2b56d161c2cf9ef4ffc6ee2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (01f61e9b3984d65ffda65f0f8bfa3654ba3319e1a2b56d161c2cf9ef4ffc6ee2) both verified against disk. raw_response_sha256=01f61e9b3984d65ffda65f0f8bfa3654ba3319e1a2b56d161c2cf9ef4ffc6ee2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -1095,7 +1099,7 @@
       "spine_condition_count": 15,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=80c353c9e3a3e28b3a7deba423ec75b77564a2d563f143828082b4a140d4d7ee, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (80c353c9e3a3e28b3a7deba423ec75b77564a2d563f143828082b4a140d4d7ee) both verified against disk. raw_response_sha256=80c353c9e3a3e28b3a7deba423ec75b77564a2d563f143828082b4a140d4d7ee, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -1122,7 +1126,7 @@
       "spine_condition_count": 15,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=bde25596c180b9d13f64abea7cc080c8348e3a30463dd5a0a8142b4aea517e0f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (bde25596c180b9d13f64abea7cc080c8348e3a30463dd5a0a8142b4aea517e0f) both verified against disk. raw_response_sha256=bde25596c180b9d13f64abea7cc080c8348e3a30463dd5a0a8142b4aea517e0f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -1181,7 +1185,7 @@
       "spine_condition_count": 11,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=a838468525cd18551107db50b8f79849f7b17a6be2b3ba9e6eb5ce2142ff5a4e, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (a838468525cd18551107db50b8f79849f7b17a6be2b3ba9e6eb5ce2142ff5a4e) both verified against disk. raw_response_sha256=a838468525cd18551107db50b8f79849f7b17a6be2b3ba9e6eb5ce2142ff5a4e, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
@@ -1208,7 +1212,7 @@
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
       "locator_backend": "opus_batch",
-      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=2159ac69e65b00c8fc8890966faf710827e07c4d99613d1038df680a8f1055d2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "locator_evidence": "sibling opus_batch_receipt.json present AND CONTENT-VALIDATED (AR-1351 F-4): identity + raw_response_sha256 (2159ac69e65b00c8fc8890966faf710827e07c4d99613d1038df680a8f1055d2) both verified against disk. raw_response_sha256=2159ac69e65b00c8fc8890966faf710827e07c4d99613d1038df680a8f1055d2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
