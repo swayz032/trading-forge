@@ -1,6 +1,8 @@
 /* MNQ v2.4 Replay Lab V3 desktop overlay enhancement.
  * Loaded after the core generated page. Keeps trader-drawn key zones visible on
  * 15m/5m/1m and the TP reaction cluster visible on 5m/1m without exposing bot data.
+ * It also starts each chart near the current decision area instead of shrinking
+ * ten days of context into a tiny first view; the trader can still pan left.
  */
 (function () {
   function paintLayer(canvas, chartObj, zones, tp) {
@@ -34,6 +36,22 @@
     }
   }
 
+  function focusRecent(chartObj, barsBack) {
+    const data = chartObj.series.data();
+    const n = data ? data.length : 0;
+    if (!n) return;
+    chartObj.chart.timeScale().setVisibleLogicalRange({
+      from: Math.max(-0.5, n - barsBack),
+      to: n + 4,
+    });
+  }
+
+  function focusDecisionArea() {
+    focusRecent(c15, 72);  // about 3 RTH days of 15m context
+    focusRecent(c5, 84);   // about 7 hours of 5m context
+    focusRecent(c1, 60);   // recent live tug-of-war path
+  }
+
   drawOverlays = function () {
     const l = lab();
     paintLayer(ov15, c15, l.trader_zones, null);
@@ -41,5 +59,13 @@
     paintLayer(ov1, c1, l.trader_zones, l.trader_tp_reaction_cluster);
   };
 
+  const coreRenderCase = renderCase;
+  renderCase = function () {
+    coreRenderCase();
+    focusDecisionArea();
+    drawOverlays();
+  };
+
+  focusDecisionArea();
   drawOverlays();
 })();
