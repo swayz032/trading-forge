@@ -8,11 +8,11 @@ question without contaminating production artifacts:
 
 The `emit` command reads ONLY the frozen transcript for the selected video plus this file's static
 source-reader contract. It does not read the legacy extraction JSON. The legacy artifact is not
-opened until `compare`, after a fresh Opus candidate has already been ingested and hash-frozen.
+opened until `compare`, after a fresh Opus candidate has already been ingested, hash-frozen, and
+independently graded.
 
-No output from this script is Factory authority. A candidate must still survive independent
-source-fidelity grading and the normal certified compile path before it can become
-FAITHFUL_COMPILE_READY_FOR_BACKTEST.
+No output from this script is Factory authority. A candidate must still survive the normal
+certified compile path before it can become FAITHFUL_COMPILE_READY_FOR_BACKTEST.
 """
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SELECTION_PATH = REPO_ROOT / "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/selection.json"
 DEFAULT_OUT = REPO_ROOT / "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/runs"
+CANONICAL_VAULT = REPO_ROOT / "docs/replay-results/strategy-factory-census/extraction-vault"
 
 REQUIRED_MODEL_OVERRIDE = "opus"
 REQUIRED_READER_ROLE = "OPUS_LEAD_SOURCE_READER"
@@ -66,8 +67,11 @@ OUTPUT SHAPE
       "source_strategy_id": "s0",
       "name": "<neutral source-grounded name>",
       "direction": "long|short|both|source_unresolved",
+      "direction_transcript_quote": "<literal support, or null only when source_unresolved>",
       "higher_timeframe": "<source-grounded value or source_unresolved>",
+      "higher_timeframe_transcript_quote": "<literal support, or null only when source_unresolved>",
       "execution_timeframe": "<source-grounded value or source_unresolved>",
+      "execution_timeframe_transcript_quote": "<literal support, or null only when source_unresolved>",
       "setup": [
         {"description": "<rule/context>", "transcript_quote": "<literal source quote>"}
       ],
@@ -195,16 +199,33 @@ def _display_path(path: Path) -> str:
         return str(path)
 
 
+def _safe_out_root(raw: str) -> Path:
+    root = Path(raw)
+    if not root.is_absolute():
+        root = REPO_ROOT / root
+    resolved = root.resolve()
+    vault = CANONICAL_VAULT.resolve()
+    try:
+        resolved.relative_to(vault)
+    except ValueError:
+        pass
+    else:
+        raise SystemExit(
+            "diagnostic out-dir may not be the canonical extraction vault or any child of it"
+        )
+    return resolved
+
+
 def cmd_emit(args: argparse.Namespace) -> int:
     case = get_case(args.video_id)
     transcript_path, transcript = transcript_for(case)
     task = build_task(args.video_id, transcript)
-    out_dir = Path(args.out_dir) / args.video_id
+    out_dir = _safe_out_root(args.out_dir) / args.video_id
     task_path = out_dir / "opus_source_reader_task.txt"
     index_path = out_dir / "task_index.json"
     write_text_lf(task_path, task)
     index = {
-        "artifact": "opus-transcript-first-task-index-v1",
+        "artifact": "opus-transcript-first-task-index-v2",
         "status": "AWAITING_FRESH_OPUS_READER",
         "video_id": args.video_id,
         "diagnostic_category": case["category"],
@@ -249,6 +270,17 @@ def _iter_quote_objects(strategy: dict[str, Any]):
         yield "stop", stop
 
 
+def _require_literal_quote(
+    quote: Any, *, ref: str, normalized_transcript: str, failures: list[str]
+) -> int:
+    if not isinstance(quote, str) or not quote.strip():
+        failures.append(f"{ref}: missing transcript_quote")
+        return 0
+    if norm_ws(quote) not in normalized_transcript:
+        failures.append(f"{ref}: quote is not a whitespace-normalized transcript substring")
+    return 1
+
+
 def validate_candidate(candidate: dict[str, Any], transcript: str, video_id: str) -> dict[str, Any]:
     if candidate.get("video_id") != video_id:
         raise ValueError(f"candidate video_id mismatch: {candidate.get('video_id')!r} != {video_id!r}")
@@ -258,10 +290,26 @@ def validate_candidate(candidate: dict[str, Any], transcript: str, video_id: str
     if not isinstance(strategies, list):
         raise ValueError("strategies must be a list")
 
+    top_gaps = candidate.get("top_level_source_gaps")
+    if not strategies and (not isinstance(top_gaps, list) or not top_gaps):
+        raise ValueError("strategies=[] requires a non-empty top_level_source_gaps explanation")
+
     normalized_transcript = norm_ws(transcript)
     quote_count = 0
     quote_failures: list[str] = []
     ids: list[str] = []
+
+    instrument = candidate.get("instrument_classification")
+    if instrument is not None:
+        if not isinstance(instrument, dict):
+            raise ValueError("instrument_classification must be an object or null")
+        if any(instrument.get(k) not in (None, "") for k in ("asset_class", "instrument", "rationale")):
+            quote_count += _require_literal_quote(
+                instrument.get("transcript_quote"),
+                ref="instrument_classification",
+                normalized_transcript=normalized_transcript,
+                failures=quote_failures,
+            )
 
     for si, strategy in enumerate(strategies):
         if not isinstance(strategy, dict):
@@ -271,6 +319,29 @@ def validate_candidate(candidate: dict[str, Any], transcript: str, video_id: str
         if sid != expected_id:
             raise ValueError(f"strategies[{si}].source_strategy_id must be {expected_id!r}, got {sid!r}")
         ids.append(sid)
+
+        direction = strategy.get("direction")
+        if direction not in ("long", "short", "both", "source_unresolved"):
+            raise ValueError(f"{sid}: invalid direction {direction!r}")
+        if direction != "source_unresolved":
+            quote_count += _require_literal_quote(
+                strategy.get("direction_transcript_quote"),
+                ref=f"{sid}.direction",
+                normalized_transcript=normalized_transcript,
+                failures=quote_failures,
+            )
+
+        for field in ("higher_timeframe", "execution_timeframe"):
+            value = strategy.get(field)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{sid}: {field} must be a non-empty string or source_unresolved")
+            if value != "source_unresolved":
+                quote_count += _require_literal_quote(
+                    strategy.get(f"{field}_transcript_quote"),
+                    ref=f"{sid}.{field}",
+                    normalized_transcript=normalized_transcript,
+                    failures=quote_failures,
+                )
 
         entry = strategy.get("entry_sequence")
         if not isinstance(entry, list) or not entry:
@@ -290,15 +361,12 @@ def validate_candidate(candidate: dict[str, Any], transcript: str, video_id: str
             raise ValueError(f"{sid}: source_gaps must be a list")
 
         for ref, obj in _iter_quote_objects(strategy):
-            quote = obj.get("transcript_quote")
-            if not isinstance(quote, str) or not quote.strip():
-                quote_failures.append(f"{sid}.{ref}: missing transcript_quote")
-                continue
-            quote_count += 1
-            if norm_ws(quote) not in normalized_transcript:
-                quote_failures.append(
-                    f"{sid}.{ref}: quote is not a whitespace-normalized transcript substring"
-                )
+            quote_count += _require_literal_quote(
+                obj.get("transcript_quote"),
+                ref=f"{sid}.{ref}",
+                normalized_transcript=normalized_transcript,
+                failures=quote_failures,
+            )
 
     if quote_failures:
         raise ValueError("literal evidence verification failed: " + "; ".join(quote_failures))
@@ -333,12 +401,15 @@ def validate_invocation_receipt(receipt: dict[str, Any], index: dict[str, Any]) 
         raise ValueError("invocation receipt must attest prompt_source=task_file_only")
     if receipt.get("legacy_semantics_visible") is not False:
         raise ValueError("invocation receipt must attest legacy_semantics_visible=false")
+    actual = receipt.get("actual_model_identity")
+    if not isinstance(actual, str) or not actual.strip():
+        raise ValueError("invocation receipt must record actual_model_identity or an explicit override-only note")
 
 
 def cmd_ingest(args: argparse.Namespace) -> int:
     case = get_case(args.video_id)
     _, transcript = transcript_for(case)
-    out_dir = Path(args.out_dir) / args.video_id
+    out_dir = _safe_out_root(args.out_dir) / args.video_id
     index = read_json(out_dir / "task_index.json")
     if index.get("video_id") != args.video_id:
         raise SystemExit("task index identity mismatch")
@@ -375,13 +446,15 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     write_text_lf(out_dir / "fresh_source_candidate.json", candidate_text)
 
     frozen = {
-        "artifact": "opus-transcript-first-candidate-receipt-v1",
+        "artifact": "opus-transcript-first-candidate-receipt-v2",
         "status": STATUS_FRESH,
         "video_id": args.video_id,
         "diagnostic_category": case["category"],
         "reader_role": REQUIRED_READER_ROLE,
         "model_override": REQUIRED_MODEL_OVERRIDE,
         "actual_model_identity": receipt.get("actual_model_identity"),
+        "invocation_declared": True,
+        "invocation_independently_attested": False,
         "task_sha256": index["task_sha256"],
         "transcript_sha256": index["transcript_sha256"],
         "raw_response_sha256": raw_sha,
@@ -425,7 +498,7 @@ def _legacy_summary(record: dict[str, Any]) -> dict[str, Any]:
 
 def cmd_compare(args: argparse.Namespace) -> int:
     case = get_case(args.video_id)
-    out_dir = Path(args.out_dir) / args.video_id
+    out_dir = _safe_out_root(args.out_dir) / args.video_id
     receipt = read_json(out_dir / "candidate_receipt.json")
     if receipt.get("status") != STATUS_FRESH:
         raise SystemExit("fresh candidate is not hash-frozen; refusing legacy comparison")
@@ -456,7 +529,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
     legacy = read_json(legacy_path)
     candidate = json.loads(candidate_bytes.decode("utf-8"))
     report = {
-        "artifact": "legacy-vs-fresh-opus-comparison-v1",
+        "artifact": "legacy-vs-fresh-opus-comparison-v2",
         "video_id": args.video_id,
         "diagnostic_category": case["category"],
         "fresh_candidate_sha256": receipt["candidate_sha256"],
@@ -481,7 +554,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
 
 def cmd_receipt_template(args: argparse.Namespace) -> int:
     case = get_case(args.video_id)
-    out_dir = Path(args.out_dir) / args.video_id
+    out_dir = _safe_out_root(args.out_dir) / args.video_id
     index = read_json(out_dir / "task_index.json")
     template = {
         "video_id": args.video_id,
