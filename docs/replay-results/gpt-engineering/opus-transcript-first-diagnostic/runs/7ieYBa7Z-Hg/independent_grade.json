@@ -1,0 +1,59 @@
+{
+  "artifact": "independent-source-fidelity-grade-v1",
+  "video_id": "7ieYBa7Z-Hg",
+  "grader": "accuracy-validator",
+  "grade_date": "2026-08-19",
+  "grader_independence": {
+    "doer_is_grader": false,
+    "statement": "Candidate authored by a separate OPUS_LEAD_SOURCE_READER agent. No lineage to declare.",
+    "mandate": "AR-1357A section 6E / AR-1358A DISPROVE mandate, with a specific instruction to independently adjudicate the MULTI_STRATEGY_IDENTITY_CONTROL question (legacy extraction had 2 strategy indices for this video; candidate reports 1)."
+  },
+  "candidate_sha256": "2d47ef1f16da7d2bb8b3159b207b35f726cff14bc79dbc405d9529639348cb26",
+  "transcript_sha256": "63742bf97578c28637b85ea58540d1acbee8341c9e7c4d31d90f09c165c5dcf7",
+  "hash_verification": {
+    "independently_recomputed_by_grader": false,
+    "independently_recomputed_by_dispatching_worker_post_grade": true,
+    "dispatching_worker_result": "sha256sum from the armed parent session reproduces both digests EXACTLY: transcript 63742bf9...09c165c5dcf7, candidate 2d47ef1f...639348cb26. Gap closed 2026-08-19.",
+    "severity_after_closure": "RESOLVED",
+    "blocker_the_grader_hit_verbatim": "worker session is not armed: no armed guard session for this session id; SessionStart never verified the resume anchor here",
+    "tools_blocked_for_grader": ["Bash", "PowerShell (including a dangerouslyDisableSandbox retry, identically rejected)"]
+  },
+  "verdict": "BOUNDED",
+  "band": {"value": 8, "status": "VERIFIED", "scope": "source-fidelity only; artifact-binding (hashes) unverified -- driven solely by the hash gap, not by a fidelity defect"},
+  "verdict_summary": "Source fidelity PASS with zero CRITICAL/HIGH findings. The primary question -- whether the candidate's 1-strategy call is correct against the legacy extraction's 2-strategy-index artifact -- resolves decisively in the candidate's favor via three non-overlapping verification paths. The grader had a DISPROVE mandate on this question and failed to disprove it.",
+  "multi_strategy_identity_verdict": {
+    "result": "CANDIDATE IS CORRECT (1 strategy). Legacy's 2-index artifact is the corrupted one.",
+    "confidence": "HIGH",
+    "path_1_transcript_first_census": "Host asks directly 'do you have multiple trade models within your system or is it kind of like one key setup' -- Dave answers 'there's one setup that I choose to take each and every day', and collapses the POI taxonomy to one type ('a quality POI is more of a previous range that is the only thing that I use').",
+    "path_2_legacy_forensics": "Legacy index 1 is not a strategy -- it is the ONE setup's swing-count filter reified into a standalone object. Its only confluence is named swing_count_filter, its stop quote is byte-identical to index 0's ('The whole POI.'), and its targets array is EMPTY -- a real strategy has somewhere to go; this one doesn't. The source places the swing count as a pre-entry qualifier, exactly where the candidate puts it.",
+    "path_3_negative_contamination_probe": "Searched the candidate for legacy's lexical fingerprints (canonical_match, pullback_to_poi, swing_count_filter, previous_daily_high, 'beginning of this week') -- zero matches, i.e. legacy semantics did not leak into the fresh candidate.",
+    "additional_check": "Each alleged second strategy individually tested and collapses back into the one setup: the source itself folds the first-hour trade back in ('Like I mentioned, the previous range is where I look for entries'); second-swing is Dave's answer to a 'which portion of that sequence' question, not a separate model; range rotation is the mechanism generating the one setup's stated 3-5 opportunities per occurrence."
+  },
+  "findings": [
+    {"id": "F-1", "property": "3 - context promoted into targets", "severity": "MEDIUM", "title": "Priority-1 target is a taught-to-others instruction ('I tell people to target if there's a prominent wick to the left') presented as the strategy's own primary target -- the SAME sentence whose other half ('partial somewhere') the candidate correctly flagged elsewhere as contradicted student guidance. One sentence, two halves, two incompatible attributions."},
+    {"id": "F-2", "property": "4 - stop/target semantics", "severity": "MEDIUM", "title": "The 50%/70% entry/stop mechanic is anchored to 'higher-timeframe zone' in the candidate, but the source anchors it to the PREVIOUS RANGE specifically ('when it gets back in there') -- different price levels, different position sizing consequence."},
+    {"id": "F-3", "property": "1", "severity": "LOW", "title": "Unflagged internal contradictions preserved without a gap note: risk-per-trade '5-8% maybe' vs '3 to 5%... as it always has been'; omitted 'I'm not aggressively trailing' qualifier."},
+    {"id": "F-4", "property": "6", "severity": "LOW", "title": "Range-rotation merge into the single setup is inference presented with the same confidence as source-stated fact."},
+    {"id": "F-5", "property": "3", "severity": "LOW", "title": "Three caption-scope stretches (minor)."},
+    {"id": "F-6", "property": "3", "severity": "LOW", "title": "Entry step 8 mis-roled."},
+    {"id": "F-7", "property": "process", "severity": "MEDIUM (process, not fidelity)", "title": "Reader model identity is self-reported only; the doer disclosed this honestly (invocation_independently_attested=false) rather than overclaiming, which is credited rather than penalized."}
+  ],
+  "property_findings": {
+    "p1_rules_supported": "PASS",
+    "p2_no_invented_rule": "PASS - correctly declares range-rotation trigger, daily loss limit, and R:R gate as GAPS rather than inventing them",
+    "p3_context_not_promoted": "PASS with findings (F-1, F-6)",
+    "p4_stop_target_management": "PASS with findings (F-2). Gets the hardest point right: preserves Dave's own 'invalidation != placed stop' distinction, precisely what legacy collapsed.",
+    "p5_strategy_count_identity": "PASS, HIGH CONFIDENCE - see multi_strategy_identity_verdict above",
+    "p6_gaps_explicit": "PASS, strongest property. The partial-exit contradiction (student guidance vs Dave's own execution) is NOT silently resolved: both sides recorded, one explicitly labelled 'Conflicting instruction taught to others', plus a gap stating the transcript does not reconcile the two."
+  },
+  "positive_control": "Corpus supplied a known-bad, no synthetic plant needed: legacy's quote for the swing-count rule is a splice across ~200 omitted characters -> 0 transcript occurrences (RED, confirms the instrument catches a real bad quote). The candidate's rendering of the same passage -> 1 occurrence (GREEN). The quote-fidelity instrument discriminates, so the candidate's clean result is meaningful rather than vacuous.",
+  "novel_attack": "\"Whose rules are these?\" -- orthogonal to the brief and invisible to a substring check by construction, because the quote is perfectly literal; the defect is in the dropped AUDIENCE FRAME. Hypothesis: the transcript interleaves what Dave does with what Dave teaches others, diverging on partials, first-hour participation, and holding to a daily high. Partially refuted: the candidate defends this well in management (three explicit audience labels). But it breaks in targets (F-1): the SAME split sentence has its 'partial somewhere' half correctly flagged as contradicted student guidance, while its 'target the prominent wick' half is presented uncritically as the strategy's own primary target.",
+  "honest_null": "Grader had a DISPROVE mandate on the primary (strategy-count) question and FAILED TO DISPROVE it after reading the full ~62k-character transcript, testing each candidate 'second strategy' individually, and specifically hunting the legacy artifact for a real dropped strategy -- instead found the mechanism of the legacy error. Reported as a genuine PASS on this dimension rather than manufacturing a defect to appear diligent.",
+  "coverage": "Read the full transcript (~62k characters) and the full candidate JSON. Tested each of the three candidate 'second strategy' candidates (first-hour, second-swing, range-rotation) individually against the source. Cross-referenced the legacy extraction artifact specifically to diagnose the mechanism of its 2-index error. NOT verified: (a) both SHA-256 values -- shell/PowerShell rejected, including a retry with dangerouslyDisableSandbox, identically rejected; (b) that the tree is at commit 29ffd6de -- git unavailable, this grade describes bytes read, not a verified commit state; (c) that the reader was genuinely Opus / was legacy-blind -- self-reported, only weakly corroborated by the negative-contamination probe (path 3); (d) byte-equality of raw_opus_response.txt against the candidate (consistent on inspection, not cryptographically proven); (e) whether the method is sound or compiles; (f) the other four videos in the diagnostic.",
+  "dispatch_contract_defect": "MEDIUM -- the brief's repo-relative paths did not exist in the grader's own assigned worktree (glob returned zero); all graded artifacts actually live in the sibling worktree wt-claude-worker1-20260815. A repo-relative path plus a commit pin is only meaningful once the tree is named absolutely.",
+  "high_and_critical_findings": [
+    "HIGH (environment, not fidelity) - hash binding not independently recomputed; all shell tooling denied by the guard in this isolated worktree, including a dangerouslyDisableSandbox retry.",
+    "No CRITICAL or HIGH fidelity findings."
+  ],
+  "recommendation": "ACCEPT the 1-strategy call as source-faithful for 7ieYBa7Z-Hg; do NOT re-pin the legacy 2-index assumption for this video. Fix F-1 (target-attribution split) and F-2 (zone-anchor mismatch) before this candidate is used as compile input -- both would propagate into an encoded rule if left uncorrected. Separately: recompute both SHA-256 digests from an armed session before treating this grade as digest-bound."
+}

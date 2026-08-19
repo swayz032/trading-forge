@@ -1,0 +1,131 @@
+{
+  "artifact": "independent-source-fidelity-grade-v1",
+  "video_id": "1HFoStW_wsc",
+  "grader": "accuracy-validator",
+  "grade_date": "2026-08-19",
+  "grader_independence": {
+    "doer_is_grader": false,
+    "statement": "Candidate authored by a separate OPUS_LEAD_SOURCE_READER agent. No lineage to declare.",
+    "mandate": "AR-1357A section 6E / AR-1358A DISPROVE mandate"
+  },
+  "candidate_sha256": "90a36a75bc1db78cac9b5b0181754488d98fa9406fc1b90d4bba3b876d6d170e",
+  "transcript_sha256": "c84a83c745da422bb3c19955f981a9f7ba848a7eaa68b85b732630201263b080",
+  "hash_verification": {
+    "independently_recomputed_by_grader": false,
+    "independently_recomputed_by_dispatching_worker_post_grade": true,
+    "dispatching_worker_result": "sha256sum on both files from the armed parent session (not the isolated grader worktree, which the guard denied all shell/write access in) reproduces both digests EXACTLY: transcript c84a83c7...63b080, candidate 90a36a75...6d170e. Gap closed 2026-08-19.",
+    "severity_after_closure": "RESOLVED - binding is now independently confirmed, from a different tool/session than the one that originated the receipt.",
+    "blocker_the_grader_hit_verbatim": "worker session is not armed: no armed guard session for this session id; SessionStart never verified the resume anchor here",
+    "tools_blocked_for_grader": ["Bash", "PowerShell", "Agent (subagent dispatch)", "Write"],
+    "note": "This closes the grader's own stated HIGH finding. The grader's fidelity findings (F-1 through F-9) stand independently of this closure -- they were never contingent on the hash gap."
+  },
+  "commit_pin": {
+    "claimed_commit": "29ffd6de",
+    "claimed_branch": "claude/worker1-h1-20260815",
+    "independently_verified": false,
+    "reason": "git rev-parse unavailable - shell blocked by the session guard."
+  },
+  "read_paths": [
+    "src/engine/extraction/fixtures/source-evidence/1HFoStW_wsc.transcript.txt",
+    "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/runs/1HFoStW_wsc/fresh_source_candidate.json",
+    "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/runs/1HFoStW_wsc/candidate_receipt.json"
+  ],
+  "working_directory_finding": {
+    "severity": "MEDIUM",
+    "finding": "Grader was seated in a worktree that does NOT contain the target artifacts; a glob returned zero matches. Artifacts live in the sibling worktree wt-claude-worker1-20260815.",
+    "why_it_matters": "Per verification law 10 a null result is meaningless until the tree is named. A grader trusting its own cwd would have published a false 'does not exist'."
+  },
+  "verdict": "BOUNDED",
+  "verdict_summary": "No fabricated rule, no invented numeric parameter, and no falsified stop/target semantics were found - rule-level fidelity and gap-disclosure discipline are genuinely strong. But the 6-way segmentation is not supported by disjoint evidence (6 transcript spans cited across strategy boundaries), 4 of 5 strategies assert an entry trigger their own source_gaps declare undefined, and 5 of 7 s0 'management' entries are education/no-trade context in an executable field. Separately, the hash and commit binding could not be verified at all (environment/guard blocker, not a candidate defect).",
+  "band": {
+    "value": 6,
+    "status": "VERIFIED",
+    "scope": "Source-fidelity of fresh_source_candidate.json against 1HFoStW_wsc.transcript.txt, contents-only, binding dimension UNGRADED.",
+    "explicitly_not": "Not a certification that the candidate is compilable, nor that strategy_count=6 is correct."
+  },
+  "findings": [
+    {
+      "id": "F-1",
+      "property": "5 - strategy count / identity",
+      "severity": "HIGH",
+      "title": "The 6-way split is over-segmentation: strategy evidence spans are NOT disjoint",
+      "reality": "Six transcript spans are cited as load-bearing evidence in two different strategies each (s0 overlaps s1, s2, s4, s5). s4 carries zero trade fields (no direction, no trigger, stop null, targets empty) yet increments strategy_count to 6. Only s0 has a complete entry+stop+target spec.",
+      "duplicated_spans_across_strategy_boundaries": [
+        "hierarchy conflict rule cited in both s0.confluences and s5.confluences",
+        "alternative anchors cited in both s0.variants[0] and s4.variants[0]",
+        "custom anchors sentence cited in both s0.setup[2] and s4.management[0]",
+        "trend/ranging sentence cited as s1 trigger AND s2 context",
+        "steep VWAP slope cited in both s0.confluences and s1.confluences",
+        "flat VWAP cited in both s0.confluences and s2.setup[1]"
+      ],
+      "blast_radius": "Any census consuming this as six tradeable strategies overcounts the source ~6x."
+    },
+    {
+      "id": "F-2",
+      "property": "3 - context promoted into a trigger",
+      "severity": "MEDIUM",
+      "title": "s1 entry step 3 is role='trigger' but its quote contains no entry instruction",
+      "reality": "Attached quote is a generic regime-to-method mapping, not an entry instruction. s1.source_gaps itself states the entry trigger is 'described as observed behavior, not as a defined entry trigger' -- the candidate asserts a trigger and denies it in the same object."
+    },
+    {
+      "id": "F-3",
+      "property": "3 - context promoted into an executable field",
+      "severity": "MEDIUM",
+      "title": "5 of 7 s0 'management' entries are education / no-trade filters, not trade management",
+      "reality": "Only the exit-signals sentence is genuine management. The other five (30%-volume floor, stay-out-of-market veto, 3% gap rule, whipsaw warning, news-anchor reset) come from the educational 'when VWAP stops working' passage."
+    },
+    {
+      "id": "F-4",
+      "property": "1 / 4",
+      "severity": "LOW",
+      "title": "s3 target is a probability observation typed into executable targets[]"
+    },
+    {
+      "id": "F-5",
+      "property": "4 - semantics match educator's words",
+      "severity": "LOW",
+      "title": "Three-candle acceptance rule silently symmetrized (downside-only in source, made bidirectional in candidate)"
+    },
+    {
+      "id": "F-6",
+      "property": "1 - rule support",
+      "severity": "LOW",
+      "title": "'nothing special is happening' strengthened into 'no trade is indicated'"
+    },
+    {
+      "id": "F-7",
+      "property": "2 - no invented rule",
+      "severity": "NONE - PASS",
+      "finding": "Every numeric and named parameter located verbatim in the transcript. No stop distance, risk-per-trade, R-multiple, session time, timeframe, or band multiplier was fabricated."
+    },
+    {
+      "id": "F-8",
+      "property": "4 - stop / target semantics",
+      "severity": "NONE - PASS",
+      "finding": "s0 stop and both targets match word-for-word with no drift. The candidate did NOT resolve 'Time to reassess your position' into a fabricated flatten/reduce rule, and preserved the educator's literally circular s3 band rule rather than repairing it."
+    },
+    {
+      "id": "F-9",
+      "property": "6 - source gaps explicit",
+      "severity": "NONE - PASS",
+      "finding": "34 per-strategy source_gaps plus 7 top_level_source_gaps. All unresolved fields correctly marked source_unresolved with null quotes rather than guessed."
+    }
+  ],
+  "property_findings": {
+    "p1_rules_actually_supported_by_quote": "PARTIAL - one material quote-to-claim mismatch (F-2), two minor strengthenings (F-5, F-6).",
+    "p2_no_invented_rule": "PASS (F-7)",
+    "p3_context_not_promoted_to_trigger": "PARTIAL FAIL - F-2 and F-3. Counterweight: s4 correctly left with NO trigger and an explicit gap, so these are lapses not systematic policy.",
+    "p4_stop_target_management_semantics": "PASS with one LOW (F-4). F-8.",
+    "p5_strategy_count_identity": "FAIL (structural) - see F-1.",
+    "p6_source_gaps_explicit": "PASS - exemplary (F-9)."
+  },
+  "novel_attack": "SELF-REFUTATION CROSS-CHECK: intersect each strategy's role=='trigger' steps against that SAME strategy's own source_gaps. A mechanical literal-quote-substring validator structurally cannot catch this because every quote passes substring presence individually -- the defect lives in the RELATION between two fields. Result: 4 of the 5 strategies asserting an entry trigger simultaneously declare that trigger undefined in their own source_gaps (s0, s1, s2, s5). Only s3 is self-consistent; only s4 correctly declines to assert a trigger. Stated fairly: this is not deception -- the gap is disclosed every time. The defect is a CONSUMER-CONTRACT HAZARD: any compiler reading role=='trigger' as executable emits four entry conditions whose own record says they are undefined. Companion attack, same class: the evidence-disjointness test in F-1.",
+  "coverage": "READ IN FULL, NOT SAMPLED: 100% of the transcript, all 655 lines of fresh_source_candidate.json (every field of all 6 strategies), all 32 lines of candidate_receipt.json. Spot-checked verbatim beyond the brief's mandate: s0 stop, both s0 targets, all three s0 entry confirmations, the five-point playbook, the pre-market routine, s5 sizing, s5 dip/rip, s5 yearly regime, s1 pullback, s2 directional rule, s3 band trigger and probability statements, s4's anchor-selection rules, instrument_classification. Performed a full numeric enumeration and a pairwise quote-set intersection across all 6 strategies. NOT VERIFIED: (a) no SHA-256 computed -- all shell/subagent tooling blocked by the guard (environment blocker, not a candidate defect); (b) HEAD==29ffd6de not verified, git unavailable; (c) literal_quote_count=73 not recounted; (d) receipt model-identity claims not independently verified (receipt itself discloses invocation_independently_attested=false); (e) no legacy-extraction comparison, per the receipt's freeze-first instruction; (f) no compiler executed, so the 'consumer contract hazard' claim in the novel attack is a hypothesis, not measured compiler behavior.",
+  "high_and_critical_findings": [
+    "HIGH - hash binding not independently recomputed (environment blocker: all shell/subagent tooling denied by the guard in this isolated worktree).",
+    "HIGH - F-1: strategy_count=6 not supported by disjoint evidence; six spans cited across strategy boundaries; s4 carries zero trade fields.",
+    "MEDIUM - F-2/F-3/novel_attack: trigger-role and management-bucket contamination.",
+    "MEDIUM - working directory finding: brief gave repo-relative paths that did not resolve in the grader's own worktree."
+  ],
+  "recommendation": "Do NOT promote this candidate on the strength of the mechanical literal-quote pass alone. Before re-grade: (1) recompute the three SHA-256 digests from an armed session; (2) resolve segmentation -- collapse s1-s5 into regime-variants of s0 or add a disjointness declaration; (3) reconcile every role=='trigger' step against its own source_gaps; (4) rebucket the five non-management entries out of s0.management. Rule-level fidelity and gap discipline are strong enough that these are corrections, not a rebuild."
+}

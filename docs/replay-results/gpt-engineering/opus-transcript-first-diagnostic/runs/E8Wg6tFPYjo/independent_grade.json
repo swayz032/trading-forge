@@ -1,0 +1,73 @@
+{
+  "artifact": "independent-source-fidelity-grade-v1",
+  "video_id": "E8Wg6tFPYjo",
+  "grader": "accuracy-validator",
+  "grade_date": "2026-08-19",
+  "grader_independence": {
+    "doer_is_grader": false,
+    "statement": "Candidate authored by a separate OPUS_LEAD_SOURCE_READER agent. No lineage to declare.",
+    "mandate": "AR-1357A section 6E / AR-1358A DISPROVE mandate"
+  },
+  "candidate_sha256": "858cb977600204827918dad8fd531722e454f0c0f348a91fd3b1ed62e9ce0008",
+  "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+  "hash_verification": {
+    "independently_recomputed_by_grader": false,
+    "independently_recomputed_by_dispatching_worker_post_grade": true,
+    "dispatching_worker_result": "sha256sum from the armed parent session reproduces both digests EXACTLY: transcript 62036e6e...74756ec67, candidate 858cb977...e9ce0008. Gap closed 2026-08-19.",
+    "severity_after_closure": "RESOLVED",
+    "blocker_the_grader_hit_verbatim": "worker session is not armed: no armed guard session for this session id; SessionStart never verified the resume anchor here",
+    "tools_blocked_for_grader": ["Bash", "PowerShell", "Write"]
+  },
+  "commit_pin": {
+    "claimed_commit": "29ffd6de",
+    "independently_verified_via": "git plumbing files read directly (worktree gitdir -> HEAD ref -> ref file), confirmed resolves to 29ffd6ded131efa2caed9f994dd5b491080e040a"
+  },
+  "verdict": "BOUNDED",
+  "band": {"value": 7, "status": "VERIFIED"},
+  "verdict_summary": "No fabricated executable rule, no invented money-consequence parameter, no strategy-count error, and no stop/target semantics differing from the educator's words. One HIGH finding (a correctly-quoted sentence attached to the wrong claim -- a quote-to-claim mismatch invisible to a substring-only check) and one MEDIUM-HIGH missed gap (two competing, unreconciled target definitions) keep this out of a clean PASS.",
+  "findings": [
+    {
+      "id": "F-1",
+      "property": "1 - rule actually supported by quote",
+      "severity": "HIGH",
+      "title": "setup[6] quote does not say what the claim says",
+      "reality": "Claim: 'The indicator is a convenience only; every step can be done manually.' Attached quote only says where the checklist sits on screen. The real supporting sentence ('It's a great tool to have, but you don't need it. You can do all of the things I'm about to teach you today manually on your own.') appears nowhere in the candidate. Demonstrates literal_quote_failures: 0 is a false green for evidentiary SUPPORT, not just presence."
+    },
+    {
+      "id": "F-2",
+      "property": "1 / 6 - missed gap",
+      "severity": "MEDIUM-HIGH",
+      "title": "Two competing, unreconciled target definitions not flagged as a gap",
+      "reality": "(a) 'next objective of price would be to purge liquidity from the downside... the most recent major lows' vs (b) 'I drag the takerit to the low of the Fibonacci range.' These are generally different price levels, and the 2.45 R:R is a geometric identity of definition (b) specifically; substituting (a) silently invalidates the only quantitative claim."
+    },
+    {"id": "F-3", "property": "3", "severity": "MEDIUM", "title": "confluences[4] carries a hard veto misfiled as an optional bonus confluence."},
+    {"id": "F-4", "property": "3", "severity": "MEDIUM", "title": "The two MANDATORY checklist items (4H alignment, liquidity sweep) are tagged role=context; only steps 5-6 are trigger -- the inverse direction of the named risk, and the more dangerous one (loosens entry to 2 gates instead of 4)."},
+    {"id": "F-5", "property": "3", "severity": "MEDIUM", "title": "4 of 6 management entries are pedagogy (what drawdown means, 'nothing is 100%', be mechanical, practise on demo) filed in an executable container."},
+    {"id": "F-6", "property": "4", "severity": "LOW-MEDIUM", "title": "Long-side stop anchor is an unflagged inference; educator's actual words are 'drag it over to that wick', never 'low of the Fibonacci range' for the long example."},
+    {"id": "F-7", "property": "2", "severity": "LOW", "title": "'paid indicator' -- the token 'paid' never occurs in the transcript (grep-confirmed)."},
+    {"id": "F-8", "property": "cosmetic", "severity": "LOW", "title": "targets[] has two entries both priority:1."},
+    {"id": "F-9", "property": "cosmetic", "severity": "LOW", "title": "variants[] contains two non-variant UI-workflow entries."}
+  ],
+  "property_findings": {
+    "p1_rules_supported": "FAIL - 1 instance (F-1, HIGH)",
+    "p2_no_invented_rule": "PASS, one cosmetic exception (F-7)",
+    "p3_context_not_promoted": "PASS on named direction; FAIL on inverse (F-3, F-4, F-5)",
+    "p4_stop_target_semantics": "PASS, bounded (F-6, F-2)",
+    "p5_strategy_count_identity": "PASS -- 1 strategy is correct, verified via 2 non-overlapping paths (educator's explicit framing + structural identity of the 4-checklist-item sequence across both worked examples)",
+    "p6_gaps_explicit": "PASS with one material omission (F-2)"
+  },
+  "survived_attacks": [
+    "S-1: 2.45 R:R verified correct by independent first-principles recomputation (entry 0.71, stop 1.00, target 0.00 -> 0.71/0.29 = 2.4483 ~= 2.45), and correctly labelled as geometry not an empirical result.",
+    "S-2: strategy_count=1 is CORRECT via two non-overlapping paths (explicit educator framing + structural identity of checklist across both examples).",
+    "S-3: sweep-before-BOS sequencing attack on the NZDUSD example failed -- the candidate had already pre-emptively gapped the residual uncertainty.",
+    "S-4: bearish FVG geometry correctly not mirror-invented for the untaught bullish case.",
+    "S-5: no invented session/risk/sizing/win-rate parameters -- positive-controlled grep (zero hits for absent terms, confirmed hits for present terms)."
+  ],
+  "novel_attack": "(1) Tested semantic ENTAILMENT of quote to claim, distinct from substring PRESENCE -- found F-1, invisible by construction to the mechanical gate. (2) Hunted a MISSING gap by cross-referencing two independently-sourced true statements against EACH OTHER rather than each against the source in isolation -- found F-2. Two true facts do not make a true link.",
+  "coverage": "Verified: 100% of the transcript (single continuous read), 100% of fresh_source_candidate.json (289 lines) and candidate_receipt.json. Pin verified via git plumbing files (not git CLI, which was unavailable). ~30 of 41 quotes verified verbatim by direct reading, prioritising every stop/target/entry-trigger/direction/timeframe/management quote. 2.45 recomputed from first principles. Strategy count verified via two independent paths. NOT verified: (a) SHA-256 of anything -- no shell reachable; (b) that working-tree files are byte-clean against the commit's blobs (only that the tree is ON the commit); (c) the remaining ~11 quotes (spot-check was the instructed method); (d) any legacy-extraction comparison, deliberately excluded per the receipt's own freeze-first instruction; (e) the video itself (transcript is heavily deictic -- 'right here', 'this high' -- so chart-anchor claims are under-determined by the transcript alone for candidate and grader equally; the candidate handles this correctly by gapping rather than guessing); (f) whether the reader was genuinely Opus (receipt discloses invocation_independently_attested=false).",
+  "high_and_critical_findings": [
+    "HIGH - F-1: quote-to-claim mismatch, demonstrates literal_quote_failures:0 is a false green for evidentiary support.",
+    "MEDIUM-HIGH - F-2: two competing unreconciled target definitions, not gapped."
+  ],
+  "recommendation": "Do not certify PASS while F-1 and F-2 are open -- both are cheap local fixes (one quote replacement, one added source_gaps entry). Independently of this candidate: the literal-quote gate must not be reported as evidence of rule SUPPORT until supplemented by a semantic entailment check, red-proofed against a planted quote-to-claim mismatch (F-1 is available as the discriminating fixture)."
+}
