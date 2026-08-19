@@ -1,0 +1,18 @@
+{
+  "E8Wg6tFPYjo-S0-B000": {"support": "confirmed", "justification": "The quote explicitly defines premium as above 50% of the trading range (sell bias) and discount as below 50% (buy bias), exactly as the condition states."},
+  "E8Wg6tFPYjo-S0-B001": {"support": "confirmed", "justification": "The trader states the strategy premise verbatim as buying low and selling high; the 'relative to the trading range' framing is a minor contextual gloss, not a drift."},
+  "E8Wg6tFPYjo-S0-B002": {"support": "partial", "justification": "The quote only identifies where resting liquidity sits (major highs/lows) and says nothing about waiting for a sweep or the large-wick/body-closure purge mechanism."},
+  "E8Wg6tFPYjo-S0-B003": {"support": "confirmed", "justification": "The quote states the market purges liquidity to bring money back as fuel for the next move, which is precisely the condition."},
+  "E8Wg6tFPYjo-S0-B004": {"support": "partial", "justification": "The quote conveys 'significant movement in price' and a potential opportunity, but its subject is an unnamed 'that' -- BOS is never stated in the quoted span."},
+  "E8Wg6tFPYjo-S0-B005": {"support": "partial", "justification": "The quote says 'this is the actual criteria that signals a trading opportunity' without naming BOS, so the link to break of structure is not expressed in the quote itself."},
+  "E8Wg6tFPYjo-S0-B006": {"support": "confirmed", "justification": "The quote directly says that after a break of structure one waits for a retracement, typically toward a fair value gap or imbalance."},
+  "E8Wg6tFPYjo-S0-B007": {"support": "partial", "justification": "The quote gives the rationale ('the market doesn't like inefficiencies') but does not state that gaps get filled before the move continues."},
+  "E8Wg6tFPYjo-S0-B008": {"support": "confirmed", "justification": "The quote states the entry is placed at the 71% level, matching the entry condition."},
+  "E8Wg6tFPYjo-S0-B009": {"support": "confirmed", "justification": "The quote names 71% as the favored number precisely because it yields a nice risk-to-reward ratio."},
+  "E8Wg6tFPYjo-S0-B010": {"support": "confirmed", "justification": "The quote states that higher-timeframe alignment is premised on premium and discount, matching the condition."},
+  "E8Wg6tFPYjo-S0-B011": {"support": "confirmed", "justification": "The quote describes a wick piercing above a previous high and purging that liquidity, which is the sweep of a major high the condition requires."},
+  "E8Wg6tFPYjo-S0-B012": {"support": "confirmed", "justification": "The quote states verbatim that a break of structure signals a potential trade."},
+  "E8Wg6tFPYjo-S0-B013": {"support": "confirmed", "justification": "The quote states the Fibonacci retracement number must line up with the imbalance or fair value gap."},
+  "E8Wg6tFPYjo-S0-B014": {"support": "confirmed", "justification": "The quote describes placing the stop-loss at the high of the Fibonacci range, i.e. the extreme of the measured range."},
+  "E8Wg6tFPYjo-S0-B015": {"support": "confirmed", "justification": "The quote gives the exact 2.45 risk-to-reward figure tied to the 71% entry."}
+}

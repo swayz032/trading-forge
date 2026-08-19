@@ -1,182 +1,239 @@
 {
   "conditions": [
     {
-      "surface_class": "cannot-determine-at-tier-1",
-      "classifying_tier": null,
-      "quote_anchor": "",
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities.",
       "char_span": [
-        21946,
-        22110
+        2569,
+        2813
       ],
-      "adjudication_verdict": null
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote explicitly defines premium as above 50% of the trading range (sell bias) and discount as below 50% (buy bias), exactly as the condition states."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "The strategy is very simplistic. We buy low and sell high.",
+      "char_span": [
+        2814,
+        2872
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The trader states the strategy premise verbatim as buying low and selling high; the 'relative to the trading range' framing is a minor contextual gloss, not a drift."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "The most common area to find resting liquidity is major highs and major lows.",
+      "char_span": [
+        3699,
+        3776
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote only identifies where resting liquidity sits (major highs/lows) and says nothing about waiting for a sweep or the large-wick/body-closure purge mechanism."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "And the market wants to purge that liquidity and bring that money back in to add fuel for the next move.",
+      "char_span": [
+        3594,
+        3698
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the market purges liquidity to bring money back as fuel for the next move, which is precisely the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon.",
+      "char_span": [
+        6250,
+        6386
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote conveys 'significant movement in price' and a potential opportunity, but its subject is an unnamed 'that' -- BOS is never stated in the quoted span."
+      }
     },
     {
       "surface_class": "cannot-determine-at-tier-1",
       "classifying_tier": null,
       "quote_anchor": "",
       "char_span": [
-        20847,
-        20950
+        5299,
+        5375
       ],
       "adjudication_verdict": null
     },
     {
-      "surface_class": "cannot-determine-at-tier-1",
-      "classifying_tier": null,
-      "quote_anchor": "",
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "So when a break of structure occurs, we need to patiently wait for a retracement. Now, typically that retracement ends up being towards a fair value gap or an imbalance.",
       "char_span": [
-        20847,
-        20909
+        6609,
+        6778
       ],
-      "adjudication_verdict": null
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly says that after a break of structure one waits for a retracement, typically toward a fair value gap or imbalance."
+      }
     },
     {
-      "surface_class": "cannot-determine-at-tier-1",
+      "surface_class": "context",
       "classifying_tier": null,
-      "quote_anchor": "",
+      "quote_anchor": "The best way I can explain why this happens is that the market doesn't like inefficiencies.",
       "char_span": [
-        21108,
-        21238
+        7448,
+        7539
       ],
-      "adjudication_verdict": null
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives the rationale ('the market doesn't like inefficiencies') but does not state that gaps get filled before the move continues."
+      }
     },
     {
-      "surface_class": "cannot-determine-at-tier-1",
-      "classifying_tier": null,
-      "quote_anchor": "",
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "I place my entry at the 71% right here.",
       "char_span": [
-        20847,
-        20909
+        9092,
+        9131
       ],
-      "adjudication_verdict": null
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the entry is placed at the 71% level, matching the entry condition."
+      }
     },
     {
-      "surface_class": "cannot-determine-at-tier-1",
-      "classifying_tier": null,
-      "quote_anchor": "",
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "My favorite number to use is 71%. And what that does is it allows me to get a really nice risk-to-reward ratio.",
       "char_span": [
-        21108,
-        21238
+        8657,
+        8768
       ],
-      "adjudication_verdict": null
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote names 71% as the favored number precisely because it yields a nice risk-to-reward ratio."
+      }
     },
     {
-      "surface_class": "cannot-determine-at-tier-1",
-      "classifying_tier": null,
-      "quote_anchor": "",
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "So, the premise of higher time frame alignment is premium and discount.",
       "char_span": [
-        20754,
-        20909
+        2416,
+        2487
       ],
-      "adjudication_verdict": null
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states that higher-timeframe alignment is premised on premium and discount, matching the condition."
+      }
     },
     {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "Determine the higher timeframe bias by identifying if the price is in a premium (above 50% of range) or discount (below 50% of range) zone.",
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "this large wick right here pierced above that previous high, purging all of that liquidity",
       "char_span": [
-        -1,
-        -1
+        4121,
+        4211
       ],
-      "adjudication_verdict": null,
-      "condition_ref": "entry_sequence[0].action",
-      "anchor_reason": "proposed_quote_not_literal_substring"
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote describes a wick piercing above a previous high and purging that liquidity, which is the sweep of a major high the condition requires."
+      }
     },
     {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "Liquidity sweeps signal that resting money has been purged, fueling the next directional move.",
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "Whenever we have a break of structure occurring in the market that is signaling a potential trade.",
       "char_span": [
-        -1,
-        -1
+        5376,
+        5474
       ],
-      "adjudication_verdict": null,
-      "condition_ref": "entry_sequence[1].rationale",
-      "anchor_reason": "proposed_quote_not_literal_substring"
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states verbatim that a break of structure signals a potential trade."
+      }
     },
     {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "Wait for a Break of Structure (BOS) to occur, signaling a significant movement in price.",
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap.",
       "char_span": [
-        -1,
-        -1
+        10185,
+        10281
       ],
-      "adjudication_verdict": null,
-      "condition_ref": "entry_sequence[2].action",
-      "anchor_reason": "proposed_quote_not_literal_substring"
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the Fibonacci retracement number must line up with the imbalance or fair value gap."
+      }
     },
     {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "BOS confirms a potential trading opportunity has been created.",
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "I simply drag the stop-loss to the high of the Fibonacci range right here.",
       "char_span": [
-        -1,
-        -1
+        9132,
+        9206
       ],
-      "adjudication_verdict": null,
-      "condition_ref": "entry_sequence[2].rationale",
-      "anchor_reason": "proposed_quote_not_literal_substring"
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote describes placing the stop-loss at the high of the Fibonacci range, i.e. the extreme of the measured range."
+      }
     },
     {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "Wait for price to retrace into a Fair Value Gap (FVG) or Imbalance after the BOS.",
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "If I target the 71% from my entry, I get a risk-to-reward ratio of 2.45.",
       "char_span": [
-        -1,
-        -1
+        8769,
+        8841
       ],
-      "adjudication_verdict": null,
-      "condition_ref": "entry_sequence[3].action",
-      "anchor_reason": "proposed_quote_not_literal_substring"
-    },
-    {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "The market tends to fill inefficiencies (gaps) before continuing its move.",
-      "char_span": [
-        -1,
-        -1
-      ],
-      "adjudication_verdict": null,
-      "condition_ref": "entry_sequence[3].rationale",
-      "anchor_reason": "proposed_quote_not_literal_substring"
-    },
-    {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "A major high or low must be swept to purge resting liquidity.",
-      "char_span": [
-        -1,
-        -1
-      ],
-      "adjudication_verdict": null,
-      "condition_ref": "confluences[1].description",
-      "anchor_reason": "proposed_quote_not_literal_substring"
-    },
-    {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "A break of structure must occur to signal a potential trading opportunity.",
-      "char_span": [
-        -1,
-        -1
-      ],
-      "adjudication_verdict": null,
-      "condition_ref": "confluences[2].description",
-      "anchor_reason": "proposed_quote_not_literal_substring"
-    },
-    {
-      "surface_class": "unanchored",
-      "classifying_tier": null,
-      "quote_anchor": "The Fibonacci retracement level must align with a Fair Value Gap or Imbalance.",
-      "char_span": [
-        -1,
-        -1
-      ],
-      "adjudication_verdict": null,
-      "condition_ref": "confluences[3].description",
-      "anchor_reason": "proposed_quote_not_literal_substring"
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote gives the exact 2.45 risk-to-reward figure tied to the 71% entry."
+      }
     }
   ],
   "compile_integrity": {
@@ -254,17 +311,15 @@
   "certificate_grade": false,
   "axis3_audit": null,
   "strategy_index": 0,
-  "unanchored_condition_count": 9,
-  "unanchored_reason_breakdown": {
-    "proposed_quote_not_literal_substring": 9
-  },
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
   "diagnosis": {
-    "unanchored": 9,
+    "unanchored": 0,
     "coverage_miss": 0,
-    "classification_fallthrough_unresolved": 7,
+    "classification_fallthrough_unresolved": 4,
     "tier3_fail": 0,
     "lint_fail": 0,
-    "ok": 0
+    "ok": 12
   },
   "dry_run": false
 }
