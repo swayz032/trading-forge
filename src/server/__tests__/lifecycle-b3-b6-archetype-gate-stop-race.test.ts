@@ -118,7 +118,9 @@ describe("B6/M3 — start/continue the internal stream (not stop it) on toState=
     // The B6 discipline (no `(async () => {...})()` wrapper) carries forward —
     // only the STREAM ACTION inverted from stopStream to startStream.
     const block = src.slice(m3Idx, m3Idx + 4500);
-    expect(block).toContain("await startStream(activeSessId, symbols)");
+    // AR-1155 (2026-08-19): symbols now come from the qualification-activation verifier's
+    // result (the verified value is the authority), not a raw local variable.
+    expect(block).toContain("await startStream(activeSessId, activation.symbols)");
   });
 
   it("no fire-and-forget IIFE wraps the startStream call", () => {
@@ -130,7 +132,7 @@ describe("B6/M3 — start/continue the internal stream (not stop it) on toState=
 
   it("the awaited startStream attempt happens before the authority audit", () => {
     const block = src.slice(m3Idx, m3Idx + 12500);
-    const startLocalIdx = block.indexOf("startStream(activeSessId, symbols)");
+    const startLocalIdx = block.indexOf("startStream(activeSessId, activation.symbols)");
     const authorityLocalIdx = block.indexOf("paper.engine_authority_declared");
     expect(startLocalIdx).toBeGreaterThan(-1);
     expect(authorityLocalIdx).toBeGreaterThan(-1);

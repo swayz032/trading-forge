@@ -82,7 +82,10 @@ describe("deepscan14 A1 / M3 — internal stream CONTINUES/STARTS on ANY toState
     const m3Idx = src.indexOf("M3 FIX (2026-07-17)");
     expect(m3Idx).toBeGreaterThan(-1);
     const region = src.slice(m3Idx, m3Idx + 4500);
-    expect(region).toContain("startStream(activeSessId, symbols)");
+    // AR-1155 (2026-08-19): startStream's symbols now come from the qualification-
+    // activation verifier's result, not a raw local variable — the verified value is
+    // the authority, same principle as the scheduler.ts F-10 reconnect-symbol fix.
+    expect(region).toContain("startStream(activeSessId, activation.symbols)");
     // The OLD stopStream-on-PAPER call must be gone from THIS block (item 3's
     // sibling-stop block elsewhere in the file still legitimately calls
     // stopStream — that's for fromState==="PAPER" leaving to a broker-
