@@ -1,0 +1,62 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "we are going to start from a monthly time frame, a high time frame"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "top down analysis, we want to see what something has done overall. A bird's eye view."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "when we're drawing our upward trend lines and we're drawing our downward trend lines, we want to make sure we're trying to capture as many touch points as possible"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "the trend line is our guide for following the market's movement"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "We cannot have price intersect or cut through."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "We are truly envisioning this line holding the price down."
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "all of the lines that we draw from higher time frames down to lower time frames have to connect. They're always going to connect to the previous point B."
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "But this process gives us structure to how we draw our trend lines."
+  },
+  {
+    "condition_ref": "entry_sequence[4].action",
+    "raw_output": "wait for price to break one of these lines"
+  },
+  {
+    "condition_ref": "entry_sequence[4].rationale",
+    "raw_output": "when price finally does break, that gives us our indication to start taking action"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "Top down analysis means that we are starting from the highest time frame and working our way down."
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "the key point here is to make sure that price does not intersect"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "we have to try to capture as many touch points as possible"
+  },
+  {
+    "condition_ref": "confluences[3].description",
+    "raw_output": "An action line is the line that was broken. This triggers our decision to place a trade."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "We always want to make sure it is on the other side of the safety line."
+  }
+]

@@ -1,0 +1,70 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "locate the first 15-minutes candle that formed on today's date. In this example, the first 15-minutes candle that formed today is right here. Simply draw a line at the high and low of that candle"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "the candle you just boxed is what I call a manipulation candle"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "If the size of the candle you just boxed from high to low is 20 to 25% or more of that daily ATR, it's a confirmed manipulation candle."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "The ATR tells you the candle is big enough to qualify."
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "you're waiting for one of two specific reversal candles to appear outside the range you boxed in step one"
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "if someone that large is buying into that weakness, the odds of price going lower from there drop significantly. They've announced their intentions."
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "Wait for the next candle to break above the hammer high, enter at the open of the candle after that"
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": null
+  },
+  {
+    "condition_ref": "entry_sequence[4].action",
+    "raw_output": "I like to set my entry limit order at the high of that previous red candle"
+  },
+  {
+    "condition_ref": "entry_sequence[4].rationale",
+    "raw_output": "If price pushes up to that level, I'm in, and it confirms the engulfing pattern."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "locate the first 15-minutes candle that formed on today's date"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "20 to 25% or more of that daily ATR, it's a confirmed manipulation candle"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "The volume spike tells you that big players were actively involved in creating that move."
+  },
+  {
+    "condition_ref": "confluences[3].description",
+    "raw_output": "You need the reversal to form outside the box after a clear directional push."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "Stop goes below the low."
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "And the target profit? The top of the range we drew in step one."
+  },
+  {
+    "condition_ref": "targets[1].rationale",
+    "raw_output": "two natural profit targets on the other. The low of the opening candle and the high."
+  }
+]

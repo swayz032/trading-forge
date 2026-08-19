@@ -1,0 +1,66 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "from the top of that kind of high to the bottom. Drawing it then will give my 25 50% and 75% levels."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "the top of the candle is your premature zone. This is where you can expect there to be a retracement of some sort."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "We now make a manipulation. This manipulation goes into our optimum zone which is our 25 and our 50."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "Now the 25 to 50% is going to be optimum. This is ideally we want to see price make a retracement into and then continue to spiral higher."
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "this is price breaking below a low point. Okay, a structural low point and closing below this."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "we want to close for price to seal it in fine print that it does have the intention of moving lower."
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "Price comes back here, rejects off of it, and then you are looking to enter with the very new candle."
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "You want to look for price to at least rebalance off a zone."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "if price breaks above our 4hour candle high for the day, we are looking for price to continue that bullishness"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "if price breaks below that for our candle low point, we then expect bearishness for the rest of the day"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "we are specifically mainly looking for price to at least fall within this zone. It can fall within the premature area, but this is the optimum for a healthy retracement"
+  },
+  {
+    "condition_ref": "confluences[3].description",
+    "raw_output": "it is a chain state of delivery. So this is price breaking below a low point. Okay, a structural low point and closing below this."
+  },
+  {
+    "condition_ref": "confluences[4].description",
+    "raw_output": "it is all about you having a major body. So as you can see major body this is what you want. You do not want a skinny candle"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "We're going to place a stop below the most recent protective area which will be this value gap here."
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "you're targeting using the highs and lows of that time frame."
+  },
+  {
+    "condition_ref": "targets[1].rationale",
+    "raw_output": "you're targeting using the highs and lows of that time frame."
+  }
+]

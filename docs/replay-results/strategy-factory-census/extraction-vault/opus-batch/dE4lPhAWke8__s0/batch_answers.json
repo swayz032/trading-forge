@@ -1,0 +1,78 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "if I have a bullish bias, I'm looking for higher highs and higher lows to form and continue"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "What we're looking for with a bullish bias is that the market is just going to continue making higher highs and higher lows."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "Wait for liquidity raids."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "the market needs liquidity to operate"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "I want to see a raid on that old high and then I need to see a closure back below that old high"
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "That to me is a signal that this bearish market structure maybe the high time frame is overall bearish."
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "The characteristics of it are largebodied candles, a break in market structure, and a fair value gap creation."
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "a very simple and obvious sign that even beginner traders can use to find these trades easily"
+  },
+  {
+    "condition_ref": "entry_sequence[4].action",
+    "raw_output": "entry position within the gap or after rejection, and then a stop-loss placement"
+  },
+  {
+    "condition_ref": "entry_sequence[4].rationale",
+    "raw_output": "as it trades back into the inverted fair value gap, we're going to go long"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "So, if I have a bullish bias, I'm looking for higher highs and higher lows to form and continue. And if I have a bearish bias, I'm looking for lower highs and lower lows to form and continue."
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "Maybe it's equal highs and lows where multiple levels align."
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "it could purge those old short-term lows and then go higher"
+  },
+  {
+    "condition_ref": "confluences[3].description",
+    "raw_output": "it needs to close back above that old low in order to create a swing failure pattern before going higher"
+  },
+  {
+    "condition_ref": "confluences[4].description",
+    "raw_output": "largebodied candles, a break in market structure, and a fair value gap creation"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "you could use the stop loss at the low end of the fair value gap"
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "we're going to target the high of the range"
+  },
+  {
+    "condition_ref": "targets[1].rationale",
+    "raw_output": "there's level of liquidity above there. I tend to like targeting those levels"
+  },
+  {
+    "condition_ref": "targets[2].rationale",
+    "raw_output": "if you're a short-term trader, you're going to be looking at previous days highs and lows acting as those liquidity magnets"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "video_id": "ktkqq7QsN9Q",
+  "strategy_index": 1,
+  "raw_response_sha256": "8473e8fdc35f604a8c9376ac21ea1a6bd69de1a1f06f00f0082b6ee3bb6b0cf4",
+  "raw_response_char_len": 568,
+  "answer_count": 4,
+  "abstained_count": 0,
+  "candidate": {
+    "invocation": "Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+    "topology": "AR-1234 SS6 LANE O1: ONE fresh reader per video, full transcript once, ALL spine conditions at once"
+  },
+  "authority": "AR-1345A recovery steps 4/6 (preserve raw output before verify; prove real Opus execution)"
+}

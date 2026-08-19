@@ -1,0 +1,285 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "our goal here is to identify a P or a B shape profile matching trap scenarios",
+      "char_span": [
+        5282,
+        5359
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states verbatim the goal of identifying a P or B shape profile matching trap scenarios."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we saw imbalance to the upside and then we saw the market consolidate",
+      "char_span": [
+        5577,
+        5646
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote narrates one past instance of imbalance then consolidation but does not express the general claim about what these shapes show."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "Was it formed by people entering? And when we say people entering, I mean smart money. Or was it formed by smart money exiting?",
+      "char_span": [
+        7030,
+        7157
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote poses exactly the entering-vs-exiting smart-money determination the condition describes."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "a defensive move, again, is when smart money is just covering or getting out of their trades. And those moves are likely to fail.",
+      "char_span": [
+        7957,
+        8086
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote defines a defensive move as covering/exiting and states those moves are likely to fail."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "the market made a fake out move down, because remember we're expecting this to be a fake out",
+      "char_span": [
+        16580,
+        16672
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote narrates a fakeout that already happened and the expectation of one, but does not express a wait-for rule tied to the initial bias direction."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "when you know how to look for the traps, you can capitalize on those fake outs",
+      "char_span": [
+        6620,
+        6698
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote links traps and fakeouts generally but does not state that the fakeout is the signal the opposing side is trapped."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "You just have to have one of those scenarios, and then you want to see the point of control fail.",
+      "char_span": [
+        17935,
+        18032
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote requires a scenario plus POC failure but says nothing about entering on the reversal/break or about VAH/VAL."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "if the bears are losing the point of control, think of it like tug-of-war and they're starting to lose the tug-of-war",
+      "char_span": [
+        18601,
+        18718
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The tug-of-war quote expresses that losing the point of control means that side's directional control is failing."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "low volume nodes means that the market moved really quickly through these areas. Typically, this is where you're going to have your fair value gaps, and it's just showing you that the market was in a state of imbalance.",
+      "char_span": [
+        3484,
+        3703
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states low volume nodes mean the market moved quickly through the area and was in imbalance."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "our goal here is to identify a P or a B shape profile matching trap scenarios",
+      "char_span": [
+        5282,
+        5359
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states verbatim the goal of identifying a P or B shape profile matching trap scenarios."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "what is smart money doing right now? Are they on offense or are they on defense?",
+      "char_span": [
+        9489,
+        9569
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote asks the offense/defense question but does not express that the trade must be taken on that basis or map it to entering/exiting."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "you're just going to put your stop right below that point of control because with that logic, you want to you wouldn't want to see that level overtaken again",
+      "char_span": [
+        18811,
+        18968
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly instructs placing the stop below the point of control with the invalidation rationale."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "you're just going to target the end of the low volume node",
+      "char_span": [
+        18974,
+        19032
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly instructs targeting the end of the low volume node, i.e. the imbalance area."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "z3Qn3fBoe2I",
+    "full_transcript_sha256": "857bdf3e2fe991b6b0722e110d72c0b1a54d97a27e020bb90d5247bf627d953d",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 5,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 8
+  },
+  "dry_run": false
+}

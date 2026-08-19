@@ -1,0 +1,116 @@
+{
+  "video_id": "dE4lPhAWke8",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "entry_sequence[4].action",
+    "entry_sequence[4].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "confluences[3].description",
+    "confluences[4].description",
+    "stop.rationale",
+    "targets[0].rationale",
+    "targets[1].rationale",
+    "targets[2].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Establish a bullish bias by confirming the market is making higher highs and higher lows on the higher timeframe."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "Higher highs and higher lows indicate a continuation of the bullish trend."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for a liquidity raid (stop hunt) where the market sweeps through a pool of equal highs or equal lows to purge retail stops."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "The market needs liquidity to operate and often targets areas where retail traders have placed stops."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for a Swing Failure Pattern (SFP) confirmation, which is a closure back below the old high (for short) or above the old low (for long) after the raid."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "The SFP signals that the market structure has shifted and the previous bias is being invalidated."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Wait for displacement, characterized by a large-bodied candle and the creation of a Fair Value Gap (FVG) following the SFP."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "Displacement confirms the reversal intent and provides a clear entry trigger."
+    },
+    {
+      "condition_ref": "entry_sequence[4].action",
+      "condition_text": "Enter the trade within the FVG or after a strong rejection of the FVG, using the FVG low/high as the initial stop anchor."
+    },
+    {
+      "condition_ref": "entry_sequence[4].rationale",
+      "condition_text": "Entry is taken on the retest of the FVG after the market has shown displacement and structure shift."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The market must be making higher highs and higher lows (or lower highs and lower lows) on the higher timeframe."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The market must have clear liquidity pools, such as equal highs or equal lows, to trade towards."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "The market must raid the liquidity pool (purge stops) before continuing in the direction of the bias."
+    },
+    {
+      "condition_ref": "confluences[3].description",
+      "condition_text": "A closure back above the old low (for long) or below the old high (for short) must occur after the raid."
+    },
+    {
+      "condition_ref": "confluences[4].description",
+      "condition_text": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The initial stop is placed at the low end of the Fair Value Gap (FVG) to protect against a reversal."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The primary target is the high end of the current trading range."
+    },
+    {
+      "condition_ref": "targets[1].rationale",
+      "condition_text": "Secondary targets are areas of equal highs or lows where significant liquidity is present."
+    },
+    {
+      "condition_ref": "targets[2].rationale",
+      "condition_text": "For short-term traders, previous day highs and lows act as liquidity magnets."
+    }
+  ],
+  "task_sha256": "b178fcb6c29fe69250e951274b28802bc7072b1228bfdef1b040e267897b05db",
+  "task_char_len": 27471,
+  "transcript_sha256": "705af7b04a2ecda18af5276542e388dcacf969fccc0942376a3de764efbaf8c4",
+  "transcript_char_len": 23220,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

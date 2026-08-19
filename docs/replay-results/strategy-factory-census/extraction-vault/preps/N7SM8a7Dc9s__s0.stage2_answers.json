@@ -1,0 +1,62 @@
+{
+  "N7SM8a7Dc9s-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states verbatim that daily bias is found by marking out high time frame draws on liquidity."
+  },
+  "N7SM8a7Dc9s-S0-B001": {
+    "support": "partial",
+    "justification": "The quote says key levels are where price wants to GO (a draw), while the condition recasts them as levels where price is likely to REACT."
+  },
+  "N7SM8a7Dc9s-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote explicitly says to wait for one of the 1H, 4H, or session high/low key levels to be hit."
+  },
+  "N7SM8a7Dc9s-S0-B003": {
+    "support": "partial",
+    "justification": "The quote only says the area has potential; it never names a reversal as the opportunity."
+  },
+  "N7SM8a7Dc9s-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote names the 1m/5m low time frame and all three reversal confluences exactly as the condition states."
+  },
+  "N7SM8a7Dc9s-S0-B005": {
+    "support": "partial",
+    "justification": "The quote narrates a reversal occurring at a low but does not state that it signals a change in trend direction."
+  },
+  "N7SM8a7Dc9s-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote says to wait for a low time frame continuation confluence and lists fair value gaps, equilibrium, breaker blocks, and order blocks."
+  },
+  "N7SM8a7Dc9s-S0-B007": {
+    "support": "partial",
+    "justification": "The quote is the negative caution that a reversal alone is not enough; it never affirms that continuation confirms intent or yields a high-probability entry."
+  },
+  "N7SM8a7Dc9s-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote states that seeing low time frame continuation out of those confluences is when the trader is ready to enter."
+  },
+  "N7SM8a7Dc9s-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote walks the full key-level -> low time frame reversal -> continuation sequence and ends with the entry decision."
+  },
+  "N7SM8a7Dc9s-S0-B010": {
+    "support": "partial",
+    "justification": "Same anchor as B001: the quote frames key levels as where price wants to go, not where price is likely to react."
+  },
+  "N7SM8a7Dc9s-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote enumerates exactly the three confluences named in the condition."
+  },
+  "N7SM8a7Dc9s-S0-B012": {
+    "support": "partial",
+    "justification": "The quote asserts continuation off the reversal but never names the fair value gap / equilibrium / breaker / order block confluence types the condition specifies."
+  },
+  "N7SM8a7Dc9s-S0-B013": {
+    "support": "confirmed",
+    "justification": "The quote places stops underneath the lows, which is the structural stop placement the condition describes."
+  },
+  "N7SM8a7Dc9s-S0-B014": {
+    "support": "confirmed",
+    "justification": "The quote names the exit as the other draws on liquidity in the opposite direction, matching the condition."
+  }
+}

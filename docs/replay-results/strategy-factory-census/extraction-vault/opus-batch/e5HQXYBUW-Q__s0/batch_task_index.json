@@ -1,0 +1,86 @@
+{
+  "video_id": "e5HQXYBUW-Q",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Mark the high and low of the first 15 minutes of the New York open to define the Opening Range Breakout (ORB)."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "Establishes the initial range for the breakout strategy."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Zoom out to the higher time frame (e.g., 1H, 4H) to check the trend, VWAP, and liquidity zones."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "Context provides clarity and helps avoid trading blind."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for a candle to actually close and confirm the breakout outside the 15-minute range."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "Confirmation helps avoid fakeouts and provides a clear risk-to-reward."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "If the higher time frame is trending up, only look for long breakouts of the ORB; align with the trend."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "Alignments with the trend massively increase the edge of the strategy."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "Check the higher time frame for VWAP alignment and overall market context."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "Overlay volume profile to identify liquidity zones and avoid fakeouts into supply or demand."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "The higher time frame trend must align with the intended entry direction."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The speaker uses a stop loss above the previous five minute high in examples."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The speaker targets the regular trading hours gap fill."
+    }
+  ],
+  "task_sha256": "59fd50acd71d2bac9b5354c9654b64c50a561319b4cbd8384a5d25c4d55d09f6",
+  "task_char_len": 14159,
+  "transcript_sha256": "98a150c3a20e2ea2cdfcb7701e753865d37f4f5de5b0fb0d562d56aeddcb4fba",
+  "transcript_char_len": 11193,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

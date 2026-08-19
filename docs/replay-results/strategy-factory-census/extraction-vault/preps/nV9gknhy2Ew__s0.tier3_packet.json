@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 13
+    "target_items": 15
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video nV9gknhy2Ew strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 13,
+      "item_count": 15,
       "items": [
         {
           "item_id": "nV9gknhy2Ew-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "I trade the 10:00 a.m. 4hour candle. Okay, the 10 a.m. 4-hour candle. Now, this one has the highest win rate out of all candles"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "personally for me I've seen the best results with a 10 a.m. candle"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So basically we measured the manipulation phase first and when price is in -2 and -2.5 and also a little bonus if it's inside a if it is inside a 5m minute or 15-minut farewell gap or an auto block then that is actually good. You can add that confluence as well. But this is all you need for this power through trading strategy. Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "you're looking for a market structure shift below the opening price or market structure shift above the opening price"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "But this is all you need for this power through trading strategy."
+            "verbatim": "a market structure shift below the opening price or market structure shift above the opening price"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "you want to use your fib from the last low that was formed to the last high that was formed before the market start to shift"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "the first market structure shift, we have to project and find out the manipulation phase and area"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "if NQ makes a higher high, higher low and then a higher high but ES on the other hand fails to do so now that is your SMT divergence"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "SMT is going to confirm that the manipulation phase is over and now we are going to deliver to the downside"
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So basically we measured the manipulation phase first and when price is in -2 and -2.5 and also a little bonus if it's inside a if it is inside a 5m minute or 15-minut farewell gap or an auto block then that is actually good. You can add that confluence as well. But this is all you need for this power through trading strategy."
+            "verbatim": "if we close slightly below the, you know, the the the five consecutive bullish candles or whatever, you can enter right away"
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So basically we measured the manipulation phase first and when price is in -2 and -2.5 and also a little bonus if it's inside a if it is inside a 5m minute or 15-minut farewell gap or an auto block then that is actually good. You can add that confluence as well. But this is all you need for this power through trading strategy."
+            "verbatim": "the first market structure shift below the opening price"
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "you have to look for SMT divergence around this area"
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So basically we measured the manipulation phase first and when price is in -2 and -2.5 and also a little bonus if it's inside a if it is inside a 5m minute or 15-minut farewell gap or an auto block then that is actually good. You can add that confluence as well. But this is all you need for this power through trading strategy."
+            "verbatim": "wait for price to close below all these consecutive bullish candles that swept this high"
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,39 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Price goes into negative2.5 SMT around this area change in a state of delivery and bam right there."
+            "verbatim": "for this strategy specifically, I trade the 10:00 a.m. 4hour candle"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "nV9gknhy2Ew-S0-B013",
+          "video_id": "nV9gknhy2Ew",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "put your stop right above the high"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "nV9gknhy2Ew-S0-B014",
+          "video_id": "nV9gknhy2Ew",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "you can just target this because it is aligning with this -2.5 projection"
           },
           "rater_response": {
             "role": null,
@@ -426,7 +458,7 @@
     "items": [
       {
         "item_id": "nV9gknhy2Ew-S0-B000",
-        "extracted_condition_text": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase.",
+        "extracted_condition_text": "Identify the 4H candle opening at 10:00 AM, as this is the highest win rate candle for the strategy.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -434,7 +466,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B001",
-        "extracted_condition_text": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase.",
+        "extracted_condition_text": "The speaker specifies the 10:00 AM 4H candle as the optimal time for this setup.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +490,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B004",
-        "extracted_condition_text": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase.",
+        "extracted_condition_text": "Measure the manipulation phase by projecting Fibonacci/Standard Deviation levels (e.g., -2, -2.5) from the last swing low to the last swing high before the MSS.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -466,7 +498,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B005",
-        "extracted_condition_text": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase.",
+        "extracted_condition_text": "This measurement defines the manipulation phase and the target area for the expansion.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +506,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B006",
-        "extracted_condition_text": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase.",
+        "extracted_condition_text": "Wait for SMT divergence (e.g., NQ makes a higher high, but ES fails to do so) around the projected manipulation phase levels.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -482,7 +514,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B007",
-        "extracted_condition_text": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase.",
+        "extracted_condition_text": "SMT divergence confirms that the manipulation phase is over and the expansion is imminent.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -490,7 +522,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B008",
-        "extracted_condition_text": "The stop must be placed beyond the structural invalidation point (the high/low of the entry candle).",
+        "extracted_condition_text": "A sweep of liquidity confirms the exhaustion of the opposing side and signals entry.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -498,7 +530,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B009",
-        "extracted_condition_text": "The stop must be placed beyond the structural invalidation point (the high/low of the entry candle).",
+        "extracted_condition_text": "The market must show a market structure shift relative to the 4H candle opening price.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -506,7 +538,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B010",
-        "extracted_condition_text": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase.",
+        "extracted_condition_text": "SMT divergence must be present around the projected manipulation phase levels.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -514,7 +546,7 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B011",
-        "extracted_condition_text": "The stop must be placed beyond the structural invalidation point (the high/low of the entry candle).",
+        "extracted_condition_text": "Price must sweep and close below consecutive candles that swept a significant liquidity level.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -522,6 +554,22 @@
       },
       {
         "item_id": "nV9gknhy2Ew-S0-B012",
+        "extracted_condition_text": "The strategy is specifically applied to the 10:00 a.m. 4-hour candle.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "nV9gknhy2Ew-S0-B013",
+        "extracted_condition_text": "The stop must be placed beyond the structural invalidation point (the high/low of the entry candle).",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "nV9gknhy2Ew-S0-B014",
         "extracted_condition_text": "Target the projected liquidity level (e.g., -2.5) which aligns with the measured manipulation phase.",
         "adjudication_response": {
           "support": null,

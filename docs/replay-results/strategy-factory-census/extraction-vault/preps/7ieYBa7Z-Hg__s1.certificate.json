@@ -1,0 +1,180 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "as price is making higher highs and higher lows trading to a supply, you should at least have four to six swings before you're expecting price to reverse",
+      "char_span": [
+        43989,
+        44142
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the four-to-six swing requirement while price trades to a supply (the POI), which is exactly the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "when price is looking to reverse, you're going to have the swings mature to about four to six swings",
+      "char_span": [
+        45226,
+        45326
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote describes swings maturing to four to six on a reversal but never frames it as a POI-maturity filter."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "After that fourth swing, you might get a little consolidation and then you see price actually trade the other way",
+      "char_span": [
+        45328,
+        45441
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote hedges a consolidation-then-reverse sequence after the fourth swing but never instructs entering a trade."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "You definitely have to wait for price to consolidate and then shift",
+      "char_span": [
+        5466,
+        5533
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote covers waiting for consolidation and shift but omits the required swing count the condition asserts."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "you should at least have four to six swings before you're expecting price to reverse",
+      "char_span": [
+        44058,
+        44142
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly states at least four to six swings are needed before expecting a reversal."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "your stop or your invalidation of the idea is behind the 4hour POI",
+      "char_span": [
+        37718,
+        37784
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote grounds the stop behind the 4-hour POI but not the added 'or the swing that defined the reversal' alternative."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "7ieYBa7Z-Hg",
+    "full_transcript_sha256": "63742bf97578c28637b85ea58540d1acbee8341c9e7c4d31d90f09c165c5dcf7",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 1,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 4,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 2
+  },
+  "dry_run": false
+}

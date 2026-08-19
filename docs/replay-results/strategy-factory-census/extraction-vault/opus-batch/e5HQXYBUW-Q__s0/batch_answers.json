@@ -1,0 +1,54 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "mark the high and the low of the first 15 minutes of the New York open"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "the opening range breakout is a strategy where you mark the high and the low of the first 15 minutes"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "Zoom out to the higher time frame and look at VWAP. So before trading the breakout, zoom out. Check the one hour chart. Check the 4 hour chart."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "context gives you clarity"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "waiting for a candle to actually close and confirm that it's a breakout"
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "That'll give you a a clear risk-to-reward. It'll tell you where you should put your stop loss. And waiting for confirmation, waiting for a candle to actually close and confirm that it's a breakout. That's going to help you avoid getting faked out a lot of times."
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "If the higher time frame is trending up, only look for long breakouts of the orb."
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "Aligning with the trend is massively going to increase your edge with this strategy."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "Zoom out to the higher time frame and look at VWAP."
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "If you zoom out and look at those liquidity zones and overlay some volume profile, that will give you some context so you can avoid those fake outs into supply or demand zones"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "If the higher time frame is trending up, only look for long breakouts of the orb."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "putting your stop loss above the previous five minute high"
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "if you look again at the regular trading hours gap fill, that's exactly I targeted 23K was my target."
+  }
+]

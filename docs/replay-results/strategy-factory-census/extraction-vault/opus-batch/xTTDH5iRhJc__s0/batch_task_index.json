@@ -1,0 +1,76 @@
+{
+  "video_id": "xTTDH5iRhJc",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Draw a box using the high and low of the previous day and extend it one day into the future."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "The daily candle defines the range and provides liquidity targets."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for a confirmed breakout by waiting for a full 15-minute candle close above the daily high or below the daily low."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "A full candle close confirms the breakout from the daily range."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for a reversal candle (Hammer, Inverted Hammer, or Engulfing) to appear at the breakout level."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "The reversal candle signals potential market exhaustion and a bounce."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The trade must be taken within the first two and a half hours of the market open."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "A confirmed 15-minute candle close must occur outside the previous day's high or low."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "A reversal candle (Hammer, Inverted Hammer, or Engulfing) must appear at the breakout level."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed at the low of the reversal candle for long entries, or slightly above the high for short entries."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The speaker suggests setting the target profit to three times the stop loss."
+    }
+  ],
+  "task_sha256": "949c5d4972941a93bc9086ed1f23ad7f52949d197ea2c633fd5efe7f3e95eee2",
+  "task_char_len": 18830,
+  "transcript_sha256": "325a2ccefe4ec26c63b9eb1ec7fdaf04942161a6c6be50bd0bbfe3e91be0cfc9",
+  "transcript_char_len": 16046,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

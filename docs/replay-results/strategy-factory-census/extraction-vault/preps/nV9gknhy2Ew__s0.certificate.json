@@ -1,0 +1,323 @@
+{
+  "conditions": [
+    {
+      "surface_class": "imperative",
+      "classifying_tier": 1,
+      "quote_anchor": "wait for price to close below all these consecutive bullish candles th",
+      "char_span": [
+        7172,
+        7242
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "I trade the 10:00 a.m. 4hour candle. Okay, the 10 a.m. 4-hour candle. Now, this one has the highest win rate out of all candles",
+      "char_span": [
+        2781,
+        2908
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states both the 10:00 a.m. 4-hour candle selection and the highest-win-rate rationale verbatim."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "personally for me I've seen the best results with a 10 a.m. candle",
+      "char_span": [
+        9234,
+        9300
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "'Best results with a 10 a.m. candle' directly expresses the speaker designating that candle as optimal."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "you're looking for a market structure shift below the opening price or market structure shift above the opening price",
+      "char_span": [
+        3136,
+        3253
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote explicitly says to look for a market structure shift below or above the opening price."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "a market structure shift below the opening price or market structure shift above the opening price",
+      "char_span": [
+        3155,
+        3253
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives the two directional MSS alternatives but never states that the MSS sets the trade's directional bias."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "you want to use your fib from the last low that was formed to the last high that was formed before the market start to shift",
+      "char_span": [
+        4080,
+        4204
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote covers the fib anchoring from last low to last high before the shift, but not the -2/-2.5 projection levels or the manipulation-phase measurement purpose."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "the first market structure shift, we have to project and find out the manipulation phase and area",
+      "char_span": [
+        3888,
+        3985
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote says the projection is used to find the manipulation phase and area, which is what the condition asserts."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "if NQ makes a higher high, higher low and then a higher high but ES on the other hand fails to do so now that is your SMT divergence",
+      "char_span": [
+        6189,
+        6321
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote defines SMT divergence via NQ/ES but omits the 'around the projected manipulation phase levels' location requirement."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "SMT is going to confirm that the manipulation phase is over and now we are going to deliver to the downside",
+      "char_span": [
+        4942,
+        5049
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states SMT confirms the manipulation phase is over and delivery/expansion follows."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "if we close slightly below the, you know, the the the five consecutive bullish candles or whatever, you can enter right away",
+      "char_span": [
+        7417,
+        7541
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote grounds an immediate entry on a close below the consecutive bullish candles, but says nothing about a liquidity sweep confirming exhaustion."
+      }
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        5623,
+        5679
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "you have to look for SMT divergence around this area",
+      "char_span": [
+        4882,
+        4934
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "'You have to look for SMT divergence around this area' is the trader's own statement of the requirement."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "wait for price to close below all these consecutive bullish candles that swept this high",
+      "char_span": [
+        7172,
+        7260
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote requires waiting for a close below the consecutive bullish candles that swept the high, matching the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "for this strategy specifically, I trade the 10:00 a.m. 4hour candle",
+      "char_span": [
+        2749,
+        2816
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states verbatim that for this strategy specifically he trades the 10:00 a.m. 4-hour candle."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "put your stop right above the high",
+      "char_span": [
+        8909,
+        8943
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote says to place the stop above the high; the condition generalizes it into a structural-invalidation rule referencing the entry candle's high/low."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "you can just target this because it is aligning with this -2.5 projection",
+      "char_span": [
+        14691,
+        14764
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote targets the level because it aligns with the -2.5 projection, which is the condition stated."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "FAIL",
+      "reason": null,
+      "offending_anchor": "wait for price to close below all these consecutive bullish candles th",
+      "offending_char_span": [
+        7172,
+        7242
+      ]
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "REJECTED",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "FAIL",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "nV9gknhy2Ew",
+    "full_transcript_sha256": "babafe19cbe63e6e4832316ff2595f97219b17ac245fa5a472cf726497e19cce",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 1,
+    "classification_fallthrough_unresolved": 6,
+    "tier3_fail": 0,
+    "lint_fail": 1,
+    "ok": 10
+  },
+  "dry_run": false
+}

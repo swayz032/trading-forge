@@ -1,0 +1,71 @@
+{
+  "video_id": "7ieYBa7Z-Hg",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Identify the current Point of Interest (POI) on the higher timeframe (e.g., 4H) by observing wicks or sweeps."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "The higher timeframe provides the directional context and identifies potential structural shifts."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for price to break out of the previous range (defined by the swing high/low) and then pull back into that same range."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "The pullback into the previous range is the high-probability entry zone for a reversal."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Enter a trade (long or short) when price retests the high or low of the previous range."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "The retest confirms the structural validity of the previous range as a reversal zone."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The trade is executed during the pullback into the previous range, which is considered the highest probability zone."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The trade must be aligned with the overall market structure (higher highs and higher lows)."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed behind the entire Point of Interest (POI) or the swing that defined the range."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "Targets are set at significant structural levels, such as previous daily highs or lows."
+    }
+  ],
+  "task_sha256": "ce148de15eb79445637cdbc9d093191ce4e0b14a11a95ab4a48990884a5cf0d2",
+  "task_char_len": 65690,
+  "transcript_sha256": "63742bf97578c28637b85ea58540d1acbee8341c9e7c4d31d90f09c165c5dcf7",
+  "transcript_char_len": 62947,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

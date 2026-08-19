@@ -1,0 +1,330 @@
+{
+  "conditions": [
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "from the top of that kind of high to the bottom. Drawing it then will give my 25 50% and 75% levels.",
+      "char_span": [
+        3154,
+        3254
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives the high-to-low draw producing 25/50/75 levels but never states the 4H candle, a box, or Fibonacci."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "the top of the candle is your premature zone. This is where you can expect there to be a retracement of some sort.",
+      "char_span": [
+        3324,
+        3438
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote calls only the TOP of the candle the premature zone, while the condition generalizes it to the whole 4H box."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "We now make a manipulation. This manipulation goes into our optimum zone which is our 25 and our 50.",
+      "char_span": [
+        7316,
+        7416
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote narrates a manipulation into 25-50 but explicitly names that the OPTIMUM zone, not the premature zone the condition claims."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "Now the 25 to 50% is going to be optimum. This is ideally we want to see price make a retracement into and then continue to spiral higher.",
+      "char_span": [
+        3959,
+        4097
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states 25-50% is optimum and that price should retrace into it then continue, exactly the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "this is price breaking below a low point. Okay, a structural low point and closing below this.",
+      "char_span": [
+        18876,
+        18970
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote expresses break-and-close of a structural low but carries no change-of-state signaling and only the bearish direction."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we want to close for price to seal it in fine print that it does have the intention of moving lower.",
+      "char_span": [
+        19090,
+        19190
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote's wanting a close to 'seal it in fine print that it does have the intention of moving lower' is precisely the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "Price comes back here, rejects off of it, and then you are looking to enter with the very new candle.",
+      "char_span": [
+        19642,
+        19743
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives entry on the new candle after a rejection, but says nothing about rebalancing off a breaker block or FVG."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "You want to look for price to at least rebalance off a zone.",
+      "char_span": [
+        19249,
+        19309
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote requires price to at least rebalance off a zone but does not make it the final entry confirmation."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "if price breaks above our 4hour candle high for the day, we are looking for price to continue that bullishness",
+      "char_span": [
+        543,
+        653
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote conditions continued bullishness on price breaking above the 4-hour candle high, matching the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "if price breaks below that for our candle low point, we then expect bearishness for the rest of the day",
+      "char_span": [
+        795,
+        898
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote conditions bearishness for the day on price breaking below the candle low point, matching the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "we are specifically mainly looking for price to at least fall within this zone. It can fall within the premature area, but this is the optimum for a healthy retracement",
+      "char_span": [
+        27762,
+        27930
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote requires the retracement into the zone but contrasts the premature area against the optimum, inverting the condition's zone label."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "it is a chain state of delivery. So this is price breaking below a low point. Okay, a structural low point and closing below this.",
+      "char_span": [
+        18840,
+        18970
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote names the change-in-state-of-delivery and defines it as breaking and closing below a structural low."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "it is all about you having a major body. So as you can see major body this is what you want. You do not want a skinny candle",
+      "char_span": [
+        13910,
+        14034
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote requires a major body and not a skinny candle but never ties it to the 4H candle defining the box."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "We're going to place a stop below the most recent protective area which will be this value gap here.",
+      "char_span": [
+        30124,
+        30224
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote places the stop below the most recent protective area identified as a value gap, exactly the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "you're targeting using the highs and lows of that time frame.",
+      "char_span": [
+        19970,
+        20031
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Same anchor as B014: targeting timeframe highs and lows, with no support for 'secondary' or 'opposite boundary'."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "you're targeting using the highs and lows of that time frame.",
+      "char_span": [
+        19970,
+        20031
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Same anchor as B014: targeting timeframe highs and lows, with no support for 'secondary' or 'opposite boundary'."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "iU8ww5MC2FQ",
+    "full_transcript_sha256": "5368b7ea00e0f34beb7566c1383706890cf09d9d101c95ee364e61e3adceedfb",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 10,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 6
+  },
+  "dry_run": false
+}

@@ -4,12 +4,10 @@
   "summary": {
     "total_units": 47,
     "by_backend": {
-      "gemma": 24,
-      "unknown_no_prep": 17,
-      "opus_batch": 1,
+      "opus_batch": 42,
       "none": 5
     },
-    "needs_regeneration_count": 41
+    "needs_regeneration_count": 0
   },
   "units": [
     {
@@ -22,11 +20,22 @@
       "prep_exists": true,
       "spine_condition_count": 9,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=9 > 0 -- locate_condition_anchors is a total partition, so at least 9 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=3ae45799841b03afdccd207dadd05721f8f2d9f4099e895f16d1caa71fd74b75, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 1,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 8
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "75DJN5UVQnw",
@@ -38,22 +47,22 @@
       "prep_exists": true,
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=13 > 0 -- locate_condition_anchors is a total partition, so at least 13 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=abde6aabe4d6e4bf98922a3b17e5367b14268836a29dfeb50e65bf28d3c8daec, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
       "certificate_status": {
         "pilot_grade": false,
         "full_grade": false,
         "diagnosis": {
           "unanchored": 0,
           "coverage_miss": 0,
-          "classification_fallthrough_unresolved": 5,
+          "classification_fallthrough_unresolved": 2,
           "tier3_fail": 0,
           "lint_fail": 0,
-          "ok": 8
+          "ok": 11
         }
       },
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "7ieYBa7Z-Hg",
@@ -62,14 +71,25 @@
       "transcript_sha256": "63742bf97578c28637b85ea58540d1acbee8341c9e7c4d31d90f09c165c5dcf7",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\7ieYBa7Z-Hg.json",
       "extraction_sha256": "807594978b75b9f4dc36d7d00548071b134c8f0f0b15c6c789d06fe83830d28e",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 10,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=1c69635de8be07f1da8786ccc9d3f3df63ea4a64028fe0cacf92cf25e7de0b8f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 7,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 3
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "7ieYBa7Z-Hg",
@@ -78,14 +98,25 @@
       "transcript_sha256": "63742bf97578c28637b85ea58540d1acbee8341c9e7c4d31d90f09c165c5dcf7",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\7ieYBa7Z-Hg.json",
       "extraction_sha256": "807594978b75b9f4dc36d7d00548071b134c8f0f0b15c6c789d06fe83830d28e",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 6,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=d488eda8268b7a4b83de30bc0a2508ab4c3a7ad56a0ba1fa6b24244c2dc227a1, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 4,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 2
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "E8Wg6tFPYjo",
@@ -123,12 +154,23 @@
       "extraction_sha256": "68897bd861e3b57636bfe7cc38952a62d0ef77b6dc973125eee6dcb23e96e32a",
       "prep_exists": true,
       "spine_condition_count": 13,
-      "unanchored_condition_count": 5,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=13 > 0 -- locate_condition_anchors is a total partition, so at least 13 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (5) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=a01b965c5d6eaa2564bafe662fc99e3e8d3b41cdff3ae5e73841fd97748320d2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 7,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "FqxEKDxemtI",
@@ -171,12 +213,23 @@
       "extraction_sha256": "9614f0be0b7bca9bc10811cf5ac96972683bd36b164c2dfcff0ccd5ef30f1e1f",
       "prep_exists": true,
       "spine_condition_count": 15,
-      "unanchored_condition_count": 1,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=15 > 0 -- locate_condition_anchors is a total partition, so at least 15 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (1) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=5e982bfc885c2fbfb525c7699d747baa55e678f94481995bd6d352fe194d0b4f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 1,
+          "classification_fallthrough_unresolved": 9,
+          "tier3_fail": 0,
+          "lint_fail": 1,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "LOcaRWcc1xI",
@@ -188,11 +241,22 @@
       "prep_exists": true,
       "spine_condition_count": 14,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=14 > 0 -- locate_condition_anchors is a total partition, so at least 14 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=2827b58a98217fc2135c317683e903da4bdc06dd34dd778e2af93ecebc113b63, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 6,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 8
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "N7SM8a7Dc9s",
@@ -203,12 +267,23 @@
       "extraction_sha256": "01ceb8e8e98a87c810d3dc6ec75fe2b215d432949d997a55bf7ae28bb3c3599a",
       "prep_exists": true,
       "spine_condition_count": 15,
-      "unanchored_condition_count": 1,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=15 > 0 -- locate_condition_anchors is a total partition, so at least 15 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (1) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=67f9e51b3c15abfc747cf6ad1d159f992c3d0cce0764f31a6bc734915c254308, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 6,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 9
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "N7uP9V0Iktc",
@@ -220,11 +295,22 @@
       "prep_exists": true,
       "spine_condition_count": 7,
       "unanchored_condition_count": 1,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=7 > 0 -- locate_condition_anchors is a total partition, so at least 7 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (1) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=38ebabdf84287d6eb34a0242aab03bd9de540b3c03cbb06278472beda0eeeb92, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 1,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 3,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 3
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "NMUd0oX_7Pg",
@@ -233,14 +319,25 @@
       "transcript_sha256": "d13846b244c497fa27b005feb96de4382f8dc2974068022ad39d00b8562652e8",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\NMUd0oX_7Pg.json",
       "extraction_sha256": "6d5e27bb89f78a67c46d161082a3bf6797fdaeb5286a3c496aa147604afe6f19",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 17,
+      "unanchored_condition_count": 1,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=224206ec1828e64a436f1125b6d35f02cf7f0ea957f08bc4035d00ddc7d5f9cf, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 1,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 8,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 8
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "Qxlu8v_6G3Y",
@@ -249,14 +346,25 @@
       "transcript_sha256": "460878e0b3c131057c596165a8d025bd2117a4c26d7bc18d04deeb977312933f",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\Qxlu8v_6G3Y.json",
       "extraction_sha256": "5520ad03e6384214dd64d9074cc03cd86a50f87491bc71d7a43a0bdf5b444174",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 11,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=aff27332c790ea03fd129d23a863fb81a555003245c1d61ac42bed49a8973f52, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 5,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "UBvfsImdI2U",
@@ -268,11 +376,22 @@
       "prep_exists": true,
       "spine_condition_count": 15,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=15 > 0 -- locate_condition_anchors is a total partition, so at least 15 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=c9d1db1d9bf791a49769a063073643b89023abf0bf74abb8ce11860ed1b3f1aa, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 6,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 9
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "VTEQ2fhGLqE",
@@ -281,14 +400,25 @@
       "transcript_sha256": "3e0239f817f0468d8a6c2a7d373c6264db650cef70c23ed19dd88660b5e0985e",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\VTEQ2fhGLqE.json",
       "extraction_sha256": "e5403613be85e941a2b94ca7105d2fa7f277ea6644de5875b0ce98d0080968a1",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 9,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=4e3bcdb5f0df5a52912b1449e950760b2b5b86013e1c6be6a1e87b2a711725e2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 1,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 8
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "VTEQ2fhGLqE",
@@ -297,14 +427,25 @@
       "transcript_sha256": "3e0239f817f0468d8a6c2a7d373c6264db650cef70c23ed19dd88660b5e0985e",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\VTEQ2fhGLqE.json",
       "extraction_sha256": "e5403613be85e941a2b94ca7105d2fa7f277ea6644de5875b0ce98d0080968a1",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 9,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=18c006849233772aae710fb2ef70aff3b180ccd1c20cf9603979be7c06f741db, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 3,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "VTEQ2fhGLqE",
@@ -313,14 +454,25 @@
       "transcript_sha256": "3e0239f817f0468d8a6c2a7d373c6264db650cef70c23ed19dd88660b5e0985e",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\VTEQ2fhGLqE.json",
       "extraction_sha256": "e5403613be85e941a2b94ca7105d2fa7f277ea6644de5875b0ce98d0080968a1",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 4,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=ef5026c642ec6051e7e69a2bbbf290995f85509820e91411169d28c2fa83d185, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 1,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 3
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "WV1fyudd7fw",
@@ -347,12 +499,23 @@
       "extraction_sha256": "b87c32d645193242fd9cd5149d9a3e6cdb21201e52c250a6ff2a7815d4550632",
       "prep_exists": true,
       "spine_condition_count": 11,
-      "unanchored_condition_count": 3,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=11 > 0 -- locate_condition_anchors is a total partition, so at least 11 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (3) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=a42f9bdc343baeb369d855b289c1c4e65482e0531da90e8dfaae08343276019c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 5,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "bQp37aD1JLE",
@@ -361,14 +524,25 @@
       "transcript_sha256": "d4bff34969d62805dcebfd21e464b0f7dc72981c22434edd41e01929539361e0",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\bQp37aD1JLE.json",
       "extraction_sha256": "fd67bc14263c8ecc11be28c82a71cf4d7ee0f46d55f089d292366802321e25eb",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 13,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=e6dc8339b4333cd5d7e23e4f44fa6557102b5994000b6115d5b446f76b6541cc, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 7,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "c8VLqF0XDR4",
@@ -379,12 +553,23 @@
       "extraction_sha256": "174f0ea9eac0634448daed7d8eb6a322f0bea3c08ec1723bf89e4a7f4b20e8e3",
       "prep_exists": true,
       "spine_condition_count": 16,
-      "unanchored_condition_count": 3,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=16 > 0 -- locate_condition_anchors is a total partition, so at least 16 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (3) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=ea7cb1910b911308763c1ec3aa93c3e226fcc7b82845ea6428a05249e7bacac7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 13,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 3
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "dE4lPhAWke8",
@@ -395,12 +580,23 @@
       "extraction_sha256": "e620ff256bb1ee250b0e4a517d150a06bd1b2e305fc666b79526ad9e9d58aa9e",
       "prep_exists": true,
       "spine_condition_count": 19,
-      "unanchored_condition_count": 2,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=19 > 0 -- locate_condition_anchors is a total partition, so at least 19 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (2) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=5357b0ad6e3b99d0990bca5a366ed2e8887ee81d84115505362d7868e1e7f385, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 13,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "dHmOosYof48",
@@ -411,12 +607,23 @@
       "extraction_sha256": "f16434dc4777d8408214a8a08c18886aee3aa5c02e653350d78139d8894dbb96",
       "prep_exists": true,
       "spine_condition_count": 14,
-      "unanchored_condition_count": 8,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=14 > 0 -- locate_condition_anchors is a total partition, so at least 14 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (8) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=36cc344e92490914bc7bb8b475c34e3aaee2a2ccabdaeeea6a96071b6c81cbf7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 10,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 4
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "deymRD3kSD0",
@@ -425,14 +632,25 @@
       "transcript_sha256": "0a35e43060903f30e55cbfd7e045a9dd7b281d9e95f8128e99500990008f05c0",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\deymRD3kSD0.json",
       "extraction_sha256": "80ce047e5e0929daa524d031c778a8105545f5b5e38e7d26a18cf22fbf769a9f",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 13,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=7f44834f82ac0298b7f4310fa87ff222db8e78e78ed8f134512e3a454b05634a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 5,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 8
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "deymRD3kSD0",
@@ -441,14 +659,25 @@
       "transcript_sha256": "0a35e43060903f30e55cbfd7e045a9dd7b281d9e95f8128e99500990008f05c0",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\deymRD3kSD0.json",
       "extraction_sha256": "80ce047e5e0929daa524d031c778a8105545f5b5e38e7d26a18cf22fbf769a9f",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 13,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=bea3aa1b2f7ea64102b51ca5d69239f951cd6768cceae6e0ba3edc004698813c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 7,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "e5HQXYBUW-Q",
@@ -460,11 +689,22 @@
       "prep_exists": true,
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=13 > 0 -- locate_condition_anchors is a total partition, so at least 13 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=d9e428ad5535d1bc63f0bec721e61645cdcaaf649930c435e44ca777ec08392d, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 4,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 9
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "gddYspvW0_w",
@@ -473,14 +713,25 @@
       "transcript_sha256": "7c24170980e30cd1e8a5d4b441a6f728d938f46794e6e64aba6519301e606254",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\gddYspvW0_w.json",
       "extraction_sha256": "e8779e0759e4e0a08c67d81b22db19dc8419e69f52afdaacaed6d8e7312365a5",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 9,
+      "unanchored_condition_count": 1,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=46dfbeae7274db87784fa227100698ddf1efc6796a62b0f69967a0be74d8d36c, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 1,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 3,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 5
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "gddYspvW0_w",
@@ -489,14 +740,25 @@
       "transcript_sha256": "7c24170980e30cd1e8a5d4b441a6f728d938f46794e6e64aba6519301e606254",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\gddYspvW0_w.json",
       "extraction_sha256": "e8779e0759e4e0a08c67d81b22db19dc8419e69f52afdaacaed6d8e7312365a5",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 9,
+      "unanchored_condition_count": 1,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=e25a325d10f10a262781ae931e3fd8d0f9365fcf632bc702b48f5619a4910921, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 1,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 2,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "h6TnE7QClJg",
@@ -508,11 +770,22 @@
       "prep_exists": true,
       "spine_condition_count": 19,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=19 > 0 -- locate_condition_anchors is a total partition, so at least 19 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=106d350135c0f3aa57e392bbf8d345119cb2d62fc07e12dbbc69303b3999bae7, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 4,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 15
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "iU8ww5MC2FQ",
@@ -524,11 +797,22 @@
       "prep_exists": true,
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=16 > 0 -- locate_condition_anchors is a total partition, so at least 16 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=1d33b75b23817c3d7b60133bc5945abc37cae3dd3caca72f1d1714b7d64133d9, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 10,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "jlShztsY3oA",
@@ -539,12 +823,23 @@
       "extraction_sha256": "6b152f6d1f34c5ce6921de00cda33771fd5fc55ef04f0eee0bf5977318ae4edf",
       "prep_exists": true,
       "spine_condition_count": 12,
-      "unanchored_condition_count": 1,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=12 > 0 -- locate_condition_anchors is a total partition, so at least 12 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (1) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=adeaf423162db7e3e8c83ff9220f341be8468153e056e146bfd8f6b6ceccdffc, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 5,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 7
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "ktkqq7QsN9Q",
@@ -553,14 +848,25 @@
       "transcript_sha256": "cea3a530e458db137fc704babf50fee0a13760d06d822b730bc5836ad2f7c63a",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\ktkqq7QsN9Q.json",
       "extraction_sha256": "34a5e27a54113f6d508d52f642217db49a2e82ca90f9e34a3f46e9c93c4f7a84",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 9,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=50137879ca1e0ec9b0dbb766d26534209a7d1839ba9dec4196d414ee9ad54711, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 2,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 7
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "ktkqq7QsN9Q",
@@ -569,14 +875,25 @@
       "transcript_sha256": "cea3a530e458db137fc704babf50fee0a13760d06d822b730bc5836ad2f7c63a",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\ktkqq7QsN9Q.json",
       "extraction_sha256": "34a5e27a54113f6d508d52f642217db49a2e82ca90f9e34a3f46e9c93c4f7a84",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 4,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=8473e8fdc35f604a8c9376ac21ea1a6bd69de1a1f06f00f0082b6ee3bb6b0cf4, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 1,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 3
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "ktkqq7QsN9Q",
@@ -585,14 +902,25 @@
       "transcript_sha256": "cea3a530e458db137fc704babf50fee0a13760d06d822b730bc5836ad2f7c63a",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\ktkqq7QsN9Q.json",
       "extraction_sha256": "34a5e27a54113f6d508d52f642217db49a2e82ca90f9e34a3f46e9c93c4f7a84",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 6,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=3958a401e6456bb0ca56ba28b99b67d0ed7516b7e6a381691f026ee37248bb0a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 2,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 4
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "ktkqq7QsN9Q",
@@ -601,14 +929,25 @@
       "transcript_sha256": "cea3a530e458db137fc704babf50fee0a13760d06d822b730bc5836ad2f7c63a",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\ktkqq7QsN9Q.json",
       "extraction_sha256": "34a5e27a54113f6d508d52f642217db49a2e82ca90f9e34a3f46e9c93c4f7a84",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 6,
+      "unanchored_condition_count": 1,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=cb110a801109e183678b9e3ca9d481f7e0359d3f006fc4bd873b8565da28f010, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 1,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 3,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 2
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "l-2iKbcm5UI",
@@ -619,12 +958,23 @@
       "extraction_sha256": "30e88dc7d1a8b1b28f41482f3de03d9c94d9f7265fa4050c257b5f5165c78c24",
       "prep_exists": true,
       "spine_condition_count": 16,
-      "unanchored_condition_count": 4,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=16 > 0 -- locate_condition_anchors is a total partition, so at least 16 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (4) or transcript length"
+      "unanchored_condition_count": 3,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=079a5fe641d6ad815a1bf129376232007177d150e9f808d35d92ca288c4fdb54, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 3,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 7,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "lRMFcsqhYBU",
@@ -635,12 +985,23 @@
       "extraction_sha256": "fd2dc256831aa0ec55811fb8f20b1973253843af34903adba2e9da7c9ded7a4d",
       "prep_exists": true,
       "spine_condition_count": 16,
-      "unanchored_condition_count": 5,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=16 > 0 -- locate_condition_anchors is a total partition, so at least 16 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (5) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=61a755d91639457e17259b709ba4d0f575b3ebaa8e40254658c4e8efc31ff995, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 7,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 9
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "m-G1ag77aVc",
@@ -651,12 +1012,23 @@
       "extraction_sha256": "389349b10fd6b0ba0f907da9e22891bc5eadf86081473f4e2097e89932491c19",
       "prep_exists": true,
       "spine_condition_count": 16,
-      "unanchored_condition_count": 4,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=16 > 0 -- locate_condition_anchors is a total partition, so at least 16 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (4) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=714a09eff2a27c3604d65f6ae75c20e3e5fb62510e2dce3da39419314aa2d52a, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 9,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 7
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "mNcoaNdAyIE",
@@ -668,11 +1040,22 @@
       "prep_exists": true,
       "spine_condition_count": 16,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=16 > 0 -- locate_condition_anchors is a total partition, so at least 16 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=b495c90abf6e6468925c6428471371e746dbda6281c4d0d2807474fa3a75efcd, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 6,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 10
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "nV9gknhy2Ew",
@@ -683,12 +1066,23 @@
       "extraction_sha256": "49e2b7df7355e5154580aafc7feae67f7eead7d8eb1feefcff3f256b708287d2",
       "prep_exists": true,
       "spine_condition_count": 16,
-      "unanchored_condition_count": 3,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=16 > 0 -- locate_condition_anchors is a total partition, so at least 16 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (3) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=01f61e9b3984d65ffda65f0f8bfa3654ba3319e1a2b56d161c2cf9ef4ffc6ee2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 1,
+          "classification_fallthrough_unresolved": 6,
+          "tier3_fail": 0,
+          "lint_fail": 1,
+          "ok": 10
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "oDLt9zh33LE",
@@ -699,12 +1093,23 @@
       "extraction_sha256": "b73b6dc99bfc3e2133848f270497008b00fba05f3496d4ec2f5d0c7cb01649b0",
       "prep_exists": true,
       "spine_condition_count": 15,
-      "unanchored_condition_count": 6,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=15 > 0 -- locate_condition_anchors is a total partition, so at least 15 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (6) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=80c353c9e3a3e28b3a7deba423ec75b77564a2d563f143828082b4a140d4d7ee, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 7,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 8
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "qLtq73bTPBA",
@@ -715,12 +1120,23 @@
       "extraction_sha256": "7557fdfc651745ecc1a6f1d51cbb9243206f0451162da06765d69835f211858a",
       "prep_exists": true,
       "spine_condition_count": 15,
-      "unanchored_condition_count": 9,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=15 > 0 -- locate_condition_anchors is a total partition, so at least 15 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (9) or transcript length"
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=bde25596c180b9d13f64abea7cc080c8348e3a30463dd5a0a8142b4aea517e0f, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 4,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 11
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "snNkQSyWX4k",
@@ -761,14 +1177,25 @@
       "transcript_sha256": "325a2ccefe4ec26c63b9eb1ec7fdaf04942161a6c6be50bd0bbfe3e91be0cfc9",
       "extraction_path": "docs\\replay-results\\strategy-factory-census\\extraction-vault\\xTTDH5iRhJc.json",
       "extraction_sha256": "b2230b67a1f3041dbe2136fb7358afa069c1b3c1ef514551e777b9b0870fc19e",
-      "prep_exists": false,
-      "spine_condition_count": null,
-      "unanchored_condition_count": null,
-      "locator_backend": "unknown_no_prep",
-      "locator_evidence": "strategy object exists in extraction but no prep .pkl was ever generated for it",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "never prepped -- must run through the authorized Opus locator path for the first time"
+      "prep_exists": true,
+      "spine_condition_count": 11,
+      "unanchored_condition_count": 0,
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=a838468525cd18551107db50b8f79849f7b17a6be2b3ba9e6eb5ce2142ff5a4e, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 5,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     },
     {
       "video_id": "z3Qn3fBoe2I",
@@ -780,11 +1207,22 @@
       "prep_exists": true,
       "spine_condition_count": 13,
       "unanchored_condition_count": 0,
-      "locator_backend": "gemma",
-      "locator_evidence": "no opus_batch_receipt.json sibling and spine_condition_count=13 > 0 -- locate_condition_anchors is a total partition, so at least 13 real anchor_locator._default_propose_fn (Gemma) calls occurred for this unit",
-      "certificate_status": null,
-      "needs_regeneration": true,
-      "regeneration_reason": "load-bearing locator was Gemma during the post-AR-1234 authority-regression window -- AR-1345A revoked Gemma's load-bearing authority unconditionally, independent of this unit's unanchored_count (0) or transcript length"
+      "locator_backend": "opus_batch",
+      "locator_evidence": "sibling opus_batch_receipt.json present: raw_response_sha256=2159ac69e65b00c8fc8890966faf710827e07c4d99613d1038df680a8f1055d2, invocation=Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+      "certificate_status": {
+        "pilot_grade": false,
+        "full_grade": false,
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 5,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 8
+        }
+      },
+      "needs_regeneration": false,
+      "regeneration_reason": "already regenerated under the authorized Opus batch locator"
     }
   ]
 }

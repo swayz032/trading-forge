@@ -1,0 +1,38 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "We want the 200 period simple moving average to be relatively flat. And the 200 MA could act as a ceiling for price whenever prices are trading below it. It could also act as a floor for prices whenever prices are trading above it."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "you'll get what's called a squeeze play where you have a flat 200 period moving average"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "you have a 20 period moving average that is rising and going through this 200"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "you'll get what's called a squeeze play where you have a flat 200 period moving average and then you have a 20 period moving average that is rising and going through this 200"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "And you want to see prices oscillate between the two until eventually they can't, you know, there's no more room to oscillate and then they break out."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "And they'll continue to oscillate and oscillate and oscillate and squeeze until the point where it can't squeeze anymore, and it's just going to break out."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "So, you want a flat 200 MA"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "rising 20 MA that's going through the moving average"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": null
+  }
+]

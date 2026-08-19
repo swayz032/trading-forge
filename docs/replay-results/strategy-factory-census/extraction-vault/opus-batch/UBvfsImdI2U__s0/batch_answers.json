@@ -1,0 +1,62 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "on the 1-hour time frame, and you will mark out the most previous candle's high and the most previous candle's low. And this does include the wick."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "So, that was step number one. Just simply mark out your levels."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "you will wait for price to come break either that high or the low. And you will wait for the actual colored part of the candle to close back inside that range."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "if it doesn't reverse, the strategy is not going to work. It must reverse right after breaking a high or a low."
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "the third candle will come in and it will make a complete U-shaped reversal to the opposite end that was broken."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "from one range to the other range is exactly how CRT works"
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "You're also going to mark out the second candle, the one that broke and reversed. You are going to mark out the high of that candle or the low if it's going to be at the opposite end."
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "the only time we're entering is whenever this third candle is forming, we drop down to a lower time frame like the one or two minute."
+  },
+  {
+    "condition_ref": "entry_sequence[4].action",
+    "raw_output": "you will wait for price to come and break this middle candle's high on the lower time frame, and that is when your entry is taken. Or you will wait on the one opposite end right here for that middle candle's low, and that's where your entry will be taken."
+  },
+  {
+    "condition_ref": "entry_sequence[4].rationale",
+    "raw_output": "I'm going to see if price actually breaks that middle candle, and that's the only time I'm taking that trade."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "Go ahead overall, just quick take a look at the overall market trend."
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "the best possible setup is going to be in the New York session. So, 9:30 a.m. Eastern time is where we start looking for the setup"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "I will drag up my stop loss, right? Because we already have our TP figured out. I'm dragging up my stop loss until my risk reward becomes 1.5."
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "you will drag your TP to that candle's high, because that is where we know that price wants to make a move."
+  },
+  {
+    "condition_ref": "targets[1].rationale",
+    "raw_output": "you will drag your TP to that candle's high, because that is where we know that price wants to make a move."
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "This is where we look for the break and then acceptance into discovery."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "This is my signal that the move is real. We're not always looking for the first break. First breaks fail most of the time. We need to accept that we're now in price discovery."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "We either enter on the first sign of strength afterwards or you can buy the first touch of the band."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "The first time after a strong break, a pullback to the band is the highest probability."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "When price breaks out of the VWAP area, it typically seeks to explore new levels in the breakout direction"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "Either price closes multiple consecutive candles outside the band or price spends a significant time trading outside of the value area."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "The stop goes a few points below the testing candle."
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "The target is either a revisit of the recent highs"
+  },
+  {
+    "condition_ref": "targets[1].rationale",
+    "raw_output": "scalp to the midpoint of the distance"
+  }
+]

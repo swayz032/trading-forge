@@ -1,0 +1,66 @@
+{
+  "iU8ww5MC2FQ-S0-B000": {
+    "support": "partial",
+    "justification": "The quote gives the high-to-low draw producing 25/50/75 levels but never states the 4H candle, a box, or Fibonacci."
+  },
+  "iU8ww5MC2FQ-S0-B001": {
+    "support": "partial",
+    "justification": "The quote calls only the TOP of the candle the premature zone, while the condition generalizes it to the whole 4H box."
+  },
+  "iU8ww5MC2FQ-S0-B002": {
+    "support": "partial",
+    "justification": "The quote narrates a manipulation into 25-50 but explicitly names that the OPTIMUM zone, not the premature zone the condition claims."
+  },
+  "iU8ww5MC2FQ-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote states 25-50% is optimum and that price should retrace into it then continue, exactly the condition."
+  },
+  "iU8ww5MC2FQ-S0-B004": {
+    "support": "partial",
+    "justification": "The quote expresses break-and-close of a structural low but carries no change-of-state signaling and only the bearish direction."
+  },
+  "iU8ww5MC2FQ-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote's wanting a close to 'seal it in fine print that it does have the intention of moving lower' is precisely the condition."
+  },
+  "iU8ww5MC2FQ-S0-B006": {
+    "support": "partial",
+    "justification": "The quote gives entry on the new candle after a rejection, but says nothing about rebalancing off a breaker block or FVG."
+  },
+  "iU8ww5MC2FQ-S0-B007": {
+    "support": "partial",
+    "justification": "The quote requires price to at least rebalance off a zone but does not make it the final entry confirmation."
+  },
+  "iU8ww5MC2FQ-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote conditions continued bullishness on price breaking above the 4-hour candle high, matching the condition."
+  },
+  "iU8ww5MC2FQ-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote conditions bearishness for the day on price breaking below the candle low point, matching the condition."
+  },
+  "iU8ww5MC2FQ-S0-B010": {
+    "support": "partial",
+    "justification": "The quote requires the retracement into the zone but contrasts the premature area against the optimum, inverting the condition's zone label."
+  },
+  "iU8ww5MC2FQ-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote names the change-in-state-of-delivery and defines it as breaking and closing below a structural low."
+  },
+  "iU8ww5MC2FQ-S0-B012": {
+    "support": "partial",
+    "justification": "The quote requires a major body and not a skinny candle but never ties it to the 4H candle defining the box."
+  },
+  "iU8ww5MC2FQ-S0-B013": {
+    "support": "confirmed",
+    "justification": "The quote places the stop below the most recent protective area identified as a value gap, exactly the condition."
+  },
+  "iU8ww5MC2FQ-S0-B014": {
+    "support": "partial",
+    "justification": "The quote targets the highs and lows of the timeframe but says nothing about a secondary target or the opposite box boundary."
+  },
+  "iU8ww5MC2FQ-S0-B015": {
+    "support": "partial",
+    "justification": "Same anchor as B014: targeting timeframe highs and lows, with no support for 'secondary' or 'opposite boundary'."
+  }
+}

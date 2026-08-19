@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 6
+    "target_items": 14
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video dHmOosYof48 strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 6,
+      "item_count": 14,
       "items": [
         {
           "item_id": "dHmOosYof48-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "everything that we put on YouTube is supposed to be the best premium education you can get for free when it comes to trading."
+            "verbatim": "zoom out and analyze via top- down analysis what the larger point of view trend is as well as develop a daily biased"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "make sure that you are putting more emphasis on the candles closing on the larger time frame. That means waiting for that 1 hour candle to close. if we are near a KPL to determine if we are bullish or or bearish, right?"
+            "verbatim": "having a daily bias is what's going to give you the conviction in your trades on that smaller time frame"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "make sure that you are putting more emphasis on the candles closing on the larger time frame."
+            "verbatim": "So when we start to form things like higher lows, we are in a bullish uptrend. The opposite can be said for bearish, right?"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "make sure that you are putting more emphasis on the candles closing on the larger time frame."
+            "verbatim": "we have printed lower highs. So overall we are in a downtrend"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "everything that we put on YouTube is supposed to be the best premium education you can get for free when it comes to trading."
+            "verbatim": "now that we are on the 1 hour chart, what I like to start doing is marking out KPLs"
           },
           "rater_response": {
             "role": null,
@@ -293,12 +293,141 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "make sure that you are putting more emphasis on the candles closing on the larger time frame."
+            "verbatim": "KPLs are aligning in the same range together because that gives me a higher probability that we are likely to reverse off of that range"
           },
           "rater_response": {
             "role": null,
             "notes": null
           }
+        },
+        {
+          "item_id": "dHmOosYof48-S0-B006",
+          "video_id": "dHmOosYof48",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I want to now zoom in from the 4 hour to the 1 hour because I want to get more data"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "dHmOosYof48-S0-B007",
+          "video_id": "dHmOosYof48",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "As you're zooming in, what's happening on the chart, aka us being in a downtrend and us breaking um market structure and stuff isn't changing. You're just getting more data."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "dHmOosYof48-S0-B008",
+          "video_id": "dHmOosYof48",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "That means waiting for that 1 hour candle to close."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "dHmOosYof48-S0-B009",
+          "video_id": "dHmOosYof48",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "allow those larger point of view candles like a 1 hour candle to close to actually tell you the story of what price is doing"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "dHmOosYof48-S0-B010",
+          "video_id": "dHmOosYof48",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We are no longer making lower highs. We are now in an uptrend"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "dHmOosYof48-S0-B011",
+          "video_id": "dHmOosYof48",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "multi-touch point levels as well as these um SMAs, which I consider all of those KPLs, key pivot levels"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "dHmOosYof48-S0-B012",
+          "video_id": "dHmOosYof48",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "as we rejected that KPL for confirmation from a larger point of view. I wanted to see that candle close under."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "dHmOosYof48-S0-AUDIT",
+          "video_id": "dHmOosYof48",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "wait for volume to come in."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          },
+          "audit": true
         }
       ]
     }
@@ -314,7 +443,7 @@
     "items": [
       {
         "item_id": "dHmOosYof48-S0-B000",
-        "extracted_condition_text": "Wait for volume to come in before looking for reactions near KPLs.",
+        "extracted_condition_text": "Zoom out to the 4H chart to analyze the larger point of view trend and develop a daily bias.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -322,7 +451,7 @@
       },
       {
         "item_id": "dHmOosYof48-S0-B001",
-        "extracted_condition_text": "Identify Key Pivot Levels (KPLs), multi-touch points, or SMAs (50/200) on the larger timeframe.",
+        "extracted_condition_text": "Top-down analysis provides the necessary conviction for trades on smaller timeframes.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -330,7 +459,7 @@
       },
       {
         "item_id": "dHmOosYof48-S0-B002",
-        "extracted_condition_text": "The entry must be confirmed by the close of the larger timeframe candle.",
+        "extracted_condition_text": "Identify market structure (higher lows for bullish, lower highs for bearish) to confirm the overall trend bias.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -338,7 +467,7 @@
       },
       {
         "item_id": "dHmOosYof48-S0-B003",
-        "extracted_condition_text": "The entry must be confirmed by the close of the larger timeframe candle.",
+        "extracted_condition_text": "Market structure defines the primary trend direction.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -346,7 +475,7 @@
       },
       {
         "item_id": "dHmOosYof48-S0-B004",
-        "extracted_condition_text": "Wait for volume to come in before looking for reactions near KPLs.",
+        "extracted_condition_text": "Identify Key Pivot Levels (KPLs), multi-touch points, or SMAs (50/200) on the larger timeframe.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -354,11 +483,76 @@
       },
       {
         "item_id": "dHmOosYof48-S0-B005",
+        "extracted_condition_text": "These levels serve as points of interest for potential reversals or continuation.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "dHmOosYof48-S0-B006",
+        "extracted_condition_text": "Zoom into the 1H or 5M timeframe to gather more granular data and look for entry triggers.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "dHmOosYof48-S0-B007",
+        "extracted_condition_text": "Zooming in provides more data without changing the larger point of view bias.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "dHmOosYof48-S0-B008",
+        "extracted_condition_text": "Wait for the larger timeframe candle (e.g., 1H) to close, confirming the reversal or continuation intent.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "dHmOosYof48-S0-B009",
+        "extracted_condition_text": "The larger timeframe candle close provides the final confirmation of the trade direction.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "dHmOosYof48-S0-B010",
+        "extracted_condition_text": "The market must be in a clear uptrend or downtrend based on higher lows or lower highs.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "dHmOosYof48-S0-B011",
+        "extracted_condition_text": "Price must be near a Key Pivot Level (KPL), multi-touch point, or SMA (50/200).",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "dHmOosYof48-S0-B012",
         "extracted_condition_text": "The entry must be confirmed by the close of the larger timeframe candle.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
         }
+      },
+      {
+        "item_id": "dHmOosYof48-S0-AUDIT",
+        "extracted_condition_text": "Wait for volume to come in before looking for reactions near KPLs.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        },
+        "audit": true
       }
     ]
   }

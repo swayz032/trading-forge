@@ -1,0 +1,26 @@
+{
+  "N7uP9V0Iktc-S0-B000": {
+    "support": "partial",
+    "justification": "The quote states one specific veto (pre-market-high retest under VWAP means no calls) while the condition generalizes it into an abstract validity check across both pre-market extremes."
+  },
+  "N7uP9V0Iktc-S0-B001": {
+    "support": "partial",
+    "justification": "The quote says the tool indicates calls versus puts but never ties that determination to the pre-market extreme the condition asserts, and its referent is left unnamed."
+  },
+  "N7uP9V0Iktc-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote directly states taking the trade on a VWAP retest conditioned on VWAP's position relative to the pre-market low, which is the condition's own grounding."
+  },
+  "N7uP9V0Iktc-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote asserts VWAP is always a big retest spot, and the condition's added 'day's average price' gloss is definitional rather than new content."
+  },
+  "N7uP9V0Iktc-S0-B004": {
+    "support": "denied",
+    "justification": "The quote constrains price relative to VWAP, whereas the condition constrains VWAP relative to the pre-market high or low — a different relation entirely."
+  },
+  "N7uP9V0Iktc-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote explicitly says to hold as long as price does not get under the EMA and calls it a trailing stop loss, matching the condition verbatim in substance."
+  }
+}

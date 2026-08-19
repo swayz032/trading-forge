@@ -1,0 +1,58 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "zoom out and analyze via top- down analysis what the larger point of view trend is as well as develop a daily biased"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "having a daily bias is what's going to give you the conviction in your trades on that smaller time frame"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "So when we start to form things like higher lows, we are in a bullish uptrend. The opposite can be said for bearish, right?"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "we have printed lower highs. So overall we are in a downtrend"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "now that we are on the 1 hour chart, what I like to start doing is marking out KPLs"
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "KPLs are aligning in the same range together because that gives me a higher probability that we are likely to reverse off of that range"
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "I want to now zoom in from the 4 hour to the 1 hour because I want to get more data"
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "As you're zooming in, what's happening on the chart, aka us being in a downtrend and us breaking um market structure and stuff isn't changing. You're just getting more data."
+  },
+  {
+    "condition_ref": "entry_sequence[4].action",
+    "raw_output": "That means waiting for that 1 hour candle to close."
+  },
+  {
+    "condition_ref": "entry_sequence[4].rationale",
+    "raw_output": "allow those larger point of view candles like a 1 hour candle to close to actually tell you the story of what price is doing"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "We are no longer making lower highs. We are now in an uptrend"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "multi-touch point levels as well as these um SMAs, which I consider all of those KPLs, key pivot levels"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "wait for volume to come in. You don't want to look for reactions near these KPLs when there's no volume."
+  },
+  {
+    "condition_ref": "confluences[3].description",
+    "raw_output": "as we rejected that KPL for confirmation from a larger point of view. I wanted to see that candle close under."
+  }
+]

@@ -1,0 +1,66 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "my rule is to use the last candle before the impulse away"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "a demand zone shows a price that institutional buying took place previously"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "zoom in to the 1 hour time frame to identify smaller supply zones inside of this 4hour zone"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "we've dramatically amplified the risk-to-reward on this position"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "place your order on what we call the extreme zone"
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "because we get the best riskreward from this zone, and second of all, because it's just the safest one"
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "we would see if this lower time frame structure changes in agreement with our larger trend direction"
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "this demand zone is seeing an influx of buying that's strong enough to reshape the trend"
+  },
+  {
+    "condition_ref": "entry_sequence[4].action",
+    "raw_output": "If we want to place a buy limit on either of these zones, the standard one to go for is going to be the extreme."
+  },
+  {
+    "condition_ref": "entry_sequence[4].rationale",
+    "raw_output": "We've captured the wicks and we've secured a sniper entry."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "a demand zone is an area of consolidation before a strong upward move"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "Go lower and identify smaller zones."
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "the extreme zone is going to be the furthest zone from price in the leg of price movement"
+  },
+  {
+    "condition_ref": "confluences[3].description",
+    "raw_output": "we would see if this lower time frame structure changes in agreement with our larger trend direction"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "I still am a fan of putting stops under the low."
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "a target up into that high"
+  }
+]

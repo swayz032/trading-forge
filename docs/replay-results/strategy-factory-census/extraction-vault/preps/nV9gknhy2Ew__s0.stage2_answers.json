@@ -1,0 +1,62 @@
+{
+  "nV9gknhy2Ew-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states both the 10:00 a.m. 4-hour candle selection and the highest-win-rate rationale verbatim."
+  },
+  "nV9gknhy2Ew-S0-B001": {
+    "support": "confirmed",
+    "justification": "'Best results with a 10 a.m. candle' directly expresses the speaker designating that candle as optimal."
+  },
+  "nV9gknhy2Ew-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote explicitly says to look for a market structure shift below or above the opening price."
+  },
+  "nV9gknhy2Ew-S0-B003": {
+    "support": "partial",
+    "justification": "The quote gives the two directional MSS alternatives but never states that the MSS sets the trade's directional bias."
+  },
+  "nV9gknhy2Ew-S0-B004": {
+    "support": "partial",
+    "justification": "The quote covers the fib anchoring from last low to last high before the shift, but not the -2/-2.5 projection levels or the manipulation-phase measurement purpose."
+  },
+  "nV9gknhy2Ew-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote says the projection is used to find the manipulation phase and area, which is what the condition asserts."
+  },
+  "nV9gknhy2Ew-S0-B006": {
+    "support": "partial",
+    "justification": "The quote defines SMT divergence via NQ/ES but omits the 'around the projected manipulation phase levels' location requirement."
+  },
+  "nV9gknhy2Ew-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote states SMT confirms the manipulation phase is over and delivery/expansion follows."
+  },
+  "nV9gknhy2Ew-S0-B008": {
+    "support": "partial",
+    "justification": "The quote grounds an immediate entry on a close below the consecutive bullish candles, but says nothing about a liquidity sweep confirming exhaustion."
+  },
+  "nV9gknhy2Ew-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote names exactly the market structure shift relative to the opening price, though as a fragment without the modal."
+  },
+  "nV9gknhy2Ew-S0-B010": {
+    "support": "confirmed",
+    "justification": "'You have to look for SMT divergence around this area' is the trader's own statement of the requirement."
+  },
+  "nV9gknhy2Ew-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote requires waiting for a close below the consecutive bullish candles that swept the high, matching the condition."
+  },
+  "nV9gknhy2Ew-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote states verbatim that for this strategy specifically he trades the 10:00 a.m. 4-hour candle."
+  },
+  "nV9gknhy2Ew-S0-B013": {
+    "support": "partial",
+    "justification": "The quote says to place the stop above the high; the condition generalizes it into a structural-invalidation rule referencing the entry candle's high/low."
+  },
+  "nV9gknhy2Ew-S0-B014": {
+    "support": "confirmed",
+    "justification": "The quote targets the level because it aligns with the -2.5 projection, which is the condition stated."
+  }
+}

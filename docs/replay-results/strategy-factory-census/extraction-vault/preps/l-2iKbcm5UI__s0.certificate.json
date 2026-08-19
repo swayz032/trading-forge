@@ -1,0 +1,323 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "a 4-hour break of structure in towards the downside",
+      "char_span": [
+        6836,
+        6887
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote names the 4-hour break of structure to the downside, which is exactly the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "We then understand market structure is bearish.",
+      "char_span": [
+        4287,
+        4334
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote states structure is bearish but does not express that the MSB sets the primary directional bias for the trade."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "the market to retrace in towards that daily supply zone",
+      "char_span": [
+        5314,
+        5369
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote covers the retrace into the daily supply zone but says nothing about the 0.5 Fibonacci level."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "the 0.5 fib aligns beautifully with the overall daily supply zone",
+      "char_span": [
+        4505,
+        4570
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the 0.5 fib aligns with the overall daily supply zone, which is the condition itself."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "Within the overall impulse here in towards the downside, where do we have liquidity? Well, on top of this bullish candle's high.",
+      "char_span": [
+        6889,
+        7017
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote locates liquidity on the bullish candle's high within the impulse but never expresses waiting for it to be taken out."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "once one of those liquidity highs get taken out, we can look for the potential short position",
+      "char_span": [
+        9183,
+        9276
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote ties liquidity highs being taken out to then looking for the short, which is the reversal-readiness condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "we start seeing the bearish market structure shift. Now, this is the first entry that we can take",
+      "char_span": [
+        9343,
+        9440
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote supports entry on the bearish market structure shift but contains no 50-minute timeframe qualifier."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "That is then going to be the final piece of confluence to then enter a potential trade.",
+      "char_span": [
+        8269,
+        8356
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives a final piece of confluence before entry but does not identify it as an MSB on the entry timeframe."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "a new potential lower high, and then a new potential lower low",
+      "char_span": [
+        986,
+        1048
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the new potential lower high and lower low that define the bearish structure."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "for the market to retrace towards that 0.5 fib",
+      "char_span": [
+        1438,
+        1484
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote expresses the retrace to the 0.5 fib but not the alignment with the daily supply zone."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "That is the liquidity high that we want to get taken out",
+      "char_span": [
+        5088,
+        5144
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the liquidity high is the one the trader wants taken out, which is the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "form a supply zone in itself through creating a buy up before a sell down",
+      "char_span": [
+        5714,
+        5787
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states a supply zone forms through a buy up before a sell down, matching the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "for a one to three risk to reward",
+      "char_span": [
+        9480,
+        9513
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote specifies a one-to-three risk to reward, which the condition generalizes to an unnamed first RR level."
+      }
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "The stop is placed above the liquidity high identified on the 50-minute timeframe.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "stop.rationale",
+      "anchor_reason": "locator_declined"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "Targeting the second risk-to-reward level.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "targets[1].rationale",
+      "anchor_reason": "locator_declined"
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "Targeting the final risk-to-reward level.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "targets[2].rationale",
+      "anchor_reason": "locator_declined"
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "l-2iKbcm5UI",
+    "full_transcript_sha256": "d617e578082563498421aaa65690cb13eb7ade89e8b4001adf7ad7a755968932",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 3,
+  "unanchored_reason_breakdown": {
+    "locator_declined": 3
+  },
+  "diagnosis": {
+    "unanchored": 3,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 7,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 6
+  },
+  "dry_run": false
+}

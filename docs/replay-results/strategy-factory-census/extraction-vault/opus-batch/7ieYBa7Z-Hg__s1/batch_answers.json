@@ -1,0 +1,26 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "as price is making higher highs and higher lows trading to a supply, you should at least have four to six swings before you're expecting price to reverse"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "when price is looking to reverse, you're going to have the swings mature to about four to six swings"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "After that fourth swing, you might get a little consolidation and then you see price actually trade the other way"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "You definitely have to wait for price to consolidate and then shift"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "you should at least have four to six swings before you're expecting price to reverse"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "your stop or your invalidation of the idea is behind the 4hour POI"
+  }
+]

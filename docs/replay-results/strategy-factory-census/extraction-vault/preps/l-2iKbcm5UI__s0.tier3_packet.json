@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 12
+    "target_items": 13
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video l-2iKbcm5UI strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 12,
+      "item_count": 13,
       "items": [
         {
           "item_id": "l-2iKbcm5UI-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+            "verbatim": "a 4-hour break of structure in towards the downside"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, we have a buy up, very strong sell down causing this little internal market structure break. So, we understand by everything supply is in control and we're looking for a short."
+            "verbatim": "We then understand market structure is bearish."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "We see that the 0.5 fib aligns beautifully with the overall daily supply zone, because this green zone here is our daily supply zone."
+            "verbatim": "the market to retrace in towards that daily supply zone"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "This is the blue dotted line. That is the liquidity high that we want to get taken out, and then we want to look for the overall short position."
+            "verbatim": "the 0.5 fib aligns beautifully with the overall daily supply zone"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now, this is the first entry that we can take to then form a new potential lower low for a one to three risk to reward. We have all the confluences, we've hit the 0.5 fib, we have the internal liquidity, we have the supply zone, we have the bearish market structure."
+            "verbatim": "Within the overall impulse here in towards the downside, where do we have liquidity? Well, on top of this bullish candle's high."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, what we have is again a break of market structure. Therefore, again, we use the same confluences here on the 50-minute time frame. Overall high, overall low, break of structure in towards the downside."
+            "verbatim": "once one of those liquidity highs get taken out, we can look for the potential short position"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now, market structure is very simple to identify because all you're simply looking for is a swing high, a swing low, a new potential lower high, and then a new potential lower low."
+            "verbatim": "we start seeing the bearish market structure shift. Now, this is the first entry that we can take"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "We see that the 0.5 fib aligns beautifully with the overall daily supply zone, because this green zone here is our daily supply zone."
+            "verbatim": "That is then going to be the final piece of confluence to then enter a potential trade."
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "In a, let's say, bearish impulse down, identify a bullish candle that is most likely going to be your liquidity high."
+            "verbatim": "a new potential lower high, and then a new potential lower low"
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And what I'm simply waiting for is for the trend to shift here and for a supply zone to be created in the form of a buy up, right? Before a strong sell down. That is then going to be the final piece of confluence to then enter a potential trade."
+            "verbatim": "for the market to retrace towards that 0.5 fib"
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now, this is the first entry that we can take to then form a new potential lower low for a one to three risk to reward."
+            "verbatim": "That is the liquidity high that we want to get taken out"
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,23 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "to then eventually hit our TP for a beautiful one to three risk to reward."
+            "verbatim": "form a supply zone in itself through creating a buy up before a sell down"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "l-2iKbcm5UI-S0-B012",
+          "video_id": "l-2iKbcm5UI",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "for a one to three risk to reward"
           },
           "rater_response": {
             "role": null,
@@ -426,7 +442,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B002",
-        "extracted_condition_text": "The market must retrace towards the 0.5 Fibonacci retracement level, aligning with the daily supply zone.",
+        "extracted_condition_text": "Wait for price to retrace into the daily supply zone, specifically targeting the 0.5 Fibonacci retracement level.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -434,7 +450,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B003",
-        "extracted_condition_text": "Taking out liquidity confirms the market has swept the high and is ready for a reversal.",
+        "extracted_condition_text": "Retracement into the 0.5 Fib zone aligns the trade with the overall daily supply bias.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -442,7 +458,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B004",
-        "extracted_condition_text": "Enter a short position on the 50-minute timeframe upon confirmation of a bearish market structure shift (MSB) within the overall impulse.",
+        "extracted_condition_text": "Identify and wait for a liquidity high (a bullish candle's high) to be taken out during the impulsive phase in towards the downside.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -450,7 +466,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B005",
-        "extracted_condition_text": "The final MSB on the entry timeframe confirms the reversal intent and entry trigger.",
+        "extracted_condition_text": "Taking out liquidity confirms the market has swept the high and is ready for a reversal.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +474,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B006",
-        "extracted_condition_text": "The market must show a bearish market structure, specifically a new potential lower high and lower low.",
+        "extracted_condition_text": "Enter a short position on the 50-minute timeframe upon confirmation of a bearish market structure shift (MSB) within the overall impulse.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -466,7 +482,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B007",
-        "extracted_condition_text": "The market must retrace towards the 0.5 Fibonacci retracement level, aligning with the daily supply zone.",
+        "extracted_condition_text": "The final MSB on the entry timeframe confirms the reversal intent and entry trigger.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +490,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B008",
-        "extracted_condition_text": "The market must take out a liquidity high (a bullish candle's high) during the impulsive phase.",
+        "extracted_condition_text": "The market must show a bearish market structure, specifically a new potential lower high and lower low.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -482,7 +498,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B009",
-        "extracted_condition_text": "A supply zone must be formed, indicated by a buy up before a strong sell down (fractal structure shift).",
+        "extracted_condition_text": "The market must retrace towards the 0.5 Fibonacci retracement level, aligning with the daily supply zone.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -490,7 +506,7 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B010",
-        "extracted_condition_text": "Targeting the first risk-to-reward level.",
+        "extracted_condition_text": "The market must take out a liquidity high (a bullish candle's high) during the impulsive phase.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -498,7 +514,15 @@
       },
       {
         "item_id": "l-2iKbcm5UI-S0-B011",
-        "extracted_condition_text": "Targeting the final risk-to-reward level.",
+        "extracted_condition_text": "A supply zone must be formed, indicated by a buy up before a strong sell down (fractal structure shift).",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "l-2iKbcm5UI-S0-B012",
+        "extracted_condition_text": "Targeting the first risk-to-reward level.",
         "adjudication_response": {
           "support": null,
           "support_justification": null

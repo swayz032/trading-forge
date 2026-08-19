@@ -1,0 +1,70 @@
+{
+  "dE4lPhAWke8-S0-B000": {
+    "support": "partial",
+    "justification": "Quote ties bullish bias to higher highs/lows but never mentions the higher timeframe and states the inference in the opposite direction (bias first, structure sought)."
+  },
+  "dE4lPhAWke8-S0-B001": {
+    "support": "confirmed",
+    "justification": "Quote directly says a bullish bias means the market continues making higher highs and higher lows."
+  },
+  "dE4lPhAWke8-S0-B002": {
+    "support": "partial",
+    "justification": "Quote covers only the liquidity-need half; nothing about targeting areas where retail stops sit."
+  },
+  "dE4lPhAWke8-S0-B003": {
+    "support": "partial",
+    "justification": "Quote grounds raid-then-closure-below-the-old-high for shorts only; the SFP naming and the mirrored long-side rule are generalized beyond what was said."
+  },
+  "dE4lPhAWke8-S0-B004": {
+    "support": "partial",
+    "justification": "Quote reads the signal as confirming an overall bearish higher timeframe, not as an SFP invalidating the previous bias."
+  },
+  "dE4lPhAWke8-S0-B005": {
+    "support": "partial",
+    "justification": "Quote lists the characteristics but carries no wait-for imperative and no sequencing after the SFP."
+  },
+  "dE4lPhAWke8-S0-B006": {
+    "support": "partial",
+    "justification": "Quote supports only the easy/obvious-sign-to-find-trades half; it says nothing about displacement confirming reversal intent."
+  },
+  "dE4lPhAWke8-S0-B007": {
+    "support": "partial",
+    "justification": "Quote grounds the long entry on trading back into the inverted FVG but omits the displacement and structure-shift preconditions."
+  },
+  "dE4lPhAWke8-S0-B008": {
+    "support": "partial",
+    "justification": "Quote gives both bias directions faithfully but frames them as what the trader looks for, not a must, and never mentions the higher timeframe."
+  },
+  "dE4lPhAWke8-S0-B009": {
+    "support": "partial",
+    "justification": "Quote offers equal highs/lows as one hedged example; the requirement to have clear liquidity pools to trade towards is added."
+  },
+  "dE4lPhAWke8-S0-B010": {
+    "support": "partial",
+    "justification": "Quote describes one possible purge-then-higher move ('could'), not a must-raid-before-continuation rule."
+  },
+  "dE4lPhAWke8-S0-B011": {
+    "support": "partial",
+    "justification": "Quote states the long-side closure-above-the-old-low requirement; the short-side mirror is generalized beyond the quote."
+  },
+  "dE4lPhAWke8-S0-B012": {
+    "support": "partial",
+    "justification": "Quote is a bare characteristics list; it does not name displacement or assert that entry must be triggered by it."
+  },
+  "dE4lPhAWke8-S0-B013": {
+    "support": "confirmed",
+    "justification": "Quote places the stop at the low end of the fair value gap, exactly the condition stated."
+  },
+  "dE4lPhAWke8-S0-B014": {
+    "support": "confirmed",
+    "justification": "Quote states the target is the high of the range."
+  },
+  "dE4lPhAWke8-S0-B015": {
+    "support": "partial",
+    "justification": "Quote grounds targeting liquidity levels above but never specifies equal highs or lows as those areas."
+  },
+  "dE4lPhAWke8-S0-B016": {
+    "support": "confirmed",
+    "justification": "Quote states that short-term traders look to previous days highs and lows as liquidity magnets."
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "aHLIE_TXjpo-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states both directional branches explicitly — prior 4-hour bullish close means buys, bearish close means sells — which is exactly the bias condition."
+  },
+  "aHLIE_TXjpo-S0-B001": {
+    "support": "confirmed",
+    "justification": "The quote directly says the trade is taken based on how the previous 4-hourly candle closed, which is the bias-setting condition."
+  },
+  "aHLIE_TXjpo-S0-B002": {
+    "support": "partial",
+    "justification": "The quote grounds the 5-minute chart and breaks of highs but never mentions the low-for-short branch or that the level belongs to the current 4-hour candle."
+  },
+  "aHLIE_TXjpo-S0-B003": {
+    "support": "partial",
+    "justification": "The quote covers only the high being broken and does not state the low branch or explicitly name it the entry trigger."
+  },
+  "aHLIE_TXjpo-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote names indecision and hammer candles as unwanted and states the wick-at-the-bottom requirement for buys, matching the condition clause for clause."
+  },
+  "aHLIE_TXjpo-S0-B005": {
+    "support": "partial",
+    "justification": "The quote asserts a clear-candle requirement but says nothing about indecision or rejection zones, so the condition adds rationale the quote does not carry."
+  },
+  "aHLIE_TXjpo-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote states the strategy is looking for price to be trending, and 'not ranging' is the direct complement of that same requirement."
+  },
+  "aHLIE_TXjpo-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote requires price to break out of these areas and show good 4-hour candles 'in order to trade', which is the condition as written."
+  },
+  "aHLIE_TXjpo-S0-B008": {
+    "support": "partial",
+    "justification": "The quote grounds only 'clean body closes'; the condition narrows it to the entry candle and adds an avoid-indecision/rejection-wick rationale not present in the quote."
+  },
+  "aHLIE_TXjpo-S0-B009": {
+    "support": "partial",
+    "justification": "The quote supports average-range-based stop calculation but is permissive ('we can look at') and never specifies 4-hour candles as the condition asserts."
+  },
+  "aHLIE_TXjpo-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote states the 1:2 risk to reward target verbatim."
+  }
+}

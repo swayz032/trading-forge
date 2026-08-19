@@ -1,0 +1,66 @@
+{
+  "mNcoaNdAyIE-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states drawing zones on the 1H or 4H and looking for the most recent support/resistance zone, which is exactly the condition."
+  },
+  "mNcoaNdAyIE-S0-B001": {
+    "support": "confirmed",
+    "justification": "The quote 'the most recent area of uncertainty' is verbatim the definitional content of the condition."
+  },
+  "mNcoaNdAyIE-S0-B002": {
+    "support": "partial",
+    "justification": "The quote names the 1-hour candle specifically while the condition abstracts it to a generic HTF candle, losing the timeframe the trader actually stated."
+  },
+  "mNcoaNdAyIE-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote explicitly requires the body, not the wick, to close outside the zone."
+  },
+  "mNcoaNdAyIE-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote states dropping to the 1-minute chart and waiting for price to come back into the previous resistance/support zone."
+  },
+  "mNcoaNdAyIE-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote ties the tap back into the zone directly to entries, which is the setup role the condition asserts."
+  },
+  "mNcoaNdAyIE-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote enumerates consolidation, higher-high/lower-low structure change, or trend line break exactly as the condition does."
+  },
+  "mNcoaNdAyIE-S0-B007": {
+    "support": "partial",
+    "justification": "The quote only says price went away from the area; 'confirms the reversal intent or continuation bias' is an interpretive extension not present in the quote."
+  },
+  "mNcoaNdAyIE-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote states entering at the break of the consolidation, trend line, or recent high/low."
+  },
+  "mNcoaNdAyIE-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote describes the break above the recent high as what enters the trade, which is the trigger the condition names."
+  },
+  "mNcoaNdAyIE-S0-B010": {
+    "support": "confirmed",
+    "justification": "Same quote as B000 and it fully expresses identifying the most recent 1H/4H support or resistance zone."
+  },
+  "mNcoaNdAyIE-S0-B011": {
+    "support": "partial",
+    "justification": "The quote specifies the 4-hour candle while the condition generalizes to 'HTF candle', dropping the stated timeframe."
+  },
+  "mNcoaNdAyIE-S0-B012": {
+    "support": "partial",
+    "justification": "The quote expresses the pullback into the prior zone but says nothing about the 1M chart that the condition adds."
+  },
+  "mNcoaNdAyIE-S0-B013": {
+    "support": "confirmed",
+    "justification": "The quote lists consolidation, higher-high/lower-low change, or trend line break exactly as the condition states."
+  },
+  "mNcoaNdAyIE-S0-B014": {
+    "support": "confirmed",
+    "justification": "The quote states stop below the most recent higher low for buys and above the most recent lower high for sells, matching the condition."
+  },
+  "mNcoaNdAyIE-S0-B015": {
+    "support": "partial",
+    "justification": "The quote names the 1-hour or 4-hour timeframe explicitly while the condition collapses that to a generic HTF."
+  }
+}

@@ -1,0 +1,344 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "locate the first 15-minutes candle that formed on today's date. In this example, the first 15-minutes candle that formed today is right here. Simply draw a line at the high and low of that candle",
+      "char_span": [
+        1317,
+        1512
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states both locating today's first 15-minute candle and drawing lines at its high and low, exactly as the condition says."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "the candle you just boxed is what I call a manipulation candle",
+      "char_span": [
+        1944,
+        2006
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote only names the boxed candle a manipulation candle; it does not state that the box serves as the structural reference."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "If the size of the candle you just boxed from high to low is 20 to 25% or more of that daily ATR, it's a confirmed manipulation candle.",
+      "char_span": [
+        5077,
+        5212
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote gives the exact 20-25%-of-daily-ATR test and the confirmed-manipulation-candle conclusion."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "The ATR tells you the candle is big enough to qualify.",
+      "char_span": [
+        14919,
+        14973
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote says ATR shows the candle is big enough to qualify but says nothing about the move being institutional."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "you're waiting for one of two specific reversal candles to appear outside the range you boxed in step one",
+      "char_span": [
+        5794,
+        5899
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote specifies two reversal candles outside the range while the condition enumerates four named patterns."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "if someone that large is buying into that weakness, the odds of price going lower from there drop significantly. They've announced their intentions.",
+      "char_span": [
+        6722,
+        6870
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote is rationale about a large buyer absorbing weakness and never mentions a reversal candle or the intended move against manipulation."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "Wait for the next candle to break above the hammer high, enter at the open of the candle after that",
+      "char_span": [
+        6871,
+        6970
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the break above the hammer high and entry at the open of the following candle verbatim."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "I like to set my entry limit order at the high of that previous red candle",
+      "char_span": [
+        7380,
+        7454
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the limit entry at the high of the previous red candle, matching the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "If price pushes up to that level, I'm in, and it confirms the engulfing pattern.",
+      "char_span": [
+        11708,
+        11788
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote describes the fill confirming the engulfing pattern, not the generalized high-probability-entry claim."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "locate the first 15-minutes candle that formed on today's date",
+      "char_span": [
+        1317,
+        1379
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is the instruction to locate today's first 15-minute candle, which is what the condition asserts."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "20 to 25% or more of that daily ATR, it's a confirmed manipulation candle",
+      "char_span": [
+        5138,
+        5211
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the 20-25%-of-daily-ATR threshold confirming manipulation exactly as the condition does."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "The volume spike tells you that big players were actively involved in creating that move.",
+      "char_span": [
+        13691,
+        13780
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote ties a volume spike to big-player involvement but contains no 20-period-MA threshold."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "You need the reversal to form outside the box after a clear directional push.",
+      "char_span": [
+        11343,
+        11420
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the reversal must form outside the box, which is the condition's load-bearing requirement."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "Stop goes below the low.",
+      "char_span": [
+        8263,
+        8287
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote says only that the stop goes below the low, without identifying the reversal candle's wick."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "And the target profit? The top of the range we drew in step one.",
+      "char_span": [
+        8288,
+        8352
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote names the top of the step-one range as the profit target, matching the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "two natural profit targets on the other. The low of the opening candle and the high.",
+      "char_span": [
+        8438,
+        8522
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote lists two targets (the opening candle's low and high) without designating the bottom as the primary short target."
+      }
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "The break confirms the reversal intent and provides a high-probability entry.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "entry_sequence[3].rationale",
+      "anchor_reason": "locator_declined"
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "NMUd0oX_7Pg",
+    "full_transcript_sha256": "d13846b244c497fa27b005feb96de4382f8dc2974068022ad39d00b8562652e8",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 1,
+  "unanchored_reason_breakdown": {
+    "locator_declined": 1
+  },
+  "diagnosis": {
+    "unanchored": 1,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 8,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 8
+  },
+  "dry_run": false
+}

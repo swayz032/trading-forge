@@ -1,0 +1,255 @@
+{
+  "conditions": [
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "you want to mark out the high and the low of this first 15-minute candle",
+      "char_span": [
+        6286,
+        6358
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states exactly the instruction to mark the high and low of the first 15-minute candle."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "these are the only two levels that you need for this strategy",
+      "char_span": [
+        6535,
+        6596
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote says only two levels are needed but never states that they define the initial trading range."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "As soon as the fair value gap prints on the 5-minute chart through that first 15-minute range",
+      "char_span": [
+        8801,
+        8894
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly names an FVG printing on the 5-minute chart through the first 15-minute range."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we need a mechanical way to identify this displacement",
+      "char_span": [
+        7574,
+        7628
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote only asserts a need for a mechanical displacement method; it does not say the FVG is that signal or that it confirms direction."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we're actually good to put a limit order right on that fair value gap",
+      "char_span": [
+        8896,
+        8965
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is the trader's own instruction to place a limit order on the fair value gap."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "as long as it dips down into that zone, we're going to get entered into the market",
+      "char_span": [
+        9414,
+        9496
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote describes entry when price dips into the zone but says nothing about high probability or rebalancing rationale."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "you want to get to your desk right at 9:30 a.m. Eastern Standard Time",
+      "char_span": [
+        5262,
+        5331
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote instructs being at the desk at 9:30 AM ET, which is the trading-day start the condition states."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we're going to wait until the 9:30 to 9:45 a.m. 15-minute candle closes",
+      "char_span": [
+        6203,
+        6274
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is the explicit wait for the 9:30-9:45 15-minute candle to close, which is the condition's operative requirement."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "in order for the fair value gap to be valid, one of the three candles has to close outside of this 15-minute range",
+      "char_span": [
+        9128,
+        9242
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote states an FVG validity criterion (one of three candles closing outside the range), not the broader 'FVG must print breaking the 15m range' claim."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we're going to put our stop loss on fair value gap candle one",
+      "char_span": [
+        8971,
+        9032
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote places the stop on FVG candle one but does not specify the low of that candle."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "for our target, we're just going to go for a fixed two to one risk to reward",
+      "char_span": [
+        9637,
+        9713
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states a fixed two-to-one risk-to-reward target verbatim."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "Qxlu8v_6G3Y",
+    "full_transcript_sha256": "460878e0b3c131057c596165a8d025bd2117a4c26d7bc18d04deeb977312933f",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 5,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 6
+  },
+  "dry_run": false
+}

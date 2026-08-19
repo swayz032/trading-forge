@@ -1,0 +1,86 @@
+{
+  "video_id": "z3Qn3fBoe2I",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Identify a P-shape (bullish) or B-shape (bearish) profile, which indicates an area of imbalance (Low Volume Node)."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "These shapes show where the market consolidated or moved quickly through an area of low volume."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Determine if the profile was formed by smart money exiting (defensive move/trap) or entering (offensive move/continuation)."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "Defensive moves (covering/exiting) are likely to fail, creating a trap."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for the market to fake out in the direction of the initial bias (the trap)."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "The fakeout is the signal that the opposing side is trapped."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Enter on the reversal/break of the Point of Control (POC) or a key level (VAH/VAL) after the fakeout."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "The POC failure indicates the initial directional bias is failing."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The market moved quickly through areas of low volume, indicating imbalance."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The profile must match a P or B shape, indicating a potential trap."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "The trade must be taken based on whether smart money is exiting (defensive) or entering (offensive)."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed below the Point of Control to invalidate the trap."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The target is the end of the area of imbalance (the vacuum)."
+    }
+  ],
+  "task_sha256": "829d8153bf51b2bb12d935b02019982f174b2411384ad8ec682b9542d7f2595a",
+  "task_char_len": 32003,
+  "transcript_sha256": "857bdf3e2fe991b6b0722e110d72c0b1a54d97a27e020bb90d5247bf627d953d",
+  "transcript_char_len": 28975,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

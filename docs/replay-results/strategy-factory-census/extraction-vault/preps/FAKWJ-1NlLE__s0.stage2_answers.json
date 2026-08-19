@@ -1,0 +1,54 @@
+{
+  "FAKWJ-1NlLE-S0-B000": {
+    "support": "partial",
+    "justification": "The quote states C1 is always accumulation but frames it as a descriptive fact, not the 'wait for it to form' instruction the condition asserts."
+  },
+  "FAKWJ-1NlLE-S0-B001": {
+    "support": "denied",
+    "justification": "The quote only restates that candle one is the accumulation candle and says nothing about accumulation setting directional bias."
+  },
+  "FAKWJ-1NlLE-S0-B002": {
+    "support": "partial",
+    "justification": "The quote does describe a large opposing run in candle 2 that does not support expansion, but it uses it as a disqualifier rather than something to wait for as a reversal signal."
+  },
+  "FAKWJ-1NlLE-S0-B003": {
+    "support": "partial",
+    "justification": "The quote shows C2's large opposing run preceding the C3 move but never states the 'testing the opposite extreme before the main move' rationale the condition claims."
+  },
+  "FAKWJ-1NlLE-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote states almost verbatim that candle 3 opens, makes a shallow opposing run, then expands higher."
+  },
+  "FAKWJ-1NlLE-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote explicitly names trading the distribution/expansion directional candle as the whole goal."
+  },
+  "FAKWJ-1NlLE-S0-B006": {
+    "support": "partial",
+    "justification": "The quote grounds the protected-low-then-trade-the-expansion logic but says nothing about entering on the body of the expansion candle."
+  },
+  "FAKWJ-1NlLE-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote ties CSD to a formed protected swing and uses that as the trigger to trade the expansion, which is exactly the condition."
+  },
+  "FAKWJ-1NlLE-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote directly says to align the trade with a daily bias."
+  },
+  "FAKWJ-1NlLE-S0-B009": {
+    "support": "partial",
+    "justification": "The quote is an instance observation of a weekly reversal candle with hedged modality, not the stated requirement that one must form to initiate the pattern."
+  },
+  "FAKWJ-1NlLE-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote states verbatim that a change in the state of delivery is needed to confirm the reversal point."
+  },
+  "FAKWJ-1NlLE-S0-B011": {
+    "support": "partial",
+    "justification": "The quote supports placing the stop on the protected low, but the FVG is described as the entry region rather than a stop anchor."
+  },
+  "FAKWJ-1NlLE-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote states the target is the previous day high and that the trade ran to it."
+  }
+}

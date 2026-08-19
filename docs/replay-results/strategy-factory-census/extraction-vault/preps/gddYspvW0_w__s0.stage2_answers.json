@@ -1,0 +1,34 @@
+{
+  "gddYspvW0_w-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states exactly the higher-or-lower 20 MA slope requirement the condition encodes."
+  },
+  "gddYspvW0_w-S0-B001": {
+    "support": "confirmed",
+    "justification": "The quote directly says the 20 EMA is what establishes the trend, which is the condition verbatim in substance."
+  },
+  "gddYspvW0_w-S0-B002": {
+    "support": "partial",
+    "justification": "The quote offers retracements into the 20 MA as possible buying opportunities but never states a rising MA, an established uptrend, or a hard long entry."
+  },
+  "gddYspvW0_w-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote describes the 20 MA acting as support with bounces continuing the uptrend, which is the condition."
+  },
+  "gddYspvW0_w-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote explicitly names the declining 20 MA, retracement or consolidation into it, and the resulting short opportunity."
+  },
+  "gddYspvW0_w-S0-B005": {
+    "support": "partial",
+    "justification": "The quote is a past-tense chart recap of the 20 acting as resistance before a breakdown, not a statement of retracement short opportunities in downtrends."
+  },
+  "gddYspvW0_w-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote states the flat-20 exclusion and the lack-of-momentum rationale exactly as the condition does."
+  },
+  "gddYspvW0_w-S0-B007": {
+    "support": "partial",
+    "justification": "The quote only remarks that price respects the 20 MA; the support-in-uptrend / resistance-in-downtrend elaboration is not in it."
+  }
+}

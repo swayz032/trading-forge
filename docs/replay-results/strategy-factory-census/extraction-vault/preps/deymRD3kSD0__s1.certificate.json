@@ -1,0 +1,285 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "I'm on the 15minute time frame on Trading View. I have my time at UTC minus4. Just copy that. We have the 9:15 candle right here. The candle we care about is the 930 candle. This is the New York Stock Exchange open candle. We're going to use this to set our range.",
+      "char_span": [
+        720,
+        984
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote names the 15-minute timeframe, the 9:30 NYSE-open candle, and states it is used to set the range."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "So once that candle is closed, we simply set the top of the range with the top wick and the bottom of the range with the bottom of the wick. And this is our trading range for the day.",
+      "char_span": [
+        985,
+        1168
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote defines the day's range from that candle's upper and lower wicks, which is exactly the high/low range definition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "break and close above our range and also through our trend line",
+      "char_span": [
+        9020,
+        9083
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Same anchor as B002 \u2014 it supports break-and-close above the range but never identifies the trend line as a 200 period EMA."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "This is telling us we may have that market reversal now to the upside.",
+      "char_span": [
+        9112,
+        9182
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote is hedged ('we MAY have that market reversal'), while the condition upgrades it to a confirmation of reversal and bullish bias."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "So, I want to be tapping in to the top of the range, right? That way, I'm using the top of the range as a support along with my demand.",
+      "char_span": [
+        9533,
+        9668
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the desire to tap into the top of the range and use it as support along with demand, matching the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "It tapped the top of the range and it shot up immediately.",
+      "char_span": [
+        9935,
+        9993
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote is a single past observation of one tap-and-rally; the condition generalizes it into a high-probability entry rule."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "it tapped the demand. It tapped the top of the range and it shot up immediately. I was already into the trade at this moment.",
+      "char_span": [
+        9913,
+        10038
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote narrates being 'already into the trade' at the tap rather than stating entry is triggered upon the tap."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "The candle closed in the demand zone, which is exactly what we want to see. That means the demand zone is likely going to hold.",
+      "char_span": [
+        3888,
+        4015
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote says the demand zone is 'likely going to hold' (forward-looking hedge), while the condition asserts the support level is confirmed holding."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "break and close above our range and also through our trend line",
+      "char_span": [
+        9020,
+        9083
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Same anchor as B002 \u2014 it supports break-and-close above the range but never identifies the trend line as a 200 period EMA."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "We had many touches of that trend line.",
+      "char_span": [
+        8657,
+        8696
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote states many touches of 'that trend line' but does not identify it as the 200 period EMA."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "We had multiple fair value gaps. Another here, another here, showing us that we had really strong buyers at this level.",
+      "char_span": [
+        6365,
+        6484
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states multiple fair value gaps showing really strong buyers at this level, which is the condition verbatim in substance."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "for my stop loss, since I'm entering near the range midline, I'm going to put it below the bottom line and below the demand",
+      "char_span": [
+        3634,
+        3757
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote places the stop loss below the bottom line of the range and below the demand, exactly as the condition states."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "we want to target the top of the range, not the bottom of the range",
+      "char_span": [
+        9771,
+        9838
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote explicitly says to target the top of the range, not the bottom."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "deymRD3kSD0",
+    "full_transcript_sha256": "0a35e43060903f30e55cbfd7e045a9dd7b281d9e95f8128e99500990008f05c0",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 1,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 7,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 6
+  },
+  "dry_run": false
+}

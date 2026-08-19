@@ -1,0 +1,26 @@
+{
+  "7ieYBa7Z-Hg-S1-B000": {
+    "support": "confirmed",
+    "justification": "The quote states the four-to-six swing requirement while price trades to a supply (the POI), which is exactly the condition."
+  },
+  "7ieYBa7Z-Hg-S1-B001": {
+    "support": "partial",
+    "justification": "The quote describes swings maturing to four to six on a reversal but never frames it as a POI-maturity filter."
+  },
+  "7ieYBa7Z-Hg-S1-B002": {
+    "support": "partial",
+    "justification": "The quote hedges a consolidation-then-reverse sequence after the fourth swing but never instructs entering a trade."
+  },
+  "7ieYBa7Z-Hg-S1-B003": {
+    "support": "partial",
+    "justification": "The quote covers waiting for consolidation and shift but omits the required swing count the condition asserts."
+  },
+  "7ieYBa7Z-Hg-S1-B004": {
+    "support": "confirmed",
+    "justification": "The quote directly states at least four to six swings are needed before expecting a reversal."
+  },
+  "7ieYBa7Z-Hg-S1-B005": {
+    "support": "partial",
+    "justification": "The quote grounds the stop behind the 4-hour POI but not the added 'or the swing that defined the reversal' alternative."
+  }
+}

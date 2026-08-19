@@ -1,0 +1,54 @@
+{
+  "deymRD3kSD0-S1-B000": {
+    "support": "confirmed",
+    "justification": "The quote names the 15-minute timeframe, the 9:30 NYSE-open candle, and states it is used to set the range."
+  },
+  "deymRD3kSD0-S1-B001": {
+    "support": "confirmed",
+    "justification": "The quote defines the day's range from that candle's upper and lower wicks, which is exactly the high/low range definition."
+  },
+  "deymRD3kSD0-S1-B002": {
+    "support": "partial",
+    "justification": "The quote says 'our trend line' only; the '200 period EMA' specificity in the condition is not present in the anchor."
+  },
+  "deymRD3kSD0-S1-B003": {
+    "support": "partial",
+    "justification": "The quote is hedged ('we MAY have that market reversal'), while the condition upgrades it to a confirmation of reversal and bullish bias."
+  },
+  "deymRD3kSD0-S1-B004": {
+    "support": "confirmed",
+    "justification": "The quote states the desire to tap into the top of the range and use it as support along with demand, matching the condition."
+  },
+  "deymRD3kSD0-S1-B005": {
+    "support": "partial",
+    "justification": "The quote is a single past observation of one tap-and-rally; the condition generalizes it into a high-probability entry rule."
+  },
+  "deymRD3kSD0-S1-B006": {
+    "support": "partial",
+    "justification": "The quote narrates being 'already into the trade' at the tap rather than stating entry is triggered upon the tap."
+  },
+  "deymRD3kSD0-S1-B007": {
+    "support": "partial",
+    "justification": "The quote says the demand zone is 'likely going to hold' (forward-looking hedge), while the condition asserts the support level is confirmed holding."
+  },
+  "deymRD3kSD0-S1-B008": {
+    "support": "partial",
+    "justification": "Same anchor as B002 — it supports break-and-close above the range but never identifies the trend line as a 200 period EMA."
+  },
+  "deymRD3kSD0-S1-B009": {
+    "support": "partial",
+    "justification": "The quote states many touches of 'that trend line' but does not identify it as the 200 period EMA."
+  },
+  "deymRD3kSD0-S1-B010": {
+    "support": "confirmed",
+    "justification": "The quote states multiple fair value gaps showing really strong buyers at this level, which is the condition verbatim in substance."
+  },
+  "deymRD3kSD0-S1-B011": {
+    "support": "confirmed",
+    "justification": "The quote places the stop loss below the bottom line of the range and below the demand, exactly as the condition states."
+  },
+  "deymRD3kSD0-S1-B012": {
+    "support": "confirmed",
+    "justification": "The quote explicitly says to target the top of the range, not the bottom."
+  }
+}

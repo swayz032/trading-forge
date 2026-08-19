@@ -1,0 +1,18 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "If price breaks it, I'm going to enter."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "Action line is the one that tells you to get into the trade. That's the line that was broken."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "This one right here only has two touch points and it's high risk."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "When you take the break, the opposing trend line is going to be the safety line."
+  }
+]

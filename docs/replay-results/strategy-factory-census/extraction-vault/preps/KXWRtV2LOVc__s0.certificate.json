@@ -1,0 +1,322 @@
+{
+  "conditions": [
+    {
+      "surface_class": "conditional-action",
+      "classifying_tier": 1,
+      "quote_anchor": "when the second candle of the 15minute CRT closes or enter off o",
+      "char_span": [
+        1336,
+        1400
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we want to locate the 6 a.m. 4H hour CRT this means means locate the 6 a.m. 4H hour candle",
+      "char_span": [
+        814,
+        904
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly instructs locating the 6 a.m. 4H candle as the CRT, which is exactly the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "first candle 6 a.m. creating the range high and low",
+      "char_span": [
+        8324,
+        8375
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the 6 a.m. first candle creates the range high and low, which is what the condition asserts."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "The Purge will occur during the 10: a.m. hour up until 11:30 is accepted sometimes even 12",
+      "char_span": [
+        1143,
+        1233
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives a hedged window (10 a.m. hour, up to 11:30, sometimes 12) while the condition flattens it into a firm 10:00-12:00 rule."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "the timed turtle soup being from 10:00 a.m. up until 12 a.m. is accepted",
+      "char_span": [
+        13059,
+        13131
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote states the accepted turtle-soup time window but says nothing about it acting as a probability-narrowing filter."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "step number two locate a 15minute CRT at the low or high of the 4our CRT",
+      "char_span": [
+        5639,
+        5711
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is the verbatim step of locating a 15-minute CRT at the low or high of the 4H CRT."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "confirmation number two is the lower time frame CRT within the higher time frame CRT",
+      "char_span": [
+        11546,
+        11630
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote states the containment relationship but not the interpretive claim that the lower timeframe is reacting to the higher timeframe range."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "that is because you are able to refine your entries to the tick",
+      "char_span": [
+        1543,
+        1606
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "denied",
+        "support_justification": "The quote only explains that entries can be refined to the tick; it never expresses that multiple entry methods are provided."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "confirmation number one is a timed CRT we are using the specific time of 6 a.m. the 4H hour 6 a.m. candle as our larger time frame CRT range",
+      "char_span": [
+        1772,
+        1912
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote names the specific 6 a.m. 4H candle as the larger timeframe CRT range, exactly the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we have a timed Purge a timed turtle soup of the range happening between 10:00 a.m. up until 12:00 a.m.",
+      "char_span": [
+        1913,
+        2016
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote observes a purge occurring in the 10:00-12:00 window on an example rather than stating the trade must occur in it."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we have the lower time frame CRT within the higher time frame CRT",
+      "char_span": [
+        2116,
+        2181
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote observes the containment on a specific chart instance rather than stating it as a must-hold requirement."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we have a daily key level here which is a daily fair value Gap this will be our key level",
+      "char_span": [
+        2692,
+        2781
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote identifies a daily FVG as the key level but does not express that alignment with it strengthens the trade."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "targeting the opposing end of the 4our CRT with a stop loss at the swing lows",
+      "char_span": [
+        12682,
+        12759
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote places the stop at the swing lows only, while the condition generalizes to swing high or low of the CRT sweep."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "targeting the opposing end of the 4our CRT range",
+      "char_span": [
+        15136,
+        15184
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is verbatim the target: the opposing end of the 4H CRT range."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "expands to the opposing end of the range which range the 4H hour CRT range",
+      "char_span": [
+        3044,
+        3118
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote describes price expanding to the opposing end of the 4H CRT range rather than stating it as the trade target."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "FAIL",
+      "reason": null,
+      "offending_anchor": "when the second candle of the 15minute CRT closes or enter off o",
+      "offending_char_span": [
+        1336,
+        1400
+      ]
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "REJECTED",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "FAIL",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "KXWRtV2LOVc",
+    "full_transcript_sha256": "62bc2e0cf69a33bf3c7e34ae4b521bd61a96849b5cb65b2362aaa4fa27357d70",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": {
+    "item_id": "KXWRtV2LOVc-S0-AUDIT",
+    "char_span": [
+      1336,
+      1400
+    ],
+    "condition_text": "Enter on the second candle close, or enter off a 1-15 minute Order Block following the CRT sweep.",
+    "support": "partial",
+    "support_justification": "The quote captures the second-candle-close trigger but is truncated and never expresses the 1-15 minute Order Block alternative."
+  },
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 1,
+    "classification_fallthrough_unresolved": 9,
+    "tier3_fail": 0,
+    "lint_fail": 1,
+    "ok": 6
+  },
+  "dry_run": false
+}

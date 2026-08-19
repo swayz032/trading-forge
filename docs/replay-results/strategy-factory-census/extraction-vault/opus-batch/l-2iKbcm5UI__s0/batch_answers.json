@@ -1,0 +1,66 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "a 4-hour break of structure in towards the downside"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "We then understand market structure is bearish."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "the market to retrace in towards that daily supply zone"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "the 0.5 fib aligns beautifully with the overall daily supply zone"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "Within the overall impulse here in towards the downside, where do we have liquidity? Well, on top of this bullish candle's high."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "once one of those liquidity highs get taken out, we can look for the potential short position"
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "we start seeing the bearish market structure shift. Now, this is the first entry that we can take"
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "That is then going to be the final piece of confluence to then enter a potential trade."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "a new potential lower high, and then a new potential lower low"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "for the market to retrace towards that 0.5 fib"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "That is the liquidity high that we want to get taken out"
+  },
+  {
+    "condition_ref": "confluences[3].description",
+    "raw_output": "form a supply zone in itself through creating a buy up before a sell down"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": null
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "for a one to three risk to reward"
+  },
+  {
+    "condition_ref": "targets[1].rationale",
+    "raw_output": null
+  },
+  {
+    "condition_ref": "targets[2].rationale",
+    "raw_output": null
+  }
+]

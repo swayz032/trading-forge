@@ -1,0 +1,54 @@
+{
+  "deymRD3kSD0-S0-B000": {
+    "support": "partial",
+    "justification": "Quote grounds the 9:30 NYSE-open candle setting the range, but says nothing about a 15-minute timeframe, which the condition adds."
+  },
+  "deymRD3kSD0-S0-B001": {
+    "support": "partial",
+    "justification": "Quote grounds wick-to-wick range for the day but never names the 9:30 candle that the condition attributes it to."
+  },
+  "deymRD3kSD0-S0-B002": {
+    "support": "confirmed",
+    "justification": "Quote states the 5-minute close above/below the range is what gives trend confirmation, exactly the condition."
+  },
+  "deymRD3kSD0-S0-B003": {
+    "support": "confirmed",
+    "justification": "Quote directly ties the close above the range to trend confirmation for the day."
+  },
+  "deymRD3kSD0-S0-B004": {
+    "support": "confirmed",
+    "justification": "Quote defines a demand level verbatim as a big impulsive move of multiple green candles in a row."
+  },
+  "deymRD3kSD0-S0-B005": {
+    "support": "partial",
+    "justification": "Quote supports demand as the preferred entry but says 'strong level', which the condition reinterprets as 'strong buying pressure'."
+  },
+  "deymRD3kSD0-S0-B006": {
+    "support": "confirmed",
+    "justification": "Quote places the long right at the top of demand, exactly the condition."
+  },
+  "deymRD3kSD0-S0-B007": {
+    "support": "partial",
+    "justification": "Quote gives the placement and the 'strong level' rationale, but 'capitalizes on strong buying interest' is an added interpretation."
+  },
+  "deymRD3kSD0-S0-B008": {
+    "support": "partial",
+    "justification": "Quote is a past-tense observation of a close above the range, omitting both the 5-minute timeframe and the 'must' requirement force."
+  },
+  "deymRD3kSD0-S0-B009": {
+    "support": "confirmed",
+    "justification": "Quote states the demand level and its impulsive multi-green-candle indication almost verbatim."
+  },
+  "deymRD3kSD0-S0-B010": {
+    "support": "confirmed",
+    "justification": "Quote states he is on the 5-minute timeframe with a small breakout out the top of the range."
+  },
+  "deymRD3kSD0-S0-B011": {
+    "support": "confirmed",
+    "justification": "Quote places the stop loss below the bottom line and below the demand, exactly the condition."
+  },
+  "deymRD3kSD0-S0-B012": {
+    "support": "confirmed",
+    "justification": "Quote states he is going to target recent price, which the condition restates as the target."
+  }
+}

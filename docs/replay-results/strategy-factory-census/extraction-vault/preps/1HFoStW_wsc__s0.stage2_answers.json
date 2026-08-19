@@ -1,0 +1,38 @@
+{
+  "1HFoStW_wsc-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states verbatim that the three VWAPs are stacked bullishly with price above all three."
+  },
+  "1HFoStW_wsc-S0-B001": {
+    "support": "partial",
+    "justification": "The quote asserts timeframe agreement on direction but does not itself express institutional commitment to the move."
+  },
+  "1HFoStW_wsc-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote gives the bearish stacking order (monthly>weekly>daily) with price below all three."
+  },
+  "1HFoStW_wsc-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote literally states institutional money is aligned to the downside."
+  },
+  "1HFoStW_wsc-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote states the bullish VWAP stack with price above all three exactly as the condition reads."
+  },
+  "1HFoStW_wsc-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote states the bearish VWAP stack with price below all three exactly as the condition reads."
+  },
+  "1HFoStW_wsc-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote says high volume at VWAP means institutions are active, accumulating or distributing."
+  },
+  "1HFoStW_wsc-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote is verbatim identical to the extracted condition text."
+  },
+  "1HFoStW_wsc-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote is verbatim identical to the extracted condition text."
+  }
+}

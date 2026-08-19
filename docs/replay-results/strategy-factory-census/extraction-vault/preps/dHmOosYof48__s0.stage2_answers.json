@@ -1,0 +1,58 @@
+{
+  "dHmOosYof48-S0-B000": {
+    "support": "partial",
+    "justification": "The quote covers zooming out for top-down trend analysis and developing a daily bias, but never names the 4H chart the condition specifies."
+  },
+  "dHmOosYof48-S0-B001": {
+    "support": "partial",
+    "justification": "The quote attributes conviction on the smaller timeframe to having a daily bias, while the condition reattributes it to top-down analysis generally."
+  },
+  "dHmOosYof48-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote states higher lows mean a bullish uptrend and the opposite for bearish, which is exactly the structure-to-bias mapping in the condition."
+  },
+  "dHmOosYof48-S0-B003": {
+    "support": "partial",
+    "justification": "The quote is a single narrated instance (lower highs therefore downtrend) that the condition generalizes into a rule about market structure defining trend."
+  },
+  "dHmOosYof48-S0-B004": {
+    "support": "partial",
+    "justification": "The quote grounds marking KPLs on the 1H chart but says nothing about multi-touch points or the 50/200 SMAs the condition adds."
+  },
+  "dHmOosYof48-S0-B005": {
+    "support": "partial",
+    "justification": "The quote supports aligned KPLs raising reversal probability, but the condition broadens it to points of interest for reversal or continuation."
+  },
+  "dHmOosYof48-S0-B006": {
+    "support": "partial",
+    "justification": "The quote covers zooming 4H to 1H for more data but not the 5M timeframe or looking for entry triggers that the condition adds."
+  },
+  "dHmOosYof48-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote says zooming in changes nothing about what the chart is doing and only yields more data, which is the condition verbatim in substance."
+  },
+  "dHmOosYof48-S0-B008": {
+    "support": "partial",
+    "justification": "The quote expresses waiting for the 1H candle to close but not that the close confirms reversal or continuation intent."
+  },
+  "dHmOosYof48-S0-B009": {
+    "support": "partial",
+    "justification": "The quote says the larger-timeframe close tells the story of price, which the condition hardens into final confirmation of trade direction."
+  },
+  "dHmOosYof48-S0-B010": {
+    "support": "partial",
+    "justification": "The quote narrates a specific chart flipping out of lower highs into an uptrend rather than stating a requirement that the market be in a clear trend."
+  },
+  "dHmOosYof48-S0-B011": {
+    "support": "partial",
+    "justification": "The quote only defines what counts as a KPL (multi-touch levels and SMAs) and never expresses the requirement that price be near one."
+  },
+  "dHmOosYof48-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote explicitly wants the larger-point-of-view candle to close under the rejected KPL as confirmation, which is the condition."
+  },
+  "dHmOosYof48-S0-AUDIT": {
+    "support": "partial",
+    "justification": "The quote is a bare instruction to wait for volume with no mention of KPLs or looking for reactions near them, so the condition's second clause is unsupported."
+  }
+}

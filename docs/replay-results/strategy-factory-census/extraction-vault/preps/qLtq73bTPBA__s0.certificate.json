@@ -1,0 +1,319 @@
+{
+  "conditions": [
+    {
+      "surface_class": "imperative",
+      "classifying_tier": 1,
+      "quote_anchor": "wait for price to break one of these lines",
+      "char_span": [
+        10288,
+        10330
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "we are going to start from a monthly time frame, a high time frame",
+      "char_span": [
+        5501,
+        5567
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly states starting from the monthly (highest) timeframe, which is exactly the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "top down analysis, we want to see what something has done overall. A bird's eye view.",
+      "char_span": [
+        2645,
+        2730
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote describes a bird's-eye overall view but never mentions establishing bias or structure, so the condition generalizes beyond it."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "when we're drawing our upward trend lines and we're drawing our downward trend lines, we want to make sure we're trying to capture as many touch points as possible",
+      "char_span": [
+        45089,
+        45252
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states both upward and downward trend lines are drawn capturing as many touch points as possible."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "the trend line is our guide for following the market's movement",
+      "char_span": [
+        2408,
+        2471
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote calls the trend line the guide for following market movement, matching the condition's claim of structural guidance."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "We cannot have price intersect or cut through.",
+      "char_span": [
+        4191,
+        4237
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states price cannot intersect or cut through, which is the condition verbatim in substance."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "We are truly envisioning this line holding the price down.",
+      "char_span": [
+        1785,
+        1843
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote is a visualization of the line holding price down and does not state the 'integrity maintained only if price respects the line' rule."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "all of the lines that we draw from higher time frames down to lower time frames have to connect. They're always going to connect to the previous point B.",
+      "char_span": [
+        47607,
+        47760
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states lines from higher to lower timeframes must connect and always connect to the previous point B, matching the iterative connection rule."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "But this process gives us structure to how we draw our trend lines.",
+      "char_span": [
+        7865,
+        7932
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote says the process gives structure to drawing lines, but does not assert that connecting lines maintains integrity across time scales."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "when price finally does break, that gives us our indication to start taking action",
+      "char_span": [
+        9162,
+        9244
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote makes the price break the indication to start taking action, which is the condition's entry trigger."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "Top down analysis means that we are starting from the highest time frame and working our way down.",
+      "char_span": [
+        2473,
+        2571
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote defines top-down analysis as starting from the highest timeframe and working down, matching the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "the key point here is to make sure that price does not intersect",
+      "char_span": [
+        45308,
+        45372
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the key point is that price does not intersect, which is the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "we have to try to capture as many touch points as possible",
+      "char_span": [
+        1603,
+        1661
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the requirement to capture as many touch points as possible."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "An action line is the line that was broken. This triggers our decision to place a trade.",
+      "char_span": [
+        12219,
+        12307
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote defines the action line as the broken line and says it triggers the decision to place a trade."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "We always want to make sure it is on the other side of the safety line.",
+      "char_span": [
+        17847,
+        17918
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote's referent is an unnamed 'it' and never identifies a stop loss or the safety line as the opposite trend line."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "qLtq73bTPBA",
+    "full_transcript_sha256": "6be3dc970b1e9ae7017d6050be0ca28b9d87ea5baba7e7f5a638a533299fde02",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": {
+    "item_id": "qLtq73bTPBA-S0-AUDIT",
+    "char_span": [
+      10288,
+      10330
+    ],
+    "condition_text": "Wait for price to break one of the established trend lines (the 'action line').",
+    "support": "confirmed",
+    "support_justification": "The quote instructs waiting for price to break one of the lines, exactly the condition."
+  },
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 4,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 11
+  },
+  "dry_run": false
+}

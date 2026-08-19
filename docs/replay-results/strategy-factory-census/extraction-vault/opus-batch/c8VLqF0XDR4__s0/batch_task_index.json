@@ -1,0 +1,101 @@
+{
+  "video_id": "c8VLqF0XDR4",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "entry_sequence[4].action",
+    "entry_sequence[4].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "stop.rationale",
+    "targets[0].rationale",
+    "targets[1].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Identify the 30-minute Orb by marking the high and low of the first 30-minute candle (9:30 AM - 10:00 AM NY time)."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "The 30-minute Orb defines the initial range for the strategy."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for price to break the 30-minute Orb range (either above the high or below the low) to establish initial manipulation."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "The strategy avoids simple breakouts or breakdowns due to poor risk-to-reward definition."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for price to pull back and retest the 30-minute Orb high (for long) or low (for short)."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "The retest of the Orb acts as the high-probability entry trigger."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Enter short on the 5-minute candle close after price rejects the Orb low, with a stop loss placed right above the high of that rejection candle."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "The rejection of the Orb low confirms bearish reversal intent."
+    },
+    {
+      "condition_ref": "entry_sequence[4].action",
+      "condition_text": "Enter long on the 5-minute candle close after price retests the Orb high, with a stop loss placed right below the high of the 30-minute Orb candle."
+    },
+    {
+      "condition_ref": "entry_sequence[4].rationale",
+      "condition_text": "The retest of the Orb high confirms bullish reversal intent."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The trade setup is strengthened by the presence of the pre-market high."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The setup is confirmed by an imbalance within the market."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "The trade is validated by the alignment with order flow."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed structurally below the swing low of the entry candle."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The primary target is the new high of the day."
+    },
+    {
+      "condition_ref": "targets[1].rationale",
+      "condition_text": "The secondary target is based on achieving a 1:1 risk-to-reward ratio."
+    }
+  ],
+  "task_sha256": "1e737d7be98b037b32d1dfecea57b9fbc14d22297dfdc092652a18422a20bd39",
+  "task_char_len": 13639,
+  "transcript_sha256": "872b559814b9f9ebfa7d608f3cc5310b8efde7047fd4daa95e5229e611d74159",
+  "transcript_char_len": 10187,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

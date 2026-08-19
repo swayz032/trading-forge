@@ -1,0 +1,50 @@
+{
+  "jlShztsY3oA-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states verbatim the marking of the first 15-minute candle's high and low from 9:30-9:45 ET after the NY open."
+  },
+  "jlShztsY3oA-S0-B001": {
+    "support": "partial",
+    "justification": "The quote says liquidity pools sit above and below ranges, not that the range itself is the initial liquidity pool for the breakout."
+  },
+  "jlShztsY3oA-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote gives the same bidirectional breakout trigger, long on a break above and short on a break below."
+  },
+  "jlShztsY3oA-S0-B003": {
+    "support": "partial",
+    "justification": "The quote supports only the trap clause; it says nothing about the initial breakout signaling a potential directional move."
+  },
+  "jlShztsY3oA-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote states watching for fakeouts, trading the re-entry back inside the range, and confirming with structure breaks or liquidity sweeps."
+  },
+  "jlShztsY3oA-S0-B005": {
+    "support": "partial",
+    "justification": "The quote gives the institutional-trap rationale but does not itself advise against the breakout entry or prescribe waiting for a reversal."
+  },
+  "jlShztsY3oA-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote states Fibonacci is used to filter out bad trades because price pulls back to a retracement level and rejects off it after a large move."
+  },
+  "jlShztsY3oA-S0-B007": {
+    "support": "partial",
+    "justification": "The quote only tells the trader to learn the key retracement zones; it does not say those zones give reversal or entry confirmation."
+  },
+  "jlShztsY3oA-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote restricts ORB trades to the higher-timeframe 15m or 1h bias direction, exactly as the condition states."
+  },
+  "jlShztsY3oA-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote expresses the pullback to a Fibonacci retracement level and the rejection off it, with only a likely/should modal shift."
+  },
+  "jlShztsY3oA-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote places the stop loss below the range in order to avoid trading within the range, matching the condition."
+  },
+  "jlShztsY3oA-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote names the 1:1.5 risk-to-reward ratio the condition attributes to the speaker."
+  }
+}

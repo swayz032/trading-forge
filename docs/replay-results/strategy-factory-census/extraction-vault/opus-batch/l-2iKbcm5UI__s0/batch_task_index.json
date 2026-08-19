@@ -1,0 +1,101 @@
+{
+  "video_id": "l-2iKbcm5UI",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "confluences[3].description",
+    "stop.rationale",
+    "targets[0].rationale",
+    "targets[1].rationale",
+    "targets[2].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Confirm bearish market structure on the 4H timeframe by identifying a break of structure (MSB) in towards the downside."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "Bearish MSB establishes the primary directional bias for the trade."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for price to retrace into the daily supply zone, specifically targeting the 0.5 Fibonacci retracement level."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "Retracement into the 0.5 Fib zone aligns the trade with the overall daily supply bias."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Identify and wait for a liquidity high (a bullish candle's high) to be taken out during the impulsive phase in towards the downside."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "Taking out liquidity confirms the market has swept the high and is ready for a reversal."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Enter a short position on the 50-minute timeframe upon confirmation of a bearish market structure shift (MSB) within the overall impulse."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "The final MSB on the entry timeframe confirms the reversal intent and entry trigger."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The market must show a bearish market structure, specifically a new potential lower high and lower low."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The market must retrace towards the 0.5 Fibonacci retracement level, aligning with the daily supply zone."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "The market must take out a liquidity high (a bullish candle's high) during the impulsive phase."
+    },
+    {
+      "condition_ref": "confluences[3].description",
+      "condition_text": "A supply zone must be formed, indicated by a buy up before a strong sell down (fractal structure shift)."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed above the liquidity high identified on the 50-minute timeframe."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "Targeting the first risk-to-reward level."
+    },
+    {
+      "condition_ref": "targets[1].rationale",
+      "condition_text": "Targeting the second risk-to-reward level."
+    },
+    {
+      "condition_ref": "targets[2].rationale",
+      "condition_text": "Targeting the final risk-to-reward level."
+    }
+  ],
+  "task_sha256": "9f66ff1b2d817376456a58e0d0b20bd9b33d136ff8dcd0a2b216c838b96e2c38",
+  "task_char_len": 13393,
+  "transcript_sha256": "d617e578082563498421aaa65690cb13eb7ade89e8b4001adf7ad7a755968932",
+  "transcript_char_len": 9836,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

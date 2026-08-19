@@ -1,0 +1,78 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "wait for the EMA10 to cross above the EMA 20. This signals bullish short-term momentum."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes. The EMA 20 is smoother. It represents the broader short to medium-term trend."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "check CCI. It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "measure how far the current price has moved away from its average price"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "enter the trade only when both conditions are present. You can enter on the close of the confirmation candle or if you want a better entry, wait for price to pull back slightly to the EMA10 and enter there."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "you're only entering when both signals align"
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "EMA10 crosses below the EMA 20 bearish momentum signal"
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes. The EMA 20 is smoother. It represents the broader short to medium-term trend."
+  },
+  {
+    "condition_ref": "entry_sequence[4].action",
+    "raw_output": "CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength."
+  },
+  {
+    "condition_ref": "entry_sequence[4].rationale",
+    "raw_output": "measure how far the current price has moved away from its average price"
+  },
+  {
+    "condition_ref": "entry_sequence[5].action",
+    "raw_output": "enter when both align"
+  },
+  {
+    "condition_ref": "entry_sequence[5].rationale",
+    "raw_output": "This confirms bearish strength."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "wait for the EMA10 to cross above the EMA 20. This signals bullish short-term momentum."
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength."
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "EMA10 crosses below the EMA 20 bearish momentum signal"
+  },
+  {
+    "condition_ref": "confluences[3].description",
+    "raw_output": "CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "place your stop loss below the most recent swing low or just below the EMA 20"
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "set your takeprofit at least 1 and a half to two times the distance of your stop loss"
+  },
+  {
+    "condition_ref": "targets[1].rationale",
+    "raw_output": "target at least 1.5 to two times your risk."
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "LOcaRWcc1xI-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states step one is marking out 10:00 a.m. Eastern where the new 4-hour candle opens, exactly the condition."
+  },
+  "LOcaRWcc1xI-S0-B001": {
+    "support": "partial",
+    "justification": "The quote explains the 30-minutes-after-open fakeout rationale for lining up bias but never states this time defines the pattern's trading window."
+  },
+  "LOcaRWcc1xI-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote directly instructs going to the 15-minute timeframe and finding the most recent FVG closest to price."
+  },
+  "LOcaRWcc1xI-S0-B003": {
+    "support": "partial",
+    "justification": "The quote only says the marked level is where price should tap into; it never frames the FVG as the target of a manipulation phase."
+  },
+  "LOcaRWcc1xI-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote is the step itself: see a PO3 on the 1-minute timeframe tapping into the 15-minute gap."
+  },
+  "LOcaRWcc1xI-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote defines the accumulate / manipulate-fakeout / real-move sequence the condition summarizes."
+  },
+  "LOcaRWcc1xI-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote states entry happens the second a candle body closes through the fair value gap."
+  },
+  "LOcaRWcc1xI-S0-B007": {
+    "support": "partial",
+    "justification": "The quote requires an entry confirmation but names inversion fair value gaps, not a candle-body closure, so the mechanism drifts."
+  },
+  "LOcaRWcc1xI-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote states the first step is finding the most recent formed-and-closed 4-hour candlestick."
+  },
+  "LOcaRWcc1xI-S0-B009": {
+    "support": "partial",
+    "justification": "The quote observes one gap sitting just above price on this chart rather than stating a general requirement that price be near a recent 15-minute FVG."
+  },
+  "LOcaRWcc1xI-S0-B010": {
+    "support": "partial",
+    "justification": "The quote narrates an observed PO3 manipulating into the 15-minute gap without stating the 1-minute timeframe or a must-form requirement."
+  },
+  "LOcaRWcc1xI-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote places the stop loss at the manipulation high, the top of the 4-hour candle, exactly as the condition states."
+  },
+  "LOcaRWcc1xI-S0-B012": {
+    "support": "partial",
+    "justification": "The quote offers the accumulation-range bottom as an optional target conditioned on risk-reward, not as the primary target."
+  },
+  "LOcaRWcc1xI-S0-B013": {
+    "support": "confirmed",
+    "justification": "The quote offers targeting liquidity lower down as the alternative/secondary target the condition describes."
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "VTEQ2fhGLqE-S1-B000": {
+    "support": "confirmed",
+    "justification": "The quote states the three-or-more touch point requirement verbatim."
+  },
+  "VTEQ2fhGLqE-S1-B001": {
+    "support": "confirmed",
+    "justification": "The quote explicitly pairs three-or-more touch points with the trend line."
+  },
+  "VTEQ2fhGLqE-S1-B002": {
+    "support": "confirmed",
+    "justification": "The quote states the over-a-week's-worth-of-data requirement verbatim."
+  },
+  "VTEQ2fhGLqE-S1-B003": {
+    "support": "partial",
+    "justification": "The quote voices a personal preference ('I like to look for'), which the condition hardens into a must-span requirement."
+  },
+  "VTEQ2fhGLqE-S1-B004": {
+    "support": "confirmed",
+    "justification": "The quote states entry on the break, matching the enter-on-trend-line-break condition."
+  },
+  "VTEQ2fhGLqE-S1-B005": {
+    "support": "partial",
+    "justification": "The quote says a broken action line tells him to take action but never names the trend line or an entry trigger explicitly."
+  },
+  "VTEQ2fhGLqE-S1-B006": {
+    "support": "confirmed",
+    "justification": "The quote states the over-a-week's-worth-of-data requirement verbatim."
+  },
+  "VTEQ2fhGLqE-S1-B007": {
+    "support": "partial",
+    "justification": "The quote defines how risk is graded by break-to-safety-line distance but does not require the setup to be low risk."
+  },
+  "VTEQ2fhGLqE-S1-B008": {
+    "support": "confirmed",
+    "justification": "The quote directly designates the opposing trend line as the safety line on the break."
+  }
+}

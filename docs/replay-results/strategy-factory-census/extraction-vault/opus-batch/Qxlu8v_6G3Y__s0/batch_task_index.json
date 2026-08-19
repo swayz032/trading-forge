@@ -1,0 +1,76 @@
+{
+  "video_id": "Qxlu8v_6G3Y",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Mark out the high and the low of the first 15-minute candle (9:30-9:45 AM ET) on the 15m chart."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "These levels define the initial trading range for the strategy."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for a Fair Value Gap (FVG) to print on the 5-minute chart that breaks through the 15-minute range."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "The FVG acts as the mechanical displacement signal to confirm the direction."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Place a limit order at the FVG level on the 5m chart."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "Entering on the FVG allows for a high-probability entry as the market rebalances into the gap."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The strategy requires starting the trading day at 9:30 AM ET."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The initial 15-minute candle must close to define the high and low range."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "A Fair Value Gap must print on the 5m chart that breaks the 15m range."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed at the low of the first candle of the Fair Value Gap."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The target is set at a fixed two to one risk to reward ratio."
+    }
+  ],
+  "task_sha256": "2df097df22459514b00f8d82ddebe685cce2321f05e0e720756a25bb69ce0c32",
+  "task_char_len": 18414,
+  "transcript_sha256": "460878e0b3c131057c596165a8d025bd2117a4c26d7bc18d04deeb977312933f",
+  "transcript_char_len": 15767,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

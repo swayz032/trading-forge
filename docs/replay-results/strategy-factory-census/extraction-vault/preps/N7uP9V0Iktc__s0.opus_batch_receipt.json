@@ -1,0 +1,11 @@
+{
+  "video_id": "N7uP9V0Iktc",
+  "strategy_index": 0,
+  "locator_backend": "opus_batch (AR-1345A recovery; AR-1234 LANE O1 topology)",
+  "batch_task_sha256": "ace5cc98bbc12d50efb5dedc09ae90d56961e8c5987708714a9664300bfecc91",
+  "batch_task_index_path": "C:\\Users\\tonio\\Projects\\wt-claude-worker1-20260815\\docs/replay-results/strategy-factory-census/extraction-vault/opus-batch\\N7uP9V0Iktc__s0\\batch_task_index.json",
+  "raw_response_sha256": "38ebabdf84287d6eb34a0242aab03bd9de540b3c03cbb06278472beda0eeeb92",
+  "raw_response_path": "C:\\Users\\tonio\\Projects\\wt-claude-worker1-20260815\\docs/replay-results/strategy-factory-census/extraction-vault/opus-batch\\N7uP9V0Iktc__s0\\batch_raw_response.txt",
+  "invocation": "Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent per video, given only the task text -- no direct Anthropic API key/SDK spend, uses the Claude Code subscription's own subagent dispatch (same invocation contract as AR-1234 LANE O1's svkm_opus_batch_locator.py)",
+  "condition_order_consumed_fully": true
+}

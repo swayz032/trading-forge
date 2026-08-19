@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 8
+    "target_items": 11
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video aHLIE_TXjpo strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 8,
+      "item_count": 11,
       "items": [
         {
           "item_id": "aHLIE_TXjpo-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "We had a gain of 11,000. We took 22 trades, which was a little bit higher than I thought just because price seemed to be ranging a little bit. And I was thinking while price is ranging on GU, we could obviously be looking at other pairs to trade provided that we have got that confluence of currency strength, which is always important with most trading strategies really. Had a win rate of 52.63%."
+            "verbatim": "if the previous 4-hour candle has closed bullish, we are looking for buys during the next 4-hour candle. And if it's closed bearish, we're looking for sells during the next 4-hour candle."
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "this strategy is more for people who can't sit at the charts all day."
+            "verbatim": "how the previous 4-hourly candle has closed, and then we are looking to take a trade based on that"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Okay, so that is back testing completed. We had a gain of 11,000. We took 22 trades, which was a little bit higher than I thought just because price seemed to be ranging a little bit. And I was thinking while price is ranging on GU, we could obviously be looking at other pairs to trade provided that we have got that confluence of currency strength, which is always important with most trading strategies really. Had a win rate of 52.63%. But obviously, we are going for a 1:2 risk to reward, so it was profitable. So, our Zela score is 74.96. If you have a look into the reports here, you'll be able to see everything about the breakdown. So, average winning trade was 2,000. Average losing trade was just over 1,000. 1:2 risk to reward, risking 1% of a 100k account. 22 trades, 10 winners, nine losers, and then three break evens. Max consecutive wins was three. Max consecutive losses was two."
+            "verbatim": "It's a little bit more straightforward on the 5-minute charts. Really, we're just looking for breaks of highs."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "this strategy is more for people who can't sit at the charts all day."
+            "verbatim": "we are just looking for a high to be broken"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "I'm also not looking for reversals. I'm just looking for continuations."
+            "verbatim": "We don't want to see indecision candles, a hammer candles, or anything like that. If we do have a wick on a candle, it has to be at the bottom if we're looking to buy."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Okay, so that is back testing completed. We had a gain of 11,000. We took 22 trades, which was a little bit higher than I thought just because price seemed to be ranging a little bit."
+            "verbatim": "with this strategy, we're looking for really clear candles"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "This strategy is a little bit more like higher highs, higher lows. That's all that matters."
+            "verbatim": "we are clearly looking for price to be trending"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,55 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "We had a gain of 11,000. We took 22 trades, which was a little bit higher than I thought just because price seemed to be ranging a little bit. And I was thinking while price is ranging on GU, we could obviously be looking at other pairs to trade provided that we have got that confluence of currency strength, which is always important with most trading strategies really. Had a win rate of 52.63%. But obviously, we are going for a 1:2 risk to reward, so it was profitable. So, our Zela score is 74.96."
+            "verbatim": "We want to see price break out of these areas and have some nice 4-hour candles in order to trade"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "aHLIE_TXjpo-S0-B008",
+          "video_id": "aHLIE_TXjpo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we're looking for clean body closes"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "aHLIE_TXjpo-S0-B009",
+          "video_id": "aHLIE_TXjpo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "in order to calculate stop loss, we can look at the average range of the previous few candles"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "aHLIE_TXjpo-S0-B010",
+          "video_id": "aHLIE_TXjpo",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we're going for a 1:2 risk to reward"
           },
           "rater_response": {
             "role": null,
@@ -354,7 +402,7 @@
       },
       {
         "item_id": "aHLIE_TXjpo-S0-B001",
-        "extracted_condition_text": "Candle quality is required to avoid trading in indecision or rejection zones.",
+        "extracted_condition_text": "The bias is set by the close of the preceding 4-hour candle.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -362,7 +410,7 @@
       },
       {
         "item_id": "aHLIE_TXjpo-S0-B002",
-        "extracted_condition_text": "Ensure the entry candle is not an indecision candle or a hammer, and if a wick is present, it must be at the bottom for a long entry.",
+        "extracted_condition_text": "On the 5-minute chart, wait for price to break the high (for long) or low (for short) of the current 4-hour candle.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -370,7 +418,7 @@
       },
       {
         "item_id": "aHLIE_TXjpo-S0-B003",
-        "extracted_condition_text": "Candle quality is required to avoid trading in indecision or rejection zones.",
+        "extracted_condition_text": "The break of the candle high/low serves as the entry trigger.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -378,7 +426,7 @@
       },
       {
         "item_id": "aHLIE_TXjpo-S0-B004",
-        "extracted_condition_text": "Price must break out of sideways areas and show strong 4-hour candle movement.",
+        "extracted_condition_text": "Ensure the entry candle is not an indecision candle or a hammer, and if a wick is present, it must be at the bottom for a long entry.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -386,7 +434,7 @@
       },
       {
         "item_id": "aHLIE_TXjpo-S0-B005",
-        "extracted_condition_text": "The entry candle must have a clean body close, avoiding indecision or rejection wicks.",
+        "extracted_condition_text": "Candle quality is required to avoid trading in indecision or rejection zones.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -394,7 +442,7 @@
       },
       {
         "item_id": "aHLIE_TXjpo-S0-B006",
-        "extracted_condition_text": "The stop loss is calculated dynamically based on the average range of the previous few 4-hour candles.",
+        "extracted_condition_text": "The strategy requires the market to be trending, not ranging.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -402,6 +450,30 @@
       },
       {
         "item_id": "aHLIE_TXjpo-S0-B007",
+        "extracted_condition_text": "Price must break out of sideways areas and show strong 4-hour candle movement.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "aHLIE_TXjpo-S0-B008",
+        "extracted_condition_text": "The entry candle must have a clean body close, avoiding indecision or rejection wicks.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "aHLIE_TXjpo-S0-B009",
+        "extracted_condition_text": "The stop loss is calculated dynamically based on the average range of the previous few 4-hour candles.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "aHLIE_TXjpo-S0-B010",
         "extracted_condition_text": "The speaker aims for a 1:2 risk to reward ratio.",
         "adjudication_response": {
           "support": null,

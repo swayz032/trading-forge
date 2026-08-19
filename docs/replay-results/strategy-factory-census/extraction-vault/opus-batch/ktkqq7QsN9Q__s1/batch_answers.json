@@ -1,0 +1,18 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "entry is in the first sign of weakness or rejection on the test of the VWAP deviation area"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "the fade value area extremes. This is when we're trading in fair market value."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "It must show price acceptance. This is time and distance inside value."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "The stop is going to go beyond the price level or beyond the testing candle wick."
+  }
+]

@@ -1,0 +1,62 @@
+{
+  "UBvfsImdI2U-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states the 1H timeframe, marking the most previous candle's high and low, and explicitly that it includes the wick."
+  },
+  "UBvfsImdI2U-S0-B001": {
+    "support": "partial",
+    "justification": "The quote only recaps 'mark out your levels' as step one; it never says those levels define the initial CRT range."
+  },
+  "UBvfsImdI2U-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote states waiting for the break of the high or low and for the colored (body) part of the candle to close back inside the range."
+  },
+  "UBvfsImdI2U-S0-B003": {
+    "support": "partial",
+    "justification": "The quote requires a reversal right after the break but says nothing about the body closing inside confirming the break was a false move."
+  },
+  "UBvfsImdI2U-S0-B004": {
+    "support": "partial",
+    "justification": "The quote declaratively describes the third candle's U-shaped reversal rather than instructing the trader to wait for it as a checked condition."
+  },
+  "UBvfsImdI2U-S0-B005": {
+    "support": "partial",
+    "justification": "The quote explains how CRT mechanically moves range-to-range, but does not assert it confirms market intent to run to the opposite extreme."
+  },
+  "UBvfsImdI2U-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote directly instructs marking the high (or opposite-end low) of the second candle that broke and reversed."
+  },
+  "UBvfsImdI2U-S0-B007": {
+    "support": "partial",
+    "justification": "The quote covers entry timing during the third candle and dropping to a 1-2 minute chart, but does not state that anything sets a trigger boundary."
+  },
+  "UBvfsImdI2U-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote says the break of the middle candle is the only time the trade is taken, which is the final entry trigger."
+  },
+  "UBvfsImdI2U-S0-B009": {
+    "support": "confirmed",
+    "justification": "The condition text is a near-verbatim restatement of the quote."
+  },
+  "UBvfsImdI2U-S0-B010": {
+    "support": "confirmed",
+    "justification": "The condition text is verbatim identical to the quote."
+  },
+  "UBvfsImdI2U-S0-B011": {
+    "support": "confirmed",
+    "justification": "The condition text is verbatim identical to the quote."
+  },
+  "UBvfsImdI2U-S0-B012": {
+    "support": "confirmed",
+    "justification": "The condition text matches the quote apart from a pronoun swap; the substance of dragging TP to that candle's high is identical."
+  },
+  "UBvfsImdI2U-S0-B013": {
+    "support": "confirmed",
+    "justification": "Same quote and same condition as B012; the pronoun swap is the only difference from the verbatim text."
+  },
+  "UBvfsImdI2U-S0-AUDIT": {
+    "support": "denied",
+    "justification": "The fragment 'when your entry is taken' expresses nothing about breaking the middle candle's high/low on the 1M timeframe."
+  }
+}

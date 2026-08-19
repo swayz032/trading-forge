@@ -1,0 +1,54 @@
+{
+  "e5HQXYBUW-Q-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states the mark-the-high-and-low-of-the-first-15-minutes-of-the-New-York-open rule verbatim."
+  },
+  "e5HQXYBUW-Q-S0-B001": {
+    "support": "confirmed",
+    "justification": "The quote defines the ORB as marking the first 15-minute high and low, which is exactly establishing the initial range."
+  },
+  "e5HQXYBUW-Q-S0-B002": {
+    "support": "partial",
+    "justification": "The quote covers zooming out to 1H/4H and VWAP but never mentions checking trend or liquidity zones, which the condition adds."
+  },
+  "e5HQXYBUW-Q-S0-B003": {
+    "support": "partial",
+    "justification": "The quote says only 'context gives you clarity'; the 'helps avoid trading blind' half is not in the anchor."
+  },
+  "e5HQXYBUW-Q-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote is the candle-close breakout confirmation requirement; 'outside the 15-minute range' is the ORB's own definition of breakout."
+  },
+  "e5HQXYBUW-Q-S0-B005": {
+    "support": "partial",
+    "justification": "The quote attributes the clear risk-to-reward to a different antecedent and only the fakeout-avoidance clause to confirmation, so the condition merges two claims."
+  },
+  "e5HQXYBUW-Q-S0-B006": {
+    "support": "confirmed",
+    "justification": "'If the higher time frame is trending up, only look for long breakouts' is exactly a must-align-with-HTF-trend directional rule."
+  },
+  "e5HQXYBUW-Q-S0-B007": {
+    "support": "confirmed",
+    "justification": "The condition is a near-verbatim restatement of the quote's claim that trend alignment massively increases edge."
+  },
+  "e5HQXYBUW-Q-S0-B008": {
+    "support": "partial",
+    "justification": "The quote says to zoom out and look at VWAP but does not mention 'VWAP alignment' or 'overall market context', which broaden it."
+  },
+  "e5HQXYBUW-Q-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote names volume profile overlay, liquidity zones, and avoiding fakeouts into supply or demand exactly as stated."
+  },
+  "e5HQXYBUW-Q-S0-B010": {
+    "support": "confirmed",
+    "justification": "Same anchor as B006; the quote directly expresses the HTF-trend-must-align-with-entry-direction rule."
+  },
+  "e5HQXYBUW-Q-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote states putting the stop loss above the previous five minute high, which is what the condition reports."
+  },
+  "e5HQXYBUW-Q-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote has the speaker naming the regular trading hours gap fill as the target he took."
+  }
+}

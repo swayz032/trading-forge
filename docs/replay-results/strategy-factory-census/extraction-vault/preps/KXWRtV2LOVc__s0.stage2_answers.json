@@ -1,0 +1,62 @@
+{
+  "KXWRtV2LOVc-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote directly instructs locating the 6 a.m. 4H candle as the CRT, which is exactly the condition."
+  },
+  "KXWRtV2LOVc-S0-B001": {
+    "support": "confirmed",
+    "justification": "The quote states the 6 a.m. first candle creates the range high and low, which is what the condition asserts."
+  },
+  "KXWRtV2LOVc-S0-B002": {
+    "support": "partial",
+    "justification": "The quote gives a hedged window (10 a.m. hour, up to 11:30, sometimes 12) while the condition flattens it into a firm 10:00-12:00 rule."
+  },
+  "KXWRtV2LOVc-S0-B003": {
+    "support": "partial",
+    "justification": "The quote states the accepted turtle-soup time window but says nothing about it acting as a probability-narrowing filter."
+  },
+  "KXWRtV2LOVc-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote is the verbatim step of locating a 15-minute CRT at the low or high of the 4H CRT."
+  },
+  "KXWRtV2LOVc-S0-B005": {
+    "support": "partial",
+    "justification": "The quote states the containment relationship but not the interpretive claim that the lower timeframe is reacting to the higher timeframe range."
+  },
+  "KXWRtV2LOVc-S0-B006": {
+    "support": "denied",
+    "justification": "The quote only explains that entries can be refined to the tick; it never expresses that multiple entry methods are provided."
+  },
+  "KXWRtV2LOVc-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote names the specific 6 a.m. 4H candle as the larger timeframe CRT range, exactly the condition."
+  },
+  "KXWRtV2LOVc-S0-B008": {
+    "support": "partial",
+    "justification": "The quote observes a purge occurring in the 10:00-12:00 window on an example rather than stating the trade must occur in it."
+  },
+  "KXWRtV2LOVc-S0-B009": {
+    "support": "partial",
+    "justification": "The quote observes the containment on a specific chart instance rather than stating it as a must-hold requirement."
+  },
+  "KXWRtV2LOVc-S0-B010": {
+    "support": "partial",
+    "justification": "The quote identifies a daily FVG as the key level but does not express that alignment with it strengthens the trade."
+  },
+  "KXWRtV2LOVc-S0-B011": {
+    "support": "partial",
+    "justification": "The quote places the stop at the swing lows only, while the condition generalizes to swing high or low of the CRT sweep."
+  },
+  "KXWRtV2LOVc-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote is verbatim the target: the opposing end of the 4H CRT range."
+  },
+  "KXWRtV2LOVc-S0-B013": {
+    "support": "partial",
+    "justification": "The quote describes price expanding to the opposing end of the 4H CRT range rather than stating it as the trade target."
+  },
+  "KXWRtV2LOVc-S0-AUDIT": {
+    "support": "partial",
+    "justification": "The quote captures the second-candle-close trigger but is truncated and never expresses the 1-15 minute Order Block alternative."
+  }
+}

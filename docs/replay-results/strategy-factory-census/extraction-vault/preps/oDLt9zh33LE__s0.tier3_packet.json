@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 9
+    "target_items": 15
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video oDLt9zh33LE strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 9,
+      "item_count": 15,
       "items": [
         {
           "item_id": "oDLt9zh33LE-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "If we sweep out external range liquidity, the market is going to come and seek out internal before either sweeping external or failing to the next external range liquidity. That is the cycle of price action."
+            "verbatim": "we are going to wait for a breakout on the fiveminut chart"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "We need price action to trade back into that gap and into the high and give me my engulfing candlestick."
+            "verbatim": "And this alone filters out a ton of false signals."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember, a loss saved is still money gained in your account. That is very important when it comes to trading. Knowing when to sit on your hands will turn you into a profitable trader."
+            "verbatim": "we're going to wait for an overlapping fair value gap that crosses the higher low"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "We need price action to trade back into that gap and into the high and give me my engulfing candlestick."
+            "verbatim": "That has to be the middle candle. It is even better if the fair value gap overlaps with the actual range high."
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember, a loss saved is still money gained in your account. That is very important when it comes to trading. Knowing when to sit on your hands will turn you into a profitable trader."
+            "verbatim": "we're going to wait for the market to retest that high or low of this initial candle that has a fair value gap overlapping it"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember, a loss saved is still money gained in your account. That is very important when it comes to trading. Knowing when to sit on your hands will turn you into a profitable trader."
+            "verbatim": "This is where patience pays off because most traders jump in way too early."
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Knowing when to sit on your hands will turn you into a profitable trader."
+            "verbatim": "we're only going to take the trade when the retest candle gets engulfed"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember, a loss saved is still money gained in your account. That is very important when it comes to trading. Knowing when to sit on your hands will turn you into a profitable trader."
+            "verbatim": "that engulfing candle, that is your confirmation that this breakout is real and ready to run"
           },
           "rater_response": {
             "role": null,
@@ -341,12 +341,109 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember, a loss saved is still money gained in your account. That is very important when it comes to trading. Knowing when to sit on your hands will turn you into a profitable trader."
+            "verbatim": "as soon as that candle closes, that is your entry"
           },
           "rater_response": {
             "role": null,
             "notes": null
           }
+        },
+        {
+          "item_id": "oDLt9zh33LE-S0-B009",
+          "video_id": "oDLt9zh33LE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "You mark out the high and the low of the first 15minute candle range."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "oDLt9zh33LE-S0-B010",
+          "video_id": "oDLt9zh33LE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "displace through that level, and create an overlapping fair value gap"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "oDLt9zh33LE-S0-B011",
+          "video_id": "oDLt9zh33LE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we simply wait for the market to trade back into this gap, retest the high and then give us our engulfing candlestick"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "oDLt9zh33LE-S0-B012",
+          "video_id": "oDLt9zh33LE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We're going to place our stop loss at this low."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "oDLt9zh33LE-S0-B013",
+          "video_id": "oDLt9zh33LE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "And our first target will be a clean 2."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "oDLt9zh33LE-S0-AUDIT",
+          "video_id": "oDLt9zh33LE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "as soon as that candle closes"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          },
+          "audit": true
         }
       ]
     }
@@ -370,7 +467,7 @@
       },
       {
         "item_id": "oDLt9zh33LE-S0-B001",
-        "extracted_condition_text": "This retest provides the necessary patience and confirms the initial displacement.",
+        "extracted_condition_text": "This step filters out false signals by requiring a definitive breakout on the lower timeframe.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -378,7 +475,7 @@
       },
       {
         "item_id": "oDLt9zh33LE-S0-B002",
-        "extracted_condition_text": "The first target is a clean 2R.",
+        "extracted_condition_text": "Wait for the breakout candle to create an overlapping fair value gap (FVG) that crosses the range high or low.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -386,7 +483,7 @@
       },
       {
         "item_id": "oDLt9zh33LE-S0-B003",
-        "extracted_condition_text": "This retest provides the necessary patience and confirms the initial displacement.",
+        "extracted_condition_text": "The FVG must be the middle candle of the three-candle pattern and must overlap the initial range.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -394,7 +491,7 @@
       },
       {
         "item_id": "oDLt9zh33LE-S0-B004",
-        "extracted_condition_text": "The first target is a clean 2R.",
+        "extracted_condition_text": "Wait for the market to retest the high or low of the initial candle that formed the overlapping FVG.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -402,7 +499,7 @@
       },
       {
         "item_id": "oDLt9zh33LE-S0-B005",
-        "extracted_condition_text": "The first target is a clean 2R.",
+        "extracted_condition_text": "This retest provides the necessary patience and confirms the initial displacement.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -410,7 +507,7 @@
       },
       {
         "item_id": "oDLt9zh33LE-S0-B006",
-        "extracted_condition_text": "The market must displace through the range and create an FVG that overlaps the range high or low.",
+        "extracted_condition_text": "Wait for the retest candle to be engulfed by the opposing candle (bullish for long, bearish for short).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -418,7 +515,7 @@
       },
       {
         "item_id": "oDLt9zh33LE-S0-B007",
-        "extracted_condition_text": "The first target is a clean 2R.",
+        "extracted_condition_text": "The engulfing candle confirms that the breakout is real and ready to run.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -426,11 +523,60 @@
       },
       {
         "item_id": "oDLt9zh33LE-S0-B008",
+        "extracted_condition_text": "Enter the trade immediately upon the close of the engulfing candle.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "oDLt9zh33LE-S0-B009",
+        "extracted_condition_text": "The strategy begins by marking the high and low of the first 15-minute candle to define the opening range.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "oDLt9zh33LE-S0-B010",
+        "extracted_condition_text": "The market must displace through the range and create an FVG that overlaps the range high or low.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "oDLt9zh33LE-S0-B011",
+        "extracted_condition_text": "The market must retest the initial candle and provide an engulfing candle for confirmation.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "oDLt9zh33LE-S0-B012",
+        "extracted_condition_text": "The stop is placed at the low of the initial candle that formed the FVG.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "oDLt9zh33LE-S0-B013",
         "extracted_condition_text": "The first target is a clean 2R.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
         }
+      },
+      {
+        "item_id": "oDLt9zh33LE-S0-AUDIT",
+        "extracted_condition_text": "Entry is taken on the close of the confirmation candle.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        },
+        "audit": true
       }
     ]
   }

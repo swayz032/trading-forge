@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 11
+    "target_items": 12
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video jlShztsY3oA strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 11,
+      "item_count": 12,
       "items": [
         {
           "item_id": "jlShztsY3oA-S0-B000",
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "If a candle breaks out of this range and closes above this range, you go long. If it closes below, you go short."
+            "verbatim": "Liquidity pools live above and below ranges."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Most of the time, the first move is a trap."
+            "verbatim": "If the price breaks above, go long. If the price breaks below, go short."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Watch for fakeouts and then trade the re-entry back inside the range and add confirmation structure breaks, liquidity sweeps, or even tools and indicators."
+            "verbatim": "Most of the time, the first move is a trap."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "after a large move, price is likely to pull back to a Fibonacci retracement level and also reject off of that."
+            "verbatim": "institutions know retail traders use this strategy. So they fake the breakout, grab the stop- losses and reverse."
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, even something as simple as drawing out a trend line and using tools like Fibonacci is going to keep you out of these useless trades when you know that after a large move, price is likely to pull back to a Fibonacci retracement level and also reject off of that."
+            "verbatim": "using tools like Fibonacci is going to keep you out of these useless trades when you know that after a large move, price is likely to pull back to a Fibonacci retracement level and also reject off of that"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Only trade orb in the direction of the higher time frame trend like the 15minute or the 1 hour bias."
+            "verbatim": "Learn about the key Fibonacci zones that price likes to retrace to based on supply and demand of that asset in that time frame."
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "price is likely to pull back to a Fibonacci retracement level and also reject off of that."
+            "verbatim": "Only trade orb in the direction of the higher time frame trend like the 15minute or the 1 hour bias."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And to not trade within the range, you put your stop loss below the range."
+            "verbatim": "price is likely to pull back to a Fibonacci retracement level and also reject off of that"
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,23 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And I'm being very conservative here using a 1:1.5 risk-to-reward ratio."
+            "verbatim": "And to not trade within the range, you put your stop loss below the range."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "jlShztsY3oA-S0-B011",
+          "video_id": "jlShztsY3oA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "using a 1:1.5 risk-to-reward ratio"
           },
           "rater_response": {
             "role": null,
@@ -402,7 +418,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B001",
-        "extracted_condition_text": "Wait for the price to break above the range high (for long) or below the range low (for short).",
+        "extracted_condition_text": "This range serves as the initial liquidity pool for the breakout trade.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -410,7 +426,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B002",
-        "extracted_condition_text": "The initial breakout signals a potential directional move, though the speaker notes this is often a trap.",
+        "extracted_condition_text": "Wait for the price to break above the range high (for long) or below the range low (for short).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -418,7 +434,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B003",
-        "extracted_condition_text": "The speaker advises against trading the initial breakout due to institutional traps and suggests waiting for a reversal entry.",
+        "extracted_condition_text": "The initial breakout signals a potential directional move, though the speaker notes this is often a trap.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -426,7 +442,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B004",
-        "extracted_condition_text": "The speaker advises against trading the initial breakout due to institutional traps and suggests waiting for a reversal entry.",
+        "extracted_condition_text": "Wait for a fakeout (stop-loss grab) and then trade the re-entry back inside the range, confirming the reversal with structure breaks or liquidity sweeps.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -434,7 +450,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B005",
-        "extracted_condition_text": "Use Fibonacci retracement levels as a confirmation tool, waiting for price to pull back and reject off the level after a large move.",
+        "extracted_condition_text": "The speaker advises against trading the initial breakout due to institutional traps and suggests waiting for a reversal entry.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -442,7 +458,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B006",
-        "extracted_condition_text": "Fibonacci retracements provide a key zone for price reversal and entry confirmation.",
+        "extracted_condition_text": "Use Fibonacci retracement levels as a confirmation tool, waiting for price to pull back and reject off the level after a large move.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -450,7 +466,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B007",
-        "extracted_condition_text": "The trade must be taken in the direction of the higher timeframe trend (15m or 1h bias).",
+        "extracted_condition_text": "Fibonacci retracements provide a key zone for price reversal and entry confirmation.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +474,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B008",
-        "extracted_condition_text": "Price should pull back to a Fibonacci retracement level and reject off that level.",
+        "extracted_condition_text": "The trade must be taken in the direction of the higher timeframe trend (15m or 1h bias).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -466,7 +482,7 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B009",
-        "extracted_condition_text": "The initial stop is placed below the range low to avoid trading within the range.",
+        "extracted_condition_text": "Price should pull back to a Fibonacci retracement level and reject off that level.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,6 +490,14 @@
       },
       {
         "item_id": "jlShztsY3oA-S0-B010",
+        "extracted_condition_text": "The initial stop is placed below the range low to avoid trading within the range.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "jlShztsY3oA-S0-B011",
         "extracted_condition_text": "The speaker uses a 1:1.5 risk-to-reward ratio for the trade.",
         "adjudication_response": {
           "support": null,

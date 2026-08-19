@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 12
+    "target_items": 16
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video m-G1ag77aVc strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 12,
+      "item_count": 16,
       "items": [
         {
           "item_id": "m-G1ag77aVc-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down."
+            "verbatim": "my rule is to use the last candle before the impulse away"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, a standard confirmation looks just like this. Okay. What we would do is when the market reaches this level, we would see if this lower time frame structure changes in agreement with our larger trend direction."
+            "verbatim": "a demand zone shows a price that institutional buying took place previously"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, a standard confirmation looks just like this. Okay. What we would do is when the market reaches this level, we would see if this lower time frame structure changes in agreement with our larger trend direction."
+            "verbatim": "zoom in to the 1 hour time frame to identify smaller supply zones inside of this 4hour zone"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down."
+            "verbatim": "we've dramatically amplified the risk-to-reward on this position"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down."
+            "verbatim": "place your order on what we call the extreme zone"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down."
+            "verbatim": "because we get the best riskreward from this zone, and second of all, because it's just the safest one"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down."
+            "verbatim": "we would see if this lower time frame structure changes in agreement with our larger trend direction"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down. Okay, so two steps down simply means if we were on the 4hour time frame, we could go to the 1 hour time frame and at best we could go down to the 30 minute."
+            "verbatim": "this demand zone is seeing an influx of buying that's strong enough to reshape the trend"
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, a standard confirmation looks just like this. Okay. What we would do is when the market reaches this level, we would see if this lower time frame structure changes in agreement with our larger trend direction."
+            "verbatim": "If we want to place a buy limit on either of these zones, the standard one to go for is going to be the extreme."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down."
+            "verbatim": "We've captured the wicks and we've secured a sniper entry."
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down."
+            "verbatim": "a demand zone is an area of consolidation before a strong upward move"
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,71 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now a simple rule that's good to follow to make sure you don't overreine and end up missing out on all your good trades is to go two steps down."
+            "verbatim": "Go lower and identify smaller zones."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "m-G1ag77aVc-S0-B012",
+          "video_id": "m-G1ag77aVc",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the extreme zone is going to be the furthest zone from price in the leg of price movement"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "m-G1ag77aVc-S0-B013",
+          "video_id": "m-G1ag77aVc",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we would see if this lower time frame structure changes in agreement with our larger trend direction"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "m-G1ag77aVc-S0-B014",
+          "video_id": "m-G1ag77aVc",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I still am a fan of putting stops under the low."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "m-G1ag77aVc-S0-B015",
+          "video_id": "m-G1ag77aVc",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "a target up into that high"
           },
           "rater_response": {
             "role": null,
@@ -410,7 +474,7 @@
     "items": [
       {
         "item_id": "m-G1ag77aVc-S0-B000",
-        "extracted_condition_text": "The target is set up into the structural high of the initial zone.",
+        "extracted_condition_text": "Identify the initial supply or demand zone on the higher timeframe using the last candle before the impulse.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -418,7 +482,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B001",
-        "extracted_condition_text": "The extreme zone is the furthest zone from price in the leg of price movement.",
+        "extracted_condition_text": "The last candle before the impulse marks the zone where institutional buying or selling took place.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -426,7 +490,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B002",
-        "extracted_condition_text": "The extreme zone is the furthest zone from price in the leg of price movement.",
+        "extracted_condition_text": "Zoom into a lower timeframe (e.g., 1H) to identify smaller supply or demand zones inside the initial higher timeframe zone.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -434,7 +498,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B003",
-        "extracted_condition_text": "The target is set up into the structural high of the initial zone.",
+        "extracted_condition_text": "Refining the zone to a smaller timeframe allows for a more precise entry and amplified risk-to-reward.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -442,7 +506,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B004",
-        "extracted_condition_text": "The target is set up into the structural high of the initial zone.",
+        "extracted_condition_text": "Select the 'extreme zone,' which is the zone furthest from price within the current leg of price movement.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -450,7 +514,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B005",
-        "extracted_condition_text": "The target is set up into the structural high of the initial zone.",
+        "extracted_condition_text": "The extreme zone is chosen because it offers the best risk-reward and is considered the safest entry point.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +522,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B006",
-        "extracted_condition_text": "The target is set up into the structural high of the initial zone.",
+        "extracted_condition_text": "Wait for the lower timeframe structure to change in agreement with the larger trend direction.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -466,7 +530,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B007",
-        "extracted_condition_text": "Entering at the refined zone captures the wick and secures a sniper entry.",
+        "extracted_condition_text": "Standard confirmation confirms that the zone has enough strength to reshape the trend.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +538,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B008",
-        "extracted_condition_text": "The extreme zone is the furthest zone from price in the leg of price movement.",
+        "extracted_condition_text": "Enter a buy limit order at the refined zone (extreme zone) upon confirmation of a structural shift.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -482,7 +546,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B009",
-        "extracted_condition_text": "The target is set up into the structural high of the initial zone.",
+        "extracted_condition_text": "Entering at the refined zone captures the wick and secures a sniper entry.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -490,7 +554,7 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B010",
-        "extracted_condition_text": "The target is set up into the structural high of the initial zone.",
+        "extracted_condition_text": "A demand zone is an area of consolidation before a strong upward move.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -498,6 +562,38 @@
       },
       {
         "item_id": "m-G1ag77aVc-S0-B011",
+        "extracted_condition_text": "Zooming into a lower timeframe allows for the identification of smaller zones inside the initial zone.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "m-G1ag77aVc-S0-B012",
+        "extracted_condition_text": "The extreme zone is the furthest zone from price in the leg of price movement.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "m-G1ag77aVc-S0-B013",
+        "extracted_condition_text": "Wait for the lower timeframe structure to change in agreement with the larger trend direction.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "m-G1ag77aVc-S0-B014",
+        "extracted_condition_text": "The stop loss is placed structurally below the zone for long entries.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "m-G1ag77aVc-S0-B015",
         "extracted_condition_text": "The target is set up into the structural high of the initial zone.",
         "adjudication_response": {
           "support": null,

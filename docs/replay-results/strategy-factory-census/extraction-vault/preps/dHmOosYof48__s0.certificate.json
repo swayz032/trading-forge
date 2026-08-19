@@ -1,0 +1,304 @@
+{
+  "conditions": [
+    {
+      "surface_class": "imperative",
+      "classifying_tier": 1,
+      "quote_anchor": "wait for volume to come in.",
+      "char_span": [
+        28353,
+        28380
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "zoom out and analyze via top- down analysis what the larger point of view trend is as well as develop a daily biased",
+      "char_span": [
+        100,
+        216
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote covers zooming out for top-down trend analysis and developing a daily bias, but never names the 4H chart the condition specifies."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "having a daily bias is what's going to give you the conviction in your trades on that smaller time frame",
+      "char_span": [
+        499,
+        603
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote attributes conviction on the smaller timeframe to having a daily bias, while the condition reattributes it to top-down analysis generally."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "So when we start to form things like higher lows, we are in a bullish uptrend. The opposite can be said for bearish, right?",
+      "char_span": [
+        3552,
+        3675
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states higher lows mean a bullish uptrend and the opposite for bearish, which is exactly the structure-to-bias mapping in the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we have printed lower highs. So overall we are in a downtrend",
+      "char_span": [
+        9241,
+        9302
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote is a single narrated instance (lower highs therefore downtrend) that the condition generalizes into a rule about market structure defining trend."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "now that we are on the 1 hour chart, what I like to start doing is marking out KPLs",
+      "char_span": [
+        12816,
+        12899
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote grounds marking KPLs on the 1H chart but says nothing about multi-touch points or the 50/200 SMAs the condition adds."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "KPLs are aligning in the same range together because that gives me a higher probability that we are likely to reverse off of that range",
+      "char_span": [
+        19959,
+        20094
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote supports aligned KPLs raising reversal probability, but the condition broadens it to points of interest for reversal or continuation."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "I want to now zoom in from the 4 hour to the 1 hour because I want to get more data",
+      "char_span": [
+        11437,
+        11520
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote covers zooming 4H to 1H for more data but not the 5M timeframe or looking for entry triggers that the condition adds."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "As you're zooming in, what's happening on the chart, aka us being in a downtrend and us breaking um market structure and stuff isn't changing. You're just getting more data.",
+      "char_span": [
+        11522,
+        11695
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote says zooming in changes nothing about what the chart is doing and only yields more data, which is the condition verbatim in substance."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "That means waiting for that 1 hour candle to close.",
+      "char_span": [
+        29912,
+        29963
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote expresses waiting for the 1H candle to close but not that the close confirms reversal or continuation intent."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "allow those larger point of view candles like a 1 hour candle to close to actually tell you the story of what price is doing",
+      "char_span": [
+        30084,
+        30208
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote says the larger-timeframe close tells the story of price, which the condition hardens into final confirmation of trade direction."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "We are no longer making lower highs. We are now in an uptrend",
+      "char_span": [
+        25870,
+        25931
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote narrates a specific chart flipping out of lower highs into an uptrend rather than stating a requirement that the market be in a clear trend."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "multi-touch point levels as well as these um SMAs, which I consider all of those KPLs, key pivot levels",
+      "char_span": [
+        19823,
+        19926
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote only defines what counts as a KPL (multi-touch levels and SMAs) and never expresses the requirement that price be near one."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "as we rejected that KPL for confirmation from a larger point of view. I wanted to see that candle close under.",
+      "char_span": [
+        24258,
+        24368
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote explicitly wants the larger-point-of-view candle to close under the rejected KPL as confirmation, which is the condition."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "dHmOosYof48",
+    "full_transcript_sha256": "b96f3813a5cb0b76171386013c8a29d08502bc7081ee047393471f4b68cc7fb4",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": {
+    "item_id": "dHmOosYof48-S0-AUDIT",
+    "char_span": [
+      28353,
+      28380
+    ],
+    "condition_text": "Wait for volume to come in before looking for reactions near KPLs.",
+    "support": "partial",
+    "support_justification": "The quote is a bare instruction to wait for volume with no mention of KPLs or looking for reactions near them, so the condition's second clause is unsupported."
+  },
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 10,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 4
+  },
+  "dry_run": false
+}

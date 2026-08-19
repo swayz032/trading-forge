@@ -1,0 +1,314 @@
+{
+  "conditions": [
+    {
+      "surface_class": "conditional-action",
+      "classifying_tier": 1,
+      "quote_anchor": "when your entry is taken.",
+      "char_span": [
+        5193,
+        5218
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "on the 1-hour time frame, and you will mark out the most previous candle's high and the most previous candle's low. And this does include the wick.",
+      "char_span": [
+        2630,
+        2777
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the 1H timeframe, marking the most previous candle's high and low, and explicitly that it includes the wick."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "So, that was step number one. Just simply mark out your levels.",
+      "char_span": [
+        3542,
+        3605
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote only recaps 'mark out your levels' as step one; it never says those levels define the initial CRT range."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "you will wait for price to come break either that high or the low. And you will wait for the actual colored part of the candle to close back inside that range.",
+      "char_span": [
+        3006,
+        3165
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states waiting for the break of the high or low and for the colored (body) part of the candle to close back inside the range."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "if it doesn't reverse, the strategy is not going to work. It must reverse right after breaking a high or a low.",
+      "char_span": [
+        3721,
+        3832
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote requires a reversal right after the break but says nothing about the body closing inside confirming the break was a false move."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "the third candle will come in and it will make a complete U-shaped reversal to the opposite end that was broken.",
+      "char_span": [
+        3924,
+        4036
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote declaratively describes the third candle's U-shaped reversal rather than instructing the trader to wait for it as a checked condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "from one range to the other range is exactly how CRT works",
+      "char_span": [
+        4317,
+        4375
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote explains how CRT mechanically moves range-to-range, but does not assert it confirms market intent to run to the opposite extreme."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "You're also going to mark out the second candle, the one that broke and reversed. You are going to mark out the high of that candle or the low if it's going to be at the opposite end.",
+      "char_span": [
+        4693,
+        4876
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly instructs marking the high (or opposite-end low) of the second candle that broke and reversed."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "the only time we're entering is whenever this third candle is forming, we drop down to a lower time frame like the one or two minute.",
+      "char_span": [
+        4881,
+        5014
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote covers entry timing during the third candle and dropping to a 1-2 minute chart, but does not state that anything sets a trigger boundary."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "I'm going to see if price actually breaks that middle candle, and that's the only time I'm taking that trade.",
+      "char_span": [
+        12623,
+        12732
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote says the break of the middle candle is the only time the trade is taken, which is the final entry trigger."
+      }
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        9997,
+        10066
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "the best possible setup is going to be in the New York session. So, 9:30 a.m. Eastern time is where we start looking for the setup",
+      "char_span": [
+        8179,
+        8309
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The condition text is verbatim identical to the quote."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "I will drag up my stop loss, right? Because we already have our TP figured out. I'm dragging up my stop loss until my risk reward becomes 1.5.",
+      "char_span": [
+        7791,
+        7933
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The condition text is verbatim identical to the quote."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "you will drag your TP to that candle's high, because that is where we know that price wants to make a move.",
+      "char_span": [
+        7472,
+        7579
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Same quote and same condition as B012; the pronoun swap is the only difference from the verbatim text."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "you will drag your TP to that candle's high, because that is where we know that price wants to make a move.",
+      "char_span": [
+        7472,
+        7579
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Same quote and same condition as B012; the pronoun swap is the only difference from the verbatim text."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "UBvfsImdI2U",
+    "full_transcript_sha256": "24b05bfb35534d2b90bc17ec85b3c57bfee7701d54678e9f98c0178379dff413",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": {
+    "item_id": "UBvfsImdI2U-S0-AUDIT",
+    "char_span": [
+      5193,
+      5218
+    ],
+    "condition_text": "Enter on the break of the middle candle's high (for longs) or low (for shorts) on the 1M timeframe.",
+    "support": "denied",
+    "support_justification": "The fragment 'when your entry is taken' expresses nothing about breaking the middle candle's high/low on the 1M timeframe."
+  },
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 6,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 9
+  },
+  "dry_run": false
+}

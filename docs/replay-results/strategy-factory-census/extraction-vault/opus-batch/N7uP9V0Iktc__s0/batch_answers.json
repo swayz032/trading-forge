@@ -1,0 +1,30 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "a stock's retesting pre-market high, but it's under VWOP, we're not going to take calls on it"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "It also tells you if you could buy calls or puts."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "if VWAP is under the pre-market low, then I'm looking to take puts on a VWOP retest"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "VWAP is always a big retest spot"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "I never take calls under VWAP and I never take puts over VWAP"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "as long as it doesn't get under the EMA, you could hold. And it's like a trailing stop loss for you."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": null
+  }
+]

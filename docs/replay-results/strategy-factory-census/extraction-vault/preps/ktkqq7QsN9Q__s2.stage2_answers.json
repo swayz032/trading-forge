@@ -1,0 +1,26 @@
+{
+  "ktkqq7QsN9Q-S2-B000": {
+    "support": "confirmed",
+    "justification": "The quote states the break into value plus acceptance, which is exactly the condition."
+  },
+  "ktkqq7QsN9Q-S2-B001": {
+    "support": "confirmed",
+    "justification": "The quote describes price discovery followed by a break back into the value area, which is the stated condition."
+  },
+  "ktkqq7QsN9Q-S2-B002": {
+    "support": "confirmed",
+    "justification": "The quote is a verbatim statement of the entry on the backtest/pullback of the VWAP deviation band after the break into value."
+  },
+  "ktkqq7QsN9Q-S2-B003": {
+    "support": "partial",
+    "justification": "The quote asserts a highest-probability version but never names the pullback or the return to value that the condition adds."
+  },
+  "ktkqq7QsN9Q-S2-B004": {
+    "support": "partial",
+    "justification": "The quote narrates that time and distance were spent outside in price discovery but does not state it as a required precondition."
+  },
+  "ktkqq7QsN9Q-S2-B005": {
+    "support": "confirmed",
+    "justification": "The quote is a verbatim statement of the stop going below or above the testing candle wick."
+  }
+}

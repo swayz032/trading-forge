@@ -1,0 +1,224 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "We want the 200 period simple moving average to be relatively flat. And the 200 MA could act as a ceiling for price whenever prices are trading below it. It could also act as a floor for prices whenever prices are trading above it.",
+      "char_span": [
+        10765,
+        10996
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states both the relatively-flat 200 SMA requirement and its ceiling/floor role verbatim."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "you'll get what's called a squeeze play where you have a flat 200 period moving average",
+      "char_span": [
+        11665,
+        11752
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote ties the flat 200 period moving average directly to the squeeze play setup."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "you have a 20 period moving average that is rising and going through this 200",
+      "char_span": [
+        11762,
+        11839
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the 20 period MA is rising and going through the 200, which is the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "you'll get what's called a squeeze play where you have a flat 200 period moving average and then you have a 20 period moving average that is rising and going through this 200",
+      "char_span": [
+        11665,
+        11839
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The combined quote names the squeeze play with both the flat 200 and the rising 20 crossing it."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "And you want to see prices oscillate between the two until eventually they can't, you know, there's no more room to oscillate and then they break out.",
+      "char_span": [
+        12337,
+        12487
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote describes oscillation ending in a breakout but never instructs entering on that breakout."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "And they'll continue to oscillate and oscillate and oscillate and squeeze until the point where it can't squeeze anymore, and it's just going to break out.",
+      "char_span": [
+        12030,
+        12185
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote says price oscillates and squeezes until it cannot squeeze anymore and then breaks out."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "So, you want a flat 200 MA",
+      "char_span": [
+        12256,
+        12282
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote 'you want a flat 200 MA' directly expresses the flat-200 requirement."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "rising 20 MA that's going through the moving average",
+      "char_span": [
+        12283,
+        12335
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives the rising 20 MA crossing 'the moving average' but does not identify it as the flat 200."
+      }
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "No specific initial stop placement anchor was provided by the speaker.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "stop.rationale",
+      "anchor_reason": "locator_declined"
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "gddYspvW0_w",
+    "full_transcript_sha256": "7c24170980e30cd1e8a5d4b441a6f728d938f46794e6e64aba6519301e606254",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 1,
+  "unanchored_condition_count": 1,
+  "unanchored_reason_breakdown": {
+    "locator_declined": 1
+  },
+  "diagnosis": {
+    "unanchored": 1,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 2,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 6
+  },
+  "dry_run": false
+}

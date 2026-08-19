@@ -1,0 +1,96 @@
+{
+  "video_id": "UBvfsImdI2U",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "entry_sequence[4].action",
+    "entry_sequence[4].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "stop.rationale",
+    "targets[0].rationale",
+    "targets[1].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Mark out the high and low of the most previous candle, including the wick, on the 1H timeframe."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "This defines the initial range for the CRT setup."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for price to break the defined high or low, and then for the candle's body to close back inside that range (reversal confirmation)."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "The reversal of the candle body inside the range confirms the initial break was a false move."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for the third candle to form a complete U-shaped reversal to the opposite end of the initial range."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "This confirms the market's intent to move from one extreme to the other."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Mark out the high or low of the second candle (the one that broke and reversed)."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "This sets the boundary for the entry trigger on the lower timeframe."
+    },
+    {
+      "condition_ref": "entry_sequence[4].action",
+      "condition_text": "Enter on the break of the middle candle's high (for longs) or low (for shorts) on the 1M timeframe."
+    },
+    {
+      "condition_ref": "entry_sequence[4].rationale",
+      "condition_text": "The break of the middle candle's high/low on the lower timeframe serves as the final entry trigger."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "Go overall, just quick take a look at the overall market trend."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The best possible setup is going to be in the New York session. So, 9:30 a.m. Eastern time is where we start looking for the setup"
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "I will drag up my stop loss, right? Because we already have our TP figured out. I'm dragging up my stop loss until my risk reward becomes 1.5."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "I will drag your TP to that candle's high, because that is where we know that price wants to make a move."
+    },
+    {
+      "condition_ref": "targets[1].rationale",
+      "condition_text": "I will drag your TP to that candle's high, because that is where we know that price wants to make a move."
+    }
+  ],
+  "task_sha256": "8fdf2a4b200f8c64252ecd7482409739a4ceb4baad2debc709349b5e7c88f413",
+  "task_char_len": 24306,
+  "transcript_sha256": "24b05bfb35534d2b90bc17ec85b3c57bfee7701d54678e9f98c0178379dff413",
+  "transcript_char_len": 20804,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

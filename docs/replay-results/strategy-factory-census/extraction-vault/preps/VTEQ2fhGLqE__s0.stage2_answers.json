@@ -1,0 +1,38 @@
+{
+  "VTEQ2fhGLqE-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states directly that the trader is identifying a trend, which is exactly the condition."
+  },
+  "VTEQ2fhGLqE-S0-B001": {
+    "support": "confirmed",
+    "justification": "'we'll start with ... identify a trend' faithfully expresses that the strategy begins with trend identification."
+  },
+  "VTEQ2fhGLqE-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote states the two-touch-point minimum for drawing the trend line; the parenthetical labels are naming, not added substance."
+  },
+  "VTEQ2fhGLqE-S0-B003": {
+    "support": "confirmed",
+    "justification": "'trying to capture as many touch points as I can' is the same drawing preference the condition states."
+  },
+  "VTEQ2fhGLqE-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote gives the trigger verbatim: price reaching or getting close enough to the line, expecting respect, then entering."
+  },
+  "VTEQ2fhGLqE-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote grounds entry on price getting close enough to the trend line; the condition only generalizes 'buy' to 'entry'."
+  },
+  "VTEQ2fhGLqE-S0-B006": {
+    "support": "partial",
+    "justification": "The quote describes two distinct lines with separate roles, whereas the condition claims one trend line is designated as both."
+  },
+  "VTEQ2fhGLqE-S0-B007": {
+    "support": "confirmed",
+    "justification": "'it has to have three or more touch points' states the requirement directly, if anything more strongly than the condition's 'should'."
+  },
+  "VTEQ2fhGLqE-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote assigns risk mitigation and exit timing to the safety line, exactly as the condition states."
+  }
+}

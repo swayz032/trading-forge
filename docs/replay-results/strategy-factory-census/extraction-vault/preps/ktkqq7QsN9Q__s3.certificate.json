@@ -1,0 +1,179 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "Entry is on the first test of VWAP after price breaks into value on a trending day.",
+      "char_span": [
+        19347,
+        19430
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote does describe break-into-value then a VWAP test, but the condition drops the 'first test' and trending-day qualifiers and recasts generic 'value' as a 'VWAP value area'."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "VWAP plays a better magnet than it does a trading level except in a trend.",
+      "char_span": [
+        19146,
+        19220
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "denied",
+        "support_justification": "The quote says VWAP is a magnet EXCEPT in a trend, so the condition asserting it acts as a magnet DURING a trending day inverts what was said."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "After the test of VWAP, we enter on strength in the direction away from the VWAP.",
+      "char_span": [
+        19554,
+        19635
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states entry on strength in the direction away from VWAP after the test, which is exactly the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "A trending day or a high volatility day with price going in and out of value during its trend.",
+      "char_span": [
+        19221,
+        19315
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote names the trending / high-volatility day type but the condition adds an 'only effective' effectiveness claim and drops the in-and-out-of-value detail."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "the stop goes above or below the testing candle at the VWAP",
+      "char_span": [
+        19697,
+        19756
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is verbatim the condition's stop-placement rule."
+      }
+    },
+    {
+      "surface_class": "unanchored",
+      "classifying_tier": null,
+      "quote_anchor": "The test of VWAP confirms the trend and provides a high-probability entry.",
+      "char_span": [
+        -1,
+        -1
+      ],
+      "adjudication_verdict": null,
+      "condition_ref": "entry_sequence[1].rationale",
+      "anchor_reason": "locator_declined"
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "ktkqq7QsN9Q",
+    "full_transcript_sha256": "cea3a530e458db137fc704babf50fee0a13760d06d822b730bc5836ad2f7c63a",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 3,
+  "unanchored_condition_count": 1,
+  "unanchored_reason_breakdown": {
+    "locator_declined": 1
+  },
+  "diagnosis": {
+    "unanchored": 1,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 3,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 2
+  },
+  "dry_run": false
+}

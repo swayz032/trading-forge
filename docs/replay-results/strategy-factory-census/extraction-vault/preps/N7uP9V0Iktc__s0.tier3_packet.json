@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So if a stock's retesting pre-market high, but it's under VWOP, we're not going to take calls on it. If a stock is under pre-market low, but it's above VWOP, we're not going to take puts on it."
+            "verbatim": "a stock's retesting pre-market high, but it's under VWOP, we're not going to take calls on it"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So if a stock's retesting pre-market high, but it's under VWOP, we're not going to take calls on it. If a stock is under pre-market low, but it's above VWOP, we're not going to take puts on it."
+            "verbatim": "It also tells you if you could buy calls or puts."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "As we could see, we come down, we retest VWAP, and we're above pre-market high. We're above pre-market high, and then we come and retest VWAP. So, what does that mean? This means we're taking calls here. It's a VWOP retest, above pre-market high, one of the strongest stocks of the day."
+            "verbatim": "if VWAP is under the pre-market low, then I'm looking to take puts on a VWOP retest"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "VWOP's a volume weighted average price. What this basically means is that VWAP tells us what the average trading price of the day is for a certain stock. This is always a very big area. So I have a very big rule as well. I never take calls under VWAP and I never take puts over VWAP. This helps me identify where buyers and sellers are as well as VWAP is always a big retest spot."
+            "verbatim": "VWAP is always a big retest spot"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, if VWAP is under the pre-market low, then I'm looking to take puts on a VWOP retest, not a pre-market low retest, which I'll go over the full strategy in a bit."
+            "verbatim": "I never take calls under VWAP and I never take puts over VWAP"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Watch as the stock rides the EMA and as long as it doesn't get under the EMA, you could hold. And it's like a trailing stop loss for you."
+            "verbatim": "as long as it doesn't get under the EMA, you could hold. And it's like a trailing stop loss for you."
           },
           "rater_response": {
             "role": null,
@@ -314,7 +314,7 @@
     "items": [
       {
         "item_id": "N7uP9V0Iktc-S0-B000",
-        "extracted_condition_text": "The VWAP determines whether calls or puts are valid based on the pre-market extreme.",
+        "extracted_condition_text": "Identify if the trade setup is valid by checking if the price retesting a pre-market extreme is aligned with the VWAP position.",
         "adjudication_response": {
           "support": null,
           "support_justification": null

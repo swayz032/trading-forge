@@ -1,0 +1,365 @@
+{
+  "conditions": [
+    {
+      "surface_class": "imperative",
+      "classifying_tier": 1,
+      "quote_anchor": "Wait for liquidity raids.",
+      "char_span": [
+        22900,
+        22925
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "conditional-action",
+      "classifying_tier": 1,
+      "quote_anchor": "after rejection",
+      "char_span": [
+        19714,
+        19729
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "if I have a bullish bias, I'm looking for higher highs and higher lows to form and continue",
+      "char_span": [
+        909,
+        1000
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote ties bullish bias to higher highs/lows but never mentions the higher timeframe and states the inference in the opposite direction (bias first, structure sought)."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "What we're looking for with a bullish bias is that the market is just going to continue making higher highs and higher lows.",
+      "char_span": [
+        1232,
+        1356
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote directly says a bullish bias means the market continues making higher highs and higher lows."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "the market needs liquidity to operate",
+      "char_span": [
+        15498,
+        15535
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote covers only the liquidity-need half; nothing about targeting areas where retail stops sit."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "I want to see a raid on that old high and then I need to see a closure back below that old high",
+      "char_span": [
+        15934,
+        16029
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote grounds raid-then-closure-below-the-old-high for shorts only; the SFP naming and the mirrored long-side rule are generalized beyond what was said."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "That to me is a signal that this bearish market structure maybe the high time frame is overall bearish.",
+      "char_span": [
+        16031,
+        16134
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote reads the signal as confirming an overall bearish higher timeframe, not as an SFP invalidating the previous bias."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "The characteristics of it are largebodied candles, a break in market structure, and a fair value gap creation.",
+      "char_span": [
+        19475,
+        19585
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote lists the characteristics but carries no wait-for imperative and no sequencing after the SFP."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "a very simple and obvious sign that even beginner traders can use to find these trades easily",
+      "char_span": [
+        19269,
+        19362
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote supports only the easy/obvious-sign-to-find-trades half; it says nothing about displacement confirming reversal intent."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "as it trades back into the inverted fair value gap, we're going to go long",
+      "char_span": [
+        21211,
+        21285
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote grounds the long entry on trading back into the inverted FVG but omits the displacement and structure-shift preconditions."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "So, if I have a bullish bias, I'm looking for higher highs and higher lows to form and continue. And if I have a bearish bias, I'm looking for lower highs and lower lows to form and continue.",
+      "char_span": [
+        905,
+        1096
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote gives both bias directions faithfully but frames them as what the trader looks for, not a must, and never mentions the higher timeframe."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "Maybe it's equal highs and lows where multiple levels align.",
+      "char_span": [
+        5526,
+        5586
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote offers equal highs/lows as one hedged example; the requirement to have clear liquidity pools to trade towards is added."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "it could purge those old short-term lows and then go higher",
+      "char_span": [
+        7126,
+        7185
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote describes one possible purge-then-higher move ('could'), not a must-raid-before-continuation rule."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "it needs to close back above that old low in order to create a swing failure pattern before going higher",
+      "char_span": [
+        16585,
+        16689
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote states the long-side closure-above-the-old-low requirement; the short-side mirror is generalized beyond the quote."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "largebodied candles, a break in market structure, and a fair value gap creation",
+      "char_span": [
+        19505,
+        19584
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote is a bare characteristics list; it does not name displacement or assert that entry must be triggered by it."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "you could use the stop loss at the low end of the fair value gap",
+      "char_span": [
+        21303,
+        21367
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote places the stop at the low end of the fair value gap, exactly the condition stated."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "we're going to target the high of the range",
+      "char_span": [
+        20376,
+        20419
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote states the target is the high of the range."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "there's level of liquidity above there. I tend to like targeting those levels",
+      "char_span": [
+        5692,
+        5769
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "Quote grounds targeting liquidity levels above but never specifies equal highs or lows as those areas."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "if you're a short-term trader, you're going to be looking at previous days highs and lows acting as those liquidity magnets",
+      "char_span": [
+        6162,
+        6285
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Quote states that short-term traders look to previous days highs and lows as liquidity magnets."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "dE4lPhAWke8",
+    "full_transcript_sha256": "705af7b04a2ecda18af5276542e388dcacf969fccc0942376a3de764efbaf8c4",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 13,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 6
+  },
+  "dry_run": false
+}

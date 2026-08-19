@@ -1,0 +1,22 @@
+{
+  "ktkqq7QsN9Q-S3-B000": {
+    "support": "partial",
+    "justification": "The quote does describe break-into-value then a VWAP test, but the condition drops the 'first test' and trending-day qualifiers and recasts generic 'value' as a 'VWAP value area'."
+  },
+  "ktkqq7QsN9Q-S3-B001": {
+    "support": "denied",
+    "justification": "The quote says VWAP is a magnet EXCEPT in a trend, so the condition asserting it acts as a magnet DURING a trending day inverts what was said."
+  },
+  "ktkqq7QsN9Q-S3-B002": {
+    "support": "confirmed",
+    "justification": "The quote states entry on strength in the direction away from VWAP after the test, which is exactly the condition."
+  },
+  "ktkqq7QsN9Q-S3-B003": {
+    "support": "partial",
+    "justification": "The quote names the trending / high-volatility day type but the condition adds an 'only effective' effectiveness claim and drops the in-and-out-of-value detail."
+  },
+  "ktkqq7QsN9Q-S3-B004": {
+    "support": "confirmed",
+    "justification": "The quote is verbatim the condition's stop-placement rule."
+  }
+}

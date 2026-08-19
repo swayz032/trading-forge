@@ -1,0 +1,34 @@
+{
+  "gddYspvW0_w-S1-B000": {
+    "support": "confirmed",
+    "justification": "The quote states both the relatively-flat 200 SMA requirement and its ceiling/floor role verbatim."
+  },
+  "gddYspvW0_w-S1-B001": {
+    "support": "confirmed",
+    "justification": "The quote ties the flat 200 period moving average directly to the squeeze play setup."
+  },
+  "gddYspvW0_w-S1-B002": {
+    "support": "confirmed",
+    "justification": "The quote states the 20 period MA is rising and going through the 200, which is the condition."
+  },
+  "gddYspvW0_w-S1-B003": {
+    "support": "confirmed",
+    "justification": "The combined quote names the squeeze play with both the flat 200 and the rising 20 crossing it."
+  },
+  "gddYspvW0_w-S1-B004": {
+    "support": "partial",
+    "justification": "The quote describes oscillation ending in a breakout but never instructs entering on that breakout."
+  },
+  "gddYspvW0_w-S1-B005": {
+    "support": "confirmed",
+    "justification": "The quote says price oscillates and squeezes until it cannot squeeze anymore and then breaks out."
+  },
+  "gddYspvW0_w-S1-B006": {
+    "support": "confirmed",
+    "justification": "The quote 'you want a flat 200 MA' directly expresses the flat-200 requirement."
+  },
+  "gddYspvW0_w-S1-B007": {
+    "support": "partial",
+    "justification": "The quote gives the rising 20 MA crossing 'the moving average' but does not identify it as the flat 200."
+  }
+}

@@ -1,0 +1,325 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we're drawing our zones on the 1 hour time frame or on the 4hour time frame. And we're looking for the most recent support or resistance zone.",
+      "char_span": [
+        2927,
+        3069
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Same quote as B000 and it fully expresses identifying the most recent 1H/4H support or resistance zone."
+      }
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        3070,
+        3117
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "you need to wait for that 1 hour candlestick to close outside of that zone that you drew",
+      "char_span": [
+        3437,
+        3525
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote names the 1-hour candle specifically while the condition abstracts it to a generic HTF candle, losing the timeframe the trader actually stated."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we need the body of the candlestick to close outside of it, not the wick.",
+      "char_span": [
+        3588,
+        3661
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote explicitly requires the body, not the wick, to close outside the zone."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we're going to drop down to the 1 minute chart. We're going to then just wait for any of the following to form. We're basically waiting for price to come back down into our previous resistance zone or previous support zone.",
+      "char_span": [
+        4206,
+        4429
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states dropping to the 1-minute chart and waiting for price to come back into the previous resistance/support zone."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "I told you for entries, we want price to tap back into our zone.",
+      "char_span": [
+        13631,
+        13695
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote ties the tap back into the zone directly to entries, which is the setup role the condition asserts."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we're going to be looking for some consolidation or we're going to be looking for a higher high or a lower low structure change. Or we can look for a trend line break.",
+      "char_span": [
+        4505,
+        4672
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote lists consolidation, higher-high/lower-low change, or trend line break exactly as the condition states."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "which shows us that price went away from our area",
+      "char_span": [
+        11701,
+        11750
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote only says price went away from the area; 'confirms the reversal intent or continuation bias' is an interpretive extension not present in the quote."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we're then going to enter the trade at the break of that consolidation. in that trend line or that recent high/ low.",
+      "char_span": [
+        5284,
+        5400
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states entering at the break of the consolidation, trend line, or recent high/low."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "as soon as price broke above this recent high as we just talked about it would enter us into the trade.",
+      "char_span": [
+        11805,
+        11908
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote describes the break above the recent high as what enters the trade, which is the trigger the condition names."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we're drawing our zones on the 1 hour time frame or on the 4hour time frame. And we're looking for the most recent support or resistance zone.",
+      "char_span": [
+        2927,
+        3069
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "Same quote as B000 and it fully expresses identifying the most recent 1H/4H support or resistance zone."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "We're waiting for the 4hour candlestick to close outside of that zone.",
+      "char_span": [
+        3725,
+        3795
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote specifies the 4-hour candle while the condition generalizes to 'HTF candle', dropping the stated timeframe."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "We're basically waiting for price to come back down into our previous resistance zone or previous support zone.",
+      "char_span": [
+        4318,
+        4429
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote expresses the pullback into the prior zone but says nothing about the 1M chart that the condition adds."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we're going to be looking for some consolidation or we're going to be looking for a higher high or a lower low structure change. Or we can look for a trend line break.",
+      "char_span": [
+        4505,
+        4672
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote lists consolidation, higher-high/lower-low change, or trend line break exactly as the condition states."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "We're going to place the stop loss below the most recent higher low if we entered for buys, or we're going to place it above the most recent lower high if we're going for sells.",
+      "char_span": [
+        5981,
+        6158
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states stop below the most recent higher low for buys and above the most recent lower high for sells, matching the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "the target for our takerit is always going to be a next major high or major low on the 1 hour time frame or the 4 hour time frame.",
+      "char_span": [
+        6436,
+        6566
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote names the 1-hour or 4-hour timeframe explicitly while the condition collapses that to a generic HTF."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "mNcoaNdAyIE",
+    "full_transcript_sha256": "2c7e1ea36d10716cdb7a0c5b4e612ec56d9ab6cc7344ca46a0bdadaaa5ae91b6",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 6,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 10
+  },
+  "dry_run": false
+}

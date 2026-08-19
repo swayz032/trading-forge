@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 11
+    "target_items": 16
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video lRMFcsqhYBU strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 11,
+      "item_count": 16,
       "items": [
         {
           "item_id": "lRMFcsqhYBU-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "with this pound dollar daily chart what are you seeing hopefully you said you're seeing an uptrend as prices are in fact making new higher highs"
+            "verbatim": "price is making higher highs and higher lows"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "you're not ready to just go out and start trading a strategy right now you need to learn the basics learn a lot about risk management learn a lot about trading psychology"
+            "verbatim": "go below it and look left to the very next level price will hit"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "with this pound dollar daily chart what are you seeing hopefully you said you're seeing an uptrend as prices are in fact making new higher highs"
+            "verbatim": "so this level would be my counter Trend level for this trading strategy"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "on the daily chart this is not only our swing low before the impulsive move up but also has been what has been tested multiple times I was testing you there so it's been tested multiple times it's a valid major structure level"
+            "verbatim": "this level must have been tested multiple times I must see at least two tests of one of these levels"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "with this pound dollar daily chart what are you seeing hopefully you said you're seeing an uptrend as prices are in fact making new higher highs here was our previous low what are the two levels I'm going to be looking at for Trend continuation trades well those two levels are right here at the previous resistance that was broken and also right here at the previous level of support"
+            "verbatim": "it's been tested multiple times it's a valid major structure level"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "with this pound dollar daily chart what are you seeing hopefully you said you're seeing an uptrend as prices are in fact making new higher highs here was our previous low what are the two levels I'm going to be looking at for Trend continuation trades well those two levels are right here at the previous resistance that was broken and also right here at the previous level of support"
+            "verbatim": "dropping down to the four hour chart to look for confirmation if confirmation on a bullish trade was a double bottom"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "if you're brand new to trading you're not ready to just go out and start trading a strategy right now you need to learn the basics learn a lot about risk management learn a lot about trading psychology"
+            "verbatim": "so that is our four hour confirmation"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "hopefully you said you're seeing an uptrend as prices are in fact making new higher highs here was our previous low what are the two levels I'm going to be looking at for Trend continuation trades well those two levels are right here at the previous resistance that was broken and also right here at the previous level of support"
+            "verbatim": "I grab a box tool and I create a box between the lowest body and the lowest Wick of that candle"
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "what are the two levels I'm going to be looking at for Trend continuation trades well those two levels are right here at the previous resistance that was broken and also right here at the previous level of support"
+            "verbatim": "as long as those criteria are met I have a valid double bottom"
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "I was testing you there so it's been tested multiple times it's a valid major structure level"
+            "verbatim": "my favorites are either to use a hammer candle or some type of engulfing or close above bar something that's showing that we have bullish momentum after the double bottom"
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,87 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "I'm actually looking to trade in right now using this exact strategy you learned throughout this video"
+            "verbatim": "something that's showing that we have bullish momentum after the double bottom"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "lRMFcsqhYBU-S0-B011",
+          "video_id": "lRMFcsqhYBU",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "this level must have been tested multiple times"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "lRMFcsqhYBU-S0-B012",
+          "video_id": "lRMFcsqhYBU",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the very next level price will hit"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "lRMFcsqhYBU-S0-B013",
+          "video_id": "lRMFcsqhYBU",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "what we're waiting on on the four hour chart is a double bottom"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "lRMFcsqhYBU-S0-B014",
+          "video_id": "lRMFcsqhYBU",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I normally do one times the ATR indicator below the lowest Wick of the double bottom"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "lRMFcsqhYBU-S0-B015",
+          "video_id": "lRMFcsqhYBU",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I actually go with a fixed Target of a 1.4 to 1 reward to risk ratio on these types of Trades when they're counter Trend"
           },
           "rater_response": {
             "role": null,
@@ -394,7 +474,7 @@
     "items": [
       {
         "item_id": "lRMFcsqhYBU-S0-B000",
-        "extracted_condition_text": "This level serves as the major structure zone for the counter-trend trade.",
+        "extracted_condition_text": "Identify if the market is trending up (making higher highs and higher lows) or trending down (making lower lows and lower highs).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -418,7 +498,7 @@
       },
       {
         "item_id": "lRMFcsqhYBU-S0-B003",
-        "extracted_condition_text": "Multiple tests validate the level as a major structure zone.",
+        "extracted_condition_text": "Verify that the identified counter-trend level has been tested multiple times (at least two tests).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -426,7 +506,7 @@
       },
       {
         "item_id": "lRMFcsqhYBU-S0-B004",
-        "extracted_condition_text": "The 4H confirmation signals the reversal intent.",
+        "extracted_condition_text": "Multiple tests validate the level as a major structure zone.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -434,7 +514,7 @@
       },
       {
         "item_id": "lRMFcsqhYBU-S0-B005",
-        "extracted_condition_text": "The 4H confirmation signals the reversal intent.",
+        "extracted_condition_text": "Drop down to the 4H chart and wait for the specific reversal confirmation (e.g., double bottom for long, double top for short).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -442,7 +522,7 @@
       },
       {
         "item_id": "lRMFcsqhYBU-S0-B006",
-        "extracted_condition_text": "Create a termination zone (box) between the lowest body and the lowest wick of the reversal candle (e.g., double bottom).",
+        "extracted_condition_text": "The 4H confirmation signals the reversal intent.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -450,7 +530,7 @@
       },
       {
         "item_id": "lRMFcsqhYBU-S0-B007",
-        "extracted_condition_text": "This zone defines the area where the reversal confirmation is valid.",
+        "extracted_condition_text": "Create a termination zone (box) between the lowest body and the lowest wick of the reversal candle (e.g., double bottom).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +538,7 @@
       },
       {
         "item_id": "lRMFcsqhYBU-S0-B008",
-        "extracted_condition_text": "The identified major structure level must have been tested multiple times.",
+        "extracted_condition_text": "This zone defines the area where the reversal confirmation is valid.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -466,7 +546,7 @@
       },
       {
         "item_id": "lRMFcsqhYBU-S0-B009",
-        "extracted_condition_text": "Wait for the specific reversal confirmation (e.g., double bottom) on the 4H chart.",
+        "extracted_condition_text": "Enter on a candlestick pattern showing buying pressure (e.g., engulfing bar, hammer, or close above bar) after the reversal confirmation.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +554,47 @@
       },
       {
         "item_id": "lRMFcsqhYBU-S0-B010",
+        "extracted_condition_text": "The candlestick pattern confirms bullish momentum after the reversal.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "lRMFcsqhYBU-S0-B011",
+        "extracted_condition_text": "The identified major structure level must have been tested multiple times.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "lRMFcsqhYBU-S0-B012",
+        "extracted_condition_text": "Identify the next structural level price will hit outside of the current trend direction.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "lRMFcsqhYBU-S0-B013",
+        "extracted_condition_text": "Wait for the specific reversal confirmation (e.g., double bottom) on the 4H chart.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "lRMFcsqhYBU-S0-B014",
         "extracted_condition_text": "The stop is placed one ATR below the lowest wick of the reversal candle.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "lRMFcsqhYBU-S0-B015",
+        "extracted_condition_text": "The speaker uses a fixed target of 1.4 to 1 reward to risk ratio for counter-trend trades.",
         "adjudication_response": {
           "support": null,
           "support_justification": null

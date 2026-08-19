@@ -1,0 +1,46 @@
+{
+  "xTTDH5iRhJc-S0-B000": {
+    "support": "partial",
+    "justification": "Quote gives the box drawn high-to-low and extended, but says 'until today' rather than the previous day's range extended one day forward."
+  },
+  "xTTDH5iRhJc-S0-B001": {
+    "support": "partial",
+    "justification": "Quote establishes liquidity resting above/below the previous day's high and low but never states that the daily candle defines the range."
+  },
+  "xTTDH5iRhJc-S0-B002": {
+    "support": "confirmed",
+    "justification": "Quote states the full 15-minute candle close above the high level or below the low level, which is exactly the breakout confirmation condition."
+  },
+  "xTTDH5iRhJc-S0-B003": {
+    "support": "confirmed",
+    "justification": "Quote explicitly says it is not a confirmed breakout until the candle closes, which is the condition."
+  },
+  "xTTDH5iRhJc-S0-B004": {
+    "support": "partial",
+    "justification": "Quote names only a hammer or bullish engulfing at the level; the condition generalizes to include the inverted hammer."
+  },
+  "xTTDH5iRhJc-S0-B005": {
+    "support": "partial",
+    "justification": "Quote gives the inverse rationale (movement could continue back into the range) and never states exhaustion or a bounce signal."
+  },
+  "xTTDH5iRhJc-S0-B006": {
+    "support": "confirmed",
+    "justification": "Quote states verbatim that the trade is taken only within the first 2.5 hours of the market open."
+  },
+  "xTTDH5iRhJc-S0-B007": {
+    "support": "confirmed",
+    "justification": "Quote states the 15-minute candle close outside the box, which is the previous day's high/low range."
+  },
+  "xTTDH5iRhJc-S0-B008": {
+    "support": "partial",
+    "justification": "Quote requires one of two candle types at the key level while the condition enumerates three."
+  },
+  "xTTDH5iRhJc-S0-B009": {
+    "support": "confirmed",
+    "justification": "Quote gives both placements: stop at the low for the long case and slightly above the high for the inverted-hammer short case."
+  },
+  "xTTDH5iRhJc-S0-B010": {
+    "support": "confirmed",
+    "justification": "Quote states the target profit is three times the stop loss, exactly as the condition says."
+  }
+}

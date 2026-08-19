@@ -1,0 +1,66 @@
+{
+  "lRMFcsqhYBU-S0-B000": {
+    "support": "partial",
+    "justification": "The quote states only the uptrend half and omits the downtrend branch and the explicit identify-the-trend instruction."
+  },
+  "lRMFcsqhYBU-S0-B001": {
+    "support": "partial",
+    "justification": "The quote expresses looking below and finding the next level price will hit, but the counter-trend-long framing and 'current swing low' specificity are added."
+  },
+  "lRMFcsqhYBU-S0-B002": {
+    "support": "partial",
+    "justification": "The quote designates the level as the counter-trend level but does not call it a major structure zone."
+  },
+  "lRMFcsqhYBU-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote states the level must have been tested multiple times with at least two tests, exactly as the condition says."
+  },
+  "lRMFcsqhYBU-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote directly ties multiple tests to the level being a valid major structure level."
+  },
+  "lRMFcsqhYBU-S0-B005": {
+    "support": "partial",
+    "justification": "The quote covers dropping to 4H for a bullish double-bottom confirmation, but the double-top-for-short generalization is not in the quote."
+  },
+  "lRMFcsqhYBU-S0-B006": {
+    "support": "partial",
+    "justification": "The quote only marks that a 4H confirmation occurred; 'signals the reversal intent' is added interpretation."
+  },
+  "lRMFcsqhYBU-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote gives the exact box geometry between the lowest body and lowest wick of the candle."
+  },
+  "lRMFcsqhYBU-S0-B008": {
+    "support": "denied",
+    "justification": "The quote is about criteria validating a double bottom, not about a zone defining where confirmation is valid."
+  },
+  "lRMFcsqhYBU-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote lists hammer, engulfing, or close-above bar after the double bottom, matching the entry-trigger pattern set."
+  },
+  "lRMFcsqhYBU-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote states the pattern shows bullish momentum after the double bottom, which is the condition verbatim."
+  },
+  "lRMFcsqhYBU-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote states the level must have been tested multiple times, exactly the condition."
+  },
+  "lRMFcsqhYBU-S0-B012": {
+    "support": "partial",
+    "justification": "The bare fragment names the next level price will hit but omits the identify instruction and the outside-current-trend qualifier."
+  },
+  "lRMFcsqhYBU-S0-B013": {
+    "support": "confirmed",
+    "justification": "The quote says they are waiting on the four hour chart for a double bottom, which is the condition."
+  },
+  "lRMFcsqhYBU-S0-B014": {
+    "support": "confirmed",
+    "justification": "The quote gives one times ATR below the lowest wick of the double bottom, matching the stop placement geometry."
+  },
+  "lRMFcsqhYBU-S0-B015": {
+    "support": "confirmed",
+    "justification": "The quote states a fixed 1.4 to 1 reward-to-risk target for counter-trend trades."
+  }
+}

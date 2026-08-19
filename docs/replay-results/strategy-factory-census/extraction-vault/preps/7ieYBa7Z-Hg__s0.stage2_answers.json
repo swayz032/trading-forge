@@ -1,0 +1,42 @@
+{
+  "7ieYBa7Z-Hg-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote is the trader literally checking whether the 4H is wicking or has swept, which is exactly the higher-timeframe wick/sweep observation the condition states."
+  },
+  "7ieYBa7Z-Hg-S0-B001": {
+    "support": "partial",
+    "justification": "The quote grounds the higher timeframe supplying directional context for M1, but says nothing about identifying structural shifts."
+  },
+  "7ieYBa7Z-Hg-S0-B002": {
+    "support": "partial",
+    "justification": "The quote describes one instance of price breaking the range and trading back in, but is descriptive narration and never specifies the swing-high/low definition or a wait-for imperative."
+  },
+  "7ieYBa7Z-Hg-S0-B003": {
+    "support": "partial",
+    "justification": "The quote endorses the pullback as where profit is, but does not tie it to the previous range or to a reversal entry zone."
+  },
+  "7ieYBa7Z-Hg-S0-B004": {
+    "support": "partial",
+    "justification": "The quote does place an entry on the return into the zone, but names the 50 level rather than a retest of the range high or low."
+  },
+  "7ieYBa7Z-Hg-S0-B005": {
+    "support": "partial",
+    "justification": "The quote establishes the previous range as the only POI he uses but never says a retest confirms its structural validity."
+  },
+  "7ieYBa7Z-Hg-S0-B006": {
+    "support": "partial",
+    "justification": "The quote's highest-probability claim is about a wick run then reclaim above the range for a continuation, not about executing on a pullback into the previous range."
+  },
+  "7ieYBa7Z-Hg-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote states outright that nothing should be done outside market structure, which is the alignment requirement the condition expresses."
+  },
+  "7ieYBa7Z-Hg-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote places the stop/invalidation behind the 4H POI, which is the condition's stop-placement rule in the trader's own words."
+  },
+  "7ieYBa7Z-Hg-S0-B009": {
+    "support": "partial",
+    "justification": "The quote is about targeting a prominent wick to the left, not previous daily highs or lows, so only the general structural-target idea carries over."
+  }
+}

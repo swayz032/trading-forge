@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 15
+    "target_items": 17
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video dE4lPhAWke8 strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 15,
+      "item_count": 17,
       "items": [
         {
           "item_id": "dE4lPhAWke8-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps."
+            "verbatim": "if I have a bullish bias, I'm looking for higher highs and higher lows to form and continue"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember, the market doesn't reward complexity. It rewards patience and discipline."
+            "verbatim": "What we're looking for with a bullish bias is that the market is just going to continue making higher highs and higher lows."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember, the market doesn't reward complexity. It rewards patience and discipline."
+            "verbatim": "the market needs liquidity to operate"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps."
+            "verbatim": "I want to see a raid on that old high and then I need to see a closure back below that old high"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps. Remember, the market doesn't reward complexity. It rewards patience and discipline."
+            "verbatim": "That to me is a signal that this bearish market structure maybe the high time frame is overall bearish."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps."
+            "verbatim": "The characteristics of it are largebodied candles, a break in market structure, and a fair value gap creation."
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, there you have it. The complete boring strategy that generated my biggest payout ever. Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps."
+            "verbatim": "a very simple and obvious sign that even beginner traders can use to find these trades easily"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, there you have it. The complete boring strategy that generated my biggest payout ever. Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps. Remember, the market doesn't reward complexity. It rewards patience and discipline. Master these three steps before you try anything fancy. You now have everything you need to trade profitably. Stop over complicating it. Start following this process."
+            "verbatim": "as it trades back into the inverted fair value gap, we're going to go long"
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps."
+            "verbatim": "So, if I have a bullish bias, I'm looking for higher highs and higher lows to form and continue. And if I have a bearish bias, I'm looking for lower highs and lower lows to form and continue."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps. Remember, the market doesn't reward complexity. It rewards patience and discipline."
+            "verbatim": "Maybe it's equal highs and lows where multiple levels align."
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps."
+            "verbatim": "it could purge those old short-term lows and then go higher"
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps."
+            "verbatim": "it needs to close back above that old low in order to create a swing failure pattern before going higher"
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps. Remember, the market doesn't reward complexity. It rewards patience and discipline."
+            "verbatim": "largebodied candles, a break in market structure, and a fair value gap creation"
           },
           "rater_response": {
             "role": null,
@@ -421,7 +421,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, there you have it. The complete boring strategy that generated my biggest payout ever. Three simple steps. Find a clear daily bias. Wait for liquidity raids. Enter on displacement with fair value gaps. Remember, the market doesn't reward complexity. It rewards patience and discipline."
+            "verbatim": "you could use the stop loss at the low end of the fair value gap"
           },
           "rater_response": {
             "role": null,
@@ -429,7 +429,7 @@
           }
         },
         {
-          "item_id": "dE4lPhAWke8-S0-AUDIT",
+          "item_id": "dE4lPhAWke8-S0-B014",
           "video_id": "dE4lPhAWke8",
           "family": null,
           "timeframe": null,
@@ -437,13 +437,44 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Wait for liquidity raids."
+            "verbatim": "we're going to target the high of the range"
           },
           "rater_response": {
             "role": null,
             "notes": null
+          }
+        },
+        {
+          "item_id": "dE4lPhAWke8-S0-B015",
+          "video_id": "dE4lPhAWke8",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "there's level of liquidity above there. I tend to like targeting those levels"
           },
-          "audit": true
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "dE4lPhAWke8-S0-B016",
+          "video_id": "dE4lPhAWke8",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "if you're a short-term trader, you're going to be looking at previous days highs and lows acting as those liquidity magnets"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
         }
       ]
     }
@@ -459,7 +490,7 @@
     "items": [
       {
         "item_id": "dE4lPhAWke8-S0-B000",
-        "extracted_condition_text": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap.",
+        "extracted_condition_text": "Establish a bullish bias by confirming the market is making higher highs and higher lows on the higher timeframe.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -467,7 +498,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B001",
-        "extracted_condition_text": "The market needs liquidity to operate and often targets areas where retail traders have placed stops.",
+        "extracted_condition_text": "Higher highs and higher lows indicate a continuation of the bullish trend.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -483,7 +514,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B003",
-        "extracted_condition_text": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap.",
+        "extracted_condition_text": "Wait for a Swing Failure Pattern (SFP) confirmation, which is a closure back below the old high (for short) or above the old low (for long) after the raid.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -491,7 +522,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B004",
-        "extracted_condition_text": "The initial stop is placed at the low end of the Fair Value Gap (FVG) to protect against a reversal.",
+        "extracted_condition_text": "The SFP signals that the market structure has shifted and the previous bias is being invalidated.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -499,7 +530,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B005",
-        "extracted_condition_text": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap.",
+        "extracted_condition_text": "Wait for displacement, characterized by a large-bodied candle and the creation of a Fair Value Gap (FVG) following the SFP.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -507,7 +538,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B006",
-        "extracted_condition_text": "Entry is taken on the retest of the FVG after the market has shown displacement and structure shift.",
+        "extracted_condition_text": "Displacement confirms the reversal intent and provides a clear entry trigger.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -515,7 +546,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B007",
-        "extracted_condition_text": "The market must be making higher highs and higher lows (or lower highs and lower lows) on the higher timeframe.",
+        "extracted_condition_text": "Entry is taken on the retest of the FVG after the market has shown displacement and structure shift.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -523,7 +554,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B008",
-        "extracted_condition_text": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap.",
+        "extracted_condition_text": "The market must be making higher highs and higher lows (or lower highs and lower lows) on the higher timeframe.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -531,7 +562,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B009",
-        "extracted_condition_text": "The initial stop is placed at the low end of the Fair Value Gap (FVG) to protect against a reversal.",
+        "extracted_condition_text": "The market must have clear liquidity pools, such as equal highs or equal lows, to trade towards.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -539,7 +570,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B010",
-        "extracted_condition_text": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap.",
+        "extracted_condition_text": "The market must raid the liquidity pool (purge stops) before continuing in the direction of the bias.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -547,7 +578,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B011",
-        "extracted_condition_text": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap.",
+        "extracted_condition_text": "A closure back above the old low (for long) or below the old high (for short) must occur after the raid.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -555,7 +586,7 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B012",
-        "extracted_condition_text": "The initial stop is placed at the low end of the Fair Value Gap (FVG) to protect against a reversal.",
+        "extracted_condition_text": "The entry must be triggered by displacement, which includes a large-bodied candle and the creation of a Fair Value Gap.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -563,6 +594,14 @@
       },
       {
         "item_id": "dE4lPhAWke8-S0-B013",
+        "extracted_condition_text": "The initial stop is placed at the low end of the Fair Value Gap (FVG) to protect against a reversal.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "dE4lPhAWke8-S0-B014",
         "extracted_condition_text": "The primary target is the high end of the current trading range.",
         "adjudication_response": {
           "support": null,
@@ -570,13 +609,20 @@
         }
       },
       {
-        "item_id": "dE4lPhAWke8-S0-AUDIT",
-        "extracted_condition_text": "Wait for displacement, characterized by a large-bodied candle and the creation of a Fair Value Gap (FVG) following the SFP.",
+        "item_id": "dE4lPhAWke8-S0-B015",
+        "extracted_condition_text": "Secondary targets are areas of equal highs or lows where significant liquidity is present.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
-        },
-        "audit": true
+        }
+      },
+      {
+        "item_id": "dE4lPhAWke8-S0-B016",
+        "extracted_condition_text": "For short-term traders, previous day highs and lows act as liquidity magnets.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
       }
     ]
   }

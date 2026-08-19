@@ -1,0 +1,62 @@
+{
+  "oDLt9zh33LE-S0-B000": {
+    "support": "partial",
+    "justification": "The quote gives only the 5m breakout wait; the reference to the 15m range high/low is supplied by the condition, not by this anchor."
+  },
+  "oDLt9zh33LE-S0-B001": {
+    "support": "partial",
+    "justification": "The quote asserts false-signal filtering but says nothing about a definitive lower-timeframe breakout being the mechanism."
+  },
+  "oDLt9zh33LE-S0-B002": {
+    "support": "partial",
+    "justification": "The quote names an overlapping FVG crossing 'the higher low'; the condition generalizes to range high or low and adds the breakout-candle attribution."
+  },
+  "oDLt9zh33LE-S0-B003": {
+    "support": "partial",
+    "justification": "The quote hardens only the middle-candle requirement and calls the range overlap 'even better', while the condition upgrades that optional bonus to a must."
+  },
+  "oDLt9zh33LE-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote states the retest of the high or low of the initial candle carrying the overlapping FVG almost verbatim."
+  },
+  "oDLt9zh33LE-S0-B005": {
+    "support": "partial",
+    "justification": "The quote supports the patience framing but contains nothing about the retest confirming the initial displacement."
+  },
+  "oDLt9zh33LE-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote directly conditions taking the trade on the retest candle being engulfed."
+  },
+  "oDLt9zh33LE-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote is a near-verbatim statement that the engulfing candle confirms the breakout is real and ready to run."
+  },
+  "oDLt9zh33LE-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote states that the candle's close is the entry, which is exactly the condition."
+  },
+  "oDLt9zh33LE-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote is the trader's own instruction to mark the high and low of the first 15-minute candle range."
+  },
+  "oDLt9zh33LE-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote states displacement through the level plus creation of an overlapping fair value gap, matching the condition."
+  },
+  "oDLt9zh33LE-S0-B011": {
+    "support": "partial",
+    "justification": "The quote's retest object is the gap and the high, and the condition drops the trade-back-into-gap element while restating the object as the initial candle."
+  },
+  "oDLt9zh33LE-S0-B012": {
+    "support": "partial",
+    "justification": "The quote places the stop at an unspecified 'this low'; the identification with the FVG-forming initial candle is added by the condition."
+  },
+  "oDLt9zh33LE-S0-B013": {
+    "support": "confirmed",
+    "justification": "The quote states the first target is a clean 2, which the condition renders as 2R without altering it."
+  },
+  "oDLt9zh33LE-S0-AUDIT": {
+    "support": "partial",
+    "justification": "The truncated quote carries only the close-of-candle timing and never states that entry is taken, nor identifies a confirmation candle."
+  }
+}

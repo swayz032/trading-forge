@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 6
+    "target_items": 15
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video qLtq73bTPBA strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 6,
+      "item_count": 15,
       "items": [
         {
           "item_id": "qLtq73bTPBA-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember that the price cannot yet intersect because the price has to tell us which one is going to become an action and which one is going to become a safety."
+            "verbatim": "we are going to start from a monthly time frame, a high time frame"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember that the price cannot yet intersect because the price has to tell us which one is going to become an action and which one is going to become a safety."
+            "verbatim": "top down analysis, we want to see what something has done overall. A bird's eye view."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we have to wait for price to break one of our lines in order for us to signify an entry or to take action."
+            "verbatim": "when we're drawing our upward trend lines and we're drawing our downward trend lines, we want to make sure we're trying to capture as many touch points as possible"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we have to wait for price to break one of our lines in order for us to signify an entry or to take action."
+            "verbatim": "the trend line is our guide for following the market's movement"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we have to wait for price to break one of our lines in order for us to signify an entry or to take action."
+            "verbatim": "We cannot have price intersect or cut through."
           },
           "rater_response": {
             "role": null,
@@ -293,12 +293,157 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Remember that the price cannot yet intersect because the price has to tell us which one is going to become an action and which one is going to become a safety."
+            "verbatim": "We are truly envisioning this line holding the price down."
           },
           "rater_response": {
             "role": null,
             "notes": null
           }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-B006",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "all of the lines that we draw from higher time frames down to lower time frames have to connect. They're always going to connect to the previous point B."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-B007",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "But this process gives us structure to how we draw our trend lines."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-B008",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "when price finally does break, that gives us our indication to start taking action"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-B009",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Top down analysis means that we are starting from the highest time frame and working our way down."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-B010",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the key point here is to make sure that price does not intersect"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-B011",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we have to try to capture as many touch points as possible"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-B012",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "An action line is the line that was broken. This triggers our decision to place a trade."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-B013",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We always want to make sure it is on the other side of the safety line."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "qLtq73bTPBA-S0-AUDIT",
+          "video_id": "qLtq73bTPBA",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "wait for price to break one of these lines"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          },
+          "audit": true
         }
       ]
     }
@@ -314,7 +459,7 @@
     "items": [
       {
         "item_id": "qLtq73bTPBA-S0-B000",
-        "extracted_condition_text": "The stop loss is placed on the other side of the safety line (the opposite trend line).",
+        "extracted_condition_text": "Begin the top-down analysis by starting at the highest timeframe (e.g., Monthly).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -322,7 +467,7 @@
       },
       {
         "item_id": "qLtq73bTPBA-S0-B001",
-        "extracted_condition_text": "The stop loss is placed on the other side of the safety line (the opposite trend line).",
+        "extracted_condition_text": "This establishes the overall market bias and structure.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -330,7 +475,7 @@
       },
       {
         "item_id": "qLtq73bTPBA-S0-B002",
-        "extracted_condition_text": "The strategy requires a top-down analysis starting from the highest timeframe and working down to the entry timeframe.",
+        "extracted_condition_text": "Draw both upward and downward trend lines, capturing as many touch points as possible.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -338,7 +483,7 @@
       },
       {
         "item_id": "qLtq73bTPBA-S0-B003",
-        "extracted_condition_text": "The strategy requires a top-down analysis starting from the highest timeframe and working down to the entry timeframe.",
+        "extracted_condition_text": "Trend lines provide the structural guidance for the market movement.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -346,7 +491,7 @@
       },
       {
         "item_id": "qLtq73bTPBA-S0-B004",
-        "extracted_condition_text": "The strategy requires a top-down analysis starting from the highest timeframe and working down to the entry timeframe.",
+        "extracted_condition_text": "Ensure that the price does not intersect or cut through the trend lines while drawing them.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -354,11 +499,84 @@
       },
       {
         "item_id": "qLtq73bTPBA-S0-B005",
+        "extracted_condition_text": "The integrity of the trend line is maintained only if price respects the line.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-B006",
+        "extracted_condition_text": "Iteratively move down through timeframes (e.g., Monthly to Weekly, Weekly to Daily, etc.), ensuring each new trend line connects to the previous line's most recent touch point.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-B007",
+        "extracted_condition_text": "Connecting lines maintains structural integrity across different time scales.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-B008",
+        "extracted_condition_text": "The break of a trend line serves as the primary indication to enter a trade.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-B009",
+        "extracted_condition_text": "The strategy requires a top-down analysis starting from the highest timeframe and working down to the entry timeframe.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-B010",
+        "extracted_condition_text": "The trend lines must be drawn such that price does not intersect or cut through them.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-B011",
+        "extracted_condition_text": "The trend lines must be drawn to capture as many touch points as possible.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-B012",
+        "extracted_condition_text": "The entry is triggered when price breaks one of the established trend lines, which is designated as the action line.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-B013",
         "extracted_condition_text": "The stop loss is placed on the other side of the safety line (the opposite trend line).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
         }
+      },
+      {
+        "item_id": "qLtq73bTPBA-S0-AUDIT",
+        "extracted_condition_text": "Wait for price to break one of the established trend lines (the 'action line').",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        },
+        "audit": true
       }
     ]
   }

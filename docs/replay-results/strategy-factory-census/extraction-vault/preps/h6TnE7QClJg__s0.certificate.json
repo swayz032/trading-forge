@@ -1,0 +1,350 @@
+{
+  "conditions": [
+    {
+      "surface_class": "imperative",
+      "classifying_tier": 1,
+      "quote_anchor": "wait for the EMA10 to cross above the EMA 20.",
+      "char_span": [
+        9715,
+        9760
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "conditional-action",
+      "classifying_tier": 1,
+      "quote_anchor": "when both conditions are present.",
+      "char_span": [
+        10000,
+        10033
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "conditional-action",
+      "classifying_tier": 1,
+      "quote_anchor": "when both align",
+      "char_span": [
+        10749,
+        10764
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "imperative",
+      "classifying_tier": 1,
+      "quote_anchor": "wait for the EMA10 to cross above the EMA 20.",
+      "char_span": [
+        9715,
+        9760
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes. The EMA 20 is smoother. It represents the broader short to medium-term trend.",
+      "char_span": [
+        3517,
+        3683
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states verbatim that EMA10 tracks short-term momentum and EMA20 represents the broader short-to-medium-term trend."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "check CCI. It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength.",
+      "char_span": [
+        9813,
+        9966
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the CCI check, the above-zero-at-or-shortly-before-crossover requirement, and the momentum-strength rationale exactly as written."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "measure how far the current price has moved away from its average price",
+      "char_span": [
+        5546,
+        5617
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives only the generic distance-from-average measurement; it does not name CCI or state that it indicates momentum strength."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "you're only entering when both signals align",
+      "char_span": [
+        7145,
+        7189
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote carries the both-signals-align entry requirement but not the 'confirmed momentum' rationale the condition adds."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "EMA10 crosses below the EMA 20 bearish momentum signal",
+      "char_span": [
+        10562,
+        10616
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is the EMA10-crosses-below-EMA20 bearish momentum signal the condition states."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes. The EMA 20 is smoother. It represents the broader short to medium-term trend.",
+      "char_span": [
+        3517,
+        3683
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states verbatim that EMA10 tracks short-term momentum and EMA20 represents the broader short-to-medium-term trend."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength.",
+      "char_span": [
+        10628,
+        10730
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the CCI below-zero at-or-shortly-before-crossover requirement and the bearish-strength confirmation."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "measure how far the current price has moved away from its average price",
+      "char_span": [
+        5546,
+        5617
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives only the generic distance-from-average measurement; it does not name CCI or state that it indicates momentum strength."
+      }
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        10699,
+        10730
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength.",
+      "char_span": [
+        9824,
+        9966
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote expresses the above-zero at-or-shortly-before-crossover requirement and the momentum-strength confirmation, with CCI as the implicit referent of 'it'."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "EMA10 crosses below the EMA 20 bearish momentum signal",
+      "char_span": [
+        10562,
+        10616
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is the EMA10-crosses-below-EMA20 bearish momentum signal the condition states."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength.",
+      "char_span": [
+        10628,
+        10730
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the CCI below-zero at-or-shortly-before-crossover requirement and the bearish-strength confirmation."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "place your stop loss below the most recent swing low or just below the EMA 20",
+      "char_span": [
+        10197,
+        10274
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote gives exactly the stop placement below the most recent swing low or just below the EMA 20."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "set your takeprofit at least 1 and a half to two times the distance of your stop loss",
+      "char_span": [
+        10351,
+        10436
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the take-profit at least 1.5 to two times the stop-loss distance."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "target at least 1.5 to two times your risk.",
+      "char_span": [
+        10847,
+        10890
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states targeting at least 1.5 to two times risk, which is the stop-loss distance the condition names."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "h6TnE7QClJg",
+    "full_transcript_sha256": "0488f725b67f0826df377432419447f3db14f19e8df450bd03b211905dc98219",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 4,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 15
+  },
+  "dry_run": false
+}

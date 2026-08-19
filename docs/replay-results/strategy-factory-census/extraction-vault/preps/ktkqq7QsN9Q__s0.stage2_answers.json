@@ -1,0 +1,38 @@
+{
+  "ktkqq7QsN9Q-S0-B000": {
+    "support": "partial",
+    "justification": "The quote states break-then-acceptance-into-discovery but never names the VWAP value area or the multi-candle/time acceptance definition, which the condition imports from elsewhere."
+  },
+  "ktkqq7QsN9Q-S0-B001": {
+    "support": "confirmed",
+    "justification": "The quote directly says acceptance is the signal the move is real and that we are now in price discovery."
+  },
+  "ktkqq7QsN9Q-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote gives exactly the either/or entry route -- first sign of strength afterwards, or buying the first touch of the band."
+  },
+  "ktkqq7QsN9Q-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote states the first pullback to the band after a strong break is the highest probability, matching the condition."
+  },
+  "ktkqq7QsN9Q-S0-B004": {
+    "support": "partial",
+    "justification": "The quote is a descriptive tendency ('typically seeks to explore new levels'), while the condition converts it into a prescriptive 'must break out' requirement."
+  },
+  "ktkqq7QsN9Q-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote states both disjuncts -- multiple consecutive closes outside the band or significant time outside the value area -- as the condition does."
+  },
+  "ktkqq7QsN9Q-S0-B006": {
+    "support": "confirmed",
+    "justification": "The condition is a verbatim restatement of the quote's stop placement."
+  },
+  "ktkqq7QsN9Q-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote names the target as a revisit of the recent highs, which the condition restates verbatim."
+  },
+  "ktkqq7QsN9Q-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote's 'scalp to the midpoint of the distance' is the target the condition states."
+  }
+}

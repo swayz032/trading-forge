@@ -1,0 +1,54 @@
+{
+  "bQp37aD1JLE-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote directly states zooming out on the 4-hour chart to read the most recent overall trend in price action, which is exactly the condition."
+  },
+  "bQp37aD1JLE-S0-B001": {
+    "support": "partial",
+    "justification": "The quote confirms direction is taken from the 4H chart but does not itself state that the 4H provides macro context/bias for the trade."
+  },
+  "bQp37aD1JLE-S0-B002": {
+    "support": "partial",
+    "justification": "The quote narrates that price is currently retracing rather than instructing the trader to wait for a retrace to find an entry zone."
+  },
+  "bQp37aD1JLE-S0-B003": {
+    "support": "partial",
+    "justification": "The quote explains smart money entering on FVGs/order blocks, which the condition reframes as a high-probability trend-aligned entry it never explicitly states."
+  },
+  "bQp37aD1JLE-S0-B004": {
+    "support": "partial",
+    "justification": "The quote treats the FVG/order block as the retracement entry zone AFTER confirmation, while the condition makes the FVG/OB itself the confirmation."
+  },
+  "bQp37aD1JLE-S0-B005": {
+    "support": "partial",
+    "justification": "The quote asserts a general need for confirmation but says nothing about lower timeframes, bullish bias validation, or a precise entry point."
+  },
+  "bQp37aD1JLE-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote names the big bullish fair value gap as the confirmation and says it can be the entry, which is the condition's own grounding."
+  },
+  "bQp37aD1JLE-S0-B007": {
+    "support": "partial",
+    "justification": "The quote establishes confirmation-before-buying but does not specify structural confirmation or the entry timeframe the condition asserts."
+  },
+  "bQp37aD1JLE-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote states the 4-hour chart is used solely to read the overall trend, exactly matching the condition."
+  },
+  "bQp37aD1JLE-S0-B009": {
+    "support": "partial",
+    "justification": "The quote observes that liquidity sits at big figures but does not state the trader identifies those zones to read smart-money positioning."
+  },
+  "bQp37aD1JLE-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote explicitly requires dropping to the 5m/15m chart to see price still bullish on the lower timeframes before entry."
+  },
+  "bQp37aD1JLE-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote instructs placing the stop at the low that forms the fair value gap, which is the condition verbatim in substance."
+  },
+  "bQp37aD1JLE-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote states the speaker's recommendation to target at least 3:1, matching the condition exactly."
+  }
+}

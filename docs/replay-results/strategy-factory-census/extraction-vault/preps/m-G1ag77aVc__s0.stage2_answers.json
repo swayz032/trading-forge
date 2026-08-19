@@ -1,0 +1,66 @@
+{
+  "m-G1ag77aVc-S0-B000": {
+    "support": "partial",
+    "justification": "The quote grounds the last-candle-before-the-impulse rule but says nothing about the higher timeframe or about identifying a supply/demand zone."
+  },
+  "m-G1ag77aVc-S0-B001": {
+    "support": "partial",
+    "justification": "The quote ties a demand zone to prior institutional buying but never mentions the last candle before the impulse that the condition asserts marks it."
+  },
+  "m-G1ag77aVc-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote states exactly the instruction to zoom to the 1H timeframe to find smaller zones inside the 4H zone."
+  },
+  "m-G1ag77aVc-S0-B003": {
+    "support": "partial",
+    "justification": "The quote asserts amplified risk-to-reward but not the refinement-to-a-smaller-timeframe cause or the more-precise-entry claim."
+  },
+  "m-G1ag77aVc-S0-B004": {
+    "support": "partial",
+    "justification": "The quote directs order placement at the extreme zone but omits the definition of it as the zone furthest from price in the leg."
+  },
+  "m-G1ag77aVc-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote gives both stated reasons verbatim: best risk-reward and safest."
+  },
+  "m-G1ag77aVc-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote is a near-verbatim statement of waiting for lower-timeframe structure change in agreement with the larger trend."
+  },
+  "m-G1ag77aVc-S0-B007": {
+    "support": "partial",
+    "justification": "The quote narrates one zone showing buying strong enough to reshape the trend, but does not express the generalized 'standard confirmation' rule."
+  },
+  "m-G1ag77aVc-S0-B008": {
+    "support": "partial",
+    "justification": "The quote covers choosing the extreme zone for the buy limit but carries no confirmation-of-structural-shift element."
+  },
+  "m-G1ag77aVc-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote states both outcomes the condition asserts: capturing the wicks and securing a sniper entry."
+  },
+  "m-G1ag77aVc-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote is the condition verbatim."
+  },
+  "m-G1ag77aVc-S0-B011": {
+    "support": "partial",
+    "justification": "The terse 'go lower and identify smaller zones' omits the timeframe framing and the inside-the-initial-zone containment the condition states."
+  },
+  "m-G1ag77aVc-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote defines the extreme zone as the furthest zone from price in the leg, matching the condition."
+  },
+  "m-G1ag77aVc-S0-B013": {
+    "support": "confirmed",
+    "justification": "The quote is a near-verbatim statement of waiting for lower-timeframe structure change in agreement with the larger trend."
+  },
+  "m-G1ag77aVc-S0-B014": {
+    "support": "partial",
+    "justification": "The quote is a soft preference for stops under the low, which drifts from the condition's prescriptive 'structurally below the zone for long entries'."
+  },
+  "m-G1ag77aVc-S0-B015": {
+    "support": "partial",
+    "justification": "The fragment supports a target at that high but does not express it as the structural high of the initial zone."
+  }
+}

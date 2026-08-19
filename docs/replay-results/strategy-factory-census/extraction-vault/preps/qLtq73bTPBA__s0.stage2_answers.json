@@ -1,0 +1,62 @@
+{
+  "qLtq73bTPBA-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote directly states starting from the monthly (highest) timeframe, which is exactly the condition."
+  },
+  "qLtq73bTPBA-S0-B001": {
+    "support": "partial",
+    "justification": "The quote describes a bird's-eye overall view but never mentions establishing bias or structure, so the condition generalizes beyond it."
+  },
+  "qLtq73bTPBA-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote states both upward and downward trend lines are drawn capturing as many touch points as possible."
+  },
+  "qLtq73bTPBA-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote calls the trend line the guide for following market movement, matching the condition's claim of structural guidance."
+  },
+  "qLtq73bTPBA-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote states price cannot intersect or cut through, which is the condition verbatim in substance."
+  },
+  "qLtq73bTPBA-S0-B005": {
+    "support": "partial",
+    "justification": "The quote is a visualization of the line holding price down and does not state the 'integrity maintained only if price respects the line' rule."
+  },
+  "qLtq73bTPBA-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote states lines from higher to lower timeframes must connect and always connect to the previous point B, matching the iterative connection rule."
+  },
+  "qLtq73bTPBA-S0-B007": {
+    "support": "partial",
+    "justification": "The quote says the process gives structure to drawing lines, but does not assert that connecting lines maintains integrity across time scales."
+  },
+  "qLtq73bTPBA-S0-B008": {
+    "support": "confirmed",
+    "justification": "The quote makes the price break the indication to start taking action, which is the condition's entry trigger."
+  },
+  "qLtq73bTPBA-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote defines top-down analysis as starting from the highest timeframe and working down, matching the condition."
+  },
+  "qLtq73bTPBA-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote states the key point is that price does not intersect, which is the condition."
+  },
+  "qLtq73bTPBA-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote states the requirement to capture as many touch points as possible."
+  },
+  "qLtq73bTPBA-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote defines the action line as the broken line and says it triggers the decision to place a trade."
+  },
+  "qLtq73bTPBA-S0-B013": {
+    "support": "partial",
+    "justification": "The quote's referent is an unnamed 'it' and never identifies a stop loss or the safety line as the opposite trend line."
+  },
+  "qLtq73bTPBA-S0-AUDIT": {
+    "support": "confirmed",
+    "justification": "The quote instructs waiting for price to break one of the lines, exactly the condition."
+  }
+}

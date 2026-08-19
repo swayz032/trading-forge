@@ -1,0 +1,66 @@
+{
+  "c8VLqF0XDR4-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states the 9:30-10:00 NY window and the instruction to mark that 30-minute candle's low and high, which is exactly the condition."
+  },
+  "c8VLqF0XDR4-S0-B001": {
+    "support": "partial",
+    "justification": "The quote establishes when the initial balance forms (the 10:00 candle) but does not itself say the 30-minute Orb defines the strategy's initial range."
+  },
+  "c8VLqF0XDR4-S0-B002": {
+    "support": "partial",
+    "justification": "The quote supports waiting for a break above or below the orb, but says nothing about that break establishing 'initial manipulation'."
+  },
+  "c8VLqF0XDR4-S0-B003": {
+    "support": "confirmed",
+    "justification": "The quote states both the avoidance of breakouts/breakdowns and the poor risk-reward definition as the reason."
+  },
+  "c8VLqF0XDR4-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote directly expresses waiting for a pullback and retest of the orb high or low."
+  },
+  "c8VLqF0XDR4-S0-B005": {
+    "support": "partial",
+    "justification": "The quote links the orb high to a high-probability long but does not state that the retest is the entry trigger."
+  },
+  "c8VLqF0XDR4-S0-B006": {
+    "support": "partial",
+    "justification": "The quote gives the rejection-then-short with a stop above that candle's high, but never specifies a 5-minute candle close or that the level is the Orb low."
+  },
+  "c8VLqF0XDR4-S0-B007": {
+    "support": "partial",
+    "justification": "The quote narrates a break-below and rejection in an example but does not assert that the rejection confirms bearish reversal intent."
+  },
+  "c8VLqF0XDR4-S0-B008": {
+    "support": "partial",
+    "justification": "The quote supports the long with a stop below the first 30-minute high but omits the 5-minute close and the retest condition."
+  },
+  "c8VLqF0XDR4-S0-B009": {
+    "support": "partial",
+    "justification": "The quote describes a close above and retest as support in a past example, not a stated confirmation of bullish reversal intent."
+  },
+  "c8VLqF0XDR4-S0-B010": {
+    "support": "partial",
+    "justification": "The quote only notes the pre-market high was present; it does not say the setup is strengthened by it."
+  },
+  "c8VLqF0XDR4-S0-B011": {
+    "support": "partial",
+    "justification": "The quote notes an imbalance existed but does not state the setup is confirmed by it."
+  },
+  "c8VLqF0XDR4-S0-B012": {
+    "support": "partial",
+    "justification": "The fragment mentions combining with order flow but does not express that the trade is validated by order-flow alignment."
+  },
+  "c8VLqF0XDR4-S0-B013": {
+    "support": "partial",
+    "justification": "The quote places the stop below 'these lows' generically, not specifically below the swing low of the entry candle."
+  },
+  "c8VLqF0XDR4-S0-B014": {
+    "support": "denied",
+    "justification": "The quote narrates that price pushed into a new high of the day; it does not designate that as the trade's target."
+  },
+  "c8VLqF0XDR4-S0-B015": {
+    "support": "partial",
+    "justification": "The quote states a minimum 1:1 risk-to-reward willingness but does not frame it as a secondary target."
+  }
+}

@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The 15minute orb or the opening range breakout is a strategy where you mark the high and the low of the first 15 minutes of the New York open."
+            "verbatim": "mark the high and the low of the first 15 minutes of the New York open"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The 15minute orb or the opening range breakout is a strategy where you mark the high and the low of the first 15 minutes of the New York open."
+            "verbatim": "the opening range breakout is a strategy where you mark the high and the low of the first 15 minutes"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Zoom out to the higher time frame and look at VWAP. So before trading the breakout, zoom out. Check the one hour chart. Check the 4 hour chart. Check the 15, the 30 minute. I don't care. Zoom out. Don't trade this on just looking at the one minute chart. Are we trending? Are we ranging? Are we above VWOP? Are we below VWOP? Is there an anchored VWOP with a significant high or low? Like context gives you clarity. And I'll give you some examples of this. Use volume profile and look at liquidity zones."
+            "verbatim": "Zoom out to the higher time frame and look at VWAP. So before trading the breakout, zoom out. Check the one hour chart. Check the 4 hour chart."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Like context gives you clarity."
+            "verbatim": "context gives you clarity"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And waiting for confirmation, waiting for a candle to actually close and confirm that it's a breakout."
+            "verbatim": "waiting for a candle to actually close and confirm that it's a breakout"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Wait for a structure to form. That'll give you a a clear risk-to-reward. It'll tell you where you should put your stop loss. And waiting for confirmation, waiting for a candle to actually close and confirm that it's a breakout. That's going to help you avoid getting faked out a lot of times."
+            "verbatim": "That'll give you a a clear risk-to-reward. It'll tell you where you should put your stop loss. And waiting for confirmation, waiting for a candle to actually close and confirm that it's a breakout. That's going to help you avoid getting faked out a lot of times."
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "If the higher time frame is trending up, only look for long breakouts of the orb. Aligning with the trend is massively going to increase your edge with this strategy."
+            "verbatim": "If the higher time frame is trending up, only look for long breakouts of the orb."
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, number one, add some context. Zoom out to the higher time frame and look at VWAP. So before trading the breakout, zoom out. Check the one hour chart. Check the 4 hour chart. Check the 15, the 30 minute. I don't care. Zoom out. Don't trade this on just looking at the one minute chart. Are we trending? Are we ranging? Are we above VWOP? Are we below VWOP? Is there an anchored VWOP with a significant high or low? Like context gives you clarity."
+            "verbatim": "Zoom out to the higher time frame and look at VWAP."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "If you zoom out and look at those liquidity zones and overlay some volume profile, that will give you some context so you can avoid those fake outs into supply or demand zones uh that that might fake you out."
+            "verbatim": "If you zoom out and look at those liquidity zones and overlay some volume profile, that will give you some context so you can avoid those fake outs into supply or demand zones"
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The fourth thing, trade with the trend. If the higher time frame is trending up, only look for long breakouts of the orb. Aligning with the trend is massively going to increase your edge with this strategy."
+            "verbatim": "If the higher time frame is trending up, only look for long breakouts of the orb."
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Just a conservative one to one risk-to-reward and putting your stop loss above the previous five minute high."
+            "verbatim": "putting your stop loss above the previous five minute high"
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Also, if you look again at the regular trading hours gap fill, that's exactly I targeted 23K was my target. That's where I got out fully out of my position because it filled that target."
+            "verbatim": "if you look again at the regular trading hours gap fill, that's exactly I targeted 23K was my target."
           },
           "rater_response": {
             "role": null,
@@ -426,7 +426,7 @@
     "items": [
       {
         "item_id": "e5HQXYBUW-Q-S0-B000",
-        "extracted_condition_text": "Establishes the initial range for the breakout strategy.",
+        "extracted_condition_text": "Mark the high and low of the first 15 minutes of the New York open to define the Opening Range Breakout (ORB).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +474,7 @@
       },
       {
         "item_id": "e5HQXYBUW-Q-S0-B006",
-        "extracted_condition_text": "If the higher time frame is trending up, only look for long breakouts of the ORB; align with the trend.",
+        "extracted_condition_text": "The higher time frame trend must align with the intended entry direction.",
         "adjudication_response": {
           "support": null,
           "support_justification": null

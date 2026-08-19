@@ -1,0 +1,62 @@
+{
+  "h6TnE7QClJg-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states verbatim that EMA10 tracks short-term momentum and EMA20 represents the broader short-to-medium-term trend."
+  },
+  "h6TnE7QClJg-S0-B001": {
+    "support": "confirmed",
+    "justification": "The quote states the CCI check, the above-zero-at-or-shortly-before-crossover requirement, and the momentum-strength rationale exactly as written."
+  },
+  "h6TnE7QClJg-S0-B002": {
+    "support": "partial",
+    "justification": "The quote gives only the generic distance-from-average measurement; it does not name CCI or state that it indicates momentum strength."
+  },
+  "h6TnE7QClJg-S0-B003": {
+    "support": "partial",
+    "justification": "The quote carries the both-signals-align entry requirement but not the 'confirmed momentum' rationale the condition adds."
+  },
+  "h6TnE7QClJg-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote is the EMA10-crosses-below-EMA20 bearish momentum signal the condition states."
+  },
+  "h6TnE7QClJg-S0-B005": {
+    "support": "confirmed",
+    "justification": "The quote states verbatim that EMA10 tracks short-term momentum and EMA20 represents the broader short-to-medium-term trend."
+  },
+  "h6TnE7QClJg-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote states the CCI below-zero at-or-shortly-before-crossover requirement and the bearish-strength confirmation."
+  },
+  "h6TnE7QClJg-S0-B007": {
+    "support": "partial",
+    "justification": "The quote gives only the generic distance-from-average measurement; it does not name CCI or state that it indicates momentum strength."
+  },
+  "h6TnE7QClJg-S0-B008": {
+    "support": "denied",
+    "justification": "The bare fragment 'This confirms bearish strength' says nothing about alignment of both signals; the anchor is mis-grounded."
+  },
+  "h6TnE7QClJg-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote expresses the above-zero at-or-shortly-before-crossover requirement and the momentum-strength confirmation, with CCI as the implicit referent of 'it'."
+  },
+  "h6TnE7QClJg-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote is the EMA10-crosses-below-EMA20 bearish momentum signal the condition states."
+  },
+  "h6TnE7QClJg-S0-B011": {
+    "support": "confirmed",
+    "justification": "The quote states the CCI below-zero at-or-shortly-before-crossover requirement and the bearish-strength confirmation."
+  },
+  "h6TnE7QClJg-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote gives exactly the stop placement below the most recent swing low or just below the EMA 20."
+  },
+  "h6TnE7QClJg-S0-B013": {
+    "support": "confirmed",
+    "justification": "The quote states the take-profit at least 1.5 to two times the stop-loss distance."
+  },
+  "h6TnE7QClJg-S0-B014": {
+    "support": "confirmed",
+    "justification": "The quote states targeting at least 1.5 to two times risk, which is the stop-loss distance the condition names."
+  }
+}

@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "who is wrong? Because if someone else is wrong, a lot of people are wrong, you're going to be able to make a significant amount of money whenever you're on the opposing side of them, because that is exactly how Wall Street thinks and how they operate."
+            "verbatim": "our goal here is to identify a P or a B shape profile matching trap scenarios"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Mainly because you understand why you're doing what you're doing. And there's a different level of conviction that comes with that, rather than just trading patterns."
+            "verbatim": "we saw imbalance to the upside and then we saw the market consolidate"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "who is wrong? Because if someone else is wrong, a lot of people are wrong, you're going to be able to make a significant amount of money whenever you're on the opposing side of them, because that is exactly how Wall Street thinks and how they operate."
+            "verbatim": "Was it formed by people entering? And when we say people entering, I mean smart money. Or was it formed by smart money exiting?"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "if someone else is wrong, a lot of people are wrong, you're going to be able to make a significant amount of money whenever you're on the opposing side of them"
+            "verbatim": "a defensive move, again, is when smart money is just covering or getting out of their trades. And those moves are likely to fail."
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "who is wrong? Because if someone else is wrong, a lot of people are wrong, you're going to be able to make a significant amount of money whenever you're on the opposing side of them, because that is exactly how Wall Street thinks and how they operate."
+            "verbatim": "the market made a fake out move down, because remember we're expecting this to be a fake out"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Mainly because you understand why you're doing what you're doing. And there's a different level of conviction that comes with that, rather than just trading patterns."
+            "verbatim": "when you know how to look for the traps, you can capitalize on those fake outs"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Mainly because you understand why you're doing what you're doing. And there's a different level of conviction that comes with that, rather than just trading patterns."
+            "verbatim": "You just have to have one of those scenarios, and then you want to see the point of control fail."
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Because if someone else is wrong, a lot of people are wrong, you're going to be able to make a significant amount of money whenever you're on the opposing side of them, because that is exactly how Wall Street thinks and how they operate."
+            "verbatim": "if the bears are losing the point of control, think of it like tug-of-war and they're starting to lose the tug-of-war"
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Mainly because you understand why you're doing what you're doing. And there's a different level of conviction that comes with that, rather than just trading patterns."
+            "verbatim": "low volume nodes means that the market moved really quickly through these areas. Typically, this is where you're going to have your fair value gaps, and it's just showing you that the market was in a state of imbalance."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Mainly because you understand why you're doing what you're doing. And there's a different level of conviction that comes with that, rather than just trading patterns."
+            "verbatim": "our goal here is to identify a P or a B shape profile matching trap scenarios"
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Mainly because you understand why you're doing what you're doing. And there's a different level of conviction that comes with that, rather than just trading patterns."
+            "verbatim": "what is smart money doing right now? Are they on offense or are they on defense?"
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Mainly because you understand why you're doing what you're doing. And there's a different level of conviction that comes with that, rather than just trading patterns."
+            "verbatim": "you're just going to put your stop right below that point of control because with that logic, you want to you wouldn't want to see that level overtaken again"
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "who is wrong? Because if someone else is wrong, a lot of people are wrong, you're going to be able to make a significant amount of money whenever you're on the opposing side of them, because that is exactly how Wall Street thinks and how they operate."
+            "verbatim": "you're just going to target the end of the low volume node"
           },
           "rater_response": {
             "role": null,
@@ -426,7 +426,7 @@
     "items": [
       {
         "item_id": "z3Qn3fBoe2I-S0-B000",
-        "extracted_condition_text": "The target is the end of the area of imbalance (the vacuum).",
+        "extracted_condition_text": "The profile must match a P or B shape, indicating a potential trap.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -434,7 +434,7 @@
       },
       {
         "item_id": "z3Qn3fBoe2I-S0-B001",
-        "extracted_condition_text": "The stop is placed below the Point of Control to invalidate the trap.",
+        "extracted_condition_text": "These shapes show where the market consolidated or moved quickly through an area of low volume.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -442,7 +442,7 @@
       },
       {
         "item_id": "z3Qn3fBoe2I-S0-B002",
-        "extracted_condition_text": "The target is the end of the area of imbalance (the vacuum).",
+        "extracted_condition_text": "Determine if the profile was formed by smart money exiting (defensive move/trap) or entering (offensive move/continuation).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +458,7 @@
       },
       {
         "item_id": "z3Qn3fBoe2I-S0-B004",
-        "extracted_condition_text": "The target is the end of the area of imbalance (the vacuum).",
+        "extracted_condition_text": "Wait for the market to fake out in the direction of the initial bias (the trap).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -466,7 +466,7 @@
       },
       {
         "item_id": "z3Qn3fBoe2I-S0-B005",
-        "extracted_condition_text": "The stop is placed below the Point of Control to invalidate the trap.",
+        "extracted_condition_text": "The fakeout is the signal that the opposing side is trapped.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +474,7 @@
       },
       {
         "item_id": "z3Qn3fBoe2I-S0-B006",
-        "extracted_condition_text": "The stop is placed below the Point of Control to invalidate the trap.",
+        "extracted_condition_text": "Enter on the reversal/break of the Point of Control (POC) or a key level (VAH/VAL) after the fakeout.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -490,7 +490,7 @@
       },
       {
         "item_id": "z3Qn3fBoe2I-S0-B008",
-        "extracted_condition_text": "The stop is placed below the Point of Control to invalidate the trap.",
+        "extracted_condition_text": "The market moved quickly through areas of low volume, indicating imbalance.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -498,7 +498,7 @@
       },
       {
         "item_id": "z3Qn3fBoe2I-S0-B009",
-        "extracted_condition_text": "The stop is placed below the Point of Control to invalidate the trap.",
+        "extracted_condition_text": "The profile must match a P or B shape, indicating a potential trap.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -506,7 +506,7 @@
       },
       {
         "item_id": "z3Qn3fBoe2I-S0-B010",
-        "extracted_condition_text": "The stop is placed below the Point of Control to invalidate the trap.",
+        "extracted_condition_text": "The trade must be taken based on whether smart money is exiting (defensive) or entering (offensive).",
         "adjudication_response": {
           "support": null,
           "support_justification": null

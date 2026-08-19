@@ -1,0 +1,66 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "So that's going to be from 9:30 New York time to 1000 a.m. New York time. You're going to mark the low of that 30 minute and then you're going to mark the high of that 30 minute."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "at that 10:00 a.m. candle, that's when we get our initial balance in the market"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "What I am going to look for is either for price to break above the orb or below the orb to either look for a long or a short."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "I never buy breakdowns and I never buy breakouts. The reason being your riskreward is not well defined."
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "what I like to see is for price to pull back and retest that orb high or low"
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "the high of the 30inut orb which set up for a very high probability long position"
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "rejects off that area, you can look to get short with a stop-loss right above the high of this candle"
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "price finally breaks below right here, pops back up, rejects off that area"
+  },
+  {
+    "condition_ref": "entry_sequence[4].action",
+    "raw_output": "you had another opportunity to go long with a stop-loss right below the high of that first 30 minutes"
+  },
+  {
+    "condition_ref": "entry_sequence[4].rationale",
+    "raw_output": "price closed above that level, came back, retested the area as support"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "We also had the pre-market high right there as well."
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "we also had an imbalance within the market"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "mixing that together with the order flow"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "with a stop loss right below these lows"
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "price pushed up into a new high a day"
+  },
+  {
+    "condition_ref": "targets[1].rationale",
+    "raw_output": "You want to at least be willing to make a 1:1 risk-to-reward"
+  }
+]

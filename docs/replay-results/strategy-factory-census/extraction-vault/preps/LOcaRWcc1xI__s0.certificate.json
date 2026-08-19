@@ -1,0 +1,300 @@
+{
+  "conditions": [
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "Step one, we're going to mark out 10:00 a.m. Eastern. So, here we are. Right here, we're about to open a new 4-hour candle at 10:00 a.m. Eastern, so I'm going to mark that out.",
+      "char_span": [
+        5038,
+        5214
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states step one is marking out 10:00 a.m. Eastern where the new 4-hour candle opens, exactly the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "It's 30 minutes 30 minutes after the market opens. And if you know anything about the market open, typically that first move of the market is going to be a fakeout, which gives us plenty of time to line our bias.",
+      "char_span": [
+        2026,
+        2238
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote explains the 30-minutes-after-open fakeout rationale for lining up bias but never states this time defines the pattern's trading window."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "Go to the 15-minute time frame and look for the most recent 15-minute fair value gap that's going to be closest to price.",
+      "char_span": [
+        5272,
+        5393
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly instructs going to the 15-minute timeframe and finding the most recent FVG closest to price."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "I'm going to mark that out. That's where I want price to tap into.",
+      "char_span": [
+        5503,
+        5569
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote only says the marked level is where price should tap into; it never frames the FVG as the target of a manipulation phase."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "Step three is you want to see a PO3 on the 1-minute time frame tapping into that 15-minute gap.",
+      "char_span": [
+        5570,
+        5665
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote is the step itself: see a PO3 on the 1-minute timeframe tapping into the 15-minute gap."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "all it is is price moves sideways and accumulates. It then manipulates or has a fakeout and then puts in the real move to distribute.",
+      "char_span": [
+        6027,
+        6160
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote defines the accumulate / manipulate-fakeout / real-move sequence the condition summarizes."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "The second I see a candle body close through that fair value gap, I'm entering my trade.",
+      "char_span": [
+        6745,
+        6833
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states entry happens the second a candle body closes through the fair value gap."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "Now, all we need to wait for is an entry confirmation, which for me I will like to take inversion fair value gaps typically.",
+      "char_span": [
+        6552,
+        6676
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote requires an entry confirmation but names inversion fair value gaps, not a candle-body closure, so the mechanism drifts."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "The first step of this strategy is going to the 4-hour time frame and finding the most recent 4-hour candlestick that has formed and closed.",
+      "char_span": [
+        1367,
+        1507
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the first step is finding the most recent formed-and-closed 4-hour candlestick."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "I can very clearly see we have a 15-minute fair value gap just above price. I'm going to mark that out. That's where I want price to tap into.",
+      "char_span": [
+        5427,
+        5569
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote observes one gap sitting just above price on this chart rather than stating a general requirement that price be near a recent 15-minute FVG."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "We see a PO3 pattern straight into this 15-minute gap, right? We manipulate into that 15-minute gap.",
+      "char_span": [
+        6271,
+        6371
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote narrates an observed PO3 manipulating into the 15-minute gap without stating the 1-minute timeframe or a must-form requirement."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "leave my stop loss at that manipulation high that we just made, the top of the 4-hour candle",
+      "char_span": [
+        6925,
+        7017
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote places the stop loss at the manipulation high, the top of the 4-hour candle, exactly as the condition states."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "You can take the bottom of the accumulation range if you do have the risk reward",
+      "char_span": [
+        7175,
+        7255
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote offers the accumulation-range bottom as an optional target conditioned on risk-reward, not as the primary target."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "or you can even target some liquidity lower down here or down here",
+      "char_span": [
+        7257,
+        7323
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote offers targeting liquidity lower down as the alternative/secondary target the condition describes."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "LOcaRWcc1xI",
+    "full_transcript_sha256": "eb8a40248004f4aa3010bfa445cdd6095eff743f68c2d49d2b637f0cc2abcd5e",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 6,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 8
+  },
+  "dry_run": false
+}

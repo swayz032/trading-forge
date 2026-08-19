@@ -1,0 +1,38 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "it has to have three or more touch points"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "Three or more touch point, trend line break."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "has to have over a week's worth of data"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "I like to look for a week's worth of data"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "If price breaks it, I'm going to enter."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "The action line I have cuz price broke. So, that's telling me to take action."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "has to have over a week's worth of data"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "What tells us if it's high risk or low risk is when the price makes the break, how close is it to the safety line?"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "When you take the break, the opposing trend line is going to be the safety line."
+  }
+]

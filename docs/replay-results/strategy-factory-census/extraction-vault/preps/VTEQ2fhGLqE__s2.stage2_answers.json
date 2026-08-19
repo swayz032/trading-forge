@@ -1,0 +1,18 @@
+{
+  "VTEQ2fhGLqE-S2-B000": {
+    "support": "confirmed",
+    "justification": "The quote states entry happens if price breaks the line, which is exactly enter-on-trend-line-break."
+  },
+  "VTEQ2fhGLqE-S2-B001": {
+    "support": "confirmed",
+    "justification": "The quote says the broken line is the one that tells you to get into the trade, i.e. the break of that line triggers entry."
+  },
+  "VTEQ2fhGLqE-S2-B002": {
+    "support": "partial",
+    "justification": "The quote flags a two-touch-point line as high risk (a warning about one example), while the condition rewrites it into a requirement that the line MUST have only two touch points."
+  },
+  "VTEQ2fhGLqE-S2-B003": {
+    "support": "confirmed",
+    "justification": "The quote directly says the opposing trend line becomes the safety line once the break is taken."
+  }
+}

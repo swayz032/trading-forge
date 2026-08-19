@@ -1,0 +1,26 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "breaks into value and shows acceptance"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "we've been in price discovery and then we break back into the value area"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "Entry is on the back test or pullback of the VWAP deviation band after price breaks into value"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "This is the highest probability version of this trade."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "We spent some time and distance outside in price discovery and now it's ready to come back in."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "The stop is always going to go below or above the testing candle wick"
+  }
+]

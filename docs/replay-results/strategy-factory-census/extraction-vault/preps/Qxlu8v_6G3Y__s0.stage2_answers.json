@@ -1,0 +1,46 @@
+{
+  "Qxlu8v_6G3Y-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states exactly the instruction to mark the high and low of the first 15-minute candle."
+  },
+  "Qxlu8v_6G3Y-S0-B001": {
+    "support": "partial",
+    "justification": "The quote says only two levels are needed but never states that they define the initial trading range."
+  },
+  "Qxlu8v_6G3Y-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote directly names an FVG printing on the 5-minute chart through the first 15-minute range."
+  },
+  "Qxlu8v_6G3Y-S0-B003": {
+    "support": "partial",
+    "justification": "The quote only asserts a need for a mechanical displacement method; it does not say the FVG is that signal or that it confirms direction."
+  },
+  "Qxlu8v_6G3Y-S0-B004": {
+    "support": "confirmed",
+    "justification": "The quote is the trader's own instruction to place a limit order on the fair value gap."
+  },
+  "Qxlu8v_6G3Y-S0-B005": {
+    "support": "partial",
+    "justification": "The quote describes entry when price dips into the zone but says nothing about high probability or rebalancing rationale."
+  },
+  "Qxlu8v_6G3Y-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote instructs being at the desk at 9:30 AM ET, which is the trading-day start the condition states."
+  },
+  "Qxlu8v_6G3Y-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote is the explicit wait for the 9:30-9:45 15-minute candle to close, which is the condition's operative requirement."
+  },
+  "Qxlu8v_6G3Y-S0-B008": {
+    "support": "partial",
+    "justification": "The quote states an FVG validity criterion (one of three candles closing outside the range), not the broader 'FVG must print breaking the 15m range' claim."
+  },
+  "Qxlu8v_6G3Y-S0-B009": {
+    "support": "partial",
+    "justification": "The quote places the stop on FVG candle one but does not specify the low of that candle."
+  },
+  "Qxlu8v_6G3Y-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote states a fixed two-to-one risk-to-reward target verbatim."
+  }
+}

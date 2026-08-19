@@ -1,0 +1,285 @@
+{
+  "conditions": [
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "The first candle will always be accumulation",
+      "char_span": [
+        810,
+        854
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote states C1 is always accumulation but frames it as a descriptive fact, not the 'wait for it to form' instruction the condition asserts."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "Candle one is always going to be that accumulation candle.",
+      "char_span": [
+        1746,
+        1804
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "denied",
+        "support_justification": "The quote only restates that candle one is the accumulation candle and says nothing about accumulation setting directional bias."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "do we have a large opposing run where candle 2 opens, makes this large move against the direction we want to be trading and then back up. When it has a large opposing run that does not support expansion higher in candle 2.",
+      "char_span": [
+        1848,
+        2070
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote does describe a large opposing run in candle 2 that does not support expansion, but it uses it as a disqualifier rather than something to wait for as a reversal signal."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "Candle 2 forms that reversal, but you can see it has a large opposing run. So, we don't want to trade within this candle. We want to wait for candle 3.",
+      "char_span": [
+        2754,
+        2905
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote shows C2's large opposing run preceding the C3 move but never states the 'testing the opposite extreme before the main move' rationale the condition claims."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "Here you can see candle 3 opens, makes a shallow opposing run, and then has that expansion higher.",
+      "char_span": [
+        2906,
+        3004
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states almost verbatim that candle 3 opens, makes a shallow opposing run, then expands higher."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "the whole goal is to be trading that distribution or the expansion candle, that directional candle",
+      "char_span": [
+        1181,
+        1279
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote explicitly names trading the distribution/expansion directional candle as the whole goal."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "If this is a protected low this means this wick has formed and then we can trade this expansion higher.",
+      "char_span": [
+        3270,
+        3373
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote grounds the protected-low-then-trade-the-expansion logic but says nothing about entering on the body of the expansion candle."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "It has a change in the state of delivery. So that means that it formed its protected swing. we can anticipate this wick to hold and then we can trade the expansion within the same higher time frame candle.",
+      "char_span": [
+        3526,
+        3731
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote ties CSD to a formed protected swing and uses that as the trigger to trade the expansion, which is exactly the condition."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "we want to align this with a daily bias",
+      "char_span": [
+        3970,
+        4009
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly says to align the trade with a daily bias."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we have a reversal candle on the weekly time frame. So we could be looking for price to expand higher on the weekly time frame.",
+      "char_span": [
+        7772,
+        7899
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote is an instance observation of a weekly reversal candle with hedged modality, not the stated requirement that one must form to initiate the pattern."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "We need a change in the state of delivery to confirm that reversal point and then we can look to trade it lower.",
+      "char_span": [
+        13164,
+        13276
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states verbatim that a change in the state of delivery is needed to confirm the reversal point."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "we are inside a fair value gap here. So I could then anticipate what? Well, if we have a protected swing in this new higher time frame candle, I'm expecting this wick low to have formed and I can look to trade it higher. This means I can really take any entry in here with my stop loss on this low",
+      "char_span": [
+        6881,
+        7178
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote supports placing the stop on the protected low, but the FVG is described as the entry region rather than a stop anchor."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "looking to target that previous day high. So let's see how this works out. And there we go. Trade to previous day high.",
+      "char_span": [
+        7179,
+        7298
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the target is the previous day high and that the trade ran to it."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "FAKWJ-1NlLE",
+    "full_transcript_sha256": "fb612e85dfd1a8af14538cee85750c5e186d73b6a67d78b745e3bd7fbdc0b109",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 7,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 6
+  },
+  "dry_run": false
+}

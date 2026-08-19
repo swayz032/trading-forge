@@ -1,0 +1,42 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "Is the 4 hour wicking? Has the 4 hour swept something?"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "M1 is pretty easy to trade if you understand where price is going, but you need that higher time frame overhead to be able to operate on M1 a little better"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "This is price breaking the range and trading back in."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "I always talk about the pullback being where your profit is."
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "when it gets back in there, I can use one of two things. I can place my entry at the 50"
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "a quality POI is more of a previous range that is the only thing that I use"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "it runs that wick and then you see an immediate push trading back into the range and now above that range. So that pool of liquidity that's there. Sorry, that's what I want people to focus on the most. That is the highest in probability to be able to trade a continuation"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "market structure is the crux of what I trade I don't believe that you should do anything outside of market structure"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "your stop or your invalidation of the idea is behind the 4hour POI"
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "when it comes to targeting, I tell people to target if there's a prominent wick to the left"
+  }
+]

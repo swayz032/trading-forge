@@ -59,9 +59,13 @@ def sha256_file(path: str) -> str | None:
 
 def main() -> int:
     sys.path.insert(0, REPO_ROOT)  # unpickling needs pilot_conveyor's dataclasses importable
+    # Exclude this script's OWN output filename: it lives in the same VAULT_DIR it scans, so a
+    # prior run's output would otherwise be swept up as a fake "video" with 0 strategies --
+    # measured 2026-08-19, produced a phantom unit named "prep-provenance-inventory".
+    own_output_name = os.path.basename(OUT_PATH)
     video_json_files = sorted(
         f for f in os.listdir(VAULT_DIR)
-        if f.endswith(".json") and os.path.isfile(os.path.join(VAULT_DIR, f))
+        if f.endswith(".json") and f != own_output_name and os.path.isfile(os.path.join(VAULT_DIR, f))
     )
 
     units = []

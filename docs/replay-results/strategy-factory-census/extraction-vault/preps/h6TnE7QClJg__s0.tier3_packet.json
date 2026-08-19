@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 17
+    "target_items": 15
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video h6TnE7QClJg strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 17,
+      "item_count": 15,
       "items": [
         {
           "item_id": "h6TnE7QClJg-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step one, wait for the EMA10 to cross above the EMA 20. This signals bullish short-term momentum."
+            "verbatim": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes. The EMA 20 is smoother. It represents the broader short to medium-term trend."
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes. The EMA 20 is smoother. It represents the broader short to medium-term trend."
+            "verbatim": "check CCI. It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step two, check CCI. It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength."
+            "verbatim": "measure how far the current price has moved away from its average price"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The commodity channel index was designed to measure how far the current price has moved away from its average price over a certain period."
+            "verbatim": "you're only entering when both signals align"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And you're only entering when both signals align."
+            "verbatim": "EMA10 crosses below the EMA 20 bearish momentum signal"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step one, EMA10 crosses below the EMA 20 bearish momentum signal."
+            "verbatim": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes. The EMA 20 is smoother. It represents the broader short to medium-term trend."
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The EMA10 tracks short-term momentum. It's fast. It reacts immediately to price changes. The EMA 20 is smoother. It represents the broader short to medium-term trend."
+            "verbatim": "CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength."
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step two, CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength."
+            "verbatim": "measure how far the current price has moved away from its average price"
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The commodity channel index was designed to measure how far the current price has moved away from its average price over a certain period."
+            "verbatim": "This confirms bearish strength."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step two, check CCI. It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength."
+            "verbatim": "It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength."
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step one, wait for the EMA10 to cross above the EMA 20. This signals bullish short-term momentum."
+            "verbatim": "EMA10 crosses below the EMA 20 bearish momentum signal"
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step two, check CCI. It must be above zero at the time of the crossover or it must have crossed above zero shortly before. This confirms the momentum has strength."
+            "verbatim": "CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength."
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step one, EMA10 crosses below the EMA 20 bearish momentum signal."
+            "verbatim": "place your stop loss below the most recent swing low or just below the EMA 20"
           },
           "rater_response": {
             "role": null,
@@ -421,7 +421,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step two, CCI must be below zero at the time of the crossover or shortly before. This confirms bearish strength."
+            "verbatim": "set your takeprofit at least 1 and a half to two times the distance of your stop loss"
           },
           "rater_response": {
             "role": null,
@@ -437,39 +437,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step four, place your stop loss below the most recent swing low or just below the EMA 20 depending on your risk tolerance and the volatility of the pair."
-          },
-          "rater_response": {
-            "role": null,
-            "notes": null
-          }
-        },
-        {
-          "item_id": "h6TnE7QClJg-S0-B015",
-          "video_id": "h6TnE7QClJg",
-          "family": null,
-          "timeframe": null,
-          "extracted_condition_type": null,
-          "extracted_object": null,
-          "quote_anchor": {
-            "language": "en",
-            "verbatim": "Step five, set your takeprofit at least 1 and a half to two times the distance of your stop loss."
-          },
-          "rater_response": {
-            "role": null,
-            "notes": null
-          }
-        },
-        {
-          "item_id": "h6TnE7QClJg-S0-B016",
-          "video_id": "h6TnE7QClJg",
-          "family": null,
-          "timeframe": null,
-          "extracted_condition_type": null,
-          "extracted_object": null,
-          "quote_anchor": {
-            "language": "en",
-            "verbatim": "Step five, set your takeprofit at least 1 and a half to two times the distance of your stop loss."
+            "verbatim": "target at least 1.5 to two times your risk."
           },
           "rater_response": {
             "role": null,
@@ -490,7 +458,7 @@
     "items": [
       {
         "item_id": "h6TnE7QClJg-S0-B000",
-        "extracted_condition_text": "Wait for the EMA10 to cross above the EMA 20 to signal bullish short-term momentum.",
+        "extracted_condition_text": "The EMA10 tracks short-term momentum, and the EMA 20 represents the broader short to medium-term trend.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -498,7 +466,7 @@
       },
       {
         "item_id": "h6TnE7QClJg-S0-B001",
-        "extracted_condition_text": "The EMA10 tracks short-term momentum, and the EMA 20 represents the broader short to medium-term trend.",
+        "extracted_condition_text": "Check the CCI; it must be above zero at the time of the crossover or have crossed above zero shortly before to confirm momentum strength.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -506,7 +474,7 @@
       },
       {
         "item_id": "h6TnE7QClJg-S0-B002",
-        "extracted_condition_text": "CCI must be above zero at the time of the crossover or have crossed above zero shortly before to confirm momentum strength.",
+        "extracted_condition_text": "CCI measures how far the current price has moved away from its average price, indicating momentum strength.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -514,14 +482,6 @@
       },
       {
         "item_id": "h6TnE7QClJg-S0-B003",
-        "extracted_condition_text": "CCI measures how far the current price has moved away from its average price, indicating momentum strength.",
-        "adjudication_response": {
-          "support": null,
-          "support_justification": null
-        }
-      },
-      {
-        "item_id": "h6TnE7QClJg-S0-B004",
         "extracted_condition_text": "Waiting for both signals aligns the entry with confirmed momentum.",
         "adjudication_response": {
           "support": null,
@@ -529,7 +489,7 @@
         }
       },
       {
-        "item_id": "h6TnE7QClJg-S0-B005",
+        "item_id": "h6TnE7QClJg-S0-B004",
         "extracted_condition_text": "Wait for the EMA10 to cross below the EMA 20 to signal bearish momentum.",
         "adjudication_response": {
           "support": null,
@@ -537,7 +497,7 @@
         }
       },
       {
-        "item_id": "h6TnE7QClJg-S0-B006",
+        "item_id": "h6TnE7QClJg-S0-B005",
         "extracted_condition_text": "The EMA10 tracks short-term momentum, and the EMA 20 represents the broader short to medium-term trend.",
         "adjudication_response": {
           "support": null,
@@ -545,7 +505,7 @@
         }
       },
       {
-        "item_id": "h6TnE7QClJg-S0-B007",
+        "item_id": "h6TnE7QClJg-S0-B006",
         "extracted_condition_text": "CCI must be below zero at the time of the crossover or have crossed below zero shortly before to confirm bearish strength.",
         "adjudication_response": {
           "support": null,
@@ -553,8 +513,16 @@
         }
       },
       {
-        "item_id": "h6TnE7QClJg-S0-B008",
+        "item_id": "h6TnE7QClJg-S0-B007",
         "extracted_condition_text": "CCI measures how far the current price has moved away from its average price, indicating momentum strength.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "h6TnE7QClJg-S0-B008",
+        "extracted_condition_text": "Alignment of both signals confirms the strength of the move.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -570,22 +538,6 @@
       },
       {
         "item_id": "h6TnE7QClJg-S0-B010",
-        "extracted_condition_text": "Wait for the EMA10 to cross above the EMA 20 to signal bullish short-term momentum.",
-        "adjudication_response": {
-          "support": null,
-          "support_justification": null
-        }
-      },
-      {
-        "item_id": "h6TnE7QClJg-S0-B011",
-        "extracted_condition_text": "CCI must be above zero at the time of the crossover or have crossed above zero shortly before to confirm momentum strength.",
-        "adjudication_response": {
-          "support": null,
-          "support_justification": null
-        }
-      },
-      {
-        "item_id": "h6TnE7QClJg-S0-B012",
         "extracted_condition_text": "Wait for the EMA10 to cross below the EMA 20 to signal bearish momentum.",
         "adjudication_response": {
           "support": null,
@@ -593,7 +545,7 @@
         }
       },
       {
-        "item_id": "h6TnE7QClJg-S0-B013",
+        "item_id": "h6TnE7QClJg-S0-B011",
         "extracted_condition_text": "CCI must be below zero at the time of the crossover or have crossed below zero shortly before to confirm bearish strength.",
         "adjudication_response": {
           "support": null,
@@ -601,7 +553,7 @@
         }
       },
       {
-        "item_id": "h6TnE7QClJg-S0-B014",
+        "item_id": "h6TnE7QClJg-S0-B012",
         "extracted_condition_text": "The speaker advises placing the stop below the most recent swing low or just below the EMA 20.",
         "adjudication_response": {
           "support": null,
@@ -609,7 +561,7 @@
         }
       },
       {
-        "item_id": "h6TnE7QClJg-S0-B015",
+        "item_id": "h6TnE7QClJg-S0-B013",
         "extracted_condition_text": "The speaker advises setting the target at least 1.5 to two times the distance of the stop loss.",
         "adjudication_response": {
           "support": null,
@@ -617,7 +569,7 @@
         }
       },
       {
-        "item_id": "h6TnE7QClJg-S0-B016",
+        "item_id": "h6TnE7QClJg-S0-B014",
         "extracted_condition_text": "The speaker advises setting the target at least 1.5 to two times the distance of the stop loss.",
         "adjudication_response": {
           "support": null,

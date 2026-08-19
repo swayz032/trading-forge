@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 13
+    "target_items": 16
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video c8VLqF0XDR4 strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 13,
+      "item_count": 16,
       "items": [
         {
           "item_id": "c8VLqF0XDR4-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So I will take the first 30 minute candle. So that's going to be from 9:30 New York time to 1000 a.m. New York time. You're going to mark the low of that 30 minute and then you're going to mark the high of that 30 minute."
+            "verbatim": "So that's going to be from 9:30 New York time to 1000 a.m. New York time. You're going to mark the low of that 30 minute and then you're going to mark the high of that 30 minute."
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So I will take the first 30 minute candle. So that's going to be from 9:30 New York time to 1000 a.m. New York time. You're going to mark the low of that 30 minute and then you're going to mark the high of that 30 minute."
+            "verbatim": "at that 10:00 a.m. candle, that's when we get our initial balance in the market"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "But what I like to see is for price to pull back and retest that orb high or low."
+            "verbatim": "what I like to see is for price to pull back and retest that orb high or low"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "But what I like to see is for price to pull back and retest that orb high or low."
+            "verbatim": "the high of the 30inut orb which set up for a very high probability long position"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, price finally breaks below right here, pops back up, rejects off that area, you can look to get short with a stop-loss right above the high of this candle. So, if we were to put this into a replay mode, when we popped up right here and started to reject, maybe you could have sniped it on a lower time frame, such as a two-minute, but say you did wait for the fiveminute candle to close. This would be your stop-loss right above that candle high."
+            "verbatim": "rejects off that area, you can look to get short with a stop-loss right above the high of this candle"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, price finally breaks below right here, pops back up, rejects off that area, you can look to get short with a stop-loss right above the high of this candle."
+            "verbatim": "price finally breaks below right here, pops back up, rejects off that area"
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "So, for today's trade, we pulled back. We tested that orb high right here. We also had the pre-market high right there as well. And we also had an imbalance within the market right here. So, a very high probability area for a long position. So price pulls back and as we can see it holds it as support two times right here again bouncing off of that pre-market high as well as the high of the 30inut orb which set up for a very high probability long position with a stop loss right below these lows."
+            "verbatim": "you had another opportunity to go long with a stop-loss right below the high of that first 30 minutes"
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And we also had an imbalance within the market right here. So, a very high probability area for a long position."
+            "verbatim": "price closed above that level, came back, retested the area as support"
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now mixing that together with the order flow, you can see that we had buy orders over here, buy orders here. It went down into that 6220 area and we had even more buyers at that level. So again, a lot of confluence as well as large buying participants at this key level, which is the whole reason why I went long and my stop loss was right below this 6220-ish area."
+            "verbatim": "We also had the pre-market high right there as well."
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "which set up for a very high probability long position with a stop loss right below these lows."
+            "verbatim": "we also had an imbalance within the market"
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,55 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "But I was able to capture a nice move to the upside into that new high a day."
+            "verbatim": "mixing that together with the order flow"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "c8VLqF0XDR4-S0-B013",
+          "video_id": "c8VLqF0XDR4",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "with a stop loss right below these lows"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "c8VLqF0XDR4-S0-B014",
+          "video_id": "c8VLqF0XDR4",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "price pushed up into a new high a day"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "c8VLqF0XDR4-S0-B015",
+          "video_id": "c8VLqF0XDR4",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "You want to at least be willing to make a 1:1 risk-to-reward"
           },
           "rater_response": {
             "role": null,
@@ -426,7 +474,7 @@
     "items": [
       {
         "item_id": "c8VLqF0XDR4-S0-B000",
-        "extracted_condition_text": "The 30-minute Orb defines the initial range for the strategy.",
+        "extracted_condition_text": "Identify the 30-minute Orb by marking the high and low of the first 30-minute candle (9:30 AM - 10:00 AM NY time).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +506,7 @@
       },
       {
         "item_id": "c8VLqF0XDR4-S0-B004",
-        "extracted_condition_text": "The retest of the Orb acts as the high-probability entry trigger.",
+        "extracted_condition_text": "Wait for price to pull back and retest the 30-minute Orb high (for long) or low (for short).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -490,7 +538,7 @@
       },
       {
         "item_id": "c8VLqF0XDR4-S0-B008",
-        "extracted_condition_text": "The trade setup is strengthened by the presence of the pre-market high.",
+        "extracted_condition_text": "Enter long on the 5-minute candle close after price retests the Orb high, with a stop loss placed right below the high of the 30-minute Orb candle.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -498,7 +546,7 @@
       },
       {
         "item_id": "c8VLqF0XDR4-S0-B009",
-        "extracted_condition_text": "The setup is confirmed by an imbalance within the market.",
+        "extracted_condition_text": "The retest of the Orb high confirms bullish reversal intent.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -506,7 +554,7 @@
       },
       {
         "item_id": "c8VLqF0XDR4-S0-B010",
-        "extracted_condition_text": "The trade is validated by the alignment with order flow.",
+        "extracted_condition_text": "The trade setup is strengthened by the presence of the pre-market high.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -514,7 +562,7 @@
       },
       {
         "item_id": "c8VLqF0XDR4-S0-B011",
-        "extracted_condition_text": "The stop is placed structurally below the swing low of the entry candle.",
+        "extracted_condition_text": "The setup is confirmed by an imbalance within the market.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -522,7 +570,31 @@
       },
       {
         "item_id": "c8VLqF0XDR4-S0-B012",
+        "extracted_condition_text": "The trade is validated by the alignment with order flow.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "c8VLqF0XDR4-S0-B013",
+        "extracted_condition_text": "The stop is placed structurally below the swing low of the entry candle.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "c8VLqF0XDR4-S0-B014",
         "extracted_condition_text": "The primary target is the new high of the day.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "c8VLqF0XDR4-S0-B015",
+        "extracted_condition_text": "The secondary target is based on achieving a 1:1 risk-to-reward ratio.",
         "adjudication_response": {
           "support": null,
           "support_justification": null

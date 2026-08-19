@@ -1,0 +1,76 @@
+{
+  "video_id": "aHLIE_TXjpo",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Wait for the previous 4-hour candle to close bullish (for long) or bearish (for short) to establish bias."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "The bias is set by the close of the preceding 4-hour candle."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "On the 5-minute chart, wait for price to break the high (for long) or low (for short) of the current 4-hour candle."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "The break of the candle high/low serves as the entry trigger."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Ensure the entry candle is not an indecision candle or a hammer, and if a wick is present, it must be at the bottom for a long entry."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "Candle quality is required to avoid trading in indecision or rejection zones."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The strategy requires the market to be trending, not ranging."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "Price must break out of sideways areas and show strong 4-hour candle movement."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "The entry candle must have a clean body close, avoiding indecision or rejection wicks."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop loss is calculated dynamically based on the average range of the previous few 4-hour candles."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The speaker aims for a 1:2 risk to reward ratio."
+    }
+  ],
+  "task_sha256": "469154c2e69f7b7e1fc7e005c690049a613a38aaf1eec82d3e68bd0f4c2152c5",
+  "task_char_len": 20355,
+  "transcript_sha256": "06e1b4f9da41ef1e2b98c657fdf8a0ae30e4a07dbc7cccca6e0cfa72734695d1",
+  "transcript_char_len": 17603,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

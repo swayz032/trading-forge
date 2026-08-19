@@ -1,0 +1,46 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "you want to mark out the high and the low of this first 15-minute candle"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "these are the only two levels that you need for this strategy"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "As soon as the fair value gap prints on the 5-minute chart through that first 15-minute range"
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "we need a mechanical way to identify this displacement"
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "we're actually good to put a limit order right on that fair value gap"
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "as long as it dips down into that zone, we're going to get entered into the market"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "you want to get to your desk right at 9:30 a.m. Eastern Standard Time"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "we're going to wait until the 9:30 to 9:45 a.m. 15-minute candle closes"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "in order for the fair value gap to be valid, one of the three candles has to close outside of this 15-minute range"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "we're going to put our stop loss on fair value gap candle one"
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "for our target, we're just going to go for a fixed two to one risk to reward"
+  }
+]

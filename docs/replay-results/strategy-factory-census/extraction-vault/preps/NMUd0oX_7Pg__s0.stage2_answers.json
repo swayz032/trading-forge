@@ -1,0 +1,66 @@
+{
+  "NMUd0oX_7Pg-S0-B000": {
+    "support": "confirmed",
+    "justification": "The quote states both locating today's first 15-minute candle and drawing lines at its high and low, exactly as the condition says."
+  },
+  "NMUd0oX_7Pg-S0-B001": {
+    "support": "partial",
+    "justification": "The quote only names the boxed candle a manipulation candle; it does not state that the box serves as the structural reference."
+  },
+  "NMUd0oX_7Pg-S0-B002": {
+    "support": "confirmed",
+    "justification": "The quote gives the exact 20-25%-of-daily-ATR test and the confirmed-manipulation-candle conclusion."
+  },
+  "NMUd0oX_7Pg-S0-B003": {
+    "support": "partial",
+    "justification": "The quote says ATR shows the candle is big enough to qualify but says nothing about the move being institutional."
+  },
+  "NMUd0oX_7Pg-S0-B004": {
+    "support": "partial",
+    "justification": "The quote specifies two reversal candles outside the range while the condition enumerates four named patterns."
+  },
+  "NMUd0oX_7Pg-S0-B005": {
+    "support": "partial",
+    "justification": "The quote is rationale about a large buyer absorbing weakness and never mentions a reversal candle or the intended move against manipulation."
+  },
+  "NMUd0oX_7Pg-S0-B006": {
+    "support": "confirmed",
+    "justification": "The quote states the break above the hammer high and entry at the open of the following candle verbatim."
+  },
+  "NMUd0oX_7Pg-S0-B007": {
+    "support": "confirmed",
+    "justification": "The quote states the limit entry at the high of the previous red candle, matching the condition."
+  },
+  "NMUd0oX_7Pg-S0-B008": {
+    "support": "partial",
+    "justification": "The quote describes the fill confirming the engulfing pattern, not the generalized high-probability-entry claim."
+  },
+  "NMUd0oX_7Pg-S0-B009": {
+    "support": "confirmed",
+    "justification": "The quote is the instruction to locate today's first 15-minute candle, which is what the condition asserts."
+  },
+  "NMUd0oX_7Pg-S0-B010": {
+    "support": "confirmed",
+    "justification": "The quote states the 20-25%-of-daily-ATR threshold confirming manipulation exactly as the condition does."
+  },
+  "NMUd0oX_7Pg-S0-B011": {
+    "support": "partial",
+    "justification": "The quote ties a volume spike to big-player involvement but contains no 20-period-MA threshold."
+  },
+  "NMUd0oX_7Pg-S0-B012": {
+    "support": "confirmed",
+    "justification": "The quote states the reversal must form outside the box, which is the condition's load-bearing requirement."
+  },
+  "NMUd0oX_7Pg-S0-B013": {
+    "support": "partial",
+    "justification": "The quote says only that the stop goes below the low, without identifying the reversal candle's wick."
+  },
+  "NMUd0oX_7Pg-S0-B014": {
+    "support": "confirmed",
+    "justification": "The quote names the top of the step-one range as the profit target, matching the condition."
+  },
+  "NMUd0oX_7Pg-S0-B015": {
+    "support": "partial",
+    "justification": "The quote lists two targets (the opening candle's low and high) without designating the bottom as the primary short target."
+  }
+}

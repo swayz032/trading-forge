@@ -1,0 +1,86 @@
+{
+  "video_id": "deymRD3kSD0",
+  "strategy_index": 1,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Use the 9:30 AM candle (NY Stock Exchange open) on the 15-minute timeframe to set the trading range."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "The 9:30 AM candle defines the high and low for the day's trading range."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for the candle to break and close above the range and also through the 200 period EMA trend line."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "This confirms a market reversal and bullish bias."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for price to tap the top of the range, which acts as support along with the demand zone."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "Tapping the top of the range provides a high-probability entry point."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Enter the trade upon price tapping the top of the range/demand zone."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "The price action confirms the support level is holding."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The candle must break and close above the range and through the 200 period EMA trend line."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "The price has had many touches of the 200 period EMA trend line."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "Multiple fair value gaps are present, indicating strong buyers at the level."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed below the demand/range support level."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The target is set at the top of the range."
+    }
+  ],
+  "task_sha256": "9302841e636b7b1e273f465934bb3813f1303952b5478d55b3f43edf18c37e07",
+  "task_char_len": 14992,
+  "transcript_sha256": "0a35e43060903f30e55cbfd7e045a9dd7b281d9e95f8128e99500990008f05c0",
+  "transcript_char_len": 12109,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

@@ -1,0 +1,325 @@
+{
+  "conditions": [
+    {
+      "surface_class": "context",
+      "classifying_tier": 3,
+      "quote_anchor": "So that's going to be from 9:30 New York time to 1000 a.m. New York time. You're going to mark the low of that 30 minute and then you're going to mark the high of that 30 minute.",
+      "char_span": [
+        1986,
+        2164
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states the 9:30-10:00 NY window and the instruction to mark that 30-minute candle's low and high, which is exactly the condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "at that 10:00 a.m. candle, that's when we get our initial balance in the market",
+      "char_span": [
+        6938,
+        7017
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote establishes when the initial balance forms (the 10:00 candle) but does not itself say the 30-minute Orb defines the strategy's initial range."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "What I am going to look for is either for price to break above the orb or below the orb to either look for a long or a short.",
+      "char_span": [
+        2254,
+        2379
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote supports waiting for a break above or below the orb, but says nothing about that break establishing 'initial manipulation'."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "I never buy breakdowns and I never buy breakouts. The reason being your riskreward is not well defined.",
+      "char_span": [
+        2525,
+        2628
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote states both the avoidance of breakouts/breakdowns and the poor risk-reward definition as the reason."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": 3,
+      "quote_anchor": "what I like to see is for price to pull back and retest that orb high or low",
+      "char_span": [
+        2790,
+        2866
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "confirmed",
+        "support_justification": "The quote directly expresses waiting for a pullback and retest of the orb high or low."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "the high of the 30inut orb which set up for a very high probability long position",
+      "char_span": [
+        3245,
+        3326
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote links the orb high to a high-probability long but does not state that the retest is the entry trigger."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "rejects off that area, you can look to get short with a stop-loss right above the high of this candle",
+      "char_span": [
+        4356,
+        4457
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote gives the rejection-then-short with a stop above that candle's high, but never specifies a 5-minute candle close or that the level is the Orb low."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "price finally breaks below right here, pops back up, rejects off that area",
+      "char_span": [
+        4303,
+        4377
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote narrates a break-below and rejection in an example but does not assert that the rejection confirms bearish reversal intent."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "you had another opportunity to go long with a stop-loss right below the high of that first 30 minutes",
+      "char_span": [
+        6473,
+        6574
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote supports the long with a stop below the first 30-minute high but omits the 5-minute close and the retest condition."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "price closed above that level, came back, retested the area as support",
+      "char_span": [
+        6305,
+        6375
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote describes a close above and retest as support in a past example, not a stated confirmation of bullish reversal intent."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "We also had the pre-market high right there as well.",
+      "char_span": [
+        2943,
+        2995
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote only notes the pre-market high was present; it does not say the setup is strengthened by it."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "we also had an imbalance within the market",
+      "char_span": [
+        3000,
+        3042
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote notes an imbalance existed but does not state the setup is confirmed by it."
+      }
+    },
+    {
+      "surface_class": "cannot-determine-at-tier-1",
+      "classifying_tier": null,
+      "quote_anchor": "",
+      "char_span": [
+        8221,
+        8261
+      ],
+      "adjudication_verdict": null
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "with a stop loss right below these lows",
+      "char_span": [
+        3327,
+        3366
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote places the stop below 'these lows' generically, not specifically below the swing low of the entry candle."
+      }
+    },
+    {
+      "surface_class": "context",
+      "classifying_tier": null,
+      "quote_anchor": "price pushed up into a new high a day",
+      "char_span": [
+        3387,
+        3424
+      ],
+      "adjudication_verdict": {
+        "verdict": "context",
+        "control_gate_passed": true,
+        "support": "denied",
+        "support_justification": "The quote narrates that price pushed into a new high of the day; it does not designate that as the trade's target."
+      }
+    },
+    {
+      "surface_class": "gate-strength",
+      "classifying_tier": null,
+      "quote_anchor": "You want to at least be willing to make a 1:1 risk-to-reward",
+      "char_span": [
+        4781,
+        4841
+      ],
+      "adjudication_verdict": {
+        "verdict": "gate-strength",
+        "control_gate_passed": true,
+        "support": "partial",
+        "support_justification": "The quote states a minimum 1:1 risk-to-reward willingness but does not frame it as a secondary target."
+      }
+    }
+  ],
+  "compile_integrity": {
+    "direction_conflation_lint": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "unsat_sat_check": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "or_alternatives_honored": {
+      "status": "NOT_EVALUATED",
+      "reason": "no_compiled_topology",
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "f2_coverage_gate": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null
+    },
+    "causality_lint": {
+      "status": "PASS",
+      "reason": null,
+      "offending_anchor": null,
+      "offending_char_span": null,
+      "regex_leg_status": "PASS",
+      "same_bar_leg_status": "NOT_EVALUATED",
+      "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+    }
+  },
+  "terminal_read_grade": "INDETERMINATE",
+  "terminal_read_clean": false,
+  "terminal_read_disposition": {
+    "conflation_check": "NOT_EVALUATED",
+    "enumeration_consistency": "AXIS_ABSENT",
+    "direction_conflation_lint": "RE_STATIONED_TO_H2",
+    "unsat_sat_check": "RE_STATIONED_TO_H2",
+    "or_alternatives_honored": "RE_STATIONED_TO_H2",
+    "f2_coverage_gate": "PASS",
+    "causality_lint.regex_leg": "PASS",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "provenance": {
+    "source_video_id": "c8VLqF0XDR4",
+    "full_transcript_sha256": "872b559814b9f9ebfa7d608f3cc5310b8efde7047fd4daa95e5229e611d74159",
+    "extractor_version": "minimal-8field-pass-l",
+    "taxonomy_version": "v1",
+    "dry_run": false
+  },
+  "scope_line": null,
+  "pilot_grade": false,
+  "full_grade": false,
+  "full_grade_basis": {
+    "load_bearing_axes_policy": [
+      "conflation_verdict(semantic)",
+      "enumeration_consistency(semantic)",
+      "f2_coverage_gate",
+      "causality_lint.regex_leg",
+      "pilot_anchoring_classification"
+    ],
+    "per_certificate_axis_contributions": "see terminal_read_disposition",
+    "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+    "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+    "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING"
+  },
+  "certificate_grade": false,
+  "axis3_audit": null,
+  "strategy_index": 0,
+  "unanchored_condition_count": 0,
+  "unanchored_reason_breakdown": {},
+  "diagnosis": {
+    "unanchored": 0,
+    "coverage_miss": 0,
+    "classification_fallthrough_unresolved": 13,
+    "tier3_fail": 0,
+    "lint_fail": 0,
+    "ok": 3
+  },
+  "dry_run": false
+}

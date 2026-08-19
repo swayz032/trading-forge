@@ -1,0 +1,46 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "We draw a box from the high to the low and we extend it until today."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "there is liquidity resting above your previous day high, and there's liquidity resting below the previous day's low"
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "We want a full 15-minute candle close above the level, or a 15-minute candle close below the low level."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "this isn't a confirmed breakout. We need to wait for the candle to close."
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "we go into the 5-minute timeframe and we wait for a hammer or a bullish engulfing candlestick and we wait for it to happen around this level."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "then it's not ready to be reversed because that movement could continue back into the range."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "we will only take the trade if this happens within the first 2 and 1/2 hours of the market open."
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "we go to the 15-minute timeframe and we identify that we have a candle close outside that box"
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "we need one out of two types of candles to appear at this key level"
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "and the stop loss would be set at the low. The inverted hammer would be something that comes after a clear green positive movement. You would have the wick coming from the top. Again, the confirmation comes from within the wick itself, right here. The entry would be at the break of the candle, and we would set the stop loss slightly above the high."
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "I would set a target profit to three times the stop loss."
+  }
+]

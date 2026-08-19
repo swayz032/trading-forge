@@ -1,0 +1,18 @@
+{
+  "ktkqq7QsN9Q-S1-B000": {
+    "support": "confirmed",
+    "justification": "The quote states the entry trigger verbatim as the first sign of weakness or rejection on the test of the VWAP deviation area."
+  },
+  "ktkqq7QsN9Q-S1-B001": {
+    "support": "confirmed",
+    "justification": "The quote names fading value area extremes and scopes it to when the market is trading in fair market value, which is exactly the condition text."
+  },
+  "ktkqq7QsN9Q-S1-B002": {
+    "support": "partial",
+    "justification": "The quote requires price acceptance as time and distance inside value, but never says VWAP value area nor that it must precede fading the extreme, so the condition adds specificity and sequencing the quote does not carry."
+  },
+  "ktkqq7QsN9Q-S1-B003": {
+    "support": "confirmed",
+    "justification": "The condition text is a word-for-word restatement of the quote's stop-placement instruction."
+  }
+}

@@ -1,0 +1,533 @@
+{
+  "artifact": "h1-pilot-tier3-packet",
+  "version": "2026-07-12",
+  "purpose": "Pilot tier-3 blind adjudication packet, video=deymRD3kSD0, strategy=1.",
+  "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+  "closed_taxonomy": {
+    "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+    "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+    "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+  },
+  "instructions": {
+    "read_order_LOCKED": [
+      "Set A (controls)",
+      "control-gate",
+      "Set B1..B14 (targets)"
+    ],
+    "procedure": [
+      "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+      "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+      "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+      "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+      "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+    ],
+    "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+    "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+    "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+  },
+  "counts": {
+    "control_items": 10,
+    "target_items": 13
+  },
+  "sections": [
+    {
+      "section_id": "SET-A",
+      "concept_id": null,
+      "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+      "item_count": 10,
+      "items": [
+        {
+          "item_id": "W1-0001",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0002",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "4 hour chart",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0003",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "5 sma",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "wait for a retrace back to the 5 SMA"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0004",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "eur usd",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "now back to the euro dollar chart here"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0005",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "us session trading",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0006",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "go back up",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0007",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "event occurrence",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0008",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "exit",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "now you want to go ahead and exit"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0009",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price tried to break below area",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0010",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "ballinger bands bases",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B",
+      "concept_id": null,
+      "label": "Set B -- video deymRD3kSD0 strategy 1 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+      "item_count": 13,
+      "items": [
+        {
+          "item_id": "deymRD3kSD0-S1-B000",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I'm on the 15minute time frame on Trading View. I have my time at UTC minus4. Just copy that. We have the 9:15 candle right here. The candle we care about is the 930 candle. This is the New York Stock Exchange open candle. We're going to use this to set our range."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B001",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So once that candle is closed, we simply set the top of the range with the top wick and the bottom of the range with the bottom of the wick. And this is our trading range for the day."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B002",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "break and close above our range and also through our trend line"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B003",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "This is telling us we may have that market reversal now to the upside."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B004",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So, I want to be tapping in to the top of the range, right? That way, I'm using the top of the range as a support along with my demand."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B005",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "It tapped the top of the range and it shot up immediately."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B006",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "it tapped the demand. It tapped the top of the range and it shot up immediately. I was already into the trade at this moment."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B007",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The candle closed in the demand zone, which is exactly what we want to see. That means the demand zone is likely going to hold."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B008",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "break and close above our range and also through our trend line"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B009",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We had many touches of that trend line."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B010",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We had multiple fair value gaps. Another here, another here, showing us that we had really strong buyers at this level."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B011",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "for my stop loss, since I'm entering near the range midline, I'm going to put it below the bottom line and below the demand"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "deymRD3kSD0-S1-B012",
+          "video_id": "deymRD3kSD0",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we want to target the top of the range, not the bottom of the range"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    }
+  ],
+  "stage2": {
+    "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+    "task": "Does this quote express THIS condition?",
+    "support_taxonomy": {
+      "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+      "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+      "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+    },
+    "items": [
+      {
+        "item_id": "deymRD3kSD0-S1-B000",
+        "extracted_condition_text": "Use the 9:30 AM candle (NY Stock Exchange open) on the 15-minute timeframe to set the trading range.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B001",
+        "extracted_condition_text": "The 9:30 AM candle defines the high and low for the day's trading range.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B002",
+        "extracted_condition_text": "The candle must break and close above the range and through the 200 period EMA trend line.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B003",
+        "extracted_condition_text": "This confirms a market reversal and bullish bias.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B004",
+        "extracted_condition_text": "Wait for price to tap the top of the range, which acts as support along with the demand zone.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B005",
+        "extracted_condition_text": "Tapping the top of the range provides a high-probability entry point.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B006",
+        "extracted_condition_text": "Enter the trade upon price tapping the top of the range/demand zone.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B007",
+        "extracted_condition_text": "The price action confirms the support level is holding.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B008",
+        "extracted_condition_text": "The candle must break and close above the range and through the 200 period EMA trend line.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B009",
+        "extracted_condition_text": "The price has had many touches of the 200 period EMA trend line.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B010",
+        "extracted_condition_text": "Multiple fair value gaps are present, indicating strong buyers at the level.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B011",
+        "extracted_condition_text": "The stop is placed below the demand/range support level.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "deymRD3kSD0-S1-B012",
+        "extracted_condition_text": "The target is set at the top of the range.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      }
+    ]
+  }
+}
