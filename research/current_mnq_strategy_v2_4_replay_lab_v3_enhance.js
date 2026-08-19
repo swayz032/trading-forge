@@ -1,10 +1,20 @@
-/* MNQ v2.4 Replay Lab V3 desktop overlay enhancement.
+/* MNQ v2.4 Replay Lab V3 desktop enhancement.
  * Loaded after the core generated page. Keeps trader-drawn key zones visible on
- * 15m/5m/1m and the TP reaction cluster visible on 5m/1m without exposing bot data.
- * It also starts each chart near the current decision area instead of shrinking
- * ten days of context into a tiny first view; the trader can still pan left.
+ * 15m/5m/1m, the TP reaction cluster visible on 5m/1m, focuses each first view
+ * near the decision area, and corrects Lightweight Charts' UTC-only time axis to
+ * the America/New_York wall-clock already encoded in each bar ISO timestamp.
  */
 (function () {
+  // Lightweight Charts treats timestamps as UTC and has no native timezone
+  // support. The source ISO strings already contain the correct New York wall
+  // clock and DST offset, so preserve the wall-clock fields and present them as
+  // UTC to the chart. Example: 09:47-04:00 is displayed as 09:47, not 13:47.
+  ts = function (s) {
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+    if (!m) return Math.floor(new Date(s).getTime() / 1000);
+    return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) / 1000;
+  };
+
   function paintLayer(canvas, chartObj, zones, tp) {
     const d = canvasSize(canvas);
     const ctx = d.x;
@@ -66,6 +76,9 @@
     drawOverlays();
   };
 
+  // Rebuild the initially rendered case once with corrected New York wall-clock
+  // chart timestamps, then focus it near current structure.
+  setData(false);
   focusDecisionArea();
   drawOverlays();
 })();
