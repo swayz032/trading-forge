@@ -9,6 +9,13 @@ import {
   handleIsolatedGraderPreToolUse,
   isolatedGraderSessionStart,
 } from './isolated-grader-seat.mjs';
+import {
+  revokeIssuedPermit,
+  stampIsolatedGraderParentHistory,
+  verifyActivationParentHistory,
+  verifyActiveGraderParentHistory,
+  verifyParentHistoryForDispatch,
+} from './isolated-grader-parent-history.mjs';
 
 function deny(reason) {
   return {
@@ -46,6 +53,10 @@ function repoRootFor(input) {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
+}
+
+function explicitlyDenied(result) {
+  return result?.hookSpecificOutput?.permissionDecision === 'deny' || result?.decision === 'block';
 }
 
 const ISOLATED_EDIT_TOOLS = new Set(['Edit', 'Write', 'NotebookEdit']);
@@ -102,19 +113,96 @@ try {
   // pending SessionStart only explains the redemption protocol; it does not arm anything.
   if (input.hook_event_name === 'SessionStart') {
     result = isolatedGraderSessionStart({ input, manifest, repoRoot });
-    if (!result) result = evaluateHookEvent({ input, manifest });
+    if (!result) {
+      result = evaluateHookEvent({ input, manifest });
+      // A successful NORMAL Worker SessionStart gets an isolated-grader-only history baseline in
+      // the already self-protected armed marker. Failure to stamp it does not brick ordinary
+      // Worker execution; it simply makes future isolated-grader permits fail closed.
+      if (result?._audit?.anchor?.ok && result?._audit?.armed) {
+        try {
+          const baseline = stampIsolatedGraderParentHistory({
+            repoRoot,
+            sessionId: input.session_id,
+            manifest,
+          });
+          result._audit.isolated_grader_parent_history = baseline;
+        } catch (error) {
+          result._audit.isolated_grader_parent_history_error = error.message;
+        }
+      }
+    }
   } else if (input.hook_event_name === 'PreToolUse') {
-    // Child side first. An unarmed worktree-agent-* can do exactly one special thing: redeem the
-    // secret one-use activation token injected into its prompt. Once active, grader-only law is
-    // enforced here and the normal Worker branch guard is never bypassed or reinterpreted.
-    const isolated = handleIsolatedGraderPreToolUse({ input, manifest, repoRoot });
-    if (isolated?.handled) {
-      result = isolated.active ? isolatedActiveDecision(input, isolated) : isolated.result;
+    // A token is useless if its parent loses authority between mint and redemption. Check the
+    // parent history BEFORE the child-side handler can atomically consume the permit.
+    const activationParent = verifyActivationParentHistory({ input, manifest, repoRoot });
+    if (activationParent.applicable && !activationParent.ok) {
+      result = {
+        ...deny(`isolated grader activation refused: ${activationParent.reason}`),
+        _audit: { event: 'PreToolUse', isolated_grader_activation_parent: activationParent },
+      };
     } else {
-      // Parent side. Run the normal guard FIRST. Only a genuinely allowed, armed, non-G2
-      // accuracy-validator + isolation:"worktree" dispatch may receive a permit/token.
-      const base = evaluateHookEvent({ input, manifest });
-      result = authorizeIsolatedGraderDispatch({ input, manifest, repoRoot, baseResult: base }) || base;
+      // Child side first. An unarmed worktree-agent-* can do exactly one special thing: redeem
+      // the secret one-use activation token injected into its prompt.
+      const isolated = handleIsolatedGraderPreToolUse({ input, manifest, repoRoot });
+      if (isolated?.handled) {
+        if (isolated.active) {
+          // Parent authority remains load-bearing AFTER activation too. Any later reset/rebase of
+          // the parent revokes execution on the next child command.
+          const parentHistory = verifyActiveGraderParentHistory({
+            isolatedSession: isolated.session,
+            manifest,
+          });
+          result = parentHistory.ok
+            ? isolatedActiveDecision(input, isolated)
+            : {
+                ...deny(`isolated grader parent authority invalidated: ${parentHistory.reason}`),
+                _audit: { event: 'PreToolUse', isolated_grader: isolated.session, parent_history: parentHistory },
+              };
+        } else {
+          result = isolated.result;
+        }
+      } else {
+        // Parent side. Run the normal guard FIRST. An explicit normal-guard denial always wins.
+        const base = evaluateHookEvent({ input, manifest });
+        if (explicitlyDenied(base)) {
+          result = base;
+        } else {
+          // AR-1358 A2: current-state arming alone cannot distinguish H1->H2->reset-H1 from a
+          // session that never moved. The reflog baseline must prove monotonic history before a
+          // token can be minted.
+          const historyBefore = verifyParentHistoryForDispatch({ input, manifest, repoRoot });
+          if (historyBefore.applicable && !historyBefore.ok) {
+            result = {
+              ...deny(`isolated grader permit refused: ${historyBefore.reason}`),
+              _audit: { event: 'PreToolUse', isolated_grader_parent_history: historyBefore },
+            };
+          } else {
+            const issued = authorizeIsolatedGraderDispatch({
+              input,
+              manifest,
+              repoRoot,
+              baseResult: base,
+            });
+            if (!issued) {
+              result = base;
+            } else {
+              // Close the mint-time TOCTOU window: re-check after the permit file exists but
+              // BEFORE its plaintext token/prompt is emitted. On failure, delete the unconsumed
+              // permit and return a denial.
+              const historyAfter = verifyParentHistoryForDispatch({ input, manifest, repoRoot });
+              if (!historyAfter.ok) {
+                revokeIssuedPermit({ result: issued, repoRoot });
+                result = {
+                  ...deny(`isolated grader permit revoked before dispatch: ${historyAfter.reason}`),
+                  _audit: { event: 'PreToolUse', isolated_grader_parent_history: historyAfter },
+                };
+              } else {
+                result = issued;
+              }
+            }
+          }
+        }
+      }
     }
   } else {
     result = evaluateHookEvent({ input, manifest });
