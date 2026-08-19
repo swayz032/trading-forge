@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And that imbalance is what causes those sharp moves up and down that we see on our chart. And this is why it matters. Institutions cannot place an order this big and hide it. Their size leaves footprints. And if we can recognize where they've been active, we can position ourselves to trade with them instead of against them. And supply and demand zones are the footprints that they leave behind."
+            "verbatim": "And supply and demand zones are the footprints that they leave behind."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And supply and demand zones are the footprints that they leave behind."
+            "verbatim": "And that tells me that an institution probably stepped in here. So I'm going to mark this area from open to high as a supply zone."
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And in this case, we can see that buyers started to weaken. And as soon as we tapped into the zone, sellers stepped in. This to me is a sign that this could be a solid entry point."
+            "verbatim": "And in this case, we can see that buyers started to weaken. And as soon as we tapped into the zone, sellers stepped in."
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Now, for a supply zone, this is where aggressive sellers stepped in and overwhelmed buyers, driving price down."
+            "verbatim": "this is where aggressive sellers stepped in and overwhelmed buyers, driving price down"
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "target the next level of liquidity below."
+            "verbatim": "target the next level of liquidity below"
           },
           "rater_response": {
             "role": null,
@@ -426,7 +426,7 @@
     "items": [
       {
         "item_id": "75DJN5UVQnw-S0-B000",
-        "extracted_condition_text": "The zone is formed where aggressive sellers overwhelmed buyers, driving price down.",
+        "extracted_condition_text": "Identify a Supply Zone where aggressive sellers overwhelmed buyers, driving price down.",
         "adjudication_response": {
           "support": null,
           "support_justification": null

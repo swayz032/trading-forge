@@ -1,0 +1,16 @@
+{
+  "artifact": "ar-1345a-step12-part-d-pinned-regression-control",
+  "authority": "AR-1348A SS6.D -- one cheap pinned topical-regression control before bulk fan-out, proving no regression into generic/disclaimer evidence, WITHOUT reopening the closed G2-D sVkm correction queue",
+  "method": "isolated single-condition dispatch (not batch) against an already-pinned, already-committed transcript (E8Wg6tFPYjo, sha256 already recorded in that video's batch_task_index.json), deliberately choosing a condition whose transcript contains MULTIPLE topically-similar decoy spans ('imbalance'/'fair value gap' appear in at least 3 distinct sentences describing different mechanics: the general BOS-retracement wait, the imbalance definition, and the specific Fibonacci-alignment confluence), so a lazy/generic answer was a real, available failure mode -- not a strawman.",
+  "no_svkm_no_g2d": "This control does not touch docs/replay-results/svkm-extraction-certified/ or any G2-D queue/receipt-dir/native-call-manifest path. It is a distinct pinned witness on a different video, satisfying AR-1348A's explicit 'another pinned equivalent' option.",
+  "condition_text": "The Fibonacci retracement level must align with a Fair Value Gap or Imbalance.",
+  "decoy_spans_available_in_same_transcript": [
+    "typically that retracement ends up being towards a fair value gap or an imbalance",
+    "just to quickly explain what an imbalance or fair value gap is, it's a three candlestick pattern",
+    "we can confidently identify a break of structure and a fair value gap or imbalance in this trade setup"
+  ],
+  "correct_specific_span": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap.",
+  "real_opus_response": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap.",
+  "verdict": "PASS -- the response is byte-identical to the correct specific span, not any of the 3 available generic/nearby decoys. No regression into generic/disclaimer evidence observed.",
+  "dispatch": "Agent tool, subagent_type=general-purpose, model override=opus, ONE fresh subagent, isolated single-condition prompt (not the batch format), 4.4s duration"
+}
