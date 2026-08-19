@@ -1,0 +1,1857 @@
+{
+  "artifact": "strategy-factory-pilot-c-full-run",
+  "manifest_pin": {
+    "path": "docs/replay-results/strategy-factory-census/library-manifest-v1.1.json",
+    "member_count": 120
+  },
+  "search_methodology_positive_control": {
+    "found": [
+      "docs/replay-results/svkm-extraction-certified/grade/phase1.json",
+      "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json"
+    ],
+    "passed": true
+  },
+  "external_positive_control": {
+    "role": "EXTERNAL_POSITIVE_CONTROL",
+    "video_id": "sVkmZklJDHI",
+    "committed_spec_hash": "dc9d12a78be85c62c1ae02930b3d36ddd1214a40fe98abef2a52b70b4d619749",
+    "freshly_compiled_spec_hash": "dc9d12a78be85c62c1ae02930b3d36ddd1214a40fe98abef2a52b70b4d619749",
+    "drift_detected": false,
+    "disposition": "FAITHFUL_COMPILE_READY_FOR_BACKTEST"
+  },
+  "input_count": 120,
+  "output_count": 120,
+  "unique_input_ids": 120,
+  "unique_output_ids": 120,
+  "missing_ids": [],
+  "extra_ids": [],
+  "duplicate_output_ids": false,
+  "invalid_dispositions_found": [],
+  "per_disposition_membership": {
+    "EXTRACTION_MISSING_REQUIRED_INFORMATION": [
+      "97fabc41-f55b-4a20-a020-c28d6b7ffb54",
+      "9f38ab7a-9a3d-4771-bdfb-13c1cd067536",
+      "6c755822-713d-48f9-867e-cf399722e69a",
+      "4c61be86-5940-4bec-a8a0-87328b2cafe8",
+      "589ec512-eecf-4d49-879f-7ec0e8d2b8f2",
+      "ca5564d8-f6a2-46f5-9f2f-e678572ccf48",
+      "e27546e4-fd8d-49d1-a359-5a0ed9a9411b",
+      "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa",
+      "b5871142-d5e4-4d8b-a7da-3033719d762f",
+      "3af883fa-9c50-45de-9076-214136f44b8a",
+      "4be0db1d-b6fe-46c4-8251-fd721b1b0992",
+      "913f40c4-6d3d-4c71-81da-109631f38873",
+      "6491538e-aff0-4ed8-b0c6-67a36e6cf84f",
+      "85776068-64f5-4877-b99b-026de2c49201",
+      "ff718865-0876-4cdb-a84a-cc88eaf32cd7",
+      "1b256347-a65c-4ec0-a73b-77c2c01cc29e",
+      "f3babbdd-2e2e-4adb-b449-dc1590f569e2",
+      "67d67ba0-c0b4-4dab-ba00-a25c331ae4d5",
+      "91bfb9e4-bb54-4a80-842e-3522bb1b0527",
+      "b238477c-71a4-4fa0-bb50-5f67c1b2c865",
+      "2c64c7c5-5d5d-4ba3-9995-cc5ab2fcfa1f",
+      "162e6fdd-e4c9-4335-b6da-bb8c3f8cb59d",
+      "534ca8ea-32d8-4c94-8f09-d851a78d795f",
+      "0f3a1418-992a-427e-818a-6d427fe11173",
+      "229770b3-860c-49c3-820e-0d3ff1348704",
+      "88626172-8b82-4607-938c-fab7c8b9b3a9",
+      "29a5a070-24e6-4fc4-ac0b-284d314039b6",
+      "52f9921d-619c-4cab-b845-bef642c7585f",
+      "aae789b5-2d29-4558-a58b-7950ce5b9c0a",
+      "8ec7f48d-59e8-4888-8ac7-9cdd875a78e2",
+      "69b64551-05ad-41f6-b736-aeaab16d6bfb",
+      "979ba21b-66ca-4071-8e5e-ca96911a4cbd",
+      "9b871b65-3a50-456d-accc-5269d59a3992",
+      "d8fe9ad2-da9a-463f-bcea-2b742601b028",
+      "942f83cc-0a84-41d7-b11d-b3f3b88a6f2b",
+      "232d9540-cbda-478e-93c4-9a35f6cf8a86",
+      "a1d641ff-e35c-48f8-899f-9401e0c2c839",
+      "cce3d9f0-e23e-473d-b841-8af2db3eab1a",
+      "9d133b69-55ea-4eab-969f-c385eacbba21",
+      "3e91ffe4-bd68-41bb-a364-d35968c0778f",
+      "3f63d906-ce8e-4a9f-9e97-c3b6b075642d",
+      "a71fb739-41de-45f3-af8f-1bec87338107",
+      "d2e71c2d-d8e9-4348-b7c4-1f53c2e9c67c",
+      "5cd1ac73-8e89-4adc-83cc-63a700dc0196",
+      "89ac9dea-ddb5-4779-b7ac-21d19feeee81",
+      "1489bf44-a7de-4a68-b6c9-d4d4fe9ff390",
+      "8148f3b5-8bc7-4d36-a1d4-0ed5e2802185",
+      "7ea22e05-b1b2-4be5-bd35-5f5f1bba5805",
+      "8a047fd8-148c-46b0-a268-717f826ff4d4",
+      "63d50af3-5629-437d-9271-0b242b212458",
+      "43d73bbc-2710-4d8f-89d0-bac8e60688c4",
+      "e135491b-dedf-4c30-8614-9c74acc6055f",
+      "710a9ed3-a3d0-4eb3-baa1-69085bf87dd1",
+      "c1217b13-f0a5-4fa9-afaa-35da4ce3998f",
+      "39eba5ec-6939-434a-a1cc-bcb19bee4606",
+      "fb2e92ab-feda-4327-a524-4a557e859da7",
+      "0dfd11ee-d227-4ff0-a839-c1c78356d5e5",
+      "ac4fe99d-1c97-42ee-8ce2-dafd6f18e0ea",
+      "a18406a7-4f63-4d10-948b-228b9473ad5f",
+      "93534762-1b88-41c8-b5bf-32ba8584bc0e",
+      "5b9fefce-ea5a-490c-a80e-8136272ddcf7",
+      "ae7a2560-3569-4f29-b297-a4f3a60d1ca3",
+      "b2deddcb-57d4-4bc9-b750-39be0f8fe12a",
+      "4be1fb85-0c34-4f2e-b326-9053440bdc64",
+      "5e5803d1-e255-4ee9-943f-02328deb5f14",
+      "331fe15a-8560-4b46-88bb-4b01119b725a",
+      "971826d6-defb-4882-a634-5deeecad712f",
+      "5591c0ba-a4ac-44eb-81c1-f26011774013",
+      "47b1c45a-de30-498b-b630-0ab957395204",
+      "c45b4718-07b1-4bea-baa3-1ee0a8e209b4",
+      "81002a32-98fc-4a49-9079-14742224122a",
+      "c029e162-ecf9-4709-9820-baf60c6b7af0",
+      "edbe2372-05b6-4388-afce-b99e754b7e04",
+      "81663564-e5bc-42b6-8a51-548ba0bc55c3",
+      "ad9811b7-10db-482e-afb8-d1158d5054ce",
+      "8936bb44-8a0a-4a62-87fa-e8461215066e",
+      "a2644bb7-943e-4247-8cc7-6ee385c53595",
+      "05b069a6-a8e4-49bb-a933-846d6b4b6f02",
+      "30024153-c7ea-43bb-a430-7a900ddde667",
+      "f6ff3004-361f-4c00-9235-fa233a57bac5",
+      "84928232-2e58-4e6c-92d3-5e8631eb2138",
+      "1dd66daa-5066-4755-ba3a-4ca76017e57a",
+      "fc4bf082-41d0-4030-b5a7-5494889139c0",
+      "9955f721-7644-4e31-8d01-f34a109289b6",
+      "93fe89cf-7491-4cfd-a645-e7291db36523",
+      "6304525a-81a6-41ea-9bdc-d768ee5e9ee1",
+      "c98d373d-fa40-4f87-b6ef-e6cb2d595d8d",
+      "321ef3d8-b0db-47ee-a365-7e9090fbfcee",
+      "3c6d439a-d49c-4124-a215-ff2577361480",
+      "6a03c714-45c5-4efe-81e2-5a6af5e554c0",
+      "7af16961-6df4-4038-b906-24e51cae1ede",
+      "e596fbaf-a0c7-482c-8257-e581391a8e40",
+      "0e2af137-890f-4202-962f-99ba4a3cf813",
+      "562decbf-034d-412b-9210-4f87b7f86179",
+      "2c7e78e7-0663-44f6-af18-0a5c68ad2f1d",
+      "f8795a5d-2341-433a-bf77-6dc8dae4e32c",
+      "326fe955-50cc-4246-bdab-8976438b7c06",
+      "d916b245-1562-4e82-9530-d7a79bc2c04c",
+      "e28f6ea8-fbd1-4926-a68b-e2d7de48ba46",
+      "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
+      "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3",
+      "58de00c3-308d-4f7a-9223-be161168e9ec",
+      "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90",
+      "ebc8fff7-5459-427f-a4ad-a68a6366f6e0",
+      "1771442d-0138-4c22-8993-8acfe4c79fd3",
+      "594186e5-3249-40d7-8791-b46ea2c01b20",
+      "b18952c0-ae56-411c-ae06-017051083658",
+      "d36f9a97-ebbc-423b-b7a8-a1f06271f689",
+      "389d5007-430a-4919-84c4-8cd8467afa6b",
+      "335f7418-0417-4356-bf1c-701f53e51510",
+      "f8691d73-d03e-46b7-b3fd-1948be7fd8e7",
+      "b2f4630d-3540-4a33-94c9-ebbafdd9346f",
+      "543874f8-21ad-4bc8-b298-4f8c62a35f87",
+      "d3d2d55f-30b1-4587-915e-af87e2dc2953",
+      "67c762e4-d2e0-4b57-ae72-6b8755007d36",
+      "a20ecb89-a119-4c4c-958a-6558abb08a17",
+      "06ea64d3-155a-45a4-a233-53cac8a3584d",
+      "f43088ac-49dc-4503-947f-6badf004a9e6",
+      "338f7e39-4932-48b3-a993-10afa1ed9b3e",
+      "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411"
+    ]
+  },
+  "disposition_counts": {
+    "EXTRACTION_MISSING_REQUIRED_INFORMATION": 120
+  },
+  "refusal_capability_clusters_ranked": [
+    {
+      "video_id": "1HFoStW_wsc",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "81663564-e5bc-42b6-8a51-548ba0bc55c3",
+        "ad9811b7-10db-482e-afb8-d1158d5054ce",
+        "edbe2372-05b6-4388-afce-b99e754b7e04"
+      ]
+    },
+    {
+      "video_id": "75DJN5UVQnw",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "6c755822-713d-48f9-867e-cf399722e69a",
+        "97fabc41-f55b-4a20-a020-c28d6b7ffb54",
+        "9f38ab7a-9a3d-4771-bdfb-13c1cd067536"
+      ]
+    },
+    {
+      "video_id": "7ieYBa7Z-Hg",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "81002a32-98fc-4a49-9079-14742224122a",
+        "c029e162-ecf9-4709-9820-baf60c6b7af0",
+        "c45b4718-07b1-4bea-baa3-1ee0a8e209b4"
+      ]
+    },
+    {
+      "video_id": "E8Wg6tFPYjo",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "3af883fa-9c50-45de-9076-214136f44b8a",
+        "4be0db1d-b6fe-46c4-8251-fd721b1b0992",
+        "913f40c4-6d3d-4c71-81da-109631f38873"
+      ]
+    },
+    {
+      "video_id": "FAKWJ-1NlLE",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "43d73bbc-2710-4d8f-89d0-bac8e60688c4",
+        "63d50af3-5629-437d-9271-0b242b212458",
+        "8a047fd8-148c-46b0-a268-717f826ff4d4"
+      ]
+    },
+    {
+      "video_id": "FqxEKDxemtI",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "b5871142-d5e4-4d8b-a7da-3033719d762f",
+        "e27546e4-fd8d-49d1-a359-5a0ed9a9411b",
+        "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa"
+      ]
+    },
+    {
+      "video_id": "HfZTCZTDfWk",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "331fe15a-8560-4b46-88bb-4b01119b725a",
+        "4be1fb85-0c34-4f2e-b326-9053440bdc64",
+        "5e5803d1-e255-4ee9-943f-02328deb5f14"
+      ]
+    },
+    {
+      "video_id": "KXWRtV2LOVc",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "6304525a-81a6-41ea-9bdc-d768ee5e9ee1",
+        "93fe89cf-7491-4cfd-a645-e7291db36523",
+        "c98d373d-fa40-4f87-b6ef-e6cb2d595d8d"
+      ]
+    },
+    {
+      "video_id": "LOcaRWcc1xI",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "1b256347-a65c-4ec0-a73b-77c2c01cc29e",
+        "67d67ba0-c0b4-4dab-ba00-a25c331ae4d5",
+        "f3babbdd-2e2e-4adb-b449-dc1590f569e2"
+      ]
+    },
+    {
+      "video_id": "N7SM8a7Dc9s",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "06ea64d3-155a-45a4-a233-53cac8a3584d",
+        "67c762e4-d2e0-4b57-ae72-6b8755007d36",
+        "a20ecb89-a119-4c4c-958a-6558abb08a17"
+      ]
+    },
+    {
+      "video_id": "N7uP9V0Iktc",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "9d133b69-55ea-4eab-969f-c385eacbba21",
+        "a1d641ff-e35c-48f8-899f-9401e0c2c839",
+        "cce3d9f0-e23e-473d-b841-8af2db3eab1a"
+      ]
+    },
+    {
+      "video_id": "NMUd0oX_7Pg",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "710a9ed3-a3d0-4eb3-baa1-69085bf87dd1",
+        "c1217b13-f0a5-4fa9-afaa-35da4ce3998f",
+        "e135491b-dedf-4c30-8614-9c74acc6055f"
+      ]
+    },
+    {
+      "video_id": "Qxlu8v_6G3Y",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "326fe955-50cc-4246-bdab-8976438b7c06",
+        "d916b245-1562-4e82-9530-d7a79bc2c04c",
+        "e28f6ea8-fbd1-4926-a68b-e2d7de48ba46"
+      ]
+    },
+    {
+      "video_id": "UBvfsImdI2U",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "1489bf44-a7de-4a68-b6c9-d4d4fe9ff390",
+        "7ea22e05-b1b2-4be5-bd35-5f5f1bba5805",
+        "8148f3b5-8bc7-4d36-a1d4-0ed5e2802185"
+      ]
+    },
+    {
+      "video_id": "VTEQ2fhGLqE",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "6491538e-aff0-4ed8-b0c6-67a36e6cf84f",
+        "85776068-64f5-4877-b99b-026de2c49201",
+        "ff718865-0876-4cdb-a84a-cc88eaf32cd7"
+      ]
+    },
+    {
+      "video_id": "WV1fyudd7fw",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "93534762-1b88-41c8-b5bf-32ba8584bc0e",
+        "a18406a7-4f63-4d10-948b-228b9473ad5f",
+        "ac4fe99d-1c97-42ee-8ce2-dafd6f18e0ea"
+      ]
+    },
+    {
+      "video_id": "aHLIE_TXjpo",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "5cd1ac73-8e89-4adc-83cc-63a700dc0196",
+        "89ac9dea-ddb5-4779-b7ac-21d19feeee81",
+        "d2e71c2d-d8e9-4348-b7c4-1f53c2e9c67c"
+      ]
+    },
+    {
+      "video_id": "bQp37aD1JLE",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "321ef3d8-b0db-47ee-a365-7e9090fbfcee",
+        "3c6d439a-d49c-4124-a215-ff2577361480",
+        "6a03c714-45c5-4efe-81e2-5a6af5e554c0"
+      ]
+    },
+    {
+      "video_id": "c8VLqF0XDR4",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "5b9fefce-ea5a-490c-a80e-8136272ddcf7",
+        "ae7a2560-3569-4f29-b297-a4f3a60d1ca3",
+        "b2deddcb-57d4-4bc9-b750-39be0f8fe12a"
+      ]
+    },
+    {
+      "video_id": "dE4lPhAWke8",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "1771442d-0138-4c22-8993-8acfe4c79fd3",
+        "d36f9a97-ebbc-423b-b7a8-a1f06271f689",
+        "ebc8fff7-5459-427f-a4ad-a68a6366f6e0"
+      ]
+    },
+    {
+      "video_id": "dHmOosYof48",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "0dfd11ee-d227-4ff0-a839-c1c78356d5e5",
+        "39eba5ec-6939-434a-a1cc-bcb19bee4606",
+        "fb2e92ab-feda-4327-a524-4a557e859da7"
+      ]
+    },
+    {
+      "video_id": "deymRD3kSD0",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "47b1c45a-de30-498b-b630-0ab957395204",
+        "5591c0ba-a4ac-44eb-81c1-f26011774013",
+        "971826d6-defb-4882-a634-5deeecad712f"
+      ]
+    },
+    {
+      "video_id": "e5HQXYBUW-Q",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90",
+        "594186e5-3249-40d7-8791-b46ea2c01b20",
+        "b18952c0-ae56-411c-ae06-017051083658"
+      ]
+    },
+    {
+      "video_id": "gddYspvW0_w",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "58de00c3-308d-4f7a-9223-be161168e9ec",
+        "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
+        "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3"
+      ]
+    },
+    {
+      "video_id": "h6TnE7QClJg",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "05b069a6-a8e4-49bb-a933-846d6b4b6f02",
+        "8936bb44-8a0a-4a62-87fa-e8461215066e",
+        "a2644bb7-943e-4247-8cc7-6ee385c53595"
+      ]
+    },
+    {
+      "video_id": "iU8ww5MC2FQ",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "543874f8-21ad-4bc8-b298-4f8c62a35f87",
+        "b2f4630d-3540-4a33-94c9-ebbafdd9346f",
+        "d3d2d55f-30b1-4587-915e-af87e2dc2953"
+      ]
+    },
+    {
+      "video_id": "jlShztsY3oA",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "0e2af137-890f-4202-962f-99ba4a3cf813",
+        "7af16961-6df4-4038-b906-24e51cae1ede",
+        "e596fbaf-a0c7-482c-8257-e581391a8e40"
+      ]
+    },
+    {
+      "video_id": "ktkqq7QsN9Q",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "338f7e39-4932-48b3-a993-10afa1ed9b3e",
+        "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411",
+        "f43088ac-49dc-4503-947f-6badf004a9e6"
+      ]
+    },
+    {
+      "video_id": "l-2iKbcm5UI",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "335f7418-0417-4356-bf1c-701f53e51510",
+        "389d5007-430a-4919-84c4-8cd8467afa6b",
+        "f8691d73-d03e-46b7-b3fd-1948be7fd8e7"
+      ]
+    },
+    {
+      "video_id": "lRMFcsqhYBU",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "0f3a1418-992a-427e-818a-6d427fe11173",
+        "162e6fdd-e4c9-4335-b6da-bb8c3f8cb59d",
+        "534ca8ea-32d8-4c94-8f09-d851a78d795f"
+      ]
+    },
+    {
+      "video_id": "m-G1ag77aVc",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "69b64551-05ad-41f6-b736-aeaab16d6bfb",
+        "979ba21b-66ca-4071-8e5e-ca96911a4cbd",
+        "9b871b65-3a50-456d-accc-5269d59a3992"
+      ]
+    },
+    {
+      "video_id": "mNcoaNdAyIE",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "2c64c7c5-5d5d-4ba3-9995-cc5ab2fcfa1f",
+        "91bfb9e4-bb54-4a80-842e-3522bb1b0527",
+        "b238477c-71a4-4fa0-bb50-5f67c1b2c865"
+      ]
+    },
+    {
+      "video_id": "nV9gknhy2Ew",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "232d9540-cbda-478e-93c4-9a35f6cf8a86",
+        "942f83cc-0a84-41d7-b11d-b3f3b88a6f2b",
+        "d8fe9ad2-da9a-463f-bcea-2b742601b028"
+      ]
+    },
+    {
+      "video_id": "oDLt9zh33LE",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "1dd66daa-5066-4755-ba3a-4ca76017e57a",
+        "9955f721-7644-4e31-8d01-f34a109289b6",
+        "fc4bf082-41d0-4030-b5a7-5494889139c0"
+      ]
+    },
+    {
+      "video_id": "qLtq73bTPBA",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "2c7e78e7-0663-44f6-af18-0a5c68ad2f1d",
+        "562decbf-034d-412b-9210-4f87b7f86179",
+        "f8795a5d-2341-433a-bf77-6dc8dae4e32c"
+      ]
+    },
+    {
+      "video_id": "sVkmZklJDHI",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "4c61be86-5940-4bec-a8a0-87328b2cafe8",
+        "589ec512-eecf-4d49-879f-7ec0e8d2b8f2",
+        "ca5564d8-f6a2-46f5-9f2f-e678572ccf48"
+      ]
+    },
+    {
+      "video_id": "snNkQSyWX4k",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "52f9921d-619c-4cab-b845-bef642c7585f",
+        "8ec7f48d-59e8-4888-8ac7-9cdd875a78e2",
+        "aae789b5-2d29-4558-a58b-7950ce5b9c0a"
+      ]
+    },
+    {
+      "video_id": "x1ydP8bC7OE",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "229770b3-860c-49c3-820e-0d3ff1348704",
+        "29a5a070-24e6-4fc4-ac0b-284d314039b6",
+        "88626172-8b82-4607-938c-fab7c8b9b3a9"
+      ]
+    },
+    {
+      "video_id": "xTTDH5iRhJc",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "3e91ffe4-bd68-41bb-a364-d35968c0778f",
+        "3f63d906-ce8e-4a9f-9e97-c3b6b075642d",
+        "a71fb739-41de-45f3-af8f-1bec87338107"
+      ]
+    },
+    {
+      "video_id": "z3Qn3fBoe2I",
+      "blocked_strategy_count": 3,
+      "blocked_strategy_ids": [
+        "30024153-c7ea-43bb-a430-7a900ddde667",
+        "84928232-2e58-4e6c-92d3-5e8631eb2138",
+        "f6ff3004-361f-4c00-9235-fa233a57bac5"
+      ]
+    }
+  ],
+  "members": [
+    {
+      "strategy_id": "97fabc41-f55b-4a20-a020-c28d6b7ffb54",
+      "name": "5m_minute_support_level_mcl_5m",
+      "video_id": "75DJN5UVQnw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:75DJN5UVQnw"
+    },
+    {
+      "strategy_id": "9f38ab7a-9a3d-4771-bdfb-13c1cd067536",
+      "name": "5m_minute_support_level_mes_5m",
+      "video_id": "75DJN5UVQnw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:75DJN5UVQnw"
+    },
+    {
+      "strategy_id": "6c755822-713d-48f9-867e-cf399722e69a",
+      "name": "5m_minute_support_level_mnq_5m",
+      "video_id": "75DJN5UVQnw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:75DJN5UVQnw"
+    },
+    {
+      "strategy_id": "4c61be86-5940-4bec-a8a0-87328b2cafe8",
+      "name": "avoiding_two_mistakes_mcl_1m",
+      "video_id": "sVkmZklJDHI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "a modern extraction record exists for this video but names a different strategy than this row -- this row's old compiled_spec is not proof of a new certified-source-graph compile (AR-1333A S1)",
+        "candidate_files_and_named_strategies": {
+          "docs/replay-results/svkm-extraction-certified/grade/phase1.json": [],
+          "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json": [
+            "fvg_breakout_range_1m_5m"
+          ]
+        }
+      },
+      "refusal_cluster": "video_extracted_different_concept:sVkmZklJDHI"
+    },
+    {
+      "strategy_id": "589ec512-eecf-4d49-879f-7ec0e8d2b8f2",
+      "name": "avoiding_two_mistakes_mes_1m",
+      "video_id": "sVkmZklJDHI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "a modern extraction record exists for this video but names a different strategy than this row -- this row's old compiled_spec is not proof of a new certified-source-graph compile (AR-1333A S1)",
+        "candidate_files_and_named_strategies": {
+          "docs/replay-results/svkm-extraction-certified/grade/phase1.json": [],
+          "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json": [
+            "fvg_breakout_range_1m_5m"
+          ]
+        }
+      },
+      "refusal_cluster": "video_extracted_different_concept:sVkmZklJDHI"
+    },
+    {
+      "strategy_id": "ca5564d8-f6a2-46f5-9f2f-e678572ccf48",
+      "name": "avoiding_two_mistakes_mnq_1m",
+      "video_id": "sVkmZklJDHI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "a modern extraction record exists for this video but names a different strategy than this row -- this row's old compiled_spec is not proof of a new certified-source-graph compile (AR-1333A S1)",
+        "candidate_files_and_named_strategies": {
+          "docs/replay-results/svkm-extraction-certified/grade/phase1.json": [],
+          "docs/replay-results/svkm-extraction-certified/sVkmZklJDHI.json": [
+            "fvg_breakout_range_1m_5m"
+          ]
+        }
+      },
+      "refusal_cluster": "video_extracted_different_concept:sVkmZklJDHI"
+    },
+    {
+      "strategy_id": "e27546e4-fd8d-49d1-a359-5a0ed9a9411b",
+      "name": "ballinger_bands_mcl_5m",
+      "video_id": "FqxEKDxemtI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:FqxEKDxemtI"
+    },
+    {
+      "strategy_id": "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa",
+      "name": "ballinger_bands_mes_5m",
+      "video_id": "FqxEKDxemtI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:FqxEKDxemtI"
+    },
+    {
+      "strategy_id": "b5871142-d5e4-4d8b-a7da-3033719d762f",
+      "name": "ballinger_bands_mnq_5m",
+      "video_id": "FqxEKDxemtI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:FqxEKDxemtI"
+    },
+    {
+      "strategy_id": "3af883fa-9c50-45de-9076-214136f44b8a",
+      "name": "bos_and_fvg_or_fvg_mcl_15m",
+      "video_id": "E8Wg6tFPYjo",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:E8Wg6tFPYjo"
+    },
+    {
+      "strategy_id": "4be0db1d-b6fe-46c4-8251-fd721b1b0992",
+      "name": "bos_and_fvg_or_fvg_mes_15m",
+      "video_id": "E8Wg6tFPYjo",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:E8Wg6tFPYjo"
+    },
+    {
+      "strategy_id": "913f40c4-6d3d-4c71-81da-109631f38873",
+      "name": "bos_and_fvg_or_fvg_mnq_15m",
+      "video_id": "E8Wg6tFPYjo",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:E8Wg6tFPYjo"
+    },
+    {
+      "strategy_id": "6491538e-aff0-4ed8-b0c6-67a36e6cf84f",
+      "name": "breakout_capture_mcl_5m",
+      "video_id": "VTEQ2fhGLqE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:VTEQ2fhGLqE"
+    },
+    {
+      "strategy_id": "85776068-64f5-4877-b99b-026de2c49201",
+      "name": "breakout_capture_mes_5m",
+      "video_id": "VTEQ2fhGLqE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:VTEQ2fhGLqE"
+    },
+    {
+      "strategy_id": "ff718865-0876-4cdb-a84a-cc88eaf32cd7",
+      "name": "breakout_capture_mnq_5m",
+      "video_id": "VTEQ2fhGLqE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:VTEQ2fhGLqE"
+    },
+    {
+      "strategy_id": "1b256347-a65c-4ec0-a73b-77c2c01cc29e",
+      "name": "bullish_candle_formation_mcl_1m",
+      "video_id": "LOcaRWcc1xI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:LOcaRWcc1xI"
+    },
+    {
+      "strategy_id": "f3babbdd-2e2e-4adb-b449-dc1590f569e2",
+      "name": "bullish_candle_formation_mes_1m",
+      "video_id": "LOcaRWcc1xI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:LOcaRWcc1xI"
+    },
+    {
+      "strategy_id": "67d67ba0-c0b4-4dab-ba00-a25c331ae4d5",
+      "name": "bullish_candle_formation_mnq_1m",
+      "video_id": "LOcaRWcc1xI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:LOcaRWcc1xI"
+    },
+    {
+      "strategy_id": "91bfb9e4-bb54-4a80-842e-3522bb1b0527",
+      "name": "buy_bias_mcl_5m",
+      "video_id": "mNcoaNdAyIE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:mNcoaNdAyIE"
+    },
+    {
+      "strategy_id": "b238477c-71a4-4fa0-bb50-5f67c1b2c865",
+      "name": "buy_bias_mes_5m",
+      "video_id": "mNcoaNdAyIE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:mNcoaNdAyIE"
+    },
+    {
+      "strategy_id": "2c64c7c5-5d5d-4ba3-9995-cc5ab2fcfa1f",
+      "name": "buy_bias_mnq_5m",
+      "video_id": "mNcoaNdAyIE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:mNcoaNdAyIE"
+    },
+    {
+      "strategy_id": "162e6fdd-e4c9-4335-b6da-bb8c3f8cb59d",
+      "name": "buy_trades_in_counter_trend_trading_environment_mcl_4h",
+      "video_id": "lRMFcsqhYBU",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:lRMFcsqhYBU"
+    },
+    {
+      "strategy_id": "534ca8ea-32d8-4c94-8f09-d851a78d795f",
+      "name": "buy_trades_in_counter_trend_trading_environment_mes_4h",
+      "video_id": "lRMFcsqhYBU",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:lRMFcsqhYBU"
+    },
+    {
+      "strategy_id": "0f3a1418-992a-427e-818a-6d427fe11173",
+      "name": "buy_trades_in_counter_trend_trading_environment_mnq_4h",
+      "video_id": "lRMFcsqhYBU",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:lRMFcsqhYBU"
+    },
+    {
+      "strategy_id": "229770b3-860c-49c3-820e-0d3ff1348704",
+      "name": "buying_opportunity_mcl_15m",
+      "video_id": "x1ydP8bC7OE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:x1ydP8bC7OE"
+    },
+    {
+      "strategy_id": "88626172-8b82-4607-938c-fab7c8b9b3a9",
+      "name": "buying_opportunity_mes_15m",
+      "video_id": "x1ydP8bC7OE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:x1ydP8bC7OE"
+    },
+    {
+      "strategy_id": "29a5a070-24e6-4fc4-ac0b-284d314039b6",
+      "name": "buying_opportunity_mnq_15m",
+      "video_id": "x1ydP8bC7OE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:x1ydP8bC7OE"
+    },
+    {
+      "strategy_id": "52f9921d-619c-4cab-b845-bef642c7585f",
+      "name": "crossover_mcl_5m",
+      "video_id": "snNkQSyWX4k",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:snNkQSyWX4k"
+    },
+    {
+      "strategy_id": "aae789b5-2d29-4558-a58b-7950ce5b9c0a",
+      "name": "crossover_mes_5m",
+      "video_id": "snNkQSyWX4k",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:snNkQSyWX4k"
+    },
+    {
+      "strategy_id": "8ec7f48d-59e8-4888-8ac7-9cdd875a78e2",
+      "name": "crossover_mnq_5m",
+      "video_id": "snNkQSyWX4k",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:snNkQSyWX4k"
+    },
+    {
+      "strategy_id": "69b64551-05ad-41f6-b736-aeaab16d6bfb",
+      "name": "discount_price_to_buy_from_mcl_30m",
+      "video_id": "m-G1ag77aVc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:m-G1ag77aVc"
+    },
+    {
+      "strategy_id": "979ba21b-66ca-4071-8e5e-ca96911a4cbd",
+      "name": "discount_price_to_buy_from_mes_30m",
+      "video_id": "m-G1ag77aVc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:m-G1ag77aVc"
+    },
+    {
+      "strategy_id": "9b871b65-3a50-456d-accc-5269d59a3992",
+      "name": "discount_price_to_buy_from_mnq_30m",
+      "video_id": "m-G1ag77aVc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:m-G1ag77aVc"
+    },
+    {
+      "strategy_id": "d8fe9ad2-da9a-463f-bcea-2b742601b028",
+      "name": "downside_delivery_mcl_5m",
+      "video_id": "nV9gknhy2Ew",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:nV9gknhy2Ew"
+    },
+    {
+      "strategy_id": "942f83cc-0a84-41d7-b11d-b3f3b88a6f2b",
+      "name": "downside_delivery_mes_5m",
+      "video_id": "nV9gknhy2Ew",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:nV9gknhy2Ew"
+    },
+    {
+      "strategy_id": "232d9540-cbda-478e-93c4-9a35f6cf8a86",
+      "name": "downside_delivery_mnq_5m",
+      "video_id": "nV9gknhy2Ew",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:nV9gknhy2Ew"
+    },
+    {
+      "strategy_id": "a1d641ff-e35c-48f8-899f-9401e0c2c839",
+      "name": "ema_period_mcl_5m",
+      "video_id": "N7uP9V0Iktc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:N7uP9V0Iktc"
+    },
+    {
+      "strategy_id": "cce3d9f0-e23e-473d-b841-8af2db3eab1a",
+      "name": "ema_period_mes_5m",
+      "video_id": "N7uP9V0Iktc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:N7uP9V0Iktc"
+    },
+    {
+      "strategy_id": "9d133b69-55ea-4eab-969f-c385eacbba21",
+      "name": "ema_period_mnq_5m",
+      "video_id": "N7uP9V0Iktc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:N7uP9V0Iktc"
+    },
+    {
+      "strategy_id": "3e91ffe4-bd68-41bb-a364-d35968c0778f",
+      "name": "entry_at_key_levels_mcl_5m",
+      "video_id": "xTTDH5iRhJc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:xTTDH5iRhJc"
+    },
+    {
+      "strategy_id": "3f63d906-ce8e-4a9f-9e97-c3b6b075642d",
+      "name": "entry_at_key_levels_mes_5m",
+      "video_id": "xTTDH5iRhJc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:xTTDH5iRhJc"
+    },
+    {
+      "strategy_id": "a71fb739-41de-45f3-af8f-1bec87338107",
+      "name": "entry_at_key_levels_mnq_5m",
+      "video_id": "xTTDH5iRhJc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:xTTDH5iRhJc"
+    },
+    {
+      "strategy_id": "d2e71c2d-d8e9-4348-b7c4-1f53c2e9c67c",
+      "name": "entry_chart_timeframe_mcl_5m",
+      "video_id": "aHLIE_TXjpo",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:aHLIE_TXjpo"
+    },
+    {
+      "strategy_id": "5cd1ac73-8e89-4adc-83cc-63a700dc0196",
+      "name": "entry_chart_timeframe_mes_5m",
+      "video_id": "aHLIE_TXjpo",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:aHLIE_TXjpo"
+    },
+    {
+      "strategy_id": "89ac9dea-ddb5-4779-b7ac-21d19feeee81",
+      "name": "entry_chart_timeframe_mnq_5m",
+      "video_id": "aHLIE_TXjpo",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:aHLIE_TXjpo"
+    },
+    {
+      "strategy_id": "1489bf44-a7de-4a68-b6c9-d4d4fe9ff390",
+      "name": "entry_condition_mcl_1h",
+      "video_id": "UBvfsImdI2U",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:UBvfsImdI2U"
+    },
+    {
+      "strategy_id": "8148f3b5-8bc7-4d36-a1d4-0ed5e2802185",
+      "name": "entry_condition_mes_1h",
+      "video_id": "UBvfsImdI2U",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:UBvfsImdI2U"
+    },
+    {
+      "strategy_id": "7ea22e05-b1b2-4be5-bd35-5f5f1bba5805",
+      "name": "entry_condition_mnq_1h",
+      "video_id": "UBvfsImdI2U",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:UBvfsImdI2U"
+    },
+    {
+      "strategy_id": "8a047fd8-148c-46b0-a268-717f826ff4d4",
+      "name": "expansion_higher_mcl_5m",
+      "video_id": "FAKWJ-1NlLE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:FAKWJ-1NlLE"
+    },
+    {
+      "strategy_id": "63d50af3-5629-437d-9271-0b242b212458",
+      "name": "expansion_higher_mes_5m",
+      "video_id": "FAKWJ-1NlLE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:FAKWJ-1NlLE"
+    },
+    {
+      "strategy_id": "43d73bbc-2710-4d8f-89d0-bac8e60688c4",
+      "name": "expansion_higher_mnq_5m",
+      "video_id": "FAKWJ-1NlLE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:FAKWJ-1NlLE"
+    },
+    {
+      "strategy_id": "e135491b-dedf-4c30-8614-9c74acc6055f",
+      "name": "hammer_candle_long_side_mcl_5m",
+      "video_id": "NMUd0oX_7Pg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:NMUd0oX_7Pg"
+    },
+    {
+      "strategy_id": "710a9ed3-a3d0-4eb3-baa1-69085bf87dd1",
+      "name": "hammer_candle_long_side_mes_5m",
+      "video_id": "NMUd0oX_7Pg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:NMUd0oX_7Pg"
+    },
+    {
+      "strategy_id": "c1217b13-f0a5-4fa9-afaa-35da4ce3998f",
+      "name": "hammer_candle_long_side_mnq_5m",
+      "video_id": "NMUd0oX_7Pg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:NMUd0oX_7Pg"
+    },
+    {
+      "strategy_id": "39eba5ec-6939-434a-a1cc-bcb19bee4606",
+      "name": "jump_in_downtrend_mcl_1h",
+      "video_id": "dHmOosYof48",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:dHmOosYof48"
+    },
+    {
+      "strategy_id": "fb2e92ab-feda-4327-a524-4a557e859da7",
+      "name": "jump_in_downtrend_mes_1h",
+      "video_id": "dHmOosYof48",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:dHmOosYof48"
+    },
+    {
+      "strategy_id": "0dfd11ee-d227-4ff0-a839-c1c78356d5e5",
+      "name": "jump_in_downtrend_mnq_1h",
+      "video_id": "dHmOosYof48",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:dHmOosYof48"
+    },
+    {
+      "strategy_id": "ac4fe99d-1c97-42ee-8ce2-dafd6f18e0ea",
+      "name": "long_entry_mcl_15m",
+      "video_id": "WV1fyudd7fw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:WV1fyudd7fw"
+    },
+    {
+      "strategy_id": "a18406a7-4f63-4d10-948b-228b9473ad5f",
+      "name": "long_entry_mes_15m",
+      "video_id": "WV1fyudd7fw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:WV1fyudd7fw"
+    },
+    {
+      "strategy_id": "93534762-1b88-41c8-b5bf-32ba8584bc0e",
+      "name": "long_entry_mnq_15m",
+      "video_id": "WV1fyudd7fw",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:WV1fyudd7fw"
+    },
+    {
+      "strategy_id": "5b9fefce-ea5a-490c-a80e-8136272ddcf7",
+      "name": "long_entry_or_short_entry_mcl_15m",
+      "video_id": "c8VLqF0XDR4",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:c8VLqF0XDR4"
+    },
+    {
+      "strategy_id": "ae7a2560-3569-4f29-b297-a4f3a60d1ca3",
+      "name": "long_entry_or_short_entry_mes_15m",
+      "video_id": "c8VLqF0XDR4",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:c8VLqF0XDR4"
+    },
+    {
+      "strategy_id": "b2deddcb-57d4-4bc9-b750-39be0f8fe12a",
+      "name": "long_entry_or_short_entry_mnq_15m",
+      "video_id": "c8VLqF0XDR4",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:c8VLqF0XDR4"
+    },
+    {
+      "strategy_id": "4be1fb85-0c34-4f2e-b326-9053440bdc64",
+      "name": "long_opportunities_mcl_4h",
+      "video_id": "HfZTCZTDfWk",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:HfZTCZTDfWk"
+    },
+    {
+      "strategy_id": "5e5803d1-e255-4ee9-943f-02328deb5f14",
+      "name": "long_opportunities_mes_4h",
+      "video_id": "HfZTCZTDfWk",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:HfZTCZTDfWk"
+    },
+    {
+      "strategy_id": "331fe15a-8560-4b46-88bb-4b01119b725a",
+      "name": "long_opportunities_mnq_4h",
+      "video_id": "HfZTCZTDfWk",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:HfZTCZTDfWk"
+    },
+    {
+      "strategy_id": "971826d6-defb-4882-a634-5deeecad712f",
+      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mcl_5m",
+      "video_id": "deymRD3kSD0",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:deymRD3kSD0"
+    },
+    {
+      "strategy_id": "5591c0ba-a4ac-44eb-81c1-f26011774013",
+      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mes_5m",
+      "video_id": "deymRD3kSD0",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:deymRD3kSD0"
+    },
+    {
+      "strategy_id": "47b1c45a-de30-498b-b630-0ab957395204",
+      "name": "look_i_use_range_breakouts_confirmation_trend_direction_mnq_5m",
+      "video_id": "deymRD3kSD0",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:deymRD3kSD0"
+    },
+    {
+      "strategy_id": "c45b4718-07b1-4bea-baa3-1ee0a8e209b4",
+      "name": "manipulation_trade_mcl_1m",
+      "video_id": "7ieYBa7Z-Hg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:7ieYBa7Z-Hg"
+    },
+    {
+      "strategy_id": "81002a32-98fc-4a49-9079-14742224122a",
+      "name": "manipulation_trade_mes_1m",
+      "video_id": "7ieYBa7Z-Hg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:7ieYBa7Z-Hg"
+    },
+    {
+      "strategy_id": "c029e162-ecf9-4709-9820-baf60c6b7af0",
+      "name": "manipulation_trade_mnq_1m",
+      "video_id": "7ieYBa7Z-Hg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:7ieYBa7Z-Hg"
+    },
+    {
+      "strategy_id": "edbe2372-05b6-4388-afce-b99e754b7e04",
+      "name": "mean_reversion_mcl_5m",
+      "video_id": "1HFoStW_wsc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:1HFoStW_wsc"
+    },
+    {
+      "strategy_id": "81663564-e5bc-42b6-8a51-548ba0bc55c3",
+      "name": "mean_reversion_mes_5m",
+      "video_id": "1HFoStW_wsc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:1HFoStW_wsc"
+    },
+    {
+      "strategy_id": "ad9811b7-10db-482e-afb8-d1158d5054ce",
+      "name": "mean_reversion_mnq_5m",
+      "video_id": "1HFoStW_wsc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:1HFoStW_wsc"
+    },
+    {
+      "strategy_id": "8936bb44-8a0a-4a62-87fa-e8461215066e",
+      "name": "momentum_build_in_real_time_mcl_5m",
+      "video_id": "h6TnE7QClJg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:h6TnE7QClJg"
+    },
+    {
+      "strategy_id": "a2644bb7-943e-4247-8cc7-6ee385c53595",
+      "name": "momentum_build_in_real_time_mes_5m",
+      "video_id": "h6TnE7QClJg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:h6TnE7QClJg"
+    },
+    {
+      "strategy_id": "05b069a6-a8e4-49bb-a933-846d6b4b6f02",
+      "name": "momentum_build_in_real_time_mnq_5m",
+      "video_id": "h6TnE7QClJg",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:h6TnE7QClJg"
+    },
+    {
+      "strategy_id": "30024153-c7ea-43bb-a430-7a900ddde667",
+      "name": "new_high_acceptance_mcl_5m",
+      "video_id": "z3Qn3fBoe2I",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:z3Qn3fBoe2I"
+    },
+    {
+      "strategy_id": "f6ff3004-361f-4c00-9235-fa233a57bac5",
+      "name": "new_high_acceptance_mes_5m",
+      "video_id": "z3Qn3fBoe2I",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:z3Qn3fBoe2I"
+    },
+    {
+      "strategy_id": "84928232-2e58-4e6c-92d3-5e8631eb2138",
+      "name": "new_high_acceptance_mnq_5m",
+      "video_id": "z3Qn3fBoe2I",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:z3Qn3fBoe2I"
+    },
+    {
+      "strategy_id": "1dd66daa-5066-4755-ba3a-4ca76017e57a",
+      "name": "opening_range_breakout_orb_mcl_5m",
+      "video_id": "oDLt9zh33LE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:oDLt9zh33LE"
+    },
+    {
+      "strategy_id": "fc4bf082-41d0-4030-b5a7-5494889139c0",
+      "name": "opening_range_breakout_orb_mes_5m",
+      "video_id": "oDLt9zh33LE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:oDLt9zh33LE"
+    },
+    {
+      "strategy_id": "9955f721-7644-4e31-8d01-f34a109289b6",
+      "name": "opening_range_breakout_orb_mnq_5m",
+      "video_id": "oDLt9zh33LE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:oDLt9zh33LE"
+    },
+    {
+      "strategy_id": "93fe89cf-7491-4cfd-a645-e7291db36523",
+      "name": "order_block_entry_trigger_mcl_5m",
+      "video_id": "KXWRtV2LOVc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:KXWRtV2LOVc"
+    },
+    {
+      "strategy_id": "6304525a-81a6-41ea-9bdc-d768ee5e9ee1",
+      "name": "order_block_entry_trigger_mes_5m",
+      "video_id": "KXWRtV2LOVc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:KXWRtV2LOVc"
+    },
+    {
+      "strategy_id": "c98d373d-fa40-4f87-b6ef-e6cb2d595d8d",
+      "name": "order_block_entry_trigger_mnq_5m",
+      "video_id": "KXWRtV2LOVc",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:KXWRtV2LOVc"
+    },
+    {
+      "strategy_id": "321ef3d8-b0db-47ee-a365-7e9090fbfcee",
+      "name": "overall_trend_mcl_5m",
+      "video_id": "bQp37aD1JLE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:bQp37aD1JLE"
+    },
+    {
+      "strategy_id": "3c6d439a-d49c-4124-a215-ff2577361480",
+      "name": "overall_trend_mes_5m",
+      "video_id": "bQp37aD1JLE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:bQp37aD1JLE"
+    },
+    {
+      "strategy_id": "6a03c714-45c5-4efe-81e2-5a6af5e554c0",
+      "name": "overall_trend_mnq_5m",
+      "video_id": "bQp37aD1JLE",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:bQp37aD1JLE"
+    },
+    {
+      "strategy_id": "7af16961-6df4-4038-b906-24e51cae1ede",
+      "name": "price_break_above_below_high_low_mcl_5m",
+      "video_id": "jlShztsY3oA",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:jlShztsY3oA"
+    },
+    {
+      "strategy_id": "e596fbaf-a0c7-482c-8257-e581391a8e40",
+      "name": "price_break_above_below_high_low_mes_5m",
+      "video_id": "jlShztsY3oA",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:jlShztsY3oA"
+    },
+    {
+      "strategy_id": "0e2af137-890f-4202-962f-99ba4a3cf813",
+      "name": "price_break_above_below_high_low_mnq_5m",
+      "video_id": "jlShztsY3oA",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:jlShztsY3oA"
+    },
+    {
+      "strategy_id": "562decbf-034d-412b-9210-4f87b7f86179",
+      "name": "price_break_mcl_5m",
+      "video_id": "qLtq73bTPBA",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:qLtq73bTPBA"
+    },
+    {
+      "strategy_id": "2c7e78e7-0663-44f6-af18-0a5c68ad2f1d",
+      "name": "price_break_mes_5m",
+      "video_id": "qLtq73bTPBA",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:qLtq73bTPBA"
+    },
+    {
+      "strategy_id": "f8795a5d-2341-433a-bf77-6dc8dae4e32c",
+      "name": "price_break_mnq_5m",
+      "video_id": "qLtq73bTPBA",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:qLtq73bTPBA"
+    },
+    {
+      "strategy_id": "326fe955-50cc-4246-bdab-8976438b7c06",
+      "name": "put_limit_order_right_fvg_mcl_5m",
+      "video_id": "Qxlu8v_6G3Y",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:Qxlu8v_6G3Y"
+    },
+    {
+      "strategy_id": "d916b245-1562-4e82-9530-d7a79bc2c04c",
+      "name": "put_limit_order_right_fvg_mes_5m",
+      "video_id": "Qxlu8v_6G3Y",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:Qxlu8v_6G3Y"
+    },
+    {
+      "strategy_id": "e28f6ea8-fbd1-4926-a68b-e2d7de48ba46",
+      "name": "put_limit_order_right_fvg_mnq_5m",
+      "video_id": "Qxlu8v_6G3Y",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:Qxlu8v_6G3Y"
+    },
+    {
+      "strategy_id": "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
+      "name": "retracement_opportunity_mcl_5m",
+      "video_id": "gddYspvW0_w",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:gddYspvW0_w"
+    },
+    {
+      "strategy_id": "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3",
+      "name": "retracement_opportunity_mes_5m",
+      "video_id": "gddYspvW0_w",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:gddYspvW0_w"
+    },
+    {
+      "strategy_id": "58de00c3-308d-4f7a-9223-be161168e9ec",
+      "name": "retracement_opportunity_mnq_5m",
+      "video_id": "gddYspvW0_w",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:gddYspvW0_w"
+    },
+    {
+      "strategy_id": "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90",
+      "name": "short_entry_mcl_5m",
+      "video_id": "e5HQXYBUW-Q",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:e5HQXYBUW-Q"
+    },
+    {
+      "strategy_id": "ebc8fff7-5459-427f-a4ad-a68a6366f6e0",
+      "name": "short_entry_mcl_5m",
+      "video_id": "dE4lPhAWke8",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:dE4lPhAWke8"
+    },
+    {
+      "strategy_id": "1771442d-0138-4c22-8993-8acfe4c79fd3",
+      "name": "short_entry_mes_5m",
+      "video_id": "dE4lPhAWke8",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:dE4lPhAWke8"
+    },
+    {
+      "strategy_id": "594186e5-3249-40d7-8791-b46ea2c01b20",
+      "name": "short_entry_mes_5m",
+      "video_id": "e5HQXYBUW-Q",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:e5HQXYBUW-Q"
+    },
+    {
+      "strategy_id": "b18952c0-ae56-411c-ae06-017051083658",
+      "name": "short_entry_mnq_5m",
+      "video_id": "e5HQXYBUW-Q",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:e5HQXYBUW-Q"
+    },
+    {
+      "strategy_id": "d36f9a97-ebbc-423b-b7a8-a1f06271f689",
+      "name": "short_entry_mnq_5m",
+      "video_id": "dE4lPhAWke8",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:dE4lPhAWke8"
+    },
+    {
+      "strategy_id": "389d5007-430a-4919-84c4-8cd8467afa6b",
+      "name": "short_position_mcl_5m",
+      "video_id": "l-2iKbcm5UI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:l-2iKbcm5UI"
+    },
+    {
+      "strategy_id": "335f7418-0417-4356-bf1c-701f53e51510",
+      "name": "short_position_mes_5m",
+      "video_id": "l-2iKbcm5UI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:l-2iKbcm5UI"
+    },
+    {
+      "strategy_id": "f8691d73-d03e-46b7-b3fd-1948be7fd8e7",
+      "name": "short_position_mnq_5m",
+      "video_id": "l-2iKbcm5UI",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:l-2iKbcm5UI"
+    },
+    {
+      "strategy_id": "b2f4630d-3540-4a33-94c9-ebbafdd9346f",
+      "name": "trade_era_scale_in_mcl_4h",
+      "video_id": "iU8ww5MC2FQ",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:iU8ww5MC2FQ"
+    },
+    {
+      "strategy_id": "543874f8-21ad-4bc8-b298-4f8c62a35f87",
+      "name": "trade_era_scale_in_mes_4h",
+      "video_id": "iU8ww5MC2FQ",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:iU8ww5MC2FQ"
+    },
+    {
+      "strategy_id": "d3d2d55f-30b1-4587-915e-af87e2dc2953",
+      "name": "trade_era_scale_in_mnq_4h",
+      "video_id": "iU8ww5MC2FQ",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:iU8ww5MC2FQ"
+    },
+    {
+      "strategy_id": "67c762e4-d2e0-4b57-ae72-6b8755007d36",
+      "name": "trading_session_time_mcl_5m",
+      "video_id": "N7SM8a7Dc9s",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:N7SM8a7Dc9s"
+    },
+    {
+      "strategy_id": "a20ecb89-a119-4c4c-958a-6558abb08a17",
+      "name": "trading_session_time_mes_5m",
+      "video_id": "N7SM8a7Dc9s",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:N7SM8a7Dc9s"
+    },
+    {
+      "strategy_id": "06ea64d3-155a-45a4-a233-53cac8a3584d",
+      "name": "trading_session_time_mnq_5m",
+      "video_id": "N7SM8a7Dc9s",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:N7SM8a7Dc9s"
+    },
+    {
+      "strategy_id": "f43088ac-49dc-4503-947f-6badf004a9e6",
+      "name": "vwap_cross_mcl_15m",
+      "video_id": "ktkqq7QsN9Q",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:ktkqq7QsN9Q"
+    },
+    {
+      "strategy_id": "338f7e39-4932-48b3-a993-10afa1ed9b3e",
+      "name": "vwap_cross_mes_15m",
+      "video_id": "ktkqq7QsN9Q",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:ktkqq7QsN9Q"
+    },
+    {
+      "strategy_id": "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411",
+      "name": "vwap_cross_mnq_15m",
+      "video_id": "ktkqq7QsN9Q",
+      "disposition": "EXTRACTION_MISSING_REQUIRED_INFORMATION",
+      "evidence": {
+        "reason": "no repo-tracked modern-schema (entry_sequence) extraction record carries this video_id as its own",
+        "candidate_files_found": 0
+      },
+      "refusal_cluster": "no_extraction_for_video:ktkqq7QsN9Q"
+    }
+  ],
+  "factory_verdict": "PASS"
+}
