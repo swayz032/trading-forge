@@ -1,0 +1,54 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "The first candle will always be accumulation"
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "Candle one is always going to be that accumulation candle."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "do we have a large opposing run where candle 2 opens, makes this large move against the direction we want to be trading and then back up. When it has a large opposing run that does not support expansion higher in candle 2."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "Candle 2 forms that reversal, but you can see it has a large opposing run. So, we don't want to trade within this candle. We want to wait for candle 3."
+  },
+  {
+    "condition_ref": "entry_sequence[2].action",
+    "raw_output": "Here you can see candle 3 opens, makes a shallow opposing run, and then has that expansion higher."
+  },
+  {
+    "condition_ref": "entry_sequence[2].rationale",
+    "raw_output": "the whole goal is to be trading that distribution or the expansion candle, that directional candle"
+  },
+  {
+    "condition_ref": "entry_sequence[3].action",
+    "raw_output": "If this is a protected low this means this wick has formed and then we can trade this expansion higher."
+  },
+  {
+    "condition_ref": "entry_sequence[3].rationale",
+    "raw_output": "It has a change in the state of delivery. So that means that it formed its protected swing. we can anticipate this wick to hold and then we can trade the expansion within the same higher time frame candle."
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "we want to align this with a daily bias"
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "we have a reversal candle on the weekly time frame. So we could be looking for price to expand higher on the weekly time frame."
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "We need a change in the state of delivery to confirm that reversal point and then we can look to trade it lower."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "we are inside a fair value gap here. So I could then anticipate what? Well, if we have a protected swing in this new higher time frame candle, I'm expecting this wick low to have formed and I can look to trade it higher. This means I can really take any entry in here with my stop loss on this low"
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "looking to target that previous day high. So let's see how this works out. And there we go. Trade to previous day high."
+  }
+]

@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "When daily, weekly, and monthly VWAP all point in the same direction, you have institutional alignment."
+            "verbatim": "Every timeframe of smart money agrees on direction."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "When monthly is above weekly is above daily and price is below all three, institutional money is aligned to the downside."
+            "verbatim": "institutional money is aligned to the downside"
           },
           "rater_response": {
             "role": null,
@@ -386,7 +386,7 @@
       },
       {
         "item_id": "1HFoStW_wsc-S0-B003",
-        "extracted_condition_text": "The Daily, Weekly, and Monthly VWAPs are stacked in a bearish order, and price is below all three.",
+        "extracted_condition_text": "This confirms institutional alignment to the downside.",
         "adjudication_response": {
           "support": null,
           "support_justification": null

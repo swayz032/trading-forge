@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step one, we're going to mark out 10:00 a.m. Eastern. So, here we are. Right here, we're about to open a new 4-hour candle at 10:00 a.m. Eastern, so I'm going to mark that out."
+            "verbatim": "It's 30 minutes 30 minutes after the market opens. And if you know anything about the market open, typically that first move of the market is going to be a fakeout, which gives us plenty of time to line our bias."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "We see a PO3 pattern straight into this 15-minute gap, right? We manipulate into that 15-minute gap."
+            "verbatim": "I'm going to mark that out. That's where I want price to tap into."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "If you don't know what the power of three is, all it is is price moves sideways and accumulates. It then manipulates or has a fakeout and then puts in the real move to distribute."
+            "verbatim": "all it is is price moves sideways and accumulates. It then manipulates or has a fakeout and then puts in the real move to distribute."
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The second I see a candle body close through that fair value gap, I'm entering my trade."
+            "verbatim": "Now, all we need to wait for is an entry confirmation, which for me I will like to take inversion fair value gaps typically."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Go to the 15-minute time frame and look for the most recent 15-minute fair value gap that's going to be closest to price."
+            "verbatim": "I can very clearly see we have a 15-minute fair value gap just above price. I'm going to mark that out. That's where I want price to tap into."
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "Step three is you want to see a PO3 on the 1-minute time frame tapping into that 15-minute gap."
+            "verbatim": "We see a PO3 pattern straight into this 15-minute gap, right? We manipulate into that 15-minute gap."
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "leave my stop loss at that manipulation high that we just made, the top of the 4-hour candle."
+            "verbatim": "leave my stop loss at that manipulation high that we just made, the top of the 4-hour candle"
           },
           "rater_response": {
             "role": null,
@@ -421,7 +421,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "or you can even target some liquidity lower down here or down here."
+            "verbatim": "or you can even target some liquidity lower down here or down here"
           },
           "rater_response": {
             "role": null,
@@ -442,7 +442,7 @@
     "items": [
       {
         "item_id": "LOcaRWcc1xI-S0-B000",
-        "extracted_condition_text": "This time is used to define the start of the trading window for the pattern.",
+        "extracted_condition_text": "Mark the start of the new 4-hour candle at 10:00 a.m. Eastern.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +458,7 @@
       },
       {
         "item_id": "LOcaRWcc1xI-S0-B002",
-        "extracted_condition_text": "Price must be near a recent 15-minute fair value gap.",
+        "extracted_condition_text": "Identify the most recent 15-minute fair value gap (FVG) closest to the current price.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +474,7 @@
       },
       {
         "item_id": "LOcaRWcc1xI-S0-B004",
-        "extracted_condition_text": "A Power of Three (PO3) pattern must form on the 1-minute timeframe, manipulating into the 15-minute FVG.",
+        "extracted_condition_text": "Wait for a Power of Three (PO3) pattern to form on the 1-minute timeframe, manipulating into the identified 15-minute FVG.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -490,7 +490,7 @@
       },
       {
         "item_id": "LOcaRWcc1xI-S0-B006",
-        "extracted_condition_text": "The candle body closure confirms the entry trigger after the manipulation.",
+        "extracted_condition_text": "Enter the trade when a candle body closes through the 15-minute fair value gap.",
         "adjudication_response": {
           "support": null,
           "support_justification": null

@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 14
+    "target_items": 15
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video N7SM8a7Dc9s strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 14,
+      "item_count": 15,
       "items": [
         {
           "item_id": "N7SM8a7Dc9s-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "You guys just lit literally need to keep it simple."
+            "verbatim": "We're looking for daily bias. How do we do this? By marking out high time frame draws on liquidity."
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "daily bias is pretty much us looking for key levels where price is going to want to go"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "we wait for any of these levels to be hit. Okay? So whether it's a 1 hour high or a 1 hour low, a 4hour high or a 4 hour low or a session high or a session low, we wait for one of our key levels to be hit."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "because we're hitting an area that has potential"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "Once those key levels get hit, we're going to be looking for low time frame reversals. Whether it's on the 1 minute or the 5m minute, we're going to be looking for an inverse fair value gap off of these levels, a break of structure off of these levels, or a 79% extension closure above that extension level within our low time frame trend."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "we come underneath a low and then we get a reversal on the low time frame"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "So what do we have to wait for? Number three, a continuation confluence. Low time frame continuation confluence in whatever direction that we're trying to target. Okay? So this comes in the form of fair value gaps, equilibrium, breaker blocks, and order blocks."
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "But just because we get a little reversal doesn't mean that we're going to continue that trend higher."
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "Once we see low time frame continuation out of a fair value gap, equilibrium, breaker block or order block, that's when I am ready to enter."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "so we come into a key level where price has the potential to reverse. Then on the low time frame, we see the trend reversing. Then we see the trend continuing off of a continuation confluence on the lower time frame. That's when I'm looking to enter."
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "daily bias is pretty much us looking for key levels where price is going to want to go"
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "At the end of the day, guys, you don't have to reinvent the wheel."
+            "verbatim": "We are going to be looking for three different potential confluences. Either an inverse for value gap, a break of structure, or the 79% extension getting closed above or below on the Fibonacci."
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "The statistic of you becoming a profitable trader is that 98% of traders fail. And it's not because 98% of traders fail. It's because 98% of traders give up."
+            "verbatim": "we are looking for a continuation off of that reversal off of that key level to look for an entry"
           },
           "rater_response": {
             "role": null,
@@ -421,7 +421,23 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "At the end of the day, guys, you don't have to reinvent the wheel."
+            "verbatim": "we can go ahead and put our stops underneath these lows"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "N7SM8a7Dc9s-S0-B014",
+          "video_id": "N7SM8a7Dc9s",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "where are we looking to exit? At our other draws on liquidity in the opposite direction."
           },
           "rater_response": {
             "role": null,
@@ -442,7 +458,7 @@
     "items": [
       {
         "item_id": "N7SM8a7Dc9s-S0-B000",
-        "extracted_condition_text": "The daily bias is determined by key levels where price is likely to react.",
+        "extracted_condition_text": "Identify the daily bias by marking out high time frame draws on liquidity.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -450,7 +466,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B001",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "The daily bias is determined by key levels where price is likely to react.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -458,7 +474,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B002",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "Wait for price to hit a high time frame draw on liquidity (1H, 4H, or Session High/Low).",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -466,7 +482,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B003",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "Hitting a key level provides the initial opportunity for a reversal.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +490,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B004",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "Scale down to the low time frame (1M or 5M) and look for a reversal using an inverse fair value gap, a break of structure, or a 79% extension closure.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -482,7 +498,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B005",
-        "extracted_condition_text": "Wait for a continuation confluence (fair value gap, equilibrium, breaker block, or order block) on the low time frame.",
+        "extracted_condition_text": "A reversal on the low time frame signals a potential change in trend direction.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -490,7 +506,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B006",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "Wait for a continuation confluence (fair value gap, equilibrium, breaker block, or order block) on the low time frame.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -498,7 +514,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B007",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "Continuation confirms the reversal intent and provides a high-probability entry.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -506,7 +522,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B008",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "Enter the trade on the low time frame continuation confluence.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -514,7 +530,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B009",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "The combination of HTF bias, LTF reversal, and LTF continuation confirms the entry.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -522,7 +538,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B010",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "The daily bias is determined by key levels where price is likely to react.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -530,7 +546,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B011",
-        "extracted_condition_text": "Targets are set at other high time frame draws on liquidity in the opposite direction.",
+        "extracted_condition_text": "We look for a reversal using an inverse fair value gap, a break of structure, or a 79% extension closure.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -538,7 +554,7 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B012",
-        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "extracted_condition_text": "The trend must continue off of a continuation confluence like a fair value gap, equilibrium, breaker block, or order block.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -546,6 +562,14 @@
       },
       {
         "item_id": "N7SM8a7Dc9s-S0-B013",
+        "extracted_condition_text": "The stop is placed structurally below the key level or swing low.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "N7SM8a7Dc9s-S0-B014",
         "extracted_condition_text": "Targets are set at other high time frame draws on liquidity in the opposite direction.",
         "adjudication_response": {
           "support": null,

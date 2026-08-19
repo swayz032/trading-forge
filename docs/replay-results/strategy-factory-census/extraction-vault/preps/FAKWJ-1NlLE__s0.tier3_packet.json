@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 8
+    "target_items": 13
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video FAKWJ-1NlLE strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 8,
+      "item_count": 13,
       "items": [
         {
           "item_id": "FAKWJ-1NlLE-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "all we are trying to do is trade a lower time frame fractal model that confirms the formation of that wick."
+            "verbatim": "The first candle will always be accumulation"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "all we are trying to do is trade a lower time frame fractal model that confirms the formation of that wick."
+            "verbatim": "Candle one is always going to be that accumulation candle."
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "all we are trying to do is trade a lower time frame fractal model that confirms the formation of that wick."
+            "verbatim": "do we have a large opposing run where candle 2 opens, makes this large move against the direction we want to be trading and then back up. When it has a large opposing run that does not support expansion higher in candle 2."
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "all we are trying to do is trade a lower time frame fractal model that confirms the formation of that wick."
+            "verbatim": "Candle 2 forms that reversal, but you can see it has a large opposing run. So, we don't want to trade within this candle. We want to wait for candle 3."
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "trade a lower time frame fractal model that confirms the formation of that wick."
+            "verbatim": "Here you can see candle 3 opens, makes a shallow opposing run, and then has that expansion higher."
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "all we are trying to do is trade a lower time frame fractal model that confirms the formation of that wick."
+            "verbatim": "the whole goal is to be trading that distribution or the expansion candle, that directional candle"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "If we're looking to try to trade this back into the range, does it make sense to fight this expansion candle? No. It makes more sense to wait for this expansion candle to close, which would be at 1,400 and then look for a reversal candle to form and trade that back into the range."
+            "verbatim": "If this is a protected low this means this wick has formed and then we can trade this expansion higher."
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,87 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "all we are trying to do is trade a lower time frame fractal model that confirms the formation of that wick."
+            "verbatim": "It has a change in the state of delivery. So that means that it formed its protected swing. we can anticipate this wick to hold and then we can trade the expansion within the same higher time frame candle."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "FAKWJ-1NlLE-S0-B008",
+          "video_id": "FAKWJ-1NlLE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we want to align this with a daily bias"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "FAKWJ-1NlLE-S0-B009",
+          "video_id": "FAKWJ-1NlLE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we have a reversal candle on the weekly time frame. So we could be looking for price to expand higher on the weekly time frame."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "FAKWJ-1NlLE-S0-B010",
+          "video_id": "FAKWJ-1NlLE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We need a change in the state of delivery to confirm that reversal point and then we can look to trade it lower."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "FAKWJ-1NlLE-S0-B011",
+          "video_id": "FAKWJ-1NlLE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we are inside a fair value gap here. So I could then anticipate what? Well, if we have a protected swing in this new higher time frame candle, I'm expecting this wick low to have formed and I can look to trade it higher. This means I can really take any entry in here with my stop loss on this low"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "FAKWJ-1NlLE-S0-B012",
+          "video_id": "FAKWJ-1NlLE",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "looking to target that previous day high. So let's see how this works out. And there we go. Trade to previous day high."
           },
           "rater_response": {
             "role": null,
@@ -346,7 +426,7 @@
     "items": [
       {
         "item_id": "FAKWJ-1NlLE-S0-B000",
-        "extracted_condition_text": "The primary target is the previous day high, confirming the expansion move.",
+        "extracted_condition_text": "Wait for the first candle (C1) to form as the accumulation phase.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -354,7 +434,7 @@
       },
       {
         "item_id": "FAKWJ-1NlLE-S0-B001",
-        "extracted_condition_text": "The primary target is the previous day high, confirming the expansion move.",
+        "extracted_condition_text": "Accumulation sets the initial directional bias for the AMD pattern.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -362,7 +442,7 @@
       },
       {
         "item_id": "FAKWJ-1NlLE-S0-B002",
-        "extracted_condition_text": "The primary target is the previous day high, confirming the expansion move.",
+        "extracted_condition_text": "Wait for Candle 2 to form a large opposing run that does not support expansion, indicating a potential reversal.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -370,7 +450,7 @@
       },
       {
         "item_id": "FAKWJ-1NlLE-S0-B003",
-        "extracted_condition_text": "The primary target is the previous day high, confirming the expansion move.",
+        "extracted_condition_text": "A large opposing run in C2 suggests the market is testing the opposite extreme before the main move.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -378,7 +458,7 @@
       },
       {
         "item_id": "FAKWJ-1NlLE-S0-B004",
-        "extracted_condition_text": "Enter on the body of the expansion candle after a protected low (or protected swing) has formed.",
+        "extracted_condition_text": "Wait for Candle 3 to open, make a shallow opposing run (wick), and then trade the expansion higher.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -386,7 +466,7 @@
       },
       {
         "item_id": "FAKWJ-1NlLE-S0-B005",
-        "extracted_condition_text": "The primary target is the previous day high, confirming the expansion move.",
+        "extracted_condition_text": "The expansion candle (C3) is the primary target for the trade, following the manipulation.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -394,7 +474,7 @@
       },
       {
         "item_id": "FAKWJ-1NlLE-S0-B006",
-        "extracted_condition_text": "A reversal candle must form on the higher timeframe to initiate the AMD pattern.",
+        "extracted_condition_text": "Enter on the body of the expansion candle after a protected low (or protected swing) has formed.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -402,6 +482,46 @@
       },
       {
         "item_id": "FAKWJ-1NlLE-S0-B007",
+        "extracted_condition_text": "The protected low/swing confirms the reversal intent and provides a structural entry trigger.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "FAKWJ-1NlLE-S0-B008",
+        "extracted_condition_text": "The trade must align with the overall daily bias.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "FAKWJ-1NlLE-S0-B009",
+        "extracted_condition_text": "A reversal candle must form on the higher timeframe to initiate the AMD pattern.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "FAKWJ-1NlLE-S0-B010",
+        "extracted_condition_text": "A change in the state of delivery (CSD) is required to confirm the reversal point.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "FAKWJ-1NlLE-S0-B011",
+        "extracted_condition_text": "The stop is placed beyond the protected low/wick, often using the Fair Value Gap as a structural anchor.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        }
+      },
+      {
+        "item_id": "FAKWJ-1NlLE-S0-B012",
         "extracted_condition_text": "The primary target is the previous day high, confirming the expansion move.",
         "adjudication_response": {
           "support": null,

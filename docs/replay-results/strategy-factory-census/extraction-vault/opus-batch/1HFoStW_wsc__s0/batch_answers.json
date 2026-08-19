@@ -1,0 +1,38 @@
+[
+  {
+    "condition_ref": "entry_sequence[0].action",
+    "raw_output": "When all three VWAPs are stacked bullishly, daily above weekly above monthly, and price is above all three, you have what we call institutional consensus."
+  },
+  {
+    "condition_ref": "entry_sequence[0].rationale",
+    "raw_output": "Every timeframe of smart money agrees on direction."
+  },
+  {
+    "condition_ref": "entry_sequence[1].action",
+    "raw_output": "When monthly is above weekly is above daily and price is below all three, institutional money is aligned to the downside."
+  },
+  {
+    "condition_ref": "entry_sequence[1].rationale",
+    "raw_output": "institutional money is aligned to the downside"
+  },
+  {
+    "condition_ref": "confluences[0].description",
+    "raw_output": "When all three VWAPs are stacked bullishly, daily above weekly above monthly, and price is above all three, you have what we call institutional consensus."
+  },
+  {
+    "condition_ref": "confluences[1].description",
+    "raw_output": "When monthly is above weekly is above daily and price is below all three, institutional money is aligned to the downside."
+  },
+  {
+    "condition_ref": "confluences[2].description",
+    "raw_output": "High volume at VWAP means institutions are active. They're either accumulating or distributing, but they're definitely participating."
+  },
+  {
+    "condition_ref": "stop.rationale",
+    "raw_output": "Your stop goes at the next significant VWAP band or volume node."
+  },
+  {
+    "condition_ref": "targets[0].rationale",
+    "raw_output": "Your first target is the next VWAP level or standard deviation band."
+  }
+]

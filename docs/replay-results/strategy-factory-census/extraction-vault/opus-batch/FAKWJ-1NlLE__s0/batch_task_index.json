@@ -1,0 +1,86 @@
+{
+  "video_id": "FAKWJ-1NlLE",
+  "strategy_index": 0,
+  "condition_order": [
+    "entry_sequence[0].action",
+    "entry_sequence[0].rationale",
+    "entry_sequence[1].action",
+    "entry_sequence[1].rationale",
+    "entry_sequence[2].action",
+    "entry_sequence[2].rationale",
+    "entry_sequence[3].action",
+    "entry_sequence[3].rationale",
+    "confluences[0].description",
+    "confluences[1].description",
+    "confluences[2].description",
+    "stop.rationale",
+    "targets[0].rationale"
+  ],
+  "conditions": [
+    {
+      "condition_ref": "entry_sequence[0].action",
+      "condition_text": "Wait for the first candle (C1) to form as the accumulation phase."
+    },
+    {
+      "condition_ref": "entry_sequence[0].rationale",
+      "condition_text": "Accumulation sets the initial directional bias for the AMD pattern."
+    },
+    {
+      "condition_ref": "entry_sequence[1].action",
+      "condition_text": "Wait for Candle 2 to form a large opposing run that does not support expansion, indicating a potential reversal."
+    },
+    {
+      "condition_ref": "entry_sequence[1].rationale",
+      "condition_text": "A large opposing run in C2 suggests the market is testing the opposite extreme before the main move."
+    },
+    {
+      "condition_ref": "entry_sequence[2].action",
+      "condition_text": "Wait for Candle 3 to open, make a shallow opposing run (wick), and then trade the expansion higher."
+    },
+    {
+      "condition_ref": "entry_sequence[2].rationale",
+      "condition_text": "The expansion candle (C3) is the primary target for the trade, following the manipulation."
+    },
+    {
+      "condition_ref": "entry_sequence[3].action",
+      "condition_text": "Enter on the body of the expansion candle after a protected low (or protected swing) has formed."
+    },
+    {
+      "condition_ref": "entry_sequence[3].rationale",
+      "condition_text": "The protected low/swing confirms the reversal intent and provides a structural entry trigger."
+    },
+    {
+      "condition_ref": "confluences[0].description",
+      "condition_text": "The trade must align with the overall daily bias."
+    },
+    {
+      "condition_ref": "confluences[1].description",
+      "condition_text": "A reversal candle must form on the higher timeframe to initiate the AMD pattern."
+    },
+    {
+      "condition_ref": "confluences[2].description",
+      "condition_text": "A change in the state of delivery (CSD) is required to confirm the reversal point."
+    },
+    {
+      "condition_ref": "stop.rationale",
+      "condition_text": "The stop is placed beyond the protected low/wick, often using the Fair Value Gap as a structural anchor."
+    },
+    {
+      "condition_ref": "targets[0].rationale",
+      "condition_text": "The primary target is the previous day high, confirming the expansion move."
+    }
+  ],
+  "task_sha256": "bdd37003938db98450cf81363ff0fa23aa497add851c48fdd99312dec072d69d",
+  "task_char_len": 25249,
+  "transcript_sha256": "fb612e85dfd1a8af14538cee85750c5e186d73b6a67d78b745e3bd7fbdc0b109",
+  "transcript_char_len": 22190,
+  "brief_version": "batch-locator-brief-v1",
+  "batch_brief_sha256": "71a0c56066a2eaee638dff11fa362d62e45d9e7e6f8243fefad2f6e39b68cf11",
+  "reused_verbatim_sha256": "6514e4ca2c5cf34a4170134ba3f0427d48e8c90437ede0d0a0737725b2fccb10",
+  "production_system_prompt_sha256": "966d5942ccb309c577c0bc2ae8b1055eaf079c61a740fb7a32aae5dfd9485556",
+  "leakage_screen": {
+    "applicable": false,
+    "reason": "no prior answer key exists for this video's first Opus batch pass -- nothing to leak, so screen_task_for_leakage has no needle and screen_is_live's positive control cannot be constructed. This is an honest N/A, not a silent skip."
+  },
+  "authority": "AR-1345A recovery step 1 (reuse, do not rebuild); AR-1234 SS6 LANE O1 topology"
+}

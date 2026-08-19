@@ -27,7 +27,7 @@
   },
   "counts": {
     "control_items": 10,
-    "target_items": 14
+    "target_items": 15
   },
   "sections": [
     {
@@ -202,7 +202,7 @@
       "section_id": "SET-B",
       "concept_id": null,
       "label": "Set B -- video KXWRtV2LOVc strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
-      "item_count": 14,
+      "item_count": 15,
       "items": [
         {
           "item_id": "KXWRtV2LOVc-S0-B000",
@@ -213,7 +213,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "so you will not win every single trade this example that I just showed you it's basically showing you that this is not a 100% win rate strategy and do not come back into the comment section trying to tell me that this is a uh this is not working this is because you were not able to catch a trade"
+            "verbatim": "we want to locate the 6 a.m. 4H hour CRT this means means locate the 6 a.m. 4H hour candle"
           },
           "rater_response": {
             "role": null,
@@ -229,7 +229,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "first candle 6 a.m. creating the range high and low"
           },
           "rater_response": {
             "role": null,
@@ -245,7 +245,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "you will not win every single trade this example that I just showed you it's basically showing you that this is not a 100% win rate strategy"
+            "verbatim": "The Purge will occur during the 10: a.m. hour up until 11:30 is accepted sometimes even 12"
           },
           "rater_response": {
             "role": null,
@@ -261,7 +261,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "the timed turtle soup being from 10:00 a.m. up until 12 a.m. is accepted"
           },
           "rater_response": {
             "role": null,
@@ -277,7 +277,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "step number two locate a 15minute CRT at the low or high of the 4our CRT"
           },
           "rater_response": {
             "role": null,
@@ -293,7 +293,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "confirmation number two is the lower time frame CRT within the higher time frame CRT"
           },
           "rater_response": {
             "role": null,
@@ -309,7 +309,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "that is because you are able to refine your entries to the tick"
           },
           "rater_response": {
             "role": null,
@@ -325,7 +325,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "confirmation number one is a timed CRT we are using the specific time of 6 a.m. the 4H hour 6 a.m. candle as our larger time frame CRT range"
           },
           "rater_response": {
             "role": null,
@@ -341,7 +341,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "we have a timed Purge a timed turtle soup of the range happening between 10:00 a.m. up until 12:00 a.m."
           },
           "rater_response": {
             "role": null,
@@ -357,7 +357,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "we have the lower time frame CRT within the higher time frame CRT"
           },
           "rater_response": {
             "role": null,
@@ -373,7 +373,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "we have a daily key level here which is a daily fair value Gap this will be our key level"
           },
           "rater_response": {
             "role": null,
@@ -389,7 +389,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "targeting the opposing end of the 4our CRT with a stop loss at the swing lows"
           },
           "rater_response": {
             "role": null,
@@ -405,7 +405,7 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "so you will not win every single trade this example that I just showed you it's basically showing you that this is not a 100% win rate strategy and do not come back into the comment section trying to tell me that this is a uh this is not working this is because you were not able to catch a trade"
+            "verbatim": "targeting the opposing end of the 4our CRT range"
           },
           "rater_response": {
             "role": null,
@@ -421,12 +421,29 @@
           "extracted_object": null,
           "quote_anchor": {
             "language": "en",
-            "verbatim": "we want three different confirmations three confirmations minimum so minimum minimum three confirmations right guys Min three confirmations of course four is better right four includes that key level"
+            "verbatim": "expands to the opposing end of the range which range the 4H hour CRT range"
           },
           "rater_response": {
             "role": null,
             "notes": null
           }
+        },
+        {
+          "item_id": "KXWRtV2LOVc-S0-AUDIT",
+          "video_id": "KXWRtV2LOVc",
+          "family": null,
+          "timeframe": null,
+          "extracted_condition_type": null,
+          "extracted_object": null,
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "when the second candle of the 15minute CRT closes or enter off o"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          },
+          "audit": true
         }
       ]
     }
@@ -442,7 +459,7 @@
     "items": [
       {
         "item_id": "KXWRtV2LOVc-S0-B000",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "Locate the 6:00 AM 4H candle to define the CRT range.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -450,7 +467,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B001",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "This candle establishes the high and low range for the entire trade setup.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -466,7 +483,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B003",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "The Purge acts as a timed filter, narrowing the high-probability trading window.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -474,7 +491,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B004",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "Locate a 15-minute CRT at the high or low of the 4H CRT range.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -482,7 +499,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B005",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "This confirms the lower timeframe is reacting to the higher timeframe's established range.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -490,7 +507,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B006",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "Multiple entry methods are provided to refine the entry based on LTF structure.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -498,7 +515,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B007",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "The strategy uses a specific 6:00 AM 4H candle to define the primary range.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -506,7 +523,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B008",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "The trade must occur during the Purge window, which is between 10:00 AM and 12:00 PM.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -514,7 +531,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B009",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "A lower timeframe CRT must occur within the boundaries of the higher timeframe CRT.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -530,7 +547,7 @@
       },
       {
         "item_id": "KXWRtV2LOVc-S0-B011",
-        "extracted_condition_text": "Targeting the opposing end of the 4H CRT range.",
+        "extracted_condition_text": "Stop loss is placed at the swing high or low of the CRT sweep.",
         "adjudication_response": {
           "support": null,
           "support_justification": null
@@ -551,6 +568,15 @@
           "support": null,
           "support_justification": null
         }
+      },
+      {
+        "item_id": "KXWRtV2LOVc-S0-AUDIT",
+        "extracted_condition_text": "Enter on the second candle close, or enter off a 1-15 minute Order Block following the CRT sweep.",
+        "adjudication_response": {
+          "support": null,
+          "support_justification": null
+        },
+        "audit": true
       }
     ]
   }
