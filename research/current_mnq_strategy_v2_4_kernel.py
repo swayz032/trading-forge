@@ -2,12 +2,16 @@
 """Shared causal candidate kernel for Current MNQ v2.4.
 
 Single path for historical validation and live/shadow formation:
-PREMARKET -> LEVEL -> REACH -> REJECT/RECLAIM/BREAK/RETEST -> CANDLE CONTROL -> A+.
+PREMARKET -> LEVEL -> REACH/APPROACH-EXCEPTION -> CANDLE STORY -> MOMENTUM -> A+.
 
-Premarket is a conditional prior. Counter-plan setups can proceed only when the
-already-confirmed zone/candle event occurs at a major location under the frozen
-v2.4 premarket equation. No literal 0.80 cutoff or unconditional counter-breakout
-ban remains in this kernel.
+Trader-fidelity rules:
+- ordinary momentum is not automatically displacement;
+- rejection entries use a zone story followed by momentum;
+- a normal first close beyond a key zone is setup only, with the next momentum
+  candle providing confirmation;
+- a weak break may mature into a 15m three-bar continuation after pullback;
+- only two pre-break early entries exist: repeat-test momentum attack and a
+  genuine displacement sequence whose third candle retains momentum.
 """
 from __future__ import annotations
 
@@ -18,7 +22,15 @@ import numpy as np
 import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
-from research.current_mnq_strategy_v2_4_gate import gate_candidate
+from research.current_mnq_strategy_v2_4_entries import (
+    breakout_failed,
+    breakout_followthrough_after_first_print,
+    displacement_sequence_prebreak,
+    fifteen_minute_three_bar_continuation,
+    first_break_print,
+    repeat_test_momentum_prebreak,
+    reversal_story_v24,
+)
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
 from research.current_mnq_strategy_v2_4_premarket import plan_allows_v24
 from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
@@ -80,75 +92,82 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
 
         candidates: list[core.Candidate] = []
         pad = max(core.TICK * 2, p.touch_pad_atr * float(r.atr))
-        candle_window = completed_candle_window(full5, ts)
 
+        # REJECTION FAMILY: the zone event may occur on an earlier candle; the
+        # current candle is the directional momentum trigger. Displacement is
+        # supporting evidence only and is not mandatory for rejection entries.
         for direction, side in (("L", "S"), ("S", "R")):
-            near = [loc for loc in reversal_locs if loc.side == side and core.bar_interacts(loc, r, pad)]
-            for loc in near:
-                zgate = gate_candidate(
-                    bars=candle_window, zone_side=side, zone_lo=loc.lo, zone_hi=loc.hi,
-                    direction=direction, setup="REV", pad=0.0,
-                )
-                if not zgate.allowed:
-                    continue
-                story = core.reversal_story(full5, ts, r, direction, loc, p)
+            for loc in [x for x in reversal_locs if x.side == side]:
+                story = reversal_story_v24(full5, ts, r, direction, loc, p, pad)
                 if story.complete and plan_allows_v24(plan, direction, "REV", story, loc, p):
                     candidates.append(core.Candidate(
                         direction, "REV", loc, story, ts, bar_close,
-                        f"ZONE_CANDLE_REV:{zgate.reason}",
+                        "ZONE_REJECTION_STORY_THEN_MOMENTUM",
                     ))
 
+        # BREAKOUT FAMILY. A first completed close beyond the level is not an
+        # entry by itself. The next momentum candle confirms the normal breakout.
+        # Before the close-through, only the two trader-approved exceptions can
+        # create a candidate.
         for direction, side in (("L", "R"), ("S", "S")):
-            relevant = [loc for loc in breakout_locs if loc.side == side]
-            for loc in relevant:
-                if not core.decisive_outside(loc, r, direction, p):
-                    continue
-                if not core.breakout_pressure(full5, ts, direction):
-                    continue
-                if core.strong_bar(r, direction, p):
-                    zgate = gate_candidate(
-                        bars=candle_window, zone_side=side, zone_lo=loc.lo, zone_hi=loc.hi,
-                        direction=direction, setup="BRK5", pad=0.0,
+            for loc in [x for x in breakout_locs if x.side == side]:
+                key = (direction, loc.id)
+                early_displacement = displacement_sequence_prebreak(
+                    full5, ts, r, direction, loc, p, pad,
+                )
+                early_repeat_test = False
+                if not early_displacement:
+                    early_repeat_test = repeat_test_momentum_prebreak(
+                        full5, ts, r, direction, loc, p, pad,
                     )
-                    if zgate.allowed and plan_allows_v24(plan, direction, "BRK5", None, loc, p):
-                        candidates.append(core.Candidate(
-                            direction, "BRK5", loc, None, ts, bar_close,
-                            f"ZONE_CANDLE_BRK5:{zgate.reason}",
-                        ))
-                else:
-                    zgate = gate_candidate(
-                        bars=candle_window, zone_side=side, zone_lo=loc.lo, zone_hi=loc.hi,
-                        direction=direction, setup="BRK15", pad=0.0,
-                        fifteen_minute_acceptance=False,
-                    )
-                    if zgate.reason == "WAIT_FOR_NEW_COMPLETED_15M_ACCEPTANCE":
-                        key = (direction, loc.id)
-                        if key not in pending:
-                            pending[key] = core.PendingBreakout(
-                                direction, loc.id, bar_close, loc.lo, loc.hi,
-                            )
-                            pending_locs[key] = loc
+                post_break_momentum = breakout_followthrough_after_first_print(
+                    full5, ts, r, direction, loc, p,
+                )
 
+                reason = None
+                if early_displacement:
+                    reason = "PREBREAK_DISPLACEMENT_SEQUENCE_THIRD_CANDLE_MOMENTUM"
+                elif early_repeat_test:
+                    reason = "PREBREAK_REPEAT_TEST_MOMENTUM_ATTACK"
+                elif post_break_momentum:
+                    reason = "FIRST_BREAK_PRINT_THEN_MOMENTUM_CONFIRMATION"
+
+                if reason and plan_allows_v24(plan, direction, "BRK5", None, loc, p):
+                    candidates.append(core.Candidate(
+                        direction, "BRK5", loc, None, ts, bar_close, reason,
+                    ))
+                    pending.pop(key, None)
+                    pending_locs.pop(key, None)
+
+                # Every first print can seed the weak-break continuation question.
+                # A normal momentum follow-through on the next 5m candle resolves
+                # it earlier; otherwise the 15m three-bar path remains available.
+                if first_break_print(full5, ts, r, direction, loc):
+                    if key not in pending:
+                        pending[key] = core.PendingBreakout(
+                            direction, loc.id, bar_close, loc.lo, loc.hi,
+                        )
+                        pending_locs[key] = loc
+
+        # WEAK BREAK -> PULLBACK -> 15m THREE-BAR CONTINUATION.
         for key, pen in list(pending.items()):
             loc = pending_locs[key]
-            if bar_close - pen.attempted_at > pd.Timedelta(minutes=30):
+            if breakout_failed(r, pen.direction, pen.zone_lo, pen.zone_hi):
                 pending.pop(key, None); pending_locs.pop(key, None)
                 continue
-            confirmed = core.latest_new_15m_confirmation(h15, pen, bar_close)
+            # Four 15m slots cover a three-bar continuation despite alignment of
+            # the initial 5m break inside a 15m candle. This is structural timing,
+            # not a fitted performance threshold.
+            if bar_close - pen.attempted_at > pd.Timedelta(minutes=60):
+                pending.pop(key, None); pending_locs.pop(key, None)
+                continue
+            confirmed = fifteen_minute_three_bar_continuation(h15, pen, bar_close, p)
             if confirmed is None or confirmed > bar_close:
                 continue
-            attempt_ts = pen.attempted_at - pd.Timedelta(minutes=5)
-            attempt_window = completed_candle_window(full5, attempt_ts)
-            side = "R" if pen.direction == "L" else "S"
-            zgate = gate_candidate(
-                bars=attempt_window, zone_side=side, zone_lo=pen.zone_lo, zone_hi=pen.zone_hi,
-                direction=pen.direction, setup="BRK15", pad=0.0,
-                fifteen_minute_acceptance=True,
-            )
-            if zgate.allowed and plan_allows_v24(plan, pen.direction, "BRK15", None, loc, p):
+            if plan_allows_v24(plan, pen.direction, "BRK15", None, loc, p):
                 candidates.append(core.Candidate(
                     pen.direction, "BRK15", loc, None, pen.attempted_at,
-                    confirmed, f"ZONE_CANDLE_BRK15:{zgate.reason}",
+                    confirmed, "WEAK_BREAK_PULLBACK_15M_THREE_BAR_CONTINUATION",
                 ))
             pending.pop(key, None); pending_locs.pop(key, None)
 
