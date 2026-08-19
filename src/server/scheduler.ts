@@ -8521,8 +8521,32 @@ async function detectStalePaperSessions(): Promise<void> {
             continue;
           }
 
+          // AR-1155 F-6 (GPT AR-1339A S2): verify before reconnecting, closing the census to
+          // zero unverified activation/reconnect sites. On block: do NOT reconnect, emit a
+          // distinct blocked audit (never the generic recoverErr catch below), and leave the
+          // existing recoveryAttempts counter (already incremented above this try block) to
+          // govern retry/cap exactly as any other recovery failure would.
+          const reconnectActivation = await verifyPaperActivation(session.id, { correlationId });
+          if (!reconnectActivation.ok) {
+            logger.warn(
+              { sessionId: session.id, reason: reconnectActivation.reason },
+              "AR-1155: WS-reconnect activation verify BLOCKED — not reconnecting",
+            );
+            await insertAuditRowSafe({
+              action: "paper.session_reconnect_blocked_activation",
+              entityType: "paper_session",
+              entityId: session.id,
+              status: "blocked",
+              decisionAuthority: "scheduler",
+              input: { strategyId: session.strategyId, attempt },
+              result: { reason: reconnectActivation.reason },
+              correlationId,
+            });
+            continue;
+          }
+
           // Reconnect WebSocket stream
-          startStream(session.id, symbols);
+          startStream(session.id, reconnectActivation.symbols);
 
           // Restore in-memory position state from DB
           const openPositions = await db
