@@ -17,6 +17,14 @@ ENHANCE = PACK / "replay_v3_enhance.js"
 
 LWC_MARKER = '<script src="lightweight-charts.standalone.production.js"></script>'
 ENHANCE_MARKER = '<script src="replay_v3_enhance.js"></script>'
+UNIFIED_MARKERS = (
+    "Main Structure / Key Zones + TP Reaction Cluster",
+    "15m CONTEXT",
+    "− ZOOM OUT",
+    "MOVE_AWAY_REJECTION_ORIGIN",
+    "drawZone.onclick = () => beginDraw('main-zone', ov5)",
+    "drawTp.onclick = () => beginDraw('main-tp', ov5)",
+)
 
 
 def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = ENHANCE) -> str:
@@ -38,6 +46,9 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         raise RuntimeError("REPLAY_V3_EXTERNAL_RUNTIME_DEPENDENCY_REMAINS")
     if "RESET DECISION" not in html or "if (l.final_action) return;" not in html:
         raise RuntimeError("REPLAY_V3_SINGLE_TRADE_INTERACTION_NOT_BUNDLED")
+    missing = [marker for marker in UNIFIED_MARKERS if marker not in html]
+    if missing:
+        raise RuntimeError("REPLAY_V3_UNIFIED_MAIN_CHART_NOT_BUNDLED:" + "|".join(missing))
     html_path.write_text(html, encoding="utf-8")
     return html
 
