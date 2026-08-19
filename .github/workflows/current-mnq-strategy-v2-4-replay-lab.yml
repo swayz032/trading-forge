@@ -13,6 +13,7 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   pull_request:
@@ -27,6 +28,7 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   workflow_dispatch:
@@ -46,7 +48,8 @@ jobs:
         run: |
           PYTHONPATH=. pytest --confcutdir=tests -q \
             tests/test_current_mnq_strategy_v2_4_replay_lab.py \
-            tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py
       - name: Generate interactive V3 replay pack on contaminated development data
         run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_generate
       - name: Bind cross-timeframe trader drawing layer
@@ -65,6 +68,7 @@ jobs:
           PY
           grep -q 'replay_v3_enhance.js' "$pack/review_v3.html"
           grep -q 'paintLayer(ov5, c5, l.trader_zones, l.trader_tp_reaction_cluster)' "$pack/replay_v3_enhance.js"
+          grep -q 'Date.UTC' "$pack/replay_v3_enhance.js"
       - name: Vendor pinned TradingView Lightweight Charts 5.2.0
         run: |
           set -euo pipefail
