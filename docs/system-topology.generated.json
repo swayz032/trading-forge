@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T06:00:31.411Z",
+  "generatedAt": "2026-08-19T06:02:56.945Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -461,7 +461,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 1062h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 1063h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -479,7 +479,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 1074h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 1075h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
