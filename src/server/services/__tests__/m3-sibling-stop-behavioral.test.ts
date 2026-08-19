@@ -263,6 +263,7 @@ type MockDb = {
   __setPaperSessionsColumns: (cols: { strategyId: unknown; status: unknown }) => void;
   __insertedRows: { table: unknown; row: Record<string, unknown> }[];
   __setUpdateReturning: (rows: Record<string, unknown>[]) => void;
+  __setSelectQueue: (items: unknown[]) => void;
   __reset: () => void;
 };
 
