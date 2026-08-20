@@ -91,3 +91,11 @@ def test_fvg_target_keeps_midpoint_precision_after_rollover():
     assert picked is not None
     assert picked.raw_price == 155
     assert picked.location.source == base.FVG_SOURCE
+
+
+def test_historical_and_live_engines_are_wired_to_same_target_policy():
+    from research import current_mnq_strategy_v2_4_engine as engine
+    from research import current_mnq_strategy_v2_4_signal as signal
+
+    assert engine.build_and_classify is pol.build_and_classify
+    assert signal.build_and_classify is pol.build_and_classify
