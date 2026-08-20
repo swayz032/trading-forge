@@ -16,6 +16,10 @@ SOURCE-FIDELITY LAW
 - Preserve alternatives/variants without choosing a favorite for the educator.
 - Every load-bearing statement you emit MUST carry a transcript_quote copied from the transcript.
 - transcript_quote may normalize whitespace only; do not paraphrase inside the quote.
+- COPY EACH QUOTE CHARACTER-FOR-CHARACTER FROM THE SOURCE TEXT, INCLUDING ITS EXACT PUNCTUATION. Do
+  not add, remove, or move a comma, period, or any other punctuation mark that is not present at that
+  exact spot in the transcript below, even if the added punctuation would read more naturally. Copy
+  first, do not compose from memory of the sentence.
 - Return strict JSON only. No Markdown fence and no prose before/after the JSON.
 
 OUTPUT SHAPE
