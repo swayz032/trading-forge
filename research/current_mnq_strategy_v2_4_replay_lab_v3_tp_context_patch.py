@@ -5,15 +5,15 @@ from pathlib import Path
 
 PACK = Path("research/_mnq_v24_replay_lab_v3/pack")
 HTML = PACK / "review_v3.html"
-MARKER = "MNQ_TP_CONTEXT_GAP_READY_V2"
+MARKER = "MNQ_TP_CONTEXT_GAP_READY_V3"
 
 SCRIPT = r'''<script>
 (function () {
-  const PATCH_MARKER = 'MNQ_TP_CONTEXT_GAP_READY_V2';
+  const PATCH_MARKER = 'MNQ_TP_CONTEXT_GAP_READY_V3';
   const NO_VISIBLE = 'NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT';
   const NOT_CAPTURABLE = 'TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT';
   const freezeBtn = document.getElementById('freeze');
-  if (!freezeBtn || window.MNQ_TP_CONTEXT_GAP_READY_V2) return;
+  if (!freezeBtn || window.MNQ_TP_CONTEXT_GAP_READY_V3) return;
 
   const tpCard = document.getElementById('drawTp') && document.getElementById('drawTp').closest('.card');
   if (tpCard && !document.getElementById('noTpLong')) {
@@ -49,12 +49,12 @@ SCRIPT = r'''<script>
 
   const noLong = document.getElementById('noTpLong');
   const noShort = document.getElementById('noTpShort');
-  if (noLong && !noLong.dataset.v2Bound) {
-    noLong.dataset.v2Bound = '1';
+  if (noLong && !noLong.dataset.v3Bound) {
+    noLong.dataset.v3Bound = '1';
     noLong.addEventListener('click', () => setNoVisible('LONG'));
   }
-  if (noShort && !noShort.dataset.v2Bound) {
-    noShort.dataset.v2Bound = '1';
+  if (noShort && !noShort.dataset.v3Bound) {
+    noShort.dataset.v3Bound = '1';
     noShort.addEventListener('click', () => setNoVisible('SHORT'));
   }
 
@@ -115,6 +115,25 @@ SCRIPT = r'''<script>
     return l.final_action;
   }
 
+  function autoFinalizeEndedWaitOnly(c, l, warnings) {
+    if (['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE'].includes(l.final_action)) return l.final_action;
+    const timeline = Array.isArray(l.decision_timeline) ? l.decision_timeline : [];
+    if (timeline.some(x => x && x.action && x.action !== 'WAIT')) return '';
+    const replayLength = Array.isArray(c.replay_1m) ? c.replay_1m.length : 0;
+    const revealCount = Number(l.reveal_count || 0);
+    if (!replayLength || revealCount < replayLength) return '';
+    l.final_action = 'NO_TRADE';
+    l.entry_force = l.entry_force || 'NOT_APPLICABLE';
+    l.finalization_recovery = {
+      status: 'AUTO_NO_TRADE_FROM_REPLAY_END_WAIT_ONLY',
+      reveal_count: revealCount,
+      replay_count: replayLength,
+      reason: 'Freeze was requested after the full replay ended and the saved case contained only WAIT decisions.'
+    };
+    warnings.push({case_id: c.case_id, warning: 'AUTO_NO_TRADE_FROM_REPLAY_END_WAIT_ONLY'});
+    return l.final_action;
+  }
+
   function normalizeSavedCase(l, caseId, warnings) {
     if (!l) return null;
     const action = recoverFinalAction(l);
@@ -143,13 +162,9 @@ SCRIPT = r'''<script>
     let chosenTp = l[tpField] || l.trader_tp_reaction_cluster || null;
     let chosenStatus = l[statusField] || l.trader_tp_status || '';
 
-    // Migrate work made in older replay builds: a legacy selected TP belongs to
-    // the direction that was actually entered.
     if (chosenTp && !l[tpField]) l[tpField] = chosenTp;
 
     if (!chosenTp && chosenStatus !== NO_VISIBLE && chosenStatus !== NOT_CAPTURABLE) {
-      // Do not force the trader to invent a numeric level simply because the
-      // replay window ran out of meaningful structure. Record the UI/context gap.
       chosenStatus = NOT_CAPTURABLE;
       l[statusField] = NOT_CAPTURABLE;
       warnings.push({case_id: caseId, warning: NOT_CAPTURABLE, entered_direction: isLong ? 'LONG' : 'SHORT'});
@@ -161,7 +176,7 @@ SCRIPT = r'''<script>
   }
 
   freezeBtn.textContent = 'Freeze & Export';
-  freezeBtn.title = 'Preserves your completed work. Missing numeric TP caused by presented-chart context is recorded as a context gap instead of blocking export.';
+  freezeBtn.title = 'Preserves completed work. A full replay that ended with WAIT only is finalized as NO TRADE; missing numeric TP caused by presented-chart context is recorded instead of blocking export.';
   freezeBtn.onclick = async () => {
     const warnings = [];
     const unresolvedActions = [];
@@ -171,14 +186,16 @@ SCRIPT = r'''<script>
         unresolvedActions.push(`${c.case_id}: saved label missing`);
         continue;
       }
+      let action = recoverFinalAction(l);
+      if (!action) action = autoFinalizeEndedWaitOnly(c, l, warnings);
       normalizeSavedCase(l, c.case_id, warnings);
       if (!['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE'].includes(l.final_action)) {
-        unresolvedActions.push(`${c.case_id}: final action missing`);
+        unresolvedActions.push(`${c.case_id}: replay not finished and final action missing`);
       }
     }
 
     if (unresolvedActions.length) {
-      alert('I preserved the TP/context gaps, but these cases have no recoverable final trade decision:\n\n' + unresolvedActions.join('\n') + '\n\nGo only to those case(s) and choose ENTER LONG, ENTER SHORT, or END / NO TRADE.');
+      alert('These case(s) still have no recoverable final decision:\n\n' + unresolvedActions.join('\n') + '\n\nOnly those unfinished case(s) need ENTER LONG, ENTER SHORT, or END / NO TRADE. Full replays that ended with WAIT only are now automatically finalized as NO TRADE.');
       return;
     }
 
@@ -204,7 +221,7 @@ SCRIPT = r'''<script>
   };
 
   renderLabels();
-  window.MNQ_TP_CONTEXT_GAP_READY_V2 = true;
+  window.MNQ_TP_CONTEXT_GAP_READY_V3 = true;
 })();
 </script>'''
 
