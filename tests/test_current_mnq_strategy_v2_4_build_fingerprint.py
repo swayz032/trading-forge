@@ -18,6 +18,7 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
         "research/current_mnq_strategy_v2_4_build_contract.json",
         "research/current_mnq_strategy_v2_4_premarket_semantics.json",
         "research/current_mnq_strategy_v2_4_entry_semantics.json",
+        "research/current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json",
         "research/current_mnq_strategy_v1_fast.py",
         "research/current_mnq_strategy_v2_ab.py",
         "research/current_mnq_strategy_v2_2_engine.py",
@@ -29,11 +30,14 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
         "src/engine/indicators/fvg_native.py",
         "research/current_mnq_strategy_v2_4_entries.py",
         "research/current_mnq_strategy_v2_4_force.py",
+        "research/current_mnq_strategy_v2_4_fvg_interaction.py",
         "research/current_mnq_strategy_v2_4_zone_lifecycle.py",
         "research/current_mnq_strategy_v2_4_levels.py",
         "research/current_mnq_strategy_v2_4_premarket.py",
         "research/current_mnq_strategy_v2_4_kernel.py",
         "research/current_mnq_strategy_v2_4_targets.py",
+        "research/current_mnq_strategy_v2_4_target_policy.py",
+        "research/current_mnq_strategy_v2_4_replay_fidelity_grade.py",
         "research/current_mnq_strategy_v2_4_edge.py",
         "research/current_mnq_strategy_v2_4_oos.py",
         "research/current_mnq_strategy_v2_4_policy.py",
@@ -44,8 +48,8 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
     }
     assert required.issubset(files)
     assert len(files) == len(fingerprinted_files())
-    assert b["schema_version"] == 8
-    assert b["release_id"] == "MNQ-V2.4-BUILD-FINGERPRINT-8-FORCE1"
+    assert b["schema_version"] == 9
+    assert b["release_id"] == "MNQ-V2.4-BUILD-FINGERPRINT-9-REPLAY-FVG-TP"
 
 
 def test_strategy_fingerprint_is_deterministic_on_unchanged_bytes():
