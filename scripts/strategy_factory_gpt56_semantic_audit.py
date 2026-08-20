@@ -72,9 +72,10 @@ misreading rule 1 as a blanket exemption.)
    demo/backtest practice advice, or generic trading philosophy -- PROVIDED it is clearly framed
    as non-executable (e.g. typed/described as context, not as an executable rule). This is NOT a
    role_assignment violation.
-2. The five containers where that non-executable material is explicitly FORBIDDEN are exactly:
-   entry_sequence, stop, targets, management, variants. The same material that is legal in
-   setup[] is a role_assignment violation when it appears in any of these five.
+2. setup[] is the ONLY legal home for that non-executable material. The five containers most
+   commonly misused for it are entry_sequence, stop, targets, management, variants -- but this is
+   NOT a closed list: the same material is a role_assignment violation in ANY container other
+   than setup[], named here or not, including an invented or non-standard container name.
 3. targets[] must contain actual source-taught target destinations/rules. Generic risk:reward
    commentary or general trading philosophy placed in targets[] is a role_assignment violation,
    not a target.
@@ -84,10 +85,12 @@ misreading rule 1 as a blanket exemption.)
 5. variants[] records source-grounded alternatives ("what differs"). Do NOT require that every
    variant independently contain a complete entry+stop+target strategy unless a stronger written
    authority explicitly says so -- absence of that completeness is not itself a role_assignment
-   violation.
+   violation, UNLESS such a stronger written authority exists, in which case it governs instead.
 6. trigger_vs_source_gaps must distinguish candidate CONTRADICTION/INVENTION (= FAIL) from an
    HONESTLY DISCLOSED unresolved source fact (= unresolved execution authority). Honest disclosure
-   of a gap is never itself a fabrication finding.
+   of a gap is never itself a fabrication finding -- but it is never permission to invent the
+   missing rule either. An honestly disclosed gap must stay disclosed as a gap, not be silently
+   resolved by the candidate and then credited as if it were still honest.
 7. directional_symmetry must distinguish a broad bidirectional bias/framing statement from a
    fully specified, deterministic MIRRORED executable trigger. When the candidate discloses that
    only one side has a complete trigger, that is a source-completeness finding, not semantic
@@ -295,8 +298,14 @@ A literal quote can still be NOT_ENTAILED if it does not mean what the attached 
 {ROLE_ASSIGNMENT_CONTRACT}
 
 CROSS-FIELD CHECKS
-Return exactly one PASS|FAIL|UNRESOLVED row for each, graded against the authoring contract above:
-{', '.join(REQUIRED_CROSS_CHECKS)}
+Return exactly one PASS|FAIL|UNRESOLVED row for each of: {', '.join(REQUIRED_CROSS_CHECKS)}
+role_assignment, trigger_vs_source_gaps, and directional_symmetry are graded against the authoring
+contract above -- do not invent a stricter or different taxonomy for these three than what the
+contract states. strategy_evidence_disjointness, target_definition_conflicts, and
+audience_attribution are NOT defined by the contract above; grade them on ordinary semantic-
+consistency grounds against the transcript, and apply the same atomic quote law (contract point 8)
+to any finding you raise against them -- absence of a written rule for a check is not itself
+license to invent one, and it is not license to skip the check either.
 
 REQUIRED RESPONSE SHAPE
 {{
