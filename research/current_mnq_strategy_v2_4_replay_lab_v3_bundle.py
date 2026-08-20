@@ -5,8 +5,9 @@ The page must work when opened as a downloaded local HTML file or inside an
 opaque/sandboxed document. The bundler therefore inlines the chart/runtime JS,
 falls back to in-memory state when localStorage is denied, binds the frozen MNQ
 tick size, keeps drawing overlays non-intercepting, and patches marking to use
-Lightweight Charts native click coordinates. Bot answers are never read or
-embedded by this bundler.
+Lightweight Charts native click coordinates. It also captures two pre-entry TP
+plans (bullish and bearish) so the trader can map both directions before price
+chooses one. Bot answers are never read or embedded by this bundler.
 """
 from __future__ import annotations
 
@@ -59,10 +60,44 @@ CONTROL_INSERT_NEW = """  panel5.appendChild(mainTools);
   mainControlStatus.style.cssText = 'padding:5px 8px;border:1px solid #4f6a55;border-radius:6px;background:#102018;color:#8ed09f;font:700 11px ui-monospace,monospace;white-space:nowrap';
   mainControlStatus.textContent = 'MNQ_CONTROLS_READY · READY · 5M';
   mainTools.appendChild(mainControlStatus);
+
+  // The trader plans both directional targets BEFORE the entry is known.
+  drawTp.textContent = 'DRAW BULLISH TP';
+  drawTp.title = 'Mark the target you would use if price gives the long setup.';
+  const drawTpShort = document.createElement('button');
+  drawTpShort.id = 'drawTpShort';
+  drawTpShort.textContent = 'DRAW BEARISH TP';
+  drawTpShort.title = 'Mark the target you would use if price gives the short setup.';
+  drawTp.insertAdjacentElement('afterend', drawTpShort);
+  clearTp.textContent = 'CLEAR BOTH TPS';
+  clearTp.onclick = () => {
+    const l = lab();
+    l.trader_tp_long = null;
+    l.trader_tp_short = null;
+    l.trader_tp_reaction_cluster = null;
+    save();
+    renderLabels();
+    updateMainControlStatus('TPS CLEARED');
+  };
+
   function updateMainControlStatus(action) {
     const r = main.chart.timeScale().getVisibleLogicalRange();
     const bars = r ? Math.max(1, Math.round(r.to - r.from)) : 0;
     mainControlStatus.textContent = `MNQ_CONTROLS_READY · ${action} · ${mainTf.toUpperCase()}${bars ? ` · ${bars} BARS` : ''}`;
+  }
+
+  function paintDirectionalTps(canvas, chartObj, bullishTp, bearishTp) {
+    const d = canvasSize(canvas);
+    const ctx = d.x;
+    const paintOne = (tp, fill, stroke) => {
+      if (!tp) return;
+      const y1 = chartObj.series.priceToCoordinate(tp.hi);
+      const y2 = chartObj.series.priceToCoordinate(tp.lo);
+      if (y1 == null || y2 == null) return;
+      paintBand(ctx, d.w, y1, y2, fill, stroke);
+    };
+    paintOne(bullishTp, 'rgba(72,181,104,.13)', 'rgba(94,205,128,.95)');
+    paintOne(bearishTp, 'rgba(216,95,104,.13)', 'rgba(230,110,118,.95)');
   }
 """
 
@@ -136,6 +171,23 @@ HANDLERS_NEW = """  document.getElementById('main5m').addEventListener('click', 
   });
 """
 
+DIRECTIONAL_OVERLAYS_OLD = """  drawOverlays = function () {
+    const l = lab();
+    paintLayer(ov5, main, l.trader_zones, l.trader_tp_reaction_cluster);
+    paintLayer(ov1, c1, l.trader_zones, l.trader_tp_reaction_cluster);
+  };
+"""
+DIRECTIONAL_OVERLAYS_NEW = """  drawOverlays = function () {
+    const l = lab();
+    const bullishTp = l.trader_tp_long || (l.final_action === 'ENTER_LONG' ? l.trader_tp_reaction_cluster : null);
+    const bearishTp = l.trader_tp_short || (l.final_action === 'ENTER_SHORT' ? l.trader_tp_reaction_cluster : null);
+    // Top chart owns planned targets. Bottom 1m remains an entry/force chart.
+    paintLayer(ov5, main, l.trader_zones, null);
+    paintDirectionalTps(ov5, main, bullishTp, bearishTp);
+    paintLayer(ov1, c1, l.trader_zones, null);
+  };
+"""
+
 DRAW_HANDLERS_OLD = """  drawZone.onclick = () => beginDraw('main-zone', ov5);
   drawTp.onclick = () => beginDraw('main-tp', ov5);
 """
@@ -150,18 +202,25 @@ DRAW_HANDLERS_NEW = """  let nativeMarkMode = null;
     drawMode = null;
     mainDragY = null;
     ov5.classList.remove('draw');
-    updateMainControlStatus(mode === 'zone' ? 'CLICK KEY ZONE EDGE 1' : 'CLICK TP LEVEL');
+    const label = mode === 'zone'
+      ? 'CLICK KEY ZONE EDGE 1'
+      : mode === 'tp-long' ? 'CLICK BULLISH TP LEVEL' : 'CLICK BEARISH TP LEVEL';
+    updateMainControlStatus(label);
   }
   drawZone.onclick = () => armNativeMark('zone');
-  drawTp.onclick = () => armNativeMark('tp');
+  drawTp.onclick = () => armNativeMark('tp-long');
+  drawTpShort.onclick = () => armNativeMark('tp-short');
   main.chart.subscribeClick((param) => {
     if (!nativeMarkMode || !param || !param.point) return;
     const raw = main.series.coordinateToPrice(param.point.y);
     if (raw == null || !Number.isFinite(+raw)) return;
     const price = roundToTick(+raw);
-    if (nativeMarkMode === 'tp') {
-      lab().trader_tp_reaction_cluster = {
+    if (nativeMarkMode === 'tp-long' || nativeMarkMode === 'tp-short') {
+      const side = nativeMarkMode === 'tp-long' ? 'BULLISH' : 'BEARISH';
+      const field = nativeMarkMode === 'tp-long' ? 'trader_tp_long' : 'trader_tp_short';
+      lab()[field] = {
         lo: price, hi: price,
+        planned_direction: side,
         source_method: 'TRADER_REACTION_CLUSTER_EXACT_LEVEL',
         marked_time: replayTime(),
         marked_main_timeframe: mainTf,
@@ -169,7 +228,7 @@ DRAW_HANDLERS_NEW = """  let nativeMarkMode = null;
       nativeMarkMode = null;
       save();
       renderLabels();
-      updateMainControlStatus(`TP SET ${price.toFixed(2)}`);
+      updateMainControlStatus(`${side} TP SET ${price.toFixed(2)}`);
       return;
     }
     if (pendingZoneEdge == null) {
@@ -198,6 +257,31 @@ DRAW_HANDLERS_NEW = """  let nativeMarkMode = null;
   }, 50);
 """
 
+ENTRY_TP_BIND_OLD = """      l.final_action = action;
+      l.first_entry_time = now;
+"""
+ENTRY_TP_BIND_NEW = """      l.final_action = action;
+      // Preserve BOTH pre-entry plans, but bind the chosen direction into the
+      // legacy grading field so existing fidelity math compares the correct TP.
+      l.trader_tp_reaction_cluster = action === 'ENTER_LONG'
+        ? (l.trader_tp_long || null)
+        : (l.trader_tp_short || null);
+      l.first_entry_time = now;
+"""
+
+TP_STATUS_OLD = """    if (l.trader_tp_reaction_cluster) {
+      const tp = l.trader_tp_reaction_cluster;
+      tpStatus.textContent = tp.lo === tp.hi
+        ? `${tp.lo.toFixed(2)} · exact TP level`
+        : `${tp.lo.toFixed(2)} – ${tp.hi.toFixed(2)} · reaction area`;
+    }
+"""
+TP_STATUS_NEW = """    const fmtTp = (tp) => !tp ? 'not marked' : (tp.lo === tp.hi
+      ? `${tp.lo.toFixed(2)}`
+      : `${tp.lo.toFixed(2)}-${tp.hi.toFixed(2)}`);
+    tpStatus.innerHTML = `<b style="color:#70c18b">Bullish TP:</b> ${fmtTp(l.trader_tp_long)} &nbsp; · &nbsp; <b style="color:#df6b72">Bearish TP:</b> ${fmtTp(l.trader_tp_short)}`;
+"""
+
 TP_PAINT_OLD = """        const top = Math.min(y1, y2);
         const height = Math.abs(y2 - y1);
         ctx.fillStyle = 'rgba(229,161,92,.17)';
@@ -221,15 +305,17 @@ TP_PAINT_NEW = """        const top = Math.min(y1, y2);
 """
 
 ZONE_HELP_OLD = "  zoneHelp.textContent = 'Choose how you found the level, then draw it on the big main chart.';"
-ZONE_HELP_NEW = "  zoneHelp.textContent = 'Key zone: click one edge, then the other edge on the main chart. TP: click the exact price once.';"
+ZONE_HELP_NEW = "  zoneHelp.textContent = 'Key zone: click one edge, then the other. Before replay direction is known, mark BOTH targets: Bullish TP for a long setup and Bearish TP for a short setup.';"
 
 FINAL_OLD = "  drawOverlays();\n})();"
 FINAL_NEW = "  drawOverlays();\n  updateMainControlStatus('READY');\n})();"
 
 CONTROL_READY_MARKER = "MNQ_CONTROLS_READY"
 NATIVE_MARK_MARKER = "main.chart.subscribeClick((param) =>"
-TP_CLICK_MARKER = "CLICK TP LEVEL"
+TP_LONG_MARKER = "CLICK BULLISH TP LEVEL"
+TP_SHORT_MARKER = "CLICK BEARISH TP LEVEL"
 ZONE_CLICK_MARKER = "CLICK KEY ZONE EDGE 1"
+DUAL_TP_MARKER = "trader_tp_long"
 PROGRESS_MARKER = "renderClock();\n    renderLabels();\n    updateMainControlStatus('REPLAY');"
 UNIFIED_MARKERS = (
     "Main Structure / Key Zones + TP Reaction Cluster",
@@ -237,7 +323,8 @@ UNIFIED_MARKERS = (
     "− ZOOM OUT",
     "MOVE_AWAY_REJECTION_ORIGIN",
     "drawZone.onclick = () => armNativeMark('zone')",
-    "drawTp.onclick = () => armNativeMark('tp')",
+    "drawTp.onclick = () => armNativeMark('tp-long')",
+    "drawTpShort.onclick = () => armNativeMark('tp-short')",
 )
 
 
@@ -282,7 +369,10 @@ def _patch_enhance_runtime(enhance: str) -> str:
     enhance = _replace_once(enhance, SET_MAIN_TF_OLD, SET_MAIN_TF_NEW, "REPLAY_V3_TIMEFRAME_CONTROL")
     enhance = _replace_once(enhance, ZOOM_MAIN_OLD, ZOOM_MAIN_NEW, "REPLAY_V3_ZOOM_CONTROL")
     enhance = _replace_once(enhance, HANDLERS_OLD, HANDLERS_NEW, "REPLAY_V3_CONTROL_HANDLERS")
+    enhance = _replace_once(enhance, DIRECTIONAL_OVERLAYS_OLD, DIRECTIONAL_OVERLAYS_NEW, "REPLAY_V3_DIRECTIONAL_TP_OVERLAYS")
     enhance = _replace_once(enhance, DRAW_HANDLERS_OLD, DRAW_HANDLERS_NEW, "REPLAY_V3_NATIVE_MARKING")
+    enhance = _replace_once(enhance, ENTRY_TP_BIND_OLD, ENTRY_TP_BIND_NEW, "REPLAY_V3_DIRECTIONAL_TP_BIND")
+    enhance = _replace_once(enhance, TP_STATUS_OLD, TP_STATUS_NEW, "REPLAY_V3_DIRECTIONAL_TP_STATUS")
     enhance = _replace_once(enhance, TP_PAINT_OLD, TP_PAINT_NEW, "REPLAY_V3_TP_EXACT_LINE")
     enhance = _replace_once(enhance, ZONE_HELP_OLD, ZONE_HELP_NEW, "REPLAY_V3_MARK_HELP")
     enhance = _replace_once(enhance, ENHANCE_PROGRESS_OLD, ENHANCE_PROGRESS_NEW, "REPLAY_V3_PROGRESS_REFRESH")
@@ -321,8 +411,12 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_BUNDLED")
     if CONTROL_READY_MARKER not in html:
         raise RuntimeError("REPLAY_V3_VISIBLE_CONTROL_READY_MARKER_MISSING")
-    if NATIVE_MARK_MARKER not in html or TP_CLICK_MARKER not in html or ZONE_CLICK_MARKER not in html:
-        raise RuntimeError("REPLAY_V3_NATIVE_MARKING_NOT_BUNDLED")
+    if (
+        NATIVE_MARK_MARKER not in html or TP_LONG_MARKER not in html
+        or TP_SHORT_MARKER not in html or ZONE_CLICK_MARKER not in html
+        or DUAL_TP_MARKER not in html
+    ):
+        raise RuntimeError("REPLAY_V3_NATIVE_DUAL_TP_MARKING_NOT_BUNDLED")
     if "RESET DECISION" not in html or "if (l.final_action) return;" not in html:
         raise RuntimeError("REPLAY_V3_SINGLE_TRADE_INTERACTION_NOT_BUNDLED")
     missing = [marker for marker in UNIFIED_MARKERS if marker not in html]
