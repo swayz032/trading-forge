@@ -181,10 +181,12 @@ DIRECTIONAL_OVERLAYS_NEW = """  drawOverlays = function () {
     const l = lab();
     const bullishTp = l.trader_tp_long || (l.final_action === 'ENTER_LONG' ? l.trader_tp_reaction_cluster : null);
     const bearishTp = l.trader_tp_short || (l.final_action === 'ENTER_SHORT' ? l.trader_tp_reaction_cluster : null);
-    // Top chart owns planned targets. Bottom 1m remains an entry/force chart.
+    // ALL structure drawings belong on the main chart only.
     paintLayer(ov5, main, l.trader_zones, null);
     paintDirectionalTps(ov5, main, bullishTp, bearishTp);
-    paintLayer(ov1, c1, l.trader_zones, null);
+    // The bottom 1m chart is strictly entry timing / force. Never mirror zones or TP.
+    const d1 = canvasSize(ov1);
+    d1.x.clearRect(0, 0, d1.w, d1.h);
   };
 """
 
@@ -316,6 +318,7 @@ TP_LONG_MARKER = "CLICK BULLISH TP LEVEL"
 TP_SHORT_MARKER = "CLICK BEARISH TP LEVEL"
 ZONE_CLICK_MARKER = "CLICK KEY ZONE EDGE 1"
 DUAL_TP_MARKER = "trader_tp_long"
+ENTRY_CHART_CLEAN_MARKER = "The bottom 1m chart is strictly entry timing / force"
 PROGRESS_MARKER = "renderClock();\n    renderLabels();\n    updateMainControlStatus('REPLAY');"
 UNIFIED_MARKERS = (
     "Main Structure / Key Zones + TP Reaction Cluster",
@@ -411,6 +414,8 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_BUNDLED")
     if CONTROL_READY_MARKER not in html:
         raise RuntimeError("REPLAY_V3_VISIBLE_CONTROL_READY_MARKER_MISSING")
+    if ENTRY_CHART_CLEAN_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_ENTRY_CHART_STRUCTURE_OVERLAY_NOT_REMOVED")
     if (
         NATIVE_MARK_MARKER not in html or TP_LONG_MARKER not in html
         or TP_SHORT_MARKER not in html or ZONE_CLICK_MARKER not in html
