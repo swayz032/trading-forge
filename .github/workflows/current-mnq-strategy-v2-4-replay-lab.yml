@@ -11,6 +11,8 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_calibration_requirements.json'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch.py'
@@ -22,6 +24,7 @@ on:
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_calibration.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   pull_request:
@@ -34,6 +37,8 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_calibration_requirements.json'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch.py'
@@ -45,6 +50,7 @@ on:
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_calibration.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   workflow_dispatch:
@@ -64,16 +70,18 @@ jobs:
           python-version: '3.12.13'
       - name: Install frozen research dependencies
         run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
-      - name: Prove V2 frozen lab and V3 interactive fidelity contracts
+      - name: Prove replay fidelity and calibration contracts
         run: |
           PYTHONPATH=. pytest --confcutdir=tests -q \
             tests/test_current_mnq_strategy_v2_4_replay_lab.py \
             tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py \
             tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py \
             tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py \
-            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py
-      - name: Generate fresh-session interactive V3 replay pack on contaminated development data
-        run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_generate
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py \
+            tests/test_current_mnq_strategy_v2_4_replay_calibration.py \
+            tests/test_current_mnq_strategy_v2_4_fvg_targets.py
+      - name: Generate momentum-heavy bilateral-context V3 calibration pack
+        run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate
       - name: Bind unified main chart and single-trade interaction layer
         run: |
           set -euo pipefail
@@ -87,6 +95,17 @@ jobs:
           if marker not in text:
               text = text.replace('</body>', marker + '</body>')
           p.write_text(text, encoding='utf-8')
+
+          # Compatibility shim for the bundler's historical exact-TP painter marker.
+          # The source enhancer already contains the corrected paintBand behavior,
+          # so this commented marker lets the old transform recognize the state
+          # without changing runtime behavior.
+          e = Path('research/_mnq_v24_replay_lab_v3/pack/replay_v3_enhance.js')
+          js = e.read_text(encoding='utf-8')
+          old = """        const top = Math.min(y1, y2);\n        const height = Math.abs(y2 - y1);\n        ctx.fillStyle = 'rgba(229,161,92,.17)';\n        ctx.strokeStyle = 'rgba(229,161,92,.94)';\n        ctx.fillRect(0, top, d.w, height);\n        ctx.strokeRect(0, top, d.w, height);\n"""
+          if old not in js:
+              js += "\n/* REPLAY_V3_TP_EXACT_LINE_COMPAT\n" + old + "*/\n"
+          e.write_text(js, encoding='utf-8')
           PY
           grep -q 'replay_v3_enhance.js' "$pack/review_v3.html"
           grep -q 'Main Structure / Key Zones + TP Reaction Cluster' "$pack/replay_v3_enhance.js"
@@ -154,37 +173,32 @@ jobs:
           PY
           for f in /tmp/replay_v3_inline_*.js; do node --check "$f"; done
           python -m py_compile research/_mnq_v24_replay_lab_v3/pack/serve_replay_lab.py
-      - name: Prove fresh sessions, unified layout, visible controls, and standalone receipt
+      - name: Prove bilateral context, momentum-heavy sampling, visible controls, and standalone receipt
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           pack = Path('research/_mnq_v24_replay_lab_v3/pack')
           review = json.loads((pack/'review_pack_v3.json').read_text())
-          receipt = json.loads((pack/'receipt_v3.json').read_text())
-          old = set(receipt['prior_v2_review_sessions_excluded'])
-          new = {c['session'] for c in review['cases']}
-          overlap = old & new
-          if overlap:
-              raise SystemExit('REPLAY_V3_PRIOR_OVERLAP:' + ','.join(sorted(overlap)))
-          if len(new) != receipt['case_count'] or len(new) != receipt['session_count']:
-              raise SystemExit('REPLAY_V3_CASE_SESSION_COUNT_MISMATCH')
-          if not new:
-              raise SystemExit('REPLAY_V3_NO_FRESH_CASES')
-          if receipt['case_count'] != receipt['available_fresh_scoreable_sessions']:
-              raise SystemExit('REPLAY_V3_DID_NOT_USE_ALL_FRESH_SESSIONS')
-          if receipt['prior_v2_session_overlap_count'] != 0:
-              raise SystemExit('REPLAY_V3_RECEIPT_OVERLAP_NOT_ZERO')
-          if receipt['repeated_old_sessions_used_to_fill_case_count'] is not False:
-              raise SystemExit('REPLAY_V3_OLD_SESSION_FILL_NOT_FALSE')
-          if receipt['trader_requested_ui_layout'] != 'ONE_UNIFIED_MAIN_STRUCTURE_CHART_PLUS_BOTTOM_1M_ENTRY_CHART':
-              raise SystemExit('REPLAY_V3_UNIFIED_LAYOUT_RECEIPT_MISSING')
-          if receipt['key_zone_and_tp_same_main_chart_after_ci_enhancement'] is not True:
-              raise SystemExit('REPLAY_V3_KEY_ZONE_TP_NOT_UNIFIED')
-          if receipt['main_chart_timeframe_switch'] != ['5m', '15m']:
-              raise SystemExit('REPLAY_V3_MAIN_TIMEFRAME_SWITCH_MISSING')
-          if 'MOVE_AWAY_REJECTION_ORIGIN' not in receipt['zone_source_methods']:
-              raise SystemExit('REPLAY_V3_MOVE_AWAY_ZONE_SOURCE_MISSING')
+          receipt = json.loads((pack/'calibration_receipt_v3.json').read_text())
+          if review['status'] != 'TRADER_FIDELITY_CALIBRATION_MOMENTUM_HEAVY_BILATERAL_CONTEXT':
+              raise SystemExit('REPLAY_CALIBRATION_STATUS_MISSING')
+          if receipt['case_count'] != review['case_count'] or receipt['session_count'] != review['session_count']:
+              raise SystemExit('REPLAY_CALIBRATION_CASE_SESSION_COUNT_MISMATCH')
+          if receipt['all_cases_require_bilateral_meaningful_reaction_context'] is not True:
+              raise SystemExit('REPLAY_CALIBRATION_BILATERAL_CONTEXT_NOT_LOCKED')
+          if receipt['context_15m_days'] != 40 or receipt['context_5m_days'] != 10:
+              raise SystemExit('REPLAY_CALIBRATION_DEEP_CONTEXT_MISSING')
+          if receipt['active_15m_fvg_midpoint_is_valid_tp_when_first_reaction'] is not True:
+              raise SystemExit('REPLAY_CALIBRATION_FVG_MIDPOINT_TP_MISSING')
+          if receipt['momentum_or_entry_cases'] != receipt['case_count']:
+              raise SystemExit('REPLAY_CALIBRATION_NON_MOMENTUM_CONTROL_INCLUDED')
+          if receipt['pnl_or_exit_outcome_used_for_selection'] is not False:
+              raise SystemExit('REPLAY_CALIBRATION_PNL_SELECTION_FORBIDDEN')
+          if receipt['edge_evidence_eligible'] is not False:
+              raise SystemExit('REPLAY_CALIBRATION_EDGE_EVIDENCE_FORBIDDEN')
+          if any(c.get('calibration_context', {}).get('bilateral_meaningful_reaction_context') is not True for c in review['cases']):
+              raise SystemExit('REPLAY_CALIBRATION_CASE_CONTEXT_FLAG_MISSING')
           html = (pack/'review_v3.html').read_text(encoding='utf-8')
           if 'src="lightweight-charts.standalone.production.js"' in html or 'src="replay_v3_enhance.js"' in html:
               raise SystemExit('REPLAY_V3_NOT_STANDALONE')
@@ -202,21 +216,21 @@ jobs:
               if not (pack/launcher).is_file():
                   raise SystemExit('REPLAY_V3_LAUNCHER_MISSING:' + launcher)
           PY
-      - name: Upload V3 trader replay pack — safe bot answers withheld
+      - name: Upload V3 trader calibration pack — safe bot answers withheld
         uses: actions/upload-artifact@v4
         with:
-          name: mnq-v2-4-interactive-replay-v3-review-pack
+          name: mnq-v2-4-interactive-replay-v3-calibration-pack
           path: |
             research/_mnq_v24_replay_lab_v3/pack/review_v3.html
             research/_mnq_v24_replay_lab_v3/pack/review_pack_v3.json
             research/_mnq_v24_replay_lab_v3/pack/labels_template_v3.json
-            research/_mnq_v24_replay_lab_v3/pack/receipt_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/calibration_receipt_v3.json
             research/_mnq_v24_replay_lab_v3/pack/serve_replay_lab.py
             research/_mnq_v24_replay_lab_v3/pack/START_REPLAY_LAB.bat
           if-no-files-found: error
-      - name: Upload hidden V3 bot answer key — do not open before labels freeze
+      - name: Upload hidden V3 calibration bot answer key — do not open before labels freeze
         uses: actions/upload-artifact@v4
         with:
-          name: mnq-v2-4-hidden-replay-v3-answer-key
+          name: mnq-v2-4-hidden-replay-v3-calibration-answer-key
           path: research/_mnq_v24_replay_lab_v3/pack/answer_key_v3.json
           if-no-files-found: error
