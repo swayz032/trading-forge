@@ -12,6 +12,8 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py'
       - 'research/START_MNQ_REPLAY_LAB.bat'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
@@ -19,6 +21,7 @@ on:
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   pull_request:
@@ -32,6 +35,8 @@ on:
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch.py'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py'
       - 'research/START_MNQ_REPLAY_LAB.bat'
       - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
@@ -39,6 +44,7 @@ on:
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
       - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
       - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
       - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
   workflow_dispatch:
@@ -64,7 +70,8 @@ jobs:
             tests/test_current_mnq_strategy_v2_4_replay_lab.py \
             tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py \
             tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py \
-            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py
       - name: Generate fresh-session interactive V3 replay pack on contaminated development data
         run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_generate
       - name: Bind unified main chart and single-trade interaction layer
@@ -106,6 +113,7 @@ jobs:
           set -euo pipefail
           pack="research/_mnq_v24_replay_lab_v3/pack"
           PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_bundle
+          PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch
           cp research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py "$pack/serve_replay_lab.py"
           cp research/START_MNQ_REPLAY_LAB.bat "$pack/START_REPLAY_LAB.bat"
           html="$pack/review_v3.html"
@@ -117,6 +125,11 @@ jobs:
           grep -q '15m CONTEXT' "$html"
           grep -q 'MOVE_AWAY_REJECTION_ORIGIN' "$html"
           grep -q 'MNQ_CONTROLS_READY' "$html"
+          grep -q 'MNQ_TP_CONTEXT_GAP_READY' "$html"
+          grep -q 'BULLISH — NO VISIBLE REACTION' "$html"
+          grep -q 'BEARISH — NO VISIBLE REACTION' "$html"
+          grep -q 'The opposite-direction TP is optional' "$html"
+          grep -q 'Save Draft' "$html"
           grep -q "updateMainControlStatus('TIMEFRAME')" "$html"
           grep -q "updateMainControlStatus('FIT ALL')" "$html"
           test -s "$pack/serve_replay_lab.py"
@@ -133,13 +146,13 @@ jobs:
           html = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html').read_text(encoding='utf-8')
           blocks = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S|re.I)
           inline = [b for b in blocks if b.strip()]
-          if len(inline) < 3:
-              raise SystemExit(f'REPLAY_V3_EXPECTED_3_INLINE_SCRIPTS:{len(inline)}')
-          Path('/tmp/replay_v3_core.js').write_text(inline[-2], encoding='utf-8')
-          Path('/tmp/replay_v3_enhance.js').write_text(inline[-1], encoding='utf-8')
+          if len(inline) < 4:
+              raise SystemExit(f'REPLAY_V3_EXPECTED_4_INLINE_SCRIPTS:{len(inline)}')
+          for i, block in enumerate(inline):
+              Path(f'/tmp/replay_v3_inline_{i}.js').write_text(block, encoding='utf-8')
+          print(len(inline))
           PY
-          node --check /tmp/replay_v3_core.js
-          node --check /tmp/replay_v3_enhance.js
+          for f in /tmp/replay_v3_inline_*.js; do node --check "$f"; done
           python -m py_compile research/_mnq_v24_replay_lab_v3/pack/serve_replay_lab.py
       - name: Prove fresh sessions, unified layout, visible controls, and standalone receipt
         run: |
@@ -178,6 +191,8 @@ jobs:
           for marker in (
               'Main Structure / Key Zones + TP Reaction Cluster', '15m CONTEXT',
               '− ZOOM OUT', 'MOVE_AWAY_REJECTION_ORIGIN', 'MNQ_CONTROLS_READY',
+              'MNQ_TP_CONTEXT_GAP_READY', 'BULLISH — NO VISIBLE REACTION',
+              'BEARISH — NO VISIBLE REACTION', 'The opposite-direction TP is optional',
               "updateMainControlStatus('TIMEFRAME')", "updateMainControlStatus('FIT ALL')",
               "updateMainControlStatus('REPLAY')",
           ):
