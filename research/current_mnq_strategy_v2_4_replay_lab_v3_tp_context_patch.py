@@ -5,15 +5,15 @@ from pathlib import Path
 
 PACK = Path("research/_mnq_v24_replay_lab_v3/pack")
 HTML = PACK / "review_v3.html"
-MARKER = "MNQ_TP_CONTEXT_GAP_READY_V3"
+MARKER = "MNQ_TP_CONTEXT_GAP_READY_V4"
 
 SCRIPT = r'''<script>
 (function () {
-  const PATCH_MARKER = 'MNQ_TP_CONTEXT_GAP_READY_V3';
+  const PATCH_MARKER = 'MNQ_TP_CONTEXT_GAP_READY_V4';
   const NO_VISIBLE = 'NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT';
   const NOT_CAPTURABLE = 'TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT';
   const freezeBtn = document.getElementById('freeze');
-  if (!freezeBtn || window.MNQ_TP_CONTEXT_GAP_READY_V3) return;
+  if (!freezeBtn || window.MNQ_TP_CONTEXT_GAP_READY_V4) return;
 
   const tpCard = document.getElementById('drawTp') && document.getElementById('drawTp').closest('.card');
   if (tpCard && !document.getElementById('noTpLong')) {
@@ -49,12 +49,12 @@ SCRIPT = r'''<script>
 
   const noLong = document.getElementById('noTpLong');
   const noShort = document.getElementById('noTpShort');
-  if (noLong && !noLong.dataset.v3Bound) {
-    noLong.dataset.v3Bound = '1';
+  if (noLong && !noLong.dataset.v4Bound) {
+    noLong.dataset.v4Bound = '1';
     noLong.addEventListener('click', () => setNoVisible('LONG'));
   }
-  if (noShort && !noShort.dataset.v3Bound) {
-    noShort.dataset.v3Bound = '1';
+  if (noShort && !noShort.dataset.v4Bound) {
+    noShort.dataset.v4Bound = '1';
     noShort.addEventListener('click', () => setNoVisible('SHORT'));
   }
 
@@ -102,7 +102,7 @@ SCRIPT = r'''<script>
   }
 
   function recoverFinalAction(l) {
-    if (['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE'].includes(l.final_action)) return l.final_action;
+    if (['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE', 'WAIT'].includes(l.final_action)) return l.final_action;
     const timeline = Array.isArray(l.decision_timeline) ? l.decision_timeline : [];
     const decisions = timeline.filter(x => ['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE'].includes(x && x.action));
     if (!decisions.length) return '';
@@ -115,22 +115,24 @@ SCRIPT = r'''<script>
     return l.final_action;
   }
 
-  function autoFinalizeEndedWaitOnly(c, l, warnings) {
-    if (['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE'].includes(l.final_action)) return l.final_action;
+  function preserveEndedWaitOnly(c, l, warnings) {
+    if (['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE', 'WAIT'].includes(l.final_action)) return l.final_action;
     const timeline = Array.isArray(l.decision_timeline) ? l.decision_timeline : [];
-    if (timeline.some(x => x && x.action && x.action !== 'WAIT')) return '';
+    const waitEvents = timeline.filter(x => x && x.action === 'WAIT');
+    if (!waitEvents.length || timeline.some(x => x && x.action && x.action !== 'WAIT')) return '';
     const replayLength = Array.isArray(c.replay_1m) ? c.replay_1m.length : 0;
     const revealCount = Number(l.reveal_count || 0);
     if (!replayLength || revealCount < replayLength) return '';
-    l.final_action = 'NO_TRADE';
+    l.final_action = 'WAIT';
+    l.first_entry_time = null;
     l.entry_force = l.entry_force || 'NOT_APPLICABLE';
     l.finalization_recovery = {
-      status: 'AUTO_NO_TRADE_FROM_REPLAY_END_WAIT_ONLY',
+      status: 'TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING',
       reveal_count: revealCount,
       replay_count: replayLength,
-      reason: 'Freeze was requested after the full replay ended and the saved case contained only WAIT decisions.'
+      reason: 'The trader chose WAIT and the presented replay window ended. WAIT is preserved and is not converted to NO_TRADE.'
     };
-    warnings.push({case_id: c.case_id, warning: 'AUTO_NO_TRADE_FROM_REPLAY_END_WAIT_ONLY'});
+    warnings.push({case_id: c.case_id, warning: 'TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING'});
     return l.final_action;
   }
 
@@ -176,7 +178,7 @@ SCRIPT = r'''<script>
   }
 
   freezeBtn.textContent = 'Freeze & Export';
-  freezeBtn.title = 'Preserves completed work. A full replay that ended with WAIT only is finalized as NO TRADE; missing numeric TP caused by presented-chart context is recorded instead of blocking export.';
+  freezeBtn.title = 'Preserves your exact decision. If the replay ends while you are still waiting, WAIT remains WAIT and is not changed to NO TRADE.';
   freezeBtn.onclick = async () => {
     const warnings = [];
     const unresolvedActions = [];
@@ -187,26 +189,28 @@ SCRIPT = r'''<script>
         continue;
       }
       let action = recoverFinalAction(l);
-      if (!action) action = autoFinalizeEndedWaitOnly(c, l, warnings);
+      if (!action) action = preserveEndedWaitOnly(c, l, warnings);
       normalizeSavedCase(l, c.case_id, warnings);
-      if (!['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE'].includes(l.final_action)) {
+      if (!['ENTER_LONG', 'ENTER_SHORT', 'NO_TRADE', 'WAIT'].includes(l.final_action)) {
         unresolvedActions.push(`${c.case_id}: replay not finished and final action missing`);
       }
     }
 
     if (unresolvedActions.length) {
-      alert('These case(s) still have no recoverable final decision:\n\n' + unresolvedActions.join('\n') + '\n\nOnly those unfinished case(s) need ENTER LONG, ENTER SHORT, or END / NO TRADE. Full replays that ended with WAIT only are now automatically finalized as NO TRADE.');
+      alert('These case(s) still have no recoverable decision:\n\n' + unresolvedActions.join('\n') + '\n\nOnly those unfinished case(s) need another decision. A full replay that ends while you are still WAITING is preserved as WAIT — never NO TRADE.');
       return;
     }
 
     save();
     renderLabels();
     const rows = pack.cases.map(c => labels[c.case_id]);
+    const waitCount = rows.filter(r => r && r.final_action === 'WAIT').length;
     let body = {
       schema_version: 3,
       pack_id: pack.pack_id,
       frozen_at: new Date().toISOString(),
-      status: warnings.length ? 'FROZEN_WITH_PRESENTED_CONTEXT_CAPTURE_GAPS' : 'FROZEN_COMPLETE',
+      status: waitCount ? 'FROZEN_WITH_TRADER_WAIT_AT_REPLAY_END' : (warnings.length ? 'FROZEN_WITH_PRESENTED_CONTEXT_CAPTURE_GAPS' : 'FROZEN_COMPLETE'),
+      wait_at_replay_end_count: waitCount,
       capture_warnings: warnings,
       labels: rows,
     };
@@ -221,7 +225,7 @@ SCRIPT = r'''<script>
   };
 
   renderLabels();
-  window.MNQ_TP_CONTEXT_GAP_READY_V3 = true;
+  window.MNQ_TP_CONTEXT_GAP_READY_V4 = true;
 })();
 </script>'''
 
