@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "status": "LOCKED_DIRECT_TRADER_FIDELITY_ADDENDUM",
+  "locked_at": "2026-08-20",
+  "strategy_release_under_fidelity_repair": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
+  "stage": "FIDELITY",
+  "purpose": "Bind the trader's frozen 14-case replay, prior master-rulebook knowledge, trade screenshots, force videos, and direct 2026-08-20 clarifications into one non-PnL semantic correction record before executable repair.",
+  "authority_order": [
+    "direct_trader_clarification_2026_08_20",
+    "frozen_14_case_trader_replay_labels",
+    "direct_trader_force_video_pair",
+    "trader_trade_screenshots_and_master_rulebook",
+    "older_semantic_contracts_where_not_superseded"
+  ],
+  "frozen_replay": {
+    "pack_id": "aa4e32104b39e0aaa37eb2bd2c90e67a059604447892411d7dfd530c243910e4",
+    "labels_sha256": "11d8dec0749301c16c7d3b553d06dd564149edf78b4bab4b897fe3635783059c",
+    "status": "FROZEN_WITH_TRADER_WAIT_AT_REPLAY_END",
+    "case_count": 14,
+    "wait_at_replay_end_count": 6,
+    "pnl_used": false,
+    "edge_evidence_eligible": false
+  },
+  "force_video_evidence": [
+    {
+      "name": "Desktop 2026.08.19 - 02.12.06.01.mp4",
+      "sha256": "1e39083c6a8078022b5c84827b63e5b63908979177407d1868521934d48d3733",
+      "role": "forming_5m_candle_force_and_tug_of_war_evidence"
+    },
+    {
+      "name": "Desktop 2026.08.19 - 02.13.19.02.mp4",
+      "sha256": "95bcbb3f7bf3893385f77eb612e2bbb82e772c546d53a3a9a816c1f4e1ce4f00",
+      "role": "forming_5m_candle_force_and_tug_of_war_evidence"
+    }
+  ],
+  "multi_target_screenshot_evidence": [
+    {
+      "name": "Screenshot 2026-08-11 023933.png",
+      "sha256": "dd2adf7c186a4d2be31e3bed27dddc864786a8fd951afd69b69fba1d118c372b",
+      "observed_semantic": "MNQ chart explicitly carries TAKE PROFIT ZONE 1 and TAKE PROFIT ZONE 2 below a short-entry zone."
+    },
+    {
+      "name": "Screenshot 2026-08-10 114924.png",
+      "sha256": "bc063ffaa4c052a47059fbe3ef1154126798aae1b8022960e5592edce4bd3d5f",
+      "observed_semantic": "MNQ chart explicitly carries TAKE PROFIT ZONE 1 and TAKE PROFIT ZONE 2 as separate physical destinations."
+    },
+    {
+      "name": "Screenshot 2026-08-10 164520.png",
+      "sha256": "6c4dfaeb8f7d33e5adae0a44f5e8b7d8590d1e60d8d03c49a586c2311c8ffc73",
+      "observed_semantic": "MNQ coach panel explicitly carries TP1, TP2 and TP3 while preserving a separate entry and candle-setup decision."
+    }
+  ],
+  "direct_trader_rules": {
+    "execution_chart": "5m is the trader entry chart; 1m is bot causal intrabar reconstruction only.",
+    "force": "The trader may enter while the 5m candle is forming after sustained directional force is real; temporary bursts and tug-of-war are not enough.",
+    "fvg_midpoint_tp": "The midpoint of an active 15m FVG is a valid TP when that FVG is the selected meaningful destination.",
+    "fvg_edge_can_define_reaction_level": "When an FVG is the meaningful structure immediately before a support/resistance area, the trader may mark the relevant end/edge of the FVG as the physical support/resistance reaction boundary.",
+    "fvg_support_resistance_interaction": {
+      "rule": "An FVG may act as support/resistance when price is actually treating that band as the reaction structure; FVG identity alone never creates an automatic trade.",
+      "resistance_behavior": "For a bearish setup from an FVG acting as resistance, the candle must reject the FVG and push away with bearish force. For a bullish path through that same opposing FVG, price must disrespect/clear it with bullish control rather than treat the untouched FVG as already defeated.",
+      "support_mirror": "Mirror the interaction for an FVG acting as support: bullish rejection plus bullish force may defend it; a bearish path through it must disrespect/clear it with bearish control.",
+      "fvg_is_not_required_for_entry": true,
+      "all_fvgs_are_not_entry_zones": true
+    },
+    "tp_ladder": {
+      "multiple_directional_tps_allowed": true,
+      "labels": ["TP1", "TP2", "TP3_OR_NEXT_MEANINGFUL_REACTION"],
+      "normal_rule": "Use the first meaningful physical reaction that still gives valid room at the actual entry clock.",
+      "rollover_rule": "If price has already moved so close to TP1 before the A+ entry becomes actionable that TP1 no longer has the frozen minimum room, the trader may take the still-valid A+ entry and promote TP2, the next meaningful physical reaction, as the active target.",
+      "rollover_must_not_be_pnl_selected": true,
+      "rollover_room_threshold": "reuse Params.min_room_r * Params.stop; introduce no new numeric threshold",
+      "entry_requirements_still_apply": true,
+      "farther_target_cannot_be_chosen_merely_for_more_profit": true
+    },
+    "wait_semantics": "WAIT is distinct from NO_TRADE and remains WAIT when the presented replay ends while the trader is still waiting."
+  },
+  "supersedes_older_clauses": [
+    "Any older clause stating that a meaningful first reaction inside minimum room must always cancel the trade even when the entry arrived late and a preplanned next meaningful TP exists.",
+    "Any older clause treating every FVG solely as passive TP/confluence context when the same FVG is demonstrably acting as the support/resistance reaction structure.",
+    "Any replay validator that rejects a frozen WAIT label or silently converts WAIT to NO_TRADE."
+  ],
+  "preserved_invariants": [
+    "17.25_point_stop",
+    "maximum_one_strategy_trade_per_session",
+    "09_30_to_12_00_America_New_York_execution_window",
+    "location_plus_candle_story_plus_sustained_force_required",
+    "momentum_is_not_automatic_displacement",
+    "only_two_prebreak_early_entry_exceptions",
+    "no_future_candle_or_final_parent_OHLC_backdating",
+    "FVG_not_required_for_displacement_entry",
+    "no_PnL_threshold_search_or_parameter_rescue",
+    "PR_38_remains_draft_do_not_merge"
+  ],
+  "engineering_rule": "Diagnose -> repair only demonstrated fidelity defects -> permanent regression -> rerun exact-head gates. Any material executable repair invalidates prior exact-SHA promotion evidence."
+}
