@@ -1,0 +1,52 @@
+{
+  "artifact": "gpt56-semantic-audit-calibration-task-index-v1",
+  "repaired_gpt_engineering_sha": "8acb6b0fc63e0b38595a9e64c2f61a77885e9f9b",
+  "emitted_by": "worker-1",
+  "cases": {
+    "1HFoStW_wsc": {
+      "video_id": "1HFoStW_wsc",
+      "transcript_path": "src/engine/extraction/fixtures/source-evidence/1HFoStW_wsc.transcript.txt",
+      "transcript_sha256": "c84a83c745da422bb3c19955f981a9f7ba848a7eaa68b85b732630201263b080",
+      "candidate_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/runs/1HFoStW_wsc/fresh_source_candidate.json",
+      "candidate_sha256": "90a36a75bc1db78cac9b5b0181754488d98fa9406fc1b90d4bba3b876d6d170e",
+      "semantic_task_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks/1HFoStW_wsc/gpt56_semantic_audit_task.json",
+      "semantic_task_sha256": "0c5188491762980792934f3a02aa6ff7ee76efa1aa447181c005dee3d56da36a",
+      "audit_nonce": "52892798d4d79c3940e6e9d057bf3c308a2faac8e31167dd275766946fa6506e",
+      "gpt56_prompt_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks/1HFoStW_wsc/gpt56_semantic_audit_prompt.txt",
+      "gpt56_prompt_sha256": "100f6fc815d1e80e0a602fde8ea15fb839274b6f4e0728c0c1b4d9021b3a3782",
+      "claim_count": 73,
+      "strategy_count": 6,
+      "repaired_gpt_engineering_sha": "8acb6b0fc63e0b38595a9e64c2f61a77885e9f9b"
+    },
+    "E8Wg6tFPYjo": {
+      "video_id": "E8Wg6tFPYjo",
+      "transcript_path": "src/engine/extraction/fixtures/source-evidence/E8Wg6tFPYjo.transcript.txt",
+      "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+      "candidate_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/runs/E8Wg6tFPYjo/fresh_source_candidate.json",
+      "candidate_sha256": "858cb977600204827918dad8fd531722e454f0c0f348a91fd3b1ed62e9ce0008",
+      "semantic_task_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks/E8Wg6tFPYjo/gpt56_semantic_audit_task.json",
+      "semantic_task_sha256": "06315e1919fdb877dd2121f9b648fa42fa27a3b5eafc30ce13824af58e145656",
+      "audit_nonce": "c06dc26b1964018a2d056de4659240788bbce62bf7efa1973aa146abd8956985",
+      "gpt56_prompt_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks/E8Wg6tFPYjo/gpt56_semantic_audit_prompt.txt",
+      "gpt56_prompt_sha256": "e4022163c65850b858cdc78ae32ec6f766785ab610f29b7d95dc6c2ac756e321",
+      "claim_count": 41,
+      "strategy_count": 1,
+      "repaired_gpt_engineering_sha": "8acb6b0fc63e0b38595a9e64c2f61a77885e9f9b"
+    },
+    "7ieYBa7Z-Hg": {
+      "video_id": "7ieYBa7Z-Hg",
+      "transcript_path": "src/engine/extraction/fixtures/source-evidence/7ieYBa7Z-Hg.transcript.txt",
+      "transcript_sha256": "63742bf97578c28637b85ea58540d1acbee8341c9e7c4d31d90f09c165c5dcf7",
+      "candidate_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/runs/7ieYBa7Z-Hg/fresh_source_candidate.json",
+      "candidate_sha256": "2d47ef1f16da7d2bb8b3159b207b35f726cff14bc79dbc405d9529639348cb26",
+      "semantic_task_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks/7ieYBa7Z-Hg/gpt56_semantic_audit_task.json",
+      "semantic_task_sha256": "68b7f99745a0ffdd74dc3dfdc4393df47fa98a4e74f24a1194326a24d29af9c0",
+      "audit_nonce": "a8ea7c1dfc61963030b098fa48919b89f27e4aace2e3ac4a5949728321a68a85",
+      "gpt56_prompt_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks/7ieYBa7Z-Hg/gpt56_semantic_audit_prompt.txt",
+      "gpt56_prompt_sha256": "38b208951a844fa431baa2dd9922dd33aa1d850d50618c0cfb22b3354eb52ea4",
+      "claim_count": 63,
+      "strategy_count": 1,
+      "repaired_gpt_engineering_sha": "8acb6b0fc63e0b38595a9e64c2f61a77885e9f9b"
+    }
+  }
+}
