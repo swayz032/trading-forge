@@ -5,8 +5,9 @@ Candidate formation comes only from current_mnq_strategy_v2_4_kernel so sealed
 validation and live/shadow signal formation cannot silently use different entry
 semantics. The shared kernel now uses causal completed-1m sub-bars to watch the
 forming parent candle and can trigger before the 5m/15m close once sustained
-force is proven. Target formation comes only from current_mnq_strategy_v2_4_targets
-so historical and live paths share the same first-reaction/FVG semantics.
+force is proven. Target construction remains in current_mnq_strategy_v2_4_targets;
+the thin current_mnq_strategy_v2_4_target_policy layer applies the frozen
+trader-fidelity TP1->TP2 room rollover identically to historical and live paths.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ import pandas as pd
 from research import current_mnq_strategy_v2_3_engine as v23
 from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates
 from research.current_mnq_strategy_v2_4_policy import semantics_hash
-from research.current_mnq_strategy_v2_4_targets import build_and_classify
+from research.current_mnq_strategy_v2_4_target_policy import build_and_classify
 
 core = v23.core
 TZ = v23.TZ
