@@ -15,20 +15,28 @@
     },
     {
       "id": "CAL03_MOMENTUM_HEAVY_SAMPLE",
-      "rule": "The next calibration pack must show substantially more real momentum/force opportunities so the trader can demonstrate entries he would actually take.",
+      "rule": "The next calibration pack must show substantially more real 5-minute momentum/force opportunities so the trader can demonstrate entries he would actually take.",
       "implementation": "Prioritize distinct-session authoritative entries first, then genuine candle-story + force candidates rejected only by later room/TP gates, before any generic no-entry controls. Use every available qualifying momentum case up to the pack limit rather than filling with quiet controls."
     },
     {
       "id": "CAL04_WAIT_DISTINCT_FROM_NO_TRADE",
       "rule": "WAIT remains a distinct trader state at the end of the presented replay window and must never be silently converted to NO_TRADE.",
       "implementation": "Preserve WAIT exactly for fidelity comparison."
+    },
+    {
+      "id": "CAL05_5M_PRIMARY_ENTRY_1M_INTERNAL_ONLY",
+      "rule": "The trader enters from the 5-minute chart. The 1-minute view was supplied only because the bot uses completed 1-minute observations to reconstruct intrabar behavior causally.",
+      "implementation": "The trader-facing replay must make 5m the primary entry/decision chart. 15m remains higher-timeframe structure/FVG/TP context. Any 1m panel is diagnostic only and must not be presented as the trader's entry timeframe. The bot may use completed 1m bars internally to rebuild the still-forming 5m candle at exact decision clocks without hindsight."
     }
   ],
   "chart_context": {
+    "primary_trader_entry_timeframe": "5m",
+    "higher_timeframe_context": "15m",
+    "one_minute_role": "BOT_CAUSAL_INTRABAR_DIAGNOSTIC_ONLY",
     "context_15m_lookback_calendar_days": 40,
     "context_5m_lookback_calendar_days": 10,
     "context_1m_lookback_minutes": 60,
-    "initial_view": "RECENT_DECISION_AREA_WITH_NATIVE_PAN_ZOOM",
+    "initial_view": "RECENT_5M_DECISION_AREA_WITH_NATIVE_PAN_ZOOM",
     "fit_all_must_include_full_context": true,
     "bilateral_reaction_context_preferred": true,
     "bilateral_reaction_definition": "AT_LEAST_ONE_CAUSAL_MEANINGFUL_REACTION_DESTINATION_ABOVE_AND_BELOW_REFERENCE_PRICE"
