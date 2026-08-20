@@ -45,6 +45,10 @@ const QUEUE_SHA = '5935b1c6c03860b35e2aee9023f2c70c4630d2e75ef9bfa496024bb2b7efa
 const EXTRACTION_SHA_TRAP = '5935b1c6c03860b35b6ec0402a3152dc287a8ae427eb0d86661b3fb43ec01823';
 const HEAD = 'cb4bd4871e3a7e2e1d553073bca88d25dc0ffde6';
 const REPO = 'swayz032/trading-forge';
+/** AR-1364A/worker-1 fix (2026-08-19): the ruling-text read moved from `show <sha>:<path>` to
+ * `ls-tree` + `cat-file blob` (Windows path-length boundary, AR-1369/AR-1370). Fake blob id the
+ * `ls-tree` mocks below hand back to the `cat-file blob <id>` mock — content-arbitrary, shape-real. */
+const FAKE_BLOB_SHA = 'b'.repeat(40);
 const WORKTREE = 'C:/Users/tonio/Projects/wt-control-plane-ar-1279';
 const BRANCH = 'control-plane/ar-1279-guard-repair';
 
@@ -688,6 +692,8 @@ test('C8c the seat re-verifies authority against the LIVE ruling, not the manife
       if (k.startsWith('fetch')) return '';
       if (k === 'rev-parse origin/external-advisor/gpt-rulings') return 'abc123';
       if (k.startsWith('show --name-only')) return over.rulingFile ?? 'advisor-reports/AR-1281-X.md';
+      if (k.startsWith('ls-tree')) return `100644 blob ${FAKE_BLOB_SHA}\t${over.rulingFile ?? 'advisor-reports/AR-1281-X.md'}`;
+      if (k.startsWith('cat-file blob')) return over.rulingText ?? ['```json', JSON.stringify(marker), '```'].join('\n');
       if (k.startsWith('show ')) return over.rulingText ?? ['```json', JSON.stringify(marker), '```'].join('\n');
       if (k === 'rev-parse HEAD') return HEAD;
       return '';
@@ -1121,6 +1127,8 @@ function fakeIo({
       if (a.startsWith('fetch')) return '';
       if (a === 'rev-parse origin/external-advisor/gpt-rulings') return '9bf12d20';
       if (a.startsWith('show --name-only')) return rulingFile;
+      if (a.startsWith('ls-tree')) return `100644 blob ${FAKE_BLOB_SHA}\t${rulingFile}`;
+      if (a.startsWith('cat-file blob')) return rulingText;
       if (a.startsWith('show ')) return rulingText;
       if (a === 'rev-parse --abbrev-ref HEAD') return 'claude/worker1-h1-20260815';
       if (a === 'rev-parse HEAD') return HEAD;

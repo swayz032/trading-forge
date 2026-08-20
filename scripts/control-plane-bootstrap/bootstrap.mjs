@@ -118,7 +118,14 @@ export function measureState(io) {
   let rulingId = null;
   let rulingText = '';
   if (changed.length === 1) {
-    rulingText = io.git('show', `${gptAuthorityHead}:${changed[0]}`);
+    // AR-1364A/worker-1 (operator-ordered fix, 2026-08-19) — same defect and same repair as
+    // control-plane-seat-hook.mjs::verifyAuthorityIndependently (see its comment for the full
+    // explanation): `git show <sha>:<path>` can cross the Windows path-length boundary inside
+    // Git's own disambiguation `stat()`, independent of `-C` vs spawn `cwd` (AR-1369/AR-1370).
+    // `ls-tree` + `cat-file blob` never constructs that combined revision:path string.
+    const lsTreeOut = io.git('ls-tree', gptAuthorityHead, '--', changed[0]);
+    const blobMatch = /^\d+\s+blob\s+([0-9a-f]{40})/.exec(lsTreeOut);
+    rulingText = blobMatch ? io.git('cat-file', 'blob', blobMatch[1]) : '';
     rulingId = rulingIdFromFilename(pathReal.basename(changed[0]));
   }
 

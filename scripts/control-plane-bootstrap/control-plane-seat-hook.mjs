@@ -81,7 +81,23 @@ export function verifyAuthorityIndependently(io, manifest) {
     return { ok: false, code: 'authority_unreadable', detail: `expected exactly one ruling file at ${authorityHead}, saw ${changed.length}` };
   }
   const rulingId = rulingIdFromFilename(changed[0].split('/').pop());
-  const rulingText = io.git('show', `${authorityHead}:${changed[0]}`);
+  // AR-1364A/worker-1 (operator-ordered fix, 2026-08-19) — `git show <sha>:<path>` combines a
+  // full revision string with a filesystem-shaped path; Git's own disambiguation logic can
+  // `stat()` that combined string as a candidate literal filename before ever falling back to
+  // tree-ish parsing, and MEASURED on Windows (AR-1369/AR-1370) that stat() call can cross the
+  // OS path-length boundary and throw `Filename too long` — deterministically, before any
+  // authority/identity check runs. AR-1364A's `-C`-argv-to-spawn-`cwd` candidate did NOT fix
+  // this (independently proven in AR-1370: both put the child process in the identical working
+  // directory, so the combined length `stat()` sees is unchanged either way). `ls-tree` resolves
+  // the blob by tree lookup (no combined revision:path string, no filesystem stat at all); the
+  // resulting object ID is a plain 40-char hex string that `cat-file blob` reads directly — no
+  // argument here ever depends on the ruling filename's length.
+  const lsTreeOut = io.git('ls-tree', authorityHead, '--', changed[0]);
+  const blobMatch = /^\d+\s+blob\s+([0-9a-f]{40})/.exec(lsTreeOut);
+  if (!blobMatch) {
+    return { ok: false, code: 'authority_object_unresolvable', detail: `ls-tree could not resolve a blob for ${changed[0]} at ${authorityHead}` };
+  }
+  const rulingText = io.git('cat-file', 'blob', blobMatch[1]);
 
   // Frozen state and the bundle are recomputed from REAL BYTES here, never read from the manifest.
   const queueRel = 'docs/replay-results/svkm-extraction-certified/grade/opus-v2/isolated_fallback_queue_t1.json';
