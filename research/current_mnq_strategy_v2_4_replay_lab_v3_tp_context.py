@@ -8,6 +8,7 @@ from research import current_mnq_strategy_v2_4_replay_lab_v3 as lab
 
 NO_VISIBLE_MEANINGFUL_REACTION = "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT"
 TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT = "TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT"
+WAIT_AT_REPLAY_END = "WAIT"
 MARKED = "MARKED"
 
 
@@ -69,7 +70,7 @@ def validate_labels_v3_context_aware(labels: dict | list, review: dict) -> None:
         if cid not in expected or cid in observed:
             raise RuntimeError(f"REPLAY_V3_BAD_OR_DUPLICATE_CASE:{cid}")
         observed.add(cid)
-        if row.get("final_action") not in {"ENTER_LONG", "ENTER_SHORT", "NO_TRADE"}:
+        if row.get("final_action") not in {"ENTER_LONG", "ENTER_SHORT", "NO_TRADE", WAIT_AT_REPLAY_END}:
             raise RuntimeError(f"REPLAY_V3_BAD_FINAL_ACTION:{cid}")
         if row.get("entry_force") not in lab.FORCE_LABELS:
             raise RuntimeError(f"REPLAY_V3_BAD_FORCE:{cid}")
@@ -139,6 +140,7 @@ def grade_labels_v3_context_aware(labels: dict | list, review: dict, answer_key:
             "trader_action": trader["final_action"],
             "bot_action": answer["bot_action"],
             "action_agreement": action_agree,
+            "trader_waited_through_presented_replay": trader["final_action"] == WAIT_AT_REPLAY_END,
             "trader_first_entry_time": trader.get("first_entry_time"),
             "bot_entry_time": answer["bot_entry_time"],
             "entry_timing_delta_minutes": timing_delta,
@@ -152,6 +154,7 @@ def grade_labels_v3_context_aware(labels: dict | list, review: dict, answer_key:
         })
 
     disagreements = [r for r in out if not r["action_agreement"]]
+    waits = [r for r in out if r["trader_waited_through_presented_replay"]]
     context_gaps = [
         r for r in out
         if isinstance(r.get("tp_reaction_cluster_grade"), dict)
@@ -164,10 +167,12 @@ def grade_labels_v3_context_aware(labels: dict | list, review: dict, answer_key:
         "action_agreements": len(out) - len(disagreements),
         "action_agreement_rate": (len(out) - len(disagreements)) / max(len(out), 1),
         "disagreements": disagreements,
+        "trader_wait_at_replay_end_cases": waits,
         "tp_presented_context_gaps": context_gaps,
         "rows": out,
         "warning": (
-            "A TP context-gap status records a fidelity/presentation limitation. "
-            "It must not be treated as proof that ROOM_TO_FIRST_REACTION passed, and no numeric TP may be invented."
+            "WAIT means the trader was still waiting when the presented replay window ended; it is not NO_TRADE. "
+            "A TP context-gap status records a fidelity/presentation limitation. It must not be treated as proof that "
+            "ROOM_TO_FIRST_REACTION passed, and no numeric TP may be invented."
         ),
     }
