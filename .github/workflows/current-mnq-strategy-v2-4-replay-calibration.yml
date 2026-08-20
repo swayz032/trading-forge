@@ -1,0 +1,173 @@
+name: Current MNQ Strategy v2.4 5m Fidelity Calibration
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v2-4-zone-first-candles
+    paths:
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle_compat.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_primary5m_patch.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
+      - 'research/current_mnq_strategy_v2_4_replay_calibration_requirements.json'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
+      - 'research/current_mnq_strategy_v2_4_user_momentum_visual_gold.json'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_primary5m_patch.py'
+      - '.github/workflows/current-mnq-strategy-v2-4-replay-calibration.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle_compat.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_primary5m_patch.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
+      - 'research/current_mnq_strategy_v2_4_replay_calibration_requirements.json'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
+      - 'research/current_mnq_strategy_v2_4_user_momentum_visual_gold.json'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_primary5m_patch.py'
+      - '.github/workflows/current-mnq-strategy-v2-4-replay-calibration.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: mnq-v24-5m-calibration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  calibration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+
+      - name: Install frozen research dependencies
+        run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
+
+      - name: Prove 5m-primary fidelity contracts
+        run: |
+          PYTHONPATH=. pytest --confcutdir=tests -q \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_primary5m_patch.py
+
+      - name: Generate momentum-heavy bilateral-context calibration pack
+        run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate
+
+      - name: Bind unified trader chart and normalize bundle transform markers
+        run: |
+          set -euo pipefail
+          pack="research/_mnq_v24_replay_lab_v3/pack"
+          cp research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js "$pack/replay_v3_enhance.js"
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '<script src="replay_v3_enhance.js"></script>'
+          if marker not in text:
+              text = text.replace('</body>', marker + '</body>')
+          p.write_text(text, encoding='utf-8')
+          PY
+          PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_bundle_compat
+          grep -q 'Main Structure / Key Zones + TP Reaction Cluster' "$pack/replay_v3_enhance.js"
+          grep -q "drawZone.onclick = () => beginDraw('main-zone', ov5)" "$pack/replay_v3_enhance.js"
+
+      - name: Vendor pinned TradingView Lightweight Charts 5.2.0
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          cd "$tmp"
+          pkg="$(npm pack lightweight-charts@5.2.0 --silent)"
+          tar -xzf "$pkg"
+          cp package/dist/lightweight-charts.standalone.production.js \
+            "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
+
+      - name: Bundle upgraded 5m-primary replay
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_bundle
+          PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_primary5m_patch
+          PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch
+
+      - name: Syntax-check browser JavaScript
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html').read_text(encoding='utf-8')
+          blocks = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S|re.I)
+          inline = [b for b in blocks if b.strip()]
+          if len(inline) < 4:
+              raise SystemExit(f'REPLAY_CALIBRATION_EXPECTED_INLINE_SCRIPTS:{len(inline)}')
+          for i, block in enumerate(inline):
+              Path(f'/tmp/mnq_cal_{i}.js').write_text(block, encoding='utf-8')
+          print(len(inline))
+          PY
+          for f in /tmp/mnq_cal_*.js; do node --check "$f"; done
+
+      - name: Prove momentum-heavy 5m calibration artifact
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pack = Path('research/_mnq_v24_replay_lab_v3/pack')
+          review = json.loads((pack/'review_pack_v3.json').read_text())
+          receipt = json.loads((pack/'calibration_receipt_v3.json').read_text())
+          html = (pack/'review_v3.html').read_text(encoding='utf-8')
+          if receipt['all_cases_require_bilateral_meaningful_reaction_context'] is not True:
+              raise SystemExit('CALIBRATION_BILATERAL_CONTEXT_NOT_LOCKED')
+          if receipt['momentum_or_entry_cases'] != receipt['case_count']:
+              raise SystemExit('CALIBRATION_QUIET_CONTROL_LEAK')
+          if receipt['pnl_or_exit_outcome_used_for_selection'] is not False:
+              raise SystemExit('CALIBRATION_PNL_SELECTION_FORBIDDEN')
+          if receipt['active_15m_fvg_midpoint_is_valid_tp_when_first_reaction'] is not True:
+              raise SystemExit('CALIBRATION_FVG_MIDPOINT_NOT_LOCKED')
+          if not all(c.get('calibration_context',{}).get('bilateral_meaningful_reaction_context') for c in review['cases']):
+              raise SystemExit('CALIBRATION_CASE_WITHOUT_BILATERAL_CONTEXT')
+          for marker in (
+              '5m PRIMARY ENTRY / Key Zones + TP',
+              '1m BOT CAUSAL RECONSTRUCTION — DIAGNOSTIC ONLY',
+              'MNQ_5M_PRIMARY_ENTRY_FVG_CONTEXT_READY',
+              '15m FVG MID',
+              'DRAW BULLISH TP',
+              'DRAW BEARISH TP',
+              'CLICK BULLISH TP LEVEL',
+              'CLICK BEARISH TP LEVEL',
+              'The opposite-direction TP is optional',
+          ):
+              if marker not in html:
+                  raise SystemExit('CALIBRATION_HTML_MISSING:' + marker)
+          forbidden = ('"bot_action"','"bot_entry_time"','"bot_tp_reaction_cluster"','"net_pnl"','"gross_pnl"')
+          safe = (pack/'review_pack_v3.json').read_text()
+          if any(x in safe for x in forbidden):
+              raise SystemExit('CALIBRATION_SAFE_PACK_LEAK')
+          PY
+
+      - name: Upload 5m-primary trader calibration pack — bot answers withheld
+        uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-4-5m-momentum-fidelity-calibration
+          path: |
+            research/_mnq_v24_replay_lab_v3/pack/review_v3.html
+            research/_mnq_v24_replay_lab_v3/pack/review_pack_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/labels_template_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/calibration_receipt_v3.json
+          if-no-files-found: error
+
+      - name: Upload hidden calibration bot key — do not open before labels freeze
+        uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-4-5m-momentum-calibration-hidden-key
+          path: research/_mnq_v24_replay_lab_v3/pack/answer_key_v3.json
+          if-no-files-found: error
