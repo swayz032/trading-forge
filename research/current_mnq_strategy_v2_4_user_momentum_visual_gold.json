@@ -1,9 +1,15 @@
 {
-  "schema_version": 1,
-  "status": "LOCKED_TRADER_CONFIRMED_ACTUAL_TRADE_1M_MOMENTUM_VISUAL_GOLD",
+  "schema_version": 2,
+  "status": "LOCKED_TRADER_CONFIRMED_5M_ENTRY_WITH_1M_CAUSAL_DIAGNOSTIC_GOLD",
   "captured_at": "2026-08-20",
   "privacy": "No screenshot bytes are committed. Only SHA256 hashes and trader-confirmed semantic labels are stored.",
-  "trader_statement": "These are trades I took, and I switched to 1 minute to show how the momentum candles look when I take a trade.",
+  "trader_statement": "I enter on 5 minute. I was only showing 1 minute because the bot was said to use 1 minute.",
+  "correction": {
+    "supersedes": "The earlier interpretation that the trader's real entry momentum is a 1-minute entry sequence.",
+    "primary_trader_entry_timeframe": "5m",
+    "one_minute_role": "BOT_CAUSAL_INTRABAR_RECONSTRUCTION_AND_DIAGNOSTIC_ONLY",
+    "rule": "The trader makes the entry decision from the 5-minute setup/trigger chart. Completed 1-minute bars may be used internally by the bot to reconstruct the still-forming 5-minute candle at exact historical decision clocks without hindsight. The 1-minute view is not a separate trader entry strategy and the trader is not required to switch to 1 minute to decide an entry."
+  },
   "source_files": [
     {
       "name": "Screenshot 2026-08-18 171027.png",
@@ -26,27 +32,28 @@
       "sha256": "28570dbf36971a7837a014532edc5bd7e9fa9b8ae68a2c26f5e1fd4638d14730"
     }
   ],
-  "semantic_label": "The trader's real entry momentum is a live 1-minute directional-control sequence at or through the relevant structure. The important look is persistent directional progress with limited giveback/overlap and closes holding near the favorable extreme, often across consecutive or near-consecutive 1-minute candles. The trader may enter while the parent 5-minute candle is still forming once that force is proven. A single temporarily large candle is not enough if it gives back or loses control.",
+  "semantic_label": "The trader enters from the 5-minute chart when the valid setup and momentum/force are present. The supplied 1-minute screenshots were shown only to clarify the intrabar price behavior that the bot may use for causal reconstruction of a forming 5-minute candle. Internally, completed 1-minute observations can help the bot distinguish persistent directional control from giveback while preserving the trader's 5-minute decision semantics. A single temporary 1-minute burst is not itself a trader entry rule.",
   "must_have": [
     "actual_trade_provenance",
-    "1m_directional_control_sequence",
-    "persistent_progress",
-    "limited_giveback_or_overlap",
-    "latest_completed_1m_holds_or_reclaims_favorable_extreme",
+    "5m_is_primary_trader_entry_timeframe",
+    "5m_setup_and_trigger_context",
+    "1m_used_only_for_causal_intrabar_reconstruction_or_diagnostic",
+    "persistent_directional_control_may_be_inferred_from_completed_1m_without_redefining_entry_timeframe",
     "structure_or_setup_context_still_required",
-    "entry_can_precede_parent_5m_close"
+    "no_future_next_candle_evidence"
   ],
   "must_not_do": [
+    "redefine_strategy_as_1m_entry_strategy",
+    "require_trader_to_switch_to_1m_to_choose_entry",
+    "grade_trader_as_if_entry_was_selected_from_1m_chart",
     "treat_one_large_1m_candle_as_sufficient_by_itself",
-    "require_every_1m_candle_to_be_same_color",
-    "enter_after_directional_burst_if_control_immediately_gives_back",
-    "wait_for_parent_5m_close_after_sustained_force_is_already_proven",
+    "use_final_future_5m_ohlc_to_backdate_an_entry",
     "use_next_candle_outcome_as_force_evidence",
     "require_fvg_for_momentum_entry"
   ],
   "replay_sampling_use": {
-    "purpose": "Prefer more trader-representative momentum opportunities in fidelity calibration.",
+    "purpose": "Prefer more trader-representative 5-minute momentum opportunities in fidelity calibration.",
     "pnl_or_exit_selection_forbidden": true,
-    "allowed": "Rank or filter only by causal setup/force geometry known at the decision clock; do not use trade outcome."
+    "allowed": "Rank or filter only by causal setup/force geometry known at the decision clock. The trader-facing decision chart remains 5 minute; 1-minute data may be used internally to reconstruct the forming 5-minute candle without hindsight."
   }
 }
