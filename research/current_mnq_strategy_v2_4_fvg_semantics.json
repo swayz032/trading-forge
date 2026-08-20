@@ -1,7 +1,8 @@
 {
-  "schema_version": 2,
-  "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC1",
-  "source": "Trader-provided FVG transcript plus explicit trader TP clarification on 2026-08-17",
+  "schema_version": 3,
+  "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1-FIDELITY-REPAIR",
+  "source": "Trader-provided FVG transcript, prior trade screenshots/master rulebook, frozen 14-case replay, and explicit trader clarifications through 2026-08-20",
+  "fidelity_addendum": "research/current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json",
   "detector_authority": {
     "repository_path": "src/engine/indicators/fvg_native.py",
     "rule": "Use the existing native detector; do not maintain a second strategy-specific FVG detector.",
@@ -13,38 +14,55 @@
     "bearish": "third candle high is strictly below first candle low",
     "middle_candle": "displacement/imbalance candle",
     "zone_boundaries": "wick-to-wick price band between candle one and candle three",
-    "active_target_gap": "formed and not subsequently re-entered/mitigated on a completed later 15m bar"
+    "active_gap": "formed and not subsequently re-entered/mitigated on a completed later 15m bar"
   },
   "trader_target_rule": {
-    "purpose": "FVG is one possible take-profit reaction destination, not an automatic winner over nearer liquidity.",
-    "rank_by": "FIRST_PRICE_AREA_LIKELY_TO_BE_CONTACTED_IN_TRADE_DIRECTION",
+    "purpose": "FVG is one possible take-profit reaction destination and may also be a causal support/resistance interaction band; it is never an automatic trade.",
+    "rank_by": "PHYSICAL_REACTION_ORDER_AT_THE_ACTUAL_ENTRY_CLOCK",
     "rank_distance_uses": "near_edge_of_reaction_area_not_midpoint",
     "fvg_take_profit": "middle of the selected active 15m FVG, tick rounded conservatively",
+    "fvg_edge_reaction_boundary": "The trader may use the relevant end/edge of the FVG as the support/resistance reaction boundary when that FVG is the physical structure immediately before the next key level.",
     "liquidity_cluster_take_profit": "safe middle/interior of the selected meaningful liquidity cluster",
-    "liquidity_cluster_before_fvg": "TARGET_LIQUIDITY_CLUSTER",
-    "fvg_before_liquidity_cluster": "TARGET_FVG",
-    "nearby_strong_key_zone_before_both": "TARGET_OR_BLOCK_AT_THAT_NEARER_REACTION_AREA",
-    "tiny_weak_shelf": "may be skipped only when it fails the existing meaningful-reaction quality gate",
-    "insufficient_room_to_first_meaningful_reaction": "NO_TRADE",
+    "normal_tp1_rule": "The first meaningful physical reaction that still has the frozen minimum room at the actual entry clock owns TP1.",
+    "tp1_to_tp2_rollover": "If price has already moved so close to TP1 before the A+ entry becomes actionable that TP1 is inside Params.min_room_r * Params.stop, TP1 is a consumed/too-late destination for that entry plan and the next meaningful physical reaction may become TP2.",
+    "rollover_threshold": "reuse Params.min_room_r * Params.stop; no new numeric threshold",
+    "rollover_not_allowed_for_prettier_pnl": true,
+    "all_meaningful_destinations_inside_room": "NO_TRADE",
+    "weak_near_blocker_contract_preserved": true,
     "fixed_R_target": false,
     "reaction_significance_is_distinct_from_entry_authorization": true,
     "target_only_15m_zone_rule": "An active established 15m zone with at least 2 independent rejections and quality>=min_zone_quality remains a meaningful TP/blocker even when it lacks the confluence or high_zone_quality required to authorize a fresh entry.",
     "target_only_zone_can_create_entry": false
   },
+  "fvg_support_resistance_interaction": {
+    "enabled_by_direct_trader_confirmation_2026_08_20": true,
+    "bullish_fvg_default_role": "POTENTIAL_SUPPORT_INTERACTION_BAND",
+    "bearish_fvg_default_role": "POTENTIAL_RESISTANCE_INTERACTION_BAND",
+    "band_alone_is_not_signal": true,
+    "bearish_from_resistance_fvg": "price must reject the FVG resistance band and then prove bearish candle story plus sustained bearish live force",
+    "bullish_through_resistance_fvg": "price must disrespect/clear the opposing FVG resistance band under the normal breakout confirmation plus sustained bullish live force",
+    "bullish_from_support_fvg": "price must reject the FVG support band and then prove bullish candle story plus sustained bullish live force",
+    "bearish_through_support_fvg": "price must disrespect/clear the opposing FVG support band under the normal breakout confirmation plus sustained bearish live force",
+    "intraday_fvg_refresh": "Only completed active 15m FVGs known at the start of each forming 5m bucket may participate; future/incomplete 15m FVGs are forbidden.",
+    "fvg_required_for_entry": false,
+    "fvg_required_for_displacement": false
+  },
   "video_entry_filters": {
     "knowledge_recorded": [
       "unmitigated/not previously tested",
       "reaction close behavior",
-      "support/resistance confluence",
+      "support/resistance interaction",
       "relative FVG priority",
       "premium/discount placement concept",
       "break of structure before gap"
     ],
-    "adoption_rule": "Do not silently turn the video's full six-factor FVG-entry checklist into hard current-strategy entry rules. The trader supplied this video so the bot knows FVG identity and explicitly confirmed the current 15m TP role. Existing user-confirmed FVG entry/context semantics remain unchanged unless separately confirmed."
+    "adoption_rule": "Do not silently import unrelated creator checklist thresholds. Only the trader-confirmed current-strategy FVG identity, TP role, support/resistance interaction, rejection/clearance behavior and causal timing are executable authority."
   },
   "anti_overfit": {
     "pnl_tuning_for_destination_ordering": false,
-    "semantic_change_invalidates_prior_v2_4_seal": true,
-    "fresh_validation_required_after_freeze": true
+    "pnl_tuning_for_fvg_entry_role": false,
+    "no_new_rollover_threshold": true,
+    "semantic_change_invalidates_prior_v2_4_exact_sha_evidence": true,
+    "fresh_validation_required_after_fidelity_freeze": true
   }
 }
