@@ -78,20 +78,24 @@ def test_context_aware_validation_accepts_saved_state_capture_gap_for_entry_time
     validate_labels_v3_context_aware([row], {"cases": [{"case_id": "A"}]})
 
 
-def test_browser_patch_preserves_completed_work_and_only_blocks_missing_final_action(tmp_path):
+def test_browser_patch_preserves_completed_work_and_auto_finalizes_ended_wait_only_cases(tmp_path):
     html = tmp_path / "review_v3.html"
     html.write_text("<html><body><div id='x'></div></body></html>", encoding="utf-8")
     out = patch(html)
     assert MARKER in out
-    assert MARKER.endswith("_V2")
+    assert MARKER.endswith("_V3")
     assert "Do not invent a TP" in out
     assert "BULLISH — NO VISIBLE REACTION" in out
     assert "BEARISH — NO VISIBLE REACTION" in out
     assert "The opposite-direction TP is optional" in out
     assert "TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT" in out
     assert "recoverFinalAction" in out
-    assert "Migrate work made in older replay builds" in out
+    assert "autoFinalizeEndedWaitOnly" in out
+    assert "AUTO_NO_TRADE_FROM_REPLAY_END_WAIT_ONLY" in out
+    assert "replayLength" in out
+    assert "revealCount < replayLength" in out
+    assert "Full replays that ended with WAIT only are now automatically finalized as NO TRADE" in out
     assert "saved label missing" in out
-    assert "final action missing" in out
+    assert "replay not finished and final action missing" in out
     assert "FROZEN_WITH_PRESENTED_CONTEXT_CAPTURE_GAPS" in out
     assert "Save Draft" in out
