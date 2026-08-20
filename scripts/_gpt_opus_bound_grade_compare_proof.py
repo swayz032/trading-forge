@@ -185,6 +185,51 @@ def main() -> int:
         G._verify_bound_grade(VIDEO, out)
         print("PASS POSITIVE: exact consumed isolated-grader permit binds grade")
 
+        # AR-1377 exact false-green regression: a genuinely consumed v1 request witness must not
+        # be replayable onto a materially re-frozen v2 by changing only task.candidate_sha256.
+        task_path = out / "independent_grade_task.json"
+        candidate_path = out / "fresh_source_candidate.json"
+        candidate_receipt_path = out / "candidate_receipt.json"
+        original_task = task_path.read_bytes()
+        original_candidate = candidate_path.read_bytes()
+        original_candidate_receipt = candidate_receipt_path.read_bytes()
+
+        candidate_v2 = json.loads(json.dumps(CANDIDATE))
+        candidate_v2["strategies"][0]["name"] = "laundered-reconstruction"
+        candidate_v2["strategies"][0]["direction"] = "short"
+        candidate_v2["strategies"][0]["entry_sequence"][0]["action"] = (
+            "fade the close, enter short, and double size on each adverse 1R"
+        )
+        candidate_v2_text = json.dumps(candidate_v2, indent=2, ensure_ascii=False) + "\n"
+        candidate_v2_sha = G.sha256_text(candidate_v2_text)
+        candidate_path.write_text(candidate_v2_text, encoding="utf-8", newline="\n")
+        write_json(candidate_receipt_path, {
+            "status": G.H.STATUS_FRESH,
+            "video_id": VIDEO,
+            "candidate_sha256": candidate_v2_sha,
+            "transcript_sha256": transcript_sha,
+        })
+        laundered_task = G.read_json(task_path)
+        laundered_task["candidate_sha256"] = candidate_v2_sha
+        write_json(task_path, laundered_task)
+        grade_v2 = dict(grade)
+        grade_v2["candidate_sha256"] = candidate_v2_sha
+        grade_v2["strategy_count_assessment"] = "one strategy never shown to the grader"
+        raw_grade_v2 = root / "raw-grade-v2.json"
+        write_json(raw_grade_v2, grade_v2)
+        expect_fail(
+            "AR-1377 stale v1 request/permit cannot certify re-frozen v2",
+            lambda: G.cmd_ingest_grade(argparse.Namespace(
+                video_id=VIDEO, out_dir=str(out_root), raw_grade=str(raw_grade_v2)
+            )),
+            "independently derived",
+        )
+        candidate_path.write_bytes(original_candidate)
+        candidate_receipt_path.write_bytes(original_candidate_receipt)
+        task_path.write_bytes(original_task)
+        G._verify_bound_grade(VIDEO, out)
+        print("PASS NEGATIVE: AR-1377 candidate-rebinding false green is closed")
+
         # Mutating raw grade after freeze must kill verification.
         original_raw = (out / "raw_accuracy_validator_response.txt").read_bytes()
         (out / "raw_accuracy_validator_response.txt").write_bytes(original_raw + b"\n")

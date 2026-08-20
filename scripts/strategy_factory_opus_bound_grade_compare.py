@@ -203,6 +203,25 @@ FRESH SOURCE CANDIDATE — OBJECT UNDER ATTACK
 """
 
 
+def _build_grade_agent_request(video_id: str, candidate_sha: str, transcript_sha: str, nonce: str,
+                               transcript: str, candidate_text: str) -> dict[str, Any]:
+    """Derive the complete Agent request from the exact source/candidate identity.
+
+    Emission and later verification intentionally share this deterministic constructor. A stored
+    request may self-hash correctly and still be stale; only equality to this independently
+    re-derived request binds the consumed guard permit to the candidate being certified now.
+    """
+    return {
+        "description": f"independent source-fidelity grade {video_id}",
+        "prompt": _grade_prompt(
+            video_id, candidate_sha, transcript_sha, nonce, transcript, candidate_text
+        ),
+        "subagent_type": GRADE_ROLE,
+        "model": None,
+        "isolation": GRADE_ISOLATION,
+    }
+
+
 def cmd_emit_grade(args: argparse.Namespace) -> int:
     case = H.get_case(args.video_id)
     _, transcript = H.transcript_for(case)
@@ -214,16 +233,9 @@ def cmd_emit_grade(args: argparse.Namespace) -> int:
 
     nonce = secrets.token_hex(32)
     candidate_text = candidate_bytes.decode("utf-8")
-    task_prompt = _grade_prompt(
+    request = _build_grade_agent_request(
         args.video_id, receipt["candidate_sha256"], transcript_sha, nonce, transcript, candidate_text
     )
-    request = {
-        "description": f"independent source-fidelity grade {args.video_id}",
-        "prompt": task_prompt,
-        "subagent_type": GRADE_ROLE,
-        "model": None,
-        "isolation": GRADE_ISOLATION,
-    }
     req_sha = request_sha256(request)
     head = current_head()
     pin, bundle = manifest_identity()
@@ -310,11 +322,26 @@ def _verify_task_live(task: dict[str, Any], video_id: str, out_dir: Path) -> tup
         raise SystemExit("candidate receipt changed since grade task emission")
     if sha256_text(transcript) != task.get("transcript_sha256"):
         raise SystemExit("transcript changed since grade task emission")
-    if request_sha256(task.get("agent_request") or {}) != task.get("agent_request_sha256"):
-        raise SystemExit("grade Agent request bytes/fields changed after emission")
-    request = task.get("agent_request") or {}
-    if request.get("subagent_type") != GRADE_ROLE or request.get("isolation") != GRADE_ISOLATION:
-        raise SystemExit("grade Agent request no longer targets isolated accuracy-validator")
+    try:
+        candidate_text = candidate_bytes.decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise SystemExit(f"frozen candidate is not UTF-8: {e}")
+    expected_request = _build_grade_agent_request(
+        video_id,
+        task.get("candidate_sha256"),
+        task.get("transcript_sha256"),
+        task.get("grade_nonce"),
+        transcript,
+        candidate_text,
+    )
+    request = task.get("agent_request")
+    if request != expected_request:
+        raise SystemExit(
+            "grade Agent request no longer matches independently derived candidate/transcript/nonce binding"
+        )
+    expected_request_sha = request_sha256(expected_request)
+    if task.get("agent_request_sha256") != expected_request_sha:
+        raise SystemExit("grade Agent request SHA256 no longer matches independently derived request")
     pin, bundle = manifest_identity()
     if task.get("toolbox_pin") != pin or task.get("toolbox_bundle_sha256") != bundle:
         raise SystemExit("live toolbox identity changed since grade task emission")

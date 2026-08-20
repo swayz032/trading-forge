@@ -148,14 +148,20 @@ def make_response(task: dict, *, false_claim_verdict: str = "NOT_ENTAILED", verd
     }
 
 
-def emit_case(root: Path, name: str) -> tuple[Path, Path, Path, dict]:
+def emit_case(
+    root: Path,
+    name: str,
+    *,
+    transcript_text: str = TRANSCRIPT,
+    candidate_obj: dict | None = None,
+) -> tuple[Path, Path, Path, dict]:
     case = root / name
     case.mkdir(parents=True)
     transcript = case / "transcript.txt"
     candidate = case / "candidate.json"
     out = case / "out"
-    transcript.write_text(TRANSCRIPT, encoding="utf-8", newline="\n")
-    write_json(candidate, CANDIDATE)
+    transcript.write_text(transcript_text, encoding="utf-8", newline="\n")
+    write_json(candidate, CANDIDATE if candidate_obj is None else candidate_obj)
     G.emit(argparse.Namespace(video_id=VIDEO, transcript=str(transcript), candidate=str(candidate), out_dir=str(out)))
     return transcript, candidate, out, G.read_json(out / "gpt56_semantic_audit_task.json")
 
@@ -176,6 +182,56 @@ def run_ingest(transcript: Path, candidate: Path, out: Path, response: dict) -> 
 def main() -> int:
     with tempfile.TemporaryDirectory(prefix="gpt56-semantic-proof-") as td:
         root = Path(td)
+
+        # AR-1377 generic suffix-field coverage: the base fixture itself proves direction and
+        # execution_timeframe are now first-class obligations rather than accidental prompt text.
+        base_claims = {c["claim_ref"]: c for c in G.enumerate_claims(CANDIDATE)}
+        assert base_claims["strategies[0].direction"]["claim"] == "direction=long"
+        assert base_claims["strategies[0].direction"]["transcript_quote"] == "enter long"
+        assert base_claims["strategies[0].execution_timeframe"]["claim"] == "execution_timeframe=5m"
+        assert base_claims["strategies[0].execution_timeframe"]["transcript_quote"] == "five minute chart"
+        print("PASS POSITIVE: generic *_transcript_quote coverage includes direction + execution_timeframe")
+
+        # Exact AR-1377 higher-timeframe class: a literal-but-non-entailing HTF quote must become
+        # an explicit audit obligation; omission is impossible and NOT_ENTAILED must block PASS.
+        htf_quote = "the one hour chart open on my second monitor"
+        htf_transcript = TRANSCRIPT + " I keep the one hour chart open on my second monitor so you can see it while I talk."
+        htf_candidate = json.loads(json.dumps(CANDIDATE))
+        htf_candidate["strategies"][0]["higher_timeframe"] = "1h"
+        htf_candidate["strategies"][0]["higher_timeframe_transcript_quote"] = htf_quote
+        htf_claims = {c["claim_ref"]: c for c in G.enumerate_claims(htf_candidate)}
+        htf_ref = "strategies[0].higher_timeframe"
+        assert htf_claims[htf_ref]["claim"] == "higher_timeframe=1h"
+        assert htf_claims[htf_ref]["transcript_quote"] == htf_quote
+        print("PASS POSITIVE: AR-1377 fabricated higher_timeframe now adds a mandatory claim row")
+
+        t, c, out, task = emit_case(
+            root, "suffix-htf-regression", transcript_text=htf_transcript, candidate_obj=htf_candidate
+        )
+        clean = make_response(task, false_claim_verdict="ENTAILED", verdict="PASS")
+        clean["claim_entailment"] = [r for r in clean["claim_entailment"] if r["claim_ref"] != htf_ref]
+        expect_fail(
+            "AR-1377 higher_timeframe row cannot be omitted",
+            lambda: run_ingest(t, c, out, clean),
+            "coverage incomplete",
+        )
+
+        not_entailed = make_response(task, false_claim_verdict="ENTAILED", verdict="FAIL")
+        for row in not_entailed["claim_entailment"]:
+            if row["claim_ref"] == htf_ref:
+                row["verdict"] = "NOT_ENTAILED"
+                row["reason"] = "quote says the 1h chart is displayed, not that it gates entry"
+        not_entailed["findings"] = [{
+            "severity": "HIGH",
+            "ref": htf_ref,
+            "finding": "Displayed 1h chart does not entail a 1h confirmation rule.",
+            "transcript_quote": htf_quote,
+        }]
+        receipt = run_ingest(t, c, out, not_entailed)
+        assert receipt["status"] == G.FAIL_STATUS
+        assert receipt["semantic_pass"] is False
+        assert any(htf_ref in reason and "NOT_ENTAILED" in reason for reason in receipt["fail_closed_reasons"])
+        print("PASS NEGATIVE: AR-1377 higher_timeframe NOT_ENTAILED produces semantic FAIL")
 
         # 1. The core semantic false-green is represented honestly as FAIL even though the quote
         # itself is a perfect literal substring. This is the exact class a substring gate misses.

@@ -91,8 +91,18 @@ def _claim_text_for_dict(obj: dict[str, Any]) -> str:
     return " | ".join(parts) if parts else canonical_json({k: v for k, v in obj.items() if k != "transcript_quote"})
 
 
+def _claim_text_for_field(field_name: str, value: Any) -> str:
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return f"{field_name}={value}"
+    return f"{field_name}={canonical_json(value)}"
+
+
 def enumerate_claims(candidate: dict[str, Any]) -> list[dict[str, Any]]:
-    """Enumerate every transcript_quote-bearing object as a semantic claim obligation.
+    """Enumerate every source-quote-bearing semantic claim obligation.
+
+    Two candidate evidence shapes are supported and both are load-bearing:
+    1. an object with a bare ``transcript_quote`` describing that object; and
+    2. sibling ``<field>_transcript_quote`` evidence attached to ``<field>`` in the same object.
 
     Presence of a literal quote is already a mechanical property. This inventory makes semantic
     coverage explicit so an auditor cannot silently skip an awkward claim while returning PASS.
@@ -102,14 +112,36 @@ def enumerate_claims(candidate: dict[str, Any]) -> list[dict[str, Any]]:
     def walk(node: Any, path: str) -> None:
         if isinstance(node, dict):
             q = node.get("transcript_quote")
+            if q is not None and (not isinstance(q, str) or not q):
+                raise SystemExit(f"candidate claim {path or '$'} transcript_quote must be null or non-empty string")
             if isinstance(q, str) and q:
                 claims.append({
                     "claim_ref": path or "$",
                     "claim": _claim_text_for_dict(node),
                     "transcript_quote": q,
                 })
+
             for key, value in node.items():
                 if key == "transcript_quote":
+                    continue
+                if key.endswith("_transcript_quote"):
+                    if value is None:
+                        continue
+                    if not isinstance(value, str) or not value:
+                        raise SystemExit(
+                            f"candidate quote field {key} at {path or '$'} must be null or non-empty string"
+                        )
+                    stem = key[:-len("_transcript_quote")]
+                    if not stem or stem not in node:
+                        raise SystemExit(
+                            f"candidate quote field {key} at {path or '$'} has no sibling claim field {stem!r}"
+                        )
+                    claim_ref = f"{path}.{stem}" if path else stem
+                    claims.append({
+                        "claim_ref": claim_ref,
+                        "claim": _claim_text_for_field(stem, node[stem]),
+                        "transcript_quote": value,
+                    })
                     continue
                 child = f"{path}.{key}" if path else key
                 walk(value, child)
