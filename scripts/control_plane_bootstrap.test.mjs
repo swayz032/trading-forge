@@ -727,6 +727,116 @@ test('C8c the seat re-verifies authority against the LIVE ruling, not the manife
   assert.equal(verifyAuthorityIndependently(mkIo({ rulingText: 'prose only' }), manifest).code, 'no_marker_in_current_authority');
 });
 
+/* ===== AR-1365A §5 T1/T3 — MUTATION-PROOF REGRESSION for the AR-1369/AR-1371 Windows path-length
+ * repair. `git show <sha>:<path>` combined a full revision string with a filesystem-shaped path;
+ * Git's own disambiguation `stat()` could cross the Windows path-length boundary on that combined
+ * string before ever resolving the tree-ish (measured AR-1369/AR-1370, Windows/Git-for-Windows).
+ * The repair resolves the object via `ls-tree` (tree lookup, no filesystem stat) then reads it via
+ * `cat-file blob <object-id>` (a plain 40-hex-char id, never length-dependent on the ruling
+ * filename). These tests assert the CALL SHAPE itself — they must go RED if production is ever
+ * reverted to the old `io.git('show', \`${authorityHead}:${changed[0]}\`)` line, not merely check
+ * behavior that a coincidentally-compatible old implementation could also satisfy. */
+
+test('T1 verifyAuthorityIndependently call-shape guard: requires ls-tree + cat-file blob for the ruling object; throws on the old show <sha>:<path> shape', () => {
+  const bundleOf = (readFileBytes) => computeBundle(readFileBytes).bundle_sha256;
+  const queueJson = JSON.stringify({ queue: new Array(8).fill({}), attempts: {} });
+  const reader = (rel) => (BUNDLE_FILES.includes(rel) ? fakeBundleReader(rel) : Buffer.from(queueJson));
+  const qSha = createHash('sha256').update(Buffer.from(queueJson)).digest('hex');
+
+  const marker = { ...baselineMarker(), frozen_queue_sha256: qSha, bootstrap_bundle_sha256: bundleOf(reader) };
+  const manifest = {
+    ...seatManifest(),
+    ruling_id: marker.ruling_id, target_packet: marker.target_packet,
+    authorization_id: marker.authorization_id, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256,
+    allowed_paths: [...marker.allowed_paths],
+  };
+  const rulingFile = 'advisor-reports/AR-1281-X.md';
+  const rulingText = ['```json', JSON.stringify(marker), '```'].join('\n');
+  const FIXTURE_BLOB = 'e'.repeat(40);
+
+  const calls = [];
+  const io = {
+    git: (...a) => {
+      calls.push(a);
+      const k = a.join(' ');
+      if (k === 'config --get remote.origin.url') return 'git@github.com:swayz032/trading-forge.git';
+      if (k.startsWith('fetch')) return '';
+      if (k === 'rev-parse origin/external-advisor/gpt-rulings') return 'abc123';
+      if (k.startsWith('show --name-only')) return rulingFile;
+      if (a[0] === 'show') {
+        throw new Error(`FORBIDDEN CALL SHAPE: git show with a revision/path argument (${JSON.stringify(a)}) — this is the exact old vulnerable <sha>:<path> shape the AR-1369/AR-1371 repair removed. Production must use ls-tree + cat-file blob instead.`);
+      }
+      if (a[0] === 'ls-tree') {
+        assert.equal(a[1], 'abc123', 'ls-tree must resolve against the exact authority head');
+        assert.equal(a[2], '--');
+        assert.equal(a[3], rulingFile, 'ls-tree must resolve the exact discovered ruling path');
+        return `100644 blob ${FIXTURE_BLOB}\t${rulingFile}`;
+      }
+      if (a[0] === 'cat-file' && a[1] === 'blob') {
+        assert.equal(a[2], FIXTURE_BLOB, 'cat-file must read the EXACT object id ls-tree resolved — not a guessed or reused id');
+        return rulingText;
+      }
+      if (k === 'rev-parse HEAD') return HEAD;
+      return '';
+    },
+    readFileBytes: reader,
+    listDir: () => ['README.md'],
+    realpath: (p) => p,
+    readClaim: () => ({ ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256 }),
+  };
+
+  const v = verifyAuthorityIndependently(io, manifest);
+  assert.equal(v.ok, true, `expected ok, got ${v.code}: ${v.detail}`);
+  assert.ok(calls.some((c) => c[0] === 'ls-tree'), 'production must call ls-tree to resolve the ruling object');
+  assert.ok(calls.some((c) => c[0] === 'cat-file' && c[1] === 'blob'), 'production must call cat-file blob to read the resolved object');
+});
+
+test('T3 verifyAuthorityIndependently fails closed when ls-tree cannot resolve a blob: authority_object_unresolvable, no cat-file call, no armed receipt', () => {
+  const bundleOf = (readFileBytes) => computeBundle(readFileBytes).bundle_sha256;
+  const queueJson = JSON.stringify({ queue: new Array(8).fill({}), attempts: {} });
+  const reader = (rel) => (BUNDLE_FILES.includes(rel) ? fakeBundleReader(rel) : Buffer.from(queueJson));
+  const qSha = createHash('sha256').update(Buffer.from(queueJson)).digest('hex');
+
+  const marker = { ...baselineMarker(), frozen_queue_sha256: qSha, bootstrap_bundle_sha256: bundleOf(reader) };
+  const manifest = {
+    ...seatManifest(),
+    ruling_id: marker.ruling_id, target_packet: marker.target_packet,
+    authorization_id: marker.authorization_id, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256,
+    allowed_paths: [...marker.allowed_paths],
+  };
+  const rulingFile = 'advisor-reports/AR-1281-X.md';
+
+  const calls = [];
+  const io = {
+    git: (...a) => {
+      calls.push(a);
+      const k = a.join(' ');
+      if (k === 'config --get remote.origin.url') return 'git@github.com:swayz032/trading-forge.git';
+      if (k.startsWith('fetch')) return '';
+      if (k === 'rev-parse origin/external-advisor/gpt-rulings') return 'abc123';
+      if (k.startsWith('show --name-only')) return rulingFile;
+      if (a[0] === 'ls-tree') return ''; // nothing resolvable at this path/head
+      if (a[0] === 'cat-file') throw new Error('cat-file must never be called when ls-tree resolved nothing');
+      if (k === 'rev-parse HEAD') return HEAD;
+      return '';
+    },
+    readFileBytes: reader,
+    listDir: () => ['README.md'],
+    realpath: (p) => p,
+    readClaim: () => ({ ruling_id: marker.ruling_id, target_packet: marker.target_packet, bootstrap_bundle_sha256: marker.bootstrap_bundle_sha256 }),
+  };
+
+  const v = verifyAuthorityIndependently(io, manifest);
+  assert.equal(v.ok, false);
+  assert.equal(v.code, 'authority_object_unresolvable');
+  assert.ok(!calls.some((c) => c[0] === 'cat-file'), 'cat-file must never be reached after a failed ls-tree resolution');
+
+  // Confirm the fail-closed authority result also never arms at the decide() layer.
+  const store = { readReceipt: () => null, writeReceipt: () => { throw new Error('must never write a receipt on unresolved authority'); } };
+  const out = decide({ hook_event_name: 'SessionStart', session_id: 's-t3' }, manifest, seatObserved(), store, v);
+  assert.match(out.hookSpecificOutput.additionalContext, /NOT ARMED/);
+});
+
 /* ===== AR-1317A — the two-location GIT_TREE compatibility gap AR-1317 found and AR-1317A closed */
 /* AR-1317: a top-level bootstrap execution passed authorization (Lane A already fixed by AR-1316A)
  * but the RECEIVING SEAT independently refused twice more — once because its own authority
@@ -2061,6 +2171,35 @@ test('K5b regression: --plan mode reports branch namespace availability without 
   assert.equal(plan.branch_namespace_conflict.collision, false, 'baselineMarker uses AR-1279, whose flat branch does not nest under the bare AR-1279 prefix name used here');
   const collidingPlan = buildPlan(baselineMarker(), { ...baselineMeasured(), existingControlPlaneBranches: [plan.proposed_target_branch] });
   assert.equal(collidingPlan.branch_namespace_conflict.collision, true, 'an exact-duplicate existing ref must be visible in plan output too');
+});
+
+/* ===== AR-1365A §5 T2 — bootstrap measureState mutation-proof regression, same defect/repair as
+ * T1 above (see its comment): the ruling-text read must go through ls-tree + cat-file blob, never
+ * the old combined `<sha>:<path>` show shape. Wraps the already-correct `fakeIo` baseline so every
+ * OTHER call (fetch, rev-parse, config, status, for-each-ref, ...) is exercised exactly as every
+ * other bootstrap.mjs test already proves — only the object-read call shape is asserted here. */
+
+test('T2 bootstrap measureState call-shape guard: requires ls-tree + cat-file blob for the ruling object; throws on the old show <sha>:<path> shape', () => {
+  const rulingFile = 'advisor-reports/AR-1281-EXAMPLE.md';
+  const rulingText = validRuling();
+  const baseIo = fakeIo({ rulingText, rulingFile });
+  const calls = [];
+  const io = {
+    ...baseIo,
+    git: (...a) => {
+      calls.push(a);
+      if (a[0] === 'show' && a.length === 2 && typeof a[1] === 'string' && /^[0-9a-f]{6,40}:/.test(a[1])) {
+        throw new Error(`FORBIDDEN CALL SHAPE: git show with a revision:path argument (${JSON.stringify(a)}) — the exact old vulnerable shape the AR-1369/AR-1371 repair removed from measureState.`);
+      }
+      return baseIo.git(...a);
+    },
+  };
+  const measured = measureState(io);
+  assert.equal(measured.rulingId, 'AR-1281');
+  assert.equal(measured.rulingText, rulingText);
+  assert.equal(measured.isNewestRuling, true);
+  assert.ok(calls.some((c) => c[0] === 'ls-tree'), 'measureState must call ls-tree to resolve the ruling object');
+  assert.ok(calls.some((c) => c[0] === 'cat-file' && c[1] === 'blob'), 'measureState must call cat-file blob to read the resolved object');
 });
 
 /* =============================== AR-1296A F26/F27/F28 — DIRECT-BLOCKER REPAIR =============== */
