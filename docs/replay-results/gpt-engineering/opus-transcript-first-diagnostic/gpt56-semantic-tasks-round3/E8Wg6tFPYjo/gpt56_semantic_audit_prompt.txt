@@ -1,0 +1,708 @@
+You are GPT-5.6 Sol acting as Trading Forge's independent semantic auditor.
+
+AUTHORITY LAW
+- Original transcript is the source authority.
+- Opus authored the candidate. Do not defend Opus.
+- Legacy/Gemma semantics are forbidden and have NOT been supplied. Do not seek them.
+- Literal substring presence is already checked. Your job is semantic entailment, strategy identity,
+  role assignment, omitted conflicts, source-gap consistency, and audience/directional meaning.
+- Return strict JSON only. Do not repair the candidate. Grade what is frozen.
+
+BOUND IDENTITY
+video_id: E8Wg6tFPYjo
+candidate_sha256: b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041
+transcript_sha256: 62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67
+task_sha256: d5117ba229c03d15d711db49640d0e7b52ac7ea0eee6b3d53124650fc6a833c9
+audit_nonce: 9937864716d8bf80309f60ca7f9879bfd4afe00078f90f8d5330210ad1b2b883
+role: GPT_5_6_SOL_SEMANTIC_AUDITOR
+model_identity: GPT-5.6 Sol
+
+STRATEGY IDENTITY
+For every source_strategy_id, classify exactly one:
+independent_strategy | variant_of_other_strategy | filter_or_qualifier | context_only |
+non_executable_teaching | uncertain.
+A whole-candidate PASS requires every proposed top-level strategy to be a real independent strategy.
+
+CLAIM ENTAILMENT COVERAGE
+You MUST return exactly one audit row for every claim_ref below. Verdict per row:
+ENTAILED | PARTIAL | NOT_ENTAILED | UNCERTAIN.
+A literal quote can still be NOT_ENTAILED if it does not mean what the attached claim says.
+
+- instrument_classification: rationale=Both worked demonstrations are forex pairs on the 15-minute chart, and the educator explicitly frames the forex market as what he has been showing while asserting broad applicability across assets.
+  QUOTE: Now as I said at the beginning of the video this strategy is applicable to basically all assets. So of course the forex market like I've been showing you here today.
+- strategies[0].direction: direction=both
+  QUOTE: So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities.
+- strategies[0].higher_timeframe: higher_timeframe=4 hour
+  QUOTE: And the 4our time frame is going to act as our higher time frame to form a bias and anchor that bias to at all times.
+- strategies[0].execution_timeframe: execution_timeframe=15-minute
+  QUOTE: The 15-minut time frame is going to be our execution time frame where we actually place trades.
+- strategies[0].setup[0]: description=Context (non-executable framing): the educator introduces this as a 15-minute strategy he claims is applicable to almost every asset and which he says produces opportunities weekly.
+  QUOTE: This strategy is applicable to almost every asset in the market, and it creates trading opportunities every single week.
+- strategies[0].setup[1]: description=Context: the first worked example is demonstrated on GBP AUD on the 15-minute time frame.
+  QUOTE: We're taking a look at GBP AUD on the 15-minute time frame.
+- strategies[0].setup[2]: description=Context: the second worked example is demonstrated on NZDUSD on the 15-minute time frame.
+  QUOTE: All right, we're now taking a look at NZDUSD on the 15-minute time frame.
+- strategies[0].setup[3]: description=Context: the strategy is stated to use two time frames, the 15-minute and the 4 hour.
+  QUOTE: This strategy consists of two time frames, the 15-minute and the 4 hour.
+- strategies[0].setup[4]: description=Context: the two time frames are required to work together in congruence.
+  QUOTE: Those need to work together in congruence.
+- strategies[0].setup[5]: description=Context/rationale (non-executable): the educator's stated reason for aligning the 15-minute bias to the higher time frame bias.
+  QUOTE: If we can align our 15minute trade bias to a higher time frame bias, which is the overarching trend, then more times than not, we'll be on the right side of the market, and it'll prevent a lot of unnecessary losses.
+- strategies[0].setup[6]: description=Context: the taught checklist consists of four line items.
+  QUOTE: We have higher time frame alignment, liquidity sweep, break of structure plus imbalance, and a 71% retracement.
+- strategies[0].setup[7]: description=Context: the educator states the underlying premise of the strategy.
+  QUOTE: The strategy is very simplistic. We buy low and sell high.
+- strategies[0].setup[8]: description=Non-executable tooling note: the annotations shown on the chart come from a custom indicator the educator had coded, which automates the charting work.
+  QUOTE: This is a custom indicator that I've had coded and it basically just automates the charting process by creating these annotations for me so I don't have to do any manual chart work.
+- strategies[0].setup[9]: description=Non-executable tooling note: the indicator is stated to be optional and everything taught can be done manually.
+  QUOTE: It's a great tool to have, but you don't need it. You can do all of the things I'm about to teach you today manually on your own.
+- strategies[0].setup[10]: description=Non-executable tooling note: a free substitute for the indicator's structure arrows is named.
+  QUOTE: There's a free version of these little arrows if you search on Trading View fractals or Williams fractals.
+- strategies[0].setup[11]: description=Context (worked example, tooling reading): in the GBP AUD example the educator's indicator checks premium and discount on the higher time frame, with that setting on 4hour.
+  QUOTE: So, my indicator automatically checks premium and discount on the higher time frame. As you can see here, I have it set to 4hour.
+- strategies[0].setup[12]: description=Context (worked example, tooling reading): in the NZDUSD example the indicator shows the 4hour time frame at a discount, which the educator ties to not looking for selling opportunities.
+  QUOTE: Well, my indicator is showing me that the 4hour time frame is currently at a discount, which means we should not be looking for selling opportunities.
+- strategies[0].setup[13]: description=Definition (education): liquidity is described as resting money in the market.
+  QUOTE: The simple way to describe liquidity is just resting money in the market.
+- strategies[0].setup[14]: description=Definition (education): liquidity purged to the upside is referred to as buyside liquidity.
+  QUOTE: So this is what's referred to as buyside liquidity because the liquidity was purged to the upside.
+- strategies[0].setup[15]: description=Context (worked example reasoning): after the upside purge the educator states price's next objective would be to purge liquidity from the downside.
+  QUOTE: So now the next objective of price would be to purge liquidity from the downside.
+- strategies[0].setup[16]: description=Non-executable tooling note: the indicator prints a BOS label when a structural low or high is violated.
+  QUOTE: So whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure.
+- strategies[0].setup[17]: description=Definition (education): an imbalance / fair value gap is described as a three candlestick pattern with a gap between the low of the first candle and the high of the third candle.
+  QUOTE: it's a three candlestick pattern. 1 2 3. And between the low of this first candle and the high of the third candle, we can see that there is a very large gap.
+- strategies[0].setup[18]: description=Definition (education): once an imbalance forms, price is described as being drawn back towards it.
+  QUOTE: Now, whenever this occurs on the chart, price is drawn back towards it.
+- strategies[0].setup[19]: description=Definition (education): after moving away, price is described as typically retracing to fill the gap and then often continuing in its intended direction.
+  QUOTE: So, after we move away from it significantly, typically price will retrace until it fills that gap and then it will often continue in its intended direction.
+- strategies[0].setup[20]: description=Context (non-executable framing): the educator states the Fibonacci retracement tool is used only as a measurement tool, not as an indicator or a strategy.
+  QUOTE: The Fibonacci retracement tool is not an indicator. It is not a strategy in and of itself. The way I use it is simply as a measurement tool.
+- strategies[0].setup[21]: description=Context (non-executable framing): the educator explicitly denies that the retracement levels are reaction-producing magic numbers.
+  QUOTE: So don't be under the impression that somehow these retracement levels are magic numbers that price will react to. That is absolutely not the case.
+- strategies[0].setup[22]: description=Context: the educator names 71% as his favorite retracement number.
+  QUOTE: My favorite number to use is 71%.
+- strategies[0].setup[23]: description=Context (educator's stated risk-to-reward claim for the 71% framing).
+  QUOTE: If I target the 71% from my entry, I get a risk-to-reward ratio of 2.45.
+- strategies[0].setup[24]: description=Non-executable tooling note: the TradingView magnet tool is recommended, set to weak magnet rather than strong magnet.
+  QUOTE: To make this easier, you can use the magnet tool on Trading View. Just set it to weak magnet instead of strong magnet.
+- strategies[0].setup[25]: description=Non-executable platform logistics: the entry, take-profit and stop-loss prices are read off the position-tool parameters and copied to the execution platform.
+  QUOTE: Then all you have to do is double click on the parameters and copy these prices over the entry price, the takerit, the stop-loss.
+- strategies[0].setup[26]: description=Non-executable tooling/settings note: the Fibonacci settings are described as deselecting everything and enabling only the wanted levels; the educator has 71% and 75% enabled and states he really only uses the 71%.
+  QUOTE: You just deselect everything and enable the levels you want. So I have the 71% and the 75%. Really only use the 71%.
+- strategies[0].setup[27]: description=Context (education): drawdown is defined as the time price spends in the area close to the stop loss.
+  QUOTE: Anytime that price is spending in this dark gray area close to my stop loss, that's considered draw down.
+- strategies[0].setup[28]: description=Context (education): the educator states drawdown and losing trades still occur even when all confluences line up.
+  QUOTE: Even if all the confluences line up, we sometimes still get draw down and losing trades.
+- strategies[0].setup[29]: description=Context (teaching intent): the second example is deliberately a non-textbook one.
+  QUOTE: What I like to do in these educational videos is provide an example that is textbook and then provide an example that is not so pretty.
+- strategies[0].setup[30]: description=Classification rule (education): a move is classified as a liquidity grab rather than a break of structure when it is a wick instead of a candle body closure.
+  QUOTE: The reason this is a liquidity grab instead of a break of structure is because it was a wick instead of candle body closure.
+- strategies[0].setup[31]: description=Context (education): a wick of that kind is described as indicating there was not enough momentum to break through and continue.
+  QUOTE: Whenever a wick is forming like that, that means there was not enough momentum to actually break through and continue.
+- strategies[0].setup[32]: description=Definition (education): relative equal highs are described as another form of liquidity.
+  QUOTE: So, this is actually another form of liquidity called relative equal highs.
+- strategies[0].setup[33]: description=Context (worked example): in the NZDUSD example the imbalance / fair value gap is identified on the chart.
+  QUOTE: Now, we definitely have an imbalance here or fair value gap.
+- strategies[0].setup[34]: description=Context/rationale for the order type: the trade is set up in advance, which the educator ties to using a pending limit order.
+  QUOTE: Now, because we're setting up a trade in advance, you would have to do a pending limit order, which means you're betting that price will get to this point at some point in time.
+- strategies[0].setup[35]: description=Context (worked example observation, GBP AUD): the entry area was exceeded past the 71 and slightly past the 75, described by the educator as minimal drawdown.
+  QUOTE: You can see that it pushed past the 71, a little bit past the 75, but overall that is very minimal draw down in the grand scheme of things.
+- strategies[0].setup[36]: description=Context (worked example observation, NZDUSD): price entered at the 71% and crossed the 75% with drawdown described as very minimal.
+  QUOTE: price entered at the 71% still crossed the 75% but the the draw down was very minimal.
+- strategies[0].setup[37]: description=Context (worked example observation, GBP AUD): the low made during the aggressive drop did not violate the low of the Fibonacci range.
+  QUOTE: You can see that this low here did not violate the low of the Fibonacci range.
+- strategies[0].setup[38]: description=Context (non-executable applicability claim): the educator names metals, indices, and reported cryptocurrency use.
+  QUOTE: It's also great for metals and indices and I also know a lot of people who use it in the cryptocurrency market.
+- strategies[0].setup[39]: description=Non-executable practice advice: applying the strategy on a demo account or on backtesting platforms is offered as acceptable.
+  QUOTE: Even if it's on a demo account or a platform like FX Replay or Tradezela back testing, that's fine, too.
+- strategies[0].setup[40]: description=Non-executable trading philosophy: the educator states his advocacy for mechanical trading strategies.
+  QUOTE: I'm a huge advocate for mechanical trading strategies.
+- strategies[0].entry_sequence[0]: action=Gauge premium and discount pricing on the trading range as the basis of higher time frame alignment. | rationale=Higher time frame alignment is the first checklist item and the educator defines its premise as premium and discount.
+  QUOTE: So, the premise of higher time frame alignment is premium and discount. Whenever we have a trading range, we want to gauge premium and discount pricing.
+- strategies[0].entry_sequence[1]: action=When price is above 50% of the trading range (premium), look only for selling opportunities. | rationale=This is the stated directional filter produced by the premium reading.
+  QUOTE: So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities.
+- strategies[0].entry_sequence[2]: action=When price is below 50% of the trading range (discount), look only for buying opportunities. | rationale=This is the stated directional filter produced by the discount reading.
+  QUOTE: Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities.
+- strategies[0].entry_sequence[3]: action=Identify a liquidity sweep before getting involved in a trade. | rationale=Liquidity sweep is the second checklist item and the educator frames its identification as coming before trade involvement.
+  QUOTE: So there's two main reasons why a liquidity sweep is so important to identify before you get involved in a trade.
+- strategies[0].entry_sequence[4]: action=Look for the resting liquidity at major highs and major lows. | rationale=The educator names these as the most common areas where resting liquidity is found.
+  QUOTE: The most common area to find resting liquidity is major highs and major lows.
+- strategies[0].entry_sequence[5]: action=Treat liquidity already purged to the upside as favoring selling opportunities. | rationale=This is the directional inference the educator draws from the buyside sweep in the GBP AUD example.
+  QUOTE: Now this tells us that there's a high likelihood of selling opportunities being favored now because the liquidity was already purged to the upside.
+- strategies[0].entry_sequence[6]: action=Treat a break of structure occurring in the market as the signal of a potential trade. | rationale=The educator states the break of structure is what signals a potential trade.
+  QUOTE: Whenever we have a break of structure occurring in the market that is signaling a potential trade.
+- strategies[0].entry_sequence[7]: action=Do not enter immediately when the break of structure occurs. | rationale=Immediate entry is explicitly rejected by the educator as contrary to the buy-low/sell-high premise.
+  QUOTE: So we don't just immediately enter when there's a break of structure because that would be selling low and we don't want to do that obviously.
+- strategies[0].entry_sequence[8]: action=After the break of structure, wait patiently for a retracement. | rationale=The educator states the required patience for a retracement following the break of structure.
+  QUOTE: So when a break of structure occurs, we need to patiently wait for a retracement.
+- strategies[0].entry_sequence[9]: action=Expect that retracement to be toward a fair value gap or imbalance. | rationale=The educator states this as the typical destination of the retracement, at 'typically' strength rather than as an absolute.
+  QUOTE: Now, typically that retracement ends up being towards a fair value gap or an imbalance.
+- strategies[0].entry_sequence[10]: action=Draw the Fibonacci retracement tool by starting at the low, clicking, and dragging to the high, as narrated in the NZDUSD buy-side worked example. | rationale=This is the Fibonacci drawing procedure narrated in that worked example, which produces the retracement numbers used to frame the trade.
+  QUOTE: So, all I do is break out the Fibonacci tool, start at the low, click, and drag to the high.
+- strategies[0].entry_sequence[11]: action=Place the entry at the 71%, as narrated in the GBP AUD sell-side worked example using the short position tool. | rationale=The 71% retracement is the fourth checklist item and this is where the educator places the entry in the sell-side worked example.
+  QUOTE: So using the short position tool on Trading View, I place my entry at the 71% right here.
+- strategies[0].entry_sequence[12]: action=Use a pending limit order for the entry. | rationale=The educator states the order type requirement explicitly for this strategy.
+  QUOTE: So, it's really important to note you have to use pending limit orders for this strategy.
+- strategies[0].confluences[0]: description=The educator names an additional confluence, not on the checklist, in which the Fibonacci retracement number lines up with the imbalance or fair value gap. | name=Fibonacci retracement number aligned with the imbalance / fair value gap
+  QUOTE: And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap.
+- strategies[0].confluences[1]: description=The educator states that lining the entry up with the fair value gap makes it likely there will not be significant drawdown; this is stated at 'odds are' strength, not as a guarantee. | name=Reduced-drawdown expectation from entry aligned with the fair value gap
+  QUOTE: So if we can line up our entry with that fair value gap, odds are we're not going to have significant draw down.
+- strategies[0].confluences[2]: description=The educator restates the confluence as an instruction to make the Fibonacci numbers line up with the fair value gap or imbalance. | name=Restated instruction to align Fibonacci numbers with the imbalance
+  QUOTE: Make your Fibonacci numbers line up with the fair value gap or imbalance.
+- strategies[0].confluences[3]: description=The educator labels the combination of that confluence with the listed checklist items an A+ setup with a very high likelihood of success. | name=A+ setup label when the confluence is combined with the checklist items
+  QUOTE: So, if you can do that combined with the other things that I've listed here, that is what I like to call an A+ setup and you have a very high likelihood of success.
+- strategies[0].confluences[4]: description=In the GBP AUD sell-side example the educator identifies the recent major lows as pretty untested relative equal lows. | name=Untested relative equal lows as the downside liquidity objective
+  QUOTE: So, those are pretty untested relative equal lows.
+- strategies[0].confluences[5]: description=In the NZDUSD buy-side example the educator states sellside liquidity has already been purged while buyside liquidity has not, because of relative equal highs. | name=Sellside liquidity purged while buyside liquidity remains
+  QUOTE: So, we know that sellside liquidity has already been purged, but buyside liquidity was not purged because these are relative equal highs.
+- strategies[0].confluences[6]: description=In the NZDUSD buy-side example the educator states that because relative equal highs were made, price is highly likely to push higher once more and take out that liquidity. | name=Relative equal highs implying a further push higher
+  QUOTE: But because we made these relative equal highs, that tells me price is highly likely to push higher once more, taking out all of this liquidity.
+- strategies[0].stop: anchor=the high of the Fibonacci range (as placed in the GBP AUD sell-side worked example) | rationale=In the GBP AUD sell-side worked example the educator drags the stop-loss to the high of the Fibonacci range.
+  QUOTE: I simply drag the stop-loss to the high of the Fibonacci range right here.
+- strategies[0].targets[0]: type=take-profit dragged to the low of the Fibonacci range (GBP AUD sell-side worked example) | rationale=In the GBP AUD sell-side worked example the educator drags the take-profit to the low of the Fibonacci range.
+  QUOTE: And then I drag the takerit to the low of the Fibonacci range right here.
+- strategies[0].targets[1]: type=take-profit dragged to the high of the Fibonacci range (NZDUSD buy-side worked example) | rationale=In the NZDUSD buy-side worked example the educator drags the take-profit to the high of the Fibonacci range; this is the buy-side counterpart placement, narrated in the second example.
+  QUOTE: Same thing goes for my takerit. Click this little button at the top, drag it to the high of the Fibonacci range, and drop it.
+- strategies[0].management[0]: rule=When the trade is based on a given high and low, the trade remains valid until one of those levels is violated.
+  QUOTE: That's a very important detail because if our trade was based on this high and this low, then technically the trade still remains valid until one of those levels are violated.
+- strategies[0].management[1]: rule=While neither of those levels has been violated, the trade idea is still intact and the order is not to be deleted.
+  QUOTE: If neither of those levels have been violated, then the trade idea is still intact and there's logically no reason to delete the order.
+- strategies[0].variants[0]: rule=On the buy side the entry is placed at the 71% using the long position tool, after the Fibonacci tool is set up. | name=Buy-side entry placement (NZDUSD example)
+  QUOTE: So now that the fib tool is all set up, I can then click the long position tool on trading view and place my entry at the 71%.
+- strategies[0].variants[1]: rule=On the buy side the stop loss is clicked and dragged over to that wick, snapping to it with the magnet tool. | name=Buy-side stop placement (NZDUSD example)
+  QUOTE: Now using the magnet tool again, I can click the stop loss, drag it over to that wick, and it'll snap right to it.
+- strategies[0].variants[2]: rule=A break of structure that is not very clear and is described as internal is still counted as a break of structure. | name=Internal break of structure accepted (NZDUSD example)
+  QUOTE: The break of structure is not very clear here. This is more so an internal breakup structure, but it is a breaker structure nonetheless.
+
+AUTHORING CONTRACT -- BIND role_assignment AND ITS SIBLING CROSS-FIELD CHECKS TO THIS LAW
+(AR-1378A SS6: the reader's own frozen authoring law governs these checks. You may not invent a
+stricter or different taxonomy than what follows, and you may not excuse a real violation by
+misreading rule 1 as a blanket exemption.)
+
+1. setup[] accepts source-grounded rule OR context, and MAY legally contain non-executable
+   education, tooling, visualization-only steps, platform/execution-venue logistics,
+   demo/backtest practice advice, or generic trading philosophy -- PROVIDED it is clearly framed
+   as non-executable (e.g. typed/described as context, not as an executable rule). This is NOT a
+   role_assignment violation.
+2. setup[] is the ONLY legal home for that non-executable material. The five containers most
+   commonly misused for it are entry_sequence, stop, targets, management, variants -- but this is
+   NOT a closed list: the same material is a role_assignment violation in ANY container other
+   than setup[], named here or not, including an invented or non-standard container name.
+3. targets[] must contain actual source-taught target destinations/rules. Generic risk:reward
+   commentary or general trading philosophy placed in targets[] is a role_assignment violation,
+   not a target.
+4. stop must describe the actual taught stop placement. A distinct invalidation boundary silently
+   substituted for the stop is a role_assignment violation -- check whether the source itself
+   distinguishes "invalidation" from "stop" before accepting one as the other.
+5. variants[] records source-grounded alternatives ("what differs"). Do NOT require that every
+   variant independently contain a complete entry+stop+target strategy unless a stronger written
+   authority explicitly says so -- absence of that completeness is not itself a role_assignment
+   violation, UNLESS such a stronger written authority exists, in which case it governs instead.
+6. trigger_vs_source_gaps must distinguish candidate CONTRADICTION/INVENTION (= FAIL) from an
+   HONESTLY DISCLOSED unresolved source fact (= unresolved execution authority). Honest disclosure
+   of a gap is never itself a fabrication finding -- but it is never permission to invent the
+   missing rule either. An honestly disclosed gap must stay disclosed as a gap, not be silently
+   resolved by the candidate and then credited as if it were still honest.
+7. directional_symmetry must distinguish a broad bidirectional bias/framing statement from a
+   fully specified, deterministic MIRRORED executable trigger. When the candidate discloses that
+   only one side has a complete trigger, that is a source-completeness finding, not semantic
+   fabrication -- do not fail role_assignment or invent the missing mirror yourself.
+8. The atomic quote law is UNCHANGED and stays strict: each claim's own attached transcript_quote
+   must fully entail the ENTIRE attached claim. A true fact found ELSEWHERE in the transcript does
+   not rescue an under-bound claim -- that claim remains PARTIAL or NOT_ENTAILED regardless of
+   what else the transcript says.
+
+Do not defend a candidate that violates rules 2-4 by citing rule 1. Do not manufacture a
+role_assignment / directional_symmetry / trigger_vs_source_gaps finding under rules 1, 5, 6 or 7
+when the candidate is doing exactly what this contract permits.
+
+CROSS-FIELD CHECKS
+Return exactly one PASS|FAIL|UNRESOLVED row for each of: trigger_vs_source_gaps, strategy_evidence_disjointness, target_definition_conflicts, audience_attribution, role_assignment, directional_symmetry
+role_assignment, trigger_vs_source_gaps, and directional_symmetry are graded against the authoring
+contract above -- do not invent a stricter or different taxonomy for these three than what the
+contract states. strategy_evidence_disjointness, target_definition_conflicts, and
+audience_attribution are NOT defined by the contract above; grade them on ordinary semantic-
+consistency grounds against the transcript, and apply the same atomic quote law (contract point 8)
+to any finding you raise against them -- absence of a written rule for a check is not itself
+license to invent one, and it is not license to skip the check either.
+
+REQUIRED RESPONSE SHAPE
+{
+  "schema": "tf-gpt56-semantic-audit-response-v1",
+  "video_id": "E8Wg6tFPYjo",
+  "candidate_sha256": "b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041",
+  "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+  "task_sha256": "d5117ba229c03d15d711db49640d0e7b52ac7ea0eee6b3d53124650fc6a833c9",
+  "audit_nonce": "9937864716d8bf80309f60ca7f9879bfd4afe00078f90f8d5330210ad1b2b883",
+  "auditor_role": "GPT_5_6_SOL_SEMANTIC_AUDITOR",
+  "model_identity": "GPT-5.6 Sol",
+  "legacy_semantics_visible": false,
+  "verdict": "PASS|FAIL",
+  "strategy_identity": [
+    {"source_strategy_id":"s0","classification":"independent_strategy","reason":"...","transcript_quote":"literal source span"}
+  ],
+  "claim_entailment": [
+    {"claim_ref":"strategies[0].entry_sequence[0]","verdict":"ENTAILED","reason":"...","transcript_quote":"literal source span"}
+  ],
+  "cross_field_checks": [
+    {"check":"trigger_vs_source_gaps","status":"PASS","reason":"...","transcript_quote":null}
+  ],
+  "findings": [
+    {"severity":"CRITICAL|HIGH|MEDIUM|LOW|INFO","ref":"...","finding":"...","transcript_quote":null}
+  ],
+  "coverage_statement": "...",
+  "independence_statement": "I audited the frozen Opus candidate only against the supplied original transcript before any legacy comparison."
+}
+
+PASS LAW
+PASS only when every claim is ENTAILED, every top-level strategy is independent_strategy, every
+required cross-field check is PASS, and there are no HIGH/CRITICAL findings. Otherwise FAIL.
+
+ORIGINAL TRANSCRIPT
+<<<TRANSCRIPT_START>>>
+Welcome back everybody. In today's video, I'm going to show you the easiest 15-minute trading strategy you're ever going to find. This strategy is applicable to almost every asset in the market, and it creates trading opportunities every single week. I don't want to waste any of your time, so let's dive right into it. We're taking a look at GBP AUD on the 15-minute time frame. This strategy consists of two time frames, the 15-minute and the 4 hour. The 15-minut time frame is going to be our execution time frame where we actually place trades. And the 4our time frame is going to act as our higher time frame to form a bias and anchor that bias to at all times. You'll notice some annotations on my chart as well as a checklist up at the top here. This is a custom indicator that I've had coded and it basically just automates the charting process by creating these annotations for me so I don't have to do any manual chart work. It's a great tool to have, but you don't need it. You can do all of the things I'm about to teach you today manually on your own. This is simply a tool to make things easier and more streamlined. I like to use it because it allows me to focus more of my mental effort on decision-m rather than mundane chart work. Now, if I could draw your attention to the top right of the screen, you're going to see my checklist here. It only consists of four line items. So, as I said at the beginning of the video, this is very simplistic. It doesn't get any easier than this. We have higher time frame alignment, liquidity sweep, break of structure plus imbalance, and a 71% retracement. I'm going to break down each of these line items one by one so you'll get the full extent of this strategy. And by the end of this video, you're going to understand this strategy so well that you'll have confidence to execute it in real time. First things first, higher time frame alignment. So, I mentioned that we utilize two time frames for this strategy, the 15 minute and the 4 hour. Those need to work together in congruence. If we just blindly take trades on the 15-minute time frame, oftentimes we're going to be going against the overall trend, and we obviously don't want that. If we can align our 15minute trade bias to a higher time frame bias, which is the overarching trend, then more times than not, we'll be on the right side of the market, and it'll prevent a lot of unnecessary losses. So, the premise of higher time frame alignment is premium and discount. Whenever we have a trading range, we want to gauge premium and discount pricing. So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities. The strategy is very simplistic. We buy low and sell high. So, my indicator automatically checks premium and discount on the higher time frame. As you can see here, I have it set to 4hour. So, it's already telling me that we're trading at a premium on the 4hour time frame and it's right before selling opportunities. So that means we can go down to the 15-minute time frame like we're on right now and look for potential selling opportunities. And we can see a pretty clear one right in front of us. So let's now go through the next line items on the list. Next up, we have liquidity sweep. So there's two main reasons why a liquidity sweep is so important to identify before you get involved in a trade. The simple way to describe liquidity is just resting money in the market. And the market wants to purge that liquidity and bring that money back in to add fuel for the next move. The most common area to find resting liquidity is major highs and major lows. So, I'm going to bring out the arrow tool here, and I'm going to hover over the most recent major high that was swept. So, we have a liquidity sweep right here. Let me just click LQ for liquidity. It shows a little dollar sign just to represent that there was a lot of money sitting above this high. And so if we look all the way to the right, this large wick right here pierced above that previous high, purging all of that liquidity, bringing that money back into the market, adding fuel for the next upcoming move. So this is what's referred to as buyside liquidity because the liquidity was purged to the upside. Now this tells us that there's a high likelihood of selling opportunities being favored now because the liquidity was already purged to the upside. So now the next objective of price would be to purge liquidity from the downside. And where can we identify that next objective? Well, the most recent major lows right here. So, those are pretty untested relative equal lows. And it's safe to say that the objective of price would be most likely to head in that direction to purge liquidity from those lows. Now, I hope you can tell as I'm describing these things that I'm kind of building a story on the chart. I'm not just blindly entering a trade based on a pattern. I'm more so distinguishing where price has been and where it's likely to go next because that leads up into finding the trading opportunity itself. So let's go to the next step on the checklist which is break of structure plus imbalance. So this is the actual criteria that basically signals a trading opportunity. Whenever we have a break of structure occurring in the market that is signaling a potential trade. Now if you look closely on my chart I have all of these little black arrows everywhere. That's just part of my indicator. It shows the most recent major highs and lows and it helps me easily identify structure. My indicator also prints the break of structure label here to identify where one of these major lows was violated. Now again, you don't have to use this indicator. There's a free version of these little arrows if you search on Trading View fractals or Williams fractals. It's completely free. I just have it included in my indicator which compiles a bunch of features together to make the ultimate SMC tool. So whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure. That signals to me that there has been a significant movement in price and that there is a potential trading opportunity on the horizon. Now, of course, the premise of the strategy again is to buy low and sell high. So we don't just immediately enter when there's a break of structure because that would be selling low and we don't want to do that obviously. So when a break of structure occurs, we need to patiently wait for a retracement. Now, typically that retracement ends up being towards a fair value gap or an imbalance. The two names are pretty interchangeable. Now, just to quickly explain what an imbalance or fair value gap is, it's a three candlestick pattern. 1 2 3. And between the low of this first candle and the high of the third candle, we can see that there is a very large gap. That was a period of time where there was only a straight move to the downside. There was no equilibrium between buying and selling, which is why it's called imbalance. Now, whenever this occurs on the chart, price is drawn back towards it. So, after we move away from it significantly, typically price will retrace until it fills that gap and then it will often continue in its intended direction. The best way I can explain why this happens is that the market doesn't like inefficiencies. If you take a close look at some candlesticks, you're going to see that mostly all of the wicks and bodies are touching at some point, and there's really no gaps in between. So whenever we do have a gap like this, eventually it does get filled. So we can confidently identify a break of structure and a fair value gap or imbalance in this trade setup. So that checks off the next line item. Now the last item on the list is the 71% retracement. So I like to gauge retracements by using the Fibonacci retracement tool. However, I use it much differently than many other traders. I want to make one thing very clear. The Fibonacci retracement tool is not an indicator. It is not a strategy in and of itself. The way I use it is simply as a measurement tool. It helps me frame my trade. So don't be under the impression that somehow these retracement levels are magic numbers that price will react to. That is absolutely not the case. Remember how I said earlier that premium and discount pricing is anything above 50% being premium and anything below 50% being discount? Well, I like to use an extreme version of that. My favorite number to use is 71%. And what that does is it allows me to get a really nice risk-to-reward ratio. If I target the 71% from my entry, I get a risk-to-reward ratio of 2.45. That of course means for every dollar that I'm risking, I would gain two and a half roughly in return if it's a successful trade. So once again, I use the retracement tool as a way to frame my trade. So using the short position tool on Trading View, I place my entry at the 71% right here. I simply drag the stop-loss to the high of the Fibonacci range right here. And then I drag the takerit to the low of the Fibonacci range right here. To make this easier, you can use the magnet tool on Trading View. Just set it to weak magnet instead of strong magnet. I find that you fight it a lot less when it's just the weak magnet. So, I I would recommend that. And that allows you to really snap it to the wicks of the candlesticks and you'll see more accurate results that way. Then all you have to do is double click on the parameters and copy these prices over the entry price, the takerit, the stop-loss. Copy that over to your execution platform, whether that be on your computer or on your phone. And then you'll have very accurate parameters. So with that being said, there is one thing that I haven't yet mentioned, and it's basically a hidden confluence. Not so much hidden, but it's something that I don't put on the checklist. And I've found that when this confluence appears, it makes for a much higher probability trading opportunity. And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap. Remember what I said about imbalances and fair value gaps. It's a reaction point for price. Price wants to fill that gap and then continue it in its intended direction. So if we can line up our entry with that fair value gap, odds are we're not going to have significant draw down. And for those of you who don't know, let me just help you visualize what draw down means. Let's say we get activated in this trade, but it doesn't react from there and it continues higher and higher and higher and then eventually goes in our direction. Anytime that price is spending in this dark gray area close to my stop loss, that's considered draw down. That's when you're going to see those big red numbers adding up and growing, and we obviously don't want that. So, if we can time our entry to where price is most likely to react, then what's most likely going to happen is we're going to get activated in our trade and it's going to quickly react from that level and then head towards our takerit resulting in very short minimal draw down. Ideally, of course, the markets are imperfect. It doesn't always work like this. Even if all the confluences line up, we sometimes still get draw down and losing trades. Of course, nothing is 100% in the market. But what we can do is try our best to mitigate it. So, I find that that's a very very good confluence to have in this strategy. Make your Fibonacci numbers line up with the fair value gap or imbalance. So, if you can do that combined with the other things that I've listed here, that is what I like to call an A+ setup and you have a very high likelihood of success. Now, let me go ahead and play this forward and we'll see what happened. So, as you can see, very successful opportunity. However, there is something interesting I would like to mention. Let me zoom in a little bit more here. So, right around here, price reacted to that fair value gap, as you can see, and then aggressively dropped to the downside. Most people would start to panic here and most likely delete their pending order, and they would probably think they missed the trade. But let me explain one really important factor to consider here. Yes, price reacted to this fair value gap and dropped aggressively. However, nothing actually happened from that. You can see that this low here did not violate the low of the Fibonacci range. That's a very important detail because if our trade was based on this high and this low, then technically the trade still remains valid until one of those levels are violated. If neither of those levels have been violated, then the trade idea is still intact and there's logically no reason to delete the order. Now, I'd also like to draw your attention to where the entry was. You can see that it pushed past the 71, a little bit past the 75, but overall that is very minimal draw down in the grand scheme of things. And so once this trade was finally activated, there was a quick drop to the downside, a small consolidation, and then another very aggressive drop taking it to that take-profit level. So this is a pretty textbook example of this trading strategy. And I hope the entry criteria makes sense to you. If you have any questions, leave them in the comments down below and I'll try and get back to you. But before I end the video, I'd like to show you one more example. And this example is going to be a little bit different. So let's get right into it. All right, we're now taking a look at NZDUSD on the 15-minute time frame. So this example is going to be a little bit different. What I like to do in these educational videos is provide an example that is textbook and then provide an example that is not so pretty. The purpose of that is to train your eyes so that you can spot these opportunities in real time. Because as you should all know, the market is imperfect. It's not just going to be a textbook setup every time or else everybody would be billionaires by now. Being a successful trader requires a lot of repetition and at a certain point intuition. Now, once you identify these technical patterns enough, you develop the intuition to be able to navigate choppy circumstances and imperfect market conditions. So, let's get into this one. First things first, our higher time frame alignment on the checklist. Well, my indicator is showing me that the 4hour time frame is currently at a discount, which means we should not be looking for selling opportunities. is we should only be looking for buying opportunities, which is actually what I would be interested in on this 15-minute time frame. And I'll explain why. So, the next item on the checklist is a liquidity sweep. This is really important and in fact the most important in this example because it's a little bit different than the previous one. As you can see here, we have a clear break of structure to the downside. However, instead of price continuing to break structure to the downside, we have a liquidity grab right here. I'm going to annotate that for you all. Just label it with a dollar sign there, showing that liquidity was purged from this low. The reason this is a liquidity grab instead of a break of structure is because it was a wick instead of candle body closure. If you compare the candle body closure here to the candlestick here, there's a big difference. And I hope you guys can see that. Whenever a wick is forming like that, that means there was not enough momentum to actually break through and continue. But instead, it rejected from that area and continue to push up from there. So that was the initial liquidity sweep and then we got this huge bullish momentum to the upside. However, what happened next? it didn't actually break through this previous high right here. So, this is actually another form of liquidity called relative equal highs. So, this down here is liquidity that has been purged. There was a lot of money sitting below this low in terms of stop-loss orders and price purged that low, liquidating all of that money and bringing it back into the market, which fueled this bullish move. So, we know that sellside liquidity has already been purged, but buyside liquidity was not purged because these are relative equal highs. there is still a bunch of liquidity sitting above this area. If this candlestick right here went higher and purged liquidity from this high, that would be a different story. This would probably just be indecision and I would not even consider it as a trade setup. But because we made these relative equal highs, that tells me price is highly likely to push higher once more, taking out all of this liquidity. So, that would prompt me to then look for a buying opportunity. We already know that a buying opportunity on the 15-minute time frame would align with the higher time frame for our discount bias. So, we should be looking for buying opportunities. And now one is presenting itself. So, we've got the alignment, we've got the liquidity sweep, we even have identified where resting liquidity is in the market, which gives us an indication of where price is likely to go next. Next up, we have to locate the break of structure plus imbalance. Now, here's what I mean by imperfect. The break of structure is not very clear here. This is more so an internal breakup structure, but it is a breaker structure nonetheless. Now, we definitely have an imbalance here or fair value gap. You can see that my indicator is printing that very clearly. Kind of hard to miss. Next, what we have to do is set up the Fibonacci tool to identify our 71% retracement. So, all I do is break out the Fibonacci tool, start at the low, click, and drag to the high. Now, I've got those retracement numbers there. I'm going to double click on the fib tool. And what I like to do just for visualization purposes is extend it out far to the right. This allows me to also place my parameter tool and visualize the trade altogether. Now I know a lot of you ask for the Fibonacci settings. There's really nothing to explain. It's very straightforward. You just deselect everything and enable the levels you want. So I have the 71% and the 75%. Really only use the 71%. But yeah, just deselect everything that you don't want. Only enable the ones that you do want, of course, including the zero and the one. And then you can of course color code it as well if you'd like. So now that the fib tool is all set up, I can then click the long position tool on trading view and place my entry at the 71%. You simply hover over the line and click it. Now using the magnet tool again, I can click the stop loss, drag it over to that wick, and it'll snap right to it. Same thing goes for my takerit. Click this little button at the top, drag it to the high of the Fibonacci range, and drop it. Then I'll just adjust the position so it fits within the retracement tool. I just like to visualize those numbers at all times. And there we have it. Our trade is all set up. So again, if you're not executing on Trading View and you have, for example, MetaTrader 4 or MetaTrader 5 on your cellular device, just double click the parameters, go to inputs, and you'll see your entry price, your take-profit level, and your stop-loss level. You simply input those into your execution platform, and take the trade. Now, because we're setting up a trade in advance, you would have to do a pending limit order, which means you're betting that price will get to this point at some point in time. So, that obviously differs from a market execution where you're entering right away in real time. So, it's really important to note you have to use pending limit orders for this strategy. Now, we've got it all set up here. Let's play this forward and see how it turned out. Well, there you have it. This one was a lot faster. Still a very minimal draw down. price entered at the 71% still crossed the 75% but the the draw down was very minimal. Basically it filled the entire fair value gap that was previously here and then rejected this area and pushed significantly to the upside. Now as I said at the beginning of the video this strategy is applicable to basically all assets. So of course the forex market like I've been showing you here today. It's also great for metals and indices and I also know a lot of people who use it in the cryptocurrency market. I don't personally but I've heard that there's been a lot of success with that. So, I really hope you all enjoyed this video. It is such a simplistic strategy. I've been trading this way for years. I'm a huge advocate for mechanical trading strategies. I don't think that there should be much discretion in trading. If any, it should be very, very minimal. But if you have a very mechanical trading strategy such as this, what that allows you to do is test it in a very robust way without involving human emotion. If you have a strict set of rules to go by, in my opinion, that's the only way that you can gain real statistics of your strategy. If your whole strategy is based on intuition and emotion and how you're feeling that day, then you don't really have a strategy because there's nothing to actually measure, it could change at any point in time. So, what I really hope you gained from this video is the confidence to apply this strategy in real time. It's so simple, so easily repeatable. And I don't want you to take my word for it. I want you to actually apply it to the charts and see it for yourself. I've been teaching this strategy on this channel for years now. And based on the comments I receive, I know that it has been life-changing for so many people. It has created so many full-time traders, so many six-figure traders as well. And it's the kind of thing that can be adapted to any market conditions because again, it's literally buying low and selling high. So, it won't really get outdated. And I really hope you all now have the confidence to apply this in the market this week. Like, just go for it. Even if it's on a demo account or a platform like FX Replay or Tradezela back testing, that's fine, too. by all means, do whatever you can to gain confidence with it. And once you do, I would love to hear from you. So, leave a comment down below if this works for you, if it resonates with you, if you have any questions or concerns. I'd be happy to get back to you if I can. And I want to thank you all so much for watching. Thank you for subscribing. Thank you for liking and commenting on these videos. It means the world to me, and I'm going to continue making them. Thanks again and I'll talk to you all
+<<<TRANSCRIPT_END>>>
+
+FROZEN OPUS CANDIDATE
+<<<CANDIDATE_START>>>
+{
+  "video_id": "E8Wg6tFPYjo",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": {
+    "asset_class": "forex (both worked examples are forex pairs); educator additionally states applicability to metals, indices, and reports of cryptocurrency use",
+    "instrument": "GBP AUD (first worked example) and NZDUSD (second worked example)",
+    "rationale": "Both worked demonstrations are forex pairs on the 15-minute chart, and the educator explicitly frames the forex market as what he has been showing while asserting broad applicability across assets.",
+    "transcript_quote": "Now as I said at the beginning of the video this strategy is applicable to basically all assets. So of course the forex market like I've been showing you here today."
+  },
+  "strategies": [
+    {
+      "source_strategy_id": "s0",
+      "name": "4-Hour Premium/Discount Bias with 15-Minute Liquidity Sweep, Break of Structure plus Imbalance, and 71% Retracement Entry",
+      "direction": "both",
+      "direction_transcript_quote": "So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities.",
+      "higher_timeframe": "4 hour",
+      "higher_timeframe_transcript_quote": "And the 4our time frame is going to act as our higher time frame to form a bias and anchor that bias to at all times.",
+      "execution_timeframe": "15-minute",
+      "execution_timeframe_transcript_quote": "The 15-minut time frame is going to be our execution time frame where we actually place trades.",
+      "setup": [
+        {
+          "description": "Context (non-executable framing): the educator introduces this as a 15-minute strategy he claims is applicable to almost every asset and which he says produces opportunities weekly.",
+          "transcript_quote": "This strategy is applicable to almost every asset in the market, and it creates trading opportunities every single week."
+        },
+        {
+          "description": "Context: the first worked example is demonstrated on GBP AUD on the 15-minute time frame.",
+          "transcript_quote": "We're taking a look at GBP AUD on the 15-minute time frame."
+        },
+        {
+          "description": "Context: the second worked example is demonstrated on NZDUSD on the 15-minute time frame.",
+          "transcript_quote": "All right, we're now taking a look at NZDUSD on the 15-minute time frame."
+        },
+        {
+          "description": "Context: the strategy is stated to use two time frames, the 15-minute and the 4 hour.",
+          "transcript_quote": "This strategy consists of two time frames, the 15-minute and the 4 hour."
+        },
+        {
+          "description": "Context: the two time frames are required to work together in congruence.",
+          "transcript_quote": "Those need to work together in congruence."
+        },
+        {
+          "description": "Context/rationale (non-executable): the educator's stated reason for aligning the 15-minute bias to the higher time frame bias.",
+          "transcript_quote": "If we can align our 15minute trade bias to a higher time frame bias, which is the overarching trend, then more times than not, we'll be on the right side of the market, and it'll prevent a lot of unnecessary losses."
+        },
+        {
+          "description": "Context: the taught checklist consists of four line items.",
+          "transcript_quote": "We have higher time frame alignment, liquidity sweep, break of structure plus imbalance, and a 71% retracement."
+        },
+        {
+          "description": "Context: the educator states the underlying premise of the strategy.",
+          "transcript_quote": "The strategy is very simplistic. We buy low and sell high."
+        },
+        {
+          "description": "Non-executable tooling note: the annotations shown on the chart come from a custom indicator the educator had coded, which automates the charting work.",
+          "transcript_quote": "This is a custom indicator that I've had coded and it basically just automates the charting process by creating these annotations for me so I don't have to do any manual chart work."
+        },
+        {
+          "description": "Non-executable tooling note: the indicator is stated to be optional and everything taught can be done manually.",
+          "transcript_quote": "It's a great tool to have, but you don't need it. You can do all of the things I'm about to teach you today manually on your own."
+        },
+        {
+          "description": "Non-executable tooling note: a free substitute for the indicator's structure arrows is named.",
+          "transcript_quote": "There's a free version of these little arrows if you search on Trading View fractals or Williams fractals."
+        },
+        {
+          "description": "Context (worked example, tooling reading): in the GBP AUD example the educator's indicator checks premium and discount on the higher time frame, with that setting on 4hour.",
+          "transcript_quote": "So, my indicator automatically checks premium and discount on the higher time frame. As you can see here, I have it set to 4hour."
+        },
+        {
+          "description": "Context (worked example, tooling reading): in the NZDUSD example the indicator shows the 4hour time frame at a discount, which the educator ties to not looking for selling opportunities.",
+          "transcript_quote": "Well, my indicator is showing me that the 4hour time frame is currently at a discount, which means we should not be looking for selling opportunities."
+        },
+        {
+          "description": "Definition (education): liquidity is described as resting money in the market.",
+          "transcript_quote": "The simple way to describe liquidity is just resting money in the market."
+        },
+        {
+          "description": "Definition (education): liquidity purged to the upside is referred to as buyside liquidity.",
+          "transcript_quote": "So this is what's referred to as buyside liquidity because the liquidity was purged to the upside."
+        },
+        {
+          "description": "Context (worked example reasoning): after the upside purge the educator states price's next objective would be to purge liquidity from the downside.",
+          "transcript_quote": "So now the next objective of price would be to purge liquidity from the downside."
+        },
+        {
+          "description": "Non-executable tooling note: the indicator prints a BOS label when a structural low or high is violated.",
+          "transcript_quote": "So whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure."
+        },
+        {
+          "description": "Definition (education): an imbalance / fair value gap is described as a three candlestick pattern with a gap between the low of the first candle and the high of the third candle.",
+          "transcript_quote": "it's a three candlestick pattern. 1 2 3. And between the low of this first candle and the high of the third candle, we can see that there is a very large gap."
+        },
+        {
+          "description": "Definition (education): once an imbalance forms, price is described as being drawn back towards it.",
+          "transcript_quote": "Now, whenever this occurs on the chart, price is drawn back towards it."
+        },
+        {
+          "description": "Definition (education): after moving away, price is described as typically retracing to fill the gap and then often continuing in its intended direction.",
+          "transcript_quote": "So, after we move away from it significantly, typically price will retrace until it fills that gap and then it will often continue in its intended direction."
+        },
+        {
+          "description": "Context (non-executable framing): the educator states the Fibonacci retracement tool is used only as a measurement tool, not as an indicator or a strategy.",
+          "transcript_quote": "The Fibonacci retracement tool is not an indicator. It is not a strategy in and of itself. The way I use it is simply as a measurement tool."
+        },
+        {
+          "description": "Context (non-executable framing): the educator explicitly denies that the retracement levels are reaction-producing magic numbers.",
+          "transcript_quote": "So don't be under the impression that somehow these retracement levels are magic numbers that price will react to. That is absolutely not the case."
+        },
+        {
+          "description": "Context: the educator names 71% as his favorite retracement number.",
+          "transcript_quote": "My favorite number to use is 71%."
+        },
+        {
+          "description": "Context (educator's stated risk-to-reward claim for the 71% framing).",
+          "transcript_quote": "If I target the 71% from my entry, I get a risk-to-reward ratio of 2.45."
+        },
+        {
+          "description": "Non-executable tooling note: the TradingView magnet tool is recommended, set to weak magnet rather than strong magnet.",
+          "transcript_quote": "To make this easier, you can use the magnet tool on Trading View. Just set it to weak magnet instead of strong magnet."
+        },
+        {
+          "description": "Non-executable platform logistics: the entry, take-profit and stop-loss prices are read off the position-tool parameters and copied to the execution platform.",
+          "transcript_quote": "Then all you have to do is double click on the parameters and copy these prices over the entry price, the takerit, the stop-loss."
+        },
+        {
+          "description": "Non-executable tooling/settings note: the Fibonacci settings are described as deselecting everything and enabling only the wanted levels; the educator has 71% and 75% enabled and states he really only uses the 71%.",
+          "transcript_quote": "You just deselect everything and enable the levels you want. So I have the 71% and the 75%. Really only use the 71%."
+        },
+        {
+          "description": "Context (education): drawdown is defined as the time price spends in the area close to the stop loss.",
+          "transcript_quote": "Anytime that price is spending in this dark gray area close to my stop loss, that's considered draw down."
+        },
+        {
+          "description": "Context (education): the educator states drawdown and losing trades still occur even when all confluences line up.",
+          "transcript_quote": "Even if all the confluences line up, we sometimes still get draw down and losing trades."
+        },
+        {
+          "description": "Context (teaching intent): the second example is deliberately a non-textbook one.",
+          "transcript_quote": "What I like to do in these educational videos is provide an example that is textbook and then provide an example that is not so pretty."
+        },
+        {
+          "description": "Classification rule (education): a move is classified as a liquidity grab rather than a break of structure when it is a wick instead of a candle body closure.",
+          "transcript_quote": "The reason this is a liquidity grab instead of a break of structure is because it was a wick instead of candle body closure."
+        },
+        {
+          "description": "Context (education): a wick of that kind is described as indicating there was not enough momentum to break through and continue.",
+          "transcript_quote": "Whenever a wick is forming like that, that means there was not enough momentum to actually break through and continue."
+        },
+        {
+          "description": "Definition (education): relative equal highs are described as another form of liquidity.",
+          "transcript_quote": "So, this is actually another form of liquidity called relative equal highs."
+        },
+        {
+          "description": "Context (worked example): in the NZDUSD example the imbalance / fair value gap is identified on the chart.",
+          "transcript_quote": "Now, we definitely have an imbalance here or fair value gap."
+        },
+        {
+          "description": "Context/rationale for the order type: the trade is set up in advance, which the educator ties to using a pending limit order.",
+          "transcript_quote": "Now, because we're setting up a trade in advance, you would have to do a pending limit order, which means you're betting that price will get to this point at some point in time."
+        },
+        {
+          "description": "Context (worked example observation, GBP AUD): the entry area was exceeded past the 71 and slightly past the 75, described by the educator as minimal drawdown.",
+          "transcript_quote": "You can see that it pushed past the 71, a little bit past the 75, but overall that is very minimal draw down in the grand scheme of things."
+        },
+        {
+          "description": "Context (worked example observation, NZDUSD): price entered at the 71% and crossed the 75% with drawdown described as very minimal.",
+          "transcript_quote": "price entered at the 71% still crossed the 75% but the the draw down was very minimal."
+        },
+        {
+          "description": "Context (worked example observation, GBP AUD): the low made during the aggressive drop did not violate the low of the Fibonacci range.",
+          "transcript_quote": "You can see that this low here did not violate the low of the Fibonacci range."
+        },
+        {
+          "description": "Context (non-executable applicability claim): the educator names metals, indices, and reported cryptocurrency use.",
+          "transcript_quote": "It's also great for metals and indices and I also know a lot of people who use it in the cryptocurrency market."
+        },
+        {
+          "description": "Non-executable practice advice: applying the strategy on a demo account or on backtesting platforms is offered as acceptable.",
+          "transcript_quote": "Even if it's on a demo account or a platform like FX Replay or Tradezela back testing, that's fine, too."
+        },
+        {
+          "description": "Non-executable trading philosophy: the educator states his advocacy for mechanical trading strategies.",
+          "transcript_quote": "I'm a huge advocate for mechanical trading strategies."
+        }
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "role": "context",
+          "action": "Gauge premium and discount pricing on the trading range as the basis of higher time frame alignment.",
+          "rationale": "Higher time frame alignment is the first checklist item and the educator defines its premise as premium and discount.",
+          "transcript_quote": "So, the premise of higher time frame alignment is premium and discount. Whenever we have a trading range, we want to gauge premium and discount pricing."
+        },
+        {
+          "step": 2,
+          "role": "context",
+          "action": "When price is above 50% of the trading range (premium), look only for selling opportunities.",
+          "rationale": "This is the stated directional filter produced by the premium reading.",
+          "transcript_quote": "So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities."
+        },
+        {
+          "step": 3,
+          "role": "context",
+          "action": "When price is below 50% of the trading range (discount), look only for buying opportunities.",
+          "rationale": "This is the stated directional filter produced by the discount reading.",
+          "transcript_quote": "Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities."
+        },
+        {
+          "step": 4,
+          "role": "context",
+          "action": "Identify a liquidity sweep before getting involved in a trade.",
+          "rationale": "Liquidity sweep is the second checklist item and the educator frames its identification as coming before trade involvement.",
+          "transcript_quote": "So there's two main reasons why a liquidity sweep is so important to identify before you get involved in a trade."
+        },
+        {
+          "step": 5,
+          "role": "context",
+          "action": "Look for the resting liquidity at major highs and major lows.",
+          "rationale": "The educator names these as the most common areas where resting liquidity is found.",
+          "transcript_quote": "The most common area to find resting liquidity is major highs and major lows."
+        },
+        {
+          "step": 6,
+          "role": "context",
+          "action": "Treat liquidity already purged to the upside as favoring selling opportunities.",
+          "rationale": "This is the directional inference the educator draws from the buyside sweep in the GBP AUD example.",
+          "transcript_quote": "Now this tells us that there's a high likelihood of selling opportunities being favored now because the liquidity was already purged to the upside."
+        },
+        {
+          "step": 7,
+          "role": "spine",
+          "action": "Treat a break of structure occurring in the market as the signal of a potential trade.",
+          "rationale": "The educator states the break of structure is what signals a potential trade.",
+          "transcript_quote": "Whenever we have a break of structure occurring in the market that is signaling a potential trade."
+        },
+        {
+          "step": 8,
+          "role": "spine",
+          "action": "Do not enter immediately when the break of structure occurs.",
+          "rationale": "Immediate entry is explicitly rejected by the educator as contrary to the buy-low/sell-high premise.",
+          "transcript_quote": "So we don't just immediately enter when there's a break of structure because that would be selling low and we don't want to do that obviously."
+        },
+        {
+          "step": 9,
+          "role": "spine",
+          "action": "After the break of structure, wait patiently for a retracement.",
+          "rationale": "The educator states the required patience for a retracement following the break of structure.",
+          "transcript_quote": "So when a break of structure occurs, we need to patiently wait for a retracement."
+        },
+        {
+          "step": 10,
+          "role": "spine",
+          "action": "Expect that retracement to be toward a fair value gap or imbalance.",
+          "rationale": "The educator states this as the typical destination of the retracement, at 'typically' strength rather than as an absolute.",
+          "transcript_quote": "Now, typically that retracement ends up being towards a fair value gap or an imbalance."
+        },
+        {
+          "step": 11,
+          "role": "trigger",
+          "action": "Draw the Fibonacci retracement tool by starting at the low, clicking, and dragging to the high, as narrated in the NZDUSD buy-side worked example.",
+          "rationale": "This is the Fibonacci drawing procedure narrated in that worked example, which produces the retracement numbers used to frame the trade.",
+          "transcript_quote": "So, all I do is break out the Fibonacci tool, start at the low, click, and drag to the high."
+        },
+        {
+          "step": 12,
+          "role": "trigger",
+          "action": "Place the entry at the 71%, as narrated in the GBP AUD sell-side worked example using the short position tool.",
+          "rationale": "The 71% retracement is the fourth checklist item and this is where the educator places the entry in the sell-side worked example.",
+          "transcript_quote": "So using the short position tool on Trading View, I place my entry at the 71% right here."
+        },
+        {
+          "step": 13,
+          "role": "trigger",
+          "action": "Use a pending limit order for the entry.",
+          "rationale": "The educator states the order type requirement explicitly for this strategy.",
+          "transcript_quote": "So, it's really important to note you have to use pending limit orders for this strategy."
+        }
+      ],
+      "confluences": [
+        {
+          "name": "Fibonacci retracement number aligned with the imbalance / fair value gap",
+          "description": "The educator names an additional confluence, not on the checklist, in which the Fibonacci retracement number lines up with the imbalance or fair value gap.",
+          "transcript_quote": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap."
+        },
+        {
+          "name": "Reduced-drawdown expectation from entry aligned with the fair value gap",
+          "description": "The educator states that lining the entry up with the fair value gap makes it likely there will not be significant drawdown; this is stated at 'odds are' strength, not as a guarantee.",
+          "transcript_quote": "So if we can line up our entry with that fair value gap, odds are we're not going to have significant draw down."
+        },
+        {
+          "name": "Restated instruction to align Fibonacci numbers with the imbalance",
+          "description": "The educator restates the confluence as an instruction to make the Fibonacci numbers line up with the fair value gap or imbalance.",
+          "transcript_quote": "Make your Fibonacci numbers line up with the fair value gap or imbalance."
+        },
+        {
+          "name": "A+ setup label when the confluence is combined with the checklist items",
+          "description": "The educator labels the combination of that confluence with the listed checklist items an A+ setup with a very high likelihood of success.",
+          "transcript_quote": "So, if you can do that combined with the other things that I've listed here, that is what I like to call an A+ setup and you have a very high likelihood of success."
+        },
+        {
+          "name": "Untested relative equal lows as the downside liquidity objective",
+          "description": "In the GBP AUD sell-side example the educator identifies the recent major lows as pretty untested relative equal lows.",
+          "transcript_quote": "So, those are pretty untested relative equal lows."
+        },
+        {
+          "name": "Sellside liquidity purged while buyside liquidity remains",
+          "description": "In the NZDUSD buy-side example the educator states sellside liquidity has already been purged while buyside liquidity has not, because of relative equal highs.",
+          "transcript_quote": "So, we know that sellside liquidity has already been purged, but buyside liquidity was not purged because these are relative equal highs."
+        },
+        {
+          "name": "Relative equal highs implying a further push higher",
+          "description": "In the NZDUSD buy-side example the educator states that because relative equal highs were made, price is highly likely to push higher once more and take out that liquidity.",
+          "transcript_quote": "But because we made these relative equal highs, that tells me price is highly likely to push higher once more, taking out all of this liquidity."
+        }
+      ],
+      "stop": {
+        "anchor": "the high of the Fibonacci range (as placed in the GBP AUD sell-side worked example)",
+        "rationale": "In the GBP AUD sell-side worked example the educator drags the stop-loss to the high of the Fibonacci range.",
+        "transcript_quote": "I simply drag the stop-loss to the high of the Fibonacci range right here."
+      },
+      "targets": [
+        {
+          "priority": 1,
+          "type": "take-profit dragged to the low of the Fibonacci range (GBP AUD sell-side worked example)",
+          "r_multiple": null,
+          "rationale": "In the GBP AUD sell-side worked example the educator drags the take-profit to the low of the Fibonacci range.",
+          "transcript_quote": "And then I drag the takerit to the low of the Fibonacci range right here."
+        },
+        {
+          "priority": 2,
+          "type": "take-profit dragged to the high of the Fibonacci range (NZDUSD buy-side worked example)",
+          "r_multiple": null,
+          "rationale": "In the NZDUSD buy-side worked example the educator drags the take-profit to the high of the Fibonacci range; this is the buy-side counterpart placement, narrated in the second example.",
+          "transcript_quote": "Same thing goes for my takerit. Click this little button at the top, drag it to the high of the Fibonacci range, and drop it."
+        }
+      ],
+      "management": [
+        {
+          "rule": "When the trade is based on a given high and low, the trade remains valid until one of those levels is violated.",
+          "transcript_quote": "That's a very important detail because if our trade was based on this high and this low, then technically the trade still remains valid until one of those levels are violated."
+        },
+        {
+          "rule": "While neither of those levels has been violated, the trade idea is still intact and the order is not to be deleted.",
+          "transcript_quote": "If neither of those levels have been violated, then the trade idea is still intact and there's logically no reason to delete the order."
+        }
+      ],
+      "variants": [
+        {
+          "name": "Buy-side entry placement (NZDUSD example)",
+          "rule": "On the buy side the entry is placed at the 71% using the long position tool, after the Fibonacci tool is set up.",
+          "transcript_quote": "So now that the fib tool is all set up, I can then click the long position tool on trading view and place my entry at the 71%."
+        },
+        {
+          "name": "Buy-side stop placement (NZDUSD example)",
+          "rule": "On the buy side the stop loss is clicked and dragged over to that wick, snapping to it with the magnet tool.",
+          "transcript_quote": "Now using the magnet tool again, I can click the stop loss, drag it over to that wick, and it'll snap right to it."
+        },
+        {
+          "name": "Internal break of structure accepted (NZDUSD example)",
+          "rule": "A break of structure that is not very clear and is described as internal is still counted as a break of structure.",
+          "transcript_quote": "The break of structure is not very clear here. This is more so an internal breakup structure, but it is a breaker structure nonetheless."
+        }
+      ],
+      "source_gaps": [
+        {
+          "field": "stop.anchor (buy-side)",
+          "reason": "The NZDUSD buy-side example narrates dragging the stop loss over to 'that wick'; that passage does not state which level of the Fibonacci range that wick corresponds to."
+        },
+        {
+          "field": "fibonacci_range.anchor_points (sell-side)",
+          "reason": "The GBP AUD sell-side example does not narrate which swing points the Fibonacci tool was anchored to; the drawing procedure (low to high) is narrated only in the NZDUSD buy-side example."
+        },
+        {
+          "field": "higher_timeframe.trading_range_definition",
+          "reason": "The transcript does not settle how the 4-hour trading range whose 50% divides premium from discount is delineated (which high and which low define it, or over what lookback)."
+        },
+        {
+          "field": "break_of_structure.definition",
+          "reason": "The transcript does not settle a precise, measurable qualification for a break of structure; it is identified via the indicator's printed BOS label and, in the second example, an 'internal' break of structure is accepted."
+        },
+        {
+          "field": "imbalance.qualification",
+          "reason": "The transcript does not settle a minimum size, measurable threshold, or timeframe requirement for the imbalance / fair value gap."
+        },
+        {
+          "field": "liquidity_sweep.recency_and_proximity",
+          "reason": "The transcript does not settle how recent the liquidity sweep must be, nor how close it must be to the break of structure or the entry, for the setup to qualify."
+        },
+        {
+          "field": "structure_timeframe_of_bos_and_imbalance",
+          "reason": "The transcript does not explicitly state that the break of structure and imbalance must be read on the 15-minute execution chart, though both worked examples are shown on the 15-minute chart."
+        },
+        {
+          "field": "fibonacci.75_percent_level_role",
+          "reason": "The 75% level is enabled in the Fibonacci settings and referenced when describing drawdown in both examples, but the transcript does not settle any executable role for it."
+        },
+        {
+          "field": "max_tolerated_drawdown_before_invalidation",
+          "reason": "Both examples note price pushing past the 71 and past the 75 without settling any threshold at which the trade would be abandoned before the range level is violated."
+        },
+        {
+          "field": "action_on_level_violation",
+          "reason": "The transcript states the trade remains valid until one of the levels is violated but does not settle what action to take if a level is violated before the pending order activates."
+        },
+        {
+          "field": "position_sizing_and_risk_per_trade",
+          "reason": "The transcript specifies no position size, risk percentage, or contract/lot sizing method."
+        },
+        {
+          "field": "session_time_and_news_filters",
+          "reason": "The transcript specifies no session windows, trading hours, or economic-news restrictions."
+        },
+        {
+          "field": "trade_frequency_and_concurrency",
+          "reason": "The transcript does not settle a maximum number of trades per day, per week, or how many positions may be open at once."
+        },
+        {
+          "field": "targets.sequencing_and_partials",
+          "reason": "The transcript narrates one take-profit placement per worked example and does not settle whether multiple targets, partial exits, or stop movement are used."
+        },
+        {
+          "field": "pending_order_expiry",
+          "reason": "The transcript requires a pending limit order but does not settle how long the order remains working or whether it is ever cancelled on time elapsed."
+        }
+      ]
+    }
+  ],
+  "top_level_source_gaps": [
+    {
+      "field": "instrument_scope",
+      "reason": "The transcript demonstrates only two forex pairs while claiming applicability to basically all assets including metals, indices and cryptocurrency; it does not settle which instruments the strategy has actually been validated on."
+    },
+    {
+      "field": "strategy_count",
+      "reason": "The transcript presents one checklist-based strategy demonstrated through two worked examples of opposite direction; it does not teach a second, separately-defined strategy."
+    }
+  ]
+}
+
+<<<CANDIDATE_END>>>

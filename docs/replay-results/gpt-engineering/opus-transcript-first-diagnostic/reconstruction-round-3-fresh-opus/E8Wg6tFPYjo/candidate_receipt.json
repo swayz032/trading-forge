@@ -1,0 +1,35 @@
+{
+  "artifact": "opus-transcript-first-candidate-receipt-v2-file-first",
+  "status": "FRESH_OPUS_SOURCE_CANDIDATE_NOT_CERTIFIED",
+  "video_id": "E8Wg6tFPYjo",
+  "diagnostic_category": "MEDIUM_PARAPHRASE_DRIFT",
+  "reconstruction_round": 3,
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "model_override": "opus",
+  "actual_model_identity": "override=opus; exact runtime model identity not independently surfaced to the dispatcher (Agent tool model override accepted, no separate attestation channel available)",
+  "invocation_declared": true,
+  "invocation_independently_attested": false,
+  "fresh_reader": true,
+  "prompt_source": "task_file_only",
+  "legacy_semantics_visible": false,
+  "prior_candidate_json_visible": false,
+  "prior_report_prose_visible": false,
+  "delivery_mechanism": "file-first (AR-1375A Sec2 pattern, reused for round 3): the dispatched agent used its own Write tool to persist raw_opus_response.txt directly to docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/reconstruction-round-3-fresh-opus/E8Wg6tFPYjo/raw_opus_response.txt. The parent worker session read those bytes from disk; teammate chat/message delivery was not load-bearing transport.",
+  "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+  "raw_response_sha256": "b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041",
+  "candidate_sha256": "b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041",
+  "distinct_from_round2_candidate": true,
+  "round2_candidate_sha256_for_comparison": "600ca2c5c1d729538f0ceb91b4344a2d5a62c20f36dcf0d9aa06eb61d9f7d3e5",
+  "authorizing_ruling": "AR-1378A @ 47aeefa916d34c08e8a9c76d6d7f488e2e4fb71f, Section3/Section7 Lane B",
+  "validation": {
+    "strategy_count": 1,
+    "literal_quote_count": 73,
+    "literal_quote_failures": 0,
+    "identity_sequence": [
+      "s0"
+    ]
+  },
+  "factory_authority": false,
+  "certification_required": true,
+  "next_step": "Emit a GPT-5.6 semantic task from the AR-1378A-repaired harness (scripts/strategy_factory_gpt56_semantic_audit.py @ commit 0cfb3bd9), then independent Claude challenge on the audit response. Do not compare to legacy extraction until graded."
+}
