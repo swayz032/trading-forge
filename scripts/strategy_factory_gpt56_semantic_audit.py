@@ -554,6 +554,365 @@ def ingest(args: argparse.Namespace) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# AR-1379A V2 contract-binding repair (2026-08-20).
+#
+# F-1 (AR-1385, accepted CRITICAL by AR-1379A): build_task()/render_prompt() above compute
+# task_sha256 BEFORE ROLE_ASSIGNMENT_CONTRACT is ever inserted into the rendered prompt, so a V1
+# task/response/receipt cannot prove whether the auditor was shown the AR-1378A SS6 contract or
+# the pre-repair defective prompt. This section adds a V2 identity that binds
+# sha256(ROLE_ASSIGNMENT_CONTRACT exact UTF-8 bytes) into task_sha256 itself, and fails closed at
+# render time if the task's bound contract hash no longer matches the live contract text.
+#
+# V1 build_task/render_prompt/_validate_response/emit/ingest above are UNCHANGED -- this is
+# additive only, per AR-1379A section 2's explicit preference for "the smaller implementation
+# that cannot accidentally reinterpret old V1 artifacts as V2". Historical V1 tasks/responses/
+# receipts remain readable and valid exactly as before, under their own frozen schema strings.
+TASK_SCHEMA_V2 = "tf-gpt56-semantic-audit-task-v2"
+RESPONSE_SCHEMA_V2 = "tf-gpt56-semantic-audit-response-v2"
+RECEIPT_SCHEMA_V2 = "tf-gpt56-semantic-audit-receipt-v2"
+SEMANTIC_CONTRACT_ID = "AR-1378A-SS6-ROLE-ASSIGNMENT-CONTRACT-V1"
+
+
+def semantic_contract_sha256() -> str:
+    return sha256_text(ROLE_ASSIGNMENT_CONTRACT)
+
+
+def build_task_v2(video_id: str, transcript: str, candidate: dict[str, Any], candidate_raw: bytes) -> dict[str, Any]:
+    if candidate.get("video_id") != video_id:
+        raise SystemExit("candidate video_id mismatch")
+    if candidate.get("reader_role") != "OPUS_LEAD_SOURCE_READER":
+        raise SystemExit("candidate is not a fresh Opus lead-source-reader artifact")
+    claims = enumerate_claims(candidate)
+    sids = strategy_ids(candidate)
+    transcript_sha = sha256_text(transcript)
+    candidate_sha = sha256_bytes(candidate_raw)
+    nonce = secrets.token_hex(32)
+    task_core = {
+        "schema": TASK_SCHEMA_V2,
+        "video_id": video_id,
+        "candidate_sha256": candidate_sha,
+        "transcript_sha256": transcript_sha,
+        "audit_nonce": nonce,
+        "auditor_role": AUDITOR_ROLE,
+        "required_model_identity": MODEL_IDENTITY,
+        "legacy_semantics_visible": False,
+        "strategy_ids": sids,
+        "required_claims": claims,
+        "required_cross_field_checks": list(REQUIRED_CROSS_CHECKS),
+        "semantic_contract_id": SEMANTIC_CONTRACT_ID,
+        "semantic_contract_sha256": semantic_contract_sha256(),
+    }
+    task_core["task_sha256"] = sha256_text(canonical_json(task_core))
+    return task_core
+
+
+def render_prompt_v2(task: dict[str, Any], transcript: str, candidate_text: str) -> str:
+    live_contract_sha = semantic_contract_sha256()
+    if task.get("semantic_contract_sha256") != live_contract_sha:
+        raise SystemExit(
+            "V2 task semantic_contract_sha256 "
+            f"({task.get('semantic_contract_sha256')!r}) does not match the live "
+            f"ROLE_ASSIGNMENT_CONTRACT hash ({live_contract_sha!r}) -- refusing to render a prompt "
+            "that could misrepresent which contract version this task was bound under"
+        )
+    claim_lines = "\n".join(
+        f"- {c['claim_ref']}: {c['claim']}\n  QUOTE: {c['transcript_quote']}"
+        for c in task["required_claims"]
+    )
+    return f"""You are GPT-5.6 Sol acting as Trading Forge's independent semantic auditor.
+
+AUTHORITY LAW
+- Original transcript is the source authority.
+- Opus authored the candidate. Do not defend Opus.
+- Legacy/Gemma semantics are forbidden and have NOT been supplied. Do not seek them.
+- Literal substring presence is already checked. Your job is semantic entailment, strategy identity,
+  role assignment, omitted conflicts, source-gap consistency, and audience/directional meaning.
+- Return strict JSON only. Do not repair the candidate. Grade what is frozen.
+
+BOUND IDENTITY
+video_id: {task['video_id']}
+candidate_sha256: {task['candidate_sha256']}
+transcript_sha256: {task['transcript_sha256']}
+task_sha256: {task['task_sha256']}
+audit_nonce: {task['audit_nonce']}
+role: {AUDITOR_ROLE}
+model_identity: {MODEL_IDENTITY}
+semantic_contract_id: {task['semantic_contract_id']}
+semantic_contract_sha256: {task['semantic_contract_sha256']}
+
+STRATEGY IDENTITY
+For every source_strategy_id, classify exactly one:
+independent_strategy | variant_of_other_strategy | filter_or_qualifier | context_only |
+non_executable_teaching | uncertain.
+A whole-candidate PASS requires every proposed top-level strategy to be a real independent strategy.
+
+CLAIM ENTAILMENT COVERAGE
+You MUST return exactly one audit row for every claim_ref below. Verdict per row:
+ENTAILED | PARTIAL | NOT_ENTAILED | UNCERTAIN.
+A literal quote can still be NOT_ENTAILED if it does not mean what the attached claim says.
+
+{claim_lines}
+
+{ROLE_ASSIGNMENT_CONTRACT}
+
+CROSS-FIELD CHECKS
+Return exactly one PASS|FAIL|UNRESOLVED row for each of: {', '.join(REQUIRED_CROSS_CHECKS)}
+role_assignment, trigger_vs_source_gaps, and directional_symmetry are graded against the authoring
+contract above -- do not invent a stricter or different taxonomy for these three than what the
+contract states. strategy_evidence_disjointness, target_definition_conflicts, and
+audience_attribution are NOT defined by the contract above; grade them on ordinary semantic-
+consistency grounds against the transcript, and apply the same atomic quote law (contract point 8)
+to any finding you raise against them -- absence of a written rule for a check is not itself
+license to invent one, and it is not license to skip the check either.
+
+REQUIRED RESPONSE SHAPE
+{{
+  "schema": "{RESPONSE_SCHEMA_V2}",
+  "video_id": "{task['video_id']}",
+  "candidate_sha256": "{task['candidate_sha256']}",
+  "transcript_sha256": "{task['transcript_sha256']}",
+  "task_sha256": "{task['task_sha256']}",
+  "audit_nonce": "{task['audit_nonce']}",
+  "auditor_role": "{AUDITOR_ROLE}",
+  "model_identity": "{MODEL_IDENTITY}",
+  "legacy_semantics_visible": false,
+  "semantic_contract_id": "{task['semantic_contract_id']}",
+  "semantic_contract_sha256": "{task['semantic_contract_sha256']}",
+  "verdict": "PASS|FAIL",
+  "strategy_identity": [
+    {{"source_strategy_id":"s0","classification":"independent_strategy","reason":"...","transcript_quote":"literal source span"}}
+  ],
+  "claim_entailment": [
+    {{"claim_ref":"strategies[0].entry_sequence[0]","verdict":"ENTAILED","reason":"...","transcript_quote":"literal source span"}}
+  ],
+  "cross_field_checks": [
+    {{"check":"trigger_vs_source_gaps","status":"PASS","reason":"...","transcript_quote":null}}
+  ],
+  "findings": [
+    {{"severity":"CRITICAL|HIGH|MEDIUM|LOW|INFO","ref":"...","finding":"...","transcript_quote":null}}
+  ],
+  "coverage_statement": "...",
+  "independence_statement": "I audited the frozen Opus candidate only against the supplied original transcript before any legacy comparison."
+}}
+
+PASS LAW
+PASS only when every claim is ENTAILED, every top-level strategy is independent_strategy, every
+required cross-field check is PASS, and there are no HIGH/CRITICAL findings. Otherwise FAIL.
+
+ORIGINAL TRANSCRIPT
+<<<TRANSCRIPT_START>>>
+{transcript}
+<<<TRANSCRIPT_END>>>
+
+FROZEN OPUS CANDIDATE
+<<<CANDIDATE_START>>>
+{candidate_text}
+<<<CANDIDATE_END>>>
+"""
+
+
+def emit_v2(args: argparse.Namespace) -> int:
+    transcript_path = Path(args.transcript)
+    candidate_path = Path(args.candidate)
+    out_dir = Path(args.out_dir)
+    transcript = transcript_path.read_text(encoding="utf-8")
+    raw = candidate_path.read_bytes()
+    candidate = json.loads(raw.decode("utf-8"))
+    task = build_task_v2(args.video_id, transcript, candidate, raw)
+    prompt = render_prompt_v2(task, transcript, raw.decode("utf-8"))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    write_json(out_dir / "gpt56_semantic_audit_task.json", task)
+    write_text(out_dir / "gpt56_semantic_audit_prompt.txt", prompt)
+    print(json.dumps({
+        "status": "GPT56_SEMANTIC_AUDIT_TASK_EMITTED_V2",
+        "video_id": args.video_id,
+        "candidate_sha256": task["candidate_sha256"],
+        "transcript_sha256": task["transcript_sha256"],
+        "task_sha256": task["task_sha256"],
+        "semantic_contract_id": task["semantic_contract_id"],
+        "semantic_contract_sha256": task["semantic_contract_sha256"],
+        "claim_count": len(task["required_claims"]),
+        "strategy_count": len(task["strategy_ids"]),
+    }, indent=2))
+    return 0
+
+
+def _validate_response_v2(task: dict[str, Any], response: dict[str, Any], transcript: str) -> tuple[bool, list[str]]:
+    exact = {
+        "schema": RESPONSE_SCHEMA_V2,
+        "video_id": task["video_id"],
+        "candidate_sha256": task["candidate_sha256"],
+        "transcript_sha256": task["transcript_sha256"],
+        "task_sha256": task["task_sha256"],
+        "audit_nonce": task["audit_nonce"],
+        "auditor_role": AUDITOR_ROLE,
+        "model_identity": MODEL_IDENTITY,
+        "legacy_semantics_visible": False,
+        "semantic_contract_id": task["semantic_contract_id"],
+        "semantic_contract_sha256": task["semantic_contract_sha256"],
+    }
+    for key, expected in exact.items():
+        if response.get(key) != expected:
+            raise SystemExit(f"audit response {key} mismatch")
+    if response.get("verdict") not in {"PASS", "FAIL"}:
+        raise SystemExit("audit verdict must be PASS or FAIL")
+    expected_independence = (
+        "I audited the frozen Opus candidate only against the supplied original transcript before any legacy comparison."
+    )
+    if response.get("independence_statement") != expected_independence:
+        raise SystemExit("audit independence statement mismatch")
+
+    reasons: list[str] = []
+
+    expected_sids = task["strategy_ids"]
+    rows = response.get("strategy_identity")
+    if not isinstance(rows, list):
+        raise SystemExit("strategy_identity must be a list")
+    by_sid: dict[str, dict[str, Any]] = {}
+    for i, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise SystemExit(f"strategy_identity[{i}] not an object")
+        sid = row.get("source_strategy_id")
+        if sid in by_sid:
+            raise SystemExit(f"duplicate strategy identity row: {sid}")
+        if sid not in expected_sids:
+            raise SystemExit(f"unexpected strategy identity row: {sid}")
+        cls = row.get("classification")
+        if cls not in IDENTITY_CLASSES:
+            raise SystemExit(f"strategy identity {sid}: invalid classification")
+        _literal_or_null(transcript, row.get("transcript_quote"), f"strategy_identity[{sid}]")
+        by_sid[sid] = row
+        if cls != "independent_strategy":
+            reasons.append(f"strategy {sid} classified {cls}")
+    if set(by_sid) != set(expected_sids):
+        missing = sorted(set(expected_sids) - set(by_sid))
+        raise SystemExit(f"strategy identity coverage incomplete: {missing}")
+
+    expected_claims = {c["claim_ref"]: c for c in task["required_claims"]}
+    ent = response.get("claim_entailment")
+    if not isinstance(ent, list):
+        raise SystemExit("claim_entailment must be a list")
+    seen: dict[str, dict[str, Any]] = {}
+    for i, row in enumerate(ent):
+        if not isinstance(row, dict):
+            raise SystemExit(f"claim_entailment[{i}] not an object")
+        ref = row.get("claim_ref")
+        if ref in seen:
+            raise SystemExit(f"duplicate claim audit row: {ref}")
+        if ref not in expected_claims:
+            raise SystemExit(f"unexpected claim audit row: {ref}")
+        verdict = row.get("verdict")
+        if verdict not in ENTAILMENT:
+            raise SystemExit(f"claim {ref}: invalid entailment verdict")
+        _literal_or_null(transcript, row.get("transcript_quote"), f"claim_entailment[{ref}]")
+        seen[ref] = row
+        if verdict != "ENTAILED":
+            reasons.append(f"claim {ref}={verdict}")
+    if set(seen) != set(expected_claims):
+        missing = sorted(set(expected_claims) - set(seen))
+        raise SystemExit(f"claim entailment coverage incomplete: {missing}")
+
+    checks = response.get("cross_field_checks")
+    if not isinstance(checks, list):
+        raise SystemExit("cross_field_checks must be a list")
+    by_check: dict[str, dict[str, Any]] = {}
+    for i, row in enumerate(checks):
+        if not isinstance(row, dict):
+            raise SystemExit(f"cross_field_checks[{i}] not an object")
+        name = row.get("check")
+        if name in by_check:
+            raise SystemExit(f"duplicate cross-field check: {name}")
+        if name not in REQUIRED_CROSS_CHECKS:
+            raise SystemExit(f"unexpected cross-field check: {name}")
+        status = row.get("status")
+        if status not in CHECK_STATUS:
+            raise SystemExit(f"cross-field check {name}: invalid status")
+        _literal_or_null(transcript, row.get("transcript_quote"), f"cross_field_checks[{name}]")
+        by_check[name] = row
+        if status != "PASS":
+            reasons.append(f"cross-field {name}={status}")
+    if set(by_check) != set(REQUIRED_CROSS_CHECKS):
+        missing = sorted(set(REQUIRED_CROSS_CHECKS) - set(by_check))
+        raise SystemExit(f"cross-field coverage incomplete: {missing}")
+
+    findings = response.get("findings")
+    if not isinstance(findings, list):
+        raise SystemExit("findings must be a list")
+    for i, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            raise SystemExit(f"findings[{i}] not an object")
+        sev = finding.get("severity")
+        if sev not in {"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"}:
+            raise SystemExit(f"findings[{i}]: invalid severity")
+        _literal_or_null(transcript, finding.get("transcript_quote"), f"findings[{i}]")
+        if sev in {"CRITICAL", "HIGH"}:
+            reasons.append(f"blocking finding {sev}:{finding.get('ref')}")
+
+    semantic_pass = not reasons
+    if response.get("verdict") == "PASS" and not semantic_pass:
+        raise SystemExit("audit claims PASS but fail-closed semantic conditions are not all clean: " + "; ".join(reasons[:8]))
+    if response.get("verdict") == "FAIL" and semantic_pass:
+        if not findings:
+            raise SystemExit("audit claims FAIL with no failing condition and no finding")
+    return semantic_pass and response.get("verdict") == "PASS", reasons
+
+
+def ingest_v2(args: argparse.Namespace) -> int:
+    out_dir = Path(args.out_dir)
+    task_path = out_dir / "gpt56_semantic_audit_task.json"
+    task = read_json(task_path)
+    if task.get("schema") != TASK_SCHEMA_V2 or task.get("video_id") != args.video_id:
+        raise SystemExit("semantic audit task identity/schema mismatch (expected V2)")
+    if task.get("semantic_contract_sha256") != semantic_contract_sha256():
+        raise SystemExit(
+            "V2 task was bound to a semantic contract hash that no longer matches the live "
+            "ROLE_ASSIGNMENT_CONTRACT -- refusing to ingest against a stale contract binding"
+        )
+
+    transcript = Path(args.transcript).read_text(encoding="utf-8")
+    candidate_raw = Path(args.candidate).read_bytes()
+    if sha256_text(transcript) != task.get("transcript_sha256"):
+        raise SystemExit("transcript changed after semantic audit task emission")
+    if sha256_bytes(candidate_raw) != task.get("candidate_sha256"):
+        raise SystemExit("candidate changed after semantic audit task emission")
+
+    task_copy = dict(task)
+    task_sha = task_copy.pop("task_sha256", None)
+    if sha256_text(canonical_json(task_copy)) != task_sha:
+        raise SystemExit("semantic audit task changed after emission")
+
+    raw_response = Path(args.raw_response).read_bytes()
+    response = json.loads(raw_response.decode("utf-8"))
+    clean_pass, reasons = _validate_response_v2(task, response, transcript)
+    status = PASS_STATUS if clean_pass else FAIL_STATUS
+    receipt = {
+        "schema": RECEIPT_SCHEMA_V2,
+        "status": status,
+        "video_id": args.video_id,
+        "candidate_sha256": task["candidate_sha256"],
+        "transcript_sha256": task["transcript_sha256"],
+        "task_sha256": task["task_sha256"],
+        "raw_response_sha256": sha256_bytes(raw_response),
+        "auditor_role": AUDITOR_ROLE,
+        "model_identity": MODEL_IDENTITY,
+        "legacy_semantics_visible": False,
+        "semantic_contract_id": task["semantic_contract_id"],
+        "semantic_contract_sha256": task["semantic_contract_sha256"],
+        "semantic_pass": clean_pass,
+        "fail_closed_reasons": reasons,
+        "next_authority": (
+            "INDEPENDENT_CLAUDE_ACCURACY_VALIDATOR_REQUIRED"
+            if clean_pass else "STOP_NO_CERTIFIER_COMPILER_AUTHORITY"
+        ),
+        "explicitly_not_factory_authority": True,
+    }
+    write_text(out_dir / "raw_gpt56_semantic_audit_response.json", raw_response.decode("utf-8"))
+    write_json(out_dir / "gpt56_semantic_audit_receipt.json", receipt)
+    print(json.dumps(receipt, indent=2))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -571,6 +930,21 @@ def parser() -> argparse.ArgumentParser:
     i.add_argument("--out-dir", required=True)
     i.add_argument("--raw-response", required=True)
     i.set_defaults(fn=ingest)
+
+    e2 = sub.add_parser("emit-v2")
+    e2.add_argument("--video-id", required=True)
+    e2.add_argument("--transcript", required=True)
+    e2.add_argument("--candidate", required=True)
+    e2.add_argument("--out-dir", required=True)
+    e2.set_defaults(fn=emit_v2)
+
+    i2 = sub.add_parser("ingest-v2")
+    i2.add_argument("--video-id", required=True)
+    i2.add_argument("--transcript", required=True)
+    i2.add_argument("--candidate", required=True)
+    i2.add_argument("--out-dir", required=True)
+    i2.add_argument("--raw-response", required=True)
+    i2.set_defaults(fn=ingest_v2)
     return p
 
 
