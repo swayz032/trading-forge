@@ -119,6 +119,8 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "CLEAR BOTH TPS" in out
     assert "paintDirectionalTps" in out
     assert "Key zone: click one edge, then the other" in out
+    assert "The bottom 1m chart is strictly entry timing / force" in out
+    assert "paintLayer(ov1, c1, l.trader_zones, null)" not in out
     assert "if (height < 1)" in out
     assert "setInterval(() =>" in out
     assert "scrollIntoView" not in out
