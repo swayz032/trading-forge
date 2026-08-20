@@ -49,6 +49,11 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
         "  document.getElementById('mainZoomOut').onclick = () => zoomMain(1.55);\n"
         "  document.getElementById('mainZoomIn').onclick = () => zoomMain(0.68);\n"
         "  document.getElementById('mainFit').onclick = () => { main.chart.timeScale().fitContent(); drawOverlays(); };\n"
+        "  drawOverlays = function () {\n"
+        "    const l = lab();\n"
+        "    paintLayer(ov5, main, l.trader_zones, l.trader_tp_reaction_cluster);\n"
+        "    paintLayer(ov1, c1, l.trader_zones, l.trader_tp_reaction_cluster);\n"
+        "  };\n"
         "  drawZone.onclick = () => beginDraw('main-zone', ov5);\n"
         "  drawTp.onclick = () => beginDraw('main-tp', ov5);\n"
         "        const top = Math.min(y1, y2);\n"
@@ -57,6 +62,14 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
         "        ctx.strokeStyle = 'rgba(229,161,92,.94)';\n"
         "        ctx.fillRect(0, top, d.w, height);\n"
         "        ctx.strokeRect(0, top, d.w, height);\n"
+        "      l.final_action = action;\n"
+        "      l.first_entry_time = now;\n"
+        "    if (l.trader_tp_reaction_cluster) {\n"
+        "      const tp = l.trader_tp_reaction_cluster;\n"
+        "      tpStatus.textContent = tp.lo === tp.hi\n"
+        "        ? `${tp.lo.toFixed(2)} · exact TP level`\n"
+        "        : `${tp.lo.toFixed(2)} – ${tp.hi.toFixed(2)} · reaction area`;\n"
+        "    }\n"
         "setData = function (fit) {\n"
         "    refreshMain(Boolean(fit));\n"
         "    renderClock();\n"
@@ -90,11 +103,22 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "addEventListener('click', () => setMainTf('15m'))" in out
     assert "main.chart.subscribeClick((param) =>" in out
     assert "drawZone.onclick = () => armNativeMark('zone')" in out
-    assert "drawTp.onclick = () => armNativeMark('tp')" in out
+    assert "drawTp.onclick = () => armNativeMark('tp-long')" in out
+    assert "drawTpShort.onclick = () => armNativeMark('tp-short')" in out
+    assert "DRAW BULLISH TP" in out
+    assert "DRAW BEARISH TP" in out
     assert "CLICK KEY ZONE EDGE 1" in out
-    assert "CLICK TP LEVEL" in out
-    assert "TRADER_REACTION_CLUSTER_EXACT_LEVEL" in out
-    assert "Key zone: click one edge, then the other edge" in out
+    assert "CLICK BULLISH TP LEVEL" in out
+    assert "CLICK BEARISH TP LEVEL" in out
+    assert "trader_tp_long" in out
+    assert "trader_tp_short" in out
+    assert "planned_direction: side" in out
+    assert "action === 'ENTER_LONG'" in out
+    assert "Bullish TP:" in out
+    assert "Bearish TP:" in out
+    assert "CLEAR BOTH TPS" in out
+    assert "paintDirectionalTps" in out
+    assert "Key zone: click one edge, then the other" in out
     assert "if (height < 1)" in out
     assert "setInterval(() =>" in out
     assert "scrollIntoView" not in out
