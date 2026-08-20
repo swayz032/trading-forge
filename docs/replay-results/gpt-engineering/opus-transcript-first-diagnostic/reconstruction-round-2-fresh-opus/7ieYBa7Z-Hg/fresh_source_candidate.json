@@ -1,0 +1,552 @@
+{
+  "video_id": "7ieYBa7Z-Hg",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": {
+    "asset_class": "not instrument-specific — educator states the method applies across every pair and any market",
+    "instrument": null,
+    "rationale": "The educator frames the method as structure-based and claims it appears on every pair and in any market, so the source does not bind the strategy to a single asset class or instrument.",
+    "transcript_quote": "But you're going to see it on every pair. You're going to see it in any market regardless of time."
+  },
+  "strategies": [
+    {
+      "source_strategy_id": "s0",
+      "name": "Previous-range point-of-interest reaction trade after a sweep, executed on the 1-minute in the top-down higher-timeframe direction",
+      "direction": "both",
+      "direction_transcript_quote": "That can be whether you're bullish, whether you're bearish.",
+      "higher_timeframe": "daily, then 4 hour, then 15 minute (top-down sequence)",
+      "higher_timeframe_transcript_quote": "So for me, what I like to do is go to the daily time frame, look at where we are in the daily. Are we within a daily wick? Some people might refer to a rejection block. Are we in a daily fractal? Are we in a daily supply demand? Whatever it is, I look for that. Then I go into the 4 hour and look at what the 4 hour is doing. Is the 4 hour wicking? Has the 4 hour swept something? I might go into the 15 minute and see have we had a closure above or below wherever it is that price is looking to go directionally. And then on the one minute, what I'm doing is trading in that direction of wherever I am in that daily time frame.",
+      "execution_timeframe": "1 minute",
+      "execution_timeframe_transcript_quote": "And then on the one minute, what I'm doing is trading in that direction of wherever I am in that daily time frame.",
+      "setup": [
+        {
+          "description": "The educator says he takes one setup every day, and that this one setup produces three to five opportunities around the same point of interest.",
+          "transcript_quote": "but there's one setup that I choose to take each and every day that I can depend on because that setup gives me three to five opportunities that I can take all five of them if I want but it's giving me multiple opportunities around this particular POI"
+        },
+        {
+          "description": "The educator names this recurring area mms and describes price mitigating it repeatedly, with roughly three taps to the left and two taps to the right.",
+          "transcript_quote": "I call them mms, right? This is where price tends to mitigate a specific area multiple times. It continues to tap onto it. It gives about three taps to the left, two taps to the right."
+        },
+        {
+          "description": "The educator describes the sequence at that area as a first break through it which he calls manipulation, then that break being run out, then price trading in the opposite direction.",
+          "transcript_quote": "It breaks through that first break. You know, that's manipulation. Then it runs that out like kind of like inducement as you mentioned in your own trades, right? and then it actually trades and goes to the opposite direction."
+        },
+        {
+          "description": "The educator states market structure is the basis of what he trades and that it identifies the side of the market price is more efficient on.",
+          "transcript_quote": "so market structure is the crux of what I trade I don't believe that you should do anything outside of market structure market structure lets you know the side of the market that price is more efficient on"
+        },
+        {
+          "description": "Non-executable context: the educator says price is always inside some point of interest, with only the timeframe of that point of interest varying.",
+          "transcript_quote": "But we are always in a point of interest. It just depends on where it is on that time frame."
+        },
+        {
+          "description": "Non-executable context: the educator identifies himself as a reaction trader who takes whatever price gives him.",
+          "transcript_quote": "Yes, I'm I'm a reaction trader. Whatever price gives me, that's what I do."
+        },
+        {
+          "description": "The educator conditions his reaction approach on the move being the first move inside a higher timeframe point of interest.",
+          "transcript_quote": "And that's given that I understand it's the first move inside of a higher time frame POI."
+        },
+        {
+          "description": "The educator says he identifies this structure usually on the 1-minute and the 3-minute, and states no rule for choosing between them.",
+          "transcript_quote": "um so it's on everything usually is on the one minute the 3 minute and that's because if we understand that price is fractal we could zoom out on a one minute chart and we can see the weekly highs and lows from it"
+        },
+        {
+          "description": "The educator says he must see the structure component first and treats time only as adding volatility.",
+          "transcript_quote": "price for me, I have to see the structure component first and time just adds in the volatility part."
+        },
+        {
+          "description": "Non-executable context: the educator says he can trade in Asia, London or New York and that the session and timeframe do not matter.",
+          "transcript_quote": "I can trade in Asia. I can trade in London. I can trade in New York. It doesn't matter what time, what zone, what uh sorry, time frame that we're in."
+        },
+        {
+          "description": "The educator tells students to stay out of the first hour of the New York open.",
+          "transcript_quote": "But as far as time goes, that first hour of trading, I usually tell students to stay out."
+        },
+        {
+          "description": "The educator conditions that first-hour avoidance on inexperience and states the first hour is itself tradable.",
+          "transcript_quote": "So I tend to tell traders, stay out of that first hour if you're not as experienced, but that first hour is totally tradable."
+        },
+        {
+          "description": "Non-executable context: the educator says he averages about two, sometimes three trades a day.",
+          "transcript_quote": "Um, I would say it's about maybe two, sometimes three trades a day."
+        },
+        {
+          "description": "Non-executable context: asked what he currently risks, the educator says about 3 to 5 percent.",
+          "transcript_quote": "So, it's about maybe 3 to 5% somewhere."
+        },
+        {
+          "description": "Non-executable context: the educator states risk per trade varies by person rather than prescribing a value.",
+          "transcript_quote": "So, when it comes to the account size, risk per trade is is going to be different for everybody, right?"
+        },
+        {
+          "description": "Non-executable context: the educator frames the pullback, rather than the breakout, as where profit is found.",
+          "transcript_quote": "I always talk about the pullback being where your profit is."
+        },
+        {
+          "description": "Non-executable context: the educator says he does not watch profit and loss while trading.",
+          "transcript_quote": "But I don't really look at the P&L at all."
+        },
+        {
+          "description": "Non-executable context: the educator says he reviews his losses to find the recurring environment he loses in, and then stays out of that environment.",
+          "transcript_quote": "So what I tend to do is go and look at where I struggled, what was occurring while I struggled, and then the next time that I do trade, I'm staying out of that kind of environment."
+        }
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "role": "context",
+          "action": "Run a top-down read: daily first, then the 4 hour, then the 15 minute, and then trade the 1 minute in the direction of where price sits on the daily.",
+          "rationale": "The educator gives this as the sequence he personally follows to establish direction before executing.",
+          "transcript_quote": "So for me, what I like to do is go to the daily time frame, look at where we are in the daily. Are we within a daily wick? Some people might refer to a rejection block. Are we in a daily fractal? Are we in a daily supply demand? Whatever it is, I look for that. Then I go into the 4 hour and look at what the 4 hour is doing. Is the 4 hour wicking? Has the 4 hour swept something? I might go into the 15 minute and see have we had a closure above or below wherever it is that price is looking to go directionally. And then on the one minute, what I'm doing is trading in that direction of wherever I am in that daily time frame."
+        },
+        {
+          "step": 2,
+          "role": "context",
+          "action": "Treat the top-down read as the directional compass, without which any impulse can mislead.",
+          "rationale": "The educator states top-down analysis is essentially the compass for knowing where price is going.",
+          "transcript_quote": "Top down is very very important. I top down is essentially your compass. If you don't know where prices go in, it's easy to get lost on any little impulse going one way or another."
+        },
+        {
+          "step": 3,
+          "role": "spine",
+          "action": "Use a previous range as the point of interest.",
+          "rationale": "The educator states the previous range is what qualifies as a quality point of interest and is the only thing he uses.",
+          "transcript_quote": "So a quality POI is more of a previous range that is the only thing that I use. It's meaning previous consolidation."
+        },
+        {
+          "step": 4,
+          "role": "spine",
+          "action": "Define that previous range as the span from the break of structure down to the low, formed by a swing high, a swing low, and a current swing high that breaks the previous swing high.",
+          "rationale": "The educator gives this exact construction of the previous range.",
+          "transcript_quote": "So, we get a swing high, we get a swing low, and then now we have the current swing high that's put in. That breakup structure from the breakup structure to the low, that is the previous range."
+        },
+        {
+          "step": 5,
+          "role": "spine",
+          "action": "Expect price to retrace back into that previous range by roughly 30, 50 or 70 percent, somewhere within that band.",
+          "rationale": "The educator states this as the retracement depth he expects into the previous range.",
+          "transcript_quote": "So, I'm expecting price to drop back into that previous range by about 30, 50, or 70% somewhere within there."
+        },
+        {
+          "step": 6,
+          "role": "spine",
+          "action": "Restrict the trade to the original first push that caused the break of structure rather than every subsequent push.",
+          "rationale": "The educator affirms he is not trading every new push and calls the original push higher in quality.",
+          "transcript_quote": "So, you're not just trading every new push in the market. is the original first push in the market that caused the breakup structure. Yes. Yes. Because that's higher in quality."
+        },
+        {
+          "step": 7,
+          "role": "spine",
+          "action": "Count the swings before taking the entry.",
+          "rationale": "The educator states he counts swings before every entry he takes.",
+          "transcript_quote": "the one thing that I um talked to Nagi about was any entry that I'm taking, I count my swings before I take the entry."
+        },
+        {
+          "step": 8,
+          "role": "spine",
+          "action": "Require at least four to six swings as price makes higher highs and higher lows into a supply before expecting a reversal.",
+          "rationale": "The educator gives four to six swings as the maturity condition before expecting price to reverse.",
+          "transcript_quote": "And what I mean by that is as price is making higher highs and higher lows trading to a supply, you should at least have four to six swings before you're expecting price to reverse."
+        },
+        {
+          "step": 9,
+          "role": "spine",
+          "action": "On the 1-minute trading into a 15-minute or hourly point of interest, require at least four higher highs and four higher lows before price turns.",
+          "rationale": "The educator restates the swing requirement specifically for 1-minute execution into a 15-minute or hourly point of interest.",
+          "transcript_quote": "So on the one minute time frame, if it's trading to a 15minute or hourly POI, you should at least have four highs, four higher highs, four higher lows before price actually turns and goes the other way."
+        },
+        {
+          "step": 10,
+          "role": "spine",
+          "action": "Do not take the entry from the supply if the four swings are not yet present.",
+          "rationale": "The educator states the swing count is a precondition on taking the entry.",
+          "transcript_quote": "So if it's going into a supply, if I don't have those four swings as of yet, then I'm not looking to take an entry from that supply."
+        },
+        {
+          "step": 11,
+          "role": "trigger",
+          "action": "Require a sweep before any trade.",
+          "rationale": "The educator states price always needs a sweep for any trade taken.",
+          "transcript_quote": "So, um I think that price always needs a sweep for any trade you take. I always say that if there is no sweep, you are the sweep. And if you cannot see the liquidity, you are liquidity."
+        },
+        {
+          "step": 12,
+          "role": "trigger",
+          "action": "Look for at least a low or a high above the point of interest, and expect the turn when price sweeps that and manipulates into a level of the point of interest.",
+          "rationale": "The educator names this as the specific thing to look out for that precedes the turn.",
+          "transcript_quote": "So, what I like to tell people to look out for is at least a low or a high above your POI. And when price sweeps that and manipulates into a certain level of the POI, that's when you should be expecting price to turn around and go the other way."
+        },
+        {
+          "step": 13,
+          "role": "trigger",
+          "action": "After the sweep, wait for confirmation: price sweeps the low and then trades up above the previous down candle's high.",
+          "rationale": "The educator states the sweep alone is not sufficient criteria and gives this confirmation.",
+          "transcript_quote": "Now, that sweep isn't the only criteria for you to just ape into the trade and go. There's a confirmation that you can find after the sweep, meaning price sweeps the low, trades up above the previous down candles high."
+        },
+        {
+          "step": 14,
+          "role": "context",
+          "action": "Wait for price to consolidate and then shift, with the sweep and manipulation coming first, then trade in the direction price is going.",
+          "rationale": "The educator gives this ordering explicitly when rejecting immediate entries.",
+          "transcript_quote": "You definitely have to wait for price to consolidate and then shift. But you need first a sweep, a manipulation, and then you trade in the direction that price is going in."
+        },
+        {
+          "step": 15,
+          "role": "context",
+          "action": "Do not enter from a 5-second zone aiming at a distant point of interest.",
+          "rationale": "The educator explicitly disavows that approach.",
+          "transcript_quote": "Some people try to get in on a a 5-second zone and try to take it to a RA POI. And I don't believe in that."
+        },
+        {
+          "step": 16,
+          "role": "context",
+          "action": "Allow for the higher-timeframe zone to need time to shift: a daily zone may need two 4-hour candles or three 1-hour candles, described as a three bar pattern.",
+          "rationale": "The educator gives this as what he understands is required inside a daily zone before it shifts.",
+          "transcript_quote": "If I'm in a daily zone, I understand that price may need two 4hour candles, three 1-hour candles in that daily zone in order to shift. We know it as a three bar pattern, right?"
+        },
+        {
+          "step": 17,
+          "role": "context",
+          "action": "When executing on the 1 minute, allow for three or four 15-minute candles and a 4-hour point of interest before price actually leaves, which the educator equates to roughly an hour spent in the consolidation.",
+          "rationale": "The educator states this residence requirement for 1-minute execution.",
+          "transcript_quote": "If I'm trading on M1, you have to remember that we need three or or four 15 minute candles and a 4hour POI for it to actually leave. So that means that you're trading in that that consolidation for about an hour."
+        },
+        {
+          "step": 18,
+          "role": "trigger",
+          "action": "Once price is back inside the previous range, use one of the two entry methods the educator names (see variants): the 50 entry, or the candlestick-structure entry.",
+          "rationale": "The educator explicitly offers two options at this point without ranking them.",
+          "transcript_quote": "Now, when it gets back in there, I can use one of two things. I can place my entry at the 50, place my stop behind the 70%. Or I could wait for something that I call candlestick structure where you have bullish candles going in, you have a bearish candle that closes below the bullish candle. You have price retrace into the bullish candle and then it drops lower. So when it retraces into that bullish candle, that's where your entry is and your stop is behind that bullish candle that that went up above."
+        },
+        {
+          "step": 19,
+          "role": "trigger",
+          "action": "Place the entry at the exact spot where price is expected to leave, rather than scattering feeler entries.",
+          "rationale": "The educator states this is what allows him to manage the position and to treat a stop-out as invalidation.",
+          "transcript_quote": "I like to take the entry at the exact spot that I'm expecting price to leave because that allows me to manage the position properly. And if I'm stopped out there, that means that I'm invalidated on the trade idea rather than trying to just scatter a couple trades in."
+        }
+      ],
+      "confluences": [
+        {
+          "name": "Rounding at the top of the consolidation",
+          "description": "The area price breaks above should have a rounded, semicircle-like shape at its top.",
+          "transcript_quote": "It needs to be above an area that it had like a round sort of semiircle kind of right at the top of it."
+        },
+        {
+          "name": "Down move immediately before the rounding, with a return to the origin of the up move",
+          "description": "A small fractal or down move forms just before the rounding, price breaks above the rounding, and then comes right back to the spot that sent it up.",
+          "transcript_quote": "So, what I've found is that when we have that rounding and we see a little fractal or like a down move created just before the rounding, price breaks up above the rounding and comes right back to that spot that sent it up."
+        },
+        {
+          "name": "Break of that origin spot indicates the wrong side",
+          "description": "If price breaks that particular part, the educator reads it as being on the wrong side, with price likely to take the floor out.",
+          "transcript_quote": "So, it breaks up above it, taps back in, and then it goes. But if it breaks that particular part there, it just means that you on the wrong side and likely you'll see price take the floor out."
+        },
+        {
+          "name": "Rounding as the breakout-versus-reversal discriminator",
+          "description": "The educator uses the rounding read to decide whether he participates in the breakout of the range or waits for a trade the other way.",
+          "transcript_quote": "So that is how I differentiate between whether I'm going to be a part of the breakout of that range or if I'm going to be waiting for a trade to go the other way."
+        },
+        {
+          "name": "Prominent wick to the left",
+          "description": "When the lows break, the educator focuses on a wick to the left that he calls a prominent wick.",
+          "transcript_quote": "But if we break those lows, what I tend to focus on is if there's a wick to the left, I call it a prominent wick."
+        },
+        {
+          "name": "Prominent wick run followed by an immediate push back above the range",
+          "description": "The prominent wick is one that stands out and stays clearly visible zoomed in or out; price runs it and then pushes immediately back into the range and above it.",
+          "transcript_quote": "This is a wick that stands out. You can zoom in and zoom out and you still see that wick clearly. it runs that wick and then you see an immediate push trading back into the range and now above that range."
+        },
+        {
+          "name": "Prominent-wick liquidity pool as the highest-probability continuation",
+          "description": "The educator states that pool of liquidity is the highest in probability for trading a continuation with the trend price is already in.",
+          "transcript_quote": "That is the highest in probability to be able to trade a continuation that would with with whatever trend price is already going in."
+        },
+        {
+          "name": "Consolidation sitting on a zone weakens that zone",
+          "description": "Because the consolidation is usually forming on a zone and weakening it, price is expected to trade through both the consolidation and the zone underneath it.",
+          "transcript_quote": "And the reason why we expect the consolidation to be ran is because the consolidation is usually happening on a zone already and that consolidation is weakening the zone. So by the time price goes back to that zone, we expect it to trade through not only the consolidation but the zone that it was sitting on top of as well."
+        },
+        {
+          "name": "Break above the range plus a low taken below it implies higher-timeframe structure already broke",
+          "description": "The educator reads that pattern as occurring because hourly or daily structure has already broken, so the leg down is the manipulation into where price is expected to run.",
+          "transcript_quote": "What what usually happens though with something like that is that if it's breaking up above that consolidation, putting in a high, and then going back down below the low, that's only because maybe on the hourly or the daily structure has already broken. So you're trading the manipulation part of it going down into where you expect price to violate, you expect price to run."
+        },
+        {
+          "name": "Ranging between two points of interest",
+          "description": "When price is ranging it is ranging between a supply and a demand, which the educator treats as the two ends of the range.",
+          "transcript_quote": "But when we have that range, we're usually ranging between two POIs, a supply and a demand."
+        },
+        {
+          "name": "Swing count applies in any direction",
+          "description": "The educator states the four to six swing count should be visible counter-trend, with-trend, on retracements and on continuations, on any asset class.",
+          "transcript_quote": "So any direction whether it's counter trend whether it's with the trend you whether it's a retracement whether it's a continuation you should see that four to six swings there on any asset class you trade and this is again regardless of time"
+        }
+      ],
+      "stop": {
+        "anchor": "Behind the higher-timeframe point of interest — the educator's stated example is behind the 4-hour point of interest — as the invalidation of the trade idea.",
+        "rationale": "The educator states that on the first trade taken, the stop or invalidation of the idea is behind the 4-hour point of interest.",
+        "transcript_quote": "So that first trade that you take, your stop or your invalidation of the idea is behind the 4hour POI."
+      },
+      "targets": [
+        {
+          "priority": 1,
+          "type": "the high price retraced from",
+          "r_multiple": null,
+          "rationale": "After price retraces into the previous range, the educator looks to trade price back to the high it retraced from.",
+          "transcript_quote": "And then I'm looking to trade price back to the high that it retraced from."
+        },
+        {
+          "priority": 1,
+          "type": "prominent wick to the left",
+          "r_multiple": null,
+          "rationale": "The educator tells people to target a prominent wick to the left when one is present.",
+          "transcript_quote": "So, when it comes to targeting, I tell people to target if there's a prominent wick to the left."
+        },
+        {
+          "priority": 1,
+          "type": "beginning of the wick",
+          "r_multiple": null,
+          "rationale": "The educator says to target the beginning of that wick, because price often hits the beginning of the wick and then retraces.",
+          "transcript_quote": "If you target the beginning of the wick that's there, a lot of the times you see price hit the beginning of the wick and then retrace."
+        },
+        {
+          "priority": 1,
+          "type": "higher-timeframe point of interest lying between entry and expected destination",
+          "r_multiple": null,
+          "rationale": "When a higher timeframe point of interest sits between the entry and where price is expected to go, the educator looks to pay himself somewhere in there.",
+          "transcript_quote": "And if it's going to a higher time frame POI between where I'm getting in and where I expect price to go, I'm looking to pay myself somewhere in there."
+        },
+        {
+          "priority": 1,
+          "type": "opposite end of the range (the other of the two bounding points of interest)",
+          "r_multiple": null,
+          "rationale": "In the range case the educator says he is trading back to one or the other of the two points of interest bounding the range.",
+          "transcript_quote": "So those two POIs, the one above and below, I'm either trading back to one or back to the other."
+        },
+        {
+          "priority": 1,
+          "type": "no fixed reward — reward is whatever the trade yields once risk is fixed",
+          "r_multiple": null,
+          "rationale": "The educator says the outcome may be 1 to 3 or 1 to 5 and that with risk fixed the reward could be anything.",
+          "transcript_quote": "It might end up as a 1 to3, it might end up as a one to five, but as long as I have that one set on what I'm willing to lose, then the RR could really be anything."
+        },
+        {
+          "priority": 1,
+          "type": "structural location rather than a numeric take-profit value",
+          "r_multiple": null,
+          "rationale": "The educator says he usually does not know the numeric take-profit value and instead targets a structural location.",
+          "transcript_quote": "Most times I don't even know the exact take profit like the the number value that's on it. I just know that I'm looking to take profit at the beginning of this week. I'm looking to take profit maybe at this high."
+        }
+      ],
+      "management": [
+        {
+          "rule": "The educator takes the position in one and out in one, with no partials and no pyramiding.",
+          "transcript_quote": "I'm just one in one out. If I put five contracts in, I'm taking five contracts out on the same trade. I don't do the partial or I don't do the they call it pyramiding."
+        },
+        {
+          "rule": "The educator does not add positions at successive levels or into drawdown.",
+          "transcript_quote": "You know, some people might add a position here, add another one and draw down, add another one up here. I don't do any of that."
+        },
+        {
+          "rule": "The educator will not sit in drawdown; he needs the entry tagged and price to begin leaving.",
+          "transcript_quote": "I need to see my trade get hit, tagged in, and then price begins to leave. I'm not interested in sitting in draw down or anything."
+        },
+        {
+          "rule": "Separately from his own one-in-one-out practice, the educator instructs others that when they are part of the initial reversal they should partial somewhere and target something within reach.",
+          "transcript_quote": "So, you want to make sure that if you're a part of the initial reversal, partial somewhere, target something that's within reach, and should price end up coming back down to your entry, stopping you out, and it actually goes, now you have enough mental capital to be able to get back in and continue trading in that direction of wherever price is going."
+        },
+        {
+          "rule": "While price is impulsing, trail the stop below the bullish (green) candle lows.",
+          "transcript_quote": "If we have green candle, green candles going up, like bullish candles. I place my stop below the green candle lows. This is as price is impulsing, right?"
+        },
+        {
+          "rule": "That green-candle-low trail is applied on any timeframe as price impulses.",
+          "transcript_quote": "any time frame as it's impulsing straight up, I'll trail my stop under those green candle lows."
+        },
+        {
+          "rule": "When price pulls back, hits the first imbalance and puts in a new high, the educator moves from break even to placing the stop below the low, trailing either swing lows or bullish candle lows.",
+          "transcript_quote": "That's where you take it from break even to put it below the low. So, you want to trail the swing lows or you want to trade the bullish candle lows. That's how I generally trade my stop trail my stops."
+        },
+        {
+          "rule": "As an alternative trailing method the educator teaches a 21 EMA trail.",
+          "transcript_quote": "But there's one way that I've taught on my YouTube channel how to trail and it's with a 21 EMA."
+        },
+        {
+          "rule": "Under the 21 EMA method, when price closes below the EMA and then trades back above it, tuck the stop just below that low.",
+          "transcript_quote": "When price closes below the EMA and then trades back up above it, you can tuck your stop right below that low because that low tends to be very reliable to hold where price will stay above the EMA, tap back into the same range that's there and then trade higher."
+        },
+        {
+          "rule": "For a looser trail, place the stop under each closure below the 21 EMA once price takes out the high that brought it to the EMA.",
+          "transcript_quote": "So if you want to trail in, you know, more loose way, you could wait for those closures below the 21 EMA and then just place your stop under each closure of the 21 EMA when it takes out the high that brought it to the EMA."
+        },
+        {
+          "rule": "Trail tightness depends on where in the move the position was taken: from the second low of a double bottom that has taken out the first, the educator trails looser rather than strict.",
+          "transcript_quote": "So, usually on double bottoms, if price is tapping into one low and then puts in another low, takes it out and then go, I know that if I'm in that the bottom of that trade now, I can just trail a little more, you know, loose rather than having to trail strict."
+        },
+        {
+          "rule": "When price puts in a new high and then trades back below that low, the educator treats it as another opportunity to enter a further trade in the same direction.",
+          "transcript_quote": "And that new high, often times we put in that high and then trade back below that low. Now, that's another opportunity to get in to another trade going up."
+        },
+        {
+          "rule": "Asked to confirm the characterization, the educator affirms holding the first reaction at full volume with one candle of protection.",
+          "transcript_quote": "That first reaction, whether it goes to 1 to three or 1 to 5, uh, you hold it full volume and then one candle protection. Yes."
+        },
+        {
+          "rule": "The educator trades the same position size on every entry, not sizing up or down on conviction.",
+          "transcript_quote": "So I tend to trade the same size every time I get in."
+        },
+        {
+          "rule": "Position size is graduated by account equity: one micro per $1,000 of account, sizing up one micro per additional $1,000.",
+          "transcript_quote": "So, if you're trading with a $1,000 account and you're trading on something like ENQ, right, you should only be trading with one micro. And every $1,000 you have in that account, you can size up to the next micro."
+        },
+        {
+          "rule": "If a trade that would have been about 1 to 3R is trailed out to roughly 1 to 12 or 1 to 13R, the educator sees no reason to trade for the rest of the day.",
+          "transcript_quote": "And what originally would have been, you know, 1 to 3R ends up being a 1 to 12 or 1 to 13 R, right? And if I can catch something like that during the day, then there's no reason for me to trade for the rest of the day, right?"
+        }
+      ],
+      "variants": [
+        {
+          "name": "50 entry with stop behind the 70 percent",
+          "rule": "Place the entry at the 50 and the stop behind the 70 percent. Offered by the educator as one of two options, with no stated preference.",
+          "transcript_quote": "Now, when it gets back in there, I can use one of two things. I can place my entry at the 50, place my stop behind the 70%."
+        },
+        {
+          "name": "Candlestick-structure entry",
+          "rule": "Wait for bullish candles going in, then a bearish candle that closes below the bullish candle, then price retracing into that bullish candle; the entry is at that retracement into the bullish candle and the stop is behind that bullish candle. Offered as the co-equal second of the two options.",
+          "transcript_quote": "Or I could wait for something that I call candlestick structure where you have bullish candles going in, you have a bearish candle that closes below the bullish candle. You have price retrace into the bullish candle and then it drops lower. So when it retraces into that bullish candle, that's where your entry is and your stop is behind that bullish candle that that went up above."
+        },
+        {
+          "name": "Effect of the candlestick-structure entry on stop size",
+          "rule": "The educator says this method reduces the stop from the zone above down to where price currently is, while acknowledging the risk of being stopped out before price actually leaves.",
+          "transcript_quote": "So, it's essentially reducing your stop from the zone that's up there to now just where price currently is at. Now, you can run the risk of being stopped out and then price actually leaves, but it's all about, you know, what you need to see within that, right?"
+        },
+        {
+          "name": "Hourly-zone framing of entry and invalidation",
+          "rule": "In an hourly zone the entry starts at the 50 percent of the zone and the invalidation is below the zone.",
+          "transcript_quote": "It starts as a one one and let's say we get into a an hourly zone, right? The entry starts at the 50% of the zone. The invalidation is below the zone."
+        },
+        {
+          "name": "Whole point of interest as invalidation, distinguished from the stop",
+          "rule": "Asked whether the stop sits at what caused the break of structure or at the whole point of interest, the educator answers the whole point of interest, then distinguishes that as his invalidation rather than his stop.",
+          "transcript_quote": "Is your stop at the what caused the breakup structure or the whole POI? The whole POI. Okay. Because so you do have a fairly large stop. That that that's my invalidation though. That's not the stop."
+        },
+        {
+          "name": "Second swing",
+          "rule": "The educator names the second swing as the portion he prefers: price breaks up above the range, then puts in a low through the low of the range.",
+          "transcript_quote": "Uh the preferred portion is the second swing. So you have price break up above the range and then you see it put in a low through the low of the range."
+        },
+        {
+          "name": "Trading the generation of liquidity or the sweep of liquidity",
+          "rule": "The educator says he trades as part of both the generation of liquidity and the sweep of liquidity.",
+          "transcript_quote": "So I would say that I trade as a part of both the generation of liquidity and the sweep of liquidity."
+        },
+        {
+          "name": "Generation-of-liquidity case defined",
+          "rule": "By generation of liquidity the educator means lows being placed without price going below them; when that low is respected price goes back to the high.",
+          "transcript_quote": "So by generation of liquidity, I mean that we're we're putting in lows, but we're not going below that. Right? I understand that closure back up above. When we respect that low, we go back to the high."
+        },
+        {
+          "name": "Sweep-of-liquidity case defined",
+          "rule": "Alternatively price sweeps through the lows that were placed and moves back up again, and the run back above is what is traded.",
+          "transcript_quote": "So, if we're creating that little range below and we're placing some lows there and then price sweeps through those lows and then moves back up again, that's I can trade a part of that generation or I can trade the sweep and run back up above."
+        },
+        {
+          "name": "Range variant traded between the two bounding points of interest",
+          "rule": "Inside a range the educator takes trades back to one or the other bounding point of interest with risk just behind the point of interest, which he says yields multiple opportunities.",
+          "transcript_quote": "It gives me multiple opportunities with the risk just behind the POI in order to take a trade. So there's never a day where I don't see anything at all."
+        },
+        {
+          "name": "First hour of the New York open traded as a manipulation into a previous range",
+          "rule": "The educator says the first hour is prime for price to go into a previous range and then reject the other way.",
+          "transcript_quote": "Like I mentioned, the previous range is where I look for entries. So that first hour, it's prime for looking for price to go into a previous range and then reject the other way."
+        },
+        {
+          "name": "Swing count on the pro-trend leg",
+          "rule": "On the pro-trend move the leg runs to the low that led price up to the supply, and the educator says the swing count is likewise visible on the way down when viewed on a higher timeframe.",
+          "transcript_quote": "So what you have is it's four to six swings leading up to the POI and now it's trading down to the low for the protrend movement, right? But if you go on a higher time frame or you look at the swing that it tapped into and begin to trade protrend, you'll see that there's a number of swings coming down too."
+        }
+      ],
+      "source_gaps": [
+        {
+          "field": "entry_method_selection",
+          "reason": "The educator offers the 50 entry with stop behind the 70 percent and the candlestick-structure entry as two things he can use, and states no condition or preference for choosing between them."
+        },
+        {
+          "field": "retracement_depth",
+          "reason": "The educator names about 30, 50 or 70 percent as where he expects price to retrace into the previous range, but gives no rule for which depth applies when, and does not present them as separate trade setups."
+        },
+        {
+          "field": "target_selection_rule",
+          "reason": "Several target types are taught (the high price retraced from, a prominent wick to the left and the beginning of that wick, an intervening higher-timeframe point of interest, the opposite end of a range) with no stated order or selection rule among them; all are therefore emitted at equal priority."
+        },
+        {
+          "field": "partial_exits",
+          "reason": "The educator states he personally takes one in and one out with no partials, while separately instructing others to partial somewhere when part of the initial reversal. The source does not reconcile the two."
+        },
+        {
+          "field": "stop_placement_versus_invalidation",
+          "reason": "The educator says the whole point of interest is his invalidation and explicitly says that is not the stop, but does not state where the actual stop sits outside the two named entry methods."
+        },
+        {
+          "field": "execution_timeframe",
+          "reason": "The educator names both the 1 minute and the 3 minute for identifying the structure and says the timeframe does not matter, without a rule for choosing between them."
+        },
+        {
+          "field": "swing_count_exact_threshold",
+          "reason": "The requirement is stated variously as four to six swings, as at least four higher highs and four higher lows, and as generally around four and maybe five sometimes, with no single exact threshold settled."
+        },
+        {
+          "field": "swing_definition",
+          "reason": "The transcript does not define how a swing is objectively identified or measured for the purpose of the count."
+        },
+        {
+          "field": "rounding_definition",
+          "reason": "The rounding or semicircle shape is described visually but the transcript gives no objective criteria for identifying it."
+        },
+        {
+          "field": "prominent_wick_definition",
+          "reason": "A prominent wick is defined only as one that stands out and remains clearly visible zoomed in or out, with no measurable threshold."
+        },
+        {
+          "field": "risk_per_trade",
+          "reason": "The educator says risk per trade differs for everybody and reports his own as about 3 to 5 percent, without prescribing a value for the strategy."
+        },
+        {
+          "field": "timeframe_conflict_resolution",
+          "reason": "Asked what he does when the daily and the 15 minute disagree, the educator answers only that he waits for something a little more in between, which does not settle a decision rule."
+        },
+        {
+          "field": "session_time_filter",
+          "reason": "The first hour of the New York open is described both as something students are told to stay out of and as totally tradable for the experienced, so no hard time filter is settled; no session times or timezone boundaries are given."
+        },
+        {
+          "field": "trailing_method_selection",
+          "reason": "Trailing under green candle lows or swing lows and trailing by 21 EMA closures are both taught, with the EMA described as the looser way, but no rule states which to use on a given trade."
+        },
+        {
+          "field": "ema_settings",
+          "reason": "The 21 EMA is named but the transcript does not state the timeframe or price source on which it is applied."
+        },
+        {
+          "field": "range_variant_stop",
+          "reason": "For the range variant the educator says risk sits just behind the point of interest but does not specify the stop placement more precisely."
+        }
+      ]
+    }
+  ],
+  "top_level_source_gaps": [
+    {
+      "field": "instrument",
+      "reason": "No instrument is bound to the strategy. The educator claims the structure appears on every pair and in any market; the only instrument named anywhere in his own speech is ENQ, and that appears inside an account-sizing example about micros rather than as the traded instrument of the setup."
+    },
+    {
+      "field": "order_type",
+      "reason": "The transcript does not state whether entries are placed as resting limit orders or executed at market."
+    },
+    {
+      "field": "strategy_count",
+      "reason": "The educator states he takes one setup each and every day; the range case, the generation-versus-sweep cases, the two entry methods and the two trailing methods are presented as parts or alternatives within that one setup rather than as separately taught strategies, so they are preserved as variants rather than split into additional strategies."
+    }
+  ]
+}

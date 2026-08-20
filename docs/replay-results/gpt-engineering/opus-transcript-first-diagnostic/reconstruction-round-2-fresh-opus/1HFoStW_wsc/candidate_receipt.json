@@ -1,0 +1,32 @@
+{
+  "artifact": "opus-transcript-first-candidate-receipt-v2-file-first",
+  "status": "FRESH_OPUS_SOURCE_CANDIDATE_NOT_CERTIFIED",
+  "video_id": "1HFoStW_wsc",
+  "diagnostic_category": "NEAR_SURVIVOR_SINGLE_UNRESOLVED",
+  "reconstruction_round": 2,
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "model_override": "opus",
+  "actual_model_identity": "override=opus; exact runtime model identity not independently surfaced to the dispatcher (Agent tool model override accepted, no separate attestation channel available)",
+  "invocation_declared": true,
+  "invocation_independently_attested": false,
+  "fresh_reader": true,
+  "prompt_source": "task_file_only",
+  "legacy_semantics_visible": false,
+  "prior_candidate_json_visible": false,
+  "prior_report_prose_visible": false,
+  "delivery_mechanism": "file-first (AR-1375A Sec2): the dispatched agent used its own Write tool to persist raw_opus_response.txt directly to docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/reconstruction-round-2-fresh-opus/1HFoStW_wsc/raw_opus_response.txt. The parent worker session read those bytes from disk; teammate chat/message delivery was NOT the load-bearing return path for the candidate bytes (it had failed to deliver at all for the prior dispatch round and was abandoned as load-bearing transport).",
+  "transcript_sha256": "c84a83c745da422bb3c19955f981a9f7ba848a7eaa68b85b732630201263b080",
+  "raw_response_sha256": "b470d40811ffe41109adc572a53daba47eed8358fa79bf6fee17c67d843393d2",
+  "candidate_sha256": "b470d40811ffe41109adc572a53daba47eed8358fa79bf6fee17c67d843393d2",
+  "validation": {
+    "strategy_count": 1,
+    "literal_quote_count": 75,
+    "literal_quote_failures": 0,
+    "identity_sequence": [
+      "s0"
+    ]
+  },
+  "factory_authority": false,
+  "certification_required": true,
+  "next_step": "Independent grader (GPT-5.6 Sol semantic audit) attacks candidate against the same transcript. Do not compare to legacy extraction until that grade is frozen."
+}

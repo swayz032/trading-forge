@@ -1,0 +1,332 @@
+{
+  "video_id": "E8Wg6tFPYjo",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": {
+    "asset_class": "Forex is the asset class actually demonstrated; the educator additionally states the strategy applies to metals and indices, and reports second-hand that others use it in cryptocurrency.",
+    "instrument": null,
+    "rationale": "The educator demonstrates on forex charts and explicitly frames the method as not tied to one instrument, naming forex, metals and indices directly and cryptocurrency only as something he has heard others do rather than something he does.",
+    "transcript_quote": "Now as I said at the beginning of the video this strategy is applicable to basically all assets. So of course the forex market like I've been showing you here today. It's also great for metals and indices and I also know a lot of people who use it in the cryptocurrency market. I don't personally but I've heard that there's been a lot of success with that."
+  },
+  "strategies": [
+    {
+      "source_strategy_id": "s0",
+      "name": "15-minute execution with 4-hour premium/discount bias, liquidity sweep, break of structure plus imbalance, and 71% Fibonacci retracement limit entry",
+      "direction": "both",
+      "direction_transcript_quote": "So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities. Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities.",
+      "higher_timeframe": "4 hour",
+      "higher_timeframe_transcript_quote": "And the 4our time frame is going to act as our higher time frame to form a bias and anchor that bias to at all times.",
+      "execution_timeframe": "15 minute",
+      "execution_timeframe_transcript_quote": "The 15-minut time frame is going to be our execution time frame where we actually place trades.",
+      "setup": [
+        {
+          "description": "The method uses exactly two timeframes.",
+          "transcript_quote": "This strategy consists of two time frames, the 15-minute and the 4 hour."
+        },
+        {
+          "description": "The taught checklist has four line items.",
+          "transcript_quote": "We have higher time frame alignment, liquidity sweep, break of structure plus imbalance, and a 71% retracement."
+        },
+        {
+          "description": "Non-executable tooling context: the educator's custom indicator is optional and everything taught can be done manually.",
+          "transcript_quote": "It's a great tool to have, but you don't need it. You can do all of the things I'm about to teach you today manually on your own. This is simply a tool to make things easier and more streamlined."
+        },
+        {
+          "description": "Non-executable tooling context: a free substitute exists for the structural high/low arrows.",
+          "transcript_quote": "There's a free version of these little arrows if you search on Trading View fractals or Williams fractals. It's completely free."
+        },
+        {
+          "description": "Non-executable tooling context: the educator's indicator is the thing computing premium/discount, and it is set to the 4-hour timeframe.",
+          "transcript_quote": "So, my indicator automatically checks premium and discount on the higher time frame. As you can see here, I have it set to 4hour."
+        },
+        {
+          "description": "Educational definition: liquidity is described as resting money in the market.",
+          "transcript_quote": "The simple way to describe liquidity is just resting money in the market."
+        },
+        {
+          "description": "Educational context: where resting liquidity is most commonly located.",
+          "transcript_quote": "The most common area to find resting liquidity is major highs and major lows."
+        },
+        {
+          "description": "Educational definition of an imbalance / fair value gap as a three-candle pattern with a gap between the first candle's low and the third candle's high.",
+          "transcript_quote": "it's a three candlestick pattern. 1 2 3. And between the low of this first candle and the high of the third candle, we can see that there is a very large gap."
+        },
+        {
+          "description": "Classification rule used to distinguish a liquidity grab from a break of structure: a wick beyond the level rather than a candle body closure.",
+          "transcript_quote": "The reason this is a liquidity grab instead of a break of structure is because it was a wick instead of candle body closure."
+        },
+        {
+          "description": "Exclusion condition stated in the second example: had that candle instead purged the liquidity above the high, the educator would have treated the situation as indecision and not as a trade setup.",
+          "transcript_quote": "If this candlestick right here went higher and purged liquidity from this high, that would be a different story. This would probably just be indecision and I would not even consider it as a trade setup."
+        },
+        {
+          "description": "Educational framing: the Fibonacci retracement tool is used purely as a measurement tool, not as an indicator or a strategy.",
+          "transcript_quote": "The Fibonacci retracement tool is not an indicator. It is not a strategy in and of itself. The way I use it is simply as a measurement tool."
+        },
+        {
+          "description": "Fibonacci tool settings as taught: the 71% and 75% levels are enabled, and the educator states he really only uses the 71%.",
+          "transcript_quote": "So I have the 71% and the 75%. Really only use the 71%."
+        },
+        {
+          "description": "Stated risk-to-reward of the taught geometry.",
+          "transcript_quote": "If I target the 71% from my entry, I get a risk-to-reward ratio of 2.45."
+        },
+        {
+          "description": "Long-side mirror of the entry placement: in the second (long) example the entry is likewise placed at the 71%.",
+          "transcript_quote": "So now that the fib tool is all set up, I can then click the long position tool on trading view and place my entry at the 71%."
+        },
+        {
+          "description": "Long-side mirror of the stop placement: in the long example the stop-loss is dragged to a wick, without the wick being named as an endpoint of the Fibonacci range.",
+          "transcript_quote": "Now using the magnet tool again, I can click the stop loss, drag it over to that wick, and it'll snap right to it."
+        },
+        {
+          "description": "Long-side mirror of the take-profit placement: in the long example the take-profit is dragged to the high of the Fibonacci range.",
+          "transcript_quote": "Same thing goes for my takerit. Click this little button at the top, drag it to the high of the Fibonacci range, and drop it."
+        },
+        {
+          "description": "Non-executable charting aid: weak magnet mode is suggested for snapping levels.",
+          "transcript_quote": "To make this easier, you can use the magnet tool on Trading View. Just set it to weak magnet instead of strong magnet."
+        },
+        {
+          "description": "Non-executable visualization step: extending the Fibonacci tool to the right.",
+          "transcript_quote": "And what I like to do just for visualization purposes is extend it out far to the right."
+        },
+        {
+          "description": "Non-executable execution-venue logistics: copying the three price parameters into whatever platform is used to execute.",
+          "transcript_quote": "Then all you have to do is double click on the parameters and copy these prices over the entry price, the takerit, the stop-loss. Copy that over to your execution platform, whether that be on your computer or on your phone."
+        },
+        {
+          "description": "Non-executable practice advice: applying the strategy on a demo account or backtesting platform is presented as acceptable.",
+          "transcript_quote": "Even if it's on a demo account or a platform like FX Replay or Tradezela back testing, that's fine, too."
+        },
+        {
+          "description": "Educational definition of drawdown used in the video.",
+          "transcript_quote": "Anytime that price is spending in this dark gray area close to my stop loss, that's considered draw down."
+        },
+        {
+          "description": "Observation from the first worked example: price traded past the 71% entry and slightly past the 75% before the trade worked, which the educator characterizes as minimal drawdown.",
+          "transcript_quote": "You can see that it pushed past the 71, a little bit past the 75, but overall that is very minimal draw down in the grand scheme of things."
+        },
+        {
+          "description": "General trading philosophy stated by the educator, not an executable rule.",
+          "transcript_quote": "I'm a huge advocate for mechanical trading strategies."
+        }
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "role": "context",
+          "action": "Gauge premium and discount pricing on the trading range.",
+          "rationale": "The educator states premium/discount assessment is applied whenever there is a trading range.",
+          "transcript_quote": "Whenever we have a trading range, we want to gauge premium and discount pricing."
+        },
+        {
+          "step": 2,
+          "role": "context",
+          "action": "If the higher timeframe is above 50% of the trading range (premium), look only for selling opportunities.",
+          "rationale": "This is the stated premium-side restriction on which direction may be considered.",
+          "transcript_quote": "So, anything above 50% of the trading range is considered premium and we should only be looking for selling opportunities."
+        },
+        {
+          "step": 3,
+          "role": "context",
+          "action": "If the higher timeframe is below 50% of the trading range (discount), look only for buying opportunities.",
+          "rationale": "This is the stated discount-side restriction on which direction may be considered.",
+          "transcript_quote": "Now, anything below the 50% is considered discount pricing and we would only want to be looking for buying opportunities."
+        },
+        {
+          "step": 4,
+          "role": "spine",
+          "action": "Identify a liquidity sweep before taking any involvement in the trade.",
+          "rationale": "The educator frames identifying the liquidity sweep as something done before getting involved in a trade.",
+          "transcript_quote": "So there's two main reasons why a liquidity sweep is so important to identify before you get involved in a trade."
+        },
+        {
+          "step": 5,
+          "role": "spine",
+          "action": "Read the direction the liquidity was purged: liquidity purged to the upside indicates selling opportunities are favored.",
+          "rationale": "This is the stated inference from the sweep direction to the favored trade direction.",
+          "transcript_quote": "Now this tells us that there's a high likelihood of selling opportunities being favored now because the liquidity was already purged to the upside."
+        },
+        {
+          "step": 6,
+          "role": "spine",
+          "action": "Identify the opposite-side resting liquidity as price's next objective.",
+          "rationale": "After an upside purge, the educator states the next objective is to purge liquidity from the downside.",
+          "transcript_quote": "So now the next objective of price would be to purge liquidity from the downside."
+        },
+        {
+          "step": 7,
+          "role": "spine",
+          "action": "Wait for a break of structure, which signals a potential trade.",
+          "rationale": "The educator states the break of structure is what signals a potential trading opportunity.",
+          "transcript_quote": "Whenever we have a break of structure occurring in the market that is signaling a potential trade."
+        },
+        {
+          "step": 8,
+          "role": "spine",
+          "action": "Recognize the break of structure as a structural low or high being violated.",
+          "rationale": "This is the stated definition of the condition that produces the break-of-structure signal.",
+          "transcript_quote": "So whenever one of these structural lows or highs vice versa is violated, you'll see this BOS label printed, which of course stands for break of structure."
+        },
+        {
+          "step": 9,
+          "role": "spine",
+          "action": "Do not enter on the break of structure itself; wait for a retracement.",
+          "rationale": "The educator explicitly rules out immediate entry at the break of structure and requires patiently waiting for the retracement.",
+          "transcript_quote": "So when a break of structure occurs, we need to patiently wait for a retracement."
+        },
+        {
+          "step": 10,
+          "role": "spine",
+          "action": "Expect that retracement to travel toward a fair value gap or imbalance.",
+          "rationale": "Stated at the strength the source gives it — the educator says this is what typically happens, not that it always does.",
+          "transcript_quote": "Now, typically that retracement ends up being towards a fair value gap or an imbalance."
+        },
+        {
+          "step": 11,
+          "role": "trigger",
+          "action": "Draw the Fibonacci retracement tool by starting at the low and dragging to the high (as demonstrated in the long-side example).",
+          "rationale": "This is the only explicitly narrated Fibonacci anchoring procedure in the transcript.",
+          "transcript_quote": "So, all I do is break out the Fibonacci tool, start at the low, click, and drag to the high."
+        },
+        {
+          "step": 12,
+          "role": "trigger",
+          "action": "Place the entry at the 71% retracement level.",
+          "rationale": "This is the stated entry-level placement in the short-side worked example.",
+          "transcript_quote": "So using the short position tool on Trading View, I place my entry at the 71% right here."
+        },
+        {
+          "step": 13,
+          "role": "trigger",
+          "action": "Submit the entry as a pending limit order rather than a market execution.",
+          "rationale": "The educator states this order type is required for the strategy because the trade is set up in advance.",
+          "transcript_quote": "So, it's really important to note you have to use pending limit orders for this strategy."
+        }
+      ],
+      "confluences": [
+        {
+          "name": "Fibonacci entry level coinciding with the imbalance / fair value gap",
+          "description": "An additional confluence, not on the four-item checklist, in which the Fibonacci retracement number lines up with the imbalance or fair value gap.",
+          "transcript_quote": "And that is when the Fibonacci retracement number lines up with the imbalance or fair value gap."
+        },
+        {
+          "name": "Reduced drawdown when entry is aligned with the fair value gap",
+          "description": "Aligning the entry with the fair value gap makes significant drawdown less likely, stated as an odds claim rather than a guarantee.",
+          "transcript_quote": "So if we can line up our entry with that fair value gap, odds are we're not going to have significant draw down."
+        },
+        {
+          "name": "Relative equal highs as unpurged liquidity",
+          "description": "Untouched relative equal highs are treated as a distinct form of liquidity still resting in the market.",
+          "transcript_quote": "So, this is actually another form of liquidity called relative equal highs."
+        },
+        {
+          "name": "Unpurged relative equal highs implying a further push higher",
+          "description": "Because relative equal highs were formed rather than taken out, the educator reads price as highly likely to push higher again to take that liquidity.",
+          "transcript_quote": "But because we made these relative equal highs, that tells me price is highly likely to push higher once more, taking out all of this liquidity."
+        },
+        {
+          "name": "A+ setup designation",
+          "description": "The educator labels the combination of the extra Fibonacci/fair-value-gap confluence with the listed checklist items an A+ setup with a very high likelihood of success.",
+          "transcript_quote": "So, if you can do that combined with the other things that I've listed here, that is what I like to call an A+ setup and you have a very high likelihood of success."
+        }
+      ],
+      "stop": {
+        "anchor": "The high of the Fibonacci range, as placed in the short-side worked example.",
+        "rationale": "In the short example the stop-loss is dragged to the high of the Fibonacci range.",
+        "transcript_quote": "I simply drag the stop-loss to the high of the Fibonacci range right here."
+      },
+      "targets": [
+        {
+          "priority": 1,
+          "type": "Endpoint of the Fibonacci range on the far side of the entry — the low of the Fibonacci range in the short-side worked example",
+          "r_multiple": null,
+          "rationale": "In the short example the take-profit is dragged to the low of the Fibonacci range.",
+          "transcript_quote": "And then I drag the takerit to the low of the Fibonacci range right here."
+        }
+      ],
+      "management": [
+        {
+          "rule": "The trade idea, being framed by the Fibonacci range's high and low, remains valid until one of those two levels is violated.",
+          "transcript_quote": "That's a very important detail because if our trade was based on this high and this low, then technically the trade still remains valid until one of those levels are violated."
+        },
+        {
+          "rule": "While neither framing level has been violated, there is no reason to delete the pending order.",
+          "transcript_quote": "If neither of those levels have been violated, then the trade idea is still intact and there's logically no reason to delete the order."
+        }
+      ],
+      "variants": [
+        {
+          "name": "Liquidity grab formed by a wick instead of a body-close break of structure",
+          "rule": "When the move beyond the structural level is a wick rather than a candle body closure, it is classified as a liquidity grab rather than a break of structure.",
+          "transcript_quote": "The reason this is a liquidity grab instead of a break of structure is because it was a wick instead of candle body closure."
+        },
+        {
+          "name": "Internal break of structure accepted in place of a clear one",
+          "rule": "In the second example the break of structure is not clear and is described as more of an internal break of structure, yet is still accepted as a break of structure.",
+          "transcript_quote": "The break of structure is not very clear here. This is more so an internal breakup structure, but it is a breaker structure nonetheless."
+        }
+      ],
+      "source_gaps": [
+        {
+          "field": "target.r_multiple",
+          "reason": "The transcript states a 2.45 risk-to-reward for the taught entry/stop/target geometry but never expresses the take-profit as an R multiple or ties that number to the target object itself, so no R value is asserted here."
+        },
+        {
+          "field": "stop anchor on the long side",
+          "reason": "In the long example the stop is only described as being dragged to 'that wick'; the transcript does not explicitly name it as the low of the Fibonacci range, so the mirror-image stop rule is not settled by the source."
+        },
+        {
+          "field": "Fibonacci anchoring on the short side",
+          "reason": "The transcript narrates the low-to-high drag only in the long-side example; it never states the anchoring order or the specific swing points used for the short-side example."
+        },
+        {
+          "field": "role of the 75% level",
+          "reason": "The educator enables both the 71% and 75% levels and says he really only uses the 71%, but gives no rule for when, if ever, the 75% level is acted upon."
+        },
+        {
+          "field": "definition of the trading range used for premium/discount",
+          "reason": "The transcript says premium/discount is measured against 'a trading range' and that the indicator computes it, but never states how the range's high and low are selected."
+        },
+        {
+          "field": "second reason a liquidity sweep matters",
+          "reason": "The educator announces 'two main reasons' a liquidity sweep is important but only one reason is explicitly developed in the transcript."
+        },
+        {
+          "field": "required directional relationship between the break of structure and the trade",
+          "reason": "The examples show a break of structure preceding the trade in each case, but the transcript never states as a rule which way the break of structure must point relative to the intended trade direction."
+        },
+        {
+          "field": "pending order lifetime / invalidation timing",
+          "reason": "The transcript says the order stays valid until one of the Fibonacci range levels is violated but gives no time-based expiry, no maximum wait, and no rule for cancelling an unfilled order otherwise."
+        },
+        {
+          "field": "position sizing and risk per trade",
+          "reason": "The transcript specifies entry, stop and target prices only; it never states position size, risk percentage, or account risk rules."
+        },
+        {
+          "field": "session / time-of-day filter",
+          "reason": "No trading session, time window, or news filter is taught anywhere in the transcript."
+        },
+        {
+          "field": "trade frequency limits and concurrent-position rules",
+          "reason": "The educator says the strategy 'creates trading opportunities every single week' but never states how many trades may be taken or whether multiple setups may run at once."
+        },
+        {
+          "field": "partial exits, break-even moves, or trailing management",
+          "reason": "The transcript teaches only a single fixed take-profit and stop; it contains no scaling out, break-even, or trailing-stop rule."
+        }
+      ]
+    }
+  ],
+  "top_level_source_gaps": [
+    {
+      "field": "instrument_classification.instrument",
+      "reason": "The transcript demonstrates on GBP/AUD and NZD/USD but explicitly frames the strategy as applicable to basically all assets, so the source does not settle a single instrument."
+    },
+    {
+      "field": "strategy count",
+      "reason": "The transcript teaches one method illustrated by two worked examples (a short on GBP/AUD and a long on NZD/USD); the second example is presented as an imperfect instance of the same checklist rather than as a separate strategy."
+    }
+  ]
+}
