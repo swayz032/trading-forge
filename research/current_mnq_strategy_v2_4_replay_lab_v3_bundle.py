@@ -87,14 +87,17 @@ CONTROL_INSERT_NEW = """  panel5.appendChild(mainTools);
   }
 
   function paintDirectionalTps(canvas, chartObj, bullishTp, bearishTp) {
-    const d = canvasSize(canvas);
-    const ctx = d.x;
+    // Do NOT resize the canvas here. canvasSize() changes width/height and clears
+    // the support/resistance zones that were painted immediately before the TPs.
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext('2d');
+    const width = rect.width;
     const paintOne = (tp, fill, stroke) => {
       if (!tp) return;
       const y1 = chartObj.series.priceToCoordinate(tp.hi);
       const y2 = chartObj.series.priceToCoordinate(tp.lo);
       if (y1 == null || y2 == null) return;
-      paintBand(ctx, d.w, y1, y2, fill, stroke);
+      paintBand(ctx, width, y1, y2, fill, stroke);
     };
     paintOne(bullishTp, 'rgba(72,181,104,.13)', 'rgba(94,205,128,.95)');
     paintOne(bearishTp, 'rgba(216,95,104,.13)', 'rgba(230,110,118,.95)');
