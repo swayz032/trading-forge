@@ -35,13 +35,38 @@ challenge remains mandatory on every real audit response.
 from __future__ import annotations
 
 import argparse
-import importlib
+import ast
+import inspect
 import json
+import subprocess
 import tempfile
 from pathlib import Path
 from unittest import mock
 
 import strategy_factory_gpt56_semantic_audit as G
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+BASE_COMMIT = "6deba50ef1f5004c9803a436e4ddfdce79430f4a"  # HEAD immediately before this repair
+HARNESS_REL_PATH = "scripts/strategy_factory_gpt56_semantic_audit.py"
+
+
+def _git_show_text(commit: str, rel_path: str) -> str:
+    result = subprocess.run(
+        ["git", "show", f"{commit}:{rel_path}"],
+        cwd=REPO_ROOT, capture_output=True, check=True,
+    )
+    return result.stdout.decode("utf-8")
+
+
+def _function_source(source_text: str, name: str) -> str:
+    tree = ast.parse(source_text)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name:
+            segment = ast.get_source_segment(source_text, node)
+            if segment is None:
+                raise AssertionError(f"could not extract source segment for {name}")
+            return segment
+    raise AssertionError(f"function {name!r} not found in supplied source text")
 
 CONTRACT_MARKERS = [
     "MAY legally contain non-executable",
@@ -208,18 +233,28 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="ar1379a-v2-proof-") as td:
         root = Path(td)
 
-        # ---- 0. V1 code paths untouched: module source of every V1 function is byte-identical
-        #         to a fresh re-import (i.e. nothing in this proof or the V2 addition mutates them). ----
-        import inspect
+        # ---- 0. V1 code paths untouched: live function source is byte-identical to the git blob
+        #         at the commit immediately BEFORE this repair. This is a real two-instrument
+        #         comparison (git history vs. the loaded module) -- NOT a comparison of the loaded
+        #         module against itself, which would trivially pass even if V1 had been rewritten
+        #         (an earlier version of this proof made exactly that mistake; see AR-1379A grade
+        #         finding F-D, which caught it). If any V1 function had been edited, this asserts
+        #         RED against the pre-repair commit. ----
         v1_names = ["build_task", "render_prompt", "_validate_response", "emit", "ingest"]
-        fresh = importlib.import_module("strategy_factory_gpt56_semantic_audit")
-        importlib.reload(fresh)
+        pre_repair_text = _git_show_text(BASE_COMMIT, HARNESS_REL_PATH)
         for name in v1_names:
-            live_src = inspect.getsource(getattr(G, name))
-            fresh_src = inspect.getsource(getattr(fresh, name))
-            assert live_src == fresh_src, f"V1 function {name} diverged from a fresh module reload"
-        print("PASS STRUCTURAL: V1 build_task/render_prompt/_validate_response/emit/ingest "
-              "are present unmodified alongside the new V2 functions")
+            # inspect.getsource() includes a trailing newline; ast.get_source_segment() does not --
+            # rstrip both before comparing so that formatting-extraction artifact isn't mistaken for
+            # a real divergence (verified: the only difference for every V1 function is this one
+            # trailing "\n", confirmed by direct inspection before adding the rstrip).
+            live_src = inspect.getsource(getattr(G, name)).rstrip("\n")
+            pre_repair_src = _function_source(pre_repair_text, name).rstrip("\n")
+            assert live_src == pre_repair_src, (
+                f"V1 function {name} diverged from its source at pre-repair commit {BASE_COMMIT}"
+            )
+        print(f"PASS STRUCTURAL: V1 build_task/render_prompt/_validate_response/emit/ingest are "
+              f"byte-identical to their source at pre-repair commit {BASE_COMMIT[:12]} "
+              f"(git blob comparison, not an import-cache artifact)")
 
         # ---- 1. Old defect reproduction: V1 task_sha256 unaffected by contract-text swap ----
         base = base_candidate()
@@ -227,9 +262,11 @@ def main() -> int:
         sha_before = v1_task["task_sha256"]
         with mock.patch.object(G, "ROLE_ASSIGNMENT_CONTRACT", G.ROLE_ASSIGNMENT_CONTRACT + " MUTATED."):
             v1_prompt_after = G.render_prompt(v1_task, TRANSCRIPT, json.dumps(base))
-        assert v1_task["task_sha256"] == sha_before, "V1 task identity must be untouched by this proof"
+        # Load-bearing assertion: the prompt TEXT must actually change under the swapped contract
+        # (otherwise this whole probe would prove nothing). sha_before/v1_task["task_sha256"] are
+        # never recomputed anywhere in this block, so asserting them equal to each other would be
+        # comparing a value to itself -- deliberately not asserted, per AR-1379A grade finding F-D.
         assert v1_prompt_before != v1_prompt_after, "prompt text must actually differ under the swapped contract"
-        assert "task_sha256" not in v1_prompt_after or v1_task["task_sha256"] == sha_before
         print(f"RED CONFIRMED (historical, expected): V1 task_sha256={sha_before[:16]}... is IDENTICAL whether the "
               f"prompt is rendered under the original or a mutated ROLE_ASSIGNMENT_CONTRACT -- this is exactly "
               f"AR-1379A F-1: a V1 receipt cannot prove which contract text the auditor actually saw. V1 is left "
@@ -265,6 +302,15 @@ def main() -> int:
             lambda: G.render_prompt_v2(tampered_task, TRANSCRIPT, json.dumps(base)),
             "does not match the live",
         )
+        # F-A fix (independent grade finding): a hash-correct but mislabeled contract id must also
+        # be refused at render time, not just at ingest time.
+        mislabeled_task = dict(v2_task)
+        mislabeled_task["semantic_contract_id"] = "AR-9999-TOTALLY-DIFFERENT-CONTRACT"
+        expect_fail(
+            "render_prompt_v2 refuses a task with a correct hash but a mislabeled contract id (F-A)",
+            lambda: G.render_prompt_v2(mislabeled_task, TRANSCRIPT, json.dumps(base)),
+            "semantic_contract_id",
+        )
 
         # ---- 4. Response refusal: response echoes wrong contract id/hash ----
         t, c, out, task, prompt = emit_case_v2(root, "v2-response-refusal", base)
@@ -294,6 +340,100 @@ def main() -> int:
         assert receipt["semantic_contract_sha256"] == G.semantic_contract_sha256()
         print("PASS: valid V2 ingest receipt records the exact bound semantic_contract_id/sha256, "
               "joining candidate + transcript + semantic contract -> task_sha256 -> response -> receipt")
+
+        # ---- 5b. Independent-grade follow-up fixes (AR-1379A grade, 2026-08-20): F-A/F-B/F-C/F-E/F-F ----
+
+        # F-A at ingest: a task.json hand-edited to a mislabeled contract id, WITH task_sha256
+        # resealed consistently so the pre-existing tamper-evidence check cannot be what catches
+        # it -- reproducing the grader's exact attack: hash-correct, resealed, only the label wrong.
+        t5, c5, out5, task5, _ = emit_case_v2(root, "v2-fa-ingest-mislabel", base)
+        mislabeled_on_disk = dict(task5)
+        mislabeled_on_disk["semantic_contract_id"] = "AR-9999-TOTALLY-DIFFERENT-CONTRACT"
+        resealed_core = dict(mislabeled_on_disk)
+        del resealed_core["task_sha256"]
+        mislabeled_on_disk["task_sha256"] = G.sha256_text(G.canonical_json(resealed_core))
+        write_json(out5 / "gpt56_semantic_audit_task.json", mislabeled_on_disk)
+        expect_fail(
+            "ingest_v2 refuses a hash-correct, resealed, but relabelled semantic_contract_id (F-A)",
+            lambda: run_ingest_v2(t5, c5, out5, clean_response_v2(task5, all_pass=True)),
+            "semantic_contract_id",
+        )
+
+        # F-B: the emitted prompt file, if tampered/stripped after emission, must be refused at
+        # ingest -- proving the receipt is bound to what was actually DELIVERED, not just to what
+        # the task claims. Positive control: an untampered prompt still ingests clean and the
+        # receipt now carries prompt_sha256.
+        t6, c6, out6, task6, prompt6 = emit_case_v2(root, "v2-fb-prompt-binding", base)
+        prompt_path6 = out6 / "gpt56_semantic_audit_prompt.txt"
+        original_prompt_bytes = prompt_path6.read_text(encoding="utf-8")
+        prompt_path6.write_text(
+            original_prompt_bytes.replace(G.ROLE_ASSIGNMENT_CONTRACT, "STRIPPED"), encoding="utf-8"
+        )
+        expect_fail(
+            "ingest_v2 refuses a delivered prompt file that no longer matches the bound task (F-B)",
+            lambda: run_ingest_v2(t6, c6, out6, clean_response_v2(task6, all_pass=True)),
+            "does not match the prompt",
+        )
+        prompt_path6.write_text(original_prompt_bytes, encoding="utf-8")
+        receipt6 = run_ingest_v2(t6, c6, out6, clean_response_v2(task6, all_pass=True))
+        assert receipt6["prompt_sha256"] == G.sha256_text(original_prompt_bytes)
+        print("PASS (F-B): tampered delivered-prompt bytes are refused; an untampered prompt ingests "
+              "clean and the receipt records the exact prompt_sha256 that was actually delivered")
+
+        # F-C: emit_v2 must refuse to overwrite a differently-schemed (e.g. V1) task in the same
+        # out-dir, but must still allow re-emitting into a directory that already holds a V2 task.
+        emit_case_v1(root, "v2-fc-overwrite-guard", base)  # writes a V1 task/prompt into .../out
+        v1_dir = root / "v2-fc-overwrite-guard" / "out"
+        expect_fail(
+            "emit_v2 refuses to overwrite an existing V1 task with the same filenames (F-C)",
+            lambda: G.emit_v2(argparse.Namespace(
+                video_id=VIDEO,
+                transcript=str(root / "v2-fc-overwrite-guard" / "transcript.txt"),
+                candidate=str(root / "v2-fc-overwrite-guard" / "candidate.json"),
+                out_dir=str(v1_dir),
+            )),
+            "already holds a",
+        )
+        preserved_v1_task = G.read_json(v1_dir / "gpt56_semantic_audit_task.json")
+        assert preserved_v1_task["schema"] == G.TASK_SCHEMA
+
+        # Re-emitting V2 into a directory that ALREADY holds a V2 task must still be allowed
+        # (idempotent regeneration is not the hazard; cross-schema clobber is) -- exercised against
+        # a fresh directory that genuinely holds a V2 task first, not the V1 directory above.
+        v2_dir_case = "v2-fc-idempotent-reemit"
+        t10, c10, out10, task10_first, _ = emit_case_v2(root, v2_dir_case, base)
+        G.emit_v2(argparse.Namespace(
+            video_id=VIDEO, transcript=str(t10), candidate=str(c10), out_dir=str(out10),
+        ))
+        task10_second = G.read_json(out10 / "gpt56_semantic_audit_task.json")
+        assert task10_second["schema"] == G.TASK_SCHEMA_V2
+        print("PASS (F-C): emit_v2 refuses to clobber existing V1 evidence with the same filenames, "
+              "while re-emitting into an already-V2 directory remains allowed")
+
+        # F-E: _validate_response_v2 must fail closed (SystemExit) rather than crash (KeyError) when
+        # a task is missing semantic_contract_id, when called directly (defense in depth beyond the
+        # ingest_v2-level check exercised by F-A above).
+        t8, c8, out8, task8, _ = emit_case_v2(root, "v2-fe-missing-key", base)
+        broken_task = dict(task8)
+        del broken_task["semantic_contract_id"]
+        try:
+            G._validate_response_v2(broken_task, clean_response_v2(task8, all_pass=True), TRANSCRIPT)
+        except SystemExit as e:
+            print(f"PASS (F-E): _validate_response_v2 fails closed via SystemExit, not KeyError, on a "
+                  f"task missing semantic_contract_id: {e}")
+        else:
+            raise AssertionError("F-E: expected SystemExit, task missing semantic_contract_id was accepted")
+
+        # F-F: a response echoing legacy_semantics_visible as the JSON int 0 (not the JSON bool
+        # false) must be refused -- Python's 0 == False previously let this slip through.
+        t9, c9, out9, task9, _ = emit_case_v2(root, "v2-ff-bool-laxity", base)
+        int_zero_resp = clean_response_v2(task9, all_pass=True)
+        int_zero_resp["legacy_semantics_visible"] = 0
+        expect_fail(
+            "ingest_v2 refuses legacy_semantics_visible=0 (int) where bool false is required (F-F)",
+            lambda: run_ingest_v2(t9, c9, out9, int_zero_resp),
+            "legacy_semantics_visible mismatch",
+        )
 
         # ---- 6. Role prompt controls remain, exercised through the V2 path ----
         missing = [m for m in CONTRACT_MARKERS if m not in prompt]

@@ -616,6 +616,13 @@ def render_prompt_v2(task: dict[str, Any], transcript: str, candidate_text: str)
             f"ROLE_ASSIGNMENT_CONTRACT hash ({live_contract_sha!r}) -- refusing to render a prompt "
             "that could misrepresent which contract version this task was bound under"
         )
+    if task.get("semantic_contract_id") != SEMANTIC_CONTRACT_ID:
+        raise SystemExit(
+            "V2 task semantic_contract_id "
+            f"({task.get('semantic_contract_id')!r}) does not match the live SEMANTIC_CONTRACT_ID "
+            f"({SEMANTIC_CONTRACT_ID!r}) -- refusing to render a prompt with a mislabeled contract "
+            "identity even though the hash check above is the real cryptographic anchor"
+        )
     claim_lines = "\n".join(
         f"- {c['claim_ref']}: {c['claim']}\n  QUOTE: {c['transcript_quote']}"
         for c in task["required_claims"]
@@ -719,6 +726,15 @@ def emit_v2(args: argparse.Namespace) -> int:
     transcript = transcript_path.read_text(encoding="utf-8")
     raw = candidate_path.read_bytes()
     candidate = json.loads(raw.decode("utf-8"))
+    existing_task_path = out_dir / "gpt56_semantic_audit_task.json"
+    if existing_task_path.exists():
+        existing_schema = read_json(existing_task_path).get("schema")
+        if existing_schema != TASK_SCHEMA_V2:
+            raise SystemExit(
+                f"refusing to emit-v2 into {out_dir}: it already holds a "
+                f"{existing_schema!r}-schema task (frozen historical evidence per AR-1379A "
+                "section 2 'Preserve historical V1 evidence') -- use a different --out-dir"
+            )
     task = build_task_v2(args.video_id, transcript, candidate, raw)
     prompt = render_prompt_v2(task, transcript, raw.decode("utf-8"))
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -741,19 +757,23 @@ def emit_v2(args: argparse.Namespace) -> int:
 def _validate_response_v2(task: dict[str, Any], response: dict[str, Any], transcript: str) -> tuple[bool, list[str]]:
     exact = {
         "schema": RESPONSE_SCHEMA_V2,
-        "video_id": task["video_id"],
-        "candidate_sha256": task["candidate_sha256"],
-        "transcript_sha256": task["transcript_sha256"],
-        "task_sha256": task["task_sha256"],
-        "audit_nonce": task["audit_nonce"],
+        "video_id": task.get("video_id"),
+        "candidate_sha256": task.get("candidate_sha256"),
+        "transcript_sha256": task.get("transcript_sha256"),
+        "task_sha256": task.get("task_sha256"),
+        "audit_nonce": task.get("audit_nonce"),
         "auditor_role": AUDITOR_ROLE,
         "model_identity": MODEL_IDENTITY,
         "legacy_semantics_visible": False,
-        "semantic_contract_id": task["semantic_contract_id"],
-        "semantic_contract_sha256": task["semantic_contract_sha256"],
+        "semantic_contract_id": task.get("semantic_contract_id"),
+        "semantic_contract_sha256": task.get("semantic_contract_sha256"),
     }
     for key, expected in exact.items():
-        if response.get(key) != expected:
+        actual = response.get(key)
+        if isinstance(expected, bool):
+            if not isinstance(actual, bool) or actual is not expected:
+                raise SystemExit(f"audit response {key} mismatch")
+        elif actual != expected:
             raise SystemExit(f"audit response {key} mismatch")
     if response.get("verdict") not in {"PASS", "FAIL"}:
         raise SystemExit("audit verdict must be PASS or FAIL")
@@ -869,6 +889,12 @@ def ingest_v2(args: argparse.Namespace) -> int:
             "V2 task was bound to a semantic contract hash that no longer matches the live "
             "ROLE_ASSIGNMENT_CONTRACT -- refusing to ingest against a stale contract binding"
         )
+    if task.get("semantic_contract_id") != SEMANTIC_CONTRACT_ID:
+        raise SystemExit(
+            "V2 task semantic_contract_id "
+            f"({task.get('semantic_contract_id')!r}) does not match the live SEMANTIC_CONTRACT_ID "
+            f"({SEMANTIC_CONTRACT_ID!r}) -- refusing to ingest against a mislabeled contract identity"
+        )
 
     transcript = Path(args.transcript).read_text(encoding="utf-8")
     candidate_raw = Path(args.candidate).read_bytes()
@@ -881,6 +907,21 @@ def ingest_v2(args: argparse.Namespace) -> int:
     task_sha = task_copy.pop("task_sha256", None)
     if sha256_text(canonical_json(task_copy)) != task_sha:
         raise SystemExit("semantic audit task changed after emission")
+
+    # F-B repair: the task identity binds the contract, but nothing previously checked that the
+    # PROMPT BYTES actually delivered to the auditor still carry it. Re-derive the expected prompt
+    # from the same (task, transcript, candidate) this ingest already trusts and hash-compare it
+    # against the prompt file on disk -- this converts "the task was bound to contract X" into
+    # "the artifact the model was handed was bound to contract X", closing the delivery half of F-1.
+    prompt_path = out_dir / "gpt56_semantic_audit_prompt.txt"
+    expected_prompt = render_prompt_v2(task, transcript, candidate_raw.decode("utf-8"))
+    on_disk_prompt = prompt_path.read_text(encoding="utf-8")
+    if sha256_text(on_disk_prompt) != sha256_text(expected_prompt):
+        raise SystemExit(
+            f"{prompt_path} does not match the prompt this task/transcript/candidate/contract "
+            "would render -- refusing to ingest against a tampered or stale delivered prompt"
+        )
+    prompt_sha256 = sha256_text(on_disk_prompt)
 
     raw_response = Path(args.raw_response).read_bytes()
     response = json.loads(raw_response.decode("utf-8"))
@@ -899,6 +940,7 @@ def ingest_v2(args: argparse.Namespace) -> int:
         "legacy_semantics_visible": False,
         "semantic_contract_id": task["semantic_contract_id"],
         "semantic_contract_sha256": task["semantic_contract_sha256"],
+        "prompt_sha256": prompt_sha256,
         "semantic_pass": clean_pass,
         "fail_closed_reasons": reasons,
         "next_authority": (
