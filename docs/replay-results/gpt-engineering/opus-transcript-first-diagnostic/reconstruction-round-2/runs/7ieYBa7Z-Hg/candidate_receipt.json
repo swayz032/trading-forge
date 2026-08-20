@@ -1,0 +1,29 @@
+{
+  "artifact": "opus-transcript-first-candidate-receipt-v2-self-authored-deviation",
+  "status": "SELF_AUTHORED_RECONSTRUCTION_NOT_FRESH_DISPATCH_NOT_CERTIFIED",
+  "video_id": "7ieYBa7Z-Hg",
+  "diagnostic_category": "MULTI_STRATEGY_IDENTITY_CONTROL",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "deviation_disclosed": true,
+  "deviation_reason": "AR-1374A specified dispatching ONE fresh, isolated Claude Code subagent per video (model override=opus, subagent_type=general-purpose, given only the task file). Three such subagents were dispatched for E8Wg6tFPYjo, 7ieYBa7Z-Hg, and 1HFoStW_wsc. All three completed (went idle) but the teammate-messaging channel did not deliver their output after approximately one hour and multiple explicit re-requests. Rather than continue waiting indefinitely or fabricate a fresh-dispatch invocation receipt that would be false, the worker session itself authored this reconstruction directly from the transcript, applying the AR-1374A atomic-authoring law and case-specific constraints. This is a real deviation from the authorized process, disclosed rather than papered over, because the worker session already knew the exact prior-round failure findings and cannot claim the bias-isolation a genuinely fresh, blind reader would have had.",
+  "invocation_declared": false,
+  "invocation_independently_attested": false,
+  "fresh_reader": false,
+  "prompt_source": "task_file_only (given to self, not to an isolated fresh subagent)",
+  "legacy_semantics_visible": false,
+  "task_sha256": "1927e303fd19e8e7d17aa341cfb4b45b23fd231abea4104e908f530809b41ee0",
+  "transcript_sha256": "63742bf97578c28637b85ea58540d1acbee8341c9e7c4d31d90f09c165c5dcf7",
+  "raw_response_sha256": "7b6c4ceb7bf5ff5df6a62dc40f392982e4bea96bedaf9f16c5d14d2a6aeb1000",
+  "candidate_sha256": "7b6c4ceb7bf5ff5df6a62dc40f392982e4bea96bedaf9f16c5d14d2a6aeb1000",
+  "validation": {
+    "strategy_count": 1,
+    "literal_quote_count": 65,
+    "literal_quote_failures": 0,
+    "identity_sequence": [
+      "s0"
+    ]
+  },
+  "factory_authority": false,
+  "certification_required": true,
+  "next_step": "GPT must rule on whether a self-authored (non-isolated) atomic reconstruction is acceptable evidence to proceed to literal verification + GPT-5.6 semantic audit, or whether it must be discarded and redone via a genuinely isolated fresh dispatch before any semantic task is emitted."
+}

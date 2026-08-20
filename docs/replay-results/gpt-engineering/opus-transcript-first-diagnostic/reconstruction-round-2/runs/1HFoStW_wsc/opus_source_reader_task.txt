@@ -1,0 +1,144 @@
+You are the LEAD SOURCE READER for a controlled Trading Forge diagnostic.
+
+MISSION
+Read the ORIGINAL transcript below from scratch and reconstruct exactly the executable trading
+strategy or strategies the educator actually teaches. Do not repair, defend, imitate, or infer from
+any prior extraction. You are intentionally not being shown any legacy strategy JSON.
+
+SOURCE-FIDELITY LAW
+- The transcript is source authority. Your interpretation is not.
+- Do not invent missing rules, defaults, indicator settings, direction, timeframes, stops, targets,
+  sequencing, or variants.
+- If the source does not settle a load-bearing field, record the gap in source_gaps instead of guessing.
+- Distinguish education/context from executable trade requirements.
+- Preserve every separately taught strategy. Do not merge multiple strategies into one.
+- Preserve alternatives/variants without choosing a favorite for the educator.
+- Every load-bearing statement you emit MUST carry a transcript_quote copied from the transcript.
+- transcript_quote may normalize whitespace only; do not paraphrase inside the quote.
+- Return strict JSON only. No Markdown fence and no prose before/after the JSON.
+
+OUTPUT SHAPE
+{
+  "video_id": "<exact supplied video id>",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": {
+    "asset_class": "<source-grounded value or null>",
+    "instrument": "<source-grounded value or null>",
+    "rationale": "<brief source-grounded explanation or null>",
+    "transcript_quote": "<literal support or null>"
+  },
+  "strategies": [
+    {
+      "source_strategy_id": "s0",
+      "name": "<neutral source-grounded name>",
+      "direction": "long|short|both|source_unresolved",
+      "direction_transcript_quote": "<literal support, or null only when source_unresolved>",
+      "higher_timeframe": "<source-grounded value or source_unresolved>",
+      "higher_timeframe_transcript_quote": "<literal support, or null only when source_unresolved>",
+      "execution_timeframe": "<source-grounded value or source_unresolved>",
+      "execution_timeframe_transcript_quote": "<literal support, or null only when source_unresolved>",
+      "setup": [
+        {"description": "<rule/context>", "transcript_quote": "<literal source quote>"}
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "role": "context|spine|trigger",
+          "action": "<what must happen>",
+          "rationale": "<why this step belongs in the taught strategy>",
+          "transcript_quote": "<literal source quote>"
+        }
+      ],
+      "confluences": [
+        {
+          "name": "<neutral name>",
+          "description": "<source-grounded condition>",
+          "transcript_quote": "<literal source quote>"
+        }
+      ],
+      "stop": null,
+      "targets": [
+        {
+          "priority": 1,
+          "type": "<source-grounded target type>",
+          "r_multiple": null,
+          "rationale": "<exact taught target rule>",
+          "transcript_quote": "<literal source quote>"
+        }
+      ],
+      "management": [
+        {"rule": "<source-grounded management/re-entry/exit rule>", "transcript_quote": "<literal quote>"}
+      ],
+      "variants": [
+        {"name": "<source-grounded variant>", "rule": "<what differs>", "transcript_quote": "<literal quote>"}
+      ],
+      "source_gaps": [
+        {"field": "<unresolved field>", "reason": "<what the transcript does not settle>"}
+      ]
+    }
+  ],
+  "top_level_source_gaps": []
+}
+
+STOP OBJECT
+If a stop is explicitly taught, replace null with:
+{
+  "anchor": "<source wording/canonical description without invention>",
+  "rationale": "<exact taught stop rule>",
+  "transcript_quote": "<literal source quote>"
+}
+
+IDENTITY LAW
+- source_strategy_id values must be sequential s0, s1, ... in source-order.
+- If the transcript teaches zero executable strategies, return strategies=[] and explain why in
+  top_level_source_gaps.
+- Do not force the strategy count to match any historical corpus.
+
+
+SUPPLIED VIDEO ID
+1HFoStW_wsc
+
+ORIGINAL TRANSCRIPT — SOURCE AUTHORITY
+<<<TRANSCRIPT_START>>>
+If you want to trade with the same edge that bank traders use to move millions of dollars without losing money, I'm revealing the VWAP system that access their secret roadmap for every major market move. You've been looking at VWAP completely wrong this entire time. I know because I made the same mistake for years. I used to think VWAP was just another moving average, maybe a fancier one, but still just a line on my chart that price would bounce off sometimes. Then I watched a former institutional trader execute a massive position and everything clicked. The way he used the VWAP wasn't anything like what retail traders do. It was like watching someone play chess while everyone else was playing checkers. Here's what VWAP really is, volume weighted average price. It shows the average price where real money actually changed hands throughout the day. VWAP is actually the institutional anchor point. Most traders treat VWAP like basic support and resistance. They see price bounce off it a few times and think they've discovered the Holy Grail. But this completely misses why VWAP actually works. The real secret is understanding that institutional traders must use VWAP. When a hedge fund needs to buy 1 million shares of Apple, they can't just market buy it all at once. That would spike the price and cost them millions extra. Instead, they use VWAP as their execution benchmark. Their algorithms are programmed to accumulate shares throughout the day, keeping their average price as close to VWAP as possible. This creates a gravitational pull that retail traders can exploit once they understand what's really happening. Now pay attention to this part because it changes everything about how you'll use VWAP. There are three VWAP types that actually matter. Daily VWAP resets every session and shows you intraday institutional activity. Weekly VWAP captures the bigger swing trade positioning. Monthly VWAP reveals the major trend and where long-term players are anchored. Each one controls price action at different times. Daily VWAP dominates your day trades. Weekly VWAP becomes magnetic during multi-day moves. Monthly VWAP acts like a massive support or resistance during trend changes. The mindset shift is this, stop seeing VWAP as just another indicator. Start seeing it as the institutional roadmap. Every time price approaches VWAP, you're watching a battle between traders who bought above it and are now underwater and traders who bought below it and are protecting profits. Once you see VWAP this way, every price movement starts making sense. Here's an insider secret that changes everything about how you read VWAP. Most retail traders see VWAP as a simple line. Price above equals bullish. Price below equals bearish. This kindergarten approach misses 90% of what VWAP actually tells you. Smart money reads VWAP completely differently. They combine it with volume profile to create power zones. Here's how it works. When VWAP intersects with a high volume node from the volume profile, you get what institutions call a confluence anchor. This isn't just any VWAP level. This is where massive institutional orders are likely sitting. But the real intelligence is in the VWAP slope. A flat VWAP means the market is in balance. Buyers and sellers are evenly matched. Price will likely chop around this level. A steep VWAP slope means one side is winning decisively. The steeper the angle, the stronger the institutional flow. This is how you identify trending versus ranging market conditions. Instead of guessing market direction, smart money uses the multi-timeframe VWAP stack. When daily, weekly, and monthly VWAP all point in the same direction, you have institutional alignment. This create the most explosive moves. Watch for this pattern. When all three VWAPs are stacked bullishly, daily above weekly above monthly, and price is above all three, you have what we call institutional consensus. Every timeframe of smart money agrees on direction. The opposite is true for bearish stacks. When monthly is above weekly is above daily and price is below all three, institutional money is aligned to the downside. This is how you avoid fighting against billion-dollar flows and start trading with them instead. Let me show you a hidden pattern that most traders never discover. Standard session VWAP isn't the only game in town. Here's the situation. You're using regular VWAP, but the levels don't seem to matter. Price blows through them like they're not even there. You start questioning if VWAP even works. The problem is you're using the wrong anchor point. Session VWAP resets every day at market open. But institutions don't think in daily sessions. They think in events. What you really want is custom anchor points. VWAP anchored to major events, earnings announcements, Fed meetings, company keynotes. These create much more powerful levels than random daily resets. The result is that you start seeing VWAP levels that institutions actually respect. Event-anchored VWAP shows you where the big money positioned themselves around major news. Here's a perfect example. Anchor VWAP to Tesla's last earnings announcement. That level will act like a magnet for weeks because that's where institutions made their big decisions about Tesla's value. The key takeaway is this, think like an institution. They don't care about arbitrary time periods. They care about information events. Anchor your VWAP to the same events they do. But you're probably wondering how to choose the right anchor. Here are the selection rules. First, the event must have moved the stock significantly. Second, it must have generated massive volume. Third, it should be fundamentally important to the company or market. And now you have the foundation for institutional level VWAP analysis. While other traders use generic daily VWAP, you're anchoring to the events that actually matter to smart money. Look at this chart. See these bands around VWAP? Most traders have no idea what they're actually looking at. These are standard deviation bands and they're showing you mathematical probability in real time, the statistical boundaries of normal price action. When price hits these bands, specific probability plays emerge. The plus one and minus one bands contain about 68% of price action. This is the normal trading range. When price is between these bands, nothing special is happening. But watch what happens at the plus two and minus two bands. This is where 95% of price action should stay contained. When price hits these levels, you get mean reversion signals. The probability heavily favors a move back toward VWAP. The plus three and minus three bands are the extreme levels. Only 0.3% of price action should reach here. When it does, you're either seeing a genuine breakout or an extreme overshoot that will snap back violently. Check this out. When the bands squeeze together, volatility is contracting. This compression almost always leads to explosive moves. The tighter the squeeze, the bigger the eventual expansion. Here's a pattern that makes money consistently, the band walk. In strong trends, price will ride along the plus one or minus one band. It doesn't return to VWAP. Instead, it uses the band as dynamic support or resistance. This tells you the difference between mean reversion and trend continuation. If price immediately returns to VWAP after hitting a band, trade mean reversion. If price walks along the band, trade trend continuation. You've just learned to read VWAP like a probability distribution instead of a simple line. This is exactly how institutional algorithms are programmed to interpret these levels. Most traders think this VWAP bounce is bullish, but they're completely wrong about what's actually happening. I used to make this exact mistake. I'd see price bounce and immediately go long thinking I'd caught the perfect entry. Then I'd watch in frustration as price would reverse and blow through my stop. The mistake was treating all VWAP touches the same. The key is reading the candles at each touch. A long wick rejection shows institutional defense. They're actively protecting that level. A weak doji shows uncertainty. But a strong close through VWAP with volume, that's capitulation. Volume tells you everything here. High volume at VWAP means institutions are active. They're either accumulating or distributing, but they're definitely participating. Here's the false break trap that gets everyone. Price breaks below VWAP by a few candles, triggers all the stops, then immediately reverses back above. This isn't random. It's institutions grabbing liquidity before the real move higher. The difference between acceptance and rejection is time. If price breaks VWAP and stays below for more than three candles, it's accepted. If it immediately snaps back, it's rejected. This simple rule filters out 80% of false signals. Here's a myth that destroys traders. VWAP works the same way in all market conditions. This is completely false. VWAP behaves totally differently in trending markets versus ranging markets versus volatile markets. Use the same strategy in all conditions and you'll get crushed. Let me show you the real way institutions adapt their VWAP strategies. In trending markets, VWAP becomes dynamic support or resistance. In an uptrend, price will pull back to VWAP, find support, and continue higher. The key is that VWAP itself is sloping in the direction of the trend. But in ranging markets, VWAP becomes the center of gravity. Price oscillates around it like a pendulum. Above VWAP, look for shorts back to VWAP. Below VWAP, look for longs back to VWAP. Instead of fighting the market condition, smart money adapts their VWAP strategy to match what the market is actually doing. Trend strategies in trending markets, mean reversion strategies in ranging markets. Volatile markets create a different situation entirely. The VWAP bands expand dramatically. Normal mean reversion levels stop working. You need wider bands and different probability thresholds. Low volume periods make VWAP less reliable. Without institutional participation, VWAP levels become meaningless. This is when you switch to alternative strategies or simply stay out of the market. News events create the most interesting VWAP behavior. Earnings, Fed announcements, and major economic data can completely reset VWAP dynamics. The pre-news VWAP becomes irrelevant. You need new anchor points. The key insight is this. VWAP is a tool, not a strategy. You must adapt how you use it based on current market conditions. You now have the foundation, but here's the complete blueprint for actually trading VWAP like a professional. The problem with most VWAP trading is that it's too discretionary. Traders see price near VWAP and just wing it. No consistent rules, no systematic approach. Here's how it works. For entries, you need three confirmations. First, price action signal at VWAP. Second, volume confirmation of institutional activity. Third, directional bias from higher time frame VWAP stack. Stop loss placement uses VWAP bands and volume profiles. Your stop goes at the next significant VWAP band or volume node. This ensures you're stopped out only when institutional opinion changes. Target selection follows VWAP logic. Your first target is the next VWAP level or standard deviation band. Your second target is the next volume node. Exit signals are just as important as entries. When VWAP slope changes direction, volume dries up, or bands compress, institutional activity is shifting. Time to reassess your position. The key takeaway is systematic execution. Every decision is based on VWAP structure, not emotions or hunches. Let me share something that completely changed how I view market structure. Monthly VWAP isn't just another line. It's the ultimate trend filter that institutions can't hide from. When price is above monthly VWAP, every dip is a buying opportunity until proven otherwise. Below it, every rip is a shorting opportunity. But here's what most traders never realize about yearly VWAP. This level defines entire market regimes. Bull market, price stays above yearly VWAP for months, even during corrections. Bear market, yearly VWAP becomes impenetrable resistance that caps every rally. The quarterly VWAP strategy is pure gold during earning season. Institutions position their portfolios around quarterly performance. That makes quarterly VWAP the anchor point for major funds. Now here's the hierarchy rule that governs everything. When daily says buy, but weekly says sell, weekly wins. When weekly says buy, but monthly says sell, monthly wins. The longer time frame always has more institutional commitment behind it. This creates incredible opportunities. When all time frames align, daily, weekly, monthly, and yearly VWAP all broken in the same direction, you're witnessing institutional herding. These moves typically run three times farther than normal because every algorithm is triggered at once. For position sizing on longer time frame trades, the distance from VWAP determines everything. If you're 5% extended from monthly VWAP, use half size. If you're within 1%, use full size. This simple rule keeps you from buying tops and selling bottoms. Here's when VWAP stops working and most traders have no backup plan. Low volume kills VWAP reliability. When volume drops below 30% of average, VWAP moves on so few shares that it loses meaning. During these dead zones, price can drift through VWAP with zero resistance because no institutions are participating. The problem gets worse with overnight gaps. A 3% gap completely breaks VWAP continuity. The session VWAP starts in no man's land, while the real battle happens at yesterday's VWAP. Most traders don't realize they're using the wrong reference point. The whipsaw problem destroys more accounts than anything. Price crosses VWAP 15 times in an hour, triggering both longs and shorts. Each cross looks valid, but immediately reverses. The key is recognizing the choppy price action and wider bands that signal a whipsaw environment. Also, alternative anchors save you when standard VWAP fails. Switch to the previous day's high or low VWAP. Use the weekly open VWAP. Anchor to the last major volume spike. The key takeaway is adaptability. VWAP is powerful, but not perfect. Knowing when it doesn't work is just as important as knowing when it does. Before this video, you had VWAP knowledge scattered in pieces. But now you're going to organize it into a complete battle plan. Here's your complete pre-market VWAP analysis routine. First, identify all relevant VWAP levels. Daily, weekly, monthly for each instrument. Second, note any custom anchors from recent events. Third, check the VWAP hierarchy for directional bias. Your VWAP watch list focuses on markets with the highest probability setups. Look for instruments where multiple VWAP time frames are aligned. Price near significant VWAP levels. Volume patterns suggesting institutional activity. Your VWAP playbook becomes a simple checklist. Is price at VWAP? Is volume above average? Are multiple time frames aligned? Is the broader market supporting this direction? Are VWAP bands expanding or contracting? Check all five or skip the trade. You are now equipped with the same VWAP knowledge that market makers and institutional traders use to move billions of dollars. This isn't retail trader education. This is professional level training. And if you're ready to fit this into a full A to Z trading system, that's what our academy is for. Link is in the description.
+<<<TRANSCRIPT_END>>>
+
+=====================================================================
+ADDITIONAL AUTHORING LAW FOR THIS RECONSTRUCTION ROUND (AR-1374A Sec5-6)
+=====================================================================
+This is an authorized re-attempt at this exact video after a prior fresh reconstruction FAILED
+independent semantic audit. The rules above (SOURCE-FIDELITY LAW, OUTPUT SHAPE, IDENTITY LAW) still
+apply in full. The following is ADDITIONAL, MANDATORY law for this round only, targeting exactly
+why the prior attempt failed:
+
+ATOMIC QUOTE-BINDING LAW (the single biggest cause of the prior FAIL):
+- Write every quote-bearing object (setup/entry_sequence/confluences/stop/targets/management/
+  variants item) as ONE atomic source proposition per object wherever practical.
+- Do NOT combine two or more distinct facts into one description/action/rationale/name/rule UNLESS
+  the single transcript_quote you attach fully and completely entails the WHOLE compound statement.
+  If a claim has two parts and only one part is covered by your best quote, SPLIT the claim into two
+  separate objects, each with its own fully-supporting quote -- do not force them together.
+- Do not make a rationale, description, or rule STRONGER than what its own attached quote actually
+  says. If the quote only implies something loosely, say so at that strength, not more.
+- Do NOT store tooling instructions, visualization-only steps, platform/execution-venue logistics,
+  demo/backtest practice advice, or generic trading philosophy inside executable strategy containers
+  (entry_sequence, stop, targets, management, variants). If the transcript teaches this kind of
+  non-executable material, put it in setup[] as context/description, clearly framed as non-executable,
+  or omit it if it adds nothing load-bearing.
+- Do NOT use words like "primary", "preferred", "priority", "must", or "only" to rank or resolve
+  between multiple things the source itself leaves equal or unresolved. If the source offers two
+  genuinely alternative methods with no stated preference, represent them as co-equal variants/
+  alternatives -- do not invent a ranking. If the source gives multiple possible values (e.g. several
+  percentages) without stating which applies when, do not assign artificial priority numbers; either
+  represent it as one field with the range/set of values as taught, or mark it source_unresolved with
+  a source_gaps entry explaining why no selection rule exists.
+
+REJECTION-CONSTRAINT HAZARDS FROM THE PRIOR ATTEMPT (authoring hazards to avoid -- these are NOT
+substitute source facts, do not treat them as things to copy; re-derive everything from the
+transcript below from scratch):
+- Re-derive the number of top-level independent strategies from the transcript itself, from scratch. Do not assume any particular count (not 6, not 2, not 1) going in.
+- Apply an independence test to each candidate top-level strategy: does it, on its own, have a stated direction, a stated entry trigger, a stated stop, and a stated target? Content that only builds a price level or a regime/filter classification (with no independent entry/stop/target of its own) is NOT an independent top-level strategy -- it belongs as context or as a confluence/filter layer used by whichever strategy actually has complete entry/stop/target logic of its own.
+- The transcript explicitly frames trending-market and ranging-market applications as two modes of adapting ONE approach to different market conditions, not as two separate top-level strategies -- watch for this kind of 'apply the same method differently depending on regime' framing and do not split it into multiple strategy identities on that basis alone.
+- Do not let a shared sentence or shared reasoning that clearly describes an umbrella/general principle (rather than a strategy-specific trigger) become the sole entry-sequence trigger for more than one 'strategy' -- if the same exact source sentence would have to be quoted as the trigger for two different top-level strategies, that is evidence they are not actually independent.
+
+Apply this law on top of, not instead of, everything in SOURCE-FIDELITY LAW and OUTPUT SHAPE above.

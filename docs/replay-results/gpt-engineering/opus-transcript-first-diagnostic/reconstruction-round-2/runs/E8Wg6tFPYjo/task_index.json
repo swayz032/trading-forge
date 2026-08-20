@@ -1,0 +1,20 @@
+{
+  "artifact": "opus-transcript-first-task-index-v2",
+  "status": "AWAITING_FRESH_OPUS_READER",
+  "video_id": "E8Wg6tFPYjo",
+  "diagnostic_category": "MEDIUM_PARAPHRASE_DRIFT",
+  "reconstruction_round": 2,
+  "transcript_path": "src/engine/extraction/fixtures/source-evidence/E8Wg6tFPYjo.transcript.txt",
+  "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+  "transcript_char_len": 22830,
+  "task_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/reconstruction-round-2/runs/E8Wg6tFPYjo/opus_source_reader_task.txt",
+  "task_sha256": "fb487888b24efe61a6dee4dc63689839f4ba7457b4f0dc635e11209e19cc2b47",
+  "required_model_override": "opus",
+  "required_reader_role": "OPUS_LEAD_SOURCE_READER",
+  "semantic_blindness": {
+    "legacy_extraction_opened_by_emit": false,
+    "legacy_semantics_in_prompt": false,
+    "construction": "static source-reader contract + AR-1374A atomic-authoring law + rejection-constraint hazards (not substitute facts) + exact transcript bytes only"
+  },
+  "next_step": "Dispatch ONE fresh Claude Code subagent with model override=opus and give it ONLY opus_source_reader_task.txt. Save its raw final text verbatim. Create an invocation receipt bound to this task/transcript, then run ingest."
+}

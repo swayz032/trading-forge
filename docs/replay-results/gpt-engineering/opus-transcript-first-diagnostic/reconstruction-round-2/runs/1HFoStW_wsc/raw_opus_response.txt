@@ -1,0 +1,304 @@
+{
+  "video_id": "1HFoStW_wsc",
+  "reader_role": "OPUS_LEAD_SOURCE_READER",
+  "instrument_classification": {
+    "asset_class": "equities",
+    "instrument": null,
+    "rationale": "The educator's only concrete instrument examples are individual stocks (Apple, Tesla). No futures, forex, or crypto instrument is named, and no single instrument is designated as the strategy's market.",
+    "transcript_quote": "When a hedge fund needs to buy 1 million shares of Apple, they can't just market buy it all at once."
+  },
+  "strategies": [
+    {
+      "source_strategy_id": "s0",
+      "name": "Three-Confirmation VWAP Trade Blueprint",
+      "direction": "both",
+      "direction_transcript_quote": "When all three VWAPs are stacked bullishly, daily above weekly above monthly, and price is above all three, you have what we call institutional consensus. Every timeframe of smart money agrees on direction. The opposite is true for bearish stacks. When monthly is above weekly is above daily and price is below all three, institutional money is aligned to the downside.",
+      "higher_timeframe": "higher time frame VWAP stack (daily, weekly, monthly)",
+      "higher_timeframe_transcript_quote": "Third, directional bias from higher time frame VWAP stack.",
+      "execution_timeframe": "source_unresolved",
+      "execution_timeframe_transcript_quote": null,
+      "setup": [
+        {
+          "description": "VWAP trading should be systematic rather than discretionary; the problem with most VWAP trading is that it lacks consistent rules.",
+          "transcript_quote": "The problem with most VWAP trading is that it's too discretionary. Traders see price near VWAP and just wing it. No consistent rules, no systematic approach."
+        },
+        {
+          "description": "VWAP is the average price where real money changed hands during the session.",
+          "transcript_quote": "It shows the average price where real money actually changed hands throughout the day."
+        },
+        {
+          "description": "Institutions use VWAP as an execution benchmark, accumulating shares throughout the day to keep their average price close to VWAP, which creates a gravitational pull retail traders can exploit.",
+          "transcript_quote": "Instead, they use VWAP as their execution benchmark. Their algorithms are programmed to accumulate shares throughout the day, keeping their average price as close to VWAP as possible. This creates a gravitational pull that retail traders can exploit once they understand what's really happening."
+        },
+        {
+          "description": "VWAP slope classifies market condition: a flat VWAP signals balance/chop; a steep VWAP signals one side winning decisively, and is how trending versus ranging conditions are identified.",
+          "transcript_quote": "A flat VWAP means the market is in balance. Buyers and sellers are evenly matched. Price will likely chop around this level. A steep VWAP slope means one side is winning decisively. The steeper the angle, the stronger the institutional flow. This is how you identify trending versus ranging market conditions."
+        },
+        {
+          "description": "VWAP behaves differently in trending, ranging, and volatile markets; using the same approach in every condition leads to losses.",
+          "transcript_quote": "VWAP behaves totally differently in trending markets versus ranging markets versus volatile markets. Use the same strategy in all conditions and you'll get crushed."
+        },
+        {
+          "description": "The source explicitly frames trend and range handling as adapting ONE approach to the prevailing condition, not as separate strategies.",
+          "transcript_quote": "Instead of fighting the market condition, smart money adapts their VWAP strategy to match what the market is actually doing. Trend strategies in trending markets, mean reversion strategies in ranging markets."
+        },
+        {
+          "description": "Low volume undermines VWAP reliability: below roughly 30% of average volume, VWAP loses meaning and price can drift through it with no resistance.",
+          "transcript_quote": "Low volume kills VWAP reliability. When volume drops below 30% of average, VWAP moves on so few shares that it loses meaning. During these dead zones, price can drift through VWAP with zero resistance because no institutions are participating."
+        },
+        {
+          "description": "Institutions anchor VWAP to information events rather than daily session resets, since they think in events, not arbitrary time periods.",
+          "transcript_quote": "Session VWAP resets every day at market open. But institutions don't think in daily sessions. They think in events. What you really want is custom anchor points. VWAP anchored to major events, earnings announcements, Fed meetings, company keynotes."
+        },
+        {
+          "description": "Pre-market preparation routine: identify all relevant VWAP levels per instrument, note custom event anchors, and check the VWAP hierarchy for directional bias.",
+          "transcript_quote": "Here's your complete pre-market VWAP analysis routine. First, identify all relevant VWAP levels. Daily, weekly, monthly for each instrument. Second, note any custom anchors from recent events. Third, check the VWAP hierarchy for directional bias."
+        },
+        {
+          "description": "Watch-list filter: focus on instruments where multiple VWAP timeframes are aligned, price is near significant VWAP levels, and volume suggests institutional activity.",
+          "transcript_quote": "Your VWAP watch list focuses on markets with the highest probability setups. Look for instruments where multiple VWAP time frames are aligned. Price near significant VWAP levels. Volume patterns suggesting institutional activity."
+        }
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "role": "trigger",
+          "action": "Require a price action signal at VWAP.",
+          "rationale": "Stated as the first of three mandatory entry confirmations.",
+          "transcript_quote": "For entries, you need three confirmations. First, price action signal at VWAP."
+        },
+        {
+          "step": 2,
+          "role": "spine",
+          "action": "Require volume confirmation of institutional activity.",
+          "rationale": "Stated as the second mandatory entry confirmation.",
+          "transcript_quote": "Second, volume confirmation of institutional activity."
+        },
+        {
+          "step": 3,
+          "role": "context",
+          "action": "Require directional bias from the higher time frame VWAP stack.",
+          "rationale": "Stated as the third mandatory entry confirmation; supplies the trade direction.",
+          "transcript_quote": "Third, directional bias from higher time frame VWAP stack."
+        },
+        {
+          "step": 4,
+          "role": "context",
+          "action": "Run the five-point checklist and skip the trade unless all five items are satisfied.",
+          "rationale": "The educator makes this an explicit go/no-go filter with a stated skip condition.",
+          "transcript_quote": "Your VWAP playbook becomes a simple checklist. Is price at VWAP? Is volume above average? Are multiple time frames aligned? Is the broader market supporting this direction? Are VWAP bands expanding or contracting? Check all five or skip the trade."
+        }
+      ],
+      "confluences": [
+        {
+          "name": "Candle read at the VWAP touch",
+          "description": "A long wick rejection shows institutional defense, a weak doji shows uncertainty, and a strong close through VWAP with volume is capitulation.",
+          "transcript_quote": "The key is reading the candles at each touch. A long wick rejection shows institutional defense. They're actively protecting that level. A weak doji shows uncertainty. But a strong close through VWAP with volume, that's capitulation."
+        },
+        {
+          "name": "High volume at VWAP",
+          "description": "High volume at the VWAP level signals institutions are actively accumulating or distributing.",
+          "transcript_quote": "High volume at VWAP means institutions are active. They're either accumulating or distributing, but they're definitely participating."
+        },
+        {
+          "name": "Acceptance vs rejection time filter",
+          "description": "A break of VWAP is accepted if price stays beyond it for more than three candles; an immediate snap back is a rejection.",
+          "transcript_quote": "The difference between acceptance and rejection is time. If price breaks VWAP and stays below for more than three candles, it's accepted. If it immediately snaps back, it's rejected. This simple rule filters out 80% of false signals."
+        },
+        {
+          "name": "False break / liquidity grab",
+          "description": "A brief break of VWAP that triggers stops and then immediately reverses is read as institutions grabbing liquidity ahead of the real move.",
+          "transcript_quote": "Price breaks below VWAP by a few candles, triggers all the stops, then immediately reverses back above. This isn't random. It's institutions grabbing liquidity before the real move higher."
+        },
+        {
+          "name": "VWAP / high-volume-node confluence anchor",
+          "description": "Where VWAP intersects a high volume node from the volume profile, large institutional orders are likely resting.",
+          "transcript_quote": "When VWAP intersects with a high volume node from the volume profile, you get what institutions call a confluence anchor. This isn't just any VWAP level. This is where massive institutional orders are likely sitting."
+        },
+        {
+          "name": "Trending-regime continuation read (context, not a separate strategy)",
+          "description": "In a trending market, with VWAP itself sloping in the trend direction, VWAP acts as dynamic support/resistance; a pullback to VWAP that finds support is read as a continuation cue in that direction.",
+          "transcript_quote": "In trending markets, VWAP becomes dynamic support or resistance. In an uptrend, price will pull back to VWAP, find support, and continue higher. The key is that VWAP itself is sloping in the direction of the trend."
+        },
+        {
+          "name": "Ranging-regime mean-reversion read (context, not a separate strategy)",
+          "description": "In a ranging market, with VWAP acting as the center of gravity, price above VWAP favors looking for shorts back to VWAP and price below VWAP favors longs back to VWAP.",
+          "transcript_quote": "But in ranging markets, VWAP becomes the center of gravity. Price oscillates around it like a pendulum. Above VWAP, look for shorts back to VWAP. Below VWAP, look for longs back to VWAP."
+        },
+        {
+          "name": "Volatile-regime caveat",
+          "description": "In volatile markets, VWAP bands expand dramatically and normal mean-reversion levels stop working, requiring wider bands and different probability thresholds.",
+          "transcript_quote": "Volatile markets create a different situation entirely. The VWAP bands expand dramatically. Normal mean reversion levels stop working. You need wider bands and different probability thresholds."
+        },
+        {
+          "name": "Standard-deviation band context (not a separate strategy -- no stop of its own is taught for this material)",
+          "description": "The plus/minus one bands contain about 68% of price action (normal range); the plus/minus two bands (95% containment) produce mean-reversion signals favoring a move back toward VWAP; the plus/minus three bands (0.3%) indicate either a genuine breakout or a violent snap-back.",
+          "transcript_quote": "The plus one and minus one bands contain about 68% of price action. This is the normal trading range. When price is between these bands, nothing special is happening. But watch what happens at the plus two and minus two bands. This is where 95% of price action should stay contained. When price hits these levels, you get mean reversion signals. The probability heavily favors a move back toward VWAP. The plus three and minus three bands are the extreme levels. Only 0.3% of price action should reach here. When it does, you're either seeing a genuine breakout or an extreme overshoot that will snap back violently."
+        },
+        {
+          "name": "Band-walk vs mean-reversion classification",
+          "description": "If price immediately returns to VWAP after hitting a band, that is read as mean reversion; if price instead walks along the band using it as dynamic support/resistance, that is read as trend continuation.",
+          "transcript_quote": "In strong trends, price will ride along the plus one or minus one band. It doesn't return to VWAP. Instead, it uses the band as dynamic support or resistance. This tells you the difference between mean reversion and trend continuation. If price immediately returns to VWAP after hitting a band, trade mean reversion. If price walks along the band, trade trend continuation."
+        },
+        {
+          "name": "Band squeeze / volatility compression",
+          "description": "Bands squeezing together signal contracting volatility that precedes an expansion move; the tighter the squeeze, the larger the eventual expansion.",
+          "transcript_quote": "When the bands squeeze together, volatility is contracting. This compression almost always leads to explosive moves. The tighter the squeeze, the bigger the eventual expansion."
+        },
+        {
+          "name": "Monthly VWAP as the trend filter (source's own word: 'filter', not a separate strategy)",
+          "description": "Above monthly VWAP, every dip is treated as a buying opportunity until proven otherwise; below it, every rip is treated as a shorting opportunity.",
+          "transcript_quote": "Monthly VWAP isn't just another line. It's the ultimate trend filter that institutions can't hide from. When price is above monthly VWAP, every dip is a buying opportunity until proven otherwise. Below it, every rip is a shorting opportunity."
+        },
+        {
+          "name": "Yearly VWAP regime boundary",
+          "description": "In a bull market price stays above yearly VWAP for months, even during corrections; in a bear market yearly VWAP becomes resistance that caps every rally.",
+          "transcript_quote": "This level defines entire market regimes. Bull market, price stays above yearly VWAP for months, even during corrections. Bear market, yearly VWAP becomes impenetrable resistance that caps every rally."
+        },
+        {
+          "name": "Quarterly VWAP as an earnings-season fund-positioning anchor",
+          "description": "Institutions position their portfolios around quarterly performance, making quarterly VWAP the anchor point for major funds during earnings season.",
+          "transcript_quote": "The quarterly VWAP strategy is pure gold during earning season. Institutions position their portfolios around quarterly performance. That makes quarterly VWAP the anchor point for major funds."
+        },
+        {
+          "name": "Timeframe hierarchy conflict rule",
+          "description": "Where VWAP timeframes disagree, the longer timeframe's signal governs (weekly beats daily; monthly beats weekly).",
+          "transcript_quote": "When daily says buy, but weekly says sell, weekly wins. When weekly says buy, but monthly says sell, monthly wins. The longer time frame always has more institutional commitment behind it."
+        },
+        {
+          "name": "Full timeframe alignment / institutional herding",
+          "description": "When daily, weekly, monthly, and yearly VWAP are all broken in the same direction, the resulting moves are said to run roughly three times farther than normal.",
+          "transcript_quote": "When all time frames align, daily, weekly, monthly, and yearly VWAP all broken in the same direction, you're witnessing institutional herding. These moves typically run three times farther than normal because every algorithm is triggered at once."
+        }
+      ],
+      "stop": {
+        "anchor": "Next significant VWAP band or volume node.",
+        "rationale": "Ensures the trade is stopped out only when institutional opinion changes.",
+        "transcript_quote": "Stop loss placement uses VWAP bands and volume profiles. Your stop goes at the next significant VWAP band or volume node. This ensures you're stopped out only when institutional opinion changes."
+      },
+      "targets": [
+        {
+          "priority": 1,
+          "type": "Next VWAP level or standard deviation band.",
+          "r_multiple": null,
+          "rationale": "Stated as the first target.",
+          "transcript_quote": "Target selection follows VWAP logic. Your first target is the next VWAP level or standard deviation band."
+        },
+        {
+          "priority": 2,
+          "type": "Next volume node.",
+          "r_multiple": null,
+          "rationale": "Stated as the second target, explicitly sequenced after the first.",
+          "transcript_quote": "Your second target is the next volume node."
+        }
+      ],
+      "management": [
+        {
+          "rule": "Reassess the position when VWAP slope changes direction, volume dries up, or the bands compress -- these signal shifting institutional activity.",
+          "transcript_quote": "Exit signals are just as important as entries. When VWAP slope changes direction, volume dries up, or bands compress, institutional activity is shifting. Time to reassess your position."
+        },
+        {
+          "rule": "Execution must be systematic -- every decision is based on VWAP structure, not emotions or hunches.",
+          "transcript_quote": "The key takeaway is systematic execution. Every decision is based on VWAP structure, not emotions or hunches."
+        },
+        {
+          "rule": "In low-volume conditions without institutional participation, switch to alternative strategies or stay out of the market.",
+          "transcript_quote": "Low volume periods make VWAP less reliable. Without institutional participation, VWAP levels become meaningless. This is when you switch to alternative strategies or simply stay out of the market."
+        },
+        {
+          "rule": "After a large overnight gap, session VWAP continuity is broken and yesterday's VWAP is the real reference point.",
+          "transcript_quote": "A 3% gap completely breaks VWAP continuity. The session VWAP starts in no man's land, while the real battle happens at yesterday's VWAP."
+        },
+        {
+          "rule": "Recognize the whipsaw environment (choppy price action, wider bands) where repeated VWAP crosses trigger both longs and shorts and immediately reverse.",
+          "transcript_quote": "Price crosses VWAP 15 times in an hour, triggering both longs and shorts. Each cross looks valid, but immediately reverses. The key is recognizing the choppy price action and wider bands that signal a whipsaw environment."
+        },
+        {
+          "rule": "News events reset VWAP dynamics; the pre-news VWAP becomes irrelevant and new anchor points are required.",
+          "transcript_quote": "Earnings, Fed announcements, and major economic data can completely reset VWAP dynamics. The pre-news VWAP becomes irrelevant. You need new anchor points."
+        },
+        {
+          "rule": "For longer-timeframe trades, position size by distance from monthly VWAP: half size when 5% extended, full size when within 1%.",
+          "transcript_quote": "For position sizing on longer time frame trades, the distance from VWAP determines everything. If you're 5% extended from monthly VWAP, use half size. If you're within 1%, use full size. This simple rule keeps you from buying tops and selling bottoms."
+        }
+      ],
+      "variants": [
+        {
+          "name": "Alternative non-event anchors when standard VWAP fails",
+          "rule": "Substitute the previous day's high or low VWAP, the weekly open VWAP, or an anchor at the last major volume spike.",
+          "transcript_quote": "Also, alternative anchors save you when standard VWAP fails. Switch to the previous day's high or low VWAP. Use the weekly open VWAP. Anchor to the last major volume spike."
+        },
+        {
+          "name": "Event-anchored VWAP selection rule",
+          "rule": "Qualify an anchor event by three rules: it moved the stock significantly, it generated massive volume, and it is fundamentally important to the company or market.",
+          "transcript_quote": "First, the event must have moved the stock significantly. Second, it must have generated massive volume. Third, it should be fundamentally important to the company or market."
+        },
+        {
+          "name": "Event-anchor magnet effect",
+          "rule": "An event-anchored level (e.g. anchored to an earnings announcement) acts like a magnet for weeks because it marks where institutions made their positioning decisions.",
+          "transcript_quote": "Anchor VWAP to Tesla's last earnings announcement. That level will act like a magnet for weeks because that's where institutions made their big decisions about Tesla's value."
+        }
+      ],
+      "source_gaps": [
+        {
+          "field": "execution_timeframe",
+          "reason": "The educator counts 'candles' (e.g. the three-candle acceptance rule) but never states which chart timeframe those candles belong to."
+        },
+        {
+          "field": "entry price action signal definition",
+          "reason": "'Price action signal at VWAP' is named as confirmation one but never defined as a specific executable trigger; the candle read (long wick / doji / strong close) is described as interpretation, not as a stated entry order rule."
+        },
+        {
+          "field": "volume confirmation threshold",
+          "reason": "'Volume confirmation of institutional activity' and 'Is volume above average?' are stated, but no numeric threshold or lookback for 'above average' is given (the only number, 30% of average, is given as the reliability floor, not the entry threshold)."
+        },
+        {
+          "field": "target selection specifics",
+          "reason": "'Next VWAP level' is not defined as to which VWAP (daily/weekly/monthly/anchored), and no partial-exit sizing between target 1 and target 2 is stated."
+        },
+        {
+          "field": "exit action on exit signals",
+          "reason": "The exit signals lead to 'time to reassess your position' -- the transcript does not say whether that means flatten, reduce, or tighten."
+        },
+        {
+          "field": "position sizing (general/base)",
+          "reason": "No general sizing rule is given for this blueprint; the only sizing rule in the transcript is the distance-based rule stated specifically for longer-timeframe trades measured from monthly VWAP."
+        },
+        {
+          "field": "session / time-of-day rules",
+          "reason": "No session window, entry cutoff, or flatten time is taught."
+        },
+        {
+          "field": "regime-mode arbitration",
+          "reason": "The source teaches trending, ranging, volatile, and low-volume regime handling but states no single procedure for which regime classification governs when conditions are ambiguous or mixed."
+        },
+        {
+          "field": "band_and_profile_settings",
+          "reason": "Standard deviation band levels (1/2/3) and volume-profile high-volume-nodes are load-bearing for confluence/stop/targets, but no calculation period, session basis, or platform settings are specified."
+        },
+        {
+          "field": "backtest_or_performance_evidence",
+          "reason": "Claims such as filtering 80% of false signals and moves running three times farther are asserted without any stated sample, period, or measurement method."
+        }
+      ]
+    }
+  ],
+  "top_level_source_gaps": [
+    {
+      "field": "strategy_count",
+      "reason": "The transcript teaches one complete executable blueprint: a three-confirmation entry (price action at VWAP, volume confirmation, higher-timeframe VWAP-stack directional bias), a stated stop (next VWAP band or volume node), and a two-stage target (next VWAP level/band, then next volume node). Applying an independence test (does the content have its own stated direction, entry trigger, stop, and target?) to every other VWAP-related section: trending-market and ranging-market handling state no stop of their own and the source explicitly frames them as adapting ONE approach to market condition ('smart money adapts their VWAP strategy to match what the market is actually doing'); the standard-deviation-band material states no stop of its own either; event-anchored VWAP constructs a reference level with no direction, entry trigger, stop, or target of its own; and the monthly/quarterly/yearly VWAP material is explicitly named 'the ultimate trend filter' by the source itself and states no stop or target of its own. None of these pass the independence test, so all are preserved as confluence/context/variant material feeding the one complete blueprint (s0) rather than split into separate top-level strategies."
+    },
+    {
+      "field": "instrument / market specification",
+      "reason": "Only equity examples (Apple, Tesla) are named; the transcript never designates a specific traded instrument, contract, or market."
+    },
+    {
+      "field": "risk per trade",
+      "reason": "No risk-per-trade percentage or dollar amount is taught; the only sizing statement is relative (half size vs full size) and scoped to longer-timeframe trades specifically."
+    },
+    {
+      "field": "volume profile settings",
+      "reason": "High volume nodes and volume profile are load-bearing for the confluence anchor, stop, and second target, but no profile period, range, or node-definition rule is given."
+    }
+  ]
+}
