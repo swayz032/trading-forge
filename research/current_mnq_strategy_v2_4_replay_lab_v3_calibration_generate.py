@@ -18,6 +18,7 @@ from research import current_mnq_strategy_v2_2_engine_final as old
 from research import current_mnq_strategy_v2_4_engine as v24
 from research import current_mnq_strategy_v2_4_replay_lab_v3 as v3
 from research import current_mnq_strategy_v2_4_replay_lab_v3_selection as sel
+from research import current_mnq_strategy_v2_4_target_policy as target_policy
 from research.current_mnq_strategy_v2_4_fvg import active_15m_fvgs
 from research.current_mnq_strategy_v2_4_targets import build_reaction_destinations
 
@@ -110,40 +111,51 @@ def main() -> None:
     p = v24.Params()
     all_days = list(old.scoreable_days(env))
 
-    eligible = []
-    kinds = {}
-    for dte in all_days:
-        ref = _reference_candidate(env, dte, p)
-        if ref is None:
-            continue
-        kind, cand, asof, price = ref
-        if not _bilateral_context(env, dte, asof, price, p):
-            continue
-        eligible.append(dte)
-        kinds[str(dte)] = {
-            "reference_kind": kind,
-            "reason": str(cand.reason),
-            "reference_time": asof.isoformat(),
-        }
-
-    if not eligible:
-        raise RuntimeError("REPLAY_CALIBRATION_NO_BILATERAL_MOMENTUM_SESSIONS")
-
-    target = min(int(req["sampling"]["target_cases"]), len(eligible))
-    original_make_case = v3._make_case
-    v3._make_case = _extended_make_case
+    # The replay modules predate the 2026-08-20 TP-ladder correction and import
+    # their target classifier at module load. Bind both helpers to the exact same
+    # production policy used by historical/live engines for this generation run.
+    original_v3_target = v3.build_and_classify
+    original_sel_target = sel.build_and_classify
+    v3.build_and_classify = target_policy.build_and_classify
+    sel.build_and_classify = target_policy.build_and_classify
     try:
-        review, answers = sel.build_replay_pack_v3_diverse(
-            env,
-            eligible,
-            p,
-            max_cases=target,
-            max_entry_cases=target,
-            min_entry_cases=0,
-            min_momentum_near_miss_cases=0,
-        )
+        eligible = []
+        kinds = {}
+        for dte in all_days:
+            ref = _reference_candidate(env, dte, p)
+            if ref is None:
+                continue
+            kind, cand, asof, price = ref
+            if not _bilateral_context(env, dte, asof, price, p):
+                continue
+            eligible.append(dte)
+            kinds[str(dte)] = {
+                "reference_kind": kind,
+                "reason": str(cand.reason),
+                "reference_time": asof.isoformat(),
+            }
+
+        if not eligible:
+            raise RuntimeError("REPLAY_CALIBRATION_NO_BILATERAL_MOMENTUM_SESSIONS")
+
+        target = min(int(req["sampling"]["target_cases"]), len(eligible))
+        original_make_case = v3._make_case
+        v3._make_case = _extended_make_case
+        try:
+            review, answers = sel.build_replay_pack_v3_diverse(
+                env,
+                eligible,
+                p,
+                max_cases=target,
+                max_entry_cases=target,
+                min_entry_cases=0,
+                min_momentum_near_miss_cases=0,
+            )
+        finally:
+            v3._make_case = original_make_case
     finally:
-        v3._make_case = original_make_case
+        v3.build_and_classify = original_v3_target
+        sel.build_and_classify = original_sel_target
 
     # Objective causal 15m FVG context is safe trader-visible market structure;
     # it contains no bot action, selected target, PnL, or future outcome.
@@ -158,10 +170,12 @@ def main() -> None:
 
     review["status"] = "TRADER_FIDELITY_CALIBRATION_MOMENTUM_HEAVY_BILATERAL_CONTEXT"
     review["calibration_requirements"] = str(REQ)
+    review["target_policy"] = "current_mnq_strategy_v2_4_target_policy"
     review["tp_instruction"] = (
-        "Mark the first meaningful physical reaction you would use as TP in BOTH directions. "
-        "A valid TP can be a key level/reaction cluster or the midpoint of an active 15m FVG "
-        "when that FVG owns first reaction."
+        "Mark the meaningful physical reaction targets you would use in BOTH directions. "
+        "A valid TP can be a key level/reaction cluster or the midpoint of an active 15m FVG. "
+        "If TP1 is already too close by the time an A+ entry becomes actionable, the next meaningful "
+        "reaction may become TP2 under the same frozen room rule."
     )
     review["pack_id"] = hashlib.sha256(
         json.dumps(review["cases"], sort_keys=True, separators=(",", ":")).encode()
@@ -189,6 +203,8 @@ def main() -> None:
         "context_1m_minutes": 60,
         "active_15m_fvg_context_embedded": True,
         "active_15m_fvg_midpoint_is_valid_tp_when_first_reaction": True,
+        "tp1_to_tp2_rollover_uses_existing_room_rule": True,
+        "answer_key_uses_production_target_policy": True,
         "seen_development_sessions_may_be_reused": True,
         "blind_evidence_eligible": False,
         "edge_evidence_eligible": False,
