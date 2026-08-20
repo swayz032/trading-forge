@@ -44,6 +44,94 @@ SAFE_STORAGE_SAVE = (
 )
 SAFE_STORAGE_MARKER = "REPLAY_STORAGE_DISABLED_USING_MEMORY"
 
+REWIND_READY_MARKER = "MNQ_REPLAY_REWIND_READY"
+REWIND_SCRIPT = r'''<script>
+(function () {
+  const REWIND_MARKER = 'MNQ_REPLAY_REWIND_READY';
+  const step1Button = document.getElementById('step1');
+  if (!step1Button || document.getElementById('rewind1')) return;
+
+  const rewind5 = document.createElement('button');
+  rewind5.id = 'rewind5';
+  rewind5.textContent = '−5m';
+  rewind5.title = 'Rewind five replay minutes. If an entry is locked, it is cleared so you can choose the correct candle.';
+
+  const rewind1 = document.createElement('button');
+  rewind1.id = 'rewind1';
+  rewind1.textContent = '−1m';
+  rewind1.title = 'Rewind one replay minute. If an entry is locked, it is cleared so you can choose the correct candle.';
+
+  step1Button.parentNode.insertBefore(rewind5, step1Button);
+  step1Button.parentNode.insertBefore(rewind1, step1Button);
+
+  const help = document.querySelector('.top .muted');
+  if (help) {
+    help.textContent = 'Space = play/pause · ← = −1m · Shift+← = −5m · → = +1m · Shift+→ = +5m · rewind clears a locked entry but keeps your key zones and both TP plans.';
+  }
+
+  function rewindReplay(minutes) {
+    pause();
+    const l = lab();
+    const fromCount = Number(l.reveal_count || 0);
+    const amount = Math.max(1, Math.floor(Number(minutes) || 1));
+    const toCount = Math.max(0, fromCount - amount);
+    if (toCount === fromCount) {
+      const status = document.getElementById('actionStatus');
+      if (status) status.textContent = 'Already at replay start';
+      return;
+    }
+
+    const beforeTime = replayTime();
+    const oldAction = l.final_action || '';
+    const oldEntryTime = l.first_entry_time || null;
+    l.correction_history = Array.isArray(l.correction_history) ? l.correction_history : [];
+    l.correction_history.push({
+      kind: 'USER_REWIND_ENTRY_CORRECTION',
+      from_reveal_count: fromCount,
+      to_reveal_count: toCount,
+      from_time: beforeTime,
+      cleared_final_action: oldAction,
+      cleared_entry_time: oldEntryTime,
+    });
+
+    l.reveal_count = toCount;
+    const afterTime = replayTime();
+    const cutoff = Date.parse(afterTime);
+    l.decision_timeline = (l.decision_timeline || []).filter((x) => {
+      if (x.action !== 'WAIT') return false;
+      const t = Date.parse(x.time);
+      return !Number.isFinite(t) || t <= cutoff;
+    });
+
+    // Clear only the chosen final decision. Preserve the trader's structure work
+    // and both pre-entry directional TP plans so correcting a candle is painless.
+    l.final_action = '';
+    l.first_entry_time = null;
+    l.entry_force = 'NOT_APPLICABLE';
+    l.trader_tp_reaction_cluster = null;
+    currentForce = 'NOT_APPLICABLE';
+
+    setData(false);
+    save();
+    renderLabels();
+    const status = document.getElementById('actionStatus');
+    if (status) status.textContent = `REWOUND ${fromCount - toCount}m — choose the correct entry candle`;
+  }
+
+  rewind1.addEventListener('click', () => rewindReplay(1));
+  rewind5.addEventListener('click', () => rewindReplay(5));
+
+  window.addEventListener('keydown', (e) => {
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (e.code !== 'ArrowLeft' || ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+    e.preventDefault();
+    rewindReplay(e.shiftKey ? 5 : 1);
+  });
+
+  window.MNQ_REPLAY_REWIND_READY = true;
+})();
+</script>'''
+
 ENHANCE_PROGRESS_OLD = "refreshMain(Boolean(fit));\n    renderClock();\n  };"
 ENHANCE_PROGRESS_NEW = (
     "refreshMain(Boolean(fit));\n"
@@ -404,6 +492,9 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
     enhance = _patch_enhance_runtime(enhance)
     html = html.replace(LWC_MARKER, f"<script>\n{lwc}\n</script>", 1)
     html = html.replace(ENHANCE_MARKER, f"<script>\n{enhance}\n</script>", 1)
+    if "</body>" not in html:
+        raise RuntimeError("REPLAY_V3_BODY_CLOSE_MISSING_FOR_REWIND")
+    html = html.replace("</body>", REWIND_SCRIPT + "\n</body>", 1)
 
     if 'script src="lightweight-charts' in html or 'script src="replay_v3_enhance' in html:
         raise RuntimeError("REPLAY_V3_EXTERNAL_RUNTIME_DEPENDENCY_REMAINS")
@@ -417,6 +508,8 @@ def bundle(html_path: Path = HTML, lwc_path: Path = LWC, enhance_path: Path = EN
         raise RuntimeError("REPLAY_V3_PROGRESS_REFRESH_NOT_BUNDLED")
     if CONTROL_READY_MARKER not in html:
         raise RuntimeError("REPLAY_V3_VISIBLE_CONTROL_READY_MARKER_MISSING")
+    if REWIND_READY_MARKER not in html:
+        raise RuntimeError("REPLAY_V3_REWIND_ENTRY_CORRECTION_NOT_BUNDLED")
     if ENTRY_CHART_CLEAN_MARKER not in html:
         raise RuntimeError("REPLAY_V3_ENTRY_CHART_STRUCTURE_OVERLAY_NOT_REMOVED")
     if (
