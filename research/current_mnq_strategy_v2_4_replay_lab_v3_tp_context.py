@@ -7,6 +7,7 @@ import pandas as pd
 from research import current_mnq_strategy_v2_4_replay_lab_v3 as lab
 
 NO_VISIBLE_MEANINGFUL_REACTION = "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT"
+TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT = "TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT"
 MARKED = "MARKED"
 
 
@@ -51,7 +52,10 @@ def entry_tp_capture_complete(row: dict[str, Any]) -> bool:
     if selected_direction(row) is None:
         return True
     tp, status = selected_tp_evidence(row)
-    return tp is not None or status == NO_VISIBLE_MEANINGFUL_REACTION
+    return tp is not None or status in {
+        NO_VISIBLE_MEANINGFUL_REACTION,
+        TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT,
+    }
 
 
 def validate_labels_v3_context_aware(labels: dict | list, review: dict) -> None:
@@ -77,12 +81,15 @@ def validate_labels_v3_context_aware(labels: dict | list, review: dict) -> None:
             if z.get("role") not in lab.ZONE_ROLES:
                 raise RuntimeError(f"REPLAY_V3_BAD_ZONE_ROLE:{cid}")
         if str(row["final_action"]).startswith("ENTER_"):
-            if not row.get("first_entry_time"):
+            if not row.get("first_entry_time") and row.get("entry_time_capture_status") != "ENTRY_TIME_NOT_RECOVERABLE_FROM_SAVED_REPLAY_STATE":
                 raise RuntimeError(f"REPLAY_V3_ENTRY_WITHOUT_TIME:{cid}")
-            if not zones:
+            if not zones and row.get("key_zone_capture_status") != "KEY_ZONE_NOT_CAPTURED_IN_SAVED_STATE":
                 raise RuntimeError(f"REPLAY_V3_ENTRY_WITHOUT_KEY_ZONE:{cid}")
             tp, status = selected_tp_evidence(row)
-            if tp is None and status != NO_VISIBLE_MEANINGFUL_REACTION:
+            if tp is None and status not in {
+                NO_VISIBLE_MEANINGFUL_REACTION,
+                TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT,
+            }:
                 raise RuntimeError(f"REPLAY_V3_ENTRY_WITHOUT_TP_CAPTURE_OR_CONTEXT_GAP:{cid}")
             if tp is not None:
                 lab._norm_interval(tp)
@@ -100,7 +107,7 @@ def grade_labels_v3_context_aware(labels: dict | list, review: dict, answer_key:
         answer = answer_key["answers"][trader["case_id"]]
         action_agree = trader["final_action"] == answer["bot_action"]
         timing_delta = None
-        if str(trader["final_action"]).startswith("ENTER_") and answer["bot_entry_time"]:
+        if str(trader["final_action"]).startswith("ENTER_") and answer["bot_entry_time"] and trader.get("first_entry_time"):
             timing_delta = (
                 pd.Timestamp(trader["first_entry_time"]) - pd.Timestamp(answer["bot_entry_time"])
             ).total_seconds() / 60.0
@@ -115,6 +122,13 @@ def grade_labels_v3_context_aware(labels: dict | list, review: dict, answer_key:
             elif tp_status == NO_VISIBLE_MEANINGFUL_REACTION:
                 tp_grade = {
                     "status": "TRADER_PRESENTED_CONTEXT_HAS_NO_VISIBLE_MEANINGFUL_REACTION",
+                    "context_gap": True,
+                    "bot_target_present": bool(bot_tp),
+                    "geometry_compared": False,
+                }
+            elif tp_status == TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT:
+                tp_grade = {
+                    "status": "TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT",
                     "context_gap": True,
                     "bot_target_present": bool(bot_tp),
                     "geometry_compared": False,
@@ -153,7 +167,7 @@ def grade_labels_v3_context_aware(labels: dict | list, review: dict, answer_key:
         "tp_presented_context_gaps": context_gaps,
         "rows": out,
         "warning": (
-            "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT records a fidelity/context limitation. "
+            "A TP context-gap status records a fidelity/presentation limitation. "
             "It must not be treated as proof that ROOM_TO_FIRST_REACTION passed, and no numeric TP may be invented."
         ),
     }
