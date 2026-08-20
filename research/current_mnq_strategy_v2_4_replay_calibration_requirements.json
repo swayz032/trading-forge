@@ -1,0 +1,59 @@
+{
+  "status": "LOCKED_TRADER_FIDELITY_CALIBRATION_REQUIREMENTS",
+  "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
+  "evidence_role": "FIDELITY_CALIBRATION_ONLY_NOT_EDGE_EVIDENCE",
+  "direct_trader_corrections": [
+    {
+      "id": "CAL01_BILATERAL_TP_CONTEXT",
+      "rule": "Replay cases used to calibrate TP marking must present meaningful higher and lower structure so the trader can independently mark both bullish and bearish TP plans before direction is known.",
+      "implementation": "Use materially deeper 15m/5m causal history and prefer cases with at least one meaningful reaction destination above and one below the decision price. Do not fabricate a level when one side truly has no meaningful reaction."
+    },
+    {
+      "id": "CAL02_15M_FVG_MID_TP",
+      "rule": "A trader TP may legitimately be placed at the middle of an active 15m FVG when that FVG is the first meaningful reaction used as the target.",
+      "implementation": "TP fidelity grading must preserve 15m FVG midpoint semantics. FVG is reaction/TP context; it does not become a requirement for displacement entry."
+    },
+    {
+      "id": "CAL03_MOMENTUM_HEAVY_SAMPLE",
+      "rule": "The next calibration pack must show substantially more real momentum/force opportunities so the trader can demonstrate entries he would actually take.",
+      "implementation": "Prioritize distinct-session authoritative entries first, then genuine candle-story + force candidates rejected only by later room/TP gates, before any generic no-entry controls. Use every available qualifying momentum case up to the pack limit rather than filling with quiet controls."
+    },
+    {
+      "id": "CAL04_WAIT_DISTINCT_FROM_NO_TRADE",
+      "rule": "WAIT remains a distinct trader state at the end of the presented replay window and must never be silently converted to NO_TRADE.",
+      "implementation": "Preserve WAIT exactly for fidelity comparison."
+    }
+  ],
+  "chart_context": {
+    "context_15m_lookback_calendar_days": 40,
+    "context_5m_lookback_calendar_days": 10,
+    "context_1m_lookback_minutes": 60,
+    "initial_view": "RECENT_DECISION_AREA_WITH_NATIVE_PAN_ZOOM",
+    "fit_all_must_include_full_context": true,
+    "bilateral_reaction_context_preferred": true,
+    "bilateral_reaction_definition": "AT_LEAST_ONE_CAUSAL_MEANINGFUL_REACTION_DESTINATION_ABOVE_AND_BELOW_REFERENCE_PRICE"
+  },
+  "tp_semantics": {
+    "canonical": "FIRST_MEANINGFUL_PHYSICAL_REACTION",
+    "valid_precision_examples": [
+      "KEY_ZONE_OR_KEY_LEVEL",
+      "5M_LIQUIDITY_REACTION_CLUSTER",
+      "ACTIVE_15M_FVG_MIDPOINT_WHEN_IT_OWNS_FIRST_REACTION"
+    ],
+    "fvg_is_entry_requirement": false,
+    "do_not_force_both_tps_when_context_truly_lacks_one_side": true
+  },
+  "sampling": {
+    "target_cases": 16,
+    "one_case_per_session": true,
+    "priority_order": [
+      "AUTHORITATIVE_FULL_ENGINE_ENTRY_REPLAY",
+      "MOMENTUM_FORCE_CANDIDATE_REJECTED_BY_ROOM_OR_TP",
+      "STRUCTURAL_CONTROL_ONLY_IF_NEEDED"
+    ],
+    "reuse_seen_development_sessions_allowed": true,
+    "reason": "This is calibration, not blind or clean edge evidence.",
+    "pnl_or_exit_outcome_used_for_selection": false,
+    "never_repeat_a_session_only_to_fill_count": true
+  }
+}
