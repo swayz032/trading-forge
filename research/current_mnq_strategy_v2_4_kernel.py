@@ -28,6 +28,7 @@ from research.current_mnq_strategy_v2_4_entries import (
     weak_first_break_print,
 )
 from research.current_mnq_strategy_v2_4_force import decision_times, force_snapshot
+from research.current_mnq_strategy_v2_4_fvg_interaction import active_fvg_interaction_locations
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
 from research.current_mnq_strategy_v2_4_premarket import plan_allows_v24
 from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
@@ -148,8 +149,8 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
             continue
         pad = max(core.TICK * 2, p.touch_pad_atr * float(atr_ref))
 
-        # Location state is frozen at the start of the forming 5m candle. A role
-        # change caused by this candle cannot authorize an entry inside itself.
+        # Structural key-zone state is frozen at the start of the forming 5m
+        # candle. A role change caused by this candle cannot authorize itself.
         pre_locs: list[core.Location] = []
         for loc in authorized:
             if loc.zone is None:
@@ -158,6 +159,17 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
             before = zone_state_at_v24(loc.zone, full5, ts, p)
             if before.active:
                 pre_locs.append(_as_location(loc, before))
+
+        # Direct trader fidelity correction: completed 15m FVGs may themselves be
+        # the causal S/R interaction band. They can form intraday, so unlike the
+        # frozen pre-open key map they are refreshed only from FVGs fully known at
+        # this 5m bucket start. They do not create trades by themselves; all normal
+        # rejection/breakout story + force + premarket + room gates below remain.
+        known_ids = {x.id for x in pre_locs}
+        for fvg_loc in active_fvg_interaction_locations(h15, ts):
+            if fvg_loc.id not in known_ids:
+                pre_locs.append(fvg_loc)
+                known_ids.add(fvg_loc.id)
 
         # Every completed 1m inside the parent 5m is a causal decision clock.
         # The parent close itself is excluded: if force was not proven before the
@@ -181,6 +193,9 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                         ))
 
             # Breakout/repeat-test/displacement momentum uses the same force gate.
+            # For an opposing FVG this is the trader's "disrespect/clear it" path:
+            # the FVG does not disappear merely because price touches it; normal
+            # breakout proof and sustained force must establish clearance.
             for direction, side in (("L", "R"), ("S", "S")):
                 force = force_snapshot(one, ts, 5, direction, decision_time, p)
                 if not force.confirmed:
