@@ -10,7 +10,7 @@ import pandas as pd
 from research import current_mnq_strategy_v2_4_engine as prod
 from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates
 from research.current_mnq_strategy_v2_4_policy import semantics_hash
-from research.current_mnq_strategy_v2_4_targets import build_and_classify
+from research.current_mnq_strategy_v2_4_target_policy import build_and_classify
 
 core = prod.core
 
