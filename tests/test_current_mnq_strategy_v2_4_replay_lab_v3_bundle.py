@@ -124,6 +124,16 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
     assert "if (height < 1)" in out
     assert "setInterval(() =>" in out
     assert "scrollIntoView" not in out
+    assert "MNQ_REPLAY_REWIND_READY" in out
+    assert "id = 'rewind1'" in out
+    assert "id = 'rewind5'" in out
+    assert "function rewindReplay(minutes)" in out
+    assert "USER_REWIND_ENTRY_CORRECTION" in out
+    assert "l.final_action = '';" in out
+    assert "l.first_entry_time = null;" in out
+    assert "l.trader_tp_reaction_cluster = null;" in out
+    assert "rewind clears a locked entry but keeps your key zones and both TP plans" in out
+    assert "e.code !== 'ArrowLeft'" in out
 
 
 def test_v3_generator_explicitly_excludes_all_prior_v2_review_sessions():
