@@ -1,0 +1,37 @@
+{
+  "artifact": "raw-to-canonical-provenance-hardening-proof-v1",
+  "ruling": "AR-1376A Sec4",
+  "cases": {
+    "E8Wg6tFPYjo": {
+      "video_id": "E8Wg6tFPYjo",
+      "no_duplicate_object_keys": true,
+      "duplicate_key_rejecting_parse_succeeded": true,
+      "raw_response_sha256": "600ca2c5c1d729538f0ceb91b4344a2d5a62c20f36dcf0d9aa06eb61d9f7d3e5",
+      "canonical_reserialization_sha256": "600ca2c5c1d729538f0ceb91b4344a2d5a62c20f36dcf0d9aa06eb61d9f7d3e5",
+      "frozen_candidate_sha256": "600ca2c5c1d729538f0ceb91b4344a2d5a62c20f36dcf0d9aa06eb61d9f7d3e5",
+      "canonical_reserialization_exactly_equals_frozen_candidate": true,
+      "raw_sha_equals_frozen_sha": true
+    },
+    "7ieYBa7Z-Hg": {
+      "video_id": "7ieYBa7Z-Hg",
+      "no_duplicate_object_keys": true,
+      "duplicate_key_rejecting_parse_succeeded": true,
+      "raw_response_sha256": "0f76914b32976232d9b2ac814813b5f1187ed95fcdd632cc6d4d071b6f3a89ed",
+      "canonical_reserialization_sha256": "c253de8f3c8d7ba36df3143d953ba18cc6a3d69b23519f28dd17ce4eac5bb3cd",
+      "frozen_candidate_sha256": "c253de8f3c8d7ba36df3143d953ba18cc6a3d69b23519f28dd17ce4eac5bb3cd",
+      "canonical_reserialization_exactly_equals_frozen_candidate": true,
+      "raw_sha_equals_frozen_sha": false
+    },
+    "1HFoStW_wsc": {
+      "video_id": "1HFoStW_wsc",
+      "no_duplicate_object_keys": true,
+      "duplicate_key_rejecting_parse_succeeded": true,
+      "raw_response_sha256": "b470d40811ffe41109adc572a53daba47eed8358fa79bf6fee17c67d843393d2",
+      "canonical_reserialization_sha256": "b470d40811ffe41109adc572a53daba47eed8358fa79bf6fee17c67d843393d2",
+      "frozen_candidate_sha256": "b470d40811ffe41109adc572a53daba47eed8358fa79bf6fee17c67d843393d2",
+      "canonical_reserialization_exactly_equals_frozen_candidate": true,
+      "raw_sha_equals_frozen_sha": true
+    }
+  },
+  "conclusion": "For all three round-2 fresh-Opus candidates: the raw Opus response contains no duplicate object keys, a duplicate-key-rejecting parse succeeds, and canonical re-serialization of the parsed object exactly equals the frozen fresh_source_candidate.json bytes. The freeze script's implicit json.loads -> json.dumps(indent=2, ensure_ascii=False) transformation is a pure deterministic formatting normalization (re-serialization), not a semantic alteration -- proven, not merely asserted."
+}
