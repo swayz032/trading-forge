@@ -1,0 +1,26 @@
+{
+  "artifact": "gpt56-semantic-audit-round3-task-index-v2",
+  "emitted_by": "worker-1",
+  "case": {
+    "video_id": "E8Wg6tFPYjo",
+    "reconstruction_round": 3,
+    "task_schema_version": "v2",
+    "ruling": "AR-1379A section 8 Lane B",
+    "harness_source": "scripts/strategy_factory_gpt56_semantic_audit.py (this branch, V2 contract-binding repair, commit 4fe66630)",
+    "transcript_path": "src/engine/extraction/fixtures/source-evidence/E8Wg6tFPYjo.transcript.txt",
+    "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+    "candidate_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/reconstruction-round-3-fresh-opus/E8Wg6tFPYjo/fresh_source_candidate.json",
+    "candidate_sha256": "b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041",
+    "semantic_task_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks-round3-v2/E8Wg6tFPYjo/gpt56_semantic_audit_task.json",
+    "semantic_task_sha256": "38e2faf5bdc84efea11ec4076ceb433c947a9b7608bafa87b7fd7df8de3b103d",
+    "audit_nonce": "f27fb0987d337decb8e5d6434983a75f778718a7699e97b6b628ee1bed438e03",
+    "semantic_contract_id": "AR-1378A-SS6-ROLE-ASSIGNMENT-CONTRACT-V1",
+    "semantic_contract_sha256": "79b0d960fe9f40d3c93a3f573a32a994a4afbae696dd831b41a11d1aaae4a9de",
+    "gpt56_prompt_path": "docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks-round3-v2/E8Wg6tFPYjo/gpt56_semantic_audit_prompt.txt",
+    "gpt56_prompt_sha256": "7bb2d0631f8b3db50d027e4049ed4755d9dd8c20a8a458ae2b975d2d137b54ba",
+    "claim_count": 73,
+    "strategy_count": 1,
+    "candidate_provenance": "genuine fresh isolated Opus reader, file-first transport, round-3 attempt 2 (attempt 1 failed literal-quote binding, preserved not deleted) -- SAME frozen candidate as the V1 round-3 task; no new Opus reconstruction was performed for this V2 re-emit",
+    "v1_task_disposition": "HOLD / DO-NOT-AUDIT per AR-1379A (F-1) -- preserved unchanged at docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/gpt56-semantic-tasks-round3/E8Wg6tFPYjo/, not overwritten"
+  }
+}
