@@ -19,6 +19,7 @@ from research import current_mnq_strategy_v2_4_engine as v24
 from research import current_mnq_strategy_v2_4_replay_lab_v3 as v3
 from research import current_mnq_strategy_v2_4_replay_lab_v3_selection as sel
 from research import current_mnq_strategy_v2_4_target_policy as target_policy
+from research.current_mnq_strategy_v2_4_frozen_replay_regrade import regrade_frozen_case_windows
 from research.current_mnq_strategy_v2_4_fvg import active_15m_fvgs
 from research.current_mnq_strategy_v2_4_targets import build_reaction_destinations
 
@@ -182,6 +183,10 @@ def main() -> None:
     ).hexdigest()
     answers["pack_id"] = review["pack_id"]
 
+    # The trader has already frozen labels for the old 14-case pack. Regrade the
+    # repaired bot on those same windows without storing or reading trader labels.
+    answers["post_repair_same_window_regrade"] = regrade_frozen_case_windows(env, p)
+
     v3.write_lab_v3(OUT, review, answers)
 
     sampling = answers.get("sampling_receipt", {})
@@ -205,6 +210,7 @@ def main() -> None:
         "active_15m_fvg_midpoint_is_valid_tp_when_first_reaction": True,
         "tp1_to_tp2_rollover_uses_existing_room_rule": True,
         "answer_key_uses_production_target_policy": True,
+        "post_repair_same_window_regrade_embedded_in_hidden_key": True,
         "seen_development_sessions_may_be_reused": True,
         "blind_evidence_eligible": False,
         "edge_evidence_eligible": False,
