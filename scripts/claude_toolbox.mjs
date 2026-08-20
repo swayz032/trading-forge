@@ -120,7 +120,13 @@ const CACHE = path.join(os.tmpdir(), 'tf-claude-toolbox');
 //                           against the REAL sVkm queue/receipt/native-call-manifest/
 //                           transcript artifacts, not just synthetic fixtures. Descendant
 //                           verified with `git merge-base --is-ancestor bbf2e6c2 59cfb1cd`.
-const TOOLBOX_PIN = '59cfb1cdd1a9779e2a7be406397bea52362db467';
+// RE-PINNED 2026-08-19 by AR-1367A control-plane seat, on AR-1367A executable ruling
+// (cpb-2026-08-19-0011), Guard-V2 promotion:
+//   59cfb1cd -> 4c6f36ea   (Guard-V2 target promotion. Target graded and accepted across
+//                           AR-1311A through AR-1367A. Bundle: 56 files, bundle hash
+//                           5b54027ed3b1bfb2d7e4c37d2644103875539e1bcc641f0abfea26f58fc2d801.
+//                           Descendant of 59cfb1cd, verified under AR-1366A preflight).
+const TOOLBOX_PIN = '4c6f36ea7e2f68e3eb50cf555390b3c4e98ddbd4';
 
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
