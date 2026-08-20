@@ -7,6 +7,7 @@ import pytest
 from research.current_mnq_strategy_v2_4_replay_lab_v3_tp_context import (
     NO_VISIBLE_MEANINGFUL_REACTION,
     TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT,
+    WAIT_AT_REPLAY_END,
     entry_tp_capture_complete,
     normalize_selected_tp,
     selected_tp_evidence,
@@ -78,24 +79,38 @@ def test_context_aware_validation_accepts_saved_state_capture_gap_for_entry_time
     validate_labels_v3_context_aware([row], {"cases": [{"case_id": "A"}]})
 
 
-def test_browser_patch_preserves_completed_work_and_auto_finalizes_ended_wait_only_cases(tmp_path):
+def test_wait_is_a_valid_distinct_fidelity_outcome_not_no_trade():
+    row = {
+        "case_id": "A",
+        "final_action": WAIT_AT_REPLAY_END,
+        "first_entry_time": None,
+        "entry_force": "NOT_APPLICABLE",
+        "trader_zones": [],
+        "trader_tp_reaction_cluster": None,
+        "decision_timeline": [{"time": "2026-08-17T10:20:00-04:00", "action": "WAIT", "force": "TUG_OF_WAR"}],
+        "note": "",
+    }
+    validate_labels_v3_context_aware([row], {"cases": [{"case_id": "A"}]})
+    assert row["final_action"] == "WAIT"
+    assert row["final_action"] != "NO_TRADE"
+
+
+def test_browser_patch_preserves_ended_wait_only_cases_as_wait(tmp_path):
     html = tmp_path / "review_v3.html"
     html.write_text("<html><body><div id='x'></div></body></html>", encoding="utf-8")
     out = patch(html)
     assert MARKER in out
-    assert MARKER.endswith("_V3")
+    assert MARKER.endswith("_V4")
     assert "Do not invent a TP" in out
     assert "BULLISH — NO VISIBLE REACTION" in out
     assert "BEARISH — NO VISIBLE REACTION" in out
     assert "The opposite-direction TP is optional" in out
     assert "TP_NOT_CAPTURABLE_FROM_PRESENTED_CONTEXT" in out
     assert "recoverFinalAction" in out
-    assert "autoFinalizeEndedWaitOnly" in out
-    assert "AUTO_NO_TRADE_FROM_REPLAY_END_WAIT_ONLY" in out
-    assert "replayLength" in out
-    assert "revealCount < replayLength" in out
-    assert "Full replays that ended with WAIT only are now automatically finalized as NO TRADE" in out
-    assert "saved label missing" in out
-    assert "replay not finished and final action missing" in out
-    assert "FROZEN_WITH_PRESENTED_CONTEXT_CAPTURE_GAPS" in out
+    assert "preserveEndedWaitOnly" in out
+    assert "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING" in out
+    assert "l.final_action = 'WAIT'" in out
+    assert "WAIT is preserved and is not converted to NO_TRADE" in out
+    assert "A full replay that ends while you are still WAITING is preserved as WAIT" in out
+    assert "FROZEN_WITH_TRADER_WAIT_AT_REPLAY_END" in out
     assert "Save Draft" in out
