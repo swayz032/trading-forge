@@ -1,0 +1,25 @@
+{
+  "schema": "tf-gpt56-semantic-audit-receipt-v1",
+  "status": "GPT56_SEMANTIC_AUDIT_FAIL",
+  "video_id": "1HFoStW_wsc",
+  "candidate_sha256": "b470d40811ffe41109adc572a53daba47eed8358fa79bf6fee17c67d843393d2",
+  "transcript_sha256": "c84a83c745da422bb3c19955f981a9f7ba848a7eaa68b85b732630201263b080",
+  "task_sha256": "ca678d3d27f361171b6e586987e1ca38ce0f074ad982130a17076eecbc234b4d",
+  "raw_response_sha256": "a3de26354885eef8e1aa5b2cc55416e9da3af6f63a245b8b9c457b6cfb6ae319",
+  "auditor_role": "GPT_5_6_SOL_SEMANTIC_AUDITOR",
+  "model_identity": "GPT-5.6 Sol",
+  "legacy_semantics_visible": false,
+  "semantic_pass": false,
+  "fail_closed_reasons": [
+    "claim instrument_classification=PARTIAL",
+    "claim strategies[0].variants[11]=PARTIAL",
+    "claim strategies[0].variants[12]=PARTIAL",
+    "claim strategies[0].variants[13]=PARTIAL",
+    "cross-field role_assignment=FAIL",
+    "cross-field directional_symmetry=UNRESOLVED",
+    "blocking finding HIGH:role_assignment",
+    "blocking finding HIGH:directional_symmetry"
+  ],
+  "next_authority": "STOP_NO_CERTIFIER_COMPILER_AUTHORITY",
+  "explicitly_not_factory_authority": true
+}

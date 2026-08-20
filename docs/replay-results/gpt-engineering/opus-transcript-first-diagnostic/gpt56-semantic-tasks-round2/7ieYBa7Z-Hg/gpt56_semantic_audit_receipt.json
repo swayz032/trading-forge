@@ -1,0 +1,31 @@
+{
+  "schema": "tf-gpt56-semantic-audit-receipt-v1",
+  "status": "GPT56_SEMANTIC_AUDIT_FAIL",
+  "video_id": "7ieYBa7Z-Hg",
+  "candidate_sha256": "c253de8f3c8d7ba36df3143d953ba18cc6a3d69b23519f28dd17ce4eac5bb3cd",
+  "transcript_sha256": "63742bf97578c28637b85ea58540d1acbee8341c9e7c4d31d90f09c165c5dcf7",
+  "task_sha256": "b73527ebbdf7048ee9c786e141a8913b39030a64f3ed15a2cd75132632fb46ff",
+  "raw_response_sha256": "2e9b1ecabc4147b26f8df9991265d3a858aa4bb65230dc40a918782bb1e2e7e3",
+  "auditor_role": "GPT_5_6_SOL_SEMANTIC_AUDITOR",
+  "model_identity": "GPT-5.6 Sol",
+  "legacy_semantics_visible": false,
+  "semantic_pass": false,
+  "fail_closed_reasons": [
+    "claim instrument_classification=PARTIAL",
+    "claim strategies[0].execution_timeframe=PARTIAL",
+    "claim strategies[0].setup[7]=PARTIAL",
+    "claim strategies[0].setup[13]=PARTIAL",
+    "claim strategies[0].stop=PARTIAL",
+    "claim strategies[0].management[6]=PARTIAL",
+    "claim strategies[0].variants[9]=PARTIAL",
+    "cross-field trigger_vs_source_gaps=FAIL",
+    "cross-field target_definition_conflicts=UNRESOLVED",
+    "cross-field role_assignment=FAIL",
+    "cross-field directional_symmetry=UNRESOLVED",
+    "blocking finding HIGH:trigger_vs_source_gaps",
+    "blocking finding HIGH:target_definition_conflicts",
+    "blocking finding HIGH:role_assignment"
+  ],
+  "next_authority": "STOP_NO_CERTIFIER_COMPILER_AUTHORITY",
+  "explicitly_not_factory_authority": true
+}
