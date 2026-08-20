@@ -1,7 +1,7 @@
 {
-  "schema_version": 8,
-  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-8-FORCE1",
-  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, entry-fidelity/live-force semantics, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when semantic prose is unchanged.",
+  "schema_version": 9,
+  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-9-REPLAY-FVG-TP",
+  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, direct trader fidelity evidence, entry/live-force/FVG/target semantics, replay grading, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when older prose is unchanged.",
   "contract_files": [
     "research/current_mnq_strategy_v2_4_spec.json",
     "research/current_mnq_strategy_v2_4_fvg_semantics.json",
@@ -9,6 +9,7 @@
     "research/current_mnq_strategy_v2_4_key_level_semantics.json",
     "research/current_mnq_strategy_v2_4_premarket_semantics.json",
     "research/current_mnq_strategy_v2_4_entry_semantics.json",
+    "research/current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json",
     "research/current_mnq_strategy_v2_4_build_contract.json"
   ],
   "strategy_and_edge_source_files": [
@@ -29,13 +30,16 @@
     "research/current_mnq_strategy_v2_4_entries.py",
     "research/current_mnq_strategy_v2_4_force.py",
     "research/current_mnq_strategy_v2_4_fvg.py",
+    "research/current_mnq_strategy_v2_4_fvg_interaction.py",
     "research/current_mnq_strategy_v2_4_zone_lifecycle.py",
     "research/current_mnq_strategy_v2_4_levels.py",
     "research/current_mnq_strategy_v2_4_premarket.py",
     "research/current_mnq_strategy_v2_4_kernel.py",
     "research/current_mnq_strategy_v2_4_targets.py",
+    "research/current_mnq_strategy_v2_4_target_policy.py",
     "research/current_mnq_strategy_v2_4_engine.py",
     "research/current_mnq_strategy_v2_4_signal.py",
+    "research/current_mnq_strategy_v2_4_replay_fidelity_grade.py",
     "research/current_mnq_strategy_v2_4_edge.py",
     "research/current_mnq_strategy_v2_4_oos.py",
     "research/current_mnq_strategy_v2_4_policy.py",
