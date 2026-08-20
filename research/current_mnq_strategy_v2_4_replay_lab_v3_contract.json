@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "LOCKED_DESKTOP_INTERACTIVE_FIDELITY_LAB_V3",
   "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
   "purpose": "Capture the trader's real discretionary timing, key-zone selection, live force/tug-of-war judgment, and first meaningful reaction-cluster TP selection with a desktop replay experience. Fidelity only; never edge certification or PnL-driven tuning.",
@@ -32,16 +32,22 @@
     "keyboard_play_pause_space": true,
     "keyboard_step_1m_right_arrow": true,
     "keyboard_step_5m_shift_right_arrow": true,
+    "keyboard_rewind_1m_left_arrow": true,
+    "keyboard_rewind_5m_shift_left_arrow": true,
     "play_speeds": [1, 2, 5],
-    "key_zone_drawn_on_15m_projects_to_all_timeframes": true,
-    "tp_drawn_on_5m_is_reaction_cluster": true,
+    "key_zone_and_tp_share_main_chart": true,
+    "bottom_1m_chart_is_entry_force_only": true,
     "autosave": true,
+    "draft_export": true,
     "freeze_export": true
   },
   "tp_semantics": {
     "canonical_label": "FIRST_MEANINGFUL_REACTION_CLUSTER",
     "not_a_rule": "SIDE_BY_SIDE_CANDLES",
-    "instruction": "Mark the first meaningful reaction cluster the trader would actually use as TP. Do not redefine reaction cluster as merely adjacent or side-by-side candles."
+    "instruction": "Mark the first meaningful reaction cluster the trader would actually use as TP. Do not redefine reaction cluster as merely adjacent or side-by-side candles.",
+    "pre_entry_directional_planning": "The trader may mark bullish and bearish TP plans before direction is confirmed, but the opposite-direction TP is optional.",
+    "presented_context_gap_status": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT",
+    "presented_context_gap_rule": "If the replay chart has open space and does not present a meaningful reaction/key level in a direction, record the explicit context-gap status instead of inventing a numeric TP. This is a fidelity/context limitation and does not prove ROOM_TO_FIRST_REACTION passed."
   },
   "scenario_selection": {
     "one_case_per_session": true,
@@ -60,6 +66,7 @@
     "tick_order_inference_forbidden": true,
     "wait_does_not_end_case": true,
     "first_entry_minute_recorded": true,
+    "rewind_is_trader_correction_not_new_market_information": true,
     "future_visibility": "UI_PROGRESSIVE_DISCLOSURE_ONLY_NOT_CRYPTOGRAPHICALLY_WITHHELD",
     "formal_blind_evidence_warning": "Because a static local artifact contains later replay bars for interactive stepping, V3 is style/fidelity capture and must not be represented as cryptographically sealed no-future evidence. A server-streamed version would be required for that stronger claim."
   },
@@ -69,7 +76,8 @@
     "compare_first_entry_action": true,
     "compare_first_entry_minute": true,
     "compare_force_at_entry": true,
-    "compare_reaction_cluster_geometry": true,
+    "compare_reaction_cluster_geometry_when_trader_marked_numeric_tp": true,
+    "explicit_no_visible_reaction_is_context_gap_not_numeric_match": true,
     "compare_decision_relevant_key_zone_geometry": true,
     "pnl_thresholds_forbidden": true
   },
@@ -77,7 +85,8 @@
     "clean_oos_edge_certification",
     "profitability_claims",
     "tick_reconstruction_from_1m_ohlc",
-    "showing_bot_answers_before trader labels freeze",
-    "parameter tuning from replay outcomes"
+    "showing bot answers before trader labels freeze",
+    "parameter tuning from replay outcomes",
+    "inventing a TP when the presented chart does not contain a meaningful reaction"
   ]
 }
