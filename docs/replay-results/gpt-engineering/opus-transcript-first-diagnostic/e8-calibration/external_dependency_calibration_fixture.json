@@ -1,0 +1,59 @@
+{
+  "schema": "tf-external-dependency-calibration-fixture-v1",
+  "authority": "AR-1385A section 6.6 (Stage C0 focused calibration fixture), on AR-1384A section 6",
+  "purpose": "ONE small pinned fixture built from the ALREADY ACCEPTED E8 transcript and visual-receipt facts. It is NOT a new candidate, it does NOT reopen reconstruction, and it is NOT a live strategy. Its whole job is to prove the compiler can PRESERVE a typed external decision dependency and refuse it nonterminally while provider access is unverified.",
+  "expected_compiler_result": "A named, structured, NONTERMINAL refusal -- grade RED, compile_readiness BLOCKED_EXTERNAL_DEPENDENCY, structured_blocker.reason EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED, terminal false -- with the source semantic status still MULTIMODAL_RESOLVED. Never a trade, never a green executable strategy, and never a claim that the source semantics are absent.",
+
+  "source": {
+    "video_id": "E8Wg6tFPYjo",
+    "video_url": "https://www.youtube.com/watch?v=E8Wg6tFPYjo",
+    "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+    "media_sha256": "06af188d3a226ca05ba9000097ec7a603ca6ca36563ed12926bf62a0da3e2841"
+  },
+
+  "evidence_receipt_sha256": {
+    "vi3_00-02-30.png": "83822a0a8439589455d2dda7a65928d12346939895319bcc0cfb17bb8bd4a634",
+    "vi3_00-12-42.png": "4cb8af14c42cb1f12ec6cd85e8892038aeec648fd484b9ee69f354ad68a6acdd"
+  },
+  "evidence_note": "The two frames above are the accepted VI-E8-3A evidence: the chart header reads 15 while the provider panel's [TF] row reads 4H -> Premium (GBP/AUD) and 4H -> Discount (NZD/USD), above the taught checklist rows including HTF Alignment. Magnifications: frames/zoom_vi3_cp_panel_premium.png, frames/zoom_vi3_cp_panel_discount.png in ../visual-intelligence-e8-round1/E8Wg6tFPYjo/. All hashed in that directory's artifact-manifest.sha256.",
+
+  "required_dependency_ids": ["e8.htf_premium_discount"],
+  "required_dependency_note": "AR-1385A section 7 item 15. The fixture NAMES the dependency it requires so that deleting the broken gate is detectable. Without this, the cheapest route past any external blocker would be to drop the dependency and go green -- a strategy must never become less strict by losing a gate it could not satisfy.",
+
+  "external_dependency": {
+    "dependency_id": "e8.htf_premium_discount",
+    "consumer_refs": ["entry_sequence[1].action"],
+    "kind": "EXTERNAL_INDICATOR",
+    "provider": "Currency Pros",
+    "artifact": "Currency Pros Indicator",
+    "platform": "TradingView",
+    "display_chart_timeframe": "15m",
+    "decision_timeframe": "4h",
+    "configuration": {"higher_timeframe": "4h"},
+    "output_contract": {
+      "type": "enum",
+      "values": ["PREMIUM", "DISCOUNT", "UNKNOWN"],
+      "gate": {
+        "PREMIUM": "SHORT_ONLY",
+        "DISCOUNT": "LONG_ONLY",
+        "UNKNOWN": "NO_TRADE"
+      }
+    },
+    "semantic_status": "MULTIMODAL_RESOLVED",
+    "access_status": "UNVERIFIED",
+    "live_delivery": "UNVERIFIED",
+    "historical_replay": "UNVERIFIED",
+    "update_policy": "UNVERIFIED",
+    "implementation_status": "NOT_STARTED"
+  },
+
+  "consumer_refs_note": "consumer_refs is bound ONLY against the synthetic calibration projection used by src/engine/tests/test_external_dependency_projection.py -- never against the rejected full E8 candidate (SHA b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041, under lock). AR-1385A section 6.1: a positional index taken from a rejected, known-misordered candidate is not a stable identity, which is why dependency_id is the stable key and consumer_refs is a SET rather than the single provisional entry_sequence[1] the earlier record carried.",
+
+  "not_in_scope": [
+    "No provider adapter, webhook, endpoint, or network call.",
+    "No Currency Pros purchase, subscription, vendor contact, or credential.",
+    "No native 4H range selector -- the provider's internal formula stays SOURCE_INCOMPLETE_FOR_NATIVE_REIMPLEMENTATION and may not be invented.",
+    "No E8 Round 4, backtest, certification, promotion, PAPER, Topstep, or live execution.",
+    "This fixture does NOT make E8 a live strategy. AR-1385A route (b): E8 is a compiler-calibration source."
+  ]
+}

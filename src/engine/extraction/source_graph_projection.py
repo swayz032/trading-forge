@@ -69,9 +69,10 @@ NO FIXTURE-SPECIFIC STRING LIVES HERE (AR-1321A §6.3)
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any
 
 from . import batch_locator as bl
@@ -88,6 +89,55 @@ ALIAS_OF_CANONICAL = "ALIAS_OF_CANONICAL"
 PRESERVED_NON_EXECUTABLE_METADATA = "PRESERVED_NON_EXECUTABLE_METADATA"
 
 
+# AR-1395 Stage C0 (AR-1385A section 6) -- typed EXTERNAL DECISION DEPENDENCIES.
+#
+# A taught rule whose value is computed OUTSIDE Trading Forge -- an indicator, a data vendor, a
+# platform overlay -- previously had nowhere to live here. The representation offered "an executable
+# condition" or "the source did not say", and nothing between them. So a required gate whose
+# provider MEANING was fully known, but whose provider ACCESS was unproven, was forced into the
+# nearest wrong bucket and reported as an absent source rule.
+#
+# THREE FACTS THAT MUST NEVER COLLAPSE INTO ONE BOOLEAN:
+#   semantic status       -- what the source says the value MEANS
+#   access status         -- whether the exact value can be OBTAINED, live and historically
+#   implementation status -- whether a validated adapter exists
+#
+# Like `graph_edges`, the domain vocabulary here is OPAQUE to this module. Output values and their
+# gate consequences are fixture data; this module validates STRUCTURE only -- identity, consumer
+# existence and executability, coverage of every declared output, the fail-closed law, declared
+# consistency, and a self-computed contract hash. It never inspects what a value MEANS.
+EXTERNAL_DEPENDENCY_KIND_INDICATOR = "EXTERNAL_INDICATOR"
+EXTERNAL_DEPENDENCY_KIND_DATA_FEED = "EXTERNAL_DATA_FEED"
+EXTERNAL_DEPENDENCY_KIND_PLATFORM = "EXTERNAL_PLATFORM_STATE"
+_EXTERNAL_DEPENDENCY_KINDS = frozenset({
+    EXTERNAL_DEPENDENCY_KIND_INDICATOR,
+    EXTERNAL_DEPENDENCY_KIND_DATA_FEED,
+    EXTERNAL_DEPENDENCY_KIND_PLATFORM,
+})
+
+ACCESS_UNVERIFIED = "UNVERIFIED"
+ACCESS_VERIFIED = "VERIFIED"
+ACCESS_UNAVAILABLE = "UNAVAILABLE"
+_ACCESS_STATUSES = frozenset({ACCESS_UNVERIFIED, ACCESS_VERIFIED, ACCESS_UNAVAILABLE})
+
+# The sentinel every external contract must declare: "the provider did not tell us". Its only
+# admissible consequence is the fail-closed action. A contract that permits acting on an unresolved
+# value is a fail-OPEN gate, which is the one thing this whole structure exists to make impossible.
+UNRESOLVED_OUTPUT = "UNKNOWN"
+FAIL_CLOSED_ACTION = "NO_TRADE"
+
+# Readiness is emitted ALONGSIDE the grade, never instead of the semantic status. RED here means
+# "not ready to execute", never "the source was not understood" -- conflating those two is exactly
+# what produced a false terminal source refusal.
+BLOCKED_EXTERNAL_DEPENDENCY = "BLOCKED_EXTERNAL_DEPENDENCY"
+READY_PENDING_CERTIFICATION = "READY_PENDING_CERTIFICATION"
+
+# The axes that must each be independently proven before an external dependency is executable.
+# Access is not one fact: live delivery, historical replay and update policy each separately gate a
+# faithful backtest, so any one of them unproven blocks.
+_ACCESS_AXES = ("access_status", "live_delivery", "historical_replay", "update_policy")
+
+
 @dataclass(frozen=True)
 class AliasSpec:
     alias_ref: str
@@ -100,6 +150,72 @@ class GraphEdge:
     from_ref: str
     to_ref: str
     edge_type: str
+
+
+@dataclass(frozen=True)
+class ExternalDependencySpec:
+    """One decision value this strategy needs that something outside Trading Forge computes.
+
+    `consumer_refs` is a SET of existing executable condition refs, not one positional index: a
+    single provider value can gate several taught conditions, and a positional index into a
+    candidate's sequence is not a stable identity. The dependency never REPLACES those conditions
+    -- every consumer stays conserved in the projection -- it records who computes a value they
+    depend on.
+
+    `configuration` and `output_contract` are opaque caller data. `output_contract` is
+    `{"type": "enum", "values": [...], "gate": {value: consequence}}`; this module checks that every
+    declared value has a consequence and that the unresolved sentinel fails closed, never what any
+    consequence means.
+    """
+
+    dependency_id: str
+    consumer_refs: tuple[str, ...]
+    kind: str
+    provider: str
+    artifact: str
+    platform: str
+    display_chart_timeframe: str
+    decision_timeframe: str
+    configuration: dict
+    output_contract: dict
+    semantic_status: str
+    access_status: str
+    live_delivery: str
+    historical_replay: str
+    update_policy: str
+    implementation_status: str
+    # Optional caller-declared digest. It is only ever CHECKED against the hash this module
+    # computes itself -- never accepted in its place. Excluded from the hash it is compared to.
+    expected_contract_sha256: str | None = None
+
+
+def _canonical_json_sha256(record: dict) -> str:
+    """Deterministic hash of a plain record.
+
+    Identical in form to `scripts/source_graph_projection_v2_1_certify.py::_canonical_hash` and to
+    the v2.1 compile adapter's copy of it. Reused rather than re-derived so a contract hash computed
+    here can never drift from the certifier's own determinism proof.
+
+    (The sibling module is referenced by role rather than by filename on purpose: this module is
+    fenced against source-specific strings by
+    `test_source_graph_projection.py::test_module_contains_no_source_specific_strings`, and that
+    fence caught the filename here on the first run.)
+    """
+    blob = json.dumps(record, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def external_dependency_contract_hash(dep: ExternalDependencySpec) -> str:
+    """The authoritative contract identity, computed from every declared field.
+
+    `expected_contract_sha256` is excluded -- a record cannot contain its own digest. Everything
+    else is included, so any change to identity, consumers, configuration, output contract or
+    status is observable as a different hash. Drift that nothing can see is drift nothing can
+    refuse.
+    """
+    record = {k: v for k, v in asdict(dep).items() if k != "expected_contract_sha256"}
+    record["consumer_refs"] = list(dep.consumer_refs)
+    return _canonical_json_sha256(record)
 
 
 @dataclass(frozen=True)
@@ -123,6 +239,11 @@ class ProjectionSpec:
     # Refs from which every canonical node must be reachable via graph_edges (structural
     # completeness check, AR-1322A F51 "complete reachability of all nine canonical nodes").
     graph_roots: tuple[str, ...] = ()
+    # AR-1395 C0: typed external decision dependencies. Defaulted-empty and OMITTED FROM THE
+    # RECEIPT when empty, on the same additive discipline `ConditionBinding.parameters` uses, so a
+    # spec that declares none serialises byte-identically to before this field existed and the
+    # committed certification artifacts keep their canonical hashes.
+    external_dependencies: tuple[ExternalDependencySpec, ...] = ()
 
     def __post_init__(self):
         if self.correction_ledger is None:
@@ -324,6 +445,118 @@ def validate_graph_edges(
         "unreachable_refs": unreachable,
         "complete": not unreachable,
     }
+
+
+def validate_external_dependencies(
+    dependencies: Sequence[ExternalDependencySpec],
+    valid_refs: set[str],
+    metadata_refs: set[str],
+) -> dict:
+    """Structural validation of typed external decision dependencies. Refuses by raising.
+
+    Checks identity, consumer existence AND executability, output coverage, the fail-closed law,
+    declared consistency, and the self-computed contract hash. It never inspects what an output
+    value MEANS -- that vocabulary is fixture data, exactly as `edge_type` is for the graph.
+
+    Returns a readiness report (mirroring `validate_graph_edges`, which likewise RAISES on
+    structural violations and RETURNS completeness): the unverified axes per dependency, and
+    whether anything blocks. Readiness is reported, not raised, because an unproven dependency is
+    a legitimate nonterminal state -- the caller turns it into a grade.
+    """
+    seen: set[str] = set()
+    unverified: dict[str, list[str]] = {}
+    records: list[dict] = []
+
+    for dep in dependencies:
+        if not (dep.dependency_id or "").strip():
+            raise ValueError("EXTERNAL_DEPENDENCY_ID_EMPTY: a dependency must be identifiable")
+        if dep.dependency_id in seen:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_ID_DUPLICATE: {dep.dependency_id!r} declared more than once")
+        seen.add(dep.dependency_id)
+
+        if not dep.consumer_refs:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_CONSUMERS_EMPTY: {dep.dependency_id!r} gates nothing")
+        for ref in dep.consumer_refs:
+            if ref not in valid_refs:
+                raise ValueError(
+                    f"EXTERNAL_DEPENDENCY_CONSUMER_UNKNOWN: {dep.dependency_id!r} names {ref!r}, "
+                    f"which is not a ref in this run")
+            if ref in metadata_refs:
+                raise ValueError(
+                    f"EXTERNAL_DEPENDENCY_CONSUMER_NOT_EXECUTABLE: {dep.dependency_id!r} names "
+                    f"{ref!r}, which is excluded from the executable denominator. A required gate "
+                    f"may not be attached to preserved commentary.")
+
+        if dep.kind not in _EXTERNAL_DEPENDENCY_KINDS:
+            raise ValueError(f"EXTERNAL_DEPENDENCY_KIND_UNKNOWN: {dep.kind!r}")
+        for axis in _ACCESS_AXES:
+            if getattr(dep, axis) not in _ACCESS_STATUSES:
+                raise ValueError(
+                    f"EXTERNAL_DEPENDENCY_STATUS_UNKNOWN: {axis}={getattr(dep, axis)!r}")
+
+        for field in ("display_chart_timeframe", "decision_timeframe"):
+            if not (getattr(dep, field) or "").strip():
+                raise ValueError(f"EXTERNAL_DEPENDENCY_TIMEFRAME_EMPTY: {field}")
+        declared_htf = (dep.configuration or {}).get("higher_timeframe")
+        if declared_htf is not None and declared_htf != dep.decision_timeframe:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_TIMEFRAME_CONTRADICTION: configuration declares "
+                f"{declared_htf!r} while decision_timeframe is {dep.decision_timeframe!r}")
+
+        contract = dep.output_contract or {}
+        values = list(contract.get("values") or ())
+        gate = dict(contract.get("gate") or {})
+        if not values:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_OUTPUT_VALUES_EMPTY: {dep.dependency_id!r}")
+        if UNRESOLVED_OUTPUT not in values:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_UNRESOLVED_VALUE_MISSING: {dep.dependency_id!r} declares no "
+                f"{UNRESOLVED_OUTPUT!r} value, so it cannot express provider silence")
+        missing = [v for v in values if v not in gate]
+        if missing:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_GATE_INCOMPLETE: {dep.dependency_id!r} declares "
+                f"{missing!r} with no consequence")
+        if gate[UNRESOLVED_OUTPUT] != FAIL_CLOSED_ACTION:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_FAIL_OPEN: {dep.dependency_id!r} maps {UNRESOLVED_OUTPUT!r} "
+                f"to {gate[UNRESOLVED_OUTPUT]!r}; the only admissible consequence of an "
+                f"unresolved provider value is {FAIL_CLOSED_ACTION!r}")
+
+        computed = external_dependency_contract_hash(dep)
+        if dep.expected_contract_sha256 is not None and dep.expected_contract_sha256 != computed:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_CONTRACT_HASH_MISMATCH: {dep.dependency_id!r} declares "
+                f"{dep.expected_contract_sha256!r}, canonical serialization gives {computed!r}")
+
+        axes = [a for a in _ACCESS_AXES if getattr(dep, a) != ACCESS_VERIFIED]
+        if axes:
+            unverified[dep.dependency_id] = axes
+
+        records.append({
+            "dependency_id": dep.dependency_id,
+            "consumer_refs": list(dep.consumer_refs),
+            "kind": dep.kind,
+            "provider": dep.provider,
+            "artifact": dep.artifact,
+            "platform": dep.platform,
+            "display_chart_timeframe": dep.display_chart_timeframe,
+            "decision_timeframe": dep.decision_timeframe,
+            "configuration": dep.configuration,
+            "output_contract": dep.output_contract,
+            "semantic_status": dep.semantic_status,
+            "access_status": dep.access_status,
+            "live_delivery": dep.live_delivery,
+            "historical_replay": dep.historical_replay,
+            "update_policy": dep.update_policy,
+            "implementation_status": dep.implementation_status,
+            "contract_sha256": computed,
+        })
+
+    return {"records": records, "unverified_axes": unverified, "blocked": bool(unverified)}
 
 
 def _validate_projection_spec(
@@ -734,11 +967,42 @@ def run_projection(
         allowed_edge_types=allowed_edge_types,
     )
 
+    # AR-1395 C0: an unresolved external dependency drives the EXISTING `RED` route with a
+    # structured reason. No new grade string is minted -- `g2d_finalizer` refuses any grade outside
+    # {RED, GREEN_PENDING_CERTIFICATION}, and inventing a third value would fail closed there for
+    # the wrong reason. Readiness is reported beside the grade, never in place of the semantic
+    # status: RED here means NOT READY TO EXECUTE, never "the source was not understood".
+    external_report = validate_external_dependencies(
+        dependencies=list(projection.external_dependencies),
+        valid_refs=set(text_by_ref) | {a.alias_ref for a in projection.alias_specs},
+        metadata_refs=set(projection.preserved_metadata_refs),
+    )
+
     grade = (
         "GREEN_PENDING_CERTIFICATION"
-        if len(canonical_accepted) == len(projection.canonical_refs) and graph_report["complete"]
+        if len(canonical_accepted) == len(projection.canonical_refs)
+        and graph_report["complete"]
+        and not external_report["blocked"]
         else "RED"
     )
+
+    external_block: dict[str, Any] = {}
+    if projection.external_dependencies:
+        external_block["external_dependencies"] = external_report["records"]
+        external_block["compile_readiness"] = (
+            BLOCKED_EXTERNAL_DEPENDENCY if external_report["blocked"]
+            else READY_PENDING_CERTIFICATION
+        )
+        if external_report["blocked"]:
+            external_block["structured_blocker"] = {
+                "reason": "EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED",
+                # NONTERMINAL on purpose. Unverified is not unavailable: the provider may well
+                # expose the value and nobody has measured it yet. A terminal capability refusal is
+                # a different, later verdict and must never be reached by assumption.
+                "terminal": False,
+                "dependency_ids": sorted(external_report["unverified_axes"]),
+                "unverified_axes": external_report["unverified_axes"],
+            }
 
     return {
         "projection_version": PROJECTION_VERSION,
@@ -773,5 +1037,6 @@ def run_projection(
             ],
             **graph_report,
         },
+        **external_block,
         "outcomes": [outcomes[c["condition_ref"]] for c in conditions],
     }

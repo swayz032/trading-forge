@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `55f1cdd6c07bea205c8dee13577766d7c286138d`  (worktree DIRTY at generation time)
+> Generated at commit `f39c9db07458e61991044d8e6d74bd1f03952edb`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 315 | 413 | 130225 | 2035 |
+| `src/` | Python | 315 | 414 | 130490 | 2039 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -41,11 +41,11 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
-| `src/` | 1915 | 777 |
-| `scripts/` | 317 | 315 |
+| `src/` | 1916 | 777 |
+| `scripts/` | 319 | 317 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2267** | **1092** |
+| **TOTAL** | **2270** | **1094** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -58,7 +58,7 @@ Published so that under-inclusion is visible instead of silent.
 | Python class methods | 460 | one row per method would swamp the map; a method is reached through its class |
 | Python nested / inner functions | 89 | not part of any module's import surface |
 | Non-exported TypeScript declarations | UNENUMERATED | module-private by construction |
-| `src/` test files | 1138 | tests are the reference surface, never the symbol surface |
+| `src/` test files | 1139 | tests are the reference surface, never the symbol surface |
 
 ---
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **242**.  Modules reachable from them: **798** of **2267** parsed files.
+Total entry points: **242**.  Modules reachable from them: **798** of **2270** parsed files.
 
 <details><summary>All 242 entry points and why each was counted</summary>
 
@@ -346,9 +346,9 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3795 |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3799 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1167 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5021 rows |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5025 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=242 |
 | C6 | a registered route module is reachable | PASS | modules reachable=798 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=138, ts=346 |
@@ -356,7 +356,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=2035 ts=2933 |
+| C12 | symbols enumerated in both languages | PASS | py=2039 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=46 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6626/6626 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -372,8 +372,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **222 of 4696 enumerated symbol names (4.7%) are defined in more than one file, covering
-  494 of 4968 symbol rows (9.9%).**  Every symbol table below marks those rows `AMBIG`.
+  **222 of 4700 enumerated symbol names (4.7%) are defined in more than one file, covering
+  494 of 4972 symbol rows (9.9%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -392,12 +392,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3795 | 75.6% |
+| `WIRED` | 3799 | 75.6% |
 | `FLAG-GATED` | 6 | 0.1% |
 | `BUILT-UNREACHABLE` | 1167 | 23.2% |
 | `DECLARED-ABSENT` | 46 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **5021** | |
+| **TOTAL** | **5025** | |
 
 ---
 
@@ -456,7 +456,7 @@ table below it.**
 | `src/engine/evt_tail.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/exits` | 20 | 0 | 2 | 0 | 0 | 22 |
 | `src/engine/exportability.py` | 3 | 0 | 0 | 0 | 0 | 3 |
-| `src/engine/extraction` | 344 | 0 | 45 | 0 | 0 | 389 |
+| `src/engine/extraction` | 348 | 0 | 45 | 0 | 0 | 393 |
 | `src/engine/family_meta_enforcement.py` | 10 | 0 | 2 | 0 | 0 | 12 |
 | `src/engine/fill_model.py` | 9 | 0 | 1 | 0 | 0 | 10 |
 | `src/engine/firm_config.py` | 2 | 0 | 1 | 0 | 0 | 3 |
@@ -4020,7 +4020,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/extraction</code> - 344 symbols</summary>
+<details><summary><code>src/engine/extraction</code> - 348 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -4266,16 +4266,20 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_attached_support` | function | `src/engine/extraction/source_fidelity_guard.py:183` | 0 | unique |
 | `_numeric_tokens` | function | `src/engine/extraction/source_fidelity_guard.py:210` | 0 | unique |
 | `check_condition_fidelity` | function | `src/engine/extraction/source_fidelity_guard.py:230` | 3 | unique |
-| `AliasSpec` | class | `src/engine/extraction/source_graph_projection.py:92` | 4 | unique |
-| `GraphEdge` | class | `src/engine/extraction/source_graph_projection.py:99` | 2 | unique |
-| `ProjectionSpec` | class | `src/engine/extraction/source_graph_projection.py:106` | 4 | unique |
-| `_claim_role` | function | `src/engine/extraction/source_graph_projection.py:132` | 1 | unique |
-| `_eligible_for_preserved_metadata` | function | `src/engine/extraction/source_graph_projection.py:157` | 0 | unique |
-| `_sha256` | function | `src/engine/extraction/source_graph_projection.py:168` | 4 | AMBIG |
-| `_validate_preserved_metadata_schema` | function | `src/engine/extraction/source_graph_projection.py:183` | 0 | unique |
-| `validate_graph_edges` | function | `src/engine/extraction/source_graph_projection.py:239` | 0 | unique |
-| `_validate_projection_spec` | function | `src/engine/extraction/source_graph_projection.py:329` | 0 | unique |
-| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:428` | 6 | unique |
+| `AliasSpec` | class | `src/engine/extraction/source_graph_projection.py:142` | 4 | unique |
+| `GraphEdge` | class | `src/engine/extraction/source_graph_projection.py:149` | 2 | unique |
+| `ExternalDependencySpec` | class | `src/engine/extraction/source_graph_projection.py:156` | 1 | unique |
+| `_canonical_json_sha256` | function | `src/engine/extraction/source_graph_projection.py:192` | 0 | unique |
+| `external_dependency_contract_hash` | function | `src/engine/extraction/source_graph_projection.py:208` | 0 | unique |
+| `ProjectionSpec` | class | `src/engine/extraction/source_graph_projection.py:222` | 4 | unique |
+| `_claim_role` | function | `src/engine/extraction/source_graph_projection.py:253` | 1 | unique |
+| `_eligible_for_preserved_metadata` | function | `src/engine/extraction/source_graph_projection.py:278` | 0 | unique |
+| `_sha256` | function | `src/engine/extraction/source_graph_projection.py:289` | 4 | AMBIG |
+| `_validate_preserved_metadata_schema` | function | `src/engine/extraction/source_graph_projection.py:304` | 0 | unique |
+| `validate_graph_edges` | function | `src/engine/extraction/source_graph_projection.py:360` | 0 | unique |
+| `validate_external_dependencies` | function | `src/engine/extraction/source_graph_projection.py:450` | 0 | unique |
+| `_validate_projection_spec` | function | `src/engine/extraction/source_graph_projection.py:562` | 0 | unique |
+| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:661` | 6 | unique |
 | `SpanCollision` | class | `src/engine/extraction/span_collision.py:41` | 0 | unique |
 | `role_of` | function | `src/engine/extraction/span_collision.py:49` | 0 | unique |
 | `_overlap` | function | `src/engine/extraction/span_collision.py:55` | 0 | unique |
