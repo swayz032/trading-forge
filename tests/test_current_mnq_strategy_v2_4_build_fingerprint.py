@@ -20,6 +20,7 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
         "research/current_mnq_strategy_v2_4_entry_semantics.json",
         "research/current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json",
         "research/current_mnq_strategy_v2_4_timeframe_pattern_fidelity_2026_08_20.json",
+        "research/current_mnq_strategy_v2_4_visual_evidence_manifest_2026_08_20.json",
         "research/current_mnq_strategy_v2_4_frozen_replay_case_manifest_2026_08_20.json",
         "research/current_mnq_strategy_v1_fast.py",
         "research/current_mnq_strategy_v2_ab.py",
@@ -54,8 +55,8 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
     }
     assert required.issubset(files)
     assert len(files) == len(fingerprinted_files())
-    assert b["schema_version"] == 11
-    assert b["release_id"] == "MNQ-V2.4-BUILD-FINGERPRINT-11-TIMEFRAME-PATTERN"
+    assert b["schema_version"] == 12
+    assert b["release_id"] == "MNQ-V2.4-BUILD-FINGERPRINT-12-CLOSED-WORLD-SR-FVG"
 
 
 def test_strategy_fingerprint_is_deterministic_on_unchanged_bytes():
