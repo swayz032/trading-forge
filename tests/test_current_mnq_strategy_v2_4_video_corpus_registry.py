@@ -69,7 +69,7 @@ OPERATOR_WORDS = {
 
 # A third location holding this file's own bytes. Deliberately NOT the full build
 # fingerprint - see fingerprint_anchor in the registry for why, and for the honest limit.
-REGISTRY_SHA256 = "a92709e287486f6dd22ad67aaf89aa3e561d0f93f091726031d2e2444b56eef5"
+REGISTRY_SHA256 = "1648517388263f82fbc6701ca49c4cf5bba1cfd8e8861e5c7fb6c05a2b52f936"
 
 ALLOWED_PROVENANCE = {
     "OPERATOR_STATED",

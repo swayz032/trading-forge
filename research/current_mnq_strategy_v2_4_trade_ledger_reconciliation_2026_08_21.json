@@ -1,0 +1,89 @@
+{
+  "artifact": "TRADE_LEDGER_RECONCILIATION_RECEIPT",
+  "produced": "2026-08-21",
+  "authority": "ALGO-002 \u00a73.3 (GPT external advisor ruling)",
+  "status": "DIAGNOSTIC_ONLY",
+  "prohibition": "This ledger is a TP/exit fidelity diagnostic. It may NEVER select a strategy rule, a threshold, or a parameter. No PnL figure here may participate in any fidelity repair decision.",
+  "custody": {
+    "source_file": "backtesting-analytics.csv",
+    "path": "C:/Users/tonio/Downloads/backtesting-analytics.csv",
+    "sha256": "0282abdbb1e6562a424fe906a57184345f81a8c8a9fee0ee2cbbe9cad0ef4089",
+    "duplicate_copy_note": "A byte-identical 'backtesting-analytics (1).csv' also exists in Downloads; same sha256.",
+    "bytes_not_committed": true
+  },
+  "census": {
+    "row_count": 74,
+    "symbols": {
+      "CME_MINI:MNQ": 74
+    },
+    "status": {
+      "closed": 74
+    },
+    "date_range": {
+      "first": "2025/04/02",
+      "last": "2025/06/20"
+    },
+    "side_counts": {
+      "buy": 28,
+      "sell": 46
+    }
+  },
+  "money_model": {
+    "solved_not_assumed": true,
+    "finding": "`amount` is DOLLARS PER POINT, not contracts. rPnL == (close-entry)*direction*amount, multiplier exactly 1.0 on all 69 non-degenerate rows.",
+    "first_model_was_wrong": "An initial pass assumed amount==contracts at $2/pt and failed on 69 of 74 rows, worst discrepancy $23,477. Recorded because the ledger was never wrong - the model was.",
+    "mnq_point_value": 2.0,
+    "rows_reconciling": 69,
+    "rows_not_reconciling": 0,
+    "degenerate_rows_close_equals_entry": 5
+  },
+  "implied_contract_sizes": {
+    "derivation": "amount / 2.0",
+    "counts": {
+      "15": 44,
+      "17": 27,
+      "20": 3
+    },
+    "note": "42 rows sit at the frozen 15 contracts; 25 at 17; 2 at 20. The ledger spans more than one sizing regime, so no per-trade dollar figure here may be normalised to 15."
+  },
+  "exit_families": {
+    "target_side_exit": 61,
+    "other_exit": 8,
+    "scratch": 5
+  },
+  "stop_analysis": {
+    "rows_carrying_an_initialSL": 0,
+    "consequence": "ZERO rows record a stop price. The RELAYED claim of '7 exact 17.25-point stops' CANNOT be reproduced from this file - there is no stop data in it at all. That claim is now UNSUPPORTED, not merely unverified."
+  },
+  "relayed_claims_tested": {
+    "62_target_side_exits": {
+      "relayed": 62,
+      "measured": 61,
+      "verdict": "CLOSE BUT NOT EQUAL - measured 61"
+    },
+    "7_exact_17_25_stops": {
+      "relayed": 7,
+      "measured": 0,
+      "verdict": "UNSUPPORTED - the file records no stop prices"
+    },
+    "5_scratches": {
+      "relayed": 5,
+      "measured": 5,
+      "verdict": "MATCHES"
+    },
+    "74_rows": {
+      "relayed": 74,
+      "measured": 74,
+      "verdict": "MATCHES"
+    },
+    "28_buy_46_sell": {
+      "relayed": "28/46",
+      "measured": "28/46",
+      "verdict": "MATCHES"
+    }
+  },
+  "eight_ledger_screenshots": {
+    "status": "NOT_RECONCILED",
+    "reason": "ALGO-001 and the engineering plan reference eight ledger screenshots. They were not supplied to this seat and are not in the operator's Trading screenshots folder by any identifiable name. The CSV-to-screenshot reconciliation ALGO-002 \u00a73.3 asks for therefore cannot be performed yet. Stated as open rather than quietly dropped."
+  }
+}
