@@ -1,24 +1,35 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "status": "LOCKED_DIRECT_TRADER_FIDELITY_ADDENDUM",
   "locked_at": "2026-08-20",
   "last_direct_clarification_at": "2026-08-20",
   "strategy_release_under_fidelity_repair": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
   "stage": "FIDELITY",
-  "purpose": "Bind the trader's frozen 14-case replay, prior master-rulebook knowledge, trade screenshots, force videos, and direct 2026-08-20 clarifications into one non-PnL semantic correction record before executable repair.",
+  "purpose": "Bind the trader's frozen 14-case labels, closed-world screenshot/video corpus, master-rulebook knowledge and direct 2026-08-20 clarifications into one non-PnL semantic correction record before fidelity freeze.",
   "authority_order": [
     "direct_trader_clarification_2026_08_20",
+    "closed_world_user_supplied_MNQ_visual_evidence_manifest",
     "frozen_14_case_trader_replay_labels",
-    "direct_trader_force_video_pair",
+    "direct_trader_force_and_TP_videos",
     "trader_trade_screenshots_and_master_rulebook",
     "older_semantic_contracts_where_not_superseded"
   ],
+  "visual_provenance": {
+    "manifest": "research/current_mnq_strategy_v2_4_visual_evidence_manifest_2026_08_20.json",
+    "screenshot_archive": "Trading screenshots (5).zip",
+    "screenshot_archive_sha256": "da25a0577a1317d3282aa40e7da9da60d36a0416319d8f452cee021a442c9f17",
+    "screenshot_count": 65,
+    "closed_world": true,
+    "same_symbol_or_similar_chart_is_not_authority": true,
+    "broad_library_search_cannot_add_strategy_evidence": true
+  },
   "frozen_replay": {
     "pack_id": "aa4e32104b39e0aaa37eb2bd2c90e67a059604447892411d7dfd530c243910e4",
     "labels_sha256": "11d8dec0749301c16c7d3b553d06dd564149edf78b4bab4b897fe3635783059c",
     "status": "FROZEN_WITH_TRADER_WAIT_AT_REPLAY_END",
     "case_count": 14,
     "wait_at_replay_end_count": 6,
+    "new_manual_replay_requested": false,
     "pnl_used": false,
     "edge_evidence_eligible": false
   },
@@ -32,6 +43,28 @@
       "name": "Desktop 2026.08.19 - 02.13.19.02.mp4",
       "sha256": "95bcbb3f7bf3893385f77eb612e2bbb82e772c546d53a3a9a816c1f4e1ce4f00",
       "role": "forming_5m_candle_force_and_tug_of_war_evidence"
+    },
+    {
+      "name": "Desktop 2026.08.20 - 20.37.47.04.mp4",
+      "sha256": "218ca9bb827db2c540d19782f6cef2227e45492a1a04b847dd78a6b3e23cda72",
+      "role": "TP_gap_reaction_retest_and_later_continuation_evidence"
+    }
+  ],
+  "direct_timeframe_screenshot_evidence": [
+    {
+      "name": "Screenshot 2026-08-20 231718.png",
+      "sha256": "8e460dce9bfab2a8de4e216ced02a5d16efae1cafabaea4e531e8120149b773b",
+      "role": "1m causal decomposition of the forming 5m A+ move"
+    },
+    {
+      "name": "Screenshot 2026-08-20 231723.png",
+      "sha256": "85d8d8e94384ed06c7df4e3d8b636c6023216fc577ab69b8bc8d9d0f3c80a985",
+      "role": "5m primary rejection/momentum pattern identity"
+    },
+    {
+      "name": "Screenshot 2026-08-20 232649.png",
+      "sha256": "383f04dbb0b606d8a5e0541f34a4d6f5093aada9e02627fb3cb859c02370fc6d",
+      "role": "5m breakout continuation trigger versus 15m context"
     }
   ],
   "multi_target_screenshot_evidence": [
@@ -51,6 +84,17 @@
       "observed_semantic": "MNQ coach panel explicitly carries TP1, TP2 and TP3 while preserving a separate entry and candle-setup decision."
     }
   ],
+  "direct_trader_market_map_scope": {
+    "regular_level_family": "STRUCTURAL_SUPPORT_RESISTANCE_ONLY",
+    "forbidden_strategy_levels": ["PDH", "PDL", "PWH", "PWL"],
+    "liquidity_reaction_clusters_are_tp_destinations": true,
+    "active_15m_fvg_midpoint_is_tp_when_fvg_owns_first_meaningful_reaction": true,
+    "active_15m_fvg_may_act_as_support_or_resistance_when_it_appears_before_regular_sr": true,
+    "fvg_identity_alone_never_creates_trade": true,
+    "first_meaningful_physical_reaction_wins": true,
+    "farther_feature_cannot_leapfrog_nearer_meaningful_reaction": true,
+    "premarket_prior_must_not_use_named_daily_weekly_levels_or_prior_close_gap_score": true
+  },
   "direct_trader_tp_gap_clarification": {
     "source": "direct_trader_video_review_and_followup_2026_08_20",
     "observed_video_tp_display_usd": 200,
@@ -70,9 +114,18 @@
     "pnl_selection_or_optimization": false
   },
   "direct_trader_rules": {
-    "execution_chart": "5m is the trader entry chart; 1m is bot causal intrabar reconstruction only.",
+    "execution_chart": "5m is the trader entry and candle-pattern chart; 1m is bot causal intrabar reconstruction only.",
+    "one_minute_pattern_vote_forbidden": true,
+    "fifteen_minute_role": "Higher-timeframe context plus the separate weak-break three-bar continuation path; a valid normal 5m continuation is not delayed for a 15m close.",
     "force": "The trader may enter while the 5m candle is forming after sustained directional force is real; temporary bursts and tug-of-war are not enough.",
-    "fvg_midpoint_tp": "The midpoint of an active 15m FVG is a valid TP when that FVG is the selected meaningful destination.",
+    "normal_breakout_second_candle": {
+      "first_completed_5m_beyond_zone": "SETUP_ONLY",
+      "long": "The immediately following forming 5m must trade above the first breakout candle high and prove sustained bullish force.",
+      "short": "The immediately following forming 5m must trade below the first breakout candle low and prove sustained bearish force.",
+      "momentum_without_extreme_extension": "WAIT_NO_ENTRY",
+      "wait_for_15m_close": false
+    },
+    "fvg_midpoint_tp": "The midpoint of an active 15m FVG is the TP when that FVG is the selected first meaningful reaction destination.",
     "fvg_edge_can_define_reaction_level": "When an FVG is the meaningful structure immediately before a support/resistance area, the trader may mark the relevant end/edge of the FVG as the physical support/resistance reaction boundary.",
     "fvg_support_resistance_interaction": {
       "rule": "An FVG may act as support/resistance when price is actually treating that band as the reaction structure; FVG identity alone never creates an automatic trade.",
@@ -84,6 +137,7 @@
     "tp_ladder": {
       "multiple_directional_tps_allowed": true,
       "labels": ["TP1", "TP2", "TP3_OR_NEXT_MEANINGFUL_REACTION"],
+      "allowed_destination_families": ["STRUCTURAL_SR_REACTION", "LIQUIDITY_REACTION_CLUSTER", "ACTIVE_15M_FVG_MIDPOINT"],
       "normal_rule": "Use the first meaningful physical reaction as TP1 when the planned TP display is $400 or more at the frozen 15-MNQ reference size and all other A+ entry requirements pass.",
       "too_close_rule": "If the planned TP1 display is under $400 at the frozen 15-MNQ reference size, the immediate entry is not safe.",
       "no_blind_rollover": "An untouched under-$400 TP1 may not be automatically skipped just because a farther TP2 exists.",
@@ -92,10 +146,14 @@
       "entry_requirements_still_apply": true,
       "farther_target_cannot_be_chosen_merely_for_more_profit": true
     },
-    "wait_semantics": "WAIT is distinct from NO_TRADE and remains WAIT when the presented replay ends while the trader is still waiting."
+    "wait_semantics": "WAIT is distinct from NO_TRADE and remains WAIT when the frozen presented replay ends while the trader is still waiting."
   },
   "supersedes_older_clauses": [
-    "The earlier 2026-08-20 addendum clause that automatically promoted TP2 whenever TP1 fell inside Params.min_room_r * Params.stop at the actual entry clock.",
+    "Any older contract or inherited engine behavior using PDH/PDL/PWH/PWL as this strategy's entry context, confluence, premarket score or TP destination.",
+    "Any older contract using previous-close gap scoring as part of this strategy's premarket prior.",
+    "Any normal-breakout clause allowing the second 5m to trigger merely because it remains beyond the broken level without taking the first breakout candle's directional extreme.",
+    "Any normal 5m breakout clause that waits for a 15m close after the second 5m has already proved the required extension and sustained force.",
+    "The earlier 2026-08-20 clause that automatically promoted TP2 whenever TP1 fell inside Params.min_room_r * Params.stop at the actual entry clock.",
     "Any older clause stating that a meaningful first reaction inside minimum room must always cancel every later continuation even after that same reaction has been causally processed by a valid test/attack and momentum path.",
     "Any older clause treating every FVG solely as passive TP/confluence context when the same FVG is demonstrably acting as the support/resistance reaction structure.",
     "Any replay validator that rejects a frozen WAIT label or silently converts WAIT to NO_TRADE."
