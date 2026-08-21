@@ -30,7 +30,7 @@ from research.current_mnq_strategy_v2_4_entries import (
 from research.current_mnq_strategy_v2_4_force import decision_times, force_snapshot
 from research.current_mnq_strategy_v2_4_fvg_interaction import active_fvg_interaction_locations
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
-from research.current_mnq_strategy_v2_4_premarket import plan_allows_v24
+from research.current_mnq_strategy_v2_4_premarket import build_premarket_plan_v24, plan_allows_v24
 from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
 
 core = prod.core
@@ -133,7 +133,9 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
     if full5.empty or open_ts - full5.index.min() < pd.Timedelta(days=core.MIN_WARMUP_DAYS):
         return
 
-    plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], env["pcm"])
+    # v2.4 direct trader fidelity: the strategy does not use PDH/PDL/PWH/PWL.
+    # Build only the causal premarket price-action structure/control prior.
+    plan = build_premarket_plan_v24(full5, dte)
     locations, _ = build_entry_locations_v24(env, dte, open_ts, p)
     authorized = [x for x in locations if x.entry_authorized]
     pending: dict[tuple[str, str], core.PendingBreakout] = {}
@@ -162,9 +164,9 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
 
         # Direct trader fidelity correction: completed 15m FVGs may themselves be
         # the causal S/R interaction band. They can form intraday, so unlike the
-        # frozen pre-open key map they are refreshed only from FVGs fully known at
+        # frozen pre-open S/R map they are refreshed only from FVGs fully known at
         # this 5m bucket start. They do not create trades by themselves; all normal
-        # rejection/breakout story + force + premarket + room gates below remain.
+        # rejection/breakout story + force + structural-prior + room gates remain.
         known_ids = {x.id for x in pre_locs}
         for fvg_loc in active_fvg_interaction_locations(h15, ts):
             if fvg_loc.id not in known_ids:
