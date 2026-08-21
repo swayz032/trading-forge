@@ -87,11 +87,11 @@ jobs:
           assert p['zone_gate']['pattern_without_zone_interaction']=='NO_TRADE'
           assert p['zone_gate']['mere_approach_without_touch']=='NO_TRADE_EXCEPT_TWO_FROZEN_PREBREAK_FAMILIES'
           assert p['zone_gate']['mid_range_pattern']=='NO_TRADE'
-          assert p['candlestick_semantics']['role']=='CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL'
-          assert 'REQUIRE_SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE' in p['hard_entry_order']
+          assert p['candlestick_semantics']['role']=='CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_SR_OR_FVG_NOT_STANDALONE_SIGNAL'
+          assert 'REQUIRE_SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE_FROM_CAUSAL_1M_RECONSTRUCTION' in p['hard_entry_order']
           assert p['risk_intent']['stop_points']==17.25
           assert p['risk_intent']['late_entry_drawdown_sensitive'] is True
-          assert p['entry_trigger_semantics']['normal_breakout']=='first completed print beyond zone is setup only -> following forming 5m candle may trigger when sustained intra5 directional force is proven'
+          assert p['entry_trigger_semantics']['normal_breakout']=='first completed 5m print beyond S/R or FVG is setup only -> following forming 5m must push beyond the first breakout candle high for long / low for short and prove sustained intra5 directional force; do not wait for 15m close'
           assert p['entry_trigger_semantics']['weak_breakout']=='weak first break -> controlled completed pullback -> forming 15m bar3 may trigger when sustained intra15 directional force is proven'
           assert p['entry_trigger_semantics']['historical_force_resolution']=='completed 1m sub-bars only; no tick-order inference and no final parent OHLC backdating'
           assert p['entry_trigger_semantics']['prebreak_early_entry_exceptions_only']==[
@@ -109,7 +109,7 @@ jobs:
           assert f['detector_authority']['repository_path']=='src/engine/indicators/fvg_native.py'
           assert f['detector_authority']['timeframe_for_current_strategy']=='15m'
           assert f['trader_target_rule']['liquidity_cluster_before_fvg']=='TARGET_LIQUIDITY_CLUSTER'
-          assert f['trader_target_rule']['fvg_before_liquidity_cluster']=='TARGET_FVG'
+          assert f['trader_target_rule']['fvg_before_liquidity_cluster']=='TARGET_FVG_MIDPOINT'
           assert f['trader_target_rule']['rank_distance_uses']=='near_edge_of_reaction_area_not_midpoint'
           assert k['established_zone_path']['minimum_independent_rejections']==2
           assert k['exceptional_single_swing_path']['absolute_displacement_floor_atr']==1.0
