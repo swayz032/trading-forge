@@ -205,7 +205,7 @@
       "role_provenance": "OPERATOR_STATED",
       "duration_seconds": 385.7,
       "operator_words": "this video i was showing how price reject key level but the candle stick patterns was terrible to take a trade you see the first candle sellers was still in control as for the second one and the other ones was doji/indecision candles it wasnt until later probably 15 mins it was a break out",
-      "notes": "A WAIT / NO-ENTRY teaching example, and the highest-value item in this extension: it is a LIVE worked instance of two of the operator's four frozen WAIT reasons - rejection-without-a-momentum-candle and doji-without-the-second-strong-candle. The key level was genuinely rejected, but the candle STORY never qualified: the first candle after the rejection still had sellers in control, and the following candles were doji/indecision. Pattern location alone is not entry authority; the story and the force must both qualify. The breakout came roughly 15 minutes later, AFTER the recording ends - so the later breakout is the operator's account, not something visible on this tape. CORRECTED 2026-08-21: an earlier DERIVED reading of this clip as zones_marked_no_trade_observation was replaced by the operator's own statement; the passive no-trade framing missed that this is an ACTIVE demonstration of why the setup was refused. Measured context, scoped honestly - the following describes chart HISTORY rendered on screen, readable from any single frame, NOT events observed unfolding across the recording: TradingView LIVE (not FX Replay), symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:38-10:46:53 ET, inside the 09:30-12:00 window. Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75); price sold from the upper band into the lower one, wicked below ~29225 and bounced, and the candles after the bounce are small-bodied. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence.",
+      "notes": "A WAIT / NO-ENTRY teaching example, and the highest-value item in this extension: it is a LIVE worked instance of two of the operator's four frozen WAIT reasons - rejection-without-a-momentum-candle and doji-without-the-second-strong-candle. The key level was genuinely rejected, but the candle STORY never qualified: the first candle after the rejection still had sellers in control, and the following candles were doji/indecision. Pattern location alone is not entry authority; the story and the force must both qualify. The breakout came roughly 15 minutes later, AFTER the recording ends - so the later breakout is the operator's account, not something visible on this tape. CORRECTED 2026-08-21: an earlier DERIVED reading of this clip as zones_marked_no_trade_observation was replaced by the operator's own statement; the passive no-trade framing missed that this is an ACTIVE demonstration of why the setup was refused. Measured context, scoped honestly - the following describes chart HISTORY rendered on screen, readable from any single frame, NOT events observed unfolding across the recording: TradingView LIVE (not FX Replay), symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:33-10:46:59 ET. CORRECTED - an earlier version published this span as 10:40:38-10:46:53, which is the span of my SIX SAMPLED FRAMES (t=5s and t=380s), not of the recording. The file runs 385.7s and both true endpoints are read directly off the TradingView wall clock at t=0 and t=385.5. This was the SIXTH instance of the sample-as-population defect, and it was minted INSIDE the sentence written to scope such claims honestly - a wall-clock SPAN needs two frames and is not \"readable from any single frame\". Found by the fresh independent grader and reproduced here before correcting. Session context, inside the 09:30-12:00 window. Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75); price sold from the upper band into the lower one, wicked below ~29225 and bounced, and the candles after the bounce are small-bodied. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence.",
       "enumerated": false
     },
     {
@@ -341,11 +341,13 @@
           "signalstats + metadata=print"
         ],
         "measured_proof": "Identical scene-detect command on item 6, which is KNOWN to change (it switches 15m -> 5m on tape): with `-v error` -> 0 hits. With default verbosity -> 264 hits. Same file, same filter, same threshold. The only difference is the verbosity flag.",
-        "how_often_it_bit": "Three times in one session, across two different people and three different filters. It was diagnosed twice and then made again on a third filter without re-checking. This trap is worth more recorded than any tool it appeared to discredit."
+        "how_often_it_bit": "Three times in one session, across two different people and three different filters. It was diagnosed twice and then made again on a third filter without re-checking. This trap is worth more recorded than any tool it appeared to discredit.",
+        "independently_verified": "I verified this trap for showinfo and volumedetect and asserted the other four BY CATEGORY - itself a claim beyond its evidence, which I flagged for attack. The fresh grader tested all six and I did NOT over-generalise. With `-v error` vs default: showinfo 0/3816, volumedetect 0/11, silencedetect 0/2, ebur128 0/317, signalstats+metadata 0/1907, and blackdetect 0/1 - the last on a SYNTHESIZED 2-second-black positive control, because blackdetect returned 0 at both verbosities on a real clip and would otherwise have been a false confirmation."
       },
       "ffmpeg_scene_change_detection": {
         "verdict": "WORKS. Not retired. select='gt(scene,0.003)' with showinfo at DEFAULT verbosity discriminates cleanly: item 6 (known to change) 264 hits, item 7 (the 1.5s fragment) 0 hits.",
-        "real_limitation_measured": "It detects scene CUTS, not ACTIVITY. The 08-21 live chart returns 0 across its whole 6m26s even though price is ticking, because tick updates are not cuts. A 0 from this tool means 'no layout change', NOT 'nothing happened'. Reading it as the latter is the mistake to avoid."
+        "real_limitation_measured": "It detects scene CUTS, not ACTIVITY. The 08-21 live chart returns 0 across its whole 6m26s even though price is ticking, because tick updates are not cuts. A 0 from this tool means 'no layout change', NOT 'nothing happened'. Reading it as the latter is the mistake to avoid.",
+        "independently_reproduced": "The fresh grader reproduced my published numbers exactly at my exact command: item 6 = 264, item 7 = 0, item 8 live = 0. It also caught two of its own instrument errors in flight - it first swept at threshold 0.02 instead of my stated 0.003, and then nearly published a disagreement (530 vs 264) caused by `grep -c \"Parsed_showinfo\"` counting showinfo's two config header lines as frames. That second one is the same trap class as this block documents: a count that looks like a measurement."
       },
       "mean_frame_to_frame_pixel_difference": {
         "verdict": "PARTLY CONFOUNDED, not blind. The grader's counter-hypothesis was correct and I tested it.",
@@ -396,9 +398,11 @@
         "item 6: 25 frames read only on the second pass; the first pass asserted entry-and-stop as the whole trade and missed the entire 138-point target leg",
         "audio: 3 windows of 60s, silence asserted of ~4 hours - refuted, one sealed video is not silent",
         "item 7: 1 frame of 90 labelled 'ENUMERATED by exhaustion' - 1.1% coverage described with the word exhaustive",
-        "the burst: duration reasoned, spectrum never measured - right answer, wrong reason, inside the retraction that was correcting the same defect"
+        "the burst: duration reasoned, spectrum never measured - right answer, wrong reason, inside the retraction that was correcting the same defect",
+        "item 8: the published session wall-clock span 10:40:38-10:46:53 was the span of the SIX SAMPLED FRAMES, not of the 385.7s recording, which runs 10:40:33-10:46:59. Minted inside the sentence written to scope the other instances honestly."
       ],
-      "note": "Instances 4 and 5 were found INSIDE the corrections for instances 1-3. The defect survived its own repair twice. That is why it is a rule with a test and not a resolution to be careful."
+      "note": "Instances 4, 5 and 6 were found INSIDE the corrections for the earlier ones. The defect has now survived its own repair THREE times - an earlier version of this note said twice, which was itself an undercount published before instance 6 was found. That is why it is a rule with tests and arithmetic, and not a resolution to be careful.",
+      "instance_count": 6
     },
     "file_locations": {
       "Desktop 2026.08.19 - 02.12.06.01.mp4": "C:/Users/tonio/Videos/NVIDIA/Desktop/",
@@ -466,7 +470,31 @@
       ],
       "verified_closed": "Item 4 fully counter-sampled for the first time by anyone - every figure confirmed to the cent, including the 17.25-point stop, the 35-point target, the exact 1050.00 fill and the 125303.25 -> 126353.25 step, plus a 1-second header enumeration across all 32s confirming no timeframe switch. The audio disposition reproduces to the digit. Three red-proof arms reproduce the published counts exactly. Zero introduced failures confirmed via a stronger path: git diff over src/ is empty.",
       "grader_own_retractions": "It retracted three of its own findings mid-grade - a registry/receipt contradiction that was an artifact of reading the moving worktree against its pinned tree; a spectral refutation that was its own magnitude-vs-power basis error; and two absence answers biased by `-v error` and by files being in another directory. It caught all of them with positive controls.",
-      "not_graded": "The three commits after its pin - bf8fd5b2, f9ee603e, b1c902ef - which already addressed its F-4 and part of F-5. Its band is scoped to f9c536ff."
+      "not_graded": "The three commits after its pin - bf8fd5b2, f9ee603e, b1c902ef - which already addressed its F-4 and part of F-5. Its band is scoped to f9c536ff.",
+      "second_pin": {
+        "commit_graded": "f9ee603e",
+        "band": 6,
+        "verdict": "BOUNDED",
+        "scope": "Names f9ee603e and EXPIRES THERE. bf8fd5b2 / b1c902ef / 75e6d8c2 are UNGRADED by it. It declined to chase HEAD on the grounds that this registry's own band-does-not-travel law binds graders too.",
+        "its_two_HIGH_findings_were_already_closed_after_its_pin": "F-1 (the false generator claim) and F-2 (the notes false-green) were both closed at 75e6d8c2, which post-dates this pin. Its report correctly describes them as live AT f9ee603e. They are not live now, and this note exists so nobody reads a stale pin as a current defect.",
+        "found_the_sixth_instance": "Yes - item 8's session span. Corrected above.",
+        "confirmed_not_defects": [
+          "item 4 is NOT a sample-as-population instance: the grader enumerated the header every 1s across all 32s and found 1m/MNQ/MICRO E-MINI throughout, no timeframe switch. Its counter-sample and my independent 3.8% walk agree on every figure.",
+          "item 8's 5m timeframe and the quantity widget reading 17 are CONSTANT across all 386 one-per-second samples; the two outlier hashes at seconds 0-1 are sub-pixel antialiasing, magnified and read. A whole-frame change census shows a median of 3 pixels changing between consecutive seconds, corroborating that no order ever opens.",
+          "the -v error trap was not over-generalised - all six filters confirmed."
+        ]
+      }
+    },
+    "session_span_arithmetic": {
+      "why": "The published wall-clock span was 375s while the file is 385.7s. Nothing checked that a stated session span equals the recording it describes. Now it must close.",
+      "Desktop 2026.08.21 - 10.40.34.05.mp4": {
+        "wall_clock_start": "10:40:33",
+        "wall_clock_end": "10:46:59",
+        "span_seconds": 386,
+        "file_duration_seconds": 385.7,
+        "read_at": "t=0 and t=385.5, cropped to the clock and read directly",
+        "retracted_span": "10:40:38-10:46:53 (375s) - the span of 6 sampled frames"
+      }
     }
   },
   "frozen_replay_evidence": {

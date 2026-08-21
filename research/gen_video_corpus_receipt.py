@@ -177,6 +177,21 @@ def render(reg: dict) -> str:
         w("worth more than one that does not: " + fresh["grader_own_retractions"])
         w("")
 
+    w("## 5b. Session-span arithmetic")
+    w("")
+    sp = ext.get("session_span_arithmetic")
+    if sp:
+        w(sp["why"])
+        w("")
+        for k, val in sp.items():
+            if k == "why":
+                continue
+            w(f"- `{k}` — {val['wall_clock_start']}→{val['wall_clock_end']} "
+              f"({val['span_seconds']}s) against a file duration of "
+              f"{val['file_duration_seconds']}s. Read at {val['read_at']}. "
+              f"**Retracted:** {val['retracted_span']}.")
+        w("")
+
     w("## 6. The denominator rule")
     w("")
     r = ext["the_denominator_rule"]

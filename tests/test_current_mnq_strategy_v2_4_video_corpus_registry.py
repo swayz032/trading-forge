@@ -63,7 +63,7 @@ OPERATOR_WORDS = {
 
 # A third location holding this file's own bytes. Deliberately NOT the full build
 # fingerprint - see fingerprint_anchor in the registry for why, and for the honest limit.
-REGISTRY_SHA256 = "9b0af68cd8fbac95db1a6de2fb514dee06a3524cbc56a8fabbc42e8ea74ac35f"
+REGISTRY_SHA256 = "a8eaa258e93d7d0ffe5ffd197ecb760cf8dc0ef8ca4e5ff9add592cb11c260de"
 
 ALLOWED_PROVENANCE = {
     "OPERATOR_STATED",
@@ -475,6 +475,155 @@ def test_every_file_location_is_recorded(registry):
     assert set(loc) == names, "a video has no recorded location"
     assert sum(1 for p in loc.values() if "Pictures" in p) == 3, (
         "three files live in Pictures, not Videos/NVIDIA/Desktop - if that changes, say so"
+    )
+
+
+def test_the_no_speech_conclusion_rests_on_spectrum_not_duration(registry):
+    """The retraction of the audio over-claim contained the SAME defect it was correcting:
+    it justified 'no speech' by duration, which does not rule speech out - 1.17s carries
+    4-7 syllables. The conclusion must rest on the measured spectrum."""
+    exc = registry["video_corpus_extension_2026_08_21"]["audio_disposition"]["the_one_exception"]
+    assert exc["retracted_reasoning"].strip(), "the duration argument must stay retracted"
+    reading = exc["reading"]
+    for token in ("197 Hz", "292 Hz", "1-4 kHz", "F2/F3"):
+        assert token in reading, f"the spectral basis is missing {token!r}"
+    assert "NOT transcribed" in reading and "NOT sent to any external service" in reading
+    assert "HYPOTHESIS" in reading, "what the chime IS remains unverified"
+
+
+def test_the_denominator_rule_and_its_pattern_are_recorded(registry):
+    """A rule with no reason attached gets deleted by the next person who finds it noisy."""
+    r = registry["video_corpus_extension_2026_08_21"]["the_denominator_rule"]
+    assert "IN THE SAME SENTENCE" in r["rule"]
+    assert len(r["the_five"]) == r["instance_count"] == 6, (
+        "every conviction stays on record - the count was already undercounted once"
+    )
+    assert "THREE times" in r["note"], (
+        "the defect has survived its own repair three times; an earlier note said twice "
+        "and that was itself an undercount published before instance 6 was found"
+    )
+
+
+def test_failed_instruments_stay_recorded(registry):
+    """A blind detector and a true negative are the same output. The instruments that
+    lied here must stay named or the next seat re-runs them and believes them."""
+    f = registry["video_corpus_extension_2026_08_21"]["instruments_that_failed_here"]
+    # The FIRST version of this block retired a WORKING detector on the strength of a
+    # broken flag. That correction must survive - re-retiring the tool is the regression.
+    assert f["CORRECTION_2026_08_21"].strip()
+    scene = f["ffmpeg_scene_change_detection"]
+    assert scene["verdict"].startswith("WORKS"), (
+        "scene detection works; recording it as failed sends the next seat away from a "
+        "real instrument"
+    )
+    assert "264" in scene["measured_proof"] if "measured_proof" in scene else True
+    assert "not ACTIVITY" in scene["real_limitation_measured"], (
+        "a 0 from this tool means no layout change, NOT nothing happened"
+    )
+    # The actual trap is the flag, and it generalises across filters.
+    trap = f["THE_ACTUAL_TRAP_ffmpeg_v_error_suppresses_log_filters"]
+    assert "264" in trap["measured_proof"] and "-v error" in trap["measured_proof"]
+    for filt in ("showinfo", "volumedetect", "silencedetect"):
+        assert filt in trap["affected_filters"], f"{filt} reports through the log too"
+    # The pixel metric is confounded, not blind, and the distinction is load-bearing.
+    px = f["mean_frame_to_frame_pixel_difference"]
+    assert "not blind" in px["verdict"]
+    assert px["controls"]["item7_after_toast"] == 0.0049, (
+        "the toast-removed control is what separates confounded from blind"
+    )
+    assert "never to rank two" in px["across_files_it_does_not"]
+    assert "TWO non-overlapping paths" in f["what_worked_for_item_7"]
+
+
+def test_a_graders_band_does_not_travel_past_its_pin(registry):
+    """A band earned at one commit read as covering later ones is how a stale grade
+    launders unverified work. The first grader said so itself."""
+    g = registry["video_corpus_extension_2026_08_21"]["independent_grade_2026_08_21"]
+    assert "EXPIRES THERE" in g["band_scope"]
+    assert "1c6fb449" in g["band_scope"]
+    assert g["grader_self_correction"].strip(), (
+        "a grading loop where only the doer gets corrected is not a grading loop"
+    )
+
+
+def test_the_seal_finding_is_recorded_and_scoped(registry):
+    """A finding against the SEALED corpus is not a finding against this extension, and
+    must not be quietly repaired by the seat that found it."""
+    s = registry["video_corpus_extension_2026_08_21"]["finding_against_the_2026_08_20_seal"]
+    assert "audio" in s["zero_hit_terms"]
+    assert s["positive_control"].strip(), "a zero-hit enumeration owes a positive control"
+    assert s["what_this_does_NOT_convict"].strip(), "the finding must state its own limit"
+    assert "NOT repaired" in s["disposition"]
+    assert s["sealed_entry_shape"] == ["name", "roles", "sha256"]
+
+
+def test_a_stated_session_span_matches_the_recording_it_describes(registry):
+    """The sixth instance: item 8's published wall-clock span 10:40:38-10:46:53 was the
+    span of SIX SAMPLED FRAMES (t=5s, t=380s), not of the 385.7s recording, which runs
+    10:40:33-10:46:59. Nothing checked that a stated span equals the file it describes."""
+    spans = registry["video_corpus_extension_2026_08_21"]["session_span_arithmetic"]
+    by_name = {v["name"]: v for v in registry["verified_video_evidence"]}
+    for name, s in spans.items():
+        if name == "why":
+            continue
+        h1, m1, s1 = (int(x) for x in s["wall_clock_start"].split(":"))
+        h2, m2, s2 = (int(x) for x in s["wall_clock_end"].split(":"))
+        elapsed = (h2 * 3600 + m2 * 60 + s2) - (h1 * 3600 + m1 * 60 + s1)
+        assert elapsed == s["span_seconds"], (
+            f"{name}: the stated span does not equal its own endpoints"
+        )
+        assert abs(s["span_seconds"] - by_name[name]["duration_seconds"]) <= 1.0, (
+            f"{name}: stated span {s['span_seconds']}s vs file duration "
+            f"{by_name[name]['duration_seconds']}s. A span that does not match the "
+            f"recording is a sample's span wearing the session's name."
+        )
+        assert s["retracted_span"].strip(), "the retracted span stays on record"
+        assert s["wall_clock_start"] in by_name[name]["notes"], (
+            f"{name}: notes and the span record disagree on the start time"
+        )
+
+
+def test_no_guard_is_silently_deleted(registry):
+    """At 75e6d8c2 a bulk edit removed FIVE guards from this file and the author read
+    '20 passed' as healthy. The completeness property that protects the video pins counts
+    videos, not tests, so nothing noticed. A test file that can quietly shrink is not a
+    guard, it is a suggestion."""
+    import re
+    src = open(__file__, encoding="utf-8").read()
+    names = set(re.findall(r"^def (test_\w+)\(", src, re.M))
+    required = {
+        "test_every_sealed_video_survives_with_its_exact_hash",
+        "test_every_video_entry_is_hash_bound_and_uniquely_identified",
+        "test_no_video_role_may_be_unlabelled_as_to_who_said_it",
+        "test_the_2026_08_21_extension_is_operator_authorized_and_does_not_reopen_replays",
+        "test_the_amendment_declares_itself_in_the_schema",
+        "test_pdh_clearance_does_not_weaken_the_pdh_ban",
+        "test_unenumerated_and_forward_dated_videos_carry_their_own_warnings",
+        "test_every_added_video_is_pinned_field_for_field",
+        "test_only_a_closed_set_of_videos_may_speak_as_the_trader",
+        "test_the_live_wait_example_keeps_its_witness_roles",
+        "test_enumeration_status_is_declared_for_every_added_video",
+        "test_the_traders_actual_words_are_pinned_not_merely_present",
+        "test_enumeration_status_cannot_drift_from_the_entries",
+        "test_this_registry_file_is_anchored_by_its_own_bytes",
+        "test_the_receipt_is_actually_derived_not_merely_claimed_to_be",
+        "test_load_bearing_figures_are_pinned_and_internally_consistent",
+        "test_sealed_videos_missing_provenance_is_named_not_guessed",
+        "test_every_file_location_is_recorded",
+        "test_the_no_speech_conclusion_rests_on_spectrum_not_duration",
+        "test_the_denominator_rule_and_its_pattern_are_recorded",
+        "test_failed_instruments_stay_recorded",
+        "test_a_graders_band_does_not_travel_past_its_pin",
+        "test_the_seal_finding_is_recorded_and_scoped",
+        "test_a_stated_session_span_matches_the_recording_it_describes",
+        "test_the_independent_grade_is_recorded_with_its_confirmed_defects",
+        "test_registry_is_still_bound_into_the_build_fingerprint",
+        "test_no_guard_is_silently_deleted",
+    }
+    missing = required - names
+    assert not missing, (
+        f"guards deleted from this file: {sorted(missing)}. Removing a guard is a decision "
+        f"that must be made deliberately, by editing this list and saying why."
     )
 
 
