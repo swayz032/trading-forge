@@ -1,7 +1,7 @@
 {
-  "schema_version": 9,
-  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-9-REPLAY-FVG-TP",
-  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, direct trader fidelity evidence, entry/live-force/FVG/target semantics, replay grading, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when older prose is unchanged.",
+  "schema_version": 10,
+  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-10-REPLAY-TP-GAP",
+  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, direct trader fidelity evidence, entry/live-force/FVG/target semantics, frozen replay manifest/regrade/calibration generation, replay grading, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when older prose is unchanged.",
   "contract_files": [
     "research/current_mnq_strategy_v2_4_spec.json",
     "research/current_mnq_strategy_v2_4_fvg_semantics.json",
@@ -10,6 +10,7 @@
     "research/current_mnq_strategy_v2_4_premarket_semantics.json",
     "research/current_mnq_strategy_v2_4_entry_semantics.json",
     "research/current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json",
+    "research/current_mnq_strategy_v2_4_frozen_replay_case_manifest_2026_08_20.json",
     "research/current_mnq_strategy_v2_4_build_contract.json"
   ],
   "strategy_and_edge_source_files": [
@@ -39,6 +40,8 @@
     "research/current_mnq_strategy_v2_4_target_policy.py",
     "research/current_mnq_strategy_v2_4_engine.py",
     "research/current_mnq_strategy_v2_4_signal.py",
+    "research/current_mnq_strategy_v2_4_frozen_replay_regrade.py",
+    "research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py",
     "research/current_mnq_strategy_v2_4_replay_fidelity_grade.py",
     "research/current_mnq_strategy_v2_4_edge.py",
     "research/current_mnq_strategy_v2_4_oos.py",
