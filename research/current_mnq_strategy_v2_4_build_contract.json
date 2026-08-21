@@ -1,7 +1,7 @@
 {
-  "schema_version": 13,
-  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-13-CLOSED-WORLD-SR-FVG-CALREQ",
-  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, direct trader fidelity evidence, S/R/FVG location scope, entry/live-force/FVG/target/timeframe-pattern semantics, closed-world visual provenance, frozen replay manifest/regrade/calibration requirements/generation and selection, replay grading, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when older prose is unchanged.",
+  "schema_version": 14,
+  "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-14-UNIFIED-FIDELITY-CORPUS",
+  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, direct trader fidelity evidence, S/R/FVG location scope, entry/live-force/FVG/target/timeframe-pattern semantics, the unified screenshot+video+frozen-replay fidelity registry, closed-world visual provenance, frozen replay manifest/regrade/calibration requirements/generation and selection, replay grading, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when older prose is unchanged.",
   "contract_files": [
     "research/current_mnq_strategy_v2_4_spec.json",
     "research/current_mnq_strategy_v2_4_fvg_semantics.json",
@@ -12,6 +12,7 @@
     "research/current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json",
     "research/current_mnq_strategy_v2_4_timeframe_pattern_fidelity_2026_08_20.json",
     "research/current_mnq_strategy_v2_4_visual_evidence_manifest_2026_08_20.json",
+    "research/current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json",
     "research/current_mnq_strategy_v2_4_replay_calibration_requirements.json",
     "research/current_mnq_strategy_v2_4_frozen_replay_case_manifest_2026_08_20.json",
     "research/current_mnq_strategy_v2_4_build_contract.json"
