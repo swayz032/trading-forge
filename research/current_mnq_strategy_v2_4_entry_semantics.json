@@ -1,13 +1,20 @@
 {
-  "schema_version": 5,
-  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-5-FORCE1",
-  "frozen_at": "2026-08-19",
-  "purpose": "Bind the trader-confirmed distinction between ordinary momentum, true displacement, rejection-trigger sequences, normal post-break continuation, weak-break 15m continuation, the only two permitted pre-break early-entry families, and the live intra-candle force clock used to avoid late entry against the fixed 17.25-point stop.",
+  "schema_version": 6,
+  "release_id": "MNQ-V2.4-ENTRY-FIDELITY-6-5M-EXTENSION",
+  "frozen_at": "2026-08-20",
+  "purpose": "Bind the trader-confirmed distinction between ordinary momentum, true displacement, rejection-trigger sequences, normal post-break continuation, weak-break 15m continuation, the only two permitted pre-break early-entry families, the live intra-candle force clock, and the required second-5m extension beyond the first completed breakout candle before a normal breakout entry.",
   "core_equation": "AUTHORIZED_LOCATION_AND_ROOM + VALID_CANDLE_STORY + SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE",
   "momentum_vs_displacement": {
     "momentum_candle": "Directional body/control geometry using the existing frozen Params.body_frac and Params.close_loc. Range expansion is NOT required.",
     "displacement": "Momentum plus true range expansion using the existing frozen Params.range_ratio. Every strong bullish/red momentum candle is not displacement.",
     "forbidden_equivalence": "STRONG_OR_MOMENTUM_CANDLE != AUTOMATIC_DISPLACEMENT"
+  },
+  "timeframe_hierarchy": {
+    "primary_execution_story": "5m",
+    "one_minute_role": "Causal sub-bars reconstruct the forming 5m parent candle and sustained force path; 1m candlestick pattern names do not replace 5m pattern identity.",
+    "fifteen_minute_role": "Higher-timeframe context and the already-frozen weak-break three-bar continuation family. The 15m chart may reveal that several 5m bars compose a larger rejection, but it is not a mandatory wait condition for a valid normal 5m breakout continuation.",
+    "normal_5m_breakout_not_delayed_for_15m_close": true,
+    "reason": "The trader explicitly stated that depending on 15m confirmation can make the entry miss the move when the second 5m candle is already proving real continuation past the first breakout candle."
   },
   "live_force_equation": {
     "role": "ENTRY_CLOCK_FOR_ANY_MOMENTUM_TRIGGER",
@@ -42,20 +49,27 @@
   },
   "normal_breakout_family": {
     "first_print_beyond_key_zone": "SETUP_ONLY",
-    "entry_trigger": "the following 5m candle may trigger before its close only after sustained intra-5m force is causally proven in the breakout direction while remaining beyond the broken zone",
+    "first_print_definition": "A completed 5m candle closes beyond the exact key-level zone.",
+    "entry_trigger": "The immediately following forming 5m candle may trigger before its close only after sustained intra-5m force is causally proven AND it pushes beyond the first completed breakout candle's directional extreme while remaining beyond the broken zone.",
+    "long_extension_requirement": "forming second 5m trades above the first breakout candle high",
+    "short_extension_requirement": "forming second 5m trades below the first breakout candle low",
+    "why_extension_is_required": "Taking out the first breakout candle's extreme is part of proving the second candle has real continuation force/momentum. Merely being green/red or remaining beyond the key level is not safe enough.",
+    "second_candle_momentum_without_extension": "WAIT_NO_ENTRY",
     "first_break_candle_alone": "NO_ENTRY",
+    "wait_for_15m_close": false,
+    "fifteen_minute_context_can_delay_valid_5m_extension": false,
     "fake_break_protection": true
   },
   "weak_break_three_bar_continuation": {
     "timeframe": "15m",
     "weak_break_definition": "The first completed breakout candle closes beyond the exact zone but does not meet the frozen momentum-candle geometry.",
-    "strong_first_break_behavior": "Do not arm the weak-break 15m path; wait for the normal following momentum/force confirmation.",
+    "strong_first_break_behavior": "Do not arm the weak-break 15m path; wait for the normal following 5m momentum/force confirmation with directional extension beyond the first breakout candle.",
     "sequence": [
       "BAR1: completed weak candle establishes the break beyond the exact key zone",
       "BAR2: completed controlled pullback toward the broken level without invalidating through the opposite side",
       "BAR3: while forming, sustained directional force may trigger before the 15m close once continuation is causally proven"
     ],
-    "use_case": "When the initial break is not a strong/momentum move, do not chase. Let price pull back and use the 15m three-bar continuation structure, but do not require waiting for bar 3 to close if force is already sustained.",
+    "use_case": "When the initial break is weak and the immediate normal 5m continuation is not earned, price may pull back and the trader checks the 15-minute chart for the three-bar continuation. Do not require waiting for bar 3 to close if force is already sustained.",
     "future_bars_forbidden": true
   },
   "pre_break_early_entry_exceptions": {
@@ -89,6 +103,7 @@
     "new_PnL_selected_numeric_threshold_added": false,
     "structural_minimum_completed_1m_observations": 2,
     "reuses_existing_frozen_geometry_thresholds_for_force": true,
+    "second_5m_extension_rule_is_direct_trader_fidelity_not_PnL_tuning": true,
     "no_PnL_selection": true,
     "video_and_direct_trader_labels_arrived_after_clean_runner_start_but_before_any_clean_performance_result_was_observed": true,
     "prior_clean_attempt_status": "ABORTED_PRE_RESULT_ARRAY_MEMORY_ERROR_NO_LEDGER_OR_EDGE_RESULT_OBSERVED",
