@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `73ebace9bd99032b687249db493026ec0119d98b`
+> Generated at commit `945c38f37b912c9f8cb0400fb2286eabff9c4f8a`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 315 | 414 | 130786 | 2040 |
+| `src/` | Python | 315 | 414 | 130912 | 2042 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -346,9 +346,9 @@ table below it.**
 | # | Control | Result | Detail |
 |---|---|---|---|
 | C1 | comment-only mention is not a caller (+ positive witness) | PASS | src/engine/config.py excluded=True; real same-module calls detected=1 (witness that the walker ran) |
-| C2 | WIRED is reachable by the classifier | PASS | WIRED=3800 |
+| C2 | WIRED is reachable by the classifier | PASS | WIRED=3802 |
 | C3 | BUILT-UNREACHABLE is reachable by the classifier | PASS | BUILT-UNREACHABLE=1167 |
-| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5026 rows |
+| C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5028 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=242 |
 | C6 | a registered route module is reachable | PASS | modules reachable=798 |
 | C7 | env-flag extractor fires in both languages | PASS | py files with env reads=138, ts=346 |
@@ -356,7 +356,7 @@ table below it.**
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |
 | C11 | TS env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 1, 3)] |
-| C12 | symbols enumerated in both languages | PASS | py=2040 ts=2933 |
+| C12 | symbols enumerated in both languages | PASS | py=2042 ts=2933 |
 | C13 | DECLARED-ABSENT probe is live | PASS | DECLARED-ABSENT=46 (probe runs; 0 would be a legitimate reading) |
 | C14 | TS import specifiers are real text, not blanked whitespace | PASS | 6626/6626 TS import specifiers non-blank |
 | C15 | no WIRED row lacks a non-test caller | PASS | violations=0 |
@@ -372,8 +372,8 @@ table below it.**
 * **Name collision biases toward `WIRED` - and the affected population is MEASURED, not
   merely warned about.**  References are matched by identifier name, not by resolved
   binding, so two symbols sharing a name each see the other's references.
-  **222 of 4701 enumerated symbol names (4.7%) are defined in more than one file, covering
-  494 of 4973 symbol rows (9.9%).**  Every symbol table below marks those rows `AMBIG`.
+  **222 of 4703 enumerated symbol names (4.7%) are defined in more than one file, covering
+  494 of 4975 symbol rows (9.9%).**  Every symbol table below marks those rows `AMBIG`.
   An `AMBIG` row has an unreliable caller count in BOTH directions.  A row WITHOUT the
   mark does not have this problem at all, so the unmarked majority is trustworthy.
 * **Dynamic dispatch is invisible.**  Registry lookups, `getattr`, string-keyed handler maps,
@@ -392,12 +392,12 @@ table below it.**
 
 | State | Count | Share |
 |---|---:|---:|
-| `WIRED` | 3800 | 75.6% |
+| `WIRED` | 3802 | 75.6% |
 | `FLAG-GATED` | 6 | 0.1% |
 | `BUILT-UNREACHABLE` | 1167 | 23.2% |
 | `DECLARED-ABSENT` | 46 | 0.9% |
 | `UNCLASSIFIED` | 7 | 0.1% |
-| **TOTAL** | **5026** | |
+| **TOTAL** | **5028** | |
 
 ---
 
@@ -456,7 +456,7 @@ table below it.**
 | `src/engine/evt_tail.py` | 2 | 0 | 1 | 0 | 0 | 3 |
 | `src/engine/exits` | 20 | 0 | 2 | 0 | 0 | 22 |
 | `src/engine/exportability.py` | 3 | 0 | 0 | 0 | 0 | 3 |
-| `src/engine/extraction` | 349 | 0 | 45 | 0 | 0 | 394 |
+| `src/engine/extraction` | 351 | 0 | 45 | 0 | 0 | 396 |
 | `src/engine/family_meta_enforcement.py` | 10 | 0 | 2 | 0 | 0 | 12 |
 | `src/engine/fill_model.py` | 9 | 0 | 1 | 0 | 0 | 10 |
 | `src/engine/firm_config.py` | 2 | 0 | 1 | 0 | 0 | 3 |
@@ -4020,7 +4020,7 @@ This is the *we already have this* list.  Check it before writing anything.
 
 </details>
 
-<details><summary><code>src/engine/extraction</code> - 349 symbols</summary>
+<details><summary><code>src/engine/extraction</code> - 351 symbols</summary>
 
 | Symbol | Kind | Defined at | Non-test caller files | Name |
 |---|---|---|---:|---|
@@ -4307,18 +4307,20 @@ This is the *we already have this* list.  Check it before writing anything.
 | `RecordCompileResult` | class | `src/engine/extraction/spec_producer.py:936` | 1 | unique |
 | `produce_spec_artifact_from_record` | function | `src/engine/extraction/spec_producer.py:1024` | 1 | unique |
 | `_opening_range_condition_id` | function | `src/engine/extraction/spec_producer.py:1111` | 0 | unique |
-| `CanonicalNodeNotAcceptedError` | class | `src/engine/extraction/svkm_v2_1_compile.py:141` | 0 | unique |
-| `_bench` | function | `src/engine/extraction/svkm_v2_1_compile.py:147` | 1 | unique |
-| `_canonical_hash` | function | `src/engine/extraction/svkm_v2_1_compile.py:162` | 1 | unique |
-| `run_certified_projection` | function | `src/engine/extraction/svkm_v2_1_compile.py:172` | 0 | unique |
-| `_outcome_by_ref` | function | `src/engine/extraction/svkm_v2_1_compile.py:190` | 0 | unique |
-| `_projected_text` | function | `src/engine/extraction/svkm_v2_1_compile.py:194` | 0 | unique |
-| `_refuse_if_not_compile_ready` | function | `src/engine/extraction/svkm_v2_1_compile.py:219` | 0 | unique |
-| `build_certified_record` | function | `src/engine/extraction/svkm_v2_1_compile.py:312` | 0 | unique |
-| `_preserved_metadata_text` | function | `src/engine/extraction/svkm_v2_1_compile.py:389` | 0 | unique |
-| `_load_frozen_source_risk` | function | `src/engine/extraction/svkm_v2_1_compile.py:404` | 0 | unique |
-| `_svkm_timeframe_roles` | function | `src/engine/extraction/svkm_v2_1_compile.py:433` | 0 | unique |
-| `compile_svkm_v2_1_vertical` | function | `src/engine/extraction/svkm_v2_1_compile.py:495` | 2 | unique |
+| `CanonicalNodeNotAcceptedError` | class | `src/engine/extraction/svkm_v2_1_compile.py:158` | 0 | unique |
+| `_bench` | function | `src/engine/extraction/svkm_v2_1_compile.py:164` | 1 | unique |
+| `_canonical_hash` | function | `src/engine/extraction/svkm_v2_1_compile.py:179` | 1 | unique |
+| `run_certified_projection` | function | `src/engine/extraction/svkm_v2_1_compile.py:189` | 0 | unique |
+| `_outcome_by_ref` | function | `src/engine/extraction/svkm_v2_1_compile.py:207` | 0 | unique |
+| `_projected_text` | function | `src/engine/extraction/svkm_v2_1_compile.py:211` | 0 | unique |
+| `_derived_dependency_blockers` | function | `src/engine/extraction/svkm_v2_1_compile.py:236` | 0 | unique |
+| `_refuse_if_receipt_hash_broken` | function | `src/engine/extraction/svkm_v2_1_compile.py:269` | 0 | unique |
+| `_refuse_if_not_compile_ready` | function | `src/engine/extraction/svkm_v2_1_compile.py:304` | 0 | unique |
+| `build_certified_record` | function | `src/engine/extraction/svkm_v2_1_compile.py:438` | 0 | unique |
+| `_preserved_metadata_text` | function | `src/engine/extraction/svkm_v2_1_compile.py:515` | 0 | unique |
+| `_load_frozen_source_risk` | function | `src/engine/extraction/svkm_v2_1_compile.py:530` | 0 | unique |
+| `_svkm_timeframe_roles` | function | `src/engine/extraction/svkm_v2_1_compile.py:559` | 0 | unique |
+| `compile_svkm_v2_1_vertical` | function | `src/engine/extraction/svkm_v2_1_compile.py:621` | 2 | unique |
 | `timeframe_tokens` | function | `src/engine/extraction/term_equivalence.py:62` | 0 | unique |
 | `abbreviation_tokens` | function | `src/engine/extraction/term_equivalence.py:116` | 0 | unique |
 | `equivalence_tokens` | function | `src/engine/extraction/term_equivalence.py:129` | 1 | unique |
