@@ -36,7 +36,13 @@ def build_premarket_plan_v24(full5, dte):
     The inherited routine still computes premarket net movement, candle control,
     and higher/lower premarket structure causally from bars already known.
     """
-    return core.premarket_plan(full5, dte, {}, {}, {})
+    plan = core.premarket_plan(full5, dte, {}, {}, {})
+    # The inherited object defaults to the audit label INSIDE_PRIOR_RANGE when no
+    # daily map is supplied. That label would falsely imply prior-day-range use.
+    # Keep the score untouched, but make the non-decision audit field truthful.
+    if hasattr(plan, "location_state"):
+        plan.location_state = "STRUCTURE_ONLY_NO_NAMED_REFERENCE"
+    return plan
 
 
 def major_location(loc: core.Location, p: core.Params) -> bool:
