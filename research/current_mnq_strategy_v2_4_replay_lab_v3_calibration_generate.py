@@ -33,6 +33,19 @@ LOCK = Path("research/current_mnq_strategy_v2_2_data_lock.json")
 REQ = Path("research/current_mnq_strategy_v2_4_replay_calibration_requirements.json")
 
 
+
+# Renamed 2026-08-20 23:58 (e5dca546) from TRADER_FIDELITY_CALIBRATION_* to
+# AUTOMATED_FIDELITY_REGRESSION_*. That rename is semantic, not cosmetic: the operator
+# closed manual replay collection, so this pack is a MACHINE regression artifact and is no
+# longer a request for trader labelling work. The CI gate that reads it was not updated in
+# the same wave and has been red ever since, looking for a string that existed in exactly
+# one place in the repository - the gate itself.
+#
+# These are constants so the gate can be bound to them by test rather than by a second copy
+# of the literal. A rename on either side now reds.
+REVIEW_STATUS = "AUTOMATED_FIDELITY_REGRESSION_MOMENTUM_HEAVY_BILATERAL_CONTEXT"
+RECEIPT_STATUS = "AUTOMATED_FIDELITY_REGRESSION_READY"
+
 def _extended_make_case(env: dict, dte, anchor: pd.Timestamp, kind: str) -> v3.ReplayCaseV3:
     start, end = v3._bounds(dte, anchor)
     one = env["one"]
@@ -164,7 +177,7 @@ def main() -> None:
             "context_1m_minutes": 60,
         }
 
-    review["status"] = "AUTOMATED_FIDELITY_REGRESSION_MOMENTUM_HEAVY_BILATERAL_CONTEXT"
+    review["status"] = REVIEW_STATUS
     review["calibration_requirements"] = str(REQ)
     review["target_policy"] = "current_mnq_strategy_v2_4_target_policy"
     review["tp_instruction"] = (
@@ -191,7 +204,7 @@ def main() -> None:
     authoritative = int(sampling.get("authoritative_entry_cases", 0))
     near_miss = int(sampling.get("momentum_near_miss_cases", 0))
     receipt = {
-        "status": "AUTOMATED_FIDELITY_REGRESSION_READY",
+        "status": RECEIPT_STATUS,
         "strategy_release": req["strategy_release"],
         "pack_id": review["pack_id"],
         "case_count": review["case_count"],

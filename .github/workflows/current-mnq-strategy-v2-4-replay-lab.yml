@@ -181,7 +181,7 @@ jobs:
           pack = Path('research/_mnq_v24_replay_lab_v3/pack')
           review = json.loads((pack/'review_pack_v3.json').read_text())
           receipt = json.loads((pack/'calibration_receipt_v3.json').read_text())
-          if review['status'] != 'TRADER_FIDELITY_CALIBRATION_MOMENTUM_HEAVY_BILATERAL_CONTEXT':
+          if review['status'] != 'AUTOMATED_FIDELITY_REGRESSION_MOMENTUM_HEAVY_BILATERAL_CONTEXT':
               raise SystemExit('REPLAY_CALIBRATION_STATUS_MISSING')
           if receipt['case_count'] != review['case_count'] or receipt['session_count'] != review['session_count']:
               raise SystemExit('REPLAY_CALIBRATION_CASE_SESSION_COUNT_MISMATCH')
