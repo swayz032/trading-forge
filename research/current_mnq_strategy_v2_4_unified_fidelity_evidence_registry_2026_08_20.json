@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "status": "LOCKED_UNIFIED_TRADER_FIDELITY_EVIDENCE_REGISTRY",
+  "locked_at": "2026-08-20",
+  "purpose": "Bind every authoritative trader-supplied screenshot, verified video, frozen replay window/label identity and direct clarification into one closed-world fidelity chain. No individual image, video, replay case or older contract may be interpreted as a standalone strategy when the combined evidence says otherwise.",
+  "privacy": "No screenshot, video or private replay-label bytes are committed here. Only filenames, hashes, pack identities, case windows and semantic provenance links are stored.",
+  "authority_order": [
+    "latest_direct_trader_clarification",
+    "combined_closed_world_visual_plus_video_plus_frozen_replay_evidence",
+    "specific_hash_bound_gold_examples",
+    "older_contracts_only_where_not_superseded"
+  ],
+  "visual_parent_corpus": {
+    "manifest": "research/current_mnq_strategy_v2_4_visual_evidence_manifest_2026_08_20.json",
+    "archive_name": "Trading screenshots (5).zip",
+    "archive_sha256": "da25a0577a1317d3282aa40e7da9da60d36a0416319d8f452cee021a442c9f17",
+    "screenshot_count": 65,
+    "closed_world": true,
+    "all_authoritative_screenshot_examples_must_be_members_of_this_corpus": true,
+    "older_archive_note": "Trading screenshots (4).zip was an earlier subset/source snapshot used by older gold records. It does not expand authority beyond the locked 65-file parent corpus."
+  },
+  "hash_bound_screenshot_examples": [
+    {"name":"Screenshot 2026-08-16 075020.png","sha256":"db867045aff322df5b6a5db050afb6cc1354b6d115700f7c8391090fca9e24e4","roles":["true_displacement_sequence_example","5m_entry_story"]},
+    {"name":"Screenshot 2026-08-17 221445.png","sha256":"8ac406fe0d713c632415d380f03f9068e273374e3de792f26554fbdc80dcb562","roles":["true_displacement_sequence_example","third_candle_timing_context"]},
+    {"name":"Screenshot 2026-08-18 175702.png","sha256":"f6fc7b7b4404ed78a2294c357c0fc4d81b6723446e0144dccbff029abd22fedb","roles":["rejection_story","momentum_after_rejection"]},
+    {"name":"Screenshot 2026-08-18 180237.png","sha256":"e9abf16283d41e18c093ededeb326f55fddbcefd935c2ceda80921c85151bb78","roles":["rejection_story","momentum_after_rejection"]},
+    {"name":"Screenshot 2026-08-18 180244.png","sha256":"670c80f2173101f9269f73cf0ef10c8c7a4e3a9cfeb51af9eb3d94e597c9ce42","roles":["liquidity_reaction_cluster_before_fvg","first_reaction_tp_ordering"]},
+    {"name":"Screenshot 2026-08-18 180356.png","sha256":"28570dbf36971a7837a014532edc5bd7e9fa9b8ae68a2c26f5e1fd4638d14730","roles":["rejection_story","liquidity_reaction_cluster_before_fvg","first_reaction_tp_ordering"]},
+    {"name":"Screenshot 2026-08-11 023933.png","sha256":"dd2adf7c186a4d2be31e3bed27dddc864786a8fd951afd69b69fba1d118c372b","roles":["multi_target_ladder","tp1_tp2"]},
+    {"name":"Screenshot 2026-08-10 114924.png","sha256":"bc063ffaa4c052a47059fbe3ef1154126798aae1b8022960e5592edce4bd3d5f","roles":["multi_target_ladder","tp1_tp2"]},
+    {"name":"Screenshot 2026-08-10 164520.png","sha256":"6c4dfaeb8f7d33e5adae0a44f5e8b7d8590d1e60d8d03c49a586c2311c8ffc73","roles":["multi_target_ladder","tp1_tp2_tp3"]},
+    {"name":"Screenshot 2026-08-20 231718.png","sha256":"8e460dce9bfab2a8de4e216ced02a5d16efae1cafabaea4e531e8120149b773b","roles":["1m_causal_decomposition_only","forming_5m_force_path"]},
+    {"name":"Screenshot 2026-08-20 231723.png","sha256":"85d8d8e94384ed06c7df4e3d8b636c6023216fc577ab69b8bc8d9d0f3c80a985","roles":["5m_primary_entry_pattern","rejection_momentum"]},
+    {"name":"Screenshot 2026-08-20 232649.png","sha256":"383f04dbb0b606d8a5e0541f34a4d6f5093aada9e02627fb3cb859c02370fc6d","roles":["normal_breakout_second_5m_extension","15m_context_not_normal_entry_delay"]}
+  ],
+  "verified_video_evidence": [
+    {
+      "name":"Desktop 2026.08.19 - 02.12.06.01.mp4",
+      "sha256":"1e39083c6a8078022b5c84827b63e5b63908979177407d1868521934d48d3733",
+      "roles":["forming_5m_directional_force","tug_of_war_giveback","entry_before_5m_close_when_force_is_real"]
+    },
+    {
+      "name":"Desktop 2026.08.19 - 02.13.19.02.mp4",
+      "sha256":"95bcbb3f7bf3893385f77eb612e2bbb82e772c546d53a3a9a816c1f4e1ce4f00",
+      "roles":["forming_5m_directional_force","tug_of_war_giveback","entry_before_5m_close_when_force_is_real"]
+    },
+    {
+      "name":"Desktop 2026.08.20 - 20.37.47.04.mp4",
+      "sha256":"218ca9bb827db2c540d19782f6cef2227e45492a1a04b847dd78a6b3e23cda72",
+      "roles":["exact_200_dollar_unsafe_tp_example","tp1_reaction","retest_then_later_momentum_continuation","no_blind_tp1_to_tp2_leapfrog"]
+    }
+  ],
+  "frozen_replay_evidence": {
+    "case_manifest": "research/current_mnq_strategy_v2_4_frozen_replay_case_manifest_2026_08_20.json",
+    "source_pack_id": "aa4e32104b39e0aaa37eb2bd2c90e67a059604447892411d7dfd530c243910e4",
+    "trader_labels_sha256": "11d8dec0749301c16c7d3b553d06dd564149edf78b4bab4b897fe3635783059c",
+    "case_count": 14,
+    "frozen_wait_at_replay_end_count": 6,
+    "manual_collection_closed": true,
+    "new_manual_replay_or_labeling_required": false,
+    "roles":[
+      "ENTER_LONG_ENTER_SHORT_WAIT_NO_TRADE_behavior_fidelity",
+      "entry_direction_fidelity",
+      "entry_timing_fidelity",
+      "room_and_target_blocker_fidelity",
+      "same_window_post_repair_regression"
+    ],
+    "pnl_used": false,
+    "edge_evidence_eligible": false
+  },
+  "semantic_crosswalk": {
+    "market_map": {
+      "final_rule":"Structural support/resistance only as the regular level family. Active 15m FVG may itself be the support/resistance interaction band when it appears first. PDH/PDL/PWH/PWL are forbidden.",
+      "evidence_combination":["latest_direct_trader_clarification","65_screenshot_parent_corpus","frozen_replay_locations","FVG_interaction_examples"],
+      "standalone_source_may_not_override":true
+    },
+    "rejection_entries": {
+      "final_rule":"Authorized S/R or FVG interaction plus completed 5m rejection/control story plus sustained forming-5m force.",
+      "evidence_combination":["rejection_story_screenshots","5m_primary_screenshot","force_video_pair","frozen_replay_actions"],
+      "standalone_pattern_name_is_not_entry":true
+    },
+    "normal_breakout": {
+      "final_rule":"First completed 5m beyond S/R or FVG is setup only. The following forming 5m must take the first breakout candle directional extreme and prove sustained force. Normal 5m continuation does not wait for a 15m close.",
+      "evidence_combination":["Screenshot 2026-08-20 232649.png","direct_trader_clarification","force_video_semantics","frozen_replay_timing"],
+      "second_5m_momentum_without_extreme_extension":"WAIT_NO_ENTRY"
+    },
+    "force_timing": {
+      "final_rule":"5m is the trader entry chart; completed 1m observations are causal internal reconstruction only. Entry may occur before 5m close after sustained real force.",
+      "evidence_combination":["two_force_videos","Screenshot 2026-08-20 231718.png","Screenshot 2026-08-20 231723.png","frozen_replay_entry_times"]
+    },
+    "target_hierarchy": {
+      "final_rule":"The nearest meaningful physical structural S/R reaction, 5m liquidity/reaction cluster, or active 15m FVG owns TP1. If FVG owns the destination, TP is its midpoint.",
+      "evidence_combination":["liquidity_before_fvg_screenshot_pair","multi_target_screenshots","frozen_replay_tp_context","direct_trader_fvg_midpoint_clarification"],
+      "farther_feature_may_not_leapfrog_nearer_meaningful_reaction":true
+    },
+    "tp_safe_gap": {
+      "final_rule":"At the frozen 15-MNQ reference display, planned TP1 reward >= $400 is safe enough if every other A+ gate passes; under $400 blocks immediate entry. Untouched close TP1 cannot be blindly skipped.",
+      "evidence_combination":["Desktop 2026.08.20 - 20.37.47.04.mp4","exact_200_dollar_observation","latest_direct_trader_400_plus_clarification","frozen_replay_room_cases"],
+      "reference_distance_points":13.333333333333334,
+      "exact_400_allowed":true
+    },
+    "wait_semantics": {
+      "final_rule":"WAIT is distinct from NO_TRADE and remains WAIT when the frozen replay ends while the trader is still waiting.",
+      "evidence_combination":["frozen_14_case_labels","direct_trader_confirmation"],
+      "wait_may_not_be_silently_rewritten":true
+    }
+  },
+  "conflict_resolution": {
+    "latest_direct_trader_clarification_overrides_older_interpretation": true,
+    "combined_evidence_overrides_single_ambiguous_frame": true,
+    "no_PnL_may_resolve_fidelity_conflict": true,
+    "no_clean_edge_result_may_modify_strategy_semantics_after_freeze_without_new_fidelity_cycle": true,
+    "examples_of_superseded_interpretations": [
+      "PDH_PDL_PWH_PWL_as_strategy_levels",
+      "automatic_1_5R_close_TP1_rollover_to_TP2",
+      "normal_breakout_second_5m_momentum_without_directional_extreme_extension",
+      "waiting_for_15m_close_after_valid_normal_5m_continuation",
+      "treating_1m_as_trader_pattern_timeframe"
+    ]
+  },
+  "engineering_invariants": {
+    "all_authoritative_evidence_files_or_manifests_are_build_fingerprinted": true,
+    "new_manual_replay_work": false,
+    "replay_regression_is_machine_only": true,
+    "clean_PnL_tuning_during_fidelity": false,
+    "PR_38_draft_do_not_merge": true
+  }
+}
