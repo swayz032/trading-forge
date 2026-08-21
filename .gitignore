@@ -75,3 +75,8 @@ all_ids.txt
 Userstonio*
 scripts/_tmp_*
 workflows/n8n-prefix/
+
+# Replay-lab generator working directory (market-data CSVs + generated pack).
+# Untracked and previously NOT ignored: a `git add -A research/` would have swept
+# 5.7 MB of MNQ bar data into the repo. Caught by an independent grader 2026-08-21.
+research/_mnq_v24_replay_lab_v3/
