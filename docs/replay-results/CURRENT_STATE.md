@@ -21,7 +21,36 @@ never by filename or AR-number sort. A newer commit on `gpt-engineering` or any 
 
 ## Latest controlling GPT ruling
 
-**AR-1386A**, `origin/external-advisor/gpt-rulings @ 725887a0b0ba8bde9322f114f400f83c3404444e`
+**AR-1387A**, `origin/external-advisor/gpt-rulings @ d84b8391`
+(`advisor-reports/AR-1387A-GPT-EXTERNAL-ADVISOR-RULING-AR1397-PARTIAL-PASS-C0-CORE-ACCEPTED-AUTHORITY-BINDING-DETERMINISM-CLOSURE-REQUIRED-2026-08-21.md`),
+2026-08-21. Grades AR-1397 **PARTIAL PASS — the C0 core repairs are ACCEPTED, Stage C0 closure is
+not**, and orders the bounded AR-1398 packet. **Stage C1, E8 trading, PAPER, Topstep and live work
+all remain gated.**
+
+### AR-1398 — DELIVERED, INDEPENDENT GRADE OWED (not yet dispatched)
+
+- Report: `docs/replay-results/worker-advisor-reports/AR-1398-WORKER1-AR1387A-STAGE-C0-CLOSURE-COMPILE-AUTHORITY-BOUND-DETERMINISM-FINDING-AGAINST-RULING-2026-08-21.md`
+- Delivery pin: `24a95641` (+ inventory `9b50bc6a`).
+- Red/green proof: ONE probe (`scripts/ar1398_attack_replay.py`) run against BOTH heads —
+  `860525ce` = **3 of 3** AR-1387A attacks COMPILED/GREEN; delivery head = **0 of 3**, each refused
+  with a distinct named cause.
+- Closed: §2 CRITICAL (required dependencies bound to an independent, immutable, versioned
+  `CompileAuthority`; `build_certified_record` takes it as a REQUIRED parameter), §3 HIGH (complete
+  versioned record schema + recomputed contract hash before any readiness axis is read), §5 MEDIUM
+  (`GATING_AXES` is a `MappingProxyType` over a dict no caller can reach).
+- Suites: 123 C0 + 31 sibling + 24 vertical = **178 passed**; ruff clean; certifier
+  `GREEN_ALL_ITEMS_DONE`; receipt byte-identical at `fd79f602…`.
+- 🛑 **ONE FINDING AGAINST THE RULING, needs a ruling not code:** AR-1387A §4's four-hash seed-matrix
+  measurement **does not reproduce on this tower**. CPython 3.12 made `builtins.sum` compensated
+  (Neumaier) and this tower runs 3.13.0, so the pre-repair head yields ONE hash across all four
+  seeds. The located line and mechanism are correct; the "same machine, four receipts" claim is
+  interpreter-specific. The repair was applied anyway and made stronger (`math.fsum` over
+  `sorted(...)`, closing interpreter dependence as well as order dependence).
+- 🛑 **CLAUSE 7.3.10 DELIBERATELY NOT EXECUTED:** the receipt hash never moved, so there is nothing
+  to rebaseline, and adopting GPT's diagnostic `a890b406…` would move the pin away from what this
+  repo produces. AR-1387A itself calls that value diagnostic, not a pre-authorized pin.
+
+### Superseded — AR-1386A, `gpt-rulings @ 725887a0b0ba8bde9322f114f400f83c3404444e`
 (`advisor-reports/AR-1386A-GPT-EXTERNAL-ADVISOR-RULING-AR1395-1396-PARTIAL-PASS-STAGE-C0-FAIL-CLOSED-CLOSURE-REQUIRED-2026-08-21.md`),
 2026-08-21. Grades AR-1395/AR-1396 **PARTIAL PASS — Stage C0 IMPLEMENTED BUT NOT CLOSED**, and
 orders the bounded AR-1397 closure packet. **Stage C1, E8 trading, PAPER, Topstep and live work all
