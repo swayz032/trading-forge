@@ -271,6 +271,54 @@ def test_preserved_metadata_is_structurally_inert(projection_record, compiled_ar
     assert mutated_spec["spec_hash"] == baseline_spec["spec_hash"]
 
 
+def test_AR1397_the_inertness_property_has_a_path_to_red(projection_record):
+    """🛑 THE POSITIVE CONTROL THE TEST ABOVE WAS MISSING, closing the AR-1397 grader's last
+    reachable NOT-MEASURED item.
+
+    `test_preserved_metadata_is_structurally_inert` asserts that mutating the two preserved-metadata
+    refs leaves `entry_conditions` byte-identical. On its own that assertion cannot distinguish
+    "the metadata is structurally unreachable" from "this mutation happens not to matter" -- an
+    unchanged output is exactly what a vacuous test also produces. The grader flagged that it had
+    never mutated the inertness MECHANISM, so the property was confirmed by construction only.
+
+    The mechanism is `spec_producer._condition_text()` preferring a non-empty `action` over
+    `rationale`, and both preserved-metadata steps carrying a non-empty `action`. So BLANK THE
+    ACTION on those steps: the rationale must then reach the compiled output. If it does not, the
+    inertness above was never load-bearing and the sibling test proves nothing.
+
+    Deliberately mutates only the RECORD, never production code -- no `spec_producer` change, no
+    monkeypatch of the thing under test.
+    """
+    from src.engine.extraction.spec_producer import produce_spec_artifact
+
+    record, _hash = projection_record
+    baseline = produce_spec_artifact(
+        build_certified_record(record)["strategies"][0], video="sVkmZklJDHI__s0",
+    )
+
+    leaked = copy.deepcopy(record)
+    outcomes = _outcome_by_ref(leaked)
+    for ref in ("entry_sequence[0].rationale", "entry_sequence[2].rationale"):
+        outcomes[ref]["original_text"] = "LEAKED PRESERVED METADATA " + ref
+    stamp_receipt(leaked)
+
+    strategy = build_certified_record(leaked)["strategies"][0]
+    # blank the `action` that was winning, so `rationale` becomes the selected text
+    blanked = 0
+    for step in strategy["entry_sequence"]:
+        if str(step.get("rationale") or "").startswith("LEAKED PRESERVED METADATA"):
+            step["action"] = ""
+            blanked += 1
+    assert blanked == 2, f"expected both preserved-metadata steps, blanked {blanked}"
+
+    leaked_spec = produce_spec_artifact(strategy, video="sVkmZklJDHI__s0")
+    assert leaked_spec["spec"]["entry_conditions"] != baseline["spec"]["entry_conditions"], (
+        "blanking the winning `action` did NOT change the compiled output, so the inertness "
+        "asserted by test_preserved_metadata_is_structurally_inert is vacuous -- that test cannot "
+        "tell an unreachable field from an irrelevant mutation"
+    )
+
+
 # ══ 5. A MUTATED / UN-ACCEPTED CANONICAL NODE REFUSES THE COMPILE ═══════════════════════
 
 

@@ -78,7 +78,8 @@ green were `F1b` and `F3b`, which are the intended discriminating controls.
 ```
 test_external_dependency_projection.py   105 passed      (59 at AR-1386A -> +46)
 test_source_graph_projection.py           31 passed
-test_svkm_v2_1_compile.py                 23 passed
+test_svkm_v2_1_compile.py                 24 passed      (23 at the graded pin; +1 is the
+                                                          inertness positive control, §7.5)
 test_source_vertical_join.py              28 passed
 test_spine_a_compile_entry_point.py       16 passed
 test_compile_fidelity_leg_a.py            31 passed
@@ -227,6 +228,17 @@ phrase "cannot delete". Named for the record.
 
 **7.4 Not proven, and not claimed:** a full engine sweep. Six suites only.
 
+**7.5 The grader's NOT-MEASURED list — three of five closed by the worker after its report.**
+Its remaining items were handed back measured rather than left as "unverified":
+
+| Grader item | Disposition |
+|---|---|
+| `test_source_band_c_vertical` not re-measured at this pin | **CLOSED — freshly measured**, §8. `12 failed, 11 passed, 7 errors`, `MY_MODULES_IN_SYS: []`. The weakened inference is retired; this is a direct measurement at the graded pin. |
+| does anything downstream consume `receipt_sha256_canonical`? | **CLOSED — measured.** `grep -c receipt_sha256_canonical` on the emitted `sVkmZklJDHI__s0.spec.json` → **0**, and `git status` on `src/engine/extraction/fixtures/` is empty, so the committed artifacts are byte-unchanged. The stamp does not leak downstream. |
+| `test_preserved_metadata_is_structurally_inert` inertness never mutation-tested | **CLOSED — positive control added**, `test_AR1397_the_inertness_property_has_a_path_to_red`. Blanking the winning `action` on the two preserved-metadata steps makes the rationale reach the compiled output, proving the inertness is load-bearing rather than a mutation that happens not to matter. Mutates only the RECORD — no `spec_producer` change, no monkeypatch of the thing under test. svkm suite 23 → 24. |
+| full engine sweep | **OPEN, §7.4.** Not claimed. |
+| E8 visual evidence + repo-wide `not_in_scope` locks | **OPEN.** Outside a code grade; needs the media and a different scan. |
+
 ---
 
 ## 8. PRE-EXISTING AND CAUSALLY EXCLUDED
@@ -254,6 +266,27 @@ enforcement, the tamper story is accident-resistant rather than adversary-resist
 full engine sweep. Its reason for 7 rather than 6: *"across three rounds of attacks I can no longer
 reach `COMPILED` with an unsatisfied dependency in the receipt by any value edit, container reshape,
 stamp destruction, or re-stamp."*
+
+### 9.1 The discrimination pass — the grader's last incomplete item, now closed
+
+The grader installed the **`f8776f36` blobs of both production modules** with two faithful shims
+(`GATING_AXES` as inert data, since the pre-repair projection had its own hand-written gating loop
+and did not consume the map; `stamp_receipt` returning the hash **without mutating**, which is
+byte-for-byte what pre-repair `run_certified_projection` did) and re-ran both suites:
+
+```
+PRE-REPAIR f8776f36 BLOBS INSTALLED
+13 failed, 115 passed
+```
+
+**Every one of the 13 failures is a new test, and no pre-existing test broke** — so the failures are
+pure discrimination, not collateral. RED against pre-repair: `F3b`, `G1`×3, `G1b`, `G2`×5, `G2b`,
+`G3c`, and the paired unstamped-edit test.
+
+`G3` and `G3b` stay GREEN, and that is **correct, not a gap**: they assert properties that also held
+pre-repair (the old projection gated on the same six axes). They are forward-looking **drift pins**,
+not repair claims — the same role `F1b` and the old `F3b` played as controls. **Every test that
+claims a repair discriminates.**
 
 **Grader process disclosures worth preserving** — it caught two of its **own** broken instruments
 mid-grade: a witness that wrote through `os.open` (now a guarded arm), so all nine plants reported
@@ -283,8 +316,16 @@ Per CLAUDE.md §11c the ledger must be empty or contain only actioned hand-offs 
 | Cross-platform float drift under a mandatory stamp — §7.2 | **operator / GPT** | measured and disclosed; fix re-baselines a 4-site pinned frozen hash = reserved class |
 | `system-map:check` registry drift (`src/server/`) | pre-existing CI hand-off | named by AR-1386A §7 itself as separately owned |
 | `test_source_band_c_vertical` AR-1113 role failures | separately owned | causally excluded, freshly re-measured at this pin |
+| Full engine sweep + E8 visual evidence + repo-wide lock audit | future scan | not claimed anywhere in this report; needs a different scan and the media |
 
-No parked TODOs. No LOW-severity items deferred.
+No parked TODOs. No LOW-severity items deferred. Three of the grader's five NOT-MEASURED items were
+closed by measurement AFTER its report rather than recorded as unverified (§7.5).
+
+**⚠️ ONE POST-GRADE COMMIT.** The inertness positive control in §7.5 landed **after** the graded pin
+`39d60f49`, so the **VERIFIED 7/10 band does not cover it**. It is additive test-only coverage that
+closes a grader NOT-MEASURED item; it changes no production code. Stated here so nobody reads the
+band as covering work the grader did not see — the same scoping discipline the grader itself applied
+when it refused to let its band cover a dirty tree.
 
 ---
 
