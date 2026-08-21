@@ -1,32 +1,43 @@
 {
   "status": "LOCKED_TRADER_FIDELITY_CALIBRATION_REQUIREMENTS",
   "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
-  "evidence_role": "FIDELITY_CALIBRATION_ONLY_NOT_EDGE_EVIDENCE",
+  "evidence_role": "AUTOMATED_FIDELITY_REGRESSION_ONLY_NOT_EDGE_EVIDENCE",
+  "manual_trader_replay_requested": false,
   "direct_trader_corrections": [
     {
       "id": "CAL01_BILATERAL_TP_CONTEXT",
-      "rule": "Replay cases used to calibrate TP marking must present meaningful higher and lower structure so the trader can independently mark both bullish and bearish TP plans before direction is known.",
+      "rule": "Automated regression cases used to inspect TP context should contain meaningful higher and lower structure when available so both bullish and bearish destination construction is exercised.",
       "implementation": "Use materially deeper 15m/5m causal history and prefer cases with at least one meaningful reaction destination above and one below the decision price. Do not fabricate a level when one side truly has no meaningful reaction."
     },
     {
       "id": "CAL02_15M_FVG_MID_TP",
-      "rule": "A trader TP may legitimately be placed at the middle of an active 15m FVG when that FVG is the first meaningful reaction used as the target.",
-      "implementation": "TP fidelity grading must preserve 15m FVG midpoint semantics. FVG is reaction/TP context; it does not become a requirement for displacement entry."
+      "rule": "A TP may legitimately be placed at the middle of an active 15m FVG when that FVG is the first meaningful reaction used as the target.",
+      "implementation": "Regression must preserve 15m FVG midpoint semantics. FVG may also act as support/resistance when it is the first causal interaction band, but FVG alone never creates a trade."
     },
     {
       "id": "CAL03_MOMENTUM_HEAVY_SAMPLE",
-      "rule": "The next calibration pack must show substantially more real 5-minute momentum/force opportunities so the trader can demonstrate entries he would actually take.",
-      "implementation": "Prioritize distinct-session authoritative entries first, then genuine candle-story + force candidates rejected only by later room/TP gates, before any generic no-entry controls. Use every available qualifying momentum case up to the pack limit rather than filling with quiet controls."
+      "rule": "Automated regression should exercise substantially more real 5-minute momentum/force opportunities than quiet controls.",
+      "implementation": "Prioritize distinct-session authoritative entries first, then genuine candle-story + force candidates rejected only by later room/TP gates, before generic no-entry controls. No new trader labeling is requested."
     },
     {
       "id": "CAL04_WAIT_DISTINCT_FROM_NO_TRADE",
-      "rule": "WAIT remains a distinct trader state at the end of the presented replay window and must never be silently converted to NO_TRADE.",
-      "implementation": "Preserve WAIT exactly for fidelity comparison."
+      "rule": "WAIT remains a distinct frozen trader state and must never be silently converted to NO_TRADE.",
+      "implementation": "Preserve the already-frozen WAIT labels exactly in same-window automated fidelity comparison."
     },
     {
       "id": "CAL05_5M_PRIMARY_ENTRY_1M_INTERNAL_ONLY",
-      "rule": "The trader enters from the 5-minute chart. The 1-minute view was supplied only because the bot uses completed 1-minute observations to reconstruct intrabar behavior causally.",
-      "implementation": "The trader-facing replay must make 5m the primary entry/decision chart. 15m remains higher-timeframe structure/FVG/TP context. Any 1m panel is diagnostic only and must not be presented as the trader's entry timeframe. The bot may use completed 1m bars internally to rebuild the still-forming 5m candle at exact decision clocks without hindsight."
+      "rule": "The trader enters from the 5-minute chart. The 1-minute stream exists only because the bot uses completed 1-minute observations to reconstruct intrabar behavior causally.",
+      "implementation": "5m is the primary entry/decision pattern timeframe. 15m is higher-timeframe context and the separate weak-break three-bar continuation family. The bot may use completed 1m bars internally to rebuild the still-forming 5m candle at exact decision clocks without hindsight."
+    },
+    {
+      "id": "CAL06_SR_FVG_ONLY_MARKET_MAP",
+      "rule": "Current strategy location/target evidence is limited to structural support/resistance, liquidity/reaction clusters and active 15m FVGs. PDH/PDL/PWH/PWL are not strategy inputs.",
+      "implementation": "Automated regression must pass empty legacy daily/weekly maps into reaction construction and must never create or score named daily/weekly levels."
+    },
+    {
+      "id": "CAL07_SECOND_5M_EXTENSION",
+      "rule": "After the first completed 5m prints beyond support/resistance or an FVG interaction band, the immediately following forming 5m must push beyond that first candle's directional extreme and prove sustained force before normal breakout entry.",
+      "implementation": "Long requires trade above the first breakout candle high; short requires trade below its low. Do not delay an already-valid 5m continuation for a 15m close."
     }
   ],
   "chart_context": {
@@ -44,12 +55,16 @@
   "tp_semantics": {
     "canonical": "FIRST_MEANINGFUL_PHYSICAL_REACTION",
     "valid_precision_examples": [
-      "KEY_ZONE_OR_KEY_LEVEL",
+      "STRUCTURAL_SUPPORT_RESISTANCE_REACTION_ZONE",
       "5M_LIQUIDITY_REACTION_CLUSTER",
       "ACTIVE_15M_FVG_MIDPOINT_WHEN_IT_OWNS_FIRST_REACTION"
     ],
+    "forbidden_named_levels": ["PDH", "PDL", "PWH", "PWL"],
     "fvg_is_entry_requirement": false,
-    "do_not_force_both_tps_when_context_truly_lacks_one_side": true
+    "fvg_can_be_sr_interaction_band_when_first": true,
+    "do_not_force_both_tps_when_context_truly_lacks_one_side": true,
+    "tp_reference_safe_floor_usd_at_15_mnq": 400.0,
+    "untouched_under_400_tp1_blind_rollover_allowed": false
   },
   "sampling": {
     "target_cases": 16,
@@ -60,8 +75,9 @@
       "STRUCTURAL_CONTROL_ONLY_IF_NEEDED"
     ],
     "reuse_seen_development_sessions_allowed": true,
-    "reason": "This is calibration, not blind or clean edge evidence.",
+    "reason": "Automated fidelity regression only, not blind or clean edge evidence.",
     "pnl_or_exit_outcome_used_for_selection": false,
-    "never_repeat_a_session_only_to_fill_count": true
+    "never_repeat_a_session_only_to_fill_count": true,
+    "new_manual_trader_labels_required": false
   }
 }
