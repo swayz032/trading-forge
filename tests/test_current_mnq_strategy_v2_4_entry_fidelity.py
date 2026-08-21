@@ -276,16 +276,36 @@ def test_range_room_premarket_prior_stays_structure_only_and_never_rebuilds_prio
     asserted the OPPOSITE: that `_range_room_authorization` must reconstruct a previous-close
     map via `core.prev_maps` and pass it into `core.premarket_plan`.
 
-    The two commits, in order:
-      39b44442  2026-08-18 22:28 -0400  test(mnq-v2.4): cover optional range-room premarket context
-      36e60654  2026-08-20 23:45 -0400  fix(mnq-v2.4): remove prior-day/week inputs from active premarket prior
+    The commits, in order — CORRECTED after an independent grader re-derived them by
+    EXECUTION rather than accepting my reading:
+      39b44442  2026-08-18 22:28:18 -0400  test: cover optional range-room premarket context
+      36e60654  2026-08-20 23:45:25 -0400  fix: remove prior-day/week inputs from the prior
+      eedebc75  2026-08-20 23:46:27 -0400  fix: restrict entry map to S/R and FVG context  <-- THE ONE
 
-    The trader correction landed TWO DAYS AFTER the test and orphaned it. `build_premarket_plan_v24`
-    now calls `core.premarket_plan(full5, dte, {}, {}, {})` with deliberately empty maps, and
-    `tests/test_current_mnq_strategy_v2_4_premarket.py` asserts `seen["pcm"] == {}` — the exact
-    inverse of the retired assertion, and it passes. Two tests demanded contradictory behaviour
-    from one call; the newer one carries the operator's correction, which outranks every older
-    interpretation. The operator restated it directly on 2026-08-21: "i dont use pdh."
+    An earlier version of this docstring named 36e60654 as the commit that orphaned the test.
+    That is WRONG and the grader disproved it by running the test at that pin, where it still
+    PASSES: 36e60654 only added `build_premarket_plan_v24` to a different file and never touched
+    the call site. The commit that actually broke it is `eedebc75`, 62 seconds later, which
+    replaced
+
+        _, _, pcm = core.prev_maps(full5)
+        plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], pcm)
+    with
+        plan = build_premarket_plan_v24(full5, dte)
+
+    inside `_range_room_authorization`. The correction was a four-commit wave inside eight
+    minutes (36e60654 -> 1fe4c893 -> eedebc75 -> 6a30e77e). Citing the wrong SHA mattered: a
+    future reader checking 36e60654 would find no call-site change and could reasonably
+    conclude this warrant was fabricated.
+
+    ALSO CORRECTED — a claim of mine the grader REFUTED. I wrote that two tests "demanded
+    contradictory behaviour from one call". They did not: they are DIFFERENT CALL SITES. The
+    sibling in `test_current_mnq_strategy_v2_4_premarket.py` calls `build_premarket_plan_v24`
+    directly with a sentinel and never touches `_range_room_authorization`. Before eedebc75
+    this function called `core.premarket_plan` DIRECTLY, bypassing the builder, so the two
+    tests were never in logical contradiction. My claim was true only of the post-eedebc75
+    world and was applied anachronistically to a test written for the pre-correction one.
+    The retirement does not depend on it.
 
     Greening the old test would have meant IMPLEMENTING the previous-close context flow that the
     PR body ("previous-close gap scoring are disabled"), the premarket docstring ("cannot
@@ -304,13 +324,54 @@ def test_range_room_premarket_prior_stays_structure_only_and_never_rebuilds_prio
          higher/lower structure and is never a standalone signal."
 
     "or prior-close/gap REFERENCE LEVELS" bans the reference itself, not merely a scoring use
-    of it. The trader fidelity addendum agrees - it carries the key
-    `premarket_prior_must_not_use_named_daily_weekly_levels_or_prior_close_gap_score` and
-    lists as SUPERSEDED: "Any older contract using previous-close gap scoring as part of this
-    strategy's premarket prior." The retired test was such an older contract.
+    of it. The same file carries a CLOSED ALLOWLIST, which is what actually settles the
+    input-vs-scoring question, because an allowlist excludes by omission where a banlist
+    cannot:
+
+        "allowed": ["causal_premarket_net_price_action",
+                    "causal_premarket_candle_control",
+                    "causal_premarket_higher_high_lower_low_structure"]
+        "prior_close_gap_score": "FORBIDDEN"
+
+    Three causal items, and previous close is not among them.
+
+    THE STRONGEST SINGLE WARRANT, which I failed to cite and the grader found for me — the
+    trader fidelity addendum (2026-08-20), key `supersedes_older_clauses`, item 2, verbatim:
+
+        "Any older contract using previous-close gap scoring as part of this strategy's
+         premarket prior."
+
+    A dated, committed, trader-sourced clause that supersedes exactly this class of older
+    contract. The retired test (2026-08-18) is one.
+
+    AND A CITATION OF MINE THAT DOES NOT SUPPORT THIS, withdrawn: I originally leaned on the
+    operator's 2026-08-21 words "i dont use pdh". That statement is about PDH. It is filed in
+    the evidence registry under `pdh_label_disposition` with `changes_the_ban: false` and a
+    stated clearance scope, and it says nothing about the previous CLOSE. It stays RELAYED and
+    it is not part of this warrant. The evidence-registry crosswalk is likewise no help here -
+    it forbids PDH/PDL/PWH/PWL and contains zero prior-close vocabulary. I reached the right
+    conclusion on a citation base that was partly overbroad while omitting the two artifacts
+    that actually decide it.
+
+    EXTENSIONALLY, the distinction is void on this path anyway [MEASURED by the grader,
+    reproduced in its report]: `pcm` has exactly two effects in `core.premarket_plan` - the
+    +/-0.5 gap score and a `gap_from_prev_close` field with ZERO consumers repo-wide. There is
+    no third use. And implementing the alternative measurably CHANGES ENTRY AUTHORIZATION: on
+    identical bars, an empty pcm scores 1.00/NEUTRAL while a populated one scores 1.50/BULL,
+    crossing the threshold and flipping which setups `plan_allows_v24` permits.
 
     Do not confuse this with the other "gap" in the addendum: the trader's $400 TP-display gap
     is distance-to-target, an entirely separate concept, and it is very much live.
+
+    Enumeration correction: I claimed "exactly one other pre-correction site, the retired
+    test's own env dict". Both halves were wrong. There are TWO inert `"pcm": {}` sites -
+    line 259 of this file (a different test) and `test_..._integration.py:47` - and neither is
+    the retired test's env, which carried no pcm key at all. Both are unread dict keys with no
+    behavioural risk, but a count claim was made and the count was wrong.
+
+    RESIDUAL RISK, recorded rather than fixed: the `called["prev_maps"] == 0` guard below
+    monkeypatches `core.prev_maps`, so it would go blind to a future edit that did
+    `from ...v2_2_engine import prev_maps` and called it bare. No such binding exists today.
 
     Measured, not inherited from a docstring: `core.premarket_plan` reads the maps as
     `if dte in pdm`, `pwm.get(dte)` and `prev_close = pcm.get(dte)`, so passing `{}` returns
@@ -342,6 +403,16 @@ def test_range_room_premarket_prior_stays_structure_only_and_never_rebuilds_prio
         pd.Timestamp("2026-08-18 09:30", tz=core.TZ), p,
     )
 
+    # POSITIVE WITNESS FIRST. It sat below the subscript assertions until an independent
+    # grader proved it was dead code: with `seen` empty, `seen["pcm"]` raises KeyError and
+    # the test dies before reaching it, so `assert seen` could never be the failing
+    # assertion. The test still went red, but by accidental KeyError with no diagnostic -
+    # not by the guard its own docstring advertised. A check with no path to red is the
+    # class this estate treats as load-bearing, so it moved here.
+    assert seen, (
+        "premarket_plan was never called - the empty-map assertions below would pass "
+        "vacuously on a path that never consulted the prior at all"
+    )
     # The prior is STRUCTURE-ONLY: every named daily/weekly/close map arrives empty.
     assert seen["pcm"] == {}, (
         "a previous-close map reached the premarket prior; v2.4 forbids previous-close "
@@ -351,9 +422,6 @@ def test_range_room_premarket_prior_stays_structure_only_and_never_rebuilds_prio
         "a prior-day or prior-week map reached the premarket prior; PDH/PDL/PWH/PWL are "
         "forbidden inputs"
     )
-    # Positive witness that the path actually ran, so the two assertions above are not
-    # vacuously true on a call that never happened.
-    assert seen, "premarket_plan was never called - the assertions above proved nothing"
     # And the forbidden reconstruction must not be attempted at all, not merely discarded.
     assert called["prev_maps"] == 0, (
         "_range_room_authorization called prev_maps to rebuild prior-day/close context. "
