@@ -3,19 +3,24 @@
 
 The base target builder still owns causal reaction construction, physical ordering,
 15m-FVG midpoint precision, key-zone significance and executable tick rounding.
-This policy changes only the final room decision after the trader's 2026-08-20
-frozen replay clarification:
+This layer owns the trader's direct TP-display entry-gap rule:
 
 - TP1 is still the first meaningful physical reaction.
-- If TP1 still has the frozen minimum room at the ACTUAL entry clock, TP1 wins.
-- If price has already moved so close to TP1 before the A+ entry becomes actionable
-  that TP1 no longer has that same frozen room, TP1 is a consumed/too-late
-  destination for this entry plan and the next meaningful physical reaction may
-  become TP2.
-- No new threshold is introduced. Rollover reuses Params.min_room_r * Params.stop.
-- A farther destination may never be chosen merely because its historical PnL is
-  prettier. The only skip authority is that the nearer destination is already
-  inside the frozen room requirement at the actual entry clock.
+- The trader may enter with TP1 nearby when the planned TP display still represents
+  at least $400 at the frozen 15-MNQ reference size.
+- The strategy stores that rule as a size-invariant price-distance test: planned
+  target distance * $2/MNQ-point * 15 reference contracts >= $400. Runtime risk
+  sizing therefore cannot silently change signal semantics.
+- If the planned TP1 display is under $400, the immediate entry is blocked. A
+  farther TP2 may NOT be selected merely because it has more room.
+- TP1 may be skipped only when the CURRENT candidate is itself a valid continuation
+  through that same physical reaction area using an already-approved reaction/test
+  path: repeat-test momentum, completed first-break follow-through, or weak-break
+  pullback 15m-bar3 continuation. The true-displacement prebreak exception alone
+  does not prove that a too-close TP1 was processed.
+- Structural weak-blocker handling remains on the inherited frozen room equation;
+  this $400 rule is specifically the trader's planned-TP display gap, not a rewrite
+  of every room/blocker threshold in the strategy.
 
 This module deliberately wraps, rather than forks, reaction construction so
 historical and live/shadow paths remain on one target implementation.
@@ -27,6 +32,40 @@ from research import current_mnq_strategy_v2_4_targets as base
 core = base.core
 ReactionDestination = base.ReactionDestination
 
+TP_GAP_REFERENCE_USD = 400.0
+TP_GAP_REFERENCE_CONTRACTS = 15
+TP_GAP_POINT_VALUE_USD = float(core.POINT_VALUE)
+PROCESSED_REACTION_REASONS = frozenset({
+    "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+    "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+    "WEAK_BREAK_PULLBACK_15M_BAR3_INTRA_FORCE",
+})
+
+
+def reference_tp_reward_usd(target_distance_points: float) -> float:
+    """Trader's TP display normalized to the frozen 15-MNQ reference size."""
+    return float(target_distance_points) * TP_GAP_POINT_VALUE_USD * TP_GAP_REFERENCE_CONTRACTS
+
+
+def _overlap(a, b) -> bool:
+    if a is None or b is None:
+        return False
+    return max(float(a.lo), float(b.lo)) <= min(float(a.hi), float(b.hi))
+
+
+def _current_candidate_processed_reaction(
+    d: ReactionDestination,
+    setup: str,
+    entry_location,
+    candidate_reason: str | None,
+) -> bool:
+    """True only when this candidate earned continuation at the TP1 area itself."""
+    if setup not in {"BRK5", "BRK15"}:
+        return False
+    if candidate_reason not in PROCESSED_REACTION_REASONS:
+        return False
+    return _overlap(entry_location, d.location)
+
 
 def classify_first_reaction_destination(
     destinations: list[ReactionDestination],
@@ -35,27 +74,31 @@ def classify_first_reaction_destination(
     setup: str,
     p: core.Params,
     strong_momentum: bool,
+    entry_location=None,
+    candidate_reason: str | None = None,
 ):
     if not destinations:
         return None, "NO_DESTINATION"
 
-    min_room = float(p.min_room_r * p.stop)
-    rolled: list[ReactionDestination] = []
+    structural_min_room = float(p.min_room_r * p.stop)
+    processed: list[ReactionDestination] = []
 
     for d in destinations:
-        # Preserve the inherited weak-blocker contract. A weak structure does not
-        # become TP1/TP2 merely because this policy supports target ladders.
+        # Preserve the inherited weak-blocker contract. The direct $400 TP-display
+        # rule does not weaken unrelated structure/blocker protection.
         if not d.meaningful:
             if d.quality > p.weak_blocker_quality and not (setup == "BRK5" and strong_momentum):
-                if d.first_contact_distance < min_room:
+                if d.first_contact_distance < structural_min_room:
                     return None, f"WEAK_NEAR_BLOCKER:{d.location.source}:{d.first_contact_distance:.2f}"
             continue
 
-        # New direct-trader rule: a meaningful destination that has already become
-        # too close by the time the entry is actually actionable is a consumed TP
-        # candidate for this trade plan. Continue in physical order to TP2/next.
-        if d.first_contact_distance < min_room:
-            rolled.append(d)
+        # A later continuation can retire the old TP1 only when this candidate is
+        # actually being earned at that same physical reaction band. This prevents
+        # the old blind TP1->TP2 leapfrog from an unrelated earlier entry location.
+        if _current_candidate_processed_reaction(
+            d, setup, entry_location, candidate_reason,
+        ):
+            processed.append(d)
             continue
 
         raw = float(d.target_raw)
@@ -70,23 +113,29 @@ def classify_first_reaction_destination(
                 f"{d.first_contact_distance:.4f}"
             )
 
+        reference_reward = reference_tp_reward_usd(actual_target_distance)
+        if reference_reward + 1e-9 < TP_GAP_REFERENCE_USD:
+            return None, (
+                f"TP1_REFERENCE_REWARD_UNDER_400:{reference_reward:.2f}:"
+                f"{d.kind}:{d.location.source}"
+            )
+
         target = core.Target(
             d.location, raw, px, actual_target_distance, d.quality,
             False, True, bool(d.fvg_confluent),
         )
         target.kind = d.kind
         target.first_contact_distance = float(d.first_contact_distance)
+        target.reference_tp_reward_usd = float(reference_reward)
 
-        if rolled:
-            skipped = ",".join(f"{x.kind}:{x.location.source}" for x in rolled)
-            return target, f"FIRST_REACTION_ROLLOVER:{skipped}->NEXT:{d.kind}"
+        if processed:
+            skipped = ",".join(f"{x.kind}:{x.location.source}" for x in processed)
+            return target, f"PROCESSED_REACTION_ROLLOVER:{skipped}->NEXT:{d.kind}"
         return target, f"FIRST_REACTION:{d.kind}"
 
-    if rolled:
-        skipped = ",".join(
-            f"{x.kind}:{x.location.source}:{x.first_contact_distance:.2f}" for x in rolled
-        )
-        return None, f"ALL_MEANINGFUL_REACTIONS_TOO_CLOSE:{skipped}"
+    if processed:
+        skipped = ",".join(f"{x.kind}:{x.location.source}" for x in processed)
+        return None, f"PROCESSED_REACTION_NO_NEXT_DESTINATION:{skipped}"
     return None, "NO_MEANINGFUL_DESTINATION"
 
 
@@ -104,10 +153,14 @@ def build_and_classify(
     setup: str,
     strong_momentum: bool,
     piv15=None,
+    entry_location=None,
+    candidate_reason: str | None = None,
 ):
     destinations = base.build_reaction_destinations(
         piv5, full5, h15, asof, p, pdm, pwm, dte, entry, direction, piv15=piv15,
     )
     return classify_first_reaction_destination(
         destinations, entry, direction, setup, p, strong_momentum,
+        entry_location=entry_location,
+        candidate_reason=candidate_reason,
     )
