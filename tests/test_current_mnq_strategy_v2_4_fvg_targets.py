@@ -84,12 +84,12 @@ def test_wide_fvg_is_ranked_by_near_edge_not_midpoint(monkeypatch):
     # FVG starts first at 110 but has midpoint 130. A genuine reaction cluster
     # starts later at 112. The trader's rule says FVG is still first reaction.
     p = tgt.core.Params(min_room_r=0.25)
-    cluster_zone = SimpleNamespace(touches=2)
-    cluster = _loc("cluster", 112, 114, "WICK_ZONE", 0.8, cluster_zone)
-    monkeypatch.setattr(tgt.core, "build_zones", lambda *a, **k: [cluster_zone])
+    cluster = _loc("cluster", 112, 114, "WICK_ZONE", 0.8, SimpleNamespace(touches=2))
+    monkeypatch.setattr(tgt.core, "build_zones", lambda *a, **k: [])
     monkeypatch.setattr(tgt.core, "enrich_confluence", lambda z, *a, **k: z)
+    # This fixture represents the already-built 5m reaction-cluster location;
+    # it is deliberately not a named daily/weekly level.
     monkeypatch.setattr(tgt.core, "zone_locations", lambda z: [cluster])
-    monkeypatch.setattr(tgt, "zone_state_at_v24", lambda z, *a, **k: z)
     monkeypatch.setattr(tgt, "active_15m_fvgs", lambda *a, **k: [
         SimpleNamespace(lo=110.0, hi=150.0, mid=130.0,
                         formed_at=pd.Timestamp("2026-08-17 09:45", tz="America/New_York"))
@@ -136,12 +136,14 @@ def test_meaningful_15m_reaction_zone_can_block_target_without_authorizing_entry
     assert out[0].meaningful is True
 
 
-def test_tp_contract_separates_reaction_significance_from_entry_authorization():
+def test_tp_contract_separates_reaction_significance_from_entry_authorization_and_forbids_named_levels():
     from research.current_mnq_strategy_v2_4_policy import load_fvg_spec
     r = load_fvg_spec()["trader_target_rule"]
     assert r["reaction_significance_is_distinct_from_entry_authorization"] is True
     assert r["target_only_zone_can_create_entry"] is False
     assert "at least 2 independent rejections" in r["target_only_15m_zone_rule"]
+    assert set(r["forbidden_destination_families"]) == {"PDH", "PDL", "PWH", "PWL"}
+    assert r["fvg_take_profit"].startswith("middle of the selected active 15m FVG")
 
 
 def test_semantics_hash_changes_if_fvg_contract_changes(tmp_path):
