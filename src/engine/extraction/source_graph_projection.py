@@ -71,9 +71,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from dataclasses import asdict, dataclass
+from types import MappingProxyType
 from typing import Any
 
 from . import batch_locator as bl
@@ -190,11 +191,28 @@ _ACCESS_AXES = ("access_status", "live_delivery", "historical_replay", "update_p
 # finding. This map is the ONE place that answers "which axes gate, and what value satisfies each".
 # `test_source_graph_projection`/`test_external_dependency_projection` pin it against the gating
 # logic below by mutation, so it cannot fall out of sync without a test going red.
-GATING_AXES: dict[str, str] = {
+#
+# 🛑 AR-1387A SECTION 5, MEDIUM — IMMUTABLE, AND THAT IS LOAD-BEARING.
+# This used to be a plain module-level dict. Sharing ONE object between the projection and the
+# compile seam is correct and stays; what was wrong is that the shared object was PUBLICLY
+# MUTABLE, so the two consumers could be disarmed together in one line. GPT executed
+# `GATING_AXES.clear()`, re-ran the blocked E8 dependency, and measured:
+#
+#     grade              GREEN_PENDING_CERTIFICATION
+#     compile_readiness  READY_PENDING_CERTIFICATION
+#
+# The existing tests proved every key present here is CONSUMED. They could not prove the map
+# cannot be EMPTIED -- a completeness test and a tamper test are different claims, and passing the
+# first says nothing about the second.
+#
+# `MappingProxyType` over a dict built INLINE: the underlying mapping is never bound to a module
+# global, so there is no second name through which a caller can reach it and mutate it behind the
+# proxy. A proxy over a reachable dict is a lock with the key taped to the door.
+GATING_AXES: Mapping[str, str] = MappingProxyType({
     **{axis: ACCESS_VERIFIED for axis in _ACCESS_AXES},
     "implementation_status": IMPL_VALIDATED,
     "semantic_status": SEMANTIC_RESOLVED,
-}
+})
 
 
 @dataclass(frozen=True)

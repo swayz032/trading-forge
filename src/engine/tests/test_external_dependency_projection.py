@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 
+from src.engine.extraction.compile_authority import EMPTY_COMPILE_AUTHORITY
 from src.engine.extraction.source_graph_projection import (
     ACCESS_UNAVAILABLE,
     ACCESS_UNVERIFIED,
@@ -538,11 +539,11 @@ def test_C0_7_blocked_artifact_cannot_pass_the_compile_seam_as_executable():
 
     # (a) the readiness gate itself refuses
     with pytest.raises(CanonicalNodeNotAcceptedError, match="BLOCKED_EXTERNAL_DEPENDENCY"):
-        _refuse_if_not_compile_ready(blocked)
+        _refuse_if_not_compile_ready(blocked, EMPTY_COMPILE_AUTHORITY)
 
     # (b) and it is WIRED IN, fires first, and names readiness -- not canonical refs
     with pytest.raises(CanonicalNodeNotAcceptedError, match="BLOCKED_EXTERNAL_DEPENDENCY"):
-        build_certified_record(blocked)
+        build_certified_record(blocked, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_C0_7b_the_seam_still_accepts_a_ready_artifact():
@@ -557,11 +558,11 @@ def test_C0_7b_the_seam_still_accepts_a_ready_artifact():
     ready = _restamp(_run())
     assert ready["grade"] == "GREEN_PENDING_CERTIFICATION"
     assert "compile_readiness" not in ready
-    _refuse_if_not_compile_ready(ready)  # must not raise
+    _refuse_if_not_compile_ready(ready, EMPTY_COMPILE_AUTHORITY)  # must not raise
 
     ok = _restamp(_run(external_dependencies=(_ready_dep(),)))
     assert ok["compile_readiness"] == "READY_PENDING_CERTIFICATION"
-    _refuse_if_not_compile_ready(ok)  # must not raise
+    _refuse_if_not_compile_ready(ok, EMPTY_COMPILE_AUTHORITY)  # must not raise
 
 
 # --------------------------------------------------------------------------- #
@@ -950,7 +951,7 @@ def test_AR1397_2_dependency_bearing_receipt_with_readiness_removed_is_refused()
     assert laundered["external_dependencies"], "the attack requires the dependency to be present"
 
     with pytest.raises(CanonicalNodeNotAcceptedError, match="EXTERNAL_DEPENDENCY_READINESS_ABSENT"):
-        build_certified_record(laundered)
+        build_certified_record(laundered, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_2b_readiness_without_any_dependency_record_is_refused_as_inconsistent():
@@ -969,7 +970,7 @@ def test_AR1397_2b_readiness_without_any_dependency_record_is_refused_as_inconsi
 
     with pytest.raises(CanonicalNodeNotAcceptedError,
                        match="EXTERNAL_DEPENDENCY_RECEIPT_INCONSISTENT"):
-        _refuse_if_not_compile_ready(inconsistent)
+        _refuse_if_not_compile_ready(inconsistent, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_2c_an_unknown_readiness_value_is_refused():
@@ -989,7 +990,7 @@ def test_AR1397_2c_an_unknown_readiness_value_is_refused():
     _restamp(odd)
 
     with pytest.raises(CanonicalNodeNotAcceptedError, match="PROBABLY_FINE"):
-        _refuse_if_not_compile_ready(odd)
+        _refuse_if_not_compile_ready(odd, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_2d_terminal_wording_comes_from_the_structured_blocker():
@@ -1017,7 +1018,7 @@ def test_AR1397_2d_terminal_wording_comes_from_the_structured_blocker():
     _restamp(receipt)
 
     with pytest.raises(CanonicalNodeNotAcceptedError) as excinfo:
-        _refuse_if_not_compile_ready(receipt)
+        _refuse_if_not_compile_ready(receipt, EMPTY_COMPILE_AUTHORITY)
     message = str(excinfo.value)
     assert "TERMINAL" in message
     assert "NONTERMINAL" not in message, (
@@ -1034,7 +1035,7 @@ def test_AR1397_2e_the_seam_still_accepts_the_real_receipt_untouched():
     untouched = _real_certified_receipt()
     assert "external_dependencies" not in untouched
     assert "compile_readiness" not in untouched
-    _refuse_if_not_compile_ready(untouched)  # must not raise
+    _refuse_if_not_compile_ready(untouched, EMPTY_COMPILE_AUTHORITY)  # must not raise
 
 
 # ---- 9.3 AR-1386A section 5: the blocker reason must not contradict its own axes ---- #
@@ -1452,7 +1453,7 @@ def test_AR1397_F1_declaring_READY_over_unsatisfied_records_is_refused(keep_bloc
 
     with pytest.raises(CanonicalNodeNotAcceptedError,
                        match="EXTERNAL_DEPENDENCY_READINESS_CONTRADICTED"):
-        build_certified_record(attack)
+        build_certified_record(attack, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_F1b_a_genuinely_satisfied_record_still_compiles():
@@ -1470,7 +1471,7 @@ def test_AR1397_F1b_a_genuinely_satisfied_record_still_compiles():
     receipt["external_dependencies"] = ready_run["external_dependencies"]
     receipt["compile_readiness"] = READY_PENDING_CERTIFICATION
     _restamp(receipt)
-    _refuse_if_not_compile_ready(receipt)  # must not raise
+    _refuse_if_not_compile_ready(receipt, EMPTY_COMPILE_AUTHORITY)  # must not raise
 
 
 @pytest.mark.parametrize("axis,bad", [
@@ -1492,6 +1493,12 @@ def test_AR1397_F1c_every_axis_is_re_derived_not_just_access(axis, bad):
     ready_run = _run(external_dependencies=(_ready_dep(),))
     records = [dict(ready_run["external_dependencies"][0])]
     records[0][axis] = bad
+    # AR-1398: the seam now validates each record's own contract hash BEFORE re-deriving readiness
+    # (section 7.2.7). Without re-sealing, this mutation would be caught by the HASH gate and this
+    # test would silently stop exercising the axis re-derivation it exists to prove -- passing for
+    # the wrong reason, which is the failure this suite keeps convicting. Re-sealing also makes it
+    # the STRONGER attack: an adversary who edits an axis and recomputes the digest.
+    _reseal_dependency_record(records[0])
 
     receipt = _real_certified_receipt()
     receipt["external_dependencies"] = records
@@ -1499,8 +1506,13 @@ def test_AR1397_F1c_every_axis_is_re_derived_not_just_access(axis, bad):
     _restamp(receipt)
 
     with pytest.raises(CanonicalNodeNotAcceptedError) as excinfo:
-        _refuse_if_not_compile_ready(receipt)
-    assert axis in str(excinfo.value), "the refusal must name the axis it re-derived"
+        _refuse_if_not_compile_ready(receipt, EMPTY_COMPILE_AUTHORITY)
+    message = str(excinfo.value)
+    assert "EXTERNAL_DEPENDENCY_READINESS_CONTRADICTED" in message, (
+        "a re-sealed record must reach the readiness re-derivation, not be stopped earlier by the "
+        "contract-hash gate -- otherwise this test proves nothing about axis re-derivation"
+    )
+    assert axis in message, "the refusal must name the axis it re-derived"
 
 
 def test_AR1397_F1d_an_axis_missing_from_the_record_is_not_satisfied_by_omission():
@@ -1508,6 +1520,7 @@ def test_AR1397_F1d_an_axis_missing_from_the_record_is_not_satisfied_by_omission
     safety -- the same law the deleted-readiness attack established, applied one level down."""
     from src.engine.extraction.svkm_v2_1_compile import (
         CanonicalNodeNotAcceptedError,
+        _derived_dependency_blockers,
         _refuse_if_not_compile_ready,
     )
 
@@ -1520,9 +1533,20 @@ def test_AR1397_F1d_an_axis_missing_from_the_record_is_not_satisfied_by_omission
     receipt["compile_readiness"] = READY_PENDING_CERTIFICATION
     _restamp(receipt)
 
-    with pytest.raises(CanonicalNodeNotAcceptedError,
-                       match="EXTERNAL_DEPENDENCY_READINESS_CONTRADICTED"):
-        _refuse_if_not_compile_ready(receipt)
+    # (a) AR-1398: a record with a DELETED field can no longer be re-sealed into a valid contract
+    # -- an incomplete record is not a dependency contract at all, so the completeness gate now
+    # owns this case and refuses it EARLIER than the readiness re-derivation used to. Strictly
+    # stronger, and the refusal names why.
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="DEPENDENCY_RECORD_INCOMPLETE"):
+        _refuse_if_not_compile_ready(receipt, EMPTY_COMPILE_AUTHORITY)
+
+    # (b) AND the original AR-1397 F-1d property is asserted directly on the helper that owns it,
+    # so moving the seam's refusal earlier cannot silently retire the claim this test was written
+    # to make. An axis absent from a record must still count as UNSATISFIED, never as satisfied by
+    # omission -- absence of proof is not proof of safety.
+    blockers = _derived_dependency_blockers(records)
+    assert blockers, "an omitted axis must still block when the re-derivation is asked directly"
+    assert "implementation_status" in str(blockers)
 
 
 def test_AR1397_F3_a_stamped_receipt_cannot_be_edited_at_all():
@@ -1553,7 +1577,7 @@ def test_AR1397_F3_a_stamped_receipt_cannot_be_edited_at_all():
     a8.pop("compile_readiness")
 
     with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_MISMATCH"):
-        _refuse_if_not_compile_ready(a8)
+        _refuse_if_not_compile_ready(a8, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_F3b_an_unstamped_receipt_refuses_and_a_stamped_intact_one_passes():
@@ -1571,13 +1595,13 @@ def test_AR1397_F3b_an_unstamped_receipt_refuses_and_a_stamped_intact_one_passes
     unstamped = _real_certified_receipt()
     unstamped.pop("receipt_sha256_canonical", None)
     with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_ABSENT"):
-        _refuse_if_not_compile_ready(unstamped)
+        _refuse_if_not_compile_ready(unstamped, EMPTY_COMPILE_AUTHORITY)
 
     # And the discriminating half: the receipt the production path actually emits is stamped,
     # intact, and must PASS its own hash check rather than be refused by it.
     intact = _real_certified_receipt()
     assert intact["receipt_sha256_canonical"] == _canonical_receipt_hash(intact)
-    _refuse_if_not_compile_ready(intact)  # must not raise
+    _refuse_if_not_compile_ready(intact, EMPTY_COMPILE_AUTHORITY)  # must not raise
 
 
 def test_AR1397_F5_a_non_dict_structured_blocker_refuses_instead_of_crashing():
@@ -1598,7 +1622,7 @@ def test_AR1397_F5_a_non_dict_structured_blocker_refuses_instead_of_crashing():
         _restamp(receipt)
 
         with pytest.raises(CanonicalNodeNotAcceptedError):
-            _refuse_if_not_compile_ready(receipt)
+            _refuse_if_not_compile_ready(receipt, EMPTY_COMPILE_AUTHORITY)
 
 
 # --------------------------------------------------------------------------- #
@@ -1646,7 +1670,7 @@ def test_AR1397_G1_a_wrong_shaped_dependency_container_fails_closed(
     _restamp(attack)  # a legitimately-stamped receipt, so the HASH gate cannot mask the derivation
 
     with pytest.raises(CanonicalNodeNotAcceptedError):
-        build_certified_record(attack)
+        build_certified_record(attack, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_G1b_the_helper_itself_reports_a_container_blocker():
@@ -1686,7 +1710,7 @@ def test_AR1397_G2_a_present_but_unreadable_receipt_stamp_refuses(bad_stamp):
     receipt["receipt_sha256_canonical"] = bad_stamp
 
     with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_UNREADABLE"):
-        _refuse_if_not_compile_ready(receipt)
+        _refuse_if_not_compile_ready(receipt, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_G2b_the_production_receipt_is_stamped_so_the_hash_gate_is_not_a_no_op():
@@ -1721,7 +1745,7 @@ def test_AR1397_G2b_the_production_receipt_is_stamped_so_the_hash_gate_is_not_a_
     a8["external_dependencies"] = _blocked_dependency_records()
     a8["_external_dependencies_renamed"] = a8.pop("external_dependencies")
     with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_MISMATCH"):
-        build_certified_record(a8)
+        build_certified_record(a8, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_G3_the_seam_re_derives_every_axis_the_projection_gates_on():
@@ -1807,3 +1831,570 @@ def test_AR1397_G3c_a_receipt_declaring_no_dependencies_still_passes_the_contain
         "an empty DICT is not an empty list -- it is the wrong container type, and G-1 was exactly "
         "the case where a wrong container read as 'nothing blocks'"
     )
+
+
+# =============================================================================================== #
+# AR-1398 -- STAGE C0 CLOSURE. THE FOUR AR-1387A COUNTEREXAMPLES, AS PERMANENT TESTS.
+#
+# Each test below replays one thing GPT actually executed against the final AR-1397 head
+# (`860525ce`) and reported as still open:
+#
+#   section 2  CRITICAL  delete the required dependency + readiness + blocker, re-stamp -> COMPILED
+#   section 3  HIGH      a record of `dependency_id` + six ready words                  -> COMPILED
+#   section 4  HIGH      four PYTHONHASHSEED values -> four different receipt hashes
+#   section 5  MEDIUM    GATING_AXES.clear() -> a blocked dependency goes GREEN
+#
+# ★ EVERY REFUSAL TEST HERE IS PAIRED WITH A POSITIVE CONTROL THAT COMPILES. A suite that only
+#   proves things are refused cannot tell "this gate catches the attack" from "this gate refuses
+#   everything", and the second passes every negative test ever written. `test_AR1398_0_*` are
+#   those controls and they must stay GREEN.
+# =============================================================================================== #
+
+
+def _reseal_dependency_record(record: dict) -> dict:
+    """Recompute a record's `contract_sha256` in place, so an edited record is self-consistent.
+
+    This is the ADVERSARY'S move, not a convenience: after AR-1398 the seam recomputes each
+    record's contract hash before reading any readiness axis, so an attacker who edits a field and
+    leaves the old digest is caught by arithmetic. Re-sealing is what a competent attacker does
+    next, and it is the state in which the readiness re-derivation actually has to do its job.
+    """
+    from src.engine.extraction.source_graph_projection import (
+        external_dependency_contract_hash,
+    )
+
+    record["contract_sha256"] = external_dependency_contract_hash(
+        ExternalDependencySpec(**{
+            k: (tuple(v) if k == "consumer_refs" else v)
+            for k, v in record.items() if k != "contract_sha256"
+        })
+    )
+    return record
+
+
+def _ar1398_e8_records() -> list:
+    fx = _load_fixture()
+    blocked = _run(external_dependencies=(ExternalDependencySpec(**fx["external_dependency"]),))
+    return blocked["external_dependencies"]
+
+
+def _ar1398_e8_authority():
+    """An authority that REQUIRES the E8 4H Premium/Discount dependency, pinned to its contract."""
+    from src.engine.extraction.compile_authority import (
+        COMPILE_AUTHORITY_VERSION,
+        CompileAuthority,
+        RequiredDependency,
+    )
+    from src.engine.extraction.source_graph_projection import (
+        external_dependency_contract_hash,
+    )
+
+    dep = ExternalDependencySpec(**_load_fixture()["external_dependency"])
+    return CompileAuthority(
+        version=COMPILE_AUTHORITY_VERSION,
+        entries=(
+            RequiredDependency(
+                dependency_id=dep.dependency_id,
+                contract_sha256=external_dependency_contract_hash(dep),
+            ),
+        ),
+    )
+
+
+# ----------------------------------------------------------------------------------------------- #
+# 0 -- THE DISCRIMINATING POSITIVE CONTROLS. If these go red, every refusal below is noise.
+# ----------------------------------------------------------------------------------------------- #
+
+
+def test_AR1398_0_legacy_receipt_with_an_explicit_empty_authority_still_compiles():
+    """The real receipt declares no dependency, and an EXPLICIT empty authority still compiles it.
+
+    This is the control that makes every refusal below meaningful. It also pins the exact
+    concession AR-1398 section 7.2.6 grants -- an explicit empty authority is allowed for a legacy
+    strategy -- so a later tightening cannot quietly withdraw it and break every legacy strategy.
+    """
+    from src.engine.extraction.compile_authority import EMPTY_COMPILE_AUTHORITY
+    from src.engine.extraction.svkm_v2_1_compile import build_certified_record
+
+    out = build_certified_record(_real_certified_receipt(), EMPTY_COMPILE_AUTHORITY)
+    assert len(out["strategies"]) == 1
+
+
+def test_AR1398_0b_a_complete_satisfied_required_dependency_compiles():
+    """A required dependency that is PRESENT, COMPLETE, PIN-MATCHED and READY compiles.
+
+    Without this, `REQUIRED_DEPENDENCY_ABSENT` and its siblings could be firing on every input and
+    the packet would still look green. This proves the authority path has a passing arm at all.
+    """
+    from src.engine.extraction.compile_authority import (
+        COMPILE_AUTHORITY_VERSION,
+        CompileAuthority,
+        RequiredDependency,
+    )
+    from src.engine.extraction.source_graph_projection import (
+        external_dependency_contract_hash,
+    )
+    from src.engine.extraction.svkm_v2_1_compile import build_certified_record
+
+    ready = _ready_dep()
+    ready_receipt = _run(external_dependencies=(ready,))
+
+    authority = CompileAuthority(
+        version=COMPILE_AUTHORITY_VERSION,
+        entries=(
+            RequiredDependency(
+                dependency_id=ready.dependency_id,
+                contract_sha256=external_dependency_contract_hash(ready),
+            ),
+        ),
+    )
+
+    receipt = _real_certified_receipt()
+    receipt["external_dependencies"] = ready_receipt["external_dependencies"]
+    receipt["compile_readiness"] = ready_receipt["compile_readiness"]
+    _restamp(receipt)
+
+    out = build_certified_record(receipt, authority)
+    assert len(out["strategies"]) == 1
+
+
+# ----------------------------------------------------------------------------------------------- #
+# 2 -- CRITICAL. The required dependency can be deleted and re-stamped.
+# ----------------------------------------------------------------------------------------------- #
+
+
+def test_AR1398_2_deleting_the_required_dependency_and_restamping_is_refused():
+    """🛑 AR-1387A section 2, CRITICAL -- GPT'S EXACT REPLAY, AND THE REASON THIS PACKET EXISTS.
+
+    GPT's measured sequence on the final AR-1397 head:
+
+        blocked E8 dependency present                 -> CanonicalNodeNotAcceptedError
+        delete external_dependencies/readiness/blocker
+        re-stamp the receipt
+        leave grade=RED
+        build_certified_record()                      -> COMPILED 1 strategy
+
+    Note what puts this beyond every other guard in the seam: AFTER the deletion the receipt is not
+    corrupt, not inconsistent, and not lying. It is a valid receipt for a strategy that requires
+    nothing, and its digest is genuinely correct because it was recomputed after the edit. A plain
+    hash cannot help; neither could an HMAC, since a producer that omits the dependency would
+    faithfully sign the omission (which is why AR-1387A section 6 refuses that expansion).
+
+    THE STRATEGY BECAME LESS STRICT BY LOSING A GATE. Only an authority the receipt does not
+    control can notice.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        build_certified_record,
+    )
+
+    authority = _ar1398_e8_authority()
+
+    laundered = _real_certified_receipt()
+    laundered["external_dependencies"] = _ar1398_e8_records()
+    laundered["grade"] = "RED"
+    laundered["compile_readiness"] = "BLOCKED_EXTERNAL_DEPENDENCY"
+    _restamp(laundered)
+
+    # Arm 1 -- the honest blocked receipt refuses, because it declares itself blocked.
+    with pytest.raises(CanonicalNodeNotAcceptedError):
+        build_certified_record(laundered, authority)
+
+    # Arm 2 -- THE ATTACK, exactly as GPT ran it.
+    laundered.pop("external_dependencies", None)
+    laundered.pop("compile_readiness", None)
+    laundered.pop("structured_blocker", None)
+    _restamp(laundered)
+
+    # POSITIVE WITNESS that the attack is really in the state it claims. Without these, the refusal
+    # below could be produced by the old pairing rules and would prove nothing new.
+    assert "external_dependencies" not in laundered
+    assert "compile_readiness" not in laundered
+    assert "structured_blocker" not in laundered
+
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="REQUIRED_DEPENDENCY_ABSENT"):
+        build_certified_record(laundered, authority)
+
+
+def test_AR1398_2b_a_present_but_contract_drifted_dependency_is_refused():
+    """Presence alone is not enough -- the declared contract must be the RATIFIED one.
+
+    Otherwise the section 2 repair falls to a weaker edit than deletion: keep a record carrying the
+    required id, change what it says, re-stamp. Here the 4H gate quietly becomes a 1H gate.
+    """
+    from src.engine.extraction.source_graph_projection import (
+        external_dependency_contract_hash,
+    )
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        build_certified_record,
+    )
+
+    drifted = dict(_ar1398_e8_records()[0])
+    drifted["decision_timeframe"] = "1h"
+    drifted["contract_sha256"] = external_dependency_contract_hash(
+        ExternalDependencySpec(**{
+            k: (tuple(v) if k == "consumer_refs" else v)
+            for k, v in drifted.items() if k != "contract_sha256"
+        })
+    )
+
+    receipt = _real_certified_receipt()
+    receipt["external_dependencies"] = [drifted]
+    receipt["compile_readiness"] = "BLOCKED_EXTERNAL_DEPENDENCY"
+    _restamp(receipt)
+
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="REQUIRED_DEPENDENCY_CONTRACT_DRIFT"):
+        build_certified_record(receipt, _ar1398_e8_authority())
+
+
+def test_AR1398_2c_the_authority_cannot_be_omitted_or_defaulted():
+    """An omitted authority is a TypeError; an explicitly wrong one is a documented refusal.
+
+    AR-1398 section 7.2.6 allows an explicit empty authority and forbids an omitted or defaulted
+    one. Omission is enforced by the SIGNATURE rather than by a branch, because a required
+    parameter is the one guard with nothing to disarm.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        build_certified_record,
+    )
+
+    receipt = _real_certified_receipt()
+    with pytest.raises(TypeError):
+        build_certified_record(receipt)
+
+    for bogus in (None, {}, [], "EMPTY", 0):
+        with pytest.raises(CanonicalNodeNotAcceptedError, match="COMPILE_AUTHORITY_ABSENT"):
+            build_certified_record(receipt, bogus)
+
+
+def test_AR1398_2d_the_authority_object_is_immutable():
+    """The authority must not become the new one-line disarm point."""
+    authority = _ar1398_e8_authority()
+    with pytest.raises((AttributeError, TypeError)):
+        authority.entries = ()
+    with pytest.raises(TypeError):
+        authority.required["e8.htf_premium_discount"] = "0" * 64
+    with pytest.raises(AttributeError):
+        authority.required.clear()
+    assert len(authority.required) == 1
+
+
+def test_AR1398_2e_a_malformed_authority_pin_is_refused_at_construction():
+    """A half-typed pin must fail loudly at BUILD time, not silently refuse every receipt later."""
+    from src.engine.extraction.compile_authority import (
+        COMPILE_AUTHORITY_VERSION,
+        CompileAuthority,
+        CompileAuthorityError,
+        RequiredDependency,
+    )
+
+    for bad in ("", "not-a-hash", "ABC" * 21 + "D", "0" * 63):
+        with pytest.raises(CompileAuthorityError):
+            RequiredDependency(dependency_id="x", contract_sha256=bad)
+    with pytest.raises(CompileAuthorityError):
+        CompileAuthority(version="compile-authority/v0", entries=())
+    with pytest.raises(CompileAuthorityError):
+        CompileAuthority(
+            version=COMPILE_AUTHORITY_VERSION,
+            entries=(RequiredDependency("dup", "a" * 64), RequiredDependency("dup", "b" * 64)),
+        )
+
+
+# ----------------------------------------------------------------------------------------------- #
+# 3 -- HIGH. Six ready words masquerading as a dependency record.
+# ----------------------------------------------------------------------------------------------- #
+
+
+def test_AR1398_3_six_ready_words_are_not_a_dependency_record():
+    """🛑 AR-1387A section 3, HIGH -- GPT'S FORGED MINIMUM RECORD, REPLAYED VERBATIM.
+
+    GPT attached exactly this to the real nine-node receipt, declared readiness, re-stamped, and
+    called the real compile entry point:
+
+        {"dependency_id": "forged.minimum-record",
+         "access_status": "VERIFIED", "live_delivery": "VERIFIED",
+         "historical_replay": "VERIFIED", "update_policy": "VERIFIED",
+         "implementation_status": "VALIDATED", "semantic_status": "MULTIMODAL_RESOLVED"}
+
+        missing consumer_refs / provider / artifact / platform / both timeframes /
+        configuration / output contract / contract hash
+        build_certified_record() -> COMPILED 1 strategy
+
+    `_derived_dependency_blockers()` re-derives the six READINESS axes, which is necessary and
+    incomplete: it never asks whether the object it reads them off is a dependency contract at all.
+    SIX TRUE-LOOKING WORDS ARE NOT A DEPENDENCY; THEY ARE SIX WORDS.
+    """
+    from src.engine.extraction.compile_authority import EMPTY_COMPILE_AUTHORITY
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        build_certified_record,
+    )
+
+    forged = {
+        "dependency_id": "forged.minimum-record",
+        "access_status": "VERIFIED",
+        "live_delivery": "VERIFIED",
+        "historical_replay": "VERIFIED",
+        "update_policy": "VERIFIED",
+        "implementation_status": "VALIDATED",
+        "semantic_status": "MULTIMODAL_RESOLVED",
+    }
+
+    receipt = _real_certified_receipt()
+    receipt["external_dependencies"] = [forged]
+    receipt["compile_readiness"] = "READY_PENDING_CERTIFICATION"
+    _restamp(receipt)
+
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="DEPENDENCY_RECORD_INCOMPLETE"):
+        build_certified_record(receipt, EMPTY_COMPILE_AUTHORITY)
+
+
+def test_AR1398_3b_the_record_schema_is_pinned_against_the_dataclass():
+    """The v1 record schema must BE the dataclass's own fields, not a hand-copied list.
+
+    A second hand-written copy of a boundary rule drifts and stops biting while still reporting
+    PASS -- the failure this campaign keeps rediscovering. A field added to
+    `ExternalDependencySpec` without being taught here turns this RED instead of arriving later as
+    a silently tolerated "extra".
+    """
+    import dataclasses
+
+    from src.engine.extraction.compile_authority import REQUIRED_DEPENDENCY_RECORD_FIELDS
+
+    declared = {f.name for f in dataclasses.fields(ExternalDependencySpec)}
+    declared.discard("expected_contract_sha256")  # caller-side assertion, never serialised
+    assert REQUIRED_DEPENDENCY_RECORD_FIELDS == declared | {"contract_sha256"}
+
+
+def test_AR1398_3c_every_single_required_field_is_load_bearing():
+    """Field-by-field mutation across the WHOLE schema.
+
+    A schema check satisfied by "most of the fields" has an unmeasured boundary -- and the forged
+    record above was precisely a record that had *some* of them.
+    """
+    from src.engine.extraction.compile_authority import (
+        REQUIRED_DEPENDENCY_RECORD_FIELDS,
+        CompileAuthorityError,
+        validate_dependency_record,
+    )
+
+    base = _ar1398_e8_records()[0]
+    # Control: the unmutated record validates. Without it, "every mutation refused" is equally
+    # consistent with a validator that refuses everything.
+    validate_dependency_record(dict(base))
+
+    for dropped in sorted(REQUIRED_DEPENDENCY_RECORD_FIELDS):
+        record = dict(base)
+        record.pop(dropped)
+        with pytest.raises(CompileAuthorityError, match="DEPENDENCY_RECORD_INCOMPLETE"):
+            validate_dependency_record(record)
+
+
+def test_AR1398_3d_an_extra_field_is_refused_not_ignored():
+    from src.engine.extraction.compile_authority import (
+        CompileAuthorityError,
+        validate_dependency_record,
+    )
+
+    record = dict(_ar1398_e8_records()[0])
+    record["surprise"] = "anything"
+    with pytest.raises(CompileAuthorityError, match="DEPENDENCY_RECORD_INCOMPLETE"):
+        validate_dependency_record(record)
+
+
+def test_AR1398_3e_a_tampered_field_breaks_the_recomputed_contract_hash():
+    """The digest is RECOMPUTED from the record's own fields, never believed."""
+    from src.engine.extraction.compile_authority import (
+        CompileAuthorityError,
+        validate_dependency_record,
+    )
+
+    record = dict(_ar1398_e8_records()[0])
+    record["provider"] = "Somebody Else"
+    with pytest.raises(CompileAuthorityError, match="DEPENDENCY_CONTRACT_HASH_MISMATCH"):
+        validate_dependency_record(record)
+
+
+def test_AR1398_3f_duplicate_records_and_malformed_containers_are_refused():
+    from src.engine.extraction.compile_authority import EMPTY_COMPILE_AUTHORITY
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        build_certified_record,
+    )
+
+    records = _ar1398_e8_records()
+
+    receipt = _real_certified_receipt()
+    receipt["external_dependencies"] = [dict(records[0]), dict(records[0])]
+    receipt["compile_readiness"] = "BLOCKED_EXTERNAL_DEPENDENCY"
+    _restamp(receipt)
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="DEPENDENCY_RECORD_DUPLICATE"):
+        build_certified_record(receipt, EMPTY_COMPILE_AUTHORITY)
+
+    # A wrong-typed container must fail CLOSED, not be coerced to "no dependencies". That is the
+    # AR-1397 G-1 shape one layer up, and it must not reappear inside the control that closed it.
+    receipt2 = _real_certified_receipt()
+    receipt2["external_dependencies"] = {r["dependency_id"]: r for r in records}
+    receipt2["compile_readiness"] = "BLOCKED_EXTERNAL_DEPENDENCY"
+    _restamp(receipt2)
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="DEPENDENCY_CONTAINER_MALFORMED"):
+        build_certified_record(receipt2, EMPTY_COMPILE_AUTHORITY)
+
+
+# ----------------------------------------------------------------------------------------------- #
+# 4 -- HIGH. Receipt-hash determinism across fresh processes.
+# ----------------------------------------------------------------------------------------------- #
+
+
+def test_AR1398_4_seed_matrix_produces_one_receipt_and_one_hash():
+    """🛑 AR-1387A section 4. Four FRESH SUBPROCESSES, four `PYTHONHASHSEED` values, one hash.
+
+    Subprocesses are not ceremony. `PYTHONHASHSEED` is read by the interpreter at STARTUP, so an
+    in-process loop that sets `os.environ` changes nothing and yields a control that CANNOT FAIL --
+    the worst kind, because it reports PASS forever.
+
+    ⚠️ HONEST SCOPE, MEASURED, AND IT DISAGREES WITH THE RULING. On this tower (CPython 3.13.0) the
+    PRE-REPAIR code ALREADY PASSED this: `builtins.sum()` gained Neumaier compensated summation in
+    CPython 3.12, which makes the two set-order reductions order-insensitive here. GPT measured
+    four different hashes on its own host, where `sum()` is a naive left fold. So on this tower
+    this test is a REGRESSION GUARD, not a reproduction. `test_AR1398_4b` is the arm that goes RED
+    on THIS interpreter, and the repair closes both halves.
+    """
+    import os
+    import subprocess
+    import sys
+
+    probe = Path(__file__).resolve().parents[3] / "scripts" / "receipt_seed_matrix_probe.py"
+    assert probe.exists(), probe
+    repo_root = probe.parents[1]
+
+    results = {}
+    for seed in ("0", "1", "2", "42"):
+        env = dict(os.environ)
+        env["PYTHONHASHSEED"] = seed
+        env["TF_MOCK_VBT"] = "1"
+        proc = subprocess.run(
+            [sys.executable, str(probe)],
+            capture_output=True, text=True, cwd=str(repo_root), env=env, timeout=900,
+        )
+        assert proc.returncode == 0, f"seed {seed} probe failed:\n{proc.stdout}\n{proc.stderr}"
+        results[seed] = proc.stdout.strip()
+
+    assert len(set(results.values())) == 1, (
+        "the certified receipt is NOT reproducible across processes; seeds disagree:\n"
+        + json.dumps(results, indent=2)
+    )
+
+
+def test_AR1398_4b_the_relevance_reductions_do_not_depend_on_sum_accuracy():
+    """The interpreter-independence arm -- the one that goes RED on THIS tower's Python.
+
+    Simulates the interpreter GPT measured on by replacing `builtins.sum` with a naive left fold,
+    which is what CPython < 3.12 does. Before the repair `_score` summed unordered SETS with
+    `sum()`, so under this patch its answer depends on both set iteration order and interpreter
+    version. After the repair it is `math.fsum` over `sorted(...)`, immune to both -- which is
+    exactly the claim, so it is exactly what is tested.
+
+    POSITIVE CONTROL FIRST: the patched fold must actually be order-sensitive on these values,
+    otherwise this test would pass against a no-op and prove nothing.
+    """
+    import builtins
+
+    from src.engine.extraction import evidence_relevance as er
+
+    def _naive(iterable, /, start=0):
+        total = start
+        for value in iterable:
+            total = total + value
+        return total
+
+    # ⚠️ THE FIRST VERSION OF THIS CONTROL WAS ITSELF BROKEN and the suite caught it: it compared a
+    # list against `reversed(list)`, and for these three values BOTH orders fold to 0.0
+    # (0+1e16+1.0 rounds back to 1e16, then -1e16 -> 0.0; and the mirror image does the same). A
+    # control that compares two orderings which happen to agree cannot detect order sensitivity.
+    # These two orderings genuinely disagree -- 0.0 versus 1.0 -- which is the property required.
+    lost = [1e16, 1.0, -1e16]      # the 1.0 is absorbed before the cancellation
+    kept = [1e16, -1e16, 1.0]      # the cancellation happens first, so the 1.0 survives
+    assert _naive(lost) != _naive(kept), (
+        "positive control failed: the naive fold is not order-sensitive on these values, so this "
+        "test cannot detect the defect it exists to detect"
+    )
+
+    weights = {f"t{i}": 1.0 / (1.0 + i) for i in range(1, 40)}
+    weights["huge"] = 1e16
+    weights["tiny"] = 1e-16
+    terms = set(weights)
+
+    real_sum = builtins.sum
+    builtins.sum = _naive
+    try:
+        baseline = er._stable_sum(terms, weights)
+        for salt in range(50):
+            shuffled = set(sorted(terms, key=lambda t: ((hash(t) + salt) % 7, t)))
+            assert shuffled == terms
+            assert er._stable_sum(shuffled, weights) == baseline
+    finally:
+        builtins.sum = real_sum
+
+    assert er._stable_sum(terms, weights) == baseline, (
+        "the reduction's value depends on whether builtins.sum compensates, so the receipt is not "
+        "portable between CPython 3.11 and 3.12+"
+    )
+
+
+# ----------------------------------------------------------------------------------------------- #
+# 5 -- MEDIUM. The shared gate authority must be immutable.
+# ----------------------------------------------------------------------------------------------- #
+
+
+def test_AR1398_5_gating_axes_cannot_be_mutated():
+    """🛑 AR-1387A section 5. GPT ran `GATING_AXES.clear()` and a blocked dependency went GREEN.
+
+        grade              GREEN_PENDING_CERTIFICATION
+        compile_readiness  READY_PENDING_CERTIFICATION
+
+    Sharing ONE declaration between projection and seam is correct and stays. What was wrong is
+    that the shared object was publicly MUTABLE, so both consumers were disarmed in one line. The
+    prior tests proved every key present is CONSUMED -- a completeness claim, which says nothing
+    about whether the map can be EMPTIED.
+    """
+    from src.engine.extraction.source_graph_projection import GATING_AXES
+
+    for mutate in (
+        lambda: GATING_AXES.clear(),
+        lambda: GATING_AXES.pop("access_status"),
+        lambda: GATING_AXES.update({"access_status": "UNVERIFIED"}),
+        lambda: GATING_AXES.__setitem__("access_status", "UNVERIFIED"),
+        lambda: GATING_AXES.__delitem__("access_status"),
+    ):
+        with pytest.raises((AttributeError, TypeError)):
+            mutate()
+
+    assert set(GATING_AXES) == {
+        "access_status", "live_delivery", "historical_replay",
+        "update_policy", "implementation_status", "semantic_status",
+    }
+
+
+def test_AR1398_5b_both_consumers_still_derive_from_the_one_declaration():
+    """Immutability must not have been bought by giving each consumer its own copy.
+
+    That would 'fix' the mutation attack by reintroducing the copy-drift defect the shared map was
+    created to remove -- trading a MEDIUM for the HIGH it replaced.
+    """
+    from src.engine.extraction import svkm_v2_1_compile as seam
+    from src.engine.extraction.source_graph_projection import GATING_AXES
+
+    assert seam._GATING_AXES is GATING_AXES, (
+        "the compile seam must consume the SAME object the projection declares, never a copy"
+    )
+
+
+def test_AR1398_5c_a_blocked_dependency_still_blocks_after_the_immutability_change():
+    """The end-to-end behaviour GPT's mutation subverted, asserted directly."""
+    fx = _load_fixture()
+    blocked = _run(external_dependencies=(ExternalDependencySpec(**fx["external_dependency"]),))
+    assert blocked["grade"] == "RED"
+    assert blocked["compile_readiness"] == "BLOCKED_EXTERNAL_DEPENDENCY"

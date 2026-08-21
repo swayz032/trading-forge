@@ -81,6 +81,12 @@ import json
 import os
 from typing import Any
 
+from src.engine.extraction.compile_authority import (
+    EMPTY_COMPILE_AUTHORITY,
+    CompileAuthority,
+    CompileAuthorityError,
+    enforce_compile_authority,
+)
 from src.engine.extraction.compile_certified_record import compile_record_to_artifact
 from src.engine.extraction.source_graph_projection import (
     ACCEPTED as CANONICAL_ACCEPTED,
@@ -372,7 +378,9 @@ def _refuse_if_receipt_hash_broken(record: dict[str, Any]) -> None:
         )
 
 
-def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
+def _refuse_if_not_compile_ready(
+    record: dict[str, Any], authority: CompileAuthority
+) -> None:
     """Refuse a projection that declares itself NOT READY to compile (AR-1395, AR-1385A 7.16).
 
     🛑 THE HOLE THIS CLOSES. This adapter previously refused only on a canonical ref that was not
@@ -415,6 +423,27 @@ def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
     has_readiness = "compile_readiness" in record
     readiness = record.get("compile_readiness")
     dependencies = record.get("external_dependencies") or ()
+
+    # 🛑 AR-1387A SECTIONS 2 AND 3, CRITICAL + HIGH. THE ONLY CHECK HERE WHOSE INPUT IS NOT THE
+    # RECEIPT. Everything above and below this line reasons about the artifact from the artifact,
+    # and the grader walked through all of it by making the artifact SMALLER: delete
+    # external_dependencies + compile_readiness + structured_blocker, re-stamp, and what remains is
+    # a valid legacy receipt with a valid digest. No field-level rule can see a field that is not
+    # there. This one can, because it iterates the AUTHORITY -- supplied by the caller, pinned in
+    # the repository -- and looks each required id up in the receipt.
+    #
+    # Ordered HERE, immediately after the stamp check and BEFORE the readiness pairing rules, for
+    # two reasons: the pairing rules cannot run at all on a shrunken receipt (they see a consistent
+    # "neither half present" and pass), and the completeness/contract-hash validation this performs
+    # must happen before `_derived_dependency_blockers()` below reads six readiness axes off an
+    # object nobody has proven is a dependency record.
+    try:
+        enforce_compile_authority(dependencies, authority)
+    except CompileAuthorityError as exc:
+        # Re-raised as the seam's DOCUMENTED refusal type. This file already paid for the lesson
+        # once (AR-1397 finding F-5): a gate that fails closed but with an undocumented exception
+        # crashes callers that correctly handle the documented one. The message is preserved whole.
+        raise CanonicalNodeNotAcceptedError(str(exc)) from exc
 
     # 🛑 AR-1397 GRADER FINDING F-1, CRITICAL, AND THE SAME FAIL-OPEN WEARING A DIFFERENT SPELLING.
     # The first repair paired the two fields by KEY PRESENCE and then believed whatever value it
@@ -506,7 +535,9 @@ def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
         )
 
 
-def build_certified_record(record: dict[str, Any]) -> dict[str, Any]:
+def build_certified_record(
+    record: dict[str, Any], authority: CompileAuthority
+) -> dict[str, Any]:
     """Reconstruct a raw-shaped `{"strategies": [...]}` certified record from a certified V2.1
     projection receipt, substituting each of the 9 canonical refs' V2.1-CORRECTED text for the
     raw extraction's original text at that position.
@@ -514,10 +545,18 @@ def build_certified_record(record: dict[str, Any]) -> dict[str, Any]:
     REFUSES via `CanonicalNodeNotAcceptedError` if any canonical ref is missing or not ACCEPTED
     -- checked for all 9 up front, so a single bad ref reports itself rather than surfacing as a
     confusing downstream KeyError.
+
+    🛑 `authority` IS REQUIRED AND HAS NO DEFAULT (AR-1398 section 7.2.6). It names the external
+    dependencies this compile must find declared in the receipt, and it is supplied by the CALLER
+    -- never read off the artifact being judged, which is the circularity AR-1387A section 2 broke.
+    A strategy that legitimately needs nothing passes `EMPTY_COMPILE_AUTHORITY` and thereby SAYS
+    so. There is deliberately no default value: a default would make "this strategy requires
+    nothing" and "somebody forgot to say what this strategy requires" the same call, and the attack
+    being closed is precisely a forgotten declaration.
     """
     # Readiness FIRST: an artifact that declares itself unready must not be able to hide behind a
     # later, unrelated refusal (or worse, pass because every canonical ref happens to verify).
-    _refuse_if_not_compile_ready(record)
+    _refuse_if_not_compile_ready(record, authority)
 
     outcomes = _outcome_by_ref(record)
 
@@ -701,7 +740,12 @@ def compile_svkm_v2_1_vertical(out_dir: str = _STAGE2_OUT_DIR) -> str:
     `test_deterministic_repeat_compile`).
     """
     record, canonical_hash = run_certified_projection()
-    certified_record = build_certified_record(record)
+    # This source declares NO external dependency -- the committed nine-node receipt carries
+    # `external_dependencies: null`. That is stated EXPLICITLY rather than defaulted (AR-1398
+    # section 7.2.6): if this vertical ever begins to require a provider-computed value, the pin
+    # is added here and a receipt that stops declaring it stops compiling. A defaulted authority
+    # would have made that silent, which is the whole defect.
+    certified_record = build_certified_record(record, EMPTY_COMPILE_AUTHORITY)
 
     os.makedirs(out_dir, exist_ok=True)
     record_path = os.path.join(out_dir, f"{_SPEC_ID}.certified_record.json")

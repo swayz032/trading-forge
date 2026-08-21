@@ -49,6 +49,7 @@ from datetime import timedelta
 import numpy as np
 import pytest
 
+from src.engine.extraction.compile_authority import EMPTY_COMPILE_AUTHORITY
 from src.engine.extraction.source_graph_projection import ACCEPTED as CANONICAL_ACCEPTED
 from src.engine.extraction.svkm_v2_1_compile import (
     _CANONICAL_REFS_IN_ORDER,
@@ -225,7 +226,7 @@ def test_alias_ref_text_never_appears_in_compiled_output(compiled_artifact: dict
     # mutation stands in for "a projection that legitimately PRODUCED this text", not for tampering,
     # so it re-stamps -- otherwise the tamper gate masks the structural claim under test.
     stamp_receipt(mutated_record)
-    rebuilt = build_certified_record(mutated_record)
+    rebuilt = build_certified_record(mutated_record, EMPTY_COMPILE_AUTHORITY)
     assert len(rebuilt["strategies"][0]["confluences"]) == 1, (
         "the alias must never appear as a second confluences[] entry regardless of its text"
     )
@@ -245,7 +246,7 @@ def test_preserved_metadata_is_structurally_inert(projection_record, compiled_ar
 
     record, _hash = projection_record
 
-    baseline_record = build_certified_record(record)
+    baseline_record = build_certified_record(record, EMPTY_COMPILE_AUTHORITY)
     baseline_spec = produce_spec_artifact(
         baseline_record["strategies"][0], video="sVkmZklJDHI__s0",
     )
@@ -258,7 +259,7 @@ def test_preserved_metadata_is_structurally_inert(projection_record, compiled_ar
     # AR-1397 F-3: re-stamp, for the same reason as the alias test above -- this mutation stands in
     # for a projection that legitimately produced this text, not for a tampered receipt.
     stamp_receipt(mutated_record)
-    mutated_certified_record = build_certified_record(mutated_record)
+    mutated_certified_record = build_certified_record(mutated_record, EMPTY_COMPILE_AUTHORITY)
     # Provenance text DID change (the mutation reached the reconstruction)...
     assert mutated_certified_record["strategies"][0]["entry_sequence"][0]["rationale"] != (
         baseline_record["strategies"][0]["entry_sequence"][0]["rationale"]
@@ -293,7 +294,8 @@ def test_AR1397_the_inertness_property_has_a_path_to_red(projection_record):
 
     record, _hash = projection_record
     baseline = produce_spec_artifact(
-        build_certified_record(record)["strategies"][0], video="sVkmZklJDHI__s0",
+        build_certified_record(record, EMPTY_COMPILE_AUTHORITY)["strategies"][0],
+        video="sVkmZklJDHI__s0",
     )
 
     leaked = copy.deepcopy(record)
@@ -302,7 +304,7 @@ def test_AR1397_the_inertness_property_has_a_path_to_red(projection_record):
         outcomes[ref]["original_text"] = "LEAKED PRESERVED METADATA " + ref
     stamp_receipt(leaked)
 
-    strategy = build_certified_record(leaked)["strategies"][0]
+    strategy = build_certified_record(leaked, EMPTY_COMPILE_AUTHORITY)["strategies"][0]
     # blank the `action` that was winning, so `rationale` becomes the selected text
     blanked = 0
     for step in strategy["entry_sequence"]:
@@ -336,7 +338,7 @@ def test_refuses_when_a_load_bearing_canonical_ref_is_not_accepted(projection_re
     # canonical-ref gate itself untested.
     stamp_receipt(mutated)
     with pytest.raises(CanonicalNodeNotAcceptedError, match=r"entry_sequence\[2\]\.action"):
-        build_certified_record(mutated)
+        build_certified_record(mutated, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_refuses_when_a_canonical_ref_is_removed_entirely(projection_record):
@@ -347,7 +349,7 @@ def test_refuses_when_a_canonical_ref_is_removed_entirely(projection_record):
     ]
     stamp_receipt(mutated)  # AR-1397 F-3, as above
     with pytest.raises(CanonicalNodeNotAcceptedError, match=r"stop\.rationale"):
-        build_certified_record(mutated)
+        build_certified_record(mutated, EMPTY_COMPILE_AUTHORITY)
 
 
 def test_AR1397_an_UNstamped_edit_refuses_as_tampered_before_any_other_gate(projection_record):
@@ -363,7 +365,7 @@ def test_AR1397_an_UNstamped_edit_refuses_as_tampered_before_any_other_gate(proj
 
     assert tampered["receipt_sha256_canonical"], "the production receipt must arrive stamped"
     with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_MISMATCH"):
-        build_certified_record(tampered)
+        build_certified_record(tampered, EMPTY_COMPILE_AUTHORITY)
 
 
 # ══ 6. DETERMINISTIC REPEAT COMPILE ══════════════════════════════════════════════════════

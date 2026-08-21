@@ -35,6 +35,7 @@ no source-specific string.
 """
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass, field
 
@@ -108,6 +109,36 @@ def _weights(document: str | None) -> dict:
     return {t: 1.0 / (1.0 + c) for t, c in counts.items()}
 
 
+def _stable_sum(terms, weights: dict) -> float:
+    """Sum `terms`' weights so the answer cannot depend on the collection's iteration order.
+
+    🛑 AR-1387A section 4 / AR-1398 section 7.2.5. These weights are summed over PYTHON SETS, whose
+    iteration order CPython deliberately randomises per process. Floating-point addition is not
+    associative, so an order-dependent sum can put last-bit differences into a score that is
+    serialised into a certified receipt -- and a certified receipt whose hash depends on the
+    process that produced it is not a pin, it is a coincidence.
+
+    TWO independent hazards are closed here, because closing only the first does not make the
+    receipt portable:
+
+    1. ORDER dependence -- `sorted()` fixes the sequence. This is the repair AR-1387A ordered.
+    2. ALGORITHM dependence -- `math.fsum` is exactly rounded, so the result is the correctly
+       rounded true sum on every interpreter. Sorting alone does NOT give that:
+       `builtins.sum()` changed behaviour in CPython 3.12, which added Neumaier compensated
+       summation for floats. MEASURED on this tower (Python 3.13.0): the same three values summed
+       by `sum()` give one answer in every order, while a naive left fold gives two -- so a repo
+       whose hosts straddle 3.11/3.13 can agree on the ORDER and still disagree on the SUM. That
+       is the more dangerous half, because it is invisible to a same-host seed matrix.
+
+    ⚠️ SCOPE: this is the receipt-producing path only. An audit of every reduction in
+    `src/engine/extraction/` found these the ONLY float reductions over unordered collections that
+    reach a certified artifact; every other `sum(...)` there is `sum(1 for ...)`, an INTEGER count,
+    and integer addition is associative and exact. AR-1398 section 7.2.5 explicitly forbids turning
+    this into a repository-wide numerical rewrite, so it was not turned into one.
+    """
+    return math.fsum(weights.get(t, 1.0) for t in sorted(terms))
+
+
 def _score(quote_terms: set[str], condition: str, weights: dict) -> tuple[float, set[str]]:
     """Rarity-weighted fraction of the CONDITION's content that the quote covers.
 
@@ -119,10 +150,10 @@ def _score(quote_terms: set[str], condition: str, weights: dict) -> tuple[float,
     if not cond:
         return 0.0, set()
     shared = cond & quote_terms
-    total = sum(weights.get(t, 1.0) for t in cond)
+    total = _stable_sum(cond, weights)
     if total <= 0:
         return 0.0, shared
-    return sum(weights.get(t, 1.0) for t in shared) / total, shared
+    return _stable_sum(shared, weights) / total, shared
 
 
 def evaluate_evidence_relevance(
