@@ -39,6 +39,7 @@ from src.engine.extraction.source_graph_projection import (
     EXTERNAL_DEPENDENCY_KIND_INDICATOR,
     FAIL_CLOSED_ACTION,
     UNRESOLVED_OUTPUT,
+    AliasSpec,
     ExternalDependencySpec,
     GraphEdge,
     ProjectionSpec,
@@ -126,6 +127,16 @@ GRAPH_EDGES = (
     GraphEdge("entry_sequence[1].action", "stop.rationale", "precedes"),
 )
 GRAPH_ROOTS = ("entry_sequence[0].action",)
+
+
+def _ready_dep(**overrides) -> ExternalDependencySpec:
+    """A dependency with every blocking axis satisfied. Used as the discriminating control: a
+    refusal that fires on this too would prove nothing about the refusals that should fire."""
+    base = dict(access_status=ACCESS_VERIFIED, live_delivery=ACCESS_VERIFIED,
+                historical_replay=ACCESS_VERIFIED, update_policy=ACCESS_VERIFIED,
+                implementation_status="VALIDATED")
+    base.update(overrides)
+    return _dep(**base)
 
 
 def _projection(**overrides) -> ProjectionSpec:
@@ -326,9 +337,10 @@ def test_C0_4c_semantic_status_survives_the_red_grade():
 
 
 def test_C0_4d_verified_access_does_not_block():
-    dep = _dep(access_status=ACCESS_VERIFIED, live_delivery=ACCESS_VERIFIED,
-               historical_replay=ACCESS_VERIFIED, update_policy=ACCESS_VERIFIED)
-    record = _run(external_dependencies=(dep,))
+    """AMENDED after grader finding F-3: verified ACCESS alone is no longer sufficient. The adapter
+    must also be built (`implementation_status=VALIDATED`), because access proven and adapter built
+    are different facts and neither implies the other. `_ready_dep()` satisfies both."""
+    record = _run(external_dependencies=(_ready_dep(),))
     assert record["compile_readiness"] == "READY_PENDING_CERTIFICATION"
     assert record["grade"] == "GREEN_PENDING_CERTIFICATION"
 
@@ -522,8 +534,226 @@ def test_C0_7b_the_seam_still_accepts_a_ready_artifact():
     assert "compile_readiness" not in ready
     _refuse_if_not_compile_ready(ready)  # must not raise
 
-    verified = _dep(access_status=ACCESS_VERIFIED, live_delivery=ACCESS_VERIFIED,
-                    historical_replay=ACCESS_VERIFIED, update_policy=ACCESS_VERIFIED)
-    ok = _run(external_dependencies=(verified,))
+    ok = _run(external_dependencies=(_ready_dep(),))
     assert ok["compile_readiness"] == "READY_PENDING_CERTIFICATION"
     _refuse_if_not_compile_ready(ok)  # must not raise
+
+
+# --------------------------------------------------------------------------- #
+# 8. GRADER FINDINGS — every defect the independent adversarial grade landed
+#
+# `GRADE-AR1395-STAGE-C0-BOUNDED-2026-08-21.md`, VERIFIED band 5/10, 14 attacks landed. Each test
+# below is named for the finding it closes and FAILED before the corresponding repair. They are
+# grouped here rather than scattered so the cost of that grade stays legible.
+# --------------------------------------------------------------------------- #
+
+
+def test_F2_extra_gate_key_not_in_declared_values_is_refused():
+    """🛑 F-2, CRITICAL, AND THE WORST DEFECT IN THIS PACKET.
+
+    Coverage was checked in ONE direction only -- `values subset-of gate`. An EXTRA gate key that
+    appears in no declared value therefore passed validation, and the receipt then handed every
+    downstream consumer a mapping containing it. A provider emitting that value would have its
+    consequence read straight out of the gate and acted on.
+
+    A FAIL-OPEN ROUTE, INSIDE THE STRUCTURE WHOSE ENTIRE PURPOSE IS THAT ACTION IS IMPOSSIBLE
+    UNLESS IT WAS DECLARED. Coverage is now an equality, both directions.
+    """
+    bad = {"type": "enum",
+           "values": [OUT_A, OUT_B, UNRESOLVED_OUTPUT],
+           "gate": {OUT_A: ACT_A, OUT_B: ACT_B, UNRESOLVED_OUTPUT: FAIL_CLOSED_ACTION,
+                    "STALE": ACT_A}}
+    with pytest.raises(ValueError, match="EXTERNAL_DEPENDENCY_GATE_UNDECLARED_VALUE"):
+        _run(external_dependencies=(_dep(output_contract=bad),))
+
+
+def test_F2b_the_undeclared_key_never_reaches_the_receipt():
+    """The consequence half of F-2: it is not enough that validation now objects -- no receipt may
+    ever carry a mapping a consumer could act on. Positive witness that the path ran: the valid
+    contract IS emitted, so the absence below is a real absence."""
+    ok = _run(external_dependencies=(_dep(),))
+    gate = ok["external_dependencies"][0]["output_contract"]["gate"]
+    assert set(gate) == {OUT_A, OUT_B, UNRESOLVED_OUTPUT}
+
+
+def test_F3_implementation_status_actually_gates():
+    """F-3, HIGH, novel. `implementation_status` gated NOTHING: verified access plus
+    `NOT_STARTED` reported READY. Provider access proven and adapter built are different facts and
+    neither implies the other -- the E8 fixture carries `NOT_STARTED`, so the moment C1 verified
+    access it would have gone green with no adapter in existence."""
+    dep = _ready_dep(implementation_status="NOT_STARTED")
+    record = _run(external_dependencies=(dep,))
+    assert record["compile_readiness"] == BLOCKED_EXTERNAL_DEPENDENCY
+    assert "implementation_status" in \
+        record["structured_blocker"]["unverified_axes"]["fixture.external_state"]
+
+
+def test_F4_proven_unavailable_is_terminal_and_named_as_such():
+    """F-4, HIGH, novel. `UNAVAILABLE` was reported as `..._ACCESS_UNVERIFIED, terminal: False` --
+    this module's own law, "unverified is not unavailable", inverted inside the code enforcing it.
+    Proven-unavailable is a different verdict and it is TERMINAL."""
+    dep = _ready_dep(access_status="UNAVAILABLE")
+    record = _run(external_dependencies=(dep,))
+    blocker = record["structured_blocker"]
+    assert blocker["reason"] == "UNSUPPORTED_CAPABILITY_REFUSAL"
+    assert blocker["terminal"] is True
+    assert blocker["unavailable_dependency_ids"] == ["fixture.external_state"]
+
+
+def test_F4b_merely_unverified_stays_nonterminal():
+    """The discriminating half of F-4 -- otherwise the repair could simply mark everything
+    terminal, which would be a different false verdict in the opposite direction."""
+    blocker = _run(external_dependencies=(_dep(),))["structured_blocker"]
+    assert blocker["reason"] == "EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED"
+    assert blocker["terminal"] is False
+    assert blocker["unavailable_dependency_ids"] == []
+
+
+@pytest.mark.parametrize("field", ["provider", "artifact", "platform"])
+def test_F5_blank_provider_identity_is_refused(field):
+    """F-5: blank identity left a dependency nobody could route, audit, or version."""
+    with pytest.raises(ValueError, match="EXTERNAL_DEPENDENCY_IDENTITY_EMPTY"):
+        _run(external_dependencies=(_dep(**{field: "   "}),))
+
+
+def test_F5b_arbitrary_semantic_status_is_refused():
+    """F-5: `semantic_status` was free text, so "the source was understood" could be asserted with
+    any string at all -- in the receipt whose whole purpose is keeping that fact honest."""
+    with pytest.raises(ValueError, match="EXTERNAL_DEPENDENCY_SEMANTIC_STATUS_UNKNOWN"):
+        _run(external_dependencies=(_dep(semantic_status="LOOKS_FINE_TO_ME"),))
+
+
+def test_F5c_arbitrary_implementation_status_is_refused():
+    with pytest.raises(ValueError, match="EXTERNAL_DEPENDENCY_IMPL_STATUS_UNKNOWN"):
+        _run(external_dependencies=(_dep(implementation_status="NEARLY_DONE"),))
+
+
+def test_F6_post_validation_mutation_cannot_rewrite_the_receipt():
+    """🛑 F-6. The caller's `output_contract` was stored BY REFERENCE, so mutating it after
+    validation silently rewrote the receipt -- including the gate map, after the fail-closed check
+    had already approved it. VALIDATION A LATER WRITE CAN UNDO IS NOT VALIDATION."""
+    contract = {"type": "enum",
+                "values": [OUT_A, OUT_B, UNRESOLVED_OUTPUT],
+                "gate": {OUT_A: ACT_A, OUT_B: ACT_B, UNRESOLVED_OUTPUT: FAIL_CLOSED_ACTION}}
+    record = _run(external_dependencies=(_dep(output_contract=contract),))
+
+    contract["gate"][UNRESOLVED_OUTPUT] = ACT_A  # the attack: fail-open, after approval
+    assert record["external_dependencies"][0]["output_contract"]["gate"][UNRESOLVED_OUTPUT] == \
+        FAIL_CLOSED_ACTION
+
+
+def test_F6b_consumer_ref_order_does_not_change_the_contract_hash():
+    """F-6b: `consumer_refs` is a set by contract, so two specs listing the same consumers in a
+    different order are the SAME contract -- and were hashing differently, which reads as drift
+    where none exists."""
+    a = _dep(consumer_refs=("entry_sequence[1].action", "stop.rationale"))
+    b = _dep(consumer_refs=("stop.rationale", "entry_sequence[1].action"))
+    assert external_dependency_contract_hash(a) == external_dependency_contract_hash(b)
+
+
+def test_F9_alias_ref_as_consumer_is_refused():
+    """F-9: an alias is a POINTER to a canonical node, carrying `ALIAS_OF_CANONICAL` and never
+    `ACCEPTED`. Gating on the pointer rather than the thing it points at is an indirection the
+    receipt cannot honestly report."""
+    proj_kwargs = dict(
+        canonical_refs=("entry_sequence[0].action", "entry_sequence[1].action",
+                        "stop.rationale"),
+        alias_specs=(AliasSpec(alias_ref="entry_sequence[1].rationale",
+                               canonical_ref="entry_sequence[1].action",
+                               authority="fixture"),),
+    )
+    with pytest.raises(ValueError, match="EXTERNAL_DEPENDENCY_CONSUMER_IS_ALIAS"):
+        _run(external_dependencies=(_dep(consumer_refs=("entry_sequence[1].rationale",)),),
+             **proj_kwargs)
+
+
+def test_F14_duplicate_consumer_refs_are_refused():
+    """F-14: a repeated consumer emitted the dependency once per occurrence, so AR-1385A section 7
+    item 2 -- "preserved exactly once" -- was false for a caller that listed one twice."""
+    with pytest.raises(ValueError, match="EXTERNAL_DEPENDENCY_CONSUMER_DUPLICATE"):
+        _run(external_dependencies=(
+            _dep(consumer_refs=("entry_sequence[1].action", "entry_sequence[1].action")),))
+
+
+def test_A14_non_enum_output_type_is_refused():
+    """Grader attack A14: `output_contract["type"]` was never validated, so a contract could
+    declare any shape while being interpreted as an enum."""
+    bad = {"type": "continuous",
+           "values": [OUT_A, UNRESOLVED_OUTPUT],
+           "gate": {OUT_A: ACT_A, UNRESOLVED_OUTPUT: FAIL_CLOSED_ACTION}}
+    with pytest.raises(ValueError, match="EXTERNAL_DEPENDENCY_OUTPUT_TYPE_UNKNOWN"):
+        _run(external_dependencies=(_dep(output_contract=bad),))
+
+
+def test_F8_the_production_spec_loader_can_declare_a_dependency():
+    """🛑 F-8, HIGH, novel, and the one that made everything else moot.
+
+    `build_projection_run_inputs()` never passed `external_dependencies`, so NO PRODUCTION CALLER
+    COULD DECLARE ONE. The typed dependency and every fail-closed guard behind it were reachable
+    only from tests that build `ProjectionSpec` by hand -- which also made the certification-seam
+    requirement VACUOUSLY unreachable rather than merely unmet.
+
+    ★ EXISTENCE IS NOT WIRING.
+    """
+    from src.engine.extraction.source_graph_projection_spec import (
+        build_projection_run_inputs,
+    )
+
+    fx = _load_fixture()
+    spec = {
+        "spec_version": "source-graph-projection-v2.1",
+        "canonical_refs": list(ALL_REFS),
+        "alias_specs": [],
+        "preserved_metadata_refs": [],
+        "preserved_metadata_records": {},
+        "correction_ledger": {},
+        "graph_edges": [{"from": e.from_ref, "to": e.to_ref, "type": e.edge_type}
+                        for e in GRAPH_EDGES],
+        "graph_roots": list(GRAPH_ROOTS),
+        "allowed_edge_types": ["precedes"],
+        "external_dependencies": [fx["external_dependency"]],
+        "pins": {"transcript_sha256": "x", "extraction_sha256": "y"},
+        "conditions": CONDITIONS,
+        "raw_output_by_ref": {a["condition_ref"]: a["raw_output"] for a in ANSWERS},
+    }
+    inputs = build_projection_run_inputs(spec, TRANSCRIPT, verify_pins=False)
+    deps = inputs.projection.external_dependencies
+    assert len(deps) == 1
+    assert deps[0].dependency_id == "e8.htf_premium_discount"
+
+
+def test_F8b_a_spec_declaring_no_dependency_still_loads_unchanged():
+    """The compatibility half of F-8: the new key is optional, on the same `.get()`-with-default
+    discipline `composition_specs` already uses, so every existing spec keeps loading."""
+    from src.engine.extraction.source_graph_projection_spec import (
+        build_projection_run_inputs,
+    )
+
+    spec = {
+        "spec_version": "source-graph-projection-v2.1",
+        "canonical_refs": list(ALL_REFS),
+        "alias_specs": [],
+        "preserved_metadata_refs": [],
+        "preserved_metadata_records": {},
+        "correction_ledger": {},
+        "graph_edges": [],
+        "graph_roots": [],
+        "allowed_edge_types": [],
+        "pins": {"transcript_sha256": "x", "extraction_sha256": "y"},
+        "conditions": CONDITIONS,
+        "raw_output_by_ref": {a["condition_ref"]: a["raw_output"] for a in ANSWERS},
+    }
+    inputs = build_projection_run_inputs(spec, TRANSCRIPT, verify_pins=False)
+    assert inputs.projection.external_dependencies == ()
+
+
+def test_F10_the_pinned_fixture_gate_is_hash_pinned():
+    """F-10: flipping the two direction consequences in the pinned calibration fixture went
+    UNDETECTED -- nothing pinned the fixture's contract. A fixture that can be silently rewritten
+    is not a fixture."""
+    fx = _load_fixture()
+    dep = ExternalDependencySpec(**fx["external_dependency"])
+    assert external_dependency_contract_hash(dep) == fx["expected_contract_sha256"], (
+        "the calibration fixture's contract changed; if that was intentional, update "
+        "expected_contract_sha256 deliberately and say why"
+    )

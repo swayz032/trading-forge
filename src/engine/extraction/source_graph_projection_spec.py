@@ -33,7 +33,12 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from .source_graph_projection import AliasSpec, GraphEdge, ProjectionSpec
+from .source_graph_projection import (
+    AliasSpec,
+    ExternalDependencySpec,
+    GraphEdge,
+    ProjectionSpec,
+)
 
 
 class SpecPinMismatchError(ValueError):
@@ -156,6 +161,34 @@ def build_projection_run_inputs(
         GraphEdge(from_ref=e["from"], to_ref=e["to"], edge_type=e["type"])
         for e in spec["graph_edges"]
     )
+    # AR-1395 F-8: the loader never passed `external_dependencies`, so NO PRODUCTION CALLER COULD
+    # DECLARE ONE -- the typed dependency was reachable only from tests that construct
+    # `ProjectionSpec` by hand. EXISTENCE IS NOT WIRING: the feature and every fail-closed guard
+    # behind it were, from the production path, unreachable code. Optional key on the same
+    # `.get()`-with-default discipline `composition_specs` and `extra_evidence_by_ref` already use,
+    # so specs that declare none keep loading byte-identically.
+    external_dependencies = tuple(
+        ExternalDependencySpec(
+            dependency_id=d["dependency_id"],
+            consumer_refs=tuple(d["consumer_refs"]),
+            kind=d["kind"],
+            provider=d["provider"],
+            artifact=d["artifact"],
+            platform=d["platform"],
+            display_chart_timeframe=d["display_chart_timeframe"],
+            decision_timeframe=d["decision_timeframe"],
+            configuration=dict(d.get("configuration") or {}),
+            output_contract=dict(d["output_contract"]),
+            semantic_status=d["semantic_status"],
+            access_status=d["access_status"],
+            live_delivery=d["live_delivery"],
+            historical_replay=d["historical_replay"],
+            update_policy=d["update_policy"],
+            implementation_status=d["implementation_status"],
+            expected_contract_sha256=d.get("expected_contract_sha256"),
+        )
+        for d in (spec.get("external_dependencies") or ())
+    )
     projection = ProjectionSpec(
         canonical_refs=tuple(spec["canonical_refs"]),
         alias_specs=alias_specs,
@@ -164,6 +197,7 @@ def build_projection_run_inputs(
         correction_ledger=dict(spec["correction_ledger"]),
         graph_edges=graph_edges,
         graph_roots=tuple(spec["graph_roots"]),
+        external_dependencies=external_dependencies,
     )
     extra_evidence_by_ref = {
         ref: tuple(items) for ref, items in (spec.get("extra_evidence_by_ref") or {}).items()

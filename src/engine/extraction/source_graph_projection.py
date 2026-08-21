@@ -72,6 +72,7 @@ import hashlib
 import json
 import re
 from collections.abc import Sequence
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -131,6 +132,28 @@ FAIL_CLOSED_ACTION = "NO_TRADE"
 # what produced a false terminal source refusal.
 BLOCKED_EXTERNAL_DEPENDENCY = "BLOCKED_EXTERNAL_DEPENDENCY"
 READY_PENDING_CERTIFICATION = "READY_PENDING_CERTIFICATION"
+
+# AR-1395 F-5: the semantic axis is a CLOSED vocabulary. It was free text, so "the source was
+# understood" could be asserted with an arbitrary string in a receipt whose whole purpose is to keep
+# that fact honest.
+SEMANTIC_RESOLVED = "MULTIMODAL_RESOLVED"
+SEMANTIC_UNRESOLVED = "VISUAL_UNRESOLVED"
+SEMANTIC_CONFLICT = "SOURCE_CONFLICT"
+_SEMANTIC_STATUSES = frozenset({SEMANTIC_RESOLVED, SEMANTIC_UNRESOLVED, SEMANTIC_CONFLICT})
+
+# AR-1395 F-3: the implementation axis GATES. It previously gated nothing, so a dependency with a
+# verified provider and NO ADAPTER BUILT reported READY. Access proven and adapter built are two
+# different facts and neither implies the other.
+IMPL_NOT_STARTED = "NOT_STARTED"
+IMPL_IN_PROGRESS = "IN_PROGRESS"
+IMPL_VALIDATED = "VALIDATED"
+_IMPL_STATUSES = frozenset({IMPL_NOT_STARTED, IMPL_IN_PROGRESS, IMPL_VALIDATED})
+
+# AR-1395 F-4: a provider PROVEN UNAVAILABLE is a different verdict from one merely unmeasured, and
+# it is TERMINAL. Reporting it as "access unverified, terminal false" inverted this module's own
+# stated principle -- "unverified is not unavailable" -- inside the code protecting it.
+BLOCKER_ACCESS_UNVERIFIED = "EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED"
+BLOCKER_CAPABILITY_UNAVAILABLE = "UNSUPPORTED_CAPABILITY_REFUSAL"
 
 # The axes that must each be independently proven before an external dependency is executable.
 # Access is not one fact: live delivery, historical replay and update policy each separately gate a
@@ -214,7 +237,10 @@ def external_dependency_contract_hash(dep: ExternalDependencySpec) -> str:
     refuse.
     """
     record = {k: v for k, v in asdict(dep).items() if k != "expected_contract_sha256"}
-    record["consumer_refs"] = list(dep.consumer_refs)
+    # AR-1395 F-6b: SORTED. `consumer_refs` is a set by contract, so two specs differing only in the
+    # order they happen to list the same consumers are the SAME contract -- and were hashing
+    # differently, which would read as drift where none exists.
+    record["consumer_refs"] = sorted(dep.consumer_refs)
     return _canonical_json_sha256(record)
 
 
@@ -451,6 +477,7 @@ def validate_external_dependencies(
     dependencies: Sequence[ExternalDependencySpec],
     valid_refs: set[str],
     metadata_refs: set[str],
+    alias_refs: set[str] | None = None,
 ) -> dict:
     """Structural validation of typed external decision dependencies. Refuses by raising.
 
@@ -463,8 +490,10 @@ def validate_external_dependencies(
     whether anything blocks. Readiness is reported, not raised, because an unproven dependency is
     a legitimate nonterminal state -- the caller turns it into a grade.
     """
+    alias_refs = alias_refs or set()
     seen: set[str] = set()
     unverified: dict[str, list[str]] = {}
+    unavailable: list[str] = []
     records: list[dict] = []
 
     for dep in dependencies:
@@ -478,6 +507,12 @@ def validate_external_dependencies(
         if not dep.consumer_refs:
             raise ValueError(
                 f"EXTERNAL_DEPENDENCY_CONSUMERS_EMPTY: {dep.dependency_id!r} gates nothing")
+        # AR-1395 F-14: consumer_refs is a SET. A repeated ref emitted the dependency once per
+        # occurrence, so "preserved exactly once" was false for a caller that listed one twice.
+        if len(set(dep.consumer_refs)) != len(dep.consumer_refs):
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_CONSUMER_DUPLICATE: {dep.dependency_id!r} lists a consumer "
+                f"more than once; consumer_refs is a set, not a sequence")
         for ref in dep.consumer_refs:
             if ref not in valid_refs:
                 raise ValueError(
@@ -488,6 +523,13 @@ def validate_external_dependencies(
                     f"EXTERNAL_DEPENDENCY_CONSUMER_NOT_EXECUTABLE: {dep.dependency_id!r} names "
                     f"{ref!r}, which is excluded from the executable denominator. A required gate "
                     f"may not be attached to preserved commentary.")
+            # AR-1395 F-9: an alias is a POINTER to a canonical node, not an executable node of its
+            # own -- it carries ALIAS_OF_CANONICAL, never ACCEPTED. Gating on the pointer instead of
+            # the thing it points at is an indirection the receipt cannot honestly report.
+            if ref in alias_refs:
+                raise ValueError(
+                    f"EXTERNAL_DEPENDENCY_CONSUMER_IS_ALIAS: {dep.dependency_id!r} names {ref!r}, "
+                    f"which is an alias of a canonical ref. Name the canonical ref instead.")
 
         if dep.kind not in _EXTERNAL_DEPENDENCY_KINDS:
             raise ValueError(f"EXTERNAL_DEPENDENCY_KIND_UNKNOWN: {dep.kind!r}")
@@ -495,6 +537,18 @@ def validate_external_dependencies(
             if getattr(dep, axis) not in _ACCESS_STATUSES:
                 raise ValueError(
                     f"EXTERNAL_DEPENDENCY_STATUS_UNKNOWN: {axis}={getattr(dep, axis)!r}")
+        # AR-1395 F-5: closed vocabularies, and non-empty provider identity. An unvalidated
+        # semantic_status let "the source was understood" be asserted as free text; blank
+        # provider/artifact/platform left a dependency nobody could route or audit.
+        if dep.semantic_status not in _SEMANTIC_STATUSES:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_SEMANTIC_STATUS_UNKNOWN: {dep.semantic_status!r}")
+        if dep.implementation_status not in _IMPL_STATUSES:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_IMPL_STATUS_UNKNOWN: {dep.implementation_status!r}")
+        for field in ("provider", "artifact", "platform"):
+            if not (getattr(dep, field) or "").strip():
+                raise ValueError(f"EXTERNAL_DEPENDENCY_IDENTITY_EMPTY: {field}")
 
         for field in ("display_chart_timeframe", "decision_timeframe"):
             if not (getattr(dep, field) or "").strip():
@@ -508,18 +562,38 @@ def validate_external_dependencies(
         contract = dep.output_contract or {}
         values = list(contract.get("values") or ())
         gate = dict(contract.get("gate") or {})
+        if contract.get("type") != "enum":
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_OUTPUT_TYPE_UNKNOWN: {dep.dependency_id!r} declares type "
+                f"{contract.get('type')!r}; only 'enum' is supported")
         if not values:
             raise ValueError(
                 f"EXTERNAL_DEPENDENCY_OUTPUT_VALUES_EMPTY: {dep.dependency_id!r}")
+        if len(set(values)) != len(values):
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_OUTPUT_VALUE_DUPLICATE: {dep.dependency_id!r}")
         if UNRESOLVED_OUTPUT not in values:
             raise ValueError(
                 f"EXTERNAL_DEPENDENCY_UNRESOLVED_VALUE_MISSING: {dep.dependency_id!r} declares no "
                 f"{UNRESOLVED_OUTPUT!r} value, so it cannot express provider silence")
-        missing = [v for v in values if v not in gate]
+
+        # 🛑 AR-1395 F-2, A CRITICAL FAIL-OPEN HOLE THE INDEPENDENT GRADER FOUND.
+        # This checked `values subset-of gate` ONLY. An EXTRA gate key that appears in no declared
+        # value therefore passed -- and the receipt then handed every downstream consumer a mapping
+        # containing it. A provider emitting that value would be read straight out of the gate and
+        # acted on, in the one structure whose entire purpose is that acting is impossible unless it
+        # was declared. Coverage must be an EQUALITY, not an inclusion, in both directions.
+        missing = sorted(v for v in values if v not in gate)
         if missing:
             raise ValueError(
                 f"EXTERNAL_DEPENDENCY_GATE_INCOMPLETE: {dep.dependency_id!r} declares "
                 f"{missing!r} with no consequence")
+        undeclared = sorted(k for k in gate if k not in set(values))
+        if undeclared:
+            raise ValueError(
+                f"EXTERNAL_DEPENDENCY_GATE_UNDECLARED_VALUE: {dep.dependency_id!r} maps "
+                f"{undeclared!r}, which is not a declared output value. A consequence for a value "
+                f"the contract never declares is a route to action nobody authorised.")
         if gate[UNRESOLVED_OUTPUT] != FAIL_CLOSED_ACTION:
             raise ValueError(
                 f"EXTERNAL_DEPENDENCY_FAIL_OPEN: {dep.dependency_id!r} maps {UNRESOLVED_OUTPUT!r} "
@@ -533,8 +607,16 @@ def validate_external_dependencies(
                 f"{dep.expected_contract_sha256!r}, canonical serialization gives {computed!r}")
 
         axes = [a for a in _ACCESS_AXES if getattr(dep, a) != ACCESS_VERIFIED]
+        # AR-1395 F-3: implementation is its own blocking axis. Provider access proven and adapter
+        # built are different facts; neither implies the other, and only one of them was gating.
+        if dep.implementation_status != IMPL_VALIDATED:
+            axes.append("implementation_status")
         if axes:
             unverified[dep.dependency_id] = axes
+        # AR-1395 F-4: a provider PROVEN UNAVAILABLE is terminal, and distinguishing it from merely
+        # unmeasured is the whole point of the vocabulary.
+        if any(getattr(dep, a) == ACCESS_UNAVAILABLE for a in _ACCESS_AXES):
+            unavailable.append(dep.dependency_id)
 
         records.append({
             "dependency_id": dep.dependency_id,
@@ -545,8 +627,12 @@ def validate_external_dependencies(
             "platform": dep.platform,
             "display_chart_timeframe": dep.display_chart_timeframe,
             "decision_timeframe": dep.decision_timeframe,
-            "configuration": dep.configuration,
-            "output_contract": dep.output_contract,
+            # AR-1395 F-6: DEEP-COPIED. These were stored by reference, so a caller mutating its own
+            # dict after validation silently rewrote the receipt -- including the gate map, after the
+            # fail-closed check had already approved it. Validation that a later write can undo is
+            # not validation.
+            "configuration": deepcopy(dep.configuration),
+            "output_contract": deepcopy(dep.output_contract),
             "semantic_status": dep.semantic_status,
             "access_status": dep.access_status,
             "live_delivery": dep.live_delivery,
@@ -556,7 +642,13 @@ def validate_external_dependencies(
             "contract_sha256": computed,
         })
 
-    return {"records": records, "unverified_axes": unverified, "blocked": bool(unverified)}
+    return {
+        "records": records,
+        "unverified_axes": unverified,
+        "unavailable_dependency_ids": sorted(unavailable),
+        "blocked": bool(unverified),
+        "terminal": bool(unavailable),
+    }
 
 
 def _validate_projection_spec(
@@ -976,6 +1068,7 @@ def run_projection(
         dependencies=list(projection.external_dependencies),
         valid_refs=set(text_by_ref) | {a.alias_ref for a in projection.alias_specs},
         metadata_refs=set(projection.preserved_metadata_refs),
+        alias_refs={a.alias_ref for a in projection.alias_specs},
     )
 
     grade = (
@@ -994,14 +1087,18 @@ def run_projection(
             else READY_PENDING_CERTIFICATION
         )
         if external_report["blocked"]:
+            # AR-1395 F-4: which verdict this is depends on WHY it blocks. Merely unmeasured is
+            # nonterminal -- the provider may well expose the value and nobody has looked. PROVEN
+            # UNAVAILABLE is terminal and must say so. Reporting the second as the first inverted
+            # this module's own "unverified is not unavailable" law inside the code enforcing it.
+            terminal = external_report["terminal"]
             external_block["structured_blocker"] = {
-                "reason": "EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED",
-                # NONTERMINAL on purpose. Unverified is not unavailable: the provider may well
-                # expose the value and nobody has measured it yet. A terminal capability refusal is
-                # a different, later verdict and must never be reached by assumption.
-                "terminal": False,
+                "reason": (BLOCKER_CAPABILITY_UNAVAILABLE if terminal
+                           else BLOCKER_ACCESS_UNVERIFIED),
+                "terminal": terminal,
                 "dependency_ids": sorted(external_report["unverified_axes"]),
                 "unverified_axes": external_report["unverified_axes"],
+                "unavailable_dependency_ids": external_report["unavailable_dependency_ids"],
             }
 
     return {

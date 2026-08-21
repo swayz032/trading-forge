@@ -17,6 +17,9 @@
   },
   "evidence_note": "The two frames above are the accepted VI-E8-3A evidence: the chart header reads 15 while the provider panel's [TF] row reads 4H -> Premium (GBP/AUD) and 4H -> Discount (NZD/USD), above the taught checklist rows including HTF Alignment. Magnifications: frames/zoom_vi3_cp_panel_premium.png, frames/zoom_vi3_cp_panel_discount.png in ../visual-intelligence-e8-round1/E8Wg6tFPYjo/. All hashed in that directory's artifact-manifest.sha256.",
 
+  "expected_contract_sha256": "13055537dcfc1dd0e35306a5bc5754c4189897a7238313f2f519eef2a09fe0a5",
+  "expected_contract_sha256_note": "AR-1395 grader finding F-10: flipping the two direction consequences in this fixture went UNDETECTED, because nothing pinned its contract. A fixture that can be silently rewritten is not a fixture. src/engine/tests/test_external_dependency_projection.py::test_F10_the_pinned_fixture_gate_is_hash_pinned recomputes this from the module's own canonical serialization and refuses a mismatch. If this fixture is changed deliberately, update this value deliberately and say why.",
+
   "required_dependency_ids": ["e8.htf_premium_discount"],
   "required_dependency_note": "AR-1385A section 7 item 15. The fixture NAMES the dependency it requires so that deleting the broken gate is detectable. Without this, the cheapest route past any external blocker would be to drop the dependency and go green -- a strategy must never become less strict by losing a gate it could not satisfy.",
 

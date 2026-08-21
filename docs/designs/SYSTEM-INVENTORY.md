@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `51ff416d8d3124722cc46f5c5dfdec60ed9d8c50`  (worktree DIRTY at generation time)
+> Generated at commit `01154a27b4e2214b2a9ae4b8340ab7442c516cf8`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 315 | 414 | 130531 | 2040 |
+| `src/` | Python | 315 | 414 | 130662 | 2040 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -1193,6 +1193,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `list_patterns` | function | `src/engine/compiler/pattern_library.py:233` | 2 | unique |
 | `naive_leaky_slice` | function | `src/engine/context/htf_availability.py:73` | 2 | unique |
 | `record_attempt` | function | `src/engine/extraction/isolated_fallback_law.py:190` | 2 | unique |
+| `build_projection_run_inputs` | function | `src/engine/extraction/source_graph_projection_spec.py:132` | 2 | unique |
 | `LegAInputs` | class | `src/engine/forensics/calibration_battery.py:57` | 2 | unique |
 | `MutationCase` | class | `src/engine/forensics/calibration_battery.py:73` | 2 | unique |
 | `A14ConditioningVector` | class | `src/engine/nemo_a14_bridge.py:24` | 2 | unique |
@@ -1293,8 +1294,7 @@ table name in `src/server/db/schema.ts`.  Nothing imports the dump, which is why
 | `IsolatedDispatcher` | class | `src/engine/extraction/isolated_dispatch.py:57` | 1 | unique |
 | `preflight_real_queue` | function | `src/engine/extraction/isolated_dispatch.py:104` | 1 | unique |
 | `substitute_isolated_answer` | function | `src/engine/extraction/isolated_fallback_law.py:218` | 1 | unique |
-| `build_projection_run_inputs` | function | `src/engine/extraction/source_graph_projection_spec.py:127` | 1 | unique |
-| `load_spec_json` | function | `src/engine/extraction/source_graph_projection_spec.py:61` | 1 | unique |
+| `load_spec_json` | function | `src/engine/extraction/source_graph_projection_spec.py:66` | 1 | unique |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:848` | 1 | unique |
 | `enforcement_status` | function | `src/engine/family_meta_enforcement.py:536` | 1 | unique |
 | `reset_enforcement_cache` | function | `src/engine/family_meta_enforcement.py:613` | 1 | unique |
@@ -1716,13 +1716,13 @@ _...323 more omitted from this table._
 | `preflight_real_queue` | function | `src/engine/extraction/isolated_dispatch.py:104` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `record_attempt` | function | `src/engine/extraction/isolated_fallback_law.py:190` | no non-test reference outside its own definition; 2 test file(s) do reference it |
 | `substitute_isolated_answer` | function | `src/engine/extraction/isolated_fallback_law.py:218` | no non-test reference outside its own definition; 1 test file(s) do reference it |
-| `SpecPinMismatchError` | class | `src/engine/extraction/source_graph_projection_spec.py:39` | defining module is not reachable from any measured entry point |
-| `SpecShapeError` | class | `src/engine/extraction/source_graph_projection_spec.py:44` | defining module is not reachable from any measured entry point |
-| `_sha256` | function | `src/engine/extraction/source_graph_projection_spec.py:57` | defining module is not reachable from any measured entry point |
-| `load_spec_json` | function | `src/engine/extraction/source_graph_projection_spec.py:61` | defining module is not reachable from any measured entry point |
-| `verify_spec_pins` | function | `src/engine/extraction/source_graph_projection_spec.py:76` | defining module is not reachable from any measured entry point |
-| `ProjectionRunInputs` | class | `src/engine/extraction/source_graph_projection_spec.py:99` | defining module is not reachable from any measured entry point |
-| `build_projection_run_inputs` | function | `src/engine/extraction/source_graph_projection_spec.py:127` | defining module is not reachable from any measured entry point |
+| `SpecPinMismatchError` | class | `src/engine/extraction/source_graph_projection_spec.py:44` | defining module is not reachable from any measured entry point |
+| `SpecShapeError` | class | `src/engine/extraction/source_graph_projection_spec.py:49` | defining module is not reachable from any measured entry point |
+| `_sha256` | function | `src/engine/extraction/source_graph_projection_spec.py:62` | defining module is not reachable from any measured entry point |
+| `load_spec_json` | function | `src/engine/extraction/source_graph_projection_spec.py:66` | defining module is not reachable from any measured entry point |
+| `verify_spec_pins` | function | `src/engine/extraction/source_graph_projection_spec.py:81` | defining module is not reachable from any measured entry point |
+| `ProjectionRunInputs` | class | `src/engine/extraction/source_graph_projection_spec.py:104` | defining module is not reachable from any measured entry point |
+| `build_projection_run_inputs` | function | `src/engine/extraction/source_graph_projection_spec.py:132` | defining module is not reachable from any measured entry point |
 | `dispose_inventory` | function | `src/engine/extraction/spec_producer.py:848` | no non-test reference outside its own definition; 1 test file(s) do reference it |
 | `describe` | function | `src/engine/extraction/term_equivalence.py:138` | no non-test reference outside its own definition; 726 test file(s) do reference it |
 | `materialize_ambiguous_reference` | function | `src/engine/extraction/tier2_design_report.py:93` | no non-test reference outside its own definition |
@@ -4266,20 +4266,20 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_attached_support` | function | `src/engine/extraction/source_fidelity_guard.py:183` | 0 | unique |
 | `_numeric_tokens` | function | `src/engine/extraction/source_fidelity_guard.py:210` | 0 | unique |
 | `check_condition_fidelity` | function | `src/engine/extraction/source_fidelity_guard.py:230` | 3 | unique |
-| `AliasSpec` | class | `src/engine/extraction/source_graph_projection.py:142` | 4 | unique |
-| `GraphEdge` | class | `src/engine/extraction/source_graph_projection.py:149` | 2 | unique |
-| `ExternalDependencySpec` | class | `src/engine/extraction/source_graph_projection.py:156` | 1 | unique |
-| `_canonical_json_sha256` | function | `src/engine/extraction/source_graph_projection.py:192` | 0 | unique |
-| `external_dependency_contract_hash` | function | `src/engine/extraction/source_graph_projection.py:208` | 0 | unique |
-| `ProjectionSpec` | class | `src/engine/extraction/source_graph_projection.py:222` | 4 | unique |
-| `_claim_role` | function | `src/engine/extraction/source_graph_projection.py:253` | 1 | unique |
-| `_eligible_for_preserved_metadata` | function | `src/engine/extraction/source_graph_projection.py:278` | 0 | unique |
-| `_sha256` | function | `src/engine/extraction/source_graph_projection.py:289` | 4 | AMBIG |
-| `_validate_preserved_metadata_schema` | function | `src/engine/extraction/source_graph_projection.py:304` | 0 | unique |
-| `validate_graph_edges` | function | `src/engine/extraction/source_graph_projection.py:360` | 0 | unique |
-| `validate_external_dependencies` | function | `src/engine/extraction/source_graph_projection.py:450` | 0 | unique |
-| `_validate_projection_spec` | function | `src/engine/extraction/source_graph_projection.py:562` | 0 | unique |
-| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:661` | 6 | unique |
+| `AliasSpec` | class | `src/engine/extraction/source_graph_projection.py:165` | 4 | unique |
+| `GraphEdge` | class | `src/engine/extraction/source_graph_projection.py:172` | 2 | unique |
+| `ExternalDependencySpec` | class | `src/engine/extraction/source_graph_projection.py:179` | 2 | unique |
+| `_canonical_json_sha256` | function | `src/engine/extraction/source_graph_projection.py:215` | 0 | unique |
+| `external_dependency_contract_hash` | function | `src/engine/extraction/source_graph_projection.py:231` | 0 | unique |
+| `ProjectionSpec` | class | `src/engine/extraction/source_graph_projection.py:248` | 4 | unique |
+| `_claim_role` | function | `src/engine/extraction/source_graph_projection.py:279` | 1 | unique |
+| `_eligible_for_preserved_metadata` | function | `src/engine/extraction/source_graph_projection.py:304` | 0 | unique |
+| `_sha256` | function | `src/engine/extraction/source_graph_projection.py:315` | 4 | AMBIG |
+| `_validate_preserved_metadata_schema` | function | `src/engine/extraction/source_graph_projection.py:330` | 0 | unique |
+| `validate_graph_edges` | function | `src/engine/extraction/source_graph_projection.py:386` | 0 | unique |
+| `validate_external_dependencies` | function | `src/engine/extraction/source_graph_projection.py:476` | 0 | unique |
+| `_validate_projection_spec` | function | `src/engine/extraction/source_graph_projection.py:654` | 0 | unique |
+| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:753` | 6 | unique |
 | `SpanCollision` | class | `src/engine/extraction/span_collision.py:41` | 0 | unique |
 | `role_of` | function | `src/engine/extraction/span_collision.py:49` | 0 | unique |
 | `_overlap` | function | `src/engine/extraction/span_collision.py:55` | 0 | unique |
