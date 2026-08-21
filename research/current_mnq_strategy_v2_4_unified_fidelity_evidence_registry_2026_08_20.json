@@ -114,7 +114,22 @@
     "edge_evidence_eligible":false,
     "custody_receipt":"research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md",
     "method":"sha256sum plus ffprobe on each file; frames sampled with ffmpeg and read visually. No evidence bytes are committed; only names, hashes, durations and semantic roles.",
-    "audio_is_silent_across_the_whole_corpus":"volumedetect on every video returns max_volume between -66 and -67 dB (item 5 spot-checked at t=600, 7000 and 13500). There is NO narration anywhere in the video corpus, so no role can ever be recovered from a soundtrack. Every role is therefore either OPERATOR_STATED in chat or DERIVED from frames - there is no third source. [MEASURED 2026-08-21]",
+    "audio_disposition": {
+      "claim":"No video in the corpus carries spoken explanation, so no role can be recovered from a soundtrack. Every role is either OPERATOR_STATED in chat or DERIVED from frames - there is no third source.",
+      "retracted_overclaim":"An earlier version of this field said the corpus is silent and that there is NO audio anywhere, based on volumedetect over THREE 60-second windows of item 5. That was an absence claim over ~4h of footage licensed by 3 minutes of it, and MY OWN INSTRUMENT REFUTED IT on re-measurement. Retracted and replaced by the full-track measurement below. Self-caught before the independent grader re-ran.",
+      "method":"volumedetect over the COMPLETE audio track of all 8 files (-vn, no video decode; the 3h53m file measures in 6.3s, so the earlier sampling was never necessary), plus silencedetect at -50dB / 0.3s minimum to locate every non-silent span. [MEASURED 2026-08-21]",
+      "silent_end_to_end_7_of_8":"mean_volume -83 to -84 dB, max_volume -65.7 to -71.2 dB. Dither-floor noise, no content.",
+      "the_one_exception":{
+        "file":"Desktop 2026.08.20 - 20.37.47.04.mp4",
+        "note":"THIS IS ONE OF THE THREE SEALED VIDEOS and it is NOT silent. Full-track mean_volume -52.9 dB, max_volume -12.2 dB, integrated loudness -22.5 LUFS.",
+        "audible_span_seconds":[571.13,572.30],
+        "audible_duration_seconds":1.17,
+        "rest_of_file":"silent from 0.02 to 571.13 and from 572.30 to 613.64",
+        "reading":"A single 1.17-second burst near the end of a 613.7s file. 1.17 seconds cannot carry a spoken explanation; consistent with a UI or notification sound. HYPOTHESIS, not measured as such - the content was not transcribed and was NOT sent to any external service.",
+        "consequence":"The no-spoken-explanation claim survives, but only because 1.17s is too short to be narration - NOT because the corpus is silent. Those are different claims and the earlier field conflated them."
+      },
+      "positive_control":"A synthesised tone at speech level measures -36.1 dB on the same detector versus -65 to -71 dB for the silent files, so the instrument discriminates content from floor."
+    },
     "enumeration_status":{
       "Desktop 2026.08.19 - 19.49.23.03.mp4":"31.8s, 9 frames - role is OPERATOR_STATED so enumeration is not load-bearing",
       "Desktop 2026.08.15 - 17.13.57.01.mp4":"14027.6s, 9 frames - UNENUMERATED, not citable for any specific rule",

@@ -268,8 +268,19 @@ def test_enumeration_status_is_declared_for_every_added_video(registry):
     six = by_name["Desktop 2026.08.16 - 23.06.30.02.mp4"]
     assert six["enumerated"] is True
     assert six["enumeration_method"].strip()
-    # No soundtrack exists anywhere, so no role may ever cite one.
-    assert "NO narration anywhere" in ext["audio_is_silent_across_the_whole_corpus"]
+    # The audio disposition must keep its retraction and its exception on record.
+    a = ext["audio_disposition"]
+    assert a["retracted_overclaim"].strip(), "the retracted overclaim may not be tidied away"
+    assert "COMPLETE audio track of all 8" in a["method"], (
+        "the claim must rest on full-track measurement, not sampling"
+    )
+    exc = a["the_one_exception"]
+    assert exc["file"] == "Desktop 2026.08.20 - 20.37.47.04.mp4"
+    assert exc["audible_duration_seconds"] == 1.17
+    assert "HYPOTHESIS" in exc["reading"], (
+        "the reading of the burst is unverified and must stay labelled as such"
+    )
+    assert a["positive_control"].strip(), "an absence claim owes a positive control"
 
 
 def test_the_independent_grade_is_recorded_with_its_confirmed_defects(registry):
