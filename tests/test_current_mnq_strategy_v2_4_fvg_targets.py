@@ -19,9 +19,8 @@ def test_adapter_uses_classic_native_three_candle_fvg_and_completed_15m_only():
     q = h15([
         (99.5, 100.0, 99.0, 99.75),
         (100.0, 102.0, 99.75, 101.75),
-        (101.25, 102.5, 101.0, 102.0),  # low 101 > bar0 high 100 => bullish FVG 100-101
+        (101.25, 102.5, 101.0, 102.0),
     ])
-    # Third bar is not known until 09:45 ET.
     assert fvg.active_15m_fvgs(q, pd.Timestamp("2026-08-17 09:44:59", tz="America/New_York")) == []
     out = fvg.active_15m_fvgs(q, pd.Timestamp("2026-08-17 09:45:00", tz="America/New_York"))
     assert len(out) == 1
@@ -35,14 +34,14 @@ def test_native_fvg_stops_being_target_after_later_15m_reentry():
         (99.5, 100.0, 99.0, 99.75),
         (100.0, 102.0, 99.75, 101.75),
         (101.25, 102.5, 101.0, 102.0),
-        (102.0, 103.0, 100.5, 102.5),  # re-enters 100-101 zone
+        (102.0, 103.0, 100.5, 102.5),
     ])
     out = fvg.active_15m_fvgs(q, pd.Timestamp("2026-08-17 10:00:00", tz="America/New_York"))
     assert out == []
 
 
-def _loc(name, lo, hi, source="WICK_ZONE", quality=0.8):
-    return tgt.core.Location(name, "B", lo, hi, (lo + hi) / 2, source, quality, 0, False, None)
+def _loc(name, lo, hi, source="WICK_ZONE", quality=0.8, zone=None):
+    return tgt.core.Location(name, "B", lo, hi, (lo + hi) / 2, source, quality, 0, False, zone)
 
 
 def _dest(name, lo, hi, kind, contact, raw, meaningful=True, quality=0.8):
@@ -82,15 +81,15 @@ def test_first_reaction_too_close_cancels_trade_instead_of_skipping_to_far_fvg()
 
 
 def test_wide_fvg_is_ranked_by_near_edge_not_midpoint(monkeypatch):
-    # FVG starts first at 110 but has midpoint 130. Cluster starts later at 112
-    # and midpoint 113. The trader's rule says FVG is still first reaction.
+    # FVG starts first at 110 but has midpoint 130. A genuine reaction cluster
+    # starts later at 112. The trader's rule says FVG is still first reaction.
     p = tgt.core.Params(min_room_r=0.25)
-    monkeypatch.setattr(tgt.core, "build_zones", lambda *a, **k: [])
+    cluster_zone = SimpleNamespace(touches=2)
+    cluster = _loc("cluster", 112, 114, "WICK_ZONE", 0.8, cluster_zone)
+    monkeypatch.setattr(tgt.core, "build_zones", lambda *a, **k: [cluster_zone])
     monkeypatch.setattr(tgt.core, "enrich_confluence", lambda z, *a, **k: z)
-    monkeypatch.setattr(tgt.core, "zone_locations", lambda z: [])
-    monkeypatch.setattr(tgt.core, "make_key_locations", lambda *a, **k: [
-        _loc("cluster", 112, 114, "PDH", 0.8)
-    ])
+    monkeypatch.setattr(tgt.core, "zone_locations", lambda z: [cluster])
+    monkeypatch.setattr(tgt, "zone_state_at_v24", lambda z, *a, **k: z)
     monkeypatch.setattr(tgt, "active_15m_fvgs", lambda *a, **k: [
         SimpleNamespace(lo=110.0, hi=150.0, mid=130.0,
                         formed_at=pd.Timestamp("2026-08-17 09:45", tz="America/New_York"))
@@ -117,8 +116,6 @@ def test_meaningful_15m_reaction_zone_can_block_target_without_authorizing_entry
         source="WICK_ZONE", confluence=0,
         state=tgt.core.ZoneState.ACTIVE_RESISTANCE,
     )
-    # It is meaningful structure but fails the stricter fresh-entry rule because
-    # it has neither confluence nor high_zone_quality.
     assert tgt.core.valid_location(z, p) is False
     monkeypatch.setattr(tgt, "active_15m_fvgs", lambda *a, **k: [])
     monkeypatch.setattr(tgt.core, "build_zones", lambda *a, **k: [])
