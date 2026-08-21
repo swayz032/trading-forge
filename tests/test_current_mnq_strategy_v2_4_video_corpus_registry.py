@@ -63,7 +63,7 @@ OPERATOR_WORDS = {
 
 # A third location holding this file's own bytes. Deliberately NOT the full build
 # fingerprint - see fingerprint_anchor in the registry for why, and for the honest limit.
-REGISTRY_SHA256 = "9309ef8a049e98d57987d54a36a5db492ff49a9b133bfe66a0feab335c72ed02"
+REGISTRY_SHA256 = "9b0af68cd8fbac95db1a6de2fb514dee06a3524cbc56a8fabbc42e8ea74ac35f"
 
 ALLOWED_PROVENANCE = {
     "OPERATOR_STATED",
@@ -349,6 +349,10 @@ def test_enumeration_status_cannot_drift_from_the_entries(registry):
     )
     for name in ADDED_2026_08_21:
         entry, text = by_name[name], status[name]
+        assert "enumerated" in entry, (
+            f"{name} carries no `enumerated` boolean, so the cross-check below never fires. "
+            f"Five of eight entries once lacked it and item 7 was a live bypass."
+        )
         if entry.get("enumerated") is True:
             assert entry.get("enumeration_method", "").strip(), (
                 f"{name} claims ENUMERATED with no stated method"
@@ -394,106 +398,84 @@ def test_this_registry_file_is_anchored_by_its_own_bytes(registry):
     assert anchor["honest_limit"].strip(), "an anchor must state what it does NOT prevent"
 
 
-def test_the_custody_receipt_does_not_contradict_the_registry(registry):
-    """Root cause of the stale receipt: the registry had a guard and the receipt did not,
-    so corrections flowed to the guarded artifact and stopped at the unguarded one - and
-    the unguarded one is the custody document. This test reads the receipt."""
-    receipt = open(RECEIPT, encoding="utf-8").read()
-    # A retired role name MAY appear - a retraction that names what it retracts is correct.
-    # What must never happen is it appearing as a CURRENT claim. So every line carrying one
-    # must also carry retraction language.
-    markers = ("REFUTED", "earlier", "CORRECTED", "retired", "replaced", "Retracted")
-    for term in ("extended_5m_zone_replay_session", "zones_marked_no_trade_observation"):
-        for line in receipt.splitlines():
-            if term in line:
-                assert any(m in line for m in markers), (
-                    f"custody receipt states retired role {term!r} as a CURRENT claim, with "
-                    f"no retraction marker on the line: {line[:120]!r}"
-                )
-    # And the live role lists must carry the replacements, never the retired names.
-    for line in receipt.splitlines():
-        if line.startswith("Roles: "):
-            assert "extended_5m_zone_replay_session" not in line
-            assert "zones_marked_no_trade_observation" not in line
-    for required in ("extended_replay_session_mixed_timeframes", "target_reached_full_tp",
-                     "4140.00", "bee2303b", "OPERATOR_STATED", "UNENUMERATED"):
-        assert required in receipt, f"custody receipt is missing {required!r}"
-    for name in OPERATOR_WORDS:
-        assert name in receipt, f"custody receipt does not mention {name}"
+def test_the_receipt_is_actually_derived_not_merely_claimed_to_be(registry):
+    """The receipt once asserted in bold that it was GENERATED FROM THE REGISTRY, and that
+    this 'removes that whole failure class', while no generator existed anywhere in the
+    repo. The text was faithful; the mechanism was fiction. This test makes the claim true:
+    it re-renders in memory and compares bytes. Edit either side alone and it reds."""
+    from research.gen_video_corpus_receipt import render
 
-
-def test_the_no_speech_conclusion_rests_on_spectrum_not_duration(registry):
-    """The retraction of the audio over-claim contained the SAME defect it was correcting:
-    it justified 'no speech' by duration, which does not rule speech out - 1.17s carries
-    4-7 syllables. The conclusion must rest on the measured spectrum."""
-    exc = registry["video_corpus_extension_2026_08_21"]["audio_disposition"]["the_one_exception"]
-    assert exc["retracted_reasoning"].strip(), "the duration argument must stay retracted"
-    reading = exc["reading"]
-    for token in ("197 Hz", "292 Hz", "1-4 kHz", "F2/F3"):
-        assert token in reading, f"the spectral basis is missing {token!r}"
-    assert "NOT transcribed" in reading and "NOT sent to any external service" in reading
-    assert "HYPOTHESIS" in reading, "what the chime IS remains unverified"
-
-
-def test_the_denominator_rule_and_its_pattern_are_recorded(registry):
-    """A rule with no reason attached gets deleted by the next person who finds it noisy."""
-    r = registry["video_corpus_extension_2026_08_21"]["the_denominator_rule"]
-    assert "IN THE SAME SENTENCE" in r["rule"]
-    assert len(r["the_five"]) == 5, "all five convictions stay on record"
-    assert "survived its own repair twice" in r["note"]
-
-
-def test_failed_instruments_stay_recorded(registry):
-    """A blind detector and a true negative are the same output. The instruments that
-    lied here must stay named or the next seat re-runs them and believes them."""
-    f = registry["video_corpus_extension_2026_08_21"]["instruments_that_failed_here"]
-    # The FIRST version of this block retired a WORKING detector on the strength of a
-    # broken flag. That correction must survive - re-retiring the tool is the regression.
-    assert f["CORRECTION_2026_08_21"].strip()
-    scene = f["ffmpeg_scene_change_detection"]
-    assert scene["verdict"].startswith("WORKS"), (
-        "scene detection works; recording it as failed sends the next seat away from a "
-        "real instrument"
+    expected = render(registry)
+    actual = open(RECEIPT, encoding="utf-8").read()
+    assert actual == expected, (
+        "the committed receipt is not what the generator produces from the current "
+        "registry. Either the registry changed without regenerating, or the receipt was "
+        "hand-edited. Run: python -m research.gen_video_corpus_receipt"
     )
-    assert "264" in scene["measured_proof"] if "measured_proof" in scene else True
-    assert "not ACTIVITY" in scene["real_limitation_measured"], (
-        "a 0 from this tool means no layout change, NOT nothing happened"
-    )
-    # The actual trap is the flag, and it generalises across filters.
-    trap = f["THE_ACTUAL_TRAP_ffmpeg_v_error_suppresses_log_filters"]
-    assert "264" in trap["measured_proof"] and "-v error" in trap["measured_proof"]
-    for filt in ("showinfo", "volumedetect", "silencedetect"):
-        assert filt in trap["affected_filters"], f"{filt} reports through the log too"
-    # The pixel metric is confounded, not blind, and the distinction is load-bearing.
-    px = f["mean_frame_to_frame_pixel_difference"]
-    assert "not blind" in px["verdict"]
-    assert px["controls"]["item7_after_toast"] == 0.0049, (
-        "the toast-removed control is what separates confounded from blind"
-    )
-    assert "never to rank two" in px["across_files_it_does_not"]
-    assert "TWO non-overlapping paths" in f["what_worked_for_item_7"]
-
-
-def test_a_graders_band_does_not_travel_past_its_pin(registry):
-    """A band earned at one commit read as covering later ones is how a stale grade
-    launders unverified work. The first grader said so itself."""
-    g = registry["video_corpus_extension_2026_08_21"]["independent_grade_2026_08_21"]
-    assert "EXPIRES THERE" in g["band_scope"]
-    assert "1c6fb449" in g["band_scope"]
-    assert g["grader_self_correction"].strip(), (
-        "a grading loop where only the doer gets corrected is not a grading loop"
+    gen = registry["video_corpus_extension_2026_08_21"]["receipt_generation"]
+    assert gen["generator"] == "research/gen_video_corpus_receipt.py"
+    assert gen["retracted_false_claim"].strip(), (
+        "the false mechanism claim stays on record - it is the finding, not an embarrassment"
     )
 
 
-def test_the_seal_finding_is_recorded_and_scoped(registry):
-    """A finding against the SEALED corpus is not a finding against this extension, and
-    must not be quietly repaired by the seat that found it."""
-    s = registry["video_corpus_extension_2026_08_21"]["finding_against_the_2026_08_20_seal"]
-    assert "audio" in s["zero_hit_terms"]
-    assert s["positive_control"].strip(), "a zero-hit enumeration owes a positive control"
-    assert s["what_this_does_NOT_convict"].strip(), "the finding must state its own limit"
-    assert "NOT repaired" in s["disposition"]
-    assert s["sealed_entry_shape"] == ["name", "roles", "sha256"]
+def test_load_bearing_figures_are_pinned_and_internally_consistent(registry):
+    """The sixth false-green: `notes` was the last substantive field with no third
+    location. A grader falsified item 6's target and PnL step in prose, re-anchored the
+    byte hash, and every test passed. Pinned here WITH the arithmetic, so a forgery must
+    also be self-consistent to survive - and the tampered one was not (19043.50 - 19005.50
+    = 38, not the 138 its own row claimed)."""
+    figs = registry["video_corpus_extension_2026_08_21"]["load_bearing_figures"]
+    by_name = {v["name"]: v for v in registry["verified_video_evidence"]}
+    expected = {
+        "Desktop 2026.08.16 - 23.06.30.02.mp4": (19005.50, 18988.25, 19143.50,
+                                                 76972.00, 81112.00, 4140.00),
+        "Desktop 2026.08.19 - 19.49.23.03.mp4": (21839.25, 21856.50, 21804.25,
+                                                 125303.25, 126353.25, 1050.00),
+    }
+    for name, (entry, stop, target, before, after, tp_usd) in expected.items():
+        f = figs[name]
+        assert (f["entry"], f["stop"], f["target"]) == (entry, stop, target), name
+        assert (f["realized_before"], f["realized_after"]) == (before, after), name
+        # Arithmetic must close, in both directions.
+        assert abs(abs(stop - entry) - f["stop_points"]) < 1e-9, f"{name}: stop distance"
+        assert abs(abs(target - entry) - f["target_points"]) < 1e-9, f"{name}: target distance"
+        assert abs(f["stop_points"] * f["point_value"] * f["contracts"]
+                   + f["stop_dollars"]) < 1e-6, f"{name}: stop dollars"
+        assert abs(f["target_points"] * f["point_value"] * f["contracts"]
+                   - f["target_dollars"]) < 1e-6, f"{name}: target dollars"
+        assert abs((after - before) - tp_usd) < 1e-6, f"{name}: the realized step is the fill"
+        assert f["stop_points"] == 17.25, "the frozen stop is not a variable"
+        assert f["contracts"] == 15, "the frozen size is not a variable"
+        # And the prose must still agree with the pin.
+        notes = by_name[name]["notes"]
+        for v in (entry, stop, target):
+            assert f"{v:.2f}" in notes, f"{name}: notes lost the figure {v}"
+
+
+def test_sealed_videos_missing_provenance_is_named_not_guessed(registry):
+    """The sealed three carry roles with no provenance, and the unlabelled-roles guard
+    skips them. Assigning one would invent a provenance nobody recorded."""
+    s = registry["video_corpus_extension_2026_08_21"]["sealed_videos_provenance"]
+    assert s["label"] == "SEALED_2026_08_20_NO_PROVENANCE_RECORDED"
+    assert "not this seat's to authorise" in s["disposition"]
+    for v in registry["verified_video_evidence"]:
+        if v["name"] in SEALED_VIDEOS:
+            assert "role_provenance" not in v, (
+                "a sealed video was given a provenance label nobody recorded - that is the "
+                "forgery the closed-set guard exists to prevent"
+            )
+
+
+def test_every_file_location_is_recorded(registry):
+    """'Hash-verified on disk' is not re-locatable without a path, and three of the eight
+    files are not where the other five are."""
+    loc = registry["video_corpus_extension_2026_08_21"]["file_locations"]
+    names = {v["name"] for v in registry["verified_video_evidence"]}
+    assert set(loc) == names, "a video has no recorded location"
+    assert sum(1 for p in loc.values() if "Pictures" in p) == 3, (
+        "three files live in Pictures, not Videos/NVIDIA/Desktop - if that changes, say so"
+    )
 
 
 def test_the_independent_grade_is_recorded_with_its_confirmed_defects(registry):

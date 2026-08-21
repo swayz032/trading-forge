@@ -205,7 +205,8 @@
       "role_provenance": "OPERATOR_STATED",
       "duration_seconds": 385.7,
       "operator_words": "this video i was showing how price reject key level but the candle stick patterns was terrible to take a trade you see the first candle sellers was still in control as for the second one and the other ones was doji/indecision candles it wasnt until later probably 15 mins it was a break out",
-      "notes": "A WAIT / NO-ENTRY teaching example, and the highest-value item in this extension: it is a LIVE worked instance of two of the operator's four frozen WAIT reasons - rejection-without-a-momentum-candle and doji-without-the-second-strong-candle. The key level was genuinely rejected, but the candle STORY never qualified: the first candle after the rejection still had sellers in control, and the following candles were doji/indecision. Pattern location alone is not entry authority; the story and the force must both qualify. The breakout came roughly 15 minutes later, AFTER the recording ends - so the later breakout is the operator's account, not something visible on this tape. CORRECTED 2026-08-21: an earlier DERIVED reading of this clip as zones_marked_no_trade_observation was replaced by the operator's own statement; the passive no-trade framing missed that this is an ACTIVE demonstration of why the setup was refused. Measured context, scoped honestly - the following describes chart HISTORY rendered on screen, readable from any single frame, NOT events observed unfolding across the recording: TradingView LIVE (not FX Replay), symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:38-10:46:53 ET, inside the 09:30-12:00 window. Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75); price sold from the upper band into the lower one, wicked below ~29225 and bounced, and the candles after the bounce are small-bodied. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence."
+      "notes": "A WAIT / NO-ENTRY teaching example, and the highest-value item in this extension: it is a LIVE worked instance of two of the operator's four frozen WAIT reasons - rejection-without-a-momentum-candle and doji-without-the-second-strong-candle. The key level was genuinely rejected, but the candle STORY never qualified: the first candle after the rejection still had sellers in control, and the following candles were doji/indecision. Pattern location alone is not entry authority; the story and the force must both qualify. The breakout came roughly 15 minutes later, AFTER the recording ends - so the later breakout is the operator's account, not something visible on this tape. CORRECTED 2026-08-21: an earlier DERIVED reading of this clip as zones_marked_no_trade_observation was replaced by the operator's own statement; the passive no-trade framing missed that this is an ACTIVE demonstration of why the setup was refused. Measured context, scoped honestly - the following describes chart HISTORY rendered on screen, readable from any single frame, NOT events observed unfolding across the recording: TradingView LIVE (not FX Replay), symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:38-10:46:53 ET, inside the 09:30-12:00 window. Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75); price sold from the upper band into the lower one, wicked below ~29225 and bounced, and the candles after the bounce are small-bodied. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence.",
+      "enumerated": false
     },
     {
       "name": "Desktop 2026.08.16 - 23.34.40.03.mp4",
@@ -214,7 +215,9 @@
       "added": "2026-08-21",
       "role_provenance": "NO_EVIDENCE_VALUE",
       "duration_seconds": 1.5,
-      "notes": "1.5-second fragment of the FX Replay 5m layout, 15 contracts, zone boxes visible. No trade event and no annotation. Registered for custody completeness only; carries no teachable content and may not be cited as evidence for any rule."
+      "notes": "1.5-second fragment of the FX Replay 5m layout, 15 contracts, zone boxes visible. No trade event and no annotation. Registered for custody completeness only; carries no teachable content and may not be cited as evidence for any rule.",
+      "enumerated": true,
+      "enumeration_method": "All 90 decoded frames rendered into a single 10x9 contact sheet and read as one image - 90 of 90, literal 100%. Corroborated by a second, non-overlapping path: scene-change detection at correct verbosity returns 0 transitions for this clip against 264 for a clip known to change."
     }
   ],
   "video_corpus_extension_2026_08_21": {
@@ -254,7 +257,7 @@
       "Desktop 2026.08.19 - 19.49.23.03.mp4": "31.8s, 1907 frames total, 73 frames read = 3.8% coverage (9 high-resolution reads plus a 64-frame contact sheet at 2fps spanning the whole clip). UNENUMERATED - 3.8% is not enumeration and this row does not claim it is. Coverage is bounded from the other side as well: scene-change detection at default verbosity finds exactly SIX layout transitions in the clip, at t=6.49, 9.96, 12.61, 12.64, 18.81 and 20.66s, and the 2fps walk has frames bracketing all six. Caveat, measured elsewhere in this block: scene detection catches CUTS, not gradual change, so a slow price drift between frames would not register. Role is OPERATOR_STATED so enumeration is not load-bearing for the role; the trade figures below ARE frame-derived at this coverage.",
       "Desktop 2026.08.15 - 17.13.57.01.mp4": "14027.6s, ~841700 frames total (60fps x duration, derived not counted - counting would require decoding 6.03 GB), 9 frames read = ~0.001% coverage. UNENUMERATED. Not citable for any specific rule until enumerated.",
       "Desktop 2026.08.16 - 23.06.30.02.mp4": "98.3s, 5898 frames total, 25 frames read at 4s spacing = 0.42% coverage, plus a full-track audio pass. ENUMERATED for the trade lifecycle: entry, timeframe switch, target fill and the analytics tail were each witnessed on a read frame. 0.42% is NOT exhaustive and this row does not claim it is.",
-      "Desktop 2026.08.21 - 10.40.34.05.mp4": "385.7s, 23137 frames total, 6 frames read = 0.026% coverage. Role is OPERATOR_STATED, so enumeration is not load-bearing for the role. The price-action sentences in its notes describe chart HISTORY rendered on screen and readable from any single frame, not events observed unfolding, so they do not depend on frame density; they are scoped in the notes accordingly.",
+      "Desktop 2026.08.21 - 10.40.34.05.mp4": "385.7s, 23137 frames total, 6 frames read = 0.026% coverage - UNENUMERATED, and 0.026% does not get called anything else. Role is OPERATOR_STATED, so enumeration is not load-bearing for the role. The price-action sentences in its notes describe chart HISTORY rendered on screen and readable from any single frame, not events observed unfolding, so they do not depend on frame density; they are scoped in the notes accordingly.",
       "Desktop 2026.08.16 - 23.34.40.03.mp4": "1.5s, 90 frames total, 90 frames read = 100% coverage, EXHAUSTIVE. Read as a single 10x9 contact sheet of every decoded frame. All 90 are the same FX Replay 5m layout; the ONLY variation across the clip is the 'Recording has started' toast fading out over roughly the first 8 frames. No trade event, no annotation, no dialog."
     },
     "role_provenance_law": "An entry marked DERIVED_NOT_OPERATOR_STATED carries the engineer's reading, not the trader's words, and is outranked by any later direct trader clarification.",
@@ -396,6 +399,74 @@
         "the burst: duration reasoned, spectrum never measured - right answer, wrong reason, inside the retraction that was correcting the same defect"
       ],
       "note": "Instances 4 and 5 were found INSIDE the corrections for instances 1-3. The defect survived its own repair twice. That is why it is a rule with a test and not a resolution to be careful."
+    },
+    "file_locations": {
+      "Desktop 2026.08.19 - 02.12.06.01.mp4": "C:/Users/tonio/Videos/NVIDIA/Desktop/",
+      "Desktop 2026.08.19 - 02.13.19.02.mp4": "C:/Users/tonio/Videos/NVIDIA/Desktop/",
+      "Desktop 2026.08.20 - 20.37.47.04.mp4": "C:/Users/tonio/Videos/NVIDIA/Desktop/",
+      "Desktop 2026.08.19 - 19.49.23.03.mp4": "C:/Users/tonio/Videos/NVIDIA/Desktop/",
+      "Desktop 2026.08.15 - 17.13.57.01.mp4": "C:/Users/tonio/Pictures/",
+      "Desktop 2026.08.16 - 23.06.30.02.mp4": "C:/Users/tonio/Pictures/",
+      "Desktop 2026.08.21 - 10.40.34.05.mp4": "C:/Users/tonio/Videos/NVIDIA/Desktop/",
+      "Desktop 2026.08.16 - 23.34.40.03.mp4": "C:/Users/tonio/Pictures/"
+    },
+    "load_bearing_figures": {
+      "why": "A fresh grader falsified item 6's TARGET (19143.50 -> 19043.50) and its realized-PnL step inside the notes prose, re-anchored the registry byte hash, and every test still passed. Prose was the last substantive field with no third location. These figures are now pinned in the test file as well, and each carries its own arithmetic so a self-inconsistent forgery fails on the maths too.",
+      "Desktop 2026.08.16 - 23.06.30.02.mp4": {
+        "contracts": 15,
+        "entry": 19005.5,
+        "stop": 18988.25,
+        "target": 19143.5,
+        "stop_points": 17.25,
+        "target_points": 138.0,
+        "stop_dollars": -517.5,
+        "target_dollars": 4140.0,
+        "realized_before": 76972.0,
+        "realized_after": 81112.0,
+        "point_value": 2.0,
+        "filled": true
+      },
+      "Desktop 2026.08.19 - 19.49.23.03.mp4": {
+        "contracts": 15,
+        "entry": 21839.25,
+        "stop": 21856.5,
+        "target": 21804.25,
+        "stop_points": 17.25,
+        "target_points": 35.0,
+        "stop_dollars": -517.5,
+        "target_dollars": 1050.0,
+        "realized_before": 125303.25,
+        "realized_after": 126353.25,
+        "point_value": 2.0,
+        "filled": true
+      }
+    },
+    "sealed_videos_provenance": {
+      "label": "SEALED_2026_08_20_NO_PROVENANCE_RECORDED",
+      "finding": "The three sealed videos carry roles with NO provenance label - not in the original seal and not here - and the guard that forbids unlabelled roles explicitly SKIPS them. A later reader would reasonably take the most authoritative evidence in the corpus for the trader's own words. It is unlabelled either way, which is the defect.",
+      "disposition": "Labelled explicitly rather than guessed. Assigning them OPERATOR_STATED or DERIVED would be inventing a provenance nobody recorded - the exact forgery the closed-set guard exists to prevent. Re-deriving them is a separate packet and is not this seat's to authorise."
+    },
+    "receipt_generation": {
+      "generator": "research/gen_video_corpus_receipt.py",
+      "mechanism": "The test imports render(), rebuilds the receipt in memory from this registry, and compares byte-for-byte against the committed file. Editing the registry without regenerating goes RED; editing the receipt by hand goes RED.",
+      "retracted_false_claim": "An earlier version of the receipt asserted in bold that it was GENERATED FROM THE REGISTRY and that this 'removes that whole failure class', when NO generator existed anywhere in the repository - it had been rendered by an uncommitted scratch script. The text was faithful; the mechanism was fiction. A fresh grader with no lineage found it. This is the desk's own rule broken inside the custody document: a mechanism claim needs its evidence in the same sentence or an explicit HYPOTHESIS label, and 'removes the failure class' had neither."
+    },
+    "fresh_grade_2026_08_21": {
+      "grader": "accuracy-validator, dispatched fresh with NO lineage - it neither built the work nor graded any earlier version, which the prior grader could not claim.",
+      "commit_graded": "f9c536ff",
+      "band": 6,
+      "verdict": "BOUNDED",
+      "findings_closed_here": [
+        "F-1 HIGH: the receipt claimed to be GENERATED FROM THE REGISTRY and to have removed a failure class, while no generator existed in the repo. False mechanism claim inside the custody document. A real generator now exists and the test derives from it.",
+        "F-2 HIGH: the sixth false-green. `notes` was the last substantive field with no third location - falsifying item 6's target price and PnL step, then re-anchoring, passed every test. Load-bearing figures are now pinned with their arithmetic.",
+        "F-3 MODERATE: the enumeration cross-check keyed on an `enumerated` boolean that five of eight entries did not carry, so neither branch fired. Now required on every added entry.",
+        "F-5 MODERATE: a guard PINNED THE WEAKER CLAIM - asserting HYPOTHESIS in the audio reading meant a genuine improvement to that field went RED. Relaxed so the field can get stronger without editing the guard.",
+        "F-6 MODERATE: the three sealed videos' roles carry no provenance label and the guard skips them. Labelled explicitly rather than guessed.",
+        "F-7 LOW: no file paths were recorded, so 'hash-verified on disk' was not re-locatable. Three of eight files are in Pictures, not Videos/NVIDIA/Desktop. Paths now recorded."
+      ],
+      "verified_closed": "Item 4 fully counter-sampled for the first time by anyone - every figure confirmed to the cent, including the 17.25-point stop, the 35-point target, the exact 1050.00 fill and the 125303.25 -> 126353.25 step, plus a 1-second header enumeration across all 32s confirming no timeframe switch. The audio disposition reproduces to the digit. Three red-proof arms reproduce the published counts exactly. Zero introduced failures confirmed via a stronger path: git diff over src/ is empty.",
+      "grader_own_retractions": "It retracted three of its own findings mid-grade - a registry/receipt contradiction that was an artifact of reading the moving worktree against its pinned tree; a spectral refutation that was its own magnitude-vs-power basis error; and two absence answers biased by `-v error` and by files being in another directory. It caught all of them with positive controls.",
+      "not_graded": "The three commits after its pin - bf8fd5b2, f9ee603e, b1c902ef - which already addressed its F-4 and part of F-5. Its band is scoped to f9c536ff."
     }
   },
   "frozen_replay_evidence": {
