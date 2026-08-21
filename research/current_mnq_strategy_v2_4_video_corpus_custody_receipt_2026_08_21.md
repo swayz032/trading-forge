@@ -7,14 +7,27 @@ videos are now bound into
 (schema_version 1 -> 2), which is build-fingerprinted, and guarded by
 `tests/test_current_mnq_strategy_v2_4_video_corpus_registry.py`.
 
-Fingerprint moved as a positive control that the registry is genuinely load-bearing:
-`c764cdda4007a5d0...` (head) -> `77d4a9a916818f52...` (with the extension) [MEASURED HERE].
-Note: the second value predates the schema_version bump; the current value is whatever
-`semantics_hash()` computes at the landed commit. The point proved is that it MOVES.
+**CORRECTION (independent grade, 2026-08-21).** An earlier version of this receipt and of
+commit `5341bb6e`'s message published the fingerprint pair as
+`c764cdda4007a5d0...` -> `77d4a9a916818f52...` and tagged it [MEASURED HERE]. The grader
+refuted the second value and I reproduced its refutation on my own instrument:
+  - `7e79d082` -> `c764cdda4007a5d07ca79f65b3d7e6c56fef77190ea39579165afa81f697fb8f`  (reproduces)
+  - `5341bb6e` -> `bee2303b69fc682f3c4f69ff21cfc061576d1313255ecad9593999d85862715a`  (the true value)
+  - `77d4a9a916818f52...` reproduces from NO state either of us could rebuild.
+It was a stale value computed mid-edit and then published as a measured control. The
+mechanism claim survives - the registry IS in `fingerprinted_files()` and the hash DOES move
+- but the specific number was wrong and is retracted. Two grades were mixed in one sentence;
+that is the defect, not a typo.
 
 Produced by an Opus 5 worker seat from the eight paths the operator supplied on 2026-08-21.
 Registry entries are additive only: no sealed video, rule, crosswalk or invariant was modified
 (`73 insertions, 1 deletion`, the single deletion being the schema_version line).
+
+Instrument note [MEASURED, corrected by the grader]: on this Windows box `pytest` without
+`PYTHONUTF8=1` manufactures 5 spurious cp1252 failures - but `PYTHONUTF8=1` manufactures one
+of its OWN (`tests/python/test_golden_snapshots.py::TestGoldenSnapshots::test_quantum_mc`).
+Genuinely-failing tests at head = **8**, not the 9 first published. Neither mode is clean;
+the honest figure is the intersection of the two.
 
 Method [MEASURED HERE]: `sha256sum` + `ffprobe` on each file; frames sampled with `ffmpeg`
 and read visually. No file was modified. Nothing was sent off this machine.

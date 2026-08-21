@@ -64,12 +64,12 @@
     {
       "name":"Desktop 2026.08.15 - 17.13.57.01.mp4",
       "sha256":"7dbc51c72d8b638a1157b294f9ea021f83fda77b6a91e390ee8c5c4c08cf257a",
-      "roles":["extended_5m_zone_replay_session"],
+      "roles":["extended_replay_session_mixed_timeframes"],
       "added":"2026-08-21",
       "role_provenance":"DERIVED_NOT_OPERATOR_STATED",
       "duration_seconds":14027.6,
       "enumerated":false,
-      "notes":"FX Replay MNQ 5m, 3h53m48s, 6.03 GB. Only 6 frames sampled - CONTENT IS UNENUMERATED and this entry may NOT be cited for any specific rule until enumerated. Traded at 17 contracts, not the frozen 15; no tick/dollar arithmetic from these frames may be normalised at 15. A PDH text label is drawn on the layout - see pdh_label_disposition."
+      "notes":"FX Replay MNQ, 3h53m48s, 6.03 GB. CONTENT IS UNENUMERATED - 9 frames sampled in total and this entry may NOT be cited for any specific rule until enumerated. CORRECTED 2026-08-21 after independent grading: an earlier role of extended_5m_zone_replay_session and a claim of a continuous 5m session were REFUTED - at t=12600s the chart is on the 1D DAILY timeframe (header reads 1D), and at t=6800s a Symbol Search dialog is open, so the recording mixes timeframes and contains idle UI navigation rather than continuous trading. Realized PnL is identical at t=1200 and t=6800, so nothing closed across that ~1h33m span; PnL climbing end-to-end says nothing about activity density. Traded at 17 contracts, not the frozen 15; no tick/dollar arithmetic from these frames may be normalised at 15. A PDH text label is drawn on the layout - see pdh_label_disposition."
     },
     {
       "name":"Desktop 2026.08.16 - 23.06.30.02.mp4",
@@ -83,11 +83,12 @@
     {
       "name":"Desktop 2026.08.21 - 10.40.34.05.mp4",
       "sha256":"08e87682f683db1b9a37200744006588c4a46bedde7d83c3e2c65b9f19870b2b",
-      "roles":["live_forward_session","zones_marked_no_trade_observation"],
+      "roles":["rejection_at_key_level_without_momentum_candle_wait","doji_indecision_cluster_is_not_an_entry","live_forward_session","later_breakout_after_failed_rejection_story"],
       "added":"2026-08-21",
-      "role_provenance":"DERIVED_NOT_OPERATOR_STATED",
+      "role_provenance":"OPERATOR_STATED",
       "duration_seconds":385.7,
-      "notes":"NOT FX Replay - TradingView LIVE, symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:38-10:46:53 ET (inside the 09:30-12:00 window). Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75) with price between them. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence."
+      "operator_words":"this video i was showing how price reject key level but the candle stick patterns was terrible to take a trade you see the first candle sellers was still in control as for the second one and the other ones was doji/indecision candles it wasnt until later probably 15 mins it was a break out",
+      "notes":"A WAIT / NO-ENTRY teaching example, and the highest-value item in this extension: it is a LIVE worked instance of two of the operator's four frozen WAIT reasons - rejection-without-a-momentum-candle and doji-without-the-second-strong-candle. The key level was genuinely rejected, but the candle STORY never qualified: the first candle after the rejection still had sellers in control, and the following candles were doji/indecision. Pattern location alone is not entry authority; the story and the force must both qualify. The breakout came roughly 15 minutes later, AFTER the recording ends - so the later breakout is the operator's account, not something visible on this tape. CORRECTED 2026-08-21: an earlier DERIVED reading of this clip as zones_marked_no_trade_observation was replaced by the operator's own statement; the passive no-trade framing missed that this is an ACTIVE demonstration of why the setup was refused. Measured context: TradingView LIVE (not FX Replay), symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:38-10:46:53 ET, inside the 09:30-12:00 window. Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75); price sold from the upper band into the lower one, wicked below ~29225 and bounced, and the candles after the bounce are small-bodied. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence."
     },
     {
       "name":"Desktop 2026.08.16 - 23.34.40.03.mp4",
@@ -112,6 +113,29 @@
     "custody_receipt":"research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md",
     "method":"sha256sum plus ffprobe on each file; frames sampled with ffmpeg and read visually. No evidence bytes are committed; only names, hashes, durations and semantic roles.",
     "role_provenance_law":"An entry marked DERIVED_NOT_OPERATOR_STATED carries the engineer's reading, not the trader's words, and is outranked by any later direct trader clarification.",
+    "operator_stated_entries_are_a_closed_set":["Desktop 2026.08.19 - 19.49.23.03.mp4","Desktop 2026.08.21 - 10.40.34.05.mp4"],
+    "operator_stated_closed_set_law":"Only a video named in operator_stated_entries_are_a_closed_set may carry role_provenance OPERATOR_STATED. Relabelling a DERIVED entry to OPERATOR_STATED without the operator adding it to this list is a fidelity forgery and is guarded against.",
+    "independent_grade_2026_08_21": {
+      "grader":"accuracy-validator, dispatched by the doer seat, no lineage in the build",
+      "commit_graded":"5341bb6e",
+      "band":6,
+      "verdict":"BOUNDED",
+      "findings_closed_in":"the follow-up commit that carries this block",
+      "confirmed_defects_the_doer_published":[
+        "semantics_hash AFTER value was published as 77d4a9a9... - REFUTED; the reproducing value at 5341bb6e is bee2303b6...; the BEFORE value c764cdda4... does reproduce",
+        "red-proof ROW1 was published as 3 failed / 4 passed against an 8-test suite (3+4=7); the reproducing count is 4 failed / 4 passed - the guard is STRONGER than advertised",
+        "the instrument note was one-sided: PYTHONUTF8=1 removes 5 cp1252 artifacts but manufactures one of its own (tests/python/test_golden_snapshots.py::TestGoldenSnapshots::test_quantum_mc). Genuinely-failing tests at head = 8, not 9",
+        "item 5 was over-graded MEASURED on frame-sampled inferences - see its corrected notes",
+        "item 8 was DERIVED as a passive zones_marked_no_trade_observation; the operator then stated it is an ACTIVE why-I-refused-this-setup demonstration. A derived reading was not merely thin here - it was the wrong shape. Recorded as evidence for the role_provenance_law."
+      ],
+      "false_green_routes_closed_here":[
+        "PROBE-A: new-video hashes were format-checked only, not identity-checked - now pinned to constants",
+        "PROBE-B: enumerated:false gated nothing; a fabricated role could be appended to the unenumerated entry - roles are now pinned",
+        "PROBE-E: a DERIVED entry could be relabelled OPERATOR_STATED and given invented operator_words - the OPERATOR_STATED set is now closed and pinned",
+        "duration_seconds was falsifiable with no cross-check - now pinned"
+      ],
+      "note":"All four routes moved the file bytes and so already tripped the build fingerprint; they were tamper-EVIDENT, not tamper-proof. They are now caught by the content guard as well."
+    },
     "pdh_label_disposition": {
       "operator_words":"i dont use pdh",
       "measured":"A PDH text label is RENDERED on the chart layout in the 2026.08.15 and 2026.08.16 videos (the latter at 19165.75). No entry, target or confluence decision was measured to use it.",
