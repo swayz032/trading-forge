@@ -859,6 +859,20 @@ def test_AR1397_1d_only_resolved_semantics_contribute_to_ready():
 # ---- 9.2 AR-1386A section 4: deleting the readiness field must not launder a RED receipt ---- #
 
 
+def _canonical_receipt_hash(record: dict) -> str:
+    """The certifier's own receipt hash, recomputed the way it computes it.
+
+    `scripts/source_graph_projection_v2_1_certify.py:38-42` hashes the record BEFORE stamping
+    `receipt_sha256_canonical` onto it, so the stamp is exactly recomputable by excluding the
+    field again.
+    """
+    import hashlib
+
+    unstamped = {k: v for k, v in record.items() if k != "receipt_sha256_canonical"}
+    blob = json.dumps(unstamped, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
 def _real_certified_receipt() -> dict:
     """The REAL nine-canonical-node certified receipt, not a synthetic stand-in.
 
@@ -1072,10 +1086,23 @@ def test_AR1397_4_emitted_consumer_refs_are_canonically_sorted():
     AR-1395 F-6b already sorted it for the HASH -- but the EMITTED record still preserved caller
     order. GPT measured EQUAL contract hashes with UNEQUAL receipts for the same two consumers
     reversed. Two artifacts that are the same contract must be the same receipt, or receipt
-    identity means something different from contract identity and neither is trustworthy."""
-    pair = ("entry_sequence[1].action", "stop.rationale")
-    forward = _run(external_dependencies=(_dep(consumer_refs=pair),))
-    assert forward["external_dependencies"][0]["consumer_refs"] == sorted(pair)
+    identity means something different from contract identity and neither is trustworthy.
+
+    ⚠️ AR-1397 GRADER FINDING F-4: THIS TEST ORIGINALLY HAD NO PATH TO RED. It was written with
+    `pair = ("entry_sequence[1].action", "stop.rationale")` -- ALREADY lexicographically sorted --
+    so the assertion held against a sorting implementation AND a passthrough one, and it passed
+    against the pre-packet production blob. That is the identical defect class this packet was
+    ordered to remove from `test_C0_4f`, reintroduced inside the packet written to remove it.
+    The input is now UNSORTED, and the guard below fails the test if anyone re-sorts it.
+    """
+    unsorted_pair = ("stop.rationale", "entry_sequence[1].action")
+    assert list(unsorted_pair) != sorted(unsorted_pair), (
+        "the input must be UNSORTED or this assertion cannot tell a sorting implementation from a "
+        "passthrough one -- which is exactly how this test was born dead"
+    )
+
+    forward = _run(external_dependencies=(_dep(consumer_refs=unsorted_pair),))
+    assert forward["external_dependencies"][0]["consumer_refs"] == sorted(unsorted_pair)
 
 
 def test_AR1397_4b_receipt_identity_is_order_independent():
@@ -1104,8 +1131,21 @@ def test_AR1397_5_no_adapter_or_network_call_is_made(monkeypatch):
     This guard instead makes the call itself impossible: every socket constructor and HTTP opener
     raises. And it ships with the POSITIVE CONTROL the ruling demands -- a guard nobody has ever
     seen fail is indistinguishable from a guard that cannot fail.
+
+    ⚠️ AR-1397 GRADER FINDING F-2: THE FIRST VERSION OF THIS GUARD WAS NETWORK-ONLY, AND ITS NAME
+    SAID "NO ADAPTER OR NETWORK CALL". The independent grader planted a real file-writing side
+    effect inside a function `run_projection` calls repeatedly; IT FIRED 17 TIMES AND THIS TEST
+    STAYED GREEN. The ruling ordered "a genuine zero-network/zero-ADAPTER guard", and half of that
+    order had been filled -- which is precisely the failure mode the previous version of this test
+    was retired for: a name that claims more than the assertion measures.
+
+    So the guard now also closes the non-network reach routes an adapter would actually use --
+    filesystem writes, subprocess launch, and dynamic import -- each with its own witness.
     """
+    import builtins
+    import importlib
     import socket
+    import subprocess
     import urllib.request
 
     calls: list[str] = []
@@ -1113,23 +1153,57 @@ def test_AR1397_5_no_adapter_or_network_call_is_made(monkeypatch):
     def _forbidden(name):
         def _raise(*_a, **_k):
             calls.append(name)
-            raise AssertionError(f"C0 attempted a network call via {name}")
+            raise AssertionError(f"C0 attempted an out-of-process call via {name}")
         return _raise
 
+    # -- network reach --
     monkeypatch.setattr(socket, "socket", _forbidden("socket.socket"))
     monkeypatch.setattr(socket, "create_connection", _forbidden("socket.create_connection"))
     monkeypatch.setattr(socket, "getaddrinfo", _forbidden("socket.getaddrinfo"))
     monkeypatch.setattr(urllib.request, "urlopen", _forbidden("urllib.request.urlopen"))
+
+    # -- ADAPTER reach: the half F-2 found open. A provider adapter that never opens a socket can
+    #    still shell out, import a vendor SDK, or read a cache file somebody else populated.
+    real_open = builtins.open
+    write_modes = ("w", "a", "x", "+")
+
+    def _guarded_open(file, mode="r", *args, **kwargs):
+        if any(m in mode for m in write_modes):
+            calls.append("builtins.open(write)")
+            raise AssertionError("C0 attempted an out-of-process call via builtins.open(write)")
+        return real_open(file, mode, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", _guarded_open)
+    monkeypatch.setattr(subprocess, "Popen", _forbidden("subprocess.Popen"))
+    monkeypatch.setattr(subprocess, "run", _forbidden("subprocess.run"))
+    monkeypatch.setattr(importlib, "import_module", _forbidden("importlib.import_module"))
 
     # (a) the real thing, under the armed guard
     record = _run(external_dependencies=(_dep(),))
     assert record["external_dependencies"][0]["dependency_id"] == "fixture.external_state"
     assert calls == [], f"C0 reached out: {calls}"
 
-    # (b) POSITIVE CONTROL -- the guard must be able to fail, or (a) proved nothing
-    with pytest.raises(AssertionError, match="attempted a network call"):
+    # (b) POSITIVE CONTROLS -- a guard nobody has seen fail is indistinguishable from one that
+    #     CANNOT fail, so every arm above is proven to bite. The grader's own planted side effect
+    #     was a FILE WRITE, so that arm is controlled explicitly rather than by analogy.
+    with pytest.raises(AssertionError, match="out-of-process call"):
         socket.create_connection(("127.0.0.1", 9))
-    assert calls == ["socket.create_connection"], "the positive control did not arm the guard"
+    with pytest.raises(AssertionError, match="out-of-process call"):
+        builtins.open("adapter-cache.tmp", "w")
+    with pytest.raises(AssertionError, match="out-of-process call"):
+        subprocess.run(["cmd", "/c", "echo"])
+    with pytest.raises(AssertionError, match="out-of-process call"):
+        importlib.import_module("json")
+
+    assert calls == [
+        "socket.create_connection",
+        "builtins.open(write)",
+        "subprocess.run",
+        "importlib.import_module",
+    ], "a guard arm did not arm; an unproven arm is an unclosed route"
+
+    # (c) and the READ path must still work, or (a) passed only because everything was broken
+    assert real_open(FIXTURE_PATH, "r", encoding="utf-8").read(1) != ""
 
 
 # ---- 9.6 AR-1386A section 6.2-6.5: the five focused E8 birth-test gaps ---- #
@@ -1214,3 +1288,187 @@ def test_AR1397_9_the_E8_result_is_never_reported_as_a_missing_source():
             f"the E8 calibration result reported {banned}; the source was understood, only "
             f"provider ACCESS is unproven"
         )
+
+
+# --------------------------------------------------------------------------- #
+# 10. AR-1397 INDEPENDENT GRADER FINDINGS — the attacks that survived the first repair
+#
+# The AR-1397 independent adversarial grade (BOUNDED 6/10) landed one CRITICAL and four lesser
+# findings against the repair above. F-1 is the one that matters: the first fix closed the
+# EXPENSIVE arm of the readiness attack and left the CHEAP one open.
+# --------------------------------------------------------------------------- #
+
+
+def _blocked_dependency_records() -> list[dict]:
+    """The real E8 fixture's emitted records -- every access axis UNVERIFIED, impl NOT_STARTED."""
+    fx = _load_fixture()
+    run = _run(external_dependencies=(ExternalDependencySpec(**fx["external_dependency"]),))
+    return run["external_dependencies"]
+
+
+@pytest.mark.parametrize("keep_blocker", [True, False])
+def test_AR1397_F1_declaring_READY_over_unsatisfied_records_is_refused(keep_blocker):
+    """🛑 AR-1397 GRADER FINDING F-1, CRITICAL. THE SAME FAIL-OPEN, ONE SPELLING CHEAPER.
+
+    The first repair refused a receipt whose `compile_readiness` key was DELETED. The grader simply
+    SET IT TO READY instead -- on the real nine-node receipt, carrying the real E8 dependency
+    record whose every access axis reads UNVERIFIED and whose implementation_status is NOT_STARTED
+    -- and measured:
+
+        A2 deps blocked + readiness SET to READY (blocker kept)     COMPILED 1 strategy
+        A3 deps blocked + readiness SET to READY (blocker dropped)  COMPILED 1 strategy
+
+    The gate paired the two fields by KEY PRESENCE and then BELIEVED THE VALUE IT FOUND. Blocking
+    the deletion while trusting the assignment closed the harder attack and left the easier one.
+
+    Readiness is now RE-DERIVED from the records the seam already holds, so the declared value is a
+    claim to be checked rather than the answer.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        build_certified_record,
+    )
+
+    attack = _real_certified_receipt()
+    attack["external_dependencies"] = _blocked_dependency_records()
+    attack["grade"] = "RED"
+    attack["compile_readiness"] = READY_PENDING_CERTIFICATION
+    if keep_blocker:
+        attack["structured_blocker"] = {"reason": BLOCKER_ACCESS_UNVERIFIED, "terminal": False}
+
+    with pytest.raises(CanonicalNodeNotAcceptedError,
+                       match="EXTERNAL_DEPENDENCY_READINESS_CONTRADICTED"):
+        build_certified_record(attack)
+
+
+def test_AR1397_F1b_a_genuinely_satisfied_record_still_compiles():
+    """The discriminating half of F-1. Re-derivation must accept what it should accept, or the
+    repair has simply made the seam refuse everything -- which passes the attack test and breaks
+    the product."""
+    from src.engine.extraction.svkm_v2_1_compile import (
+        _refuse_if_not_compile_ready,
+    )
+
+    ready_run = _run(external_dependencies=(_ready_dep(),))
+    assert ready_run["compile_readiness"] == READY_PENDING_CERTIFICATION
+
+    receipt = _real_certified_receipt()
+    receipt["external_dependencies"] = ready_run["external_dependencies"]
+    receipt["compile_readiness"] = READY_PENDING_CERTIFICATION
+    _refuse_if_not_compile_ready(receipt)  # must not raise
+
+
+@pytest.mark.parametrize("axis,bad", [
+    ("access_status", ACCESS_UNVERIFIED),
+    ("live_delivery", ACCESS_UNVERIFIED),
+    ("historical_replay", ACCESS_UNVERIFIED),
+    ("update_policy", ACCESS_UNAVAILABLE),
+    ("implementation_status", "NOT_STARTED"),
+    ("semantic_status", SEMANTIC_UNRESOLVED),
+])
+def test_AR1397_F1c_every_axis_is_re_derived_not_just_access(axis, bad):
+    """Each axis independently. A re-derivation that reads only `access_status` would pass F-1's
+    headline test while leaving five other routes to a false READY."""
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        _refuse_if_not_compile_ready,
+    )
+
+    ready_run = _run(external_dependencies=(_ready_dep(),))
+    records = [dict(ready_run["external_dependencies"][0])]
+    records[0][axis] = bad
+
+    receipt = _real_certified_receipt()
+    receipt["external_dependencies"] = records
+    receipt["compile_readiness"] = READY_PENDING_CERTIFICATION
+
+    with pytest.raises(CanonicalNodeNotAcceptedError) as excinfo:
+        _refuse_if_not_compile_ready(receipt)
+    assert axis in str(excinfo.value), "the refusal must name the axis it re-derived"
+
+
+def test_AR1397_F1d_an_axis_missing_from_the_record_is_not_satisfied_by_omission():
+    """Deleting an axis from a record must not read as satisfied. Absence of proof is not proof of
+    safety -- the same law the deleted-readiness attack established, applied one level down."""
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        _refuse_if_not_compile_ready,
+    )
+
+    ready_run = _run(external_dependencies=(_ready_dep(),))
+    records = [dict(ready_run["external_dependencies"][0])]
+    records[0].pop("implementation_status")
+
+    receipt = _real_certified_receipt()
+    receipt["external_dependencies"] = records
+    receipt["compile_readiness"] = READY_PENDING_CERTIFICATION
+
+    with pytest.raises(CanonicalNodeNotAcceptedError,
+                       match="EXTERNAL_DEPENDENCY_READINESS_CONTRADICTED"):
+        _refuse_if_not_compile_ready(receipt)
+
+
+def test_AR1397_F3_a_stamped_receipt_cannot_be_edited_at_all():
+    """🛑 AR-1397 GRADER FINDING F-3 / ATTACK A8, the structural root cause under F-1.
+
+    Every "refuse an edited receipt" rule is a hand-written invariant against an UNBOUNDED edit
+    space, and A8 proved the space is not enumerable: RENAME `external_dependencies` and drop
+    readiness, and the receipt is indistinguishable at this seam from a legitimate legacy one that
+    never had either. No field-level rule can close an attack whose whole shape is ABSENCE.
+
+    A hash can. The certifier already stamps `receipt_sha256_canonical` over the record before
+    adding the field; nothing consulted it. Now the seam does.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        _refuse_if_not_compile_ready,
+    )
+
+    stamped = _real_certified_receipt()
+    stamped["external_dependencies"] = _blocked_dependency_records()
+    stamped["compile_readiness"] = BLOCKED_EXTERNAL_DEPENDENCY
+    # stamp it exactly as scripts/source_graph_projection_v2_1_certify.py:101 does
+    stamped["receipt_sha256_canonical"] = _canonical_receipt_hash(stamped)
+
+    # A8: rename the dependency key AND drop readiness -- nothing field-level is left to catch it
+    a8 = dict(stamped)
+    a8["_external_dependencies_renamed"] = a8.pop("external_dependencies")
+    a8.pop("compile_readiness")
+
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_MISMATCH"):
+        _refuse_if_not_compile_ready(a8)
+
+
+def test_AR1397_F3b_an_unstamped_receipt_is_unaffected_and_a_stamped_intact_one_passes():
+    """The two discriminating halves of F-3. An unstamped legacy receipt must still flow through
+    untouched (that is the whole omit-when-empty contract), and a stamped receipt that has NOT been
+    edited must not be refused by its own hash check."""
+    from src.engine.extraction.svkm_v2_1_compile import _refuse_if_not_compile_ready
+
+    legacy = _real_certified_receipt()
+    assert "receipt_sha256_canonical" not in legacy
+    _refuse_if_not_compile_ready(legacy)  # must not raise
+
+    intact = _real_certified_receipt()
+    intact["receipt_sha256_canonical"] = _canonical_receipt_hash(intact)
+    _refuse_if_not_compile_ready(intact)  # must not raise
+
+
+def test_AR1397_F5_a_non_dict_structured_blocker_refuses_instead_of_crashing():
+    """AR-1397 grader finding F-5. `record.get(...) or {}` let every TRUTHY non-dict through, so
+    `structured_blocker="not a dict"` raised AttributeError rather than the documented
+    CanonicalNodeNotAcceptedError. It failed closed, but in an undocumented way -- a caller
+    catching the documented exception crashed."""
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        _refuse_if_not_compile_ready,
+    )
+
+    for junk in ("not a dict", 42, ["a", "list"], True):
+        receipt = _real_certified_receipt()
+        receipt["external_dependencies"] = _blocked_dependency_records()
+        receipt["compile_readiness"] = BLOCKED_EXTERNAL_DEPENDENCY
+        receipt["structured_blocker"] = junk
+
+        with pytest.raises(CanonicalNodeNotAcceptedError):
+            _refuse_if_not_compile_ready(receipt)

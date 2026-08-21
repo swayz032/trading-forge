@@ -75,20 +75,37 @@ does not resolve it either -- an honest compiler gap, not papered over.
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
 from typing import Any
 
 from src.engine.extraction.compile_certified_record import compile_record_to_artifact
+
+# AR-1397 F-1: `_ACCESS_AXES`, `ACCESS_VERIFIED`, `IMPL_VALIDATED` and `SEMANTIC_RESOLVED` below
+# are IMPORTED, never restated. The seam re-derives readiness using the projection's OWN axis list
+# and vocabulary, so the two can never drift into disagreeing about what "satisfied" means -- a
+# second hand-written copy of a boundary rule is how a gate stops biting while still reporting
+# PASS. (Import grouping below is ruff's; the four names are spread across its blocks.)
+from src.engine.extraction.source_graph_projection import (
+    _ACCESS_AXES,
+    PRESERVED_NON_EXECUTABLE_METADATA,
+)
 from src.engine.extraction.source_graph_projection import (
     ACCEPTED as CANONICAL_ACCEPTED,
 )
 from src.engine.extraction.source_graph_projection import (
-    PRESERVED_NON_EXECUTABLE_METADATA,
+    ACCESS_VERIFIED as _ACCESS_VERIFIED,
+)
+from src.engine.extraction.source_graph_projection import (
+    IMPL_VALIDATED as _IMPL_VALIDATED,
 )
 from src.engine.extraction.source_graph_projection import (
     READY_PENDING_CERTIFICATION as _COMPILE_READY,
+)
+from src.engine.extraction.source_graph_projection import (
+    SEMANTIC_RESOLVED as _SEMANTIC_RESOLVED,
 )
 from src.engine.extraction.spec_producer import _spec_hash
 from src.engine.source_timeframe_roles import (
@@ -216,6 +233,74 @@ def _projected_text(outcomes: dict[str, dict], ref: str) -> str:
     return outcome["provenance"]["projected_condition_text"]
 
 
+def _derived_dependency_blockers(dependencies: Any) -> dict[str, list[str]]:
+    """Re-derive, from the emitted dependency records alone, which axes are NOT satisfied.
+
+    AR-1397 grader finding F-1. The records carry every axis the projection gated on, so the seam
+    never has to believe a declared readiness value -- it can recompute the answer. This is the
+    non-overlapping second path: the projection decides readiness on the way OUT, and this decides
+    it again on the way IN, from data rather than from a summary field.
+
+    Deliberately re-uses the projection's own axis names and vocabulary by IMPORT rather than by
+    restating them here. A second hand-written copy of a boundary rule drifts and stops biting
+    while still reporting PASS, which is the failure this whole packet exists to close.
+
+    Returns `{dependency_id: [unsatisfied axis, ...]}` -- empty when every record is satisfied.
+    A record missing an axis entirely counts as UNSATISFIED, never as satisfied by omission.
+    """
+    if not isinstance(dependencies, (list, tuple)):
+        return {}
+    blockers: dict[str, list[str]] = {}
+    for index, dep in enumerate(dependencies):
+        if not isinstance(dep, dict):
+            blockers[f"<record {index}: not a mapping>"] = ["record_shape"]
+            continue
+        unsatisfied = [axis for axis in _ACCESS_AXES if dep.get(axis) != _ACCESS_VERIFIED]
+        if dep.get("implementation_status") != _IMPL_VALIDATED:
+            unsatisfied.append("implementation_status")
+        if dep.get("semantic_status") != _SEMANTIC_RESOLVED:
+            unsatisfied.append("semantic_status")
+        if unsatisfied:
+            blockers[str(dep.get("dependency_id") or f"<record {index}: unidentified>")] = \
+                unsatisfied
+    return blockers
+
+
+def _refuse_if_receipt_hash_broken(record: dict[str, Any]) -> None:
+    """If the receipt carries its producer's canonical hash, CHECK IT.
+
+    AR-1397 grader finding F-3 (structural root cause) and attack A8. Every "refuse an edited
+    receipt" rule is a hand-written invariant against an unbounded edit space, and A8 showed the
+    space is not enumerable: RENAME the `external_dependencies` key and drop readiness, and the
+    result is indistinguishable at this seam from a legitimate legacy receipt that never had
+    either. No enumeration of field-level rules can close that, because the attack is the ABSENCE
+    of fields.
+
+    A hash can. `scripts/source_graph_projection_v2_1_certify.py:101` already stamps
+    `receipt_sha256_canonical` onto the certified receipt, computed over the record BEFORE the
+    field is added -- so it is exactly recomputable by removing the field again. Nothing consulted
+    it until now.
+
+    Scoped deliberately: this CHECKS a pin that already exists, it does not mint a new one. A
+    receipt without the field is unaffected, which keeps the legacy path and the in-process caller
+    working; a receipt WITH it can no longer be edited at all without detection.
+    """
+    stamped = record.get("receipt_sha256_canonical")
+    if not isinstance(stamped, str) or not stamped:
+        return
+    unstamped = {k: v for k, v in record.items() if k != "receipt_sha256_canonical"}
+    blob = json.dumps(unstamped, sort_keys=True, ensure_ascii=False)
+    recomputed = hashlib.sha256(blob.encode("utf-8")).hexdigest()
+    if recomputed != stamped:
+        raise CanonicalNodeNotAcceptedError(
+            f"RECEIPT_HASH_MISMATCH: this receipt is stamped {stamped!r} but its current content "
+            f"canonicalizes to {recomputed!r}. Refusing to compile. The receipt was edited after "
+            "its producer signed it, and no field-level rule can enumerate every possible edit -- "
+            "including edits that REMOVE fields, which is how the dependency and readiness keys "
+            "were both made to disappear at once."
+        )
+
+
 def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
     """Refuse a projection that declares itself NOT READY to compile (AR-1395, AR-1385A 7.16).
 
@@ -254,9 +339,31 @@ def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
     half to believe. Only a receipt declaring NEITHER passes untouched -- which is what keeps the
     legacy omit-when-empty path working.
     """
+    _refuse_if_receipt_hash_broken(record)
+
     has_readiness = "compile_readiness" in record
     readiness = record.get("compile_readiness")
     dependencies = record.get("external_dependencies") or ()
+
+    # 🛑 AR-1397 GRADER FINDING F-1, CRITICAL, AND THE SAME FAIL-OPEN WEARING A DIFFERENT SPELLING.
+    # The first repair paired the two fields by KEY PRESENCE and then believed whatever value it
+    # found. So the arm it closed -- DELETE the readiness key -- was refused, while the strictly
+    # CHEAPER arm was wide open: SET the key to READY. The independent grader took the real
+    # nine-node receipt, attached the E8 dependency record whose every access axis reads UNVERIFIED
+    # and whose implementation_status is NOT_STARTED, declared `compile_readiness=READY`, and got
+    # `COMPILED 1 strategy`.
+    #
+    # The docstring above already promised "the two facts must agree, in BOTH directions" -- and a
+    # receipt claiming READY while its own records say nothing is verified IS a disagreement. The
+    # prose was true; the code only checked co-presence. So DERIVE readiness from the records this
+    # function is already holding, and treat the declared value as a claim to be checked against
+    # them, never as the answer.
+    #
+    # A DECLARED STATUS THAT NOTHING RE-DERIVES IS A SELF-REPORT, AND A SELF-REPORT IS NOT A GATE.
+    # Ordered LAST deliberately: the presence and vocabulary checks below produce a more specific
+    # refusal for the attacks they own, and a receipt that already declares itself blocked should
+    # be narrated as blocked rather than as contradicted. This check is the backstop for the one
+    # case the others cannot see -- a receipt that claims READY over records that are not.
 
     if dependencies and not has_readiness:
         raise CanonicalNodeNotAcceptedError(
@@ -276,7 +383,13 @@ def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
         )
 
     if has_readiness and readiness != _COMPILE_READY:
-        blocker = record.get("structured_blocker") or {}
+        # AR-1397 grader finding F-5: `record.get(...) or {}` left every non-dict TRUTHY value
+        # through, so `structured_blocker="not a dict"` raised AttributeError instead of the
+        # documented CanonicalNodeNotAcceptedError. It still failed closed, but a caller catching
+        # the documented exception crashed instead of handling a refusal -- a gate that fails in
+        # an undocumented way is a gate callers cannot rely on.
+        raw_blocker = record.get("structured_blocker")
+        blocker = raw_blocker if isinstance(raw_blocker, dict) else {}
         # AR-1386A section 4, final bullet: the terminal wording is READ FROM the structured
         # blocker. It used to be the hard-coded sentence "This refusal is NONTERMINAL -- unverified
         # is not unavailable", which is true of an unverified provider and FALSE of one proven
@@ -306,6 +419,19 @@ def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
             f"dependency_ids={blocker.get('dependency_ids')!r}. "
             "Every canonical node may well have verified; the strategy is still not executable "
             f"because a required value is computed outside Trading Forge. {verdict}"
+        )
+
+    # THE BACKSTOP (AR-1397 F-1). Everything above trusts what the receipt SAYS. This re-derives it
+    # from what the receipt CARRIES, and is the only check that can catch a receipt whose readiness
+    # value is well-formed, present, paired with dependency records -- and simply false.
+    derived_blockers = _derived_dependency_blockers(dependencies)
+    if derived_blockers:
+        raise CanonicalNodeNotAcceptedError(
+            "EXTERNAL_DEPENDENCY_READINESS_CONTRADICTED: this receipt declares "
+            f"compile_readiness={readiness!r}, but its own dependency records are not satisfied: "
+            f"{derived_blockers}. Refusing to compile. Readiness is re-derived from the records, "
+            "never taken on the receipt's word -- a declared status nothing re-derives is a "
+            "self-report, not a gate."
         )
 
 
