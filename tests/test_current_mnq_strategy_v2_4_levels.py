@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from research import current_mnq_strategy_v2_4_levels as levels
 from research import current_mnq_strategy_v2_3_engine as prod
@@ -59,9 +60,6 @@ def test_future_unconfirmed_pivot_is_never_used():
 
 
 def test_reference_window_is_frozen_at_candidate_confirmation_not_current_asof():
-    # Four comparison pivots existed inside the candidate's own 40-day history.
-    # Weeks later those pivots are outside today's 40-day map window while the
-    # candidate is still visible. The candidate must NOT suddenly reclassify.
     q = piv([
         (ts("2026-06-10 10:00"), ts("2026-06-10 10:45"), "R", 19500.0, .40, 1.40, 20.0),
         (ts("2026-06-11 10:00"), ts("2026-06-11 10:45"), "R", 19600.0, .40, 1.50, 20.0),
@@ -105,8 +103,6 @@ def test_candidate_does_not_grade_itself_inside_its_reference_distribution():
         (ts("2026-08-13 10:00"), ts("2026-08-13 10:45"), "S", 18700.0, .40, 1.40, 20.0),
         (ts("2026-08-14 10:00"), ts("2026-08-14 10:45"), "S", 18600.0, .40, 1.31, 20.0),
     ])
-    # Prior distribution for the final candidate is [1.1,1.2,1.3,1.4]; Q75=1.325,
-    # so 1.31 must fail. Including itself would change the reference question.
     out = levels.exceptional_single_swing_zones(q, pd.DataFrame(), empty_bars(), asof, core.Params())
     assert not any(x.mid == 18600.0 for x in out)
 
@@ -127,7 +123,7 @@ def test_established_multi_rejection_zone_wins_over_overlapping_single_swing():
     assert out == []
 
 
-def test_key_level_and_native_fvg_overlap_add_confluence_without_changing_equation():
+def test_active_fvg_overlap_adds_the_only_allowed_external_confluence_vote():
     asof = ts("2026-08-17 09:30")
     q = piv([
         (ts("2026-08-13 10:00"), ts("2026-08-13 10:45"), "S", 19000.0, .65, 2.0, 20.0),
@@ -135,10 +131,21 @@ def test_key_level_and_native_fvg_overlap_add_confluence_without_changing_equati
     fvg = SimpleNamespace(lo=18999.0, hi=19001.0)
     out = levels.exceptional_single_swing_zones(
         q, pd.DataFrame(), empty_bars(), asof, core.Params(),
-        refs=[19000.0], native_fvgs=[fvg],
+        refs=[], native_fvgs=[fvg],
     )
     assert len(out) == 1
-    assert out[0].confluence == 2
+    assert out[0].confluence == 1
+
+
+def test_prior_day_or_week_reference_injection_fails_closed():
+    asof = ts("2026-08-17 09:30")
+    q = piv([
+        (ts("2026-08-13 10:00"), ts("2026-08-13 10:45"), "S", 19000.0, .65, 2.0, 20.0),
+    ])
+    with pytest.raises(RuntimeError, match="V24_LEGACY_PRIOR_DAY_WEEK_REFERENCE_FORBIDDEN"):
+        levels.exceptional_single_swing_zones(
+            q, pd.DataFrame(), empty_bars(), asof, core.Params(), refs=[19000.0],
+        )
 
 
 def test_percentile_threshold_adapts_up_when_recent_market_has_larger_swings():
@@ -147,10 +154,11 @@ def test_percentile_threshold_adapts_up_when_recent_market_has_larger_swings():
     assert threshold == 2.0
 
 
-def test_key_level_contract_contains_no_pnl_optimizer_and_forbids_later_pivots():
+def test_sr_location_contract_contains_no_pnl_optimizer_and_forbids_later_pivots():
     spec = levels.load_key_level_spec()
     assert spec["anti_overfit"]["no_PnL_selection"] is True
     assert spec["anti_overfit"]["no_threshold_search"] is True
+    assert set(spec["forbidden_location_families"]) == {"PDH", "PDL", "PWH", "PWL"}
     rule = spec["exceptional_single_swing_path"]
     assert rule["recent_displacement_percentile"] == .75
     assert rule["absolute_displacement_floor_atr"] == 1.0
