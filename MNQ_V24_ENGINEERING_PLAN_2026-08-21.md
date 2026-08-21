@@ -9,6 +9,22 @@ The sole focus is the operator's own discretionary MNQ strategy translation
 (`MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1`). All Trading Forge tooling may be used in service
 of this lane. This lane continues on this branch.
 
+Operator orders 2026-08-21, later same day: (a) manual replay/labeling collection stays
+CLOSED — the existing evidence base is sufficient; (b) seat model — the Fable 5 seat is
+the architect/chief engineer (plans, dispatches, reviews, seals); heavy execution
+packets run on Opus 5 worker subagents dispatched from it; independent grading stays
+with `accuracy-validator` (doer ≠ grader at every level).
+
+Objective ladder (the operator's stated goal, on paper):
+- Layer 1 — translate the trader faithfully. He is the proven edge; copy first.
+- Layer 2 — the same rules minus human limits: perfect consistency, memory, and
+  measurement, every session, no rule changes. The bot beats the trader's own
+  execution leaks the day it passes fidelity.
+- Layer 3 — AFTER v2.4 is decided, an evidence-gated improvement engine (A/B
+  candidates, critic loop, challenger lanes) may make it smarter than the trader:
+  candidates audition on sealed data and only receipts promote. The roadmap non-goals
+  are the gate for Layer 3, not a permanent ceiling.
+
 Evidence grades used below: MEASURED HERE = I ran the command / read the executable line
 this session. ARTIFACT-SOURCED = read from a committed file. RELAYED = stated in the
 GPT-session chat transcript the operator pasted; not yet reproduced from artifacts.
@@ -50,26 +66,21 @@ GPT-session chat transcript the operator pasted; not yet reproduced from artifac
   per session, 09:30–12:00 ET. The $400 minimum first-destination gate stands.
   [ARTIFACT-SOURCED]
 
-## 2. Evidence custody — what exists on this machine vs. as hashes only
+## 2. Evidence custody — verified state as of 2026-08-21 (second pass, operator-supplied paths)
 
-| Evidence | Sealed reference | Local bytes found 2026-08-21 |
+| Evidence | Sealed reference | Local custody status |
 |---|---|---|
-| 14-case trader labels | sha256 `11d8dec0…` | NOT MATCHED YET. Downloads holds `mnq_replay_labels_FROZEN.json` (`7a815454…`), `mnq_replay_v3_labels_FROZEN.json` (`1b20b0a8…`), `mnq_replay_v3_labels_DRAFT.json` (`7fea1c66…`) — none equals the sealed hash. [MEASURED HERE] |
-| 65-screenshot corpus zip | sha256 `da25a057…` | Not found in Downloads/Desktop/Documents/Videos. [MEASURED HERE] |
-| 3 force/TP videos (`Desktop 2026.08.19/20 - *.mp4`) | per-file sha256 in registry | Not found in the same sweep. [MEASURED HERE] |
-| Trade-ledger CSV (74 rows) + 8 ledger screenshots | reconciled in the GPT session [RELAYED]; no repo binding found under `research/` [MEASURED HERE] | Not found in the same sweep. |
+| 65-screenshot corpus zip | sha256 `da25a057…` | VERIFIED byte-exact: `Pictures/Trading screenshots (5).zip`. [MEASURED HERE] |
+| 3 sealed force/TP videos | per-file sha256 in registry | ALL VERIFIED byte-exact in `Videos/NVIDIA/Desktop/`. [MEASURED HERE] |
+| 14-case trader labels | sealed sha256 `11d8dec0…` (a GPT-sandbox serialization; those exact bytes died with that sandbox) | CONTENT CONFIRMED: `Downloads/mnq_replay_v3_labels_FROZEN.json` (sha256 `1b20b0a8…`) carries exactly the 14 frozen-manifest case IDs; final actions 4 LONG / 3 SHORT / 6 WAIT / 1 NO_TRADE, force 8 FORCE_REAL / 6 N_A — consistent with the sealed 6-wait contract. No faithful re-serialization reproduces `11d8dec0…` [MEASURED HERE] → registry gets RE-SEALED to the local bytes with a provenance note. No silent substitution. |
+| Trade-ledger CSV | none in repo yet (GPT chat verification only [RELAYED]) | FOUND: `Downloads/backtesting-analytics.csv` (identical duplicate "(1)" copy, both sha256 `0282abdb…`): 74 rows, all CME_MINI:MNQ, 2025-04-02..2025-06-20, 28 buy / 46 sell. Reconciliation receipt owed in-repo before oracle use. [MEASURED HERE] |
 | Replay-lab packs | pack id `aa4e3210…` | Downloads holds review + calibration packs (zip + unzipped). [MEASURED HERE] |
+| NEW evidence, not yet in registry | — | 13 screenshots dated 2026-08-21 in the live `Pictures/Trading screenshots` folder (operator-stated role: how the same move/momentum candles look on 1m vs 5m — direct support for the 1m-sub-bar → forming-5m reconstruction rule) + a 4th video `Desktop 2026.08.19 - 19.49.23.03.mp4` (sha256 `74b15857…`), role pending one operator line. Registration owed under closed-world discipline. [MEASURED HERE] |
 
-Custody actions (Phase 0): operator points the seat at the actual files (or drops them
-in one folder). Every file is hash-verified against the registry before use. For the
-labels: try faithful normalizations (re-serialization) of the Downloads FROZEN file to
-reproduce `11d8dec0…`; if the sealed bytes cannot be reproduced, the honest state is
-recorded and the operator re-confirms his 14 labels once — his word is the ground truth
-the hash was protecting — and the seal is regenerated. No silent substitution.
-The ledger CSV must additionally be registered (hash + row count + reconciliation
-receipt) in the evidence registry — the GPT session verified it in chat [RELAYED] but
-left no repo artifact; that verification must be reproduced here before the ledger is
-used as an oracle.
+Custody actions remaining (Phase 0): re-seal labels reference; register the 13+1 new
+items with operator-stated roles; commit the ledger reconciliation receipt (hash, row
+count, per-row MNQ point-value check, exit-family split). Evidence bytes stay out of
+git; only hashes and receipts land.
 
 ## 3. Inherited defect queue (from the GPT session; RELAYED until re-measured)
 
@@ -87,10 +98,12 @@ errors. Named open defects when the seat died:
    pre-break exception.
 3. The 6 pre-window signals are unlabeled hazards: under the one-bullet rule a false
    early entry destroys the real setup later. They are not to be suppressed to improve
-   a score; they need trader labels (new replay cases) or precise WAIT/NO_TRADE
-   predicates from the operator's stated reasons: price never reached the key level /
-   second candle never printed outside the level / rejection without a momentum candle
-   forming / doji without the second strong candle.
+   a score; they are resolved from existing evidence plus precise WAIT/NO_TRADE
+   predicates built from the operator's stated reasons: price never reached the key
+   level / second candle never printed outside the level / rejection without a
+   momentum candle forming / doji without the second strong candle. (Replay collection
+   is CLOSED per operator 2026-08-21; one targeted operator question is the only
+   human fallback.)
 4. Replay latency regressed during the anchored-zone work; correct-but-slow is a
    release blocker for live parity. Keep the proven exact-equivalence caches; profile
    before and after every map change.
@@ -101,12 +114,11 @@ errors. Named open defects when the seat died:
 ## 4. What the operator holds (the "powers"), mapped to engineering roles
 
 1. Frozen replay labels (14 cases) — the action/timing oracle. Sealed, non-PnL.
-2. Replay lab (built, CI-gated, runs locally) — the machine that mints NEW labeled
-   cases cheaply. The registry currently says manual collection is closed; REOPENING it
-   deliberately per batch is the single highest-leverage act available: every 20-minute
-   labeling session adds trader-truth cases the bot must match, and is the antidote to
-   overfitting 14 windows. Recommended cadence: batches of 10–15 blind cases, mixed
-   with the 6 hazard windows and fresh sessions.
+2. Replay lab (built, CI-gated, runs locally) — retained as machine infrastructure.
+   Operator ruling 2026-08-21: manual replay/labeling collection stays CLOSED — the
+   existing evidence base is sufficient. The frozen 14 cases re-run mechanically
+   forever as regression; the only human fallback is a single targeted operator
+   question when a disagreement cannot be settled from existing evidence.
 3. 65-screenshot closed-world corpus + gold fixtures — zone/TP semantic truth
    (`user_fidelity_gold.json` already binds the two pre-break exceptions, rejection
    stories, TP-zone-1/2 semantics).
@@ -148,10 +160,10 @@ errors. Named open defects when the seat died:
 - Convert the operator's four WAIT reasons into executable story predicates with
   fixtures (they are exactly testable: no-reach, no-second-candle-outside,
   rejection-without-momentum-candle, doji-without-second-strong-candle).
-- Reopen label collection (operator decision) and grow the oracle set with blind
-  batches; every disagreement is mined: bot mistranslation → smallest semantic repair;
-  trader-confirmed judgment call → recorded as resolved; genuinely ambiguous →
-  `UNRESOLVED_SOURCE_AMBIGUITY`, not invented behavior.
+- Disagreement mining is machine-only (collection CLOSED per operator 2026-08-21):
+  bot mistranslation → smallest semantic repair; trader-confirmed judgment call →
+  recorded as resolved; genuinely ambiguous → `UNRESOLVED_SOURCE_AMBIGUITY`, not
+  invented behavior — one targeted operator question is the only human fallback.
 - Bind the reproduced ledger as the TP/exit oracle: for sessions where bot and trader
   agree on entry, compare direction-adjusted points-to-exit distributions; disagreement
   is diagnostic evidence, never a tuning signal.
@@ -211,13 +223,18 @@ errors. Named open defects when the seat died:
   risk enforcement drills. Real-capital go remains the operator's explicit decision;
   PR merge remains a separate explicit decision after gates.
 
-## 6. Immediate next actions (ordered)
+## 6. Immediate next actions (ordered; updated after custody verification)
 1. Fix the failing entry-fidelity test at head (premarket previous-close context).
 2. Produce the calibration status receipt; make replay-lab green at head.
 3. Push; verify both formerly-red workflows green at the exact new head.
-4. Operator supplies evidence bytes (§2); hash-verify all; register the ledger CSV.
+4. Register the new evidence (13 × 2026-08-21 screenshots, 1m-vs-5m role; 4th video
+   pending its one-line role); re-seal the labels reference to local bytes
+   `1b20b0a8…`; commit the ledger reconciliation receipt (74 rows, `0282abdb…`).
 5. Re-run the 14-case regrade; commit the measured per-case scorecard.
 6. Resume defect queue §3 in order (decision-time target map first).
+Execution model: Opus 5 worker subagents do the packets; the Fable 5 architect seat
+scopes, reviews diffs, and dispatches the independent grader. Doer ≠ grader holds at
+every level.
 
 ## 7. Standing rails (all phases)
 - 17.25-point stop and 15 MNQ are frozen constants, never variables.
