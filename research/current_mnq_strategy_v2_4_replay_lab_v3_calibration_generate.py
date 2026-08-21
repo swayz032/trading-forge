@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Generate a momentum-heavy bilateral-context replay calibration pack.
+"""Generate an automated momentum-heavy bilateral-context calibration artifact.
 
-This is fidelity calibration only. It intentionally reuses seen development
-sessions when useful because the trader asked for more real momentum examples and
-for charts with meaningful higher AND lower reaction context so both bullish and
-bearish TP plans can be marked. No PnL/exit/winner information participates.
+This is fidelity regression only. It may reuse seen development sessions because
+no PnL/exit/winner information participates. The trader has already supplied and
+frozen the manual evidence corpus; this generator is machine verification and does
+not request new trader replay work.
+
+Current strategy scope is closed: structural support/resistance, liquidity/reaction
+clusters and active 15m FVGs only. PDH/PDL/PWH/PWL are never supplied to reaction
+construction.
 """
 from __future__ import annotations
 
@@ -67,7 +71,7 @@ def _meaningful_destinations(env: dict, dte, asof: pd.Timestamp, price: float, d
     return [
         x for x in build_reaction_destinations(
             env["piv5"], env["full5"], env["h15"], asof, p,
-            env["pdm"], env["pwm"], dte, price, direction,
+            {}, {}, dte, price, direction,
             piv15=env["piv15"],
         )
         if bool(x.meaningful) and float(x.first_contact_distance) > 0
@@ -149,8 +153,8 @@ def main() -> None:
     finally:
         v3._make_case = original_make_case
 
-    # Objective causal 15m FVG context is safe trader-visible market structure;
-    # it contains no bot action, selected target, PnL, or future outcome.
+    # Objective causal 15m FVG context is safe machine-visible market structure;
+    # it contains no selected target, PnL, or future outcome.
     for case in review["cases"]:
         case["context_15m_active_fvgs_at_replay_start"] = _fvg_rows(env, case["replay_start"])
         case["calibration_context"] = {
@@ -160,16 +164,17 @@ def main() -> None:
             "context_1m_minutes": 60,
         }
 
-    review["status"] = "TRADER_FIDELITY_CALIBRATION_MOMENTUM_HEAVY_BILATERAL_CONTEXT"
+    review["status"] = "AUTOMATED_FIDELITY_REGRESSION_MOMENTUM_HEAVY_BILATERAL_CONTEXT"
     review["calibration_requirements"] = str(REQ)
     review["target_policy"] = "current_mnq_strategy_v2_4_target_policy"
     review["tp_instruction"] = (
-        "Mark the meaningful physical reaction targets you would use in BOTH directions. "
-        "A valid TP can be a key level/reaction cluster or the midpoint of an active 15m FVG. "
-        "For entry safety, the trader uses the planned TP display: $400+ at the frozen 15-MNQ "
-        "reference size can still be enough gap; under $400 blocks an immediate entry. An "
-        "untouched under-$400 TP1 may not be blindly skipped for TP2. A later valid continuation "
-        "earned at that same reaction area can make the next meaningful destination active."
+        "Machine regression context: valid targets are structural support/resistance reaction "
+        "zones, 5m liquidity/reaction clusters, or the midpoint of an active 15m FVG. "
+        "PDH/PDL/PWH/PWL are not strategy inputs. For entry safety, the planned TP display "
+        "uses the trader's frozen $400 reference rule: $400+ at 15 MNQ can still be enough "
+        "gap if every other A+ gate passes; under $400 blocks immediate entry. An untouched "
+        "under-$400 TP1 may not be blindly skipped for TP2. A later valid continuation earned "
+        "at that same reaction area can make the next meaningful destination active."
     )
     review["pack_id"] = hashlib.sha256(
         json.dumps(review["cases"], sort_keys=True, separators=(",", ":")).encode()
@@ -177,7 +182,7 @@ def main() -> None:
     answers["pack_id"] = review["pack_id"]
 
     # The trader has already frozen labels for the old 14-case pack. Regrade the
-    # repaired bot on those same windows without storing or reading trader labels.
+    # repaired bot on those same windows without requesting any new trader labels.
     answers["post_repair_same_window_regrade"] = regrade_frozen_case_windows(env, p)
 
     v3.write_lab_v3(OUT, review, answers)
@@ -186,7 +191,7 @@ def main() -> None:
     authoritative = int(sampling.get("authoritative_entry_cases", 0))
     near_miss = int(sampling.get("momentum_near_miss_cases", 0))
     receipt = {
-        "status": "TRADER_FIDELITY_CALIBRATION_PACK_READY",
+        "status": "AUTOMATED_FIDELITY_REGRESSION_READY",
         "strategy_release": req["strategy_release"],
         "pack_id": review["pack_id"],
         "case_count": review["case_count"],
@@ -201,12 +206,14 @@ def main() -> None:
         "context_1m_minutes": 60,
         "active_15m_fvg_context_embedded": True,
         "active_15m_fvg_midpoint_is_valid_tp_when_first_reaction": True,
+        "legacy_named_daily_weekly_levels_used": False,
         "tp_reference_safe_floor_usd": 400.0,
         "tp_reference_contracts": 15,
         "untouched_under_400_tp1_blind_rollover_allowed": False,
         "processed_reaction_can_promote_next_destination": True,
         "answer_key_uses_production_target_policy": True,
         "post_repair_same_window_regrade_embedded_in_hidden_key": True,
+        "manual_trader_replay_requested": False,
         "seen_development_sessions_may_be_reused": True,
         "blind_evidence_eligible": False,
         "edge_evidence_eligible": False,
