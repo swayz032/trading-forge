@@ -21,7 +21,34 @@ never by filename or AR-number sort. A newer commit on `gpt-engineering` or any 
 
 ## Latest controlling GPT ruling
 
-**AR-1385A**, `origin/external-advisor/gpt-rulings @ a1ae225bd96908eec64f025bf76d8fcdc2ca0460`
+**AR-1386A**, `origin/external-advisor/gpt-rulings @ 725887a0b0ba8bde9322f114f400f83c3404444e`
+(`advisor-reports/AR-1386A-GPT-EXTERNAL-ADVISOR-RULING-AR1395-1396-PARTIAL-PASS-STAGE-C0-FAIL-CLOSED-CLOSURE-REQUIRED-2026-08-21.md`),
+2026-08-21. Grades AR-1395/AR-1396 **PARTIAL PASS — Stage C0 IMPLEMENTED BUT NOT CLOSED**, and
+orders the bounded AR-1397 closure packet. **Stage C1, E8 trading, PAPER, Topstep and live work all
+remain gated.**
+
+### AR-1397 — DELIVERED, independently graded **VERIFIED 7/10**
+
+- Report: `docs/replay-results/worker-advisor-reports/AR-1397-WORKER1-AR1386A-STAGE-C0-FAIL-CLOSED-CLOSURE-THREE-GRADE-ROUNDS-VERIFIED-7-2026-08-21.md`
+- Graded pin: `39d60f49d4e96b6000e6f645feffb4d60a34ac95`
+- Band history across three independent adversarial rounds: **5 → 6 → 6 → 7**. The grader held at 6
+  twice because a live route to `COMPILED` with an unsatisfied dependency still existed; it is now
+  closed in every shape either party could construct.
+- Closed: AR-1386A §3 (semantic status now gates), §4 (readiness cannot be deleted, assigned-false,
+  or container-confused), §5 (blocker reasons cannot contradict their own axes), §6 (order-independent
+  receipts, a zero-call guard that can actually fail, the five E8 birth tests).
+- 🛑 **TWO RESIDUALS ARE OPEN AND NEED A RULING, NOT CODE** — see report §7 and §11:
+  1. **Unkeyed receipt stamp.** Deleting the dependency declaration and re-stamping still compiles.
+     Closing it means a keyed/HMAC stamp (the frozen-policy pattern already in the repo) — a new
+     keyed-integrity surface, forbidden inside this packet by AR-1386A §7 and reserved-class under
+     `ratify-packet`.
+  2. **Cross-platform float drift, made WORSE by this packet.** The receipt carries 18 float values
+     and the stamp is now MANDATORY, so a float-repr difference on Linux would refuse EVERY receipt
+     rather than merely weaken a check. Latent today (the vertical does not run on Linux), but it
+     must be settled BEFORE anything runs this vertical there. Fixing it moves `fd79f602…`, a hash
+     pinned in four committed locations = re-baselining a frozen certified ref.
+
+Prior controlling ruling: **AR-1385A**, `origin/external-advisor/gpt-rulings @ a1ae225bd96908eec64f025bf76d8fcdc2ca0460`
 (`advisor-reports/AR-1385A-GPT-EXTERNAL-ADVISOR-RULING-AR1394-PASS-WITH-CORRECTIONS-STAGE-C0-COMPILER-CALIBRATION-AUTHORIZED-CURRENCY-PROS-LIVE-GATED-2026-08-21.md`),
 2026-08-21. Grades AR-1394 **PASS WITH REQUIRED BOUNDED CORRECTIONS** and makes the architecture
 decision.
