@@ -108,6 +108,8 @@ def find_first_actionable_signal(env: dict, dte: date, p: prod.Params,
             reference_analysis, cand.direction, cand.setup,
             cand.setup == "BRK5",
             piv15=env["piv15"],
+            entry_location=cand.location,
+            candidate_reason=cand.reason,
         )
         if picked is None:
             continue
