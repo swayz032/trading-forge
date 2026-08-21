@@ -87,6 +87,9 @@ from src.engine.extraction.source_graph_projection import (
 from src.engine.extraction.source_graph_projection import (
     PRESERVED_NON_EXECUTABLE_METADATA,
 )
+from src.engine.extraction.source_graph_projection import (
+    READY_PENDING_CERTIFICATION as _COMPILE_READY,
+)
 from src.engine.extraction.spec_producer import _spec_hash
 from src.engine.source_timeframe_roles import (
     BREAKOUT_CONFIRMATION,
@@ -213,6 +216,40 @@ def _projected_text(outcomes: dict[str, dict], ref: str) -> str:
     return outcome["provenance"]["projected_condition_text"]
 
 
+def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
+    """Refuse a projection that declares itself NOT READY to compile (AR-1395, AR-1385A 7.16).
+
+    🛑 THE HOLE THIS CLOSES. This adapter previously refused only on a canonical ref that was not
+    ACCEPTED, and never read the receipt's readiness at all. That was sufficient while the only way
+    to be unready was a failing canonical node -- but an external decision dependency breaks that
+    assumption: EVERY canonical ref can verify perfectly while the strategy is still unexecutable
+    because something outside Trading Forge computes a value nobody has proven we can obtain.
+
+    Such a receipt carries `grade=RED` and `compile_readiness=BLOCKED_EXTERNAL_DEPENDENCY`, and
+    before this check it compiled as though it were executable.
+
+    A READINESS SIGNAL THAT NO CONSUMER ENFORCES IS NOT A GATE, IT IS A COMMENT.
+
+    Deliberately keyed on `compile_readiness`, not on `grade`: `grade` is RED for many ordinary
+    reasons this adapter already reports more precisely, and duplicating that here would turn one
+    clear refusal into two competing ones. A receipt with no `compile_readiness` key declares no
+    external dependency and is unaffected -- the omit-when-empty discipline means legacy receipts
+    reach this function unchanged and pass straight through.
+    """
+    readiness = record.get("compile_readiness")
+    if readiness is not None and readiness != _COMPILE_READY:
+        blocker = record.get("structured_blocker") or {}
+        raise CanonicalNodeNotAcceptedError(
+            f"projection declares compile_readiness={readiness!r}, refusing to compile. "
+            f"Structured blocker: reason={blocker.get('reason')!r}, "
+            f"terminal={blocker.get('terminal')!r}, "
+            f"dependency_ids={blocker.get('dependency_ids')!r}. "
+            "Every canonical node may well have verified; the strategy is still not executable "
+            "because a required value is computed outside Trading Forge and access to it is not "
+            "proven. This refusal is NONTERMINAL -- unverified is not unavailable."
+        )
+
+
 def build_certified_record(record: dict[str, Any]) -> dict[str, Any]:
     """Reconstruct a raw-shaped `{"strategies": [...]}` certified record from a certified V2.1
     projection receipt, substituting each of the 9 canonical refs' V2.1-CORRECTED text for the
@@ -222,6 +259,10 @@ def build_certified_record(record: dict[str, Any]) -> dict[str, Any]:
     -- checked for all 9 up front, so a single bad ref reports itself rather than surfacing as a
     confusing downstream KeyError.
     """
+    # Readiness FIRST: an artifact that declares itself unready must not be able to hide behind a
+    # later, unrelated refusal (or worse, pass because every canonical ref happens to verify).
+    _refuse_if_not_compile_ready(record)
+
     outcomes = _outcome_by_ref(record)
 
     # Fail closed on ALL 9 before building anything, so a caller sees every failing ref at once

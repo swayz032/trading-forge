@@ -54,14 +54,14 @@
       "status": "DONE",
       "command": "pytest src/engine/tests/test_source_graph_projection.py -q",
       "returncode": 0,
-      "tail": "...............................                                          [100%]\n31 passed in 0.30s",
+      "tail": "...............................                                          [100%]\n31 passed in 0.32s",
       "passed": true
     },
     "I_neighboring_suite": {
       "status": "DONE",
       "command": "pytest src/engine/tests/test_evidence_relevance.py src/engine/tests/ -k antecedent or fidelity or collision or finalizer or opus_phase1_route or g2d -q",
       "returncode": 0,
-      "tail": "........................................................................ [ 24%]\n........................................................................ [ 48%]\n...................................................ss................... [ 72%]\n........................................................................ [ 97%]\n........                                                                 [100%]\n294 passed, 5 skipped, 9407 deselected in 39.07s",
+      "tail": "........................................................................ [ 24%]\n........................................................................ [ 48%]\n...................................................ss................... [ 72%]\n........................................................................ [ 97%]\n........                                                                 [100%]\n294 passed, 5 skipped, 9409 deselected in 23.19s",
       "passed": true,
       "scope": "exact pre-registered AR-1322A/V2 neighboring command per AR-1324A section 3 (evidence_relevance / antecedent / fidelity / collision / finalizer / opus_phase1_route / g2d test population)"
     },

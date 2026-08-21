@@ -461,3 +461,69 @@ def test_C0_6e_calibration_fixture_consumers_are_executable_refs():
         assert ref in ALL_REFS, (
             f"fixture consumer {ref} is not an executable ref of the calibration projection"
         )
+
+
+# --------------------------------------------------------------------------- #
+# 7. The certification seam — AR-1385A section 7 item 16
+# --------------------------------------------------------------------------- #
+
+
+def test_C0_7_blocked_artifact_cannot_pass_the_compile_seam_as_executable():
+    """🛑 THE HOLE THIS TEST WAS WRITTEN TO CLOSE, FOUND BY ATTACKING MY OWN CHANGE.
+
+    `build_certified_record()` refused only on a canonical ref that was not ACCEPTED. It never
+    read `grade`. In a C0 artifact EVERY canonical ref is accepted -- the source conditions verify
+    fine -- and it is the external DEPENDENCY that blocks. So a receipt carrying
+    `grade=RED` and `compile_readiness=BLOCKED_EXTERNAL_DEPENDENCY` sailed straight through the
+    compile seam as though it were executable.
+
+    That is exactly the false green AR-1385A section 7 item 16 forbids: "No C0 output can pass the
+    certification/readiness seam as executable." A readiness signal that no consumer enforces is
+    not a gate, it is a comment.
+
+    ⚠️ AND THIS TEST ITSELF NEARLY PASSED FOR THE WRONG REASON. Calling `build_certified_record`
+    on this synthetic 4-ref projection raises `CanonicalNodeNotAcceptedError` no matter what --
+    because the synthetic fixture does not carry the 9 real canonical refs the adapter expects. A
+    green from that would have proven nothing about readiness. So the readiness refusal is asserted
+    on its own function, and the wiring is asserted by requiring the readiness message to be the one
+    that surfaces -- i.e. that it fires BEFORE the canonical-ref check it would otherwise hide
+    behind.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        _refuse_if_not_compile_ready,
+        build_certified_record,
+    )
+
+    fx = _load_fixture()
+    blocked = _run(external_dependencies=(ExternalDependencySpec(**fx["external_dependency"]),))
+    assert blocked["compile_readiness"] == BLOCKED_EXTERNAL_DEPENDENCY
+
+    # (a) the readiness gate itself refuses
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="BLOCKED_EXTERNAL_DEPENDENCY"):
+        _refuse_if_not_compile_ready(blocked)
+
+    # (b) and it is WIRED IN, fires first, and names readiness -- not canonical refs
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="BLOCKED_EXTERNAL_DEPENDENCY"):
+        build_certified_record(blocked)
+
+
+def test_C0_7b_the_seam_still_accepts_a_ready_artifact():
+    """The discriminating half. A refusal that fires on everything is not a gate either -- this
+    proves the new check rejects the BLOCKED case specifically, not every input it is handed.
+
+    The real certified v2.1 receipt (no external dependencies, grade GREEN) must still compile,
+    which is what the committed artifact's unchanged canonical hash independently attests.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import _refuse_if_not_compile_ready
+
+    ready = _run()
+    assert ready["grade"] == "GREEN_PENDING_CERTIFICATION"
+    assert "compile_readiness" not in ready
+    _refuse_if_not_compile_ready(ready)  # must not raise
+
+    verified = _dep(access_status=ACCESS_VERIFIED, live_delivery=ACCESS_VERIFIED,
+                    historical_replay=ACCESS_VERIFIED, update_policy=ACCESS_VERIFIED)
+    ok = _run(external_dependencies=(verified,))
+    assert ok["compile_readiness"] == "READY_PENDING_CERTIFICATION"
+    _refuse_if_not_compile_ready(ok)  # must not raise
