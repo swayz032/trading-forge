@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
 """Hierarchical first-reaction take-profit engine for Current MNQ v2.4.
 
+Direct trader fidelity scope (2026-08-20): TP construction uses only structural
+support/resistance reaction zones, 5m liquidity/reaction clusters, and active 15m
+FVGs. PDH/PDL/PWH/PWL are legacy inputs retained only in the function signature
+for compatibility and are deliberately ignored.
+
 Trader equation:
 1. The first MEANINGFUL reaction area by physical near edge owns the room/blocker
    question.
-2. A frozen 15m/key area may use an internal 5m liquidity cluster or active 15m
-   FVG for precise TP only when that feature does NOT protrude toward entry.
-3. Internal precision is clipped to the geometric INTERSECTION with the broad
-   area, so a refined target can never escape the area that won first reaction.
-4. A feature that protrudes toward entry remains a standalone earlier reaction and
+2. A broad 15m S/R area may use an internal 5m liquidity/reaction cluster or
+   active 15m FVG for precise TP only when that feature does NOT protrude toward
+   entry.
+3. When an FVG owns the first meaningful destination, TP is the FVG midpoint.
+4. Internal precision is clipped to the geometric INTERSECTION with the broad
+   S/R area, so a refined target can never escape the area that won first reaction.
+5. A feature that protrudes toward entry remains a standalone earlier reaction and
    competes using its true near edge.
-5. TP/reaction significance is intentionally distinct from entry authorization:
-   an active 15m zone with >=2 independent rejections and minimum structural
-   quality may block/refine a target even when it lacks the confluence required
-   to authorize a brand-new A+ entry.
+6. TP/reaction significance is intentionally distinct from entry authorization:
+   an active 15m S/R zone with >=2 independent rejections and minimum structural
+   quality may block/refine a target even when it is not authorized as a fresh
+   A+ entry.
 
-This closes both a false-room loophole and an entry-filter leakage loophole. No
-farther feature may leapfrog a nearer meaningful reaction area for prettier PnL.
+No farther feature may leapfrog a nearer meaningful reaction area for prettier PnL.
 """
 from __future__ import annotations
 
@@ -33,8 +39,6 @@ from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
 core = v23.core
 TICK = core.TICK
 FVG_SOURCE = "FVG_15M_NATIVE_UNMITIGATED"
-KEY_SOURCES = {"PDH", "PDL", "PWH", "PWL"}
-PRIMARY_KINDS = {"KEY_ZONE_15M", "KEY_LEVEL"}
 
 
 @dataclass(frozen=True)
@@ -50,9 +54,10 @@ class ReactionDestination:
 
 
 def _liquidity_quality(loc: core.Location) -> float:
-    source_bonus = 0.10 if loc.source in KEY_SOURCES else 0.0
+    # No bonus exists for inherited named daily/weekly levels. Quality comes only
+    # from the structural S/R or reaction cluster plus active FVG confluence.
     conf_bonus = 0.05 * min(int(loc.confluence), 2)
-    return float(np.clip(float(loc.quality) + source_bonus + conf_bonus, 0.0, 1.0))
+    return float(np.clip(float(loc.quality) + conf_bonus, 0.0, 1.0))
 
 
 def _ahead(entry: float, lo: float, hi: float, direction: str) -> bool:
@@ -74,8 +79,6 @@ def _cluster_target(loc: core.Location, direction: str, depth: float) -> float:
 
 
 def _structurally_meaningful_cluster(loc: core.Location, p: core.Params) -> bool:
-    if loc.source in KEY_SOURCES:
-        return True
     z = getattr(loc, "zone", None)
     if z is None:
         return False
@@ -85,12 +88,7 @@ def _structurally_meaningful_cluster(loc: core.Location, p: core.Params) -> bool
 def _target_only_15m_locations(zones: list[core.Zone],
                                existing_ids: set[str],
                                p: core.Params) -> list[core.Location]:
-    """Keep meaningful 15m reaction zones even when entry authorization is stricter.
-
-    Entry authorization additionally asks for confluence or exceptionally high
-    zone quality. TP/blocker relevance only asks whether the active 15m structure
-    is independently established and meets the frozen minimum structural quality.
-    """
+    """Keep meaningful 15m S/R reactions even when entry authorization is stricter."""
     out: list[core.Location] = []
     for z in zones:
         if z is None or not z.active or z.id in existing_ids:
@@ -117,7 +115,7 @@ def _intersection(primary: core.Location, lo: float, hi: float) -> tuple[float, 
 
 def _protrudes_toward_entry(primary: core.Location, lo: float, hi: float,
                             direction: str) -> bool:
-    """True when feature starts closer to entry than the broad primary area."""
+    """True when feature starts closer to entry than the broad S/R area."""
     if direction == "L":
         return float(lo) < float(primary.lo)
     return float(hi) > float(primary.hi)
@@ -144,7 +142,7 @@ def _precision_location(primary: core.Location, feature_source: str, feature_id:
 def _refine_primary(primary_kind: str, primary: core.Location,
                     clusters5: list[core.Location], native_fvgs: list,
                     entry: float, direction: str, p: core.Params) -> ReactionDestination:
-    """Refine a broad area only with features that begin no earlier than it."""
+    """Refine a broad S/R area only with features that begin no earlier than it."""
     broad_contact = _first_contact(entry, float(primary.lo), float(primary.hi), direction)
     broad_target = _cluster_target(primary, direction, float(p.tp_depth))
     # contact, kind-priority, target, source, id, is_fvg, intersection_lo, intersection_hi
@@ -197,8 +195,7 @@ def _refine_primary(primary_kind: str, primary: core.Location,
         )
 
     # Internal ordering remains physical. Exact contact ties prefer 5m precision
-    # because the trader explicitly uses 5m for precise TP; this tie never lets a
-    # later feature leapfrog an earlier one.
+    # because the trader uses 5m for precise reaction/liquidity TP placement.
     contact, _, raw, source, feature_id, is_fvg, ilo, ihi = sorted(
         candidates, key=lambda x: (x[0], x[1], x[4])
     )[0]
@@ -242,36 +239,28 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
     if direction not in {"L", "S"}:
         raise ValueError("direction must be L or S")
 
+    # pdm/pwm are intentionally ignored. They remain arguments only so inherited
+    # callers do not need a simultaneous API migration.
     native_fvgs = active_15m_fvgs(h15, asof)
     a15 = h15[h15.index + pd.Timedelta(minutes=15) <= asof].atr.tail(20).median()
     atr15 = float(a15) if np.isfinite(a15) else 20.0
-    refs: list[float] = []
-    if dte in pdm:
-        refs += list(pdm[dte])
-    if pwm.get(dte):
-        refs += list(pwm[dte])
     tol = max(TICK * 4, p.fvg_overlap_atr * atr15)
 
     zones5 = core.build_zones(piv5, full5, asof, p, look_days=25)
     zones5 = [zone_state_at_v24(z, full5, asof, p) for z in zones5]
-    zones5 = core.enrich_confluence(zones5, refs, native_fvgs, atr15, p)
+    zones5 = core.enrich_confluence(zones5, [], native_fvgs, atr15, p)
     clusters5 = core.zone_locations([z for z in zones5 if z.active])
 
     primaries: list[tuple[str, core.Location]] = []
     if piv15 is not None:
         open_ts = pd.Timestamp(f"{dte} 09:30", tz=core.TZ)
-        level_env = {"h15": h15, "piv15": piv15, "full5": full5, "pdm": pdm, "pwm": pwm}
+        level_env = {"h15": h15, "piv15": piv15, "full5": full5}
         primary_locs, primary_zones = build_entry_locations_v24(level_env, dte, open_ts, p)
         # Entry authorization is intentionally stricter than reaction relevance.
-        # Add established active 15m zones that are meaningful blockers/targets
-        # even if they were not authorized as fresh entries.
+        # Add established active 15m S/R zones that remain meaningful TP blockers.
         existing = {loc.id for loc in primary_locs}
         primary_locs = list(primary_locs) + _target_only_15m_locations(primary_zones, existing, p)
-        for loc in primary_locs:
-            kind = "KEY_LEVEL" if loc.source in KEY_SOURCES else "KEY_ZONE_15M"
-            primaries.append((kind, loc))
-    else:
-        primaries.extend(("KEY_LEVEL", loc) for loc in core.make_key_locations(pdm, pwm, dte, atr15, p))
+        primaries.extend(("KEY_ZONE_15M", loc) for loc in primary_locs)
 
     out: list[ReactionDestination] = []
     primary_locs_only = [x[1] for x in primaries]
@@ -299,8 +288,9 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
             precision_source="LIQUIDITY_CLUSTER_5M",
         ))
 
-    # Suppress only truly internal FVGs already used for primary refinement.
-    # An FVG that protrudes toward entry remains a standalone earlier reaction.
+    # Suppress only truly internal FVGs already used for S/R refinement. An FVG
+    # that appears before the S/R zone remains a standalone earlier reaction and
+    # therefore wins by physical first contact. Its TP is always its midpoint.
     for i, f in enumerate(native_fvgs):
         if _fvg_is_internal_to_any(f, primary_locs_only, direction):
             continue
@@ -321,12 +311,11 @@ def build_reaction_destinations(piv5: pd.DataFrame, full5: pd.DataFrame,
         ))
 
     kind_rank = {
-        "KEY_ZONE_15M": 0, "KEY_LEVEL": 1,
+        "KEY_ZONE_15M": 0,
         "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M": 0,
-        "KEY_LEVEL_REFINED_LIQUIDITY_CLUSTER_5M": 1,
         "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE": 0,
-        "KEY_LEVEL_REFINED_FVG_15M_NATIVE": 1,
-        "LIQUIDITY_CLUSTER": 2, "FVG_15M": 3,
+        "LIQUIDITY_CLUSTER": 1,
+        "FVG_15M": 2,
     }
     out.sort(key=lambda x: (
         x.first_contact_distance, kind_rank.get(x.kind, 9), -x.quality, x.location.id,
@@ -365,9 +354,6 @@ def classify_first_reaction_destination(destinations: list[ReactionDestination],
             d.location, raw, px, actual_target_distance, d.quality,
             False, True, bool(d.fvg_confluent),
         )
-        # Replay/fidelity diagnostics need the semantic reaction owner and its
-        # physical near-edge distance. These are metadata only: executable target
-        # price, room classification and strategy decisions above are unchanged.
         target.kind = d.kind
         target.first_contact_distance = float(d.first_contact_distance)
         return target, f"FIRST_REACTION:{d.kind}"
@@ -380,6 +366,6 @@ def build_and_classify(piv5: pd.DataFrame, full5: pd.DataFrame, h15: pd.DataFram
                        strong_momentum: bool,
                        piv15: pd.DataFrame | None = None):
     destinations = build_reaction_destinations(
-        piv5, full5, h15, asof, p, pdm, pwm, dte, entry, direction, piv15=piv15,
+        piv5, full5, h15, asof, p, {}, {}, dte, entry, direction, piv15=piv15,
     )
     return classify_first_reaction_destination(destinations, entry, direction, setup, p, strong_momentum)
