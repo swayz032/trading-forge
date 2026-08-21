@@ -1,7 +1,9 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "LOCKED_UNIFIED_TRADER_FIDELITY_EVIDENCE_REGISTRY",
   "locked_at": "2026-08-20",
+  "amended_at": "2026-08-21",
+  "amendment": "schema_version 1 -> 2: video corpus extended from 3 to 8 under operator authorization; see video_corpus_extension_2026_08_21. Purely additive - no sealed entry, rule, crosswalk or invariant was modified.",
   "purpose": "Bind every authoritative trader-supplied screenshot, verified video, frozen replay window/label identity and direct clarification into one closed-world fidelity chain. No individual image, video, replay case or older contract may be interpreted as a standalone strategy when the combined evidence says otherwise.",
   "privacy": "No screenshot, video or private replay-label bytes are committed here. Only filenames, hashes, pack identities, case windows and semantic provenance links are stored.",
   "authority_order": [
@@ -48,8 +50,78 @@
       "name":"Desktop 2026.08.20 - 20.37.47.04.mp4",
       "sha256":"218ca9bb827db2c540d19782f6cef2227e45492a1a04b847dd78a6b3e23cda72",
       "roles":["exact_200_dollar_unsafe_tp_example","tp1_reaction","retest_then_later_momentum_continuation","no_blind_tp1_to_tp2_leapfrog"]
+    },
+    {
+      "name":"Desktop 2026.08.19 - 19.49.23.03.mp4",
+      "sha256":"74b1585768e77dc394fcef6f94bf445a3faeb7842f19b9cd0b6034328f604d20",
+      "roles":["1m_causal_decomposition_only","forming_5m_force_path"],
+      "added":"2026-08-21",
+      "role_provenance":"OPERATOR_STATED",
+      "duration_seconds":31.8,
+      "operator_words":"i entry on 5 minute; the 1 minute chart is to show what the candles and trade looks like in 1 minute cause the bot uses 1 min candles to equal 5 minute candles; that is already in my files.",
+      "notes":"FX Replay MNQ 1m view of replayed Tue 10 Jun 2025. The 1m chart is a DEMONSTRATION view of the same trade, not the execution view; entry authority remains 5m. Observed on tape: short, 15 contracts, entry/BE 21839.25, stop 21856.50 (=17.25 points, -517.50 USD), target 21804.25 (+1050.00 USD) filled, price continued to 21787.00; operator then circled the entry cluster near 21855. Audio is silent (max -66.2 dB). The trade facts are measured; the clip is registered ONLY for the 1m-vs-5m decomposition role the operator stated, and may not be cited as a TP-hierarchy example."
+    },
+    {
+      "name":"Desktop 2026.08.15 - 17.13.57.01.mp4",
+      "sha256":"7dbc51c72d8b638a1157b294f9ea021f83fda77b6a91e390ee8c5c4c08cf257a",
+      "roles":["extended_5m_zone_replay_session"],
+      "added":"2026-08-21",
+      "role_provenance":"DERIVED_NOT_OPERATOR_STATED",
+      "duration_seconds":14027.6,
+      "enumerated":false,
+      "notes":"FX Replay MNQ 5m, 3h53m48s, 6.03 GB. Only 6 frames sampled - CONTENT IS UNENUMERATED and this entry may NOT be cited for any specific rule until enumerated. Traded at 17 contracts, not the frozen 15; no tick/dollar arithmetic from these frames may be normalised at 15. A PDH text label is drawn on the layout - see pdh_label_disposition."
+    },
+    {
+      "name":"Desktop 2026.08.16 - 23.06.30.02.mp4",
+      "sha256":"8f4020a8aa7dd6fa48d48508d411e25466577fcd0e140e4ed79a9dd232ec8c8a",
+      "roles":["zone_long_entry","momentum_after_zone_reaction","frozen_17_25_stop_in_situ"],
+      "added":"2026-08-21",
+      "role_provenance":"DERIVED_NOT_OPERATOR_STATED",
+      "duration_seconds":98.3,
+      "notes":"FX Replay MNQ 5m, 15 contracts. Long open: entry/BE 19005.50, stop 18988.25 = 17.25 points exactly (-517.50 USD), taken off a drawn zone box (~18920-18960, dashed midline 18940) after a green momentum push. A PDH text label is drawn at 19165.75 - see pdh_label_disposition."
+    },
+    {
+      "name":"Desktop 2026.08.21 - 10.40.34.05.mp4",
+      "sha256":"08e87682f683db1b9a37200744006588c4a46bedde7d83c3e2c65b9f19870b2b",
+      "roles":["live_forward_session","zones_marked_no_trade_observation"],
+      "added":"2026-08-21",
+      "role_provenance":"DERIVED_NOT_OPERATOR_STATED",
+      "duration_seconds":385.7,
+      "notes":"NOT FX Replay - TradingView LIVE, symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:38-10:46:53 ET (inside the 09:30-12:00 window). Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75) with price between them. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence."
+    },
+    {
+      "name":"Desktop 2026.08.16 - 23.34.40.03.mp4",
+      "sha256":"da8b6c2e4f53f26c4946b526ebeb076b26a7813be02c03391c41a4e7ad638c12",
+      "roles":[],
+      "added":"2026-08-21",
+      "role_provenance":"NO_EVIDENCE_VALUE",
+      "duration_seconds":1.5,
+      "notes":"1.5-second fragment of the FX Replay 5m layout, 15 contracts, zone boxes visible. No trade event and no annotation. Registered for custody completeness only; carries no teachable content and may not be cited as evidence for any rule."
     }
   ],
+  "video_corpus_extension_2026_08_21": {
+    "status":"OPERATOR_AUTHORIZED_EXTENSION_OF_THE_CLOSED_WORLD",
+    "authorizing_words":"and it gets added",
+    "authorized_on":"2026-08-21",
+    "added_video_count":5,
+    "total_video_count_after":8,
+    "prior_three_reverified_byte_exact":true,
+    "manual_collection_remains_closed":true,
+    "no_new_trader_replay_or_labeling_requested_or_implied":true,
+    "edge_evidence_eligible":false,
+    "custody_receipt":"research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md",
+    "method":"sha256sum plus ffprobe on each file; frames sampled with ffmpeg and read visually. No evidence bytes are committed; only names, hashes, durations and semantic roles.",
+    "role_provenance_law":"An entry marked DERIVED_NOT_OPERATOR_STATED carries the engineer's reading, not the trader's words, and is outranked by any later direct trader clarification.",
+    "pdh_label_disposition": {
+      "operator_words":"i dont use pdh",
+      "measured":"A PDH text label is RENDERED on the chart layout in the 2026.08.15 and 2026.08.16 videos (the latter at 19165.75). No entry, target or confluence decision was measured to use it.",
+      "ruling":"PDH is NOT a strategy input. The on-screen label is a residual drawing from an older layout and is scenery, not authority.",
+      "tag":"pdh_label_visible_not_a_strategy_input",
+      "changes_the_ban":false,
+      "consistent_with":"semantic_crosswalk.market_map (PDH/PDL/PWH/PWL are forbidden)",
+      "clearance_scope":"Rests on the operator ruling about his own strategy, NOT on an exhaustive frame enumeration; 6 frames of the 2026.08.15 file and 5 of the 2026.08.16 file were sampled."
+    }
+  },
   "frozen_replay_evidence": {
     "case_manifest": "research/current_mnq_strategy_v2_4_frozen_replay_case_manifest_2026_08_20.json",
     "source_pack_id": "aa4e32104b39e0aaa37eb2bd2c90e67a059604447892411d7dfd530c243910e4",
