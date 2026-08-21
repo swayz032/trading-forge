@@ -38,8 +38,15 @@ import sys
 
 from PIL import Image
 
-FRAMES = ("docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/"
-          "visual-intelligence-e8-round1/E8Wg6tFPYjo/frames")
+_DEFAULT_BASE = ("docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/"
+                 "visual-intelligence-e8-round1/E8Wg6tFPYjo")
+
+# AR-1385A section 4: the mutation controls must never write into the real evidence tree, so the
+# evidence root is parameterized. TF_VI_E8_EVIDENCE_ROOT is TEST-ONLY -- it is read here and by
+# _worker_vi_e8_hash_manifest.py so the regression harness can point both at a temporary copy.
+# Unset (the normal case) resolves to the committed tree exactly as before.
+BASE = os.environ.get("TF_VI_E8_EVIDENCE_ROOT", _DEFAULT_BASE)
+FRAMES = os.path.join(BASE, "frames")
 
 # (source frame, crop box l/t/r/b, integer scale, output name)
 MAGNIFICATIONS = [

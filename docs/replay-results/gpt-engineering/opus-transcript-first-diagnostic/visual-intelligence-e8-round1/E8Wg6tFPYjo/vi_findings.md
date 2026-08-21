@@ -22,7 +22,9 @@ Task spec: `vi_task.json` in this directory.
 > [`../../E8-EXTERNAL-DEPENDENCY-RECORD.md`](../../E8-EXTERNAL-DEPENDENCY-RECORD.md).
 >
 > **Artifact integrity:** every committed artifact for this source is hashed in
-> `../artifact-manifest.sha256` (32 artifacts). Verify with `sha256sum -c artifact-manifest.sha256`.
+> `../artifact-manifest.sha256` (**34** artifacts). Verify with
+> `python scripts/_worker_vi_e8_hash_manifest.py --verify` — portable decoded-pixel identity plus
+> environment-local byte identity. (`sha256sum -c` checks the byte half only.)
 
 ## Provenance
 
@@ -256,10 +258,15 @@ is recorded at
 
 ## Artifact integrity and reproducibility
 
-- **`../artifact-manifest.sha256`** hashes **all 32** committed artifacts for this source (the
-  original 26 plus the six AR-1393 additions). Verify with `sha256sum -c artifact-manifest.sha256`.
+- **`../artifact-manifest.sha256`** hashes **all 34** committed artifacts for this source (the
+  original 26, the six AR-1393 additions, and the two AR-1394 Currency Pros panel magnifications).
+  **Verify with `python scripts/_worker_vi_e8_hash_manifest.py --verify`** — it checks **portable
+  decoded-pixel** identity *and* environment-local encoded-byte identity. Plain
+  `sha256sum -c artifact-manifest.sha256` still works but checks **only the byte half**, which is
+  *not* portable across Pillow/zlib builds.
   AR-1392's prose implied its inline hashes covered the whole set; they covered only the frames it
-  argued from. Corrected under AR-1383A section 7 item 6.
+  argued from. Corrected under AR-1383A section 7 item 6; the count and the dual-identity split
+  corrected again under AR-1384A section 5 and AR-1385A section 3.3.
 - **`frames/scan_legend_5s.png`** — the full-video scan, regenerated 2026-08-21 by the committed
   generator `scripts/_worker_vi_e8_contact_sheet.py`: **236 samples at 5 s intervals**, one crop of
   the chart legend line carrying **both** the symbol and the active timeframe. **Every tile reads

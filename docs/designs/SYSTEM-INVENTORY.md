@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `5794c1957524523469019ab1771d5db632075d9b`  (worktree DIRTY at generation time)
+> Generated at commit `55f1cdd6c07bea205c8dee13577766d7c286138d`  (worktree DIRTY at generation time)
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -351,7 +351,7 @@ table below it.**
 | C4 | result is not uniform (broken-probe tell) | PASS | largest bucket = 75.6% of 5021 rows |
 | C5 | server entry point discovered | PASS | entry points discovered=242 |
 | C6 | a registered route module is reachable | PASS | modules reachable=798 |
-| C7 | env-flag extractor fires in both languages | PASS | py files with env reads=135, ts=346 |
+| C7 | env-flag extractor fires in both languages | PASS | py files with env reads=138, ts=346 |
 | C8 | TS comment blanker removes commented-out code | PASS | ok |
 | C9 | blanking preserves offsets exactly | PASS | 97 chars in, 97 out |
 | C10 | python env-gate detector fires | PASS | gates=[('TF_PROBE_FLAG', 4, 5)] |

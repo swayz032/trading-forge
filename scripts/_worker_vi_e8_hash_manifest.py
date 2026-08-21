@@ -29,8 +29,12 @@ import sys
 
 from PIL import Image
 
-BASE = ("docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/"
-        "visual-intelligence-e8-round1/E8Wg6tFPYjo")
+_DEFAULT_BASE = ("docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/"
+                 "visual-intelligence-e8-round1/E8Wg6tFPYjo")
+
+# AR-1385A section 4: TEST-ONLY override so the mutation controls can run against a temporary copy
+# of the evidence instead of the committed tree. Unset resolves to the committed tree.
+BASE = os.environ.get("TF_VI_E8_EVIDENCE_ROOT", _DEFAULT_BASE)
 FRAMES = os.path.join(BASE, "frames")
 OUT = os.path.join(BASE, "artifact-manifest.sha256")
 

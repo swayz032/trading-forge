@@ -26,7 +26,7 @@ never by filename or AR-number sort. A newer commit on `gpt-engineering` or any 
 2026-08-21. Grades AR-1393 **PARTIAL PASS** and **SUPERSEDES AR-1383A sections 4 and 8.**
 
 🛑 **THE BIG CORRECTION — the operator caught it and GPT retracted its own framing.** The E8 chart is
-intentionally on **15m** while the **Currency Pros indicator computes and displays the configured
+intentionally on **15m** while the **Currency Pros indicator** computes and displays the configured
 **4H** Premium/Discount state on that same chart. *"The private formula is not shown"* was mistaken
 for *"the required state is absent."* AR-1382A framed a false binary — recover the private formula
 **or** refuse the source — omitting the third branch: **consume the exact provider output under a
@@ -92,14 +92,23 @@ file.
 
 **Lane A: CLOSED** (AR-1382A section 5 — do not run another compiler-readiness preflight cycle).
 
-**Lane B: EXECUTED AND CLOSED** (AR-1392, corrected by AR-1393). Targeted Visual Intelligence ran
-against `E8Wg6tFPYjo`. **VI-E8-1 and VI-E8-2 `MULTIMODAL_RESOLVED` and accepted by AR-1383A sections
-2–3; VI-E8-3 `VISUAL_UNRESOLVED` / `COMPILE_BLOCKER_SOURCE_MISSING`, accepted by section 4.**
-Evidence: `.../visual-intelligence-e8-round1/E8Wg6tFPYjo/`, all 32 artifacts hashed in
-`artifact-manifest.sha256`. AR-1391's claim that no VI executor capability exists was **false and is
-struck** — the capability is a documented worker procedure with committed precedent; the yt-dlp
-403 that appeared to be a hard access wall was a **seven-week-stale dependency**, and the unmodified
-documented command works on 2026.08.19.
+**Lane B: EXECUTED AND CLOSED** (AR-1392, corrected by AR-1393 and AR-1394). Targeted Visual
+Intelligence ran against `E8Wg6tFPYjo`. **Current verdict, three axes:**
+- **VI-E8-1** and **VI-E8-2** `MULTIMODAL_RESOLVED` — accepted, AR-1383A §§2–3.
+- **VI-E8-3A** `MULTIMODAL_RESOLVED` — the external indicator computes the 4H Premium/Discount state
+  and displays it on the 15m chart. **VI-E8-3B** `EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED`
+  (**nonterminal**). Native range selector stays `SOURCE_INCOMPLETE`.
+  ~~*Previously recorded as `VI-E8-3 VISUAL_UNRESOLVED / COMPILE_BLOCKER_SOURCE_MISSING`, accepted by
+  AR-1383A §4*~~ — 🛑 **superseded by AR-1384A; that verdict is false.**
+
+Evidence: `.../visual-intelligence-e8-round1/E8Wg6tFPYjo/`, **34 artifacts** hashed in
+`artifact-manifest.sha256` (~~32~~ — two panel magnifications added by AR-1394). Verify with
+`python scripts/_worker_vi_e8_hash_manifest.py --verify`, which checks **portable decoded-pixel**
+identity *and* environment-local byte identity; plain `sha256sum -c` checks the byte half only.
+AR-1391's claim that no VI executor capability exists was **false and is struck** — the capability is
+a documented worker procedure with committed precedent; the yt-dlp 403 that appeared to be a hard
+access wall was a **seven-week-stale dependency**, and the unmodified documented command works on
+2026.08.19.
 
 **Lane C: ~~CLOSED BY REFUSAL~~ — REFUSAL SUSPENDED** (AR-1384A). The refusal at
 `.../E8-SOURCE-COMPLETENESS-REFUSAL.md` is `SUSPENDED_PENDING_EXTERNAL_DEPENDENCY_PREFLIGHT`,
@@ -130,7 +139,13 @@ stands and is retained for whenever a successor *is* needed: `[MEASURED 2026-08-
 calibration-source queue exists in this repository**; the census manifests are flat inventories with
 no priority field.
 
-**THE ONE THING BLOCKING THE MONEY PATH RIGHT NOW:** whether the operator already has lawful
-**Currency Pros** indicator access on his TradingView account. That single fact decides whether
-Stage B runs (measure whether the 4H Premium/Discount state is machine-readable live and
-historically) or returns `BLOCKED_OPERATOR_ACCESS_REQUIRED`.
+~~**THE ONE THING BLOCKING THE MONEY PATH RIGHT NOW:** whether the operator already has lawful
+Currency Pros indicator access...~~ 🛑 **CORRECTED by AR-1385A §3.2 — that overstated it.** Currency
+Pros access blocks **Stage C1 provider integration only**. It does **not** block **Stage C0 compiler
+calibration**, which AR-1385A authorizes *now* and which needs no access, no purchase and no
+provider at all.
+
+**Operator access question, still open but no longer a blocker for current work:** does the operator
+already hold lawful Currency Pros access in the normal TradingView UI? *"We use TopstepX"* is
+neither yes nor no (AR-1385A §8). If **yes** → the bounded AR-1384A §7 preflight resumes. If **no**
+→ E8 stays calibration-only and nothing is spent.

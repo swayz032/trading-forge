@@ -208,7 +208,7 @@ Still forbidden, and unchanged by this refusal:
 |---|---|
 | `visual-intelligence-e8-round1/E8Wg6tFPYjo/vi_findings.md` | Full findings, with the struck buy-target finding retained and the corrected derivation |
 | `visual-intelligence-e8-round1/E8Wg6tFPYjo/vi_task.json` | Task spec, the three questions, struck historical fields, the action-frame law |
-| `visual-intelligence-e8-round1/E8Wg6tFPYjo/artifact-manifest.sha256` | SHA-256 for all 32 committed artifacts; `sha256sum -c` verifies |
+| `visual-intelligence-e8-round1/E8Wg6tFPYjo/artifact-manifest.sha256` | SHA-256 for all ~~32~~ **34** committed artifacts (count current as of AR-1394); verify with `python scripts/_worker_vi_e8_hash_manifest.py --verify` |
 | `.../frames/scan_legend_5s.png` | The 236-sample full-video scan that carries the VI-E8-3 absence claim **and** its positive control |
 | `.../frames/vi1_00-07-48.png` | Sell-side Fibonacci orientation |
 | `.../frames/vi2_00-16-28.png` | Buy-side final stable frame — stop, entry and target all rendered |

@@ -34,8 +34,13 @@ import hashlib
 import numpy as np
 import os
 
-FRAMES = ("docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/"
-          "visual-intelligence-e8-round1/E8Wg6tFPYjo/frames")
+_DEFAULT_BASE = ("docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/"
+                 "visual-intelligence-e8-round1/E8Wg6tFPYjo")
+
+# AR-1385A section 4: TEST-ONLY evidence-root override, so arm E can exercise a self-mutating copy
+# of this proof against a temporary tree. Unset resolves to the committed tree.
+BASE = os.environ.get("TF_VI_E8_EVIDENCE_ROOT", _DEFAULT_BASE)
+FRAMES = os.path.join(BASE, "frames")
 
 
 def _evidence_fingerprint():
