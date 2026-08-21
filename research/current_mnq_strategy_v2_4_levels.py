@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-"""Causal key-level map for Current MNQ v2.4.
+"""Causal support/resistance map for Current MNQ v2.4.
 
-Two structural paths can create an executable 15m zone:
+Direct trader fidelity scope (2026-08-20): the active strategy map contains only
+structural support/resistance zones plus active 15m FVG context. PDH/PDL/PWH/PWL
+are inherited legacy concepts and are forbidden from v2.4 entry authorization or
+confluence.
+
+Two structural paths can create an executable 15m S/R zone:
 1. ESTABLISHED: the multi-rejection quality engine.
 2. EXCEPTIONAL_SINGLE_SWING: one confirmed pivot whose rejection wick is valid
    and whose displacement was exceptional versus the same-side regime that
@@ -9,14 +14,14 @@ Two structural paths can create an executable 15m zone:
 
 Later pivots may never retroactively redefine whether an older swing was dramatic.
 The reference window is anchored to each candidate's own confirmation time, so
-older comparison pivots aging out of the *current* premarket window cannot silently
+older comparison pivots aging out of the current premarket window cannot silently
 reclassify a previously-known swing. All zone roles use the v2.4 reclaim/break/
 retest lifecycle. No PnL appears here.
 
-Range-day fidelity: when the causal pre-open structure is MIXED/ranging, a nearby
-structural zone is not deleted (it may still matter as a reaction/TP area), but it
-is not authorized as a fresh entry location unless price has the already-frozen
-minimum room to break out of the range before reaching that zone.
+Range-day fidelity: when causal pre-open structure is MIXED/ranging, a nearby
+structural S/R zone is not deleted (it may still matter as reaction/TP context),
+but it is not authorized as a fresh entry location unless price has the already-
+frozen minimum room to break out of the range before reaching that zone.
 """
 from __future__ import annotations
 
@@ -30,6 +35,7 @@ import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
 from research.current_mnq_strategy_v2_4_fvg import active_15m_fvgs
+from research.current_mnq_strategy_v2_4_premarket import build_premarket_plan_v24
 from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
 
 core = prod.core
@@ -116,7 +122,8 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
     percentile = float(rule["recent_displacement_percentile"])
     min_refs = int(rule["minimum_reference_pivots_for_percentile"])
     established = established or []
-    refs = refs or []
+    if refs:
+        raise RuntimeError("V24_LEGACY_PRIOR_DAY_WEEK_REFERENCE_FORBIDDEN")
     native_fvgs = native_fvgs or []
 
     history = piv15[
@@ -147,9 +154,10 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
 
             close_away = _pivot_close_away(h15, row)
             quality, wick_q, recency = _quality(row, threshold, prior_disp, asof, p, close_away)
-            confluence = int(any(lo <= float(x) <= hi for x in refs))
-            confluence += int(any(core.overlap(lo, hi, float(f.lo), float(f.hi), 0.0)
-                                  for f in native_fvgs))
+            # Direct trader scope: only active FVG overlap may add confluence to
+            # an S/R zone. No daily/weekly reference level vote exists in v2.4.
+            confluence = int(any(core.overlap(lo, hi, float(f.lo), float(f.hi), 0.0)
+                                 for f in native_fvgs))
             created = row.confirm
             zid = f"SWING:{side}:{created.isoformat()}:{round(center/core.TICK)}"
             state = core.ZoneState.ACTIVE_SUPPORT if side == "S" else core.ZoneState.ACTIVE_RESISTANCE
@@ -178,28 +186,16 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
     return sorted(chosen, key=lambda x: (x.mid, x.id))
 
 
-def _previous_close_map(full5: pd.DataFrame, supplied: dict | None) -> dict:
-    """Use supplied causal map or reconstruct it from already-present bars."""
-    if supplied is not None:
-        return supplied
-    try:
-        _, _, pcm = core.prev_maps(full5)
-        return pcm
-    except Exception:
-        return {}
-
-
 def _range_room_authorization(locations: list[core.Location], env: dict, dte,
                               open_ts: pd.Timestamp, p: core.Params) -> list[core.Location]:
-    """On a causal ranging/mixed morning, do not crowd fresh entry zones.
+    """On a causal ranging/mixed morning, do not crowd fresh S/R entry zones.
 
     The location is preserved even when authorization is removed so target/blocker
     construction can still respect a nearby reaction area. No hindsight full-day
-    range label is used.
+    range label or prior-day/week reference is used.
     """
     full5 = env["full5"]
-    pcm = _previous_close_map(full5, env.get("pcm"))
-    plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], pcm)
+    plan = build_premarket_plan_v24(full5, dte)
     if str(plan.pm_structure) != "MIXED":
         return locations
     pm = full5[
@@ -228,28 +224,24 @@ def _range_room_authorization(locations: list[core.Location], env: dict, dte,
 
 def build_entry_locations_v24(env: dict, dte, open_ts: pd.Timestamp,
                               p: core.Params) -> tuple[list[core.Location], list[core.Zone]]:
-    """Build frozen pre-open entry map with native FVG confluence and role flips."""
+    """Build pre-open S/R map with FVG confluence; no prior-day/week levels."""
     h15, piv15, full5 = env["h15"], env["piv15"], env["full5"]
     established_zones = core.build_zones(piv15, h15, open_ts, p, look_days=40)
     established_zones = [zone_state_at_v24(z, full5, open_ts, p) for z in established_zones]
     a15 = h15[h15.index + pd.Timedelta(minutes=15) <= open_ts].atr.tail(20).median()
     atr15 = float(a15) if np.isfinite(a15) else 20.0
     native_fvgs = active_15m_fvgs(h15, open_ts)
-    refs: list[float] = []
-    if dte in env["pdm"]:
-        refs += list(env["pdm"][dte])
-    if env["pwm"].get(dte):
-        refs += list(env["pwm"][dte])
 
-    established_zones = core.enrich_confluence(established_zones, refs, native_fvgs, atr15, p)
+    # No PDH/PDL/PWH/PWL confluence. Structural S/R may be strengthened by an
+    # active FVG overlap; otherwise exceptionally high-quality S/R stands alone.
+    established_zones = core.enrich_confluence(established_zones, [], native_fvgs, atr15, p)
     established = [
         loc for loc in core.zone_locations(established_zones)
         if core.valid_location(loc.zone, p)
     ]
     swings = exceptional_single_swing_zones(
         piv15, h15, full5, open_ts, p,
-        established=established, refs=refs, native_fvgs=native_fvgs,
+        established=established, refs=[], native_fvgs=native_fvgs,
     )
-    keys = core.make_key_locations(env["pdm"], env["pwm"], dte, atr15, p)
-    locations = _range_room_authorization(established + swings + keys, env, dte, open_ts, p)
+    locations = _range_room_authorization(established + swings, env, dte, open_ts, p)
     return locations, established_zones + [x.zone for x in swings if x.zone is not None]
