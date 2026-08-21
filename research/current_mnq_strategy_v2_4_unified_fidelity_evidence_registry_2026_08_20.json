@@ -281,7 +281,9 @@
         "PROBE-E: a DERIVED entry could be relabelled OPERATOR_STATED and given invented operator_words - the OPERATOR_STATED set is now closed and pinned",
         "duration_seconds was falsifiable with no cross-check - now pinned"
       ],
-      "note": "All four routes moved the file bytes and so already tripped the build fingerprint; they were tamper-EVIDENT, not tamper-proof. They are now caught by the content guard as well."
+      "note": "All four routes moved the file bytes and so already tripped the build fingerprint; they were tamper-EVIDENT, not tamper-proof. They are now caught by the content guard as well.",
+      "band_scope": "The first grader's band 6 BOUNDED is scoped to commit 1c6fb449 and EXPIRES THERE. It stated explicitly that it has not verified, and cannot verify, anything at f9c536ff or later - including the suite figures and the receipt guard - because its last measurement pin predates them. Its band must not be read as covering commits it never touched. A fresh grader with no lineage holds the verdict on the current head.",
+      "grader_self_correction": "The grader flagged its own instrument error back to me unprompted, found the root cause, and asked me to correct the registry entry that had retired a working tool on its behalf. The denominator rule it minted applies to graders identically: '0 scene changes' reported with no stated control is itself a conclusion at the confidence of an unverified method. Recorded because a grading loop where only the doer is corrected is not a grading loop."
     },
     "pdh_label_disposition": {
       "operator_words": "i dont use pdh",
@@ -322,11 +324,39 @@
       "semantics_hash_is_recorded_not_guarded": "The build fingerprint value at each landed commit is recorded in the custody receipt as a human-checkable anchor. It is a RECORD, not a test."
     },
     "instruments_that_failed_here": {
-      "why_recorded": "A blind detector and a true negative are the same output. These cost real time and would have produced false confidence if their controls had not been run.",
-      "ffmpeg_scene_change_detection": "select='gt(scene,0.02)' returned 0 hits on the 1.5s fragment - which looks like proof it is static. The SAME detector returned 0 on a positive control known to change. It was blind. Result discarded, not used.",
-      "mean_frame_to_frame_pixel_difference": "Also non-discriminating at this task. The 1.5s fragment scored mean 0.0093, while a LIVE chart with ticking price scored 0.0003 - lower. Screen recordings of charts are mostly static pixels regardless of activity, so the measure does not separate active from idle. Result discarded.",
-      "what_worked": "Decoding all 90 frames into one contact sheet and reading it. Fewest layers between the question and the answer.",
-      "python_subprocess_path_trap": "MSYS-style paths (/c/Users/...) silently produce ZERO frames when passed to ffmpeg from Windows Python. The failure looks like an empty clip, not an error."
+      "why_recorded": "A blind detector and a true negative are the same output. Recorded so the next seat does not re-run these and believe them - and CORRECTED once, because the first version of this block retired a working tool.",
+      "CORRECTION_2026_08_21": "An earlier version of this block recorded ffmpeg scene-change detection as a FAILED, BLIND instrument. That was WRONG and it was a false claim landed in this registry. The independent grader caught it, found the root cause in its own invocation, and sent it back; I reproduced the fix before accepting it. The tool works. Retiring a working detector on the strength of a broken flag would have cost the next seat a real instrument.",
+      "THE_ACTUAL_TRAP_ffmpeg_v_error_suppresses_log_filters": {
+        "what_happens": "`-v error` silences filters that report through the LOG at info level. The command succeeds, prints nothing, and a grep -c returns 0. A blank output is indistinguishable from a genuine zero.",
+        "affected_filters": [
+          "showinfo",
+          "volumedetect",
+          "silencedetect",
+          "ebur128",
+          "blackdetect",
+          "signalstats + metadata=print"
+        ],
+        "measured_proof": "Identical scene-detect command on item 6, which is KNOWN to change (it switches 15m -> 5m on tape): with `-v error` -> 0 hits. With default verbosity -> 264 hits. Same file, same filter, same threshold. The only difference is the verbosity flag.",
+        "how_often_it_bit": "Three times in one session, across two different people and three different filters. It was diagnosed twice and then made again on a third filter without re-checking. This trap is worth more recorded than any tool it appeared to discredit."
+      },
+      "ffmpeg_scene_change_detection": {
+        "verdict": "WORKS. Not retired. select='gt(scene,0.003)' with showinfo at DEFAULT verbosity discriminates cleanly: item 6 (known to change) 264 hits, item 7 (the 1.5s fragment) 0 hits.",
+        "real_limitation_measured": "It detects scene CUTS, not ACTIVITY. The 08-21 live chart returns 0 across its whole 6m26s even though price is ticking, because tick updates are not cuts. A 0 from this tool means 'no layout change', NOT 'nothing happened'. Reading it as the latter is the mistake to avoid."
+      },
+      "mean_frame_to_frame_pixel_difference": {
+        "verdict": "PARTLY CONFOUNDED, not blind. The grader's counter-hypothesis was correct and I tested it.",
+        "within_a_file_it_works": "Item 7 measures 0.0093 across all 90 frames but 0.0049 over frames 15-90. That drop correctly detects the 'Recording has started' toast fading over roughly the first 8 frames - real change that is not a scene cut. My original reading was a TRUE reading of genuinely different content.",
+        "across_files_it_does_not": "Item 7 after the toast still measures 0.0049 against 0.0003 for a live ticking chart - 16x higher for the more static clip. The metric is dominated by per-file encoder noise, so absolute values are NOT comparable between recordings. Use it within one file, never to rank two.",
+        "controls": {
+          "item7_all_90": 0.0093,
+          "item7_after_toast": 0.0049,
+          "live_chart_ticking": 0.0003,
+          "replay_running": 0.0108,
+          "operator_drawing": 0.0487
+        }
+      },
+      "what_worked_for_item_7": "Decoding all 90 frames into one 10x9 contact sheet and reading it. Fewest layers between the question and the answer. Item 7's NO_EVIDENCE_VALUE now rests on TWO non-overlapping paths: that 90/90 read, and the corrected scene-change result at 264 vs 0.",
+      "python_subprocess_path_trap": "MSYS-style paths (/c/Users/...) silently produce ZERO frames when passed to ffmpeg from Windows Python. The failure looks like an empty clip, not an error. Same shape as the verbosity trap: a blank result reading as a measured zero."
     },
     "finding_against_the_2026_08_20_seal": {
       "status": "MEASURED at commit 7e79d082, by vocabulary enumeration over the seal registry.",

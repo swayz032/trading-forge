@@ -63,7 +63,7 @@ OPERATOR_WORDS = {
 
 # A third location holding this file's own bytes. Deliberately NOT the full build
 # fingerprint - see fingerprint_anchor in the registry for why, and for the honest limit.
-REGISTRY_SHA256 = "8f269859452f959eb160cb408960caba31fa0ed793de6b3a998857792af5faee"
+REGISTRY_SHA256 = "256def83614f3d05318ffd5c18a1ce9c566ba01e6d93d652b1a3fd9ac0d2e20f"
 
 ALLOWED_PROVENANCE = {
     "OPERATOR_STATED",
@@ -447,12 +447,42 @@ def test_failed_instruments_stay_recorded(registry):
     """A blind detector and a true negative are the same output. The instruments that
     lied here must stay named or the next seat re-runs them and believes them."""
     f = registry["video_corpus_extension_2026_08_21"]["instruments_that_failed_here"]
-    assert "blind" in f["ffmpeg_scene_change_detection"]
-    assert "discarded" in f["ffmpeg_scene_change_detection"]
-    assert "0.0003" in f["mean_frame_to_frame_pixel_difference"], (
-        "the control that beat the subject must stay on record"
+    # The FIRST version of this block retired a WORKING detector on the strength of a
+    # broken flag. That correction must survive - re-retiring the tool is the regression.
+    assert f["CORRECTION_2026_08_21"].strip()
+    scene = f["ffmpeg_scene_change_detection"]
+    assert scene["verdict"].startswith("WORKS"), (
+        "scene detection works; recording it as failed sends the next seat away from a "
+        "real instrument"
     )
-    assert f["what_worked"].strip()
+    assert "264" in scene["measured_proof"] if "measured_proof" in scene else True
+    assert "not ACTIVITY" in scene["real_limitation_measured"], (
+        "a 0 from this tool means no layout change, NOT nothing happened"
+    )
+    # The actual trap is the flag, and it generalises across filters.
+    trap = f["THE_ACTUAL_TRAP_ffmpeg_v_error_suppresses_log_filters"]
+    assert "264" in trap["measured_proof"] and "-v error" in trap["measured_proof"]
+    for filt in ("showinfo", "volumedetect", "silencedetect"):
+        assert filt in trap["affected_filters"], f"{filt} reports through the log too"
+    # The pixel metric is confounded, not blind, and the distinction is load-bearing.
+    px = f["mean_frame_to_frame_pixel_difference"]
+    assert "not blind" in px["verdict"]
+    assert px["controls"]["item7_after_toast"] == 0.0049, (
+        "the toast-removed control is what separates confounded from blind"
+    )
+    assert "never to rank two" in px["across_files_it_does_not"]
+    assert "TWO non-overlapping paths" in f["what_worked_for_item_7"]
+
+
+def test_a_graders_band_does_not_travel_past_its_pin(registry):
+    """A band earned at one commit read as covering later ones is how a stale grade
+    launders unverified work. The first grader said so itself."""
+    g = registry["video_corpus_extension_2026_08_21"]["independent_grade_2026_08_21"]
+    assert "EXPIRES THERE" in g["band_scope"]
+    assert "1c6fb449" in g["band_scope"]
+    assert g["grader_self_correction"].strip(), (
+        "a grading loop where only the doer gets corrected is not a grading loop"
+    )
 
 
 def test_the_seal_finding_is_recorded_and_scoped(registry):
