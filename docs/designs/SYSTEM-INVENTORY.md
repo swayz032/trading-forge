@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `1c800d160a1f68ad3d35ed7d3111a95e2d176ad1`
+> Generated at commit `cf18b04ac17a20989288e25aff88eebfb07152c6`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -30,7 +30,7 @@ first and its cost is made visible.
 
 | Root | Language | Files scanned | Files skipped as tests | LOC scanned | Symbols enumerated |
 |---|---|---:|---:|---:|---:|
-| `src/` | Python | 315 | 414 | 130996 | 2043 |
+| `src/` | Python | 315 | 414 | 131000 | 2043 |
 | `src/` | TypeScript | 462 | 725 | 210025 | 2933 |
 
 Python symbol rule: every **module-level** `def`, `async def` and `class`.
@@ -4278,8 +4278,8 @@ This is the *we already have this* list.  Check it before writing anything.
 | `_validate_preserved_metadata_schema` | function | `src/engine/extraction/source_graph_projection.py:366` | 0 | unique |
 | `validate_graph_edges` | function | `src/engine/extraction/source_graph_projection.py:422` | 0 | unique |
 | `validate_external_dependencies` | function | `src/engine/extraction/source_graph_projection.py:512` | 0 | unique |
-| `_validate_projection_spec` | function | `src/engine/extraction/source_graph_projection.py:720` | 0 | unique |
-| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:819` | 6 | unique |
+| `_validate_projection_spec` | function | `src/engine/extraction/source_graph_projection.py:724` | 0 | unique |
+| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:823` | 6 | unique |
 | `SpanCollision` | class | `src/engine/extraction/span_collision.py:41` | 0 | unique |
 | `role_of` | function | `src/engine/extraction/span_collision.py:49` | 0 | unique |
 | `_overlap` | function | `src/engine/extraction/span_collision.py:55` | 0 | unique |
