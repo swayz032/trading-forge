@@ -38,10 +38,10 @@ from src.engine.extraction.source_graph_projection import (
     BLOCKED_EXTERNAL_DEPENDENCY,
     EXTERNAL_DEPENDENCY_KIND_INDICATOR,
     FAIL_CLOSED_ACTION,
+    UNRESOLVED_OUTPUT,
     ExternalDependencySpec,
     GraphEdge,
     ProjectionSpec,
-    UNRESOLVED_OUTPUT,
     external_dependency_contract_hash,
     run_projection,
 )

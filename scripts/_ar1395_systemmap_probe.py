@@ -18,7 +18,7 @@ except Exception as exc:  # noqa: BLE001
     print(payload[-2000:])
     print("--- stderr ---")
     print(r.stderr[-2000:])
-    raise SystemExit(0)
+    raise SystemExit(0) from exc
 
 INTERESTING = {"drift", "drifts", "missing", "extra", "errors", "violations",
                "stale", "unknown", "orphan", "mismatch", "added", "removed"}
