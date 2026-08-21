@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """Conditional premarket-plan equation for Current MNQ v2.4.
 
-Premarket direction is a prior. Aligned/neutral setups may continue through the
-remaining gates. A counter-plan setup may continue only when the market produces
-strong contradictory evidence at a major authorized location. The kernel already
-proves the appropriate candle/reversal/breakout confirmation before this function
-is called, so this function never creates a setup by itself.
+Direct trader fidelity correction (2026-08-20): this strategy does NOT use
+PDH/PDL/PWH/PWL. The inherited v2.2 premarket scorer is therefore called with
+empty prior-day/week/previous-close maps so those legacy references cannot affect
+direction, location state, confluence, or authorization. What remains is causal
+premarket price-action structure/control only.
+
+Premarket direction is a prior, never a standalone signal. Aligned/neutral setups
+may continue through the remaining gates. A counter-plan setup may continue only
+when the market produces strong contradictory evidence at a major authorized
+support/resistance or FVG interaction location. The kernel proves the candle and
+force equations before this function can authorize anything.
 """
 from __future__ import annotations
 
@@ -20,6 +26,17 @@ SPEC_PATH = Path(__file__).with_name("current_mnq_strategy_v2_4_premarket_semant
 
 def load_premarket_spec(path: str | Path = SPEC_PATH) -> dict:
     return json.loads(Path(path).read_text())
+
+
+def build_premarket_plan_v24(full5, dte):
+    """Build the v2.4 structural prior with legacy D/W references disabled.
+
+    Passing empty maps is deliberate and fail-closed: PDH/PDL/PWH/PWL and prior
+    close/gap fields cannot contribute to score or location state in this strategy.
+    The inherited routine still computes premarket net movement, candle control,
+    and higher/lower premarket structure causally from bars already known.
+    """
+    return core.premarket_plan(full5, dte, {}, {}, {})
 
 
 def major_location(loc: core.Location, p: core.Params) -> bool:
