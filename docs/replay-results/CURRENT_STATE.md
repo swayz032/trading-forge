@@ -21,52 +21,69 @@ never by filename or AR-number sort. A newer commit on `gpt-engineering` or any 
 
 ## Latest controlling GPT ruling
 
-AR-1382A, `origin/external-advisor/gpt-rulings @ 188b41e39908518f8909f6e9e54a45c346813276`
-(`advisor-reports/AR-1382A-GPT-EXTERNAL-ADVISOR-RULING-AR1390-PASS-WITH-SOURCE-FAITHFUL-OWNERSHIP-CORRECTION-TARGETED-VISION-3-2026-08-20.md`),
-2026-08-20 20:21:49 -0400. Accepts AR-1390 (read-only compiler-readiness preflight) with one
-load-bearing architecture correction, and authorizes targeted Visual Intelligence for three
-questions.
+**AR-1383A**, `origin/external-advisor/gpt-rulings @ 7d7fe29732e9b35dd68eb575fbdc109d363ff3bc`
+(`advisor-reports/AR-1383A-GPT-EXTERNAL-ADVISOR-RULING-AR1392-PARTIAL-PASS-TWO-VI-RESOLVED-FALSE-TARGET-CONFLICT-STRUCK-E8-SOURCE-REFUSAL-NEXT-2026-08-21.md`),
+2026-08-21. Grades AR-1392 **PARTIAL PASS**: VI-E8-1 and VI-E8-2 accepted; VI-E8-3 stays
+`VISUAL_UNRESOLVED`; the buy-side target `SOURCE_CONFLICT` is **struck as false** (it was measured
+on a mid-drag frame). Orders a small correction packet, then the honest E8 source-completeness
+refusal, then the next calibration source. **No Round 4 authorized.**
 
-**The correction matters:** Extraction Compiler Blueprint v4 SUPERSEDES the older scout-pipeline
-assumption that stop/take-profit are always framework-owned. Source-taught stop/target MUST survive
-in `SOURCE_FAITHFUL`; a Trading Forge overlay may be tested separately as `TF_OVERLAY_VARIANT` but
-never reported as the educator's exact strategy. Framework fallback is allowed only for genuinely
-untaught fields and must be provenance-stamped.
+Prior controlling ruling: AR-1382A @ `188b41e39908518f8909f6e9e54a45c346813276`, 2026-08-20.
+
+**The AR-1382A architecture correction still stands and is load-bearing:** Extraction Compiler
+Blueprint v4 SUPERSEDES the older scout-pipeline assumption that stop/take-profit are always
+framework-owned. Source-taught stop/target MUST survive in `SOURCE_FAITHFUL`; a Trading Forge
+overlay may be tested separately as `TF_OVERLAY_VARIANT` but never reported as the educator's exact
+strategy. Framework fallback is allowed only for genuinely untaught fields and must be
+provenance-stamped.
+
+**New permanent control (AR-1383A section 6), binding on all visual work:** for any drag, click,
+resize or drawing action, capture BEFORE → DURING → AFTER-DROP and bind the semantic answer ONLY to
+the **last stable post-action frame**. An intermediate frame is evidence that the action occurred;
+it may never control the conclusion about its result.
 
 ## Worker branch + last verified head
 
-`claude/worker1-h1-20260815`, verified at `f92031b55b93efe4445449d731fd9e5c2581e4c6` (AR-1390 commit)
-at the time AR-1382A was written; advances with each subsequent commit.
+`claude/worker1-h1-20260815`, inspected by AR-1383A at `4fc0f6f5e72a9fc1c17183007389abbee43a2d4d`;
+advances with each subsequent commit. Resolve the current head from the repository, never from this
+file.
 
-## Current locks (AR-1382A section 9)
+## Current locks (AR-1383A section 10, superseding AR-1382A section 9)
 
+- No Round-4 E8 candidate authoring.
 - No hand-editing/reusing rejected E8 candidate SHA `b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041`.
-- No blind Round-4 Opus reconstruction before visual evidence returns.
-- No invented Fibonacci anchors, wick identity, HTF-range selector, BOS/FVG parameters, target ranking, expiry, or other source semantics.
+- No invented 4H range anchors or selector logic, wick identity, BOS/FVG parameters, target ranking, expiry, or other source semantics.
 - **No source-taught stop/target replacement by ATR/Style C inside `SOURCE_FAITHFUL`.**
 - No new semantic-audit machinery absent a demonstrated new trust defect.
-- No certifier/compiler promotion, SOURCE_FAITHFUL backtest, broad Factory rerun, 160-video intake, PAPER, or broker/Topstep/live.
+- No certifier/compiler promotion for E8, SOURCE_FAITHFUL backtest for E8, broad Factory rerun, 160-video intake, PAPER, or broker/Topstep/live.
 
 ## Exact next money-path action
 
 **Lane A: CLOSED** (AR-1382A section 5 — do not run another compiler-readiness preflight cycle).
 
-**Lane B: BLOCKED, awaiting GPT decision on an executor.** The three questions (VI-E8-1 sell-side
-Fibonacci anchors, VI-E8-2 buy-side stop wick, VI-E8-3 4H premium/discount range construction) are
-fully specified with exact derived timestamp windows in
-`docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/visual-intelligence-e8-round1/E8Wg6tFPYjo/vi_task.json`.
-**MEASURED (AR-1391): the "existing Visual Intelligence capability" AR-1382A section 6 points at does
-not exist in this repository** — no frame extraction, no ffmpeg use, no vision runner; the only
-occurrence of the phrase is a comment string. Worker-side media acquisition also failed on both
-attempted paths (yt-dlp 403 across all clients even with a Node JS runtime; browser automation loads
-the player and seeks correctly but media never buffers). Reported as a ruling-premise contradiction
-rather than routed around.
+**Lane B: EXECUTED AND CLOSED** (AR-1392, corrected by AR-1393). Targeted Visual Intelligence ran
+against `E8Wg6tFPYjo`. **VI-E8-1 and VI-E8-2 `MULTIMODAL_RESOLVED` and accepted by AR-1383A sections
+2–3; VI-E8-3 `VISUAL_UNRESOLVED` / `COMPILE_BLOCKER_SOURCE_MISSING`, accepted by section 4.**
+Evidence: `.../visual-intelligence-e8-round1/E8Wg6tFPYjo/`, all 32 artifacts hashed in
+`artifact-manifest.sha256`. AR-1391's claim that no VI executor capability exists was **false and is
+struck** — the capability is a documented worker procedure with committed precedent; the yt-dlp
+403 that appeared to be a hard access wall was a **seven-week-stale dependency**, and the unmodified
+documented command works on 2026.08.19.
 
-**Lane C: WAIT on Lane B.** One fresh E8 candidate identity only after visual evidence returns —
-never an edit of the rejected SHA. If any hard source blocker remains unresolved after the targeted
-visual pass, emit an honest E8 source-completeness refusal and move to the next calibration source
-(AR-1382A section 7 — "no endless reconstruction until green").
+**Lane C: CLOSED BY REFUSAL, not by a candidate** (AR-1383A section 8). VI-E8-3 is proven
+unresolvable from this source, which is AR-1382A section 7's own trigger for an honest refusal
+rather than another reconstruction round. Recorded at
+`docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/E8-SOURCE-COMPLETENESS-REFUSAL.md`.
+**Sole remaining blocker: exact 4H premium/discount trading-range construction.** The two accepted
+visual facts are preserved there for reuse.
 
 **Lane D: CLOSED.** This file plus the `worker-onboarding/SKILL.md` fixes (branch-head-by-commit-time
 authority scan, the AR-1382A section 8 routing correction that `gpt-rulings` is authoritative and a
 newer `gpt-engineering` commit is not a ruling, and the wrong-ref ear-arming warning in section 2a).
+
+**OPEN DECISION, GPT's to make:** AR-1383A section 8 item 5 says "move to the next calibration
+source". 🛑 `[MEASURED 2026-08-21]` **no ordered calibration-source queue exists in this repository** —
+the phrase appears only as a procedural rule in this file and in AR-1382A/AR-1383A, never as a
+pointer to a named successor. The census manifests are flat inventories with no priority field.
+Selecting the successor is a money-path priority decision reserved to GPT; it is named as open
+rather than resolved by worker inference.
