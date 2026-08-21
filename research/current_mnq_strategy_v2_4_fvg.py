@@ -31,6 +31,13 @@ def active_15m_fvgs(h15: pd.DataFrame, asof: pd.Timestamp) -> list[Active15mFVG]
     """Return native FVGs still unmitigated using only completed 15m bars <= asof."""
     if asof.tzinfo is None:
         raise RuntimeError("FVG_ASOF_MUST_BE_TZ_AWARE")
+    # Empty fixtures and real no-history windows contain no causal FVGs. Return
+    # before doing datetime arithmetic because an empty DataFrame may retain a
+    # default RangeIndex even though a populated 15m frame is datetime-indexed.
+    if h15.empty:
+        return []
+    if not isinstance(h15.index, pd.DatetimeIndex):
+        raise RuntimeError("FVG_H15_INDEX_MUST_BE_DATETIME")
     q = h15[(h15.index + pd.Timedelta(minutes=15)) <= asof].copy()
     if len(q) < 3:
         return []
