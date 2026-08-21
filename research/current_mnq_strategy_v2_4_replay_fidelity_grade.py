@@ -135,5 +135,5 @@ def grade_wait_preserving_labels(labels: dict | list, review: dict, answer_key: 
         "entered_behavior_agreement_rate": behavioral / max(len(out), 1),
         "same_direction_entry_timing_deltas_minutes": timing,
         "rows": out,
-        "warning": "WAIT remains WAIT. No PnL/exit/winner field participates in this grade.",
+        "warning": "WAIT remains WAIT. Fidelity-only outcome data is excluded from this grade.",
     }
