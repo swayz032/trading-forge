@@ -183,6 +183,19 @@ _BLOCKER_PRECEDENCE = (
 # faithful backtest, so any one of them unproven blocks.
 _ACCESS_AXES = ("access_status", "live_delivery", "historical_replay", "update_policy")
 
+# AR-1397 grader LOW note: the compile seam re-derives readiness from the emitted records, and it
+# was importing the four ACCESS axis names but RESTATING "implementation_status" and
+# "semantic_status" as string literals. 4 of 6 imported, 2 hand-copied -- so a seventh gating axis
+# added here would silently not be re-derived there, which is the exact drift this packet keeps
+# finding. This map is the ONE place that answers "which axes gate, and what value satisfies each".
+# `test_source_graph_projection`/`test_external_dependency_projection` pin it against the gating
+# logic below by mutation, so it cannot fall out of sync without a test going red.
+GATING_AXES: dict[str, str] = {
+    **{axis: ACCESS_VERIFIED for axis in _ACCESS_AXES},
+    "implementation_status": IMPL_VALIDATED,
+    "semantic_status": SEMANTIC_RESOLVED,
+}
+
 
 @dataclass(frozen=True)
 class AliasSpec:

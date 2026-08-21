@@ -57,6 +57,7 @@ from src.engine.extraction.svkm_v2_1_compile import (
     build_certified_record,
     compile_svkm_v2_1_vertical,
     run_certified_projection,
+    stamp_receipt,
 )
 from src.engine.source_timeframe_roles import SourceTimeframeRoles
 from src.engine.svkm_role_execution import assert_svkm_role_combination
@@ -219,6 +220,11 @@ def test_alias_ref_text_never_appears_in_compiled_output(compiled_artifact: dict
     mutated_outcomes["confluences[1].description"]["provenance"]["projected_condition_text"] = (
         "AN ENTIRELY DIFFERENT SENTENCE"
     )
+    # AR-1397 F-3: the receipt now carries `receipt_sha256_canonical` and the compile seam checks it
+    # FIRST, so an edited receipt refuses as tampered before any other gate speaks. This test's
+    # mutation stands in for "a projection that legitimately PRODUCED this text", not for tampering,
+    # so it re-stamps -- otherwise the tamper gate masks the structural claim under test.
+    stamp_receipt(mutated_record)
     rebuilt = build_certified_record(mutated_record)
     assert len(rebuilt["strategies"][0]["confluences"]) == 1, (
         "the alias must never appear as a second confluences[] entry regardless of its text"
@@ -249,6 +255,9 @@ def test_preserved_metadata_is_structurally_inert(projection_record, compiled_ar
     for ref in ("entry_sequence[0].rationale", "entry_sequence[2].rationale"):
         mutated_outcomes[ref]["original_text"] = "MUTATED PRESERVED METADATA TEXT " + ref
 
+    # AR-1397 F-3: re-stamp, for the same reason as the alias test above -- this mutation stands in
+    # for a projection that legitimately produced this text, not for a tampered receipt.
+    stamp_receipt(mutated_record)
     mutated_certified_record = build_certified_record(mutated_record)
     # Provenance text DID change (the mutation reached the reconstruction)...
     assert mutated_certified_record["strategies"][0]["entry_sequence"][0]["rationale"] != (
@@ -273,6 +282,11 @@ def test_refuses_when_a_load_bearing_canonical_ref_is_not_accepted(projection_re
     # simulating what a real relevance/fidelity-gate failure would produce.
     outcomes["entry_sequence[2].action"]["disposition"] = "RED_SOURCE_FIDELITY"
 
+    # AR-1397 F-3: re-stamped so this proves what it claims -- that the CANONICAL-REF gate refuses a
+    # projection which genuinely produced a RED disposition. Without the re-stamp the receipt would
+    # refuse as TAMPERED first, which is a correct refusal for the wrong reason and would leave the
+    # canonical-ref gate itself untested.
+    stamp_receipt(mutated)
     with pytest.raises(CanonicalNodeNotAcceptedError, match=r"entry_sequence\[2\]\.action"):
         build_certified_record(mutated)
 
@@ -283,8 +297,25 @@ def test_refuses_when_a_canonical_ref_is_removed_entirely(projection_record):
     mutated["outcomes"] = [
         o for o in mutated["outcomes"] if o["condition_ref"] != "stop.rationale"
     ]
+    stamp_receipt(mutated)  # AR-1397 F-3, as above
     with pytest.raises(CanonicalNodeNotAcceptedError, match=r"stop\.rationale"):
         build_certified_record(mutated)
+
+
+def test_AR1397_an_UNstamped_edit_refuses_as_tampered_before_any_other_gate(projection_record):
+    """The pair to the four re-stamps above, and the reason they are not a weakening.
+
+    Re-stamping says "suppose a producer legitimately emitted this". WITHOUT the re-stamp the same
+    edits must refuse as TAMPERED -- otherwise the stamp added by AR-1397 F-3 is decorative and the
+    re-stamps really would be hiding something.
+    """
+    record, _hash = projection_record
+    tampered = copy.deepcopy(record)
+    _outcome_by_ref(tampered)["entry_sequence[2].action"]["disposition"] = "RED_SOURCE_FIDELITY"
+
+    assert tampered["receipt_sha256_canonical"], "the production receipt must arrive stamped"
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_MISMATCH"):
+        build_certified_record(tampered)
 
 
 # ══ 6. DETERMINISTIC REPEAT COMPILE ══════════════════════════════════════════════════════

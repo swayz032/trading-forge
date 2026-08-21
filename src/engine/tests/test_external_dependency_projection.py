@@ -531,6 +531,10 @@ def test_C0_7_blocked_artifact_cannot_pass_the_compile_seam_as_executable():
     fx = _load_fixture()
     blocked = _run(external_dependencies=(ExternalDependencySpec(**fx["external_dependency"]),))
     assert blocked["compile_readiness"] == BLOCKED_EXTERNAL_DEPENDENCY
+    # AR-1397 re-grade: the seam now REQUIRES a receipt stamp, so this synthetic stand-in is stamped
+    # to say "suppose a producer emitted exactly this". Without it the receipt refuses as unstamped
+    # -- a correct refusal, but for a reason that would leave the READINESS gate here untested.
+    _restamp(blocked)
 
     # (a) the readiness gate itself refuses
     with pytest.raises(CanonicalNodeNotAcceptedError, match="BLOCKED_EXTERNAL_DEPENDENCY"):
@@ -550,12 +554,12 @@ def test_C0_7b_the_seam_still_accepts_a_ready_artifact():
     """
     from src.engine.extraction.svkm_v2_1_compile import _refuse_if_not_compile_ready
 
-    ready = _run()
+    ready = _restamp(_run())
     assert ready["grade"] == "GREEN_PENDING_CERTIFICATION"
     assert "compile_readiness" not in ready
     _refuse_if_not_compile_ready(ready)  # must not raise
 
-    ok = _run(external_dependencies=(_ready_dep(),))
+    ok = _restamp(_run(external_dependencies=(_ready_dep(),)))
     assert ok["compile_readiness"] == "READY_PENDING_CERTIFICATION"
     _refuse_if_not_compile_ready(ok)  # must not raise
 
@@ -873,6 +877,28 @@ def _canonical_receipt_hash(record: dict) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
+def _restamp(record: dict) -> dict:
+    """Re-stamp a mutated receipt so it reads as LEGITIMATELY PRODUCED in that shape.
+
+    Since AR-1397's F-3 repair the production receipt carries `receipt_sha256_canonical`, and the
+    seam checks it FIRST -- correctly, because a tampered receipt must not be narrated as though
+    its fields were trustworthy. The consequence for tests: any mutation of the real receipt
+    otherwise surfaces `RECEIPT_HASH_MISMATCH` and MASKS the gate actually under test.
+
+    So a test that wants to exercise the readiness/derivation gates re-stamps, which asserts
+    exactly the right thing -- "suppose a producer legitimately emitted a receipt in this shape".
+    A test that wants to exercise TAMPER detection deliberately does not re-stamp. Keeping the two
+    apart is what stops one gate's refusal from being mistaken for another's.
+
+    Delegates to the PRODUCTION stamping function rather than recomputing the hash here -- a test
+    that hand-copies the thing it is testing proves only that the copy agrees with itself.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import stamp_receipt
+
+    stamp_receipt(record)
+    return record
+
+
 def _real_certified_receipt() -> dict:
     """The REAL nine-canonical-node certified receipt, not a synthetic stand-in.
 
@@ -919,6 +945,7 @@ def test_AR1397_2_dependency_bearing_receipt_with_readiness_removed_is_refused()
     laundered["external_dependencies"] = blocked["external_dependencies"]
     laundered["grade"] = "RED"
     laundered.pop("compile_readiness", None)
+    _restamp(laundered)
     assert "compile_readiness" not in laundered
     assert laundered["external_dependencies"], "the attack requires the dependency to be present"
 
@@ -937,6 +964,7 @@ def test_AR1397_2b_readiness_without_any_dependency_record_is_refused_as_inconsi
 
     inconsistent = _real_certified_receipt()
     inconsistent["compile_readiness"] = READY_PENDING_CERTIFICATION
+    _restamp(inconsistent)
     assert "external_dependencies" not in inconsistent
 
     with pytest.raises(CanonicalNodeNotAcceptedError,
@@ -958,6 +986,7 @@ def test_AR1397_2c_an_unknown_readiness_value_is_refused():
     odd = _real_certified_receipt()
     odd["external_dependencies"] = blocked["external_dependencies"]
     odd["compile_readiness"] = "PROBABLY_FINE"
+    _restamp(odd)
 
     with pytest.raises(CanonicalNodeNotAcceptedError, match="PROBABLY_FINE"):
         _refuse_if_not_compile_ready(odd)
@@ -985,6 +1014,7 @@ def test_AR1397_2d_terminal_wording_comes_from_the_structured_blocker():
     receipt["external_dependencies"] = terminal_run["external_dependencies"]
     receipt["compile_readiness"] = terminal_run["compile_readiness"]
     receipt["structured_blocker"] = terminal_run["structured_blocker"]
+    _restamp(receipt)
 
     with pytest.raises(CanonicalNodeNotAcceptedError) as excinfo:
         _refuse_if_not_compile_ready(receipt)
@@ -1141,11 +1171,26 @@ def test_AR1397_5_no_adapter_or_network_call_is_made(monkeypatch):
 
     So the guard now also closes the non-network reach routes an adapter would actually use --
     filesystem writes, subprocess launch, and dynamic import -- each with its own witness.
+
+    ⚠️ AR-1397 RE-GRADE (finding F-2 residual): the first widened guard still let FIVE routes
+    through, each firing 17 times under a green test -- `io.open`, `pathlib.Path.write_text`,
+    `os.open`/`os.write`, `__import__`, and `os.system`. `os.system` is the sharp one: patching
+    `subprocess.Popen`/`run` while leaving `os.system` open means a shell-out sails past a guard
+    whose name says no adapter call was made. `Path.write_text` is the most idiomatic file write in
+    modern Python and this very module uses `Path.read_text`. All five are closed below.
+
+    THE CONTROLS PROVE THE ARMS BITE, NOT THAT PRODUCTION ROUTES THROUGH THEM. The grader's point
+    is kept deliberately: an in-test call proves the patch landed; only a plant inside the call path
+    proves the production code does not reach out. Both are needed, and only the first can live here.
     """
     import builtins
     import importlib
+    import io
+    import os
+    import pathlib
     import socket
     import subprocess
+    import sys
     import urllib.request
 
     calls: list[str] = []
@@ -1156,15 +1201,8 @@ def test_AR1397_5_no_adapter_or_network_call_is_made(monkeypatch):
             raise AssertionError(f"C0 attempted an out-of-process call via {name}")
         return _raise
 
-    # -- network reach --
-    monkeypatch.setattr(socket, "socket", _forbidden("socket.socket"))
-    monkeypatch.setattr(socket, "create_connection", _forbidden("socket.create_connection"))
-    monkeypatch.setattr(socket, "getaddrinfo", _forbidden("socket.getaddrinfo"))
-    monkeypatch.setattr(urllib.request, "urlopen", _forbidden("urllib.request.urlopen"))
-
-    # -- ADAPTER reach: the half F-2 found open. A provider adapter that never opens a socket can
-    #    still shell out, import a vendor SDK, or read a cache file somebody else populated.
     real_open = builtins.open
+    real_os_open = os.open
     write_modes = ("w", "a", "x", "+")
 
     def _guarded_open(file, mode="r", *args, **kwargs):
@@ -1173,34 +1211,109 @@ def test_AR1397_5_no_adapter_or_network_call_is_made(monkeypatch):
             raise AssertionError("C0 attempted an out-of-process call via builtins.open(write)")
         return real_open(file, mode, *args, **kwargs)
 
-    monkeypatch.setattr(builtins, "open", _guarded_open)
-    monkeypatch.setattr(subprocess, "Popen", _forbidden("subprocess.Popen"))
-    monkeypatch.setattr(subprocess, "run", _forbidden("subprocess.run"))
-    monkeypatch.setattr(importlib, "import_module", _forbidden("importlib.import_module"))
+    def _guarded_os_open(path, flags, *args, **kwargs):
+        if flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_APPEND):
+            calls.append("os.open(write)")
+            raise AssertionError("C0 attempted an out-of-process call via os.open(write)")
+        return real_os_open(path, flags, *args, **kwargs)
 
-    # (a) the real thing, under the armed guard
-    record = _run(external_dependencies=(_dep(),))
+    def _arm(m):
+        """Every route, armed on a caller-supplied monkeypatch context.
+
+        🛑 SCOPED TO A CONTEXT ON PURPOSE. `builtins.__import__` and `os.open` are load-bearing for
+        pytest ITSELF -- armed for the whole test, pytest's own faulthandler teardown tripped the
+        import guard at session unconfigure and took the entire run down. A guard that outlives the
+        window it is guarding stops being an instrument and becomes a fault.
+        """
+        # -- network reach --
+        m.setattr(socket, "socket", _forbidden("socket.socket"))
+        m.setattr(socket, "create_connection", _forbidden("socket.create_connection"))
+        m.setattr(socket, "getaddrinfo", _forbidden("socket.getaddrinfo"))
+        m.setattr(urllib.request, "urlopen", _forbidden("urllib.request.urlopen"))
+        # -- ADAPTER reach: the half F-2 found open, plus the five routes the re-grade found still
+        #    open. An adapter that never opens a socket can still shell out, import a vendor SDK,
+        #    or write a cache file.
+        m.setattr(builtins, "open", _guarded_open)
+        # `io.open` and `builtins.open` are the SAME underlying function but two separate module
+        # attributes -- patching one leaves the other live, which is how route 1 of 5 stayed open.
+        m.setattr(io, "open", _guarded_open)
+        m.setattr(subprocess, "Popen", _forbidden("subprocess.Popen"))
+        m.setattr(subprocess, "run", _forbidden("subprocess.run"))
+        # `os.system` / `os.popen` spawn a process without touching `subprocess` at all.
+        m.setattr(os, "system", _forbidden("os.system"))
+        m.setattr(os, "popen", _forbidden("os.popen"))
+        m.setattr(importlib, "import_module", _forbidden("importlib.import_module"))
+        # `importlib.import_module` is not the only dynamic-import route; `__import__("x")` and the
+        # import statement itself both go through `builtins.__import__`.
+        #
+        # 🛑 SCOPED TO A *NEW MODULE LOAD*, AND THAT SCOPING IS THE HONEST PART. Blanket-guarding
+        # `__import__` measures "an import statement executed", not "the process reached out" --
+        # every function-local `import json` in already-loaded code trips it, and the run dies for
+        # a reason that has nothing to do with adapters. Referencing a module already resident in
+        # `sys.modules` is NOT out-of-process reach; loading a vendor SDK that was not there is.
+        # So the guard fires on the second and ignores the first, and the test name is true of what
+        # is actually measured.
+        real_import = builtins.__import__
+
+        def _guarded_import(name, *args, **kwargs):
+            if name.partition(".")[0] not in sys.modules:
+                calls.append("builtins.__import__(new module)")
+                raise AssertionError(
+                    f"C0 attempted an out-of-process call via builtins.__import__(new module) "
+                    f"loading {name!r}"
+                )
+            return real_import(name, *args, **kwargs)
+
+        m.setattr(builtins, "__import__", _guarded_import)
+        # `Path.write_text` / `write_bytes` are C-level and do NOT route through `builtins.open`.
+        m.setattr(pathlib.Path, "write_text", _forbidden("pathlib.Path.write_text"))
+        m.setattr(pathlib.Path, "write_bytes", _forbidden("pathlib.Path.write_bytes"))
+        m.setattr(os, "open", _guarded_os_open)
+
+    # (a) the real thing, under every arm at once
+    with monkeypatch.context() as m:
+        _arm(m)
+        record = _run(external_dependencies=(_dep(),))
     assert record["external_dependencies"][0]["dependency_id"] == "fixture.external_state"
     assert calls == [], f"C0 reached out: {calls}"
 
     # (b) POSITIVE CONTROLS -- a guard nobody has seen fail is indistinguishable from one that
     #     CANNOT fail, so every arm above is proven to bite. The grader's own planted side effect
     #     was a FILE WRITE, so that arm is controlled explicitly rather than by analogy.
-    with pytest.raises(AssertionError, match="out-of-process call"):
-        socket.create_connection(("127.0.0.1", 9))
-    with pytest.raises(AssertionError, match="out-of-process call"):
-        builtins.open("adapter-cache.tmp", "w")
-    with pytest.raises(AssertionError, match="out-of-process call"):
-        subprocess.run(["cmd", "/c", "echo"])
-    with pytest.raises(AssertionError, match="out-of-process call"):
-        importlib.import_module("json")
-
-    assert calls == [
-        "socket.create_connection",
-        "builtins.open(write)",
-        "subprocess.run",
-        "importlib.import_module",
-    ], "a guard arm did not arm; an unproven arm is an unclosed route"
+    #     Every arm the re-grade found open is controlled BY NAME here, so a future edit that drops
+    #     one turns this list red rather than quietly reopening the route.
+    #
+    #     ⚠️ `os.system` / `os.popen` / `subprocess.run` appear below as GUARD CONTROLS, not as work.
+    #     Each is monkeypatched to raise before it can reach a shell, which is the property being
+    #     proven -- the call never executes, and there is no interpolated input for a shell to see.
+    #     They are here precisely BECAUSE `os.system` is a command-injection sink: an adapter that
+    #     shells out must be caught, and the re-grade measured it sailing past the previous guard.
+    controls = [
+        ("socket.create_connection", lambda: socket.create_connection(("127.0.0.1", 9))),
+        ("builtins.open(write)", lambda: builtins.open("adapter-cache.tmp", "w")),
+        # noqa UP020 is deliberate: `io.open` is the ROUTE UNDER TEST, not a stylistic slip. It is a
+        # separate module attribute from `builtins.open`, and patching only the latter is how this
+        # route stayed open through the first repair.
+        ("builtins.open(write)", lambda: io.open("adapter-cache.tmp", "w")),  # noqa: UP020
+        ("subprocess.run", lambda: subprocess.run(["cmd", "/c", "echo"])),
+        ("os.system", lambda: os.system("echo")),
+        ("os.popen", lambda: os.popen("echo")),
+        ("importlib.import_module", lambda: importlib.import_module("json")),
+        # a module that is genuinely NOT resident -- the adapter-shaped case
+        ("builtins.__import__(new module)", lambda: __import__("wsgiref.simple_server")),
+        ("pathlib.Path.write_text", lambda: pathlib.Path("adapter-cache.tmp").write_text("x")),
+        ("pathlib.Path.write_bytes", lambda: pathlib.Path("adapter-cache.tmp").write_bytes(b"x")),
+        ("os.open(write)", lambda: os.open("adapter-cache.tmp", os.O_WRONLY | os.O_CREAT)),
+    ]
+    for expected_name, fire in controls:
+        with monkeypatch.context() as m:
+            _arm(m)
+            with pytest.raises(AssertionError, match="out-of-process call"):
+                fire()
+        assert calls[-1] == expected_name, (
+            f"the {expected_name} arm did not arm; an unproven arm is an unclosed route"
+        )
+    assert [name for name, _ in controls] == calls, "a guard arm fired under the wrong name"
 
     # (c) and the READ path must still work, or (a) passed only because everything was broken
     assert real_open(FIXTURE_PATH, "r", encoding="utf-8").read(1) != ""
@@ -1335,6 +1448,7 @@ def test_AR1397_F1_declaring_READY_over_unsatisfied_records_is_refused(keep_bloc
     attack["compile_readiness"] = READY_PENDING_CERTIFICATION
     if keep_blocker:
         attack["structured_blocker"] = {"reason": BLOCKER_ACCESS_UNVERIFIED, "terminal": False}
+    _restamp(attack)
 
     with pytest.raises(CanonicalNodeNotAcceptedError,
                        match="EXTERNAL_DEPENDENCY_READINESS_CONTRADICTED"):
@@ -1355,6 +1469,7 @@ def test_AR1397_F1b_a_genuinely_satisfied_record_still_compiles():
     receipt = _real_certified_receipt()
     receipt["external_dependencies"] = ready_run["external_dependencies"]
     receipt["compile_readiness"] = READY_PENDING_CERTIFICATION
+    _restamp(receipt)
     _refuse_if_not_compile_ready(receipt)  # must not raise
 
 
@@ -1381,6 +1496,7 @@ def test_AR1397_F1c_every_axis_is_re_derived_not_just_access(axis, bad):
     receipt = _real_certified_receipt()
     receipt["external_dependencies"] = records
     receipt["compile_readiness"] = READY_PENDING_CERTIFICATION
+    _restamp(receipt)
 
     with pytest.raises(CanonicalNodeNotAcceptedError) as excinfo:
         _refuse_if_not_compile_ready(receipt)
@@ -1402,6 +1518,7 @@ def test_AR1397_F1d_an_axis_missing_from_the_record_is_not_satisfied_by_omission
     receipt = _real_certified_receipt()
     receipt["external_dependencies"] = records
     receipt["compile_readiness"] = READY_PENDING_CERTIFICATION
+    _restamp(receipt)
 
     with pytest.raises(CanonicalNodeNotAcceptedError,
                        match="EXTERNAL_DEPENDENCY_READINESS_CONTRADICTED"):
@@ -1439,18 +1556,27 @@ def test_AR1397_F3_a_stamped_receipt_cannot_be_edited_at_all():
         _refuse_if_not_compile_ready(a8)
 
 
-def test_AR1397_F3b_an_unstamped_receipt_is_unaffected_and_a_stamped_intact_one_passes():
-    """The two discriminating halves of F-3. An unstamped legacy receipt must still flow through
-    untouched (that is the whole omit-when-empty contract), and a stamped receipt that has NOT been
-    edited must not be refused by its own hash check."""
-    from src.engine.extraction.svkm_v2_1_compile import _refuse_if_not_compile_ready
+def test_AR1397_F3b_an_unstamped_receipt_refuses_and_a_stamped_intact_one_passes():
+    """The two discriminating halves of F-3, after the re-grade corrected which half is which."""
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        _refuse_if_not_compile_ready,
+    )
 
-    legacy = _real_certified_receipt()
-    assert "receipt_sha256_canonical" not in legacy
-    _refuse_if_not_compile_ready(legacy)  # must not raise
+    # 🛑 AR-1397 RE-GRADE, ATTACK H5. An UNSTAMPED receipt must REFUSE, not pass. The first version
+    # let it through as "legacy, nothing to check" -- which left the attack fully intact: remove the
+    # dependency key AND the stamp, and the receipt declares nothing, carries no evidence, and looks
+    # exactly like a legitimate legacy one. An integrity check a receipt can opt out of by omitting
+    # a field is not a check.
+    unstamped = _real_certified_receipt()
+    unstamped.pop("receipt_sha256_canonical", None)
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_ABSENT"):
+        _refuse_if_not_compile_ready(unstamped)
 
+    # And the discriminating half: the receipt the production path actually emits is stamped,
+    # intact, and must PASS its own hash check rather than be refused by it.
     intact = _real_certified_receipt()
-    intact["receipt_sha256_canonical"] = _canonical_receipt_hash(intact)
+    assert intact["receipt_sha256_canonical"] == _canonical_receipt_hash(intact)
     _refuse_if_not_compile_ready(intact)  # must not raise
 
 
@@ -1469,6 +1595,168 @@ def test_AR1397_F5_a_non_dict_structured_blocker_refuses_instead_of_crashing():
         receipt["external_dependencies"] = _blocked_dependency_records()
         receipt["compile_readiness"] = BLOCKED_EXTERNAL_DEPENDENCY
         receipt["structured_blocker"] = junk
+        _restamp(receipt)
 
         with pytest.raises(CanonicalNodeNotAcceptedError):
             _refuse_if_not_compile_ready(receipt)
+
+
+# --------------------------------------------------------------------------- #
+# 11. AR-1397 RE-GRADE FINDINGS — the holes the FIRST round of repairs left or made
+#
+# The re-grade at pin f8776f36 held the band flat at 6/10 BOUNDED and was right to: it still had a
+# measured `COMPILED 1 strategy` on a receipt whose own dependency record read every access axis
+# UNVERIFIED. G-1 got past the new backstop by never letting it run; G-2 was introduced BY the
+# repair, and is this packet's own signature defect committed inside the fix for it.
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("container_label,make_container", [
+    ("dict keyed by dependency_id", lambda recs: {r["dependency_id"]: r for r in recs}),
+    ("non-empty string", lambda recs: "e8.htf_premium_discount"),
+    ("int", lambda recs: 5),
+])
+def test_AR1397_G1_a_wrong_shaped_dependency_container_fails_closed(
+        container_label, make_container):
+    """🛑 AR-1397 RE-GRADE FINDING G-1, HIGH. THE BACKSTOP DEFEATED BY NEVER RUNNING.
+
+    `_derived_dependency_blockers` opened with `if not isinstance(dependencies, (list, tuple)):
+    return {}` -- and an empty return means NOTHING BLOCKS. So reshaping `external_dependencies`
+    into a dict keyed by dependency_id (a plausible ACCIDENTAL shape, not an exotic attack) made
+    the entire F-1 re-derivation evaporate, and the grader measured:
+
+        C1 deps as DICT keyed by id     COMPILED 1
+        C2 deps as a non-empty STRING   COMPILED 1
+        C3 deps as int 5                COMPILED 1
+
+    The tell was inside that one function: a non-mapping RECORD was flagged fail-closed two lines
+    below, while a wrong-typed CONTAINER was silently exempted -- the same field read as
+    truthy-dependencies by the pairing rules and as no-dependencies by the derivation.
+    WHEN A VALIDATOR HANDLES A WRONG SHAPE TWO DIFFERENT WAYS, THE PERMISSIVE BRANCH IS THE BUG.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        build_certified_record,
+    )
+
+    attack = _real_certified_receipt()
+    attack["external_dependencies"] = make_container(_blocked_dependency_records())
+    attack["grade"] = "RED"
+    attack["compile_readiness"] = READY_PENDING_CERTIFICATION
+    _restamp(attack)  # a legitimately-stamped receipt, so the HASH gate cannot mask the derivation
+
+    with pytest.raises(CanonicalNodeNotAcceptedError):
+        build_certified_record(attack)
+
+
+def test_AR1397_G1b_the_helper_itself_reports_a_container_blocker():
+    """Direct on the helper, so the property is pinned where it lives rather than only through the
+    seam. `{} == nothing blocks` was the whole defect, so the empty return must be unreachable for
+    a wrong-shaped container."""
+    from src.engine.extraction.svkm_v2_1_compile import _derived_dependency_blockers
+
+    recs = _blocked_dependency_records()
+    assert _derived_dependency_blockers({r["dependency_id"]: r for r in recs}) != {}
+    assert _derived_dependency_blockers("e8.htf_premium_discount") != {}
+    assert _derived_dependency_blockers(5) != {}
+    # ...and the shapes that MUST still work, or the fix is just "refuse everything"
+    assert _derived_dependency_blockers(recs) != {}          # blocked records still blocked
+    assert _derived_dependency_blockers([]) == {}            # genuinely no dependencies
+    assert _derived_dependency_blockers(()) == {}
+
+
+@pytest.mark.parametrize("bad_stamp", ["", None, ["a", "list"], 0, {}])
+def test_AR1397_G2_a_present_but_unreadable_receipt_stamp_refuses(bad_stamp):
+    """🛑 AR-1397 RE-GRADE FINDING G-2, INTRODUCED BY THE REPAIR ITSELF.
+
+    `_refuse_if_receipt_hash_broken` returned early on any non-string or empty stamp, so blanking
+    it to "", None, or a list DISARMED the check and the receipt COMPILED. That is precisely "a
+    gate keyed to a field's value is disarmed by deleting the field" -- the sentence written four
+    functions up, in the repair that closed exactly that for readiness, violated here for the stamp.
+
+    ABSENT and UNREADABLE are different facts. The key's PRESENCE proves the producer stamped this
+    receipt, so a blank or wrong-typed value is a DESTROYED stamp, not an unstamped receipt.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        _refuse_if_not_compile_ready,
+    )
+
+    receipt = _real_certified_receipt()
+    receipt["receipt_sha256_canonical"] = bad_stamp
+
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_UNREADABLE"):
+        _refuse_if_not_compile_ready(receipt)
+
+
+def test_AR1397_G2b_the_production_receipt_is_stamped_so_the_hash_gate_is_not_a_no_op():
+    """🛑 AR-1397 RE-GRADE, F-3 PARTIAL -- THE HALF THAT MATTERED, AND WHERE MY OWN REPLAY WAS
+    OVER-BROAD.
+
+    I reported "A8 refused RECEIPT_HASH_MISMATCH". That was true only of a receipt my TEST stamped
+    by hand. `run_certified_projection()` computed the canonical hash and returned it as a SEPARATE
+    VALUE without stamping the record, so on the ONLY production path the tamper check saw an
+    unstamped receipt and passed -- and A8 still COMPILED. A gate that is a no-op on the real path
+    is a gate in name only.
+
+    The record is now stamped at the point of production, and the returned hash is unchanged so
+    every existing pin of it still matches.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import (
+        CanonicalNodeNotAcceptedError,
+        build_certified_record,
+        run_certified_projection,
+    )
+
+    record, returned_hash = run_certified_projection()
+    assert record["receipt_sha256_canonical"] == returned_hash, (
+        "the production receipt must carry its own stamp, or the hash gate never runs"
+    )
+    assert _canonical_receipt_hash(record) == returned_hash, (
+        "the stamp must be computed over the UNSTAMPED record, as the certifier computes it"
+    )
+
+    # A8 against the receipt the production path actually produces -- no hand-stamping by the test
+    a8 = dict(record)
+    a8["external_dependencies"] = _blocked_dependency_records()
+    a8["_external_dependencies_renamed"] = a8.pop("external_dependencies")
+    with pytest.raises(CanonicalNodeNotAcceptedError, match="RECEIPT_HASH_MISMATCH"):
+        build_certified_record(a8)
+
+
+def test_AR1397_G3_the_seam_re_derives_every_axis_the_projection_gates_on():
+    """AR-1397 re-grade LOW drift note, pinned rather than commented.
+
+    The seam's re-derivation imported four axis names and RESTATED two as string literals, so a
+    seventh gating axis added to the projection would silently not be re-derived at the seam. Both
+    sides now read `GATING_AXES`, and this test proves that map is COMPLETE with respect to what
+    the projection actually gates on -- by mutation, not by inspection: flipping each axis in the
+    map must make the projection block.
+    """
+    from src.engine.extraction.source_graph_projection import GATING_AXES
+
+    ready = _run(external_dependencies=(_ready_dep(),))
+    assert ready["compile_readiness"] == READY_PENDING_CERTIFICATION, "control must start ready"
+
+    # A VALID but non-satisfying value per axis. Every axis carries a closed vocabulary, so an
+    # arbitrary string would be REFUSED at validation and would prove nothing about gating.
+    unsatisfying = {
+        "access_status": ACCESS_UNVERIFIED,
+        "live_delivery": ACCESS_UNVERIFIED,
+        "historical_replay": ACCESS_UNVERIFIED,
+        "update_policy": ACCESS_UNAVAILABLE,
+        "implementation_status": "NOT_STARTED",
+        "semantic_status": SEMANTIC_UNRESOLVED,
+    }
+    assert set(unsatisfying) == set(GATING_AXES), (
+        "GATING_AXES changed; this test must be taught the non-satisfying value for the new axis "
+        "rather than silently covering one fewer axis than the seam re-derives"
+    )
+
+    for axis, bad_value in unsatisfying.items():
+        assert bad_value != GATING_AXES[axis], f"{axis} control value must not be the satisfying one"
+        blocked = _run(external_dependencies=(_ready_dep(**{axis: bad_value}),))
+        assert blocked["compile_readiness"] == BLOCKED_EXTERNAL_DEPENDENCY, (
+            f"GATING_AXES lists {axis!r} but the projection does not gate on it"
+        )
+        assert axis in blocked["structured_blocker"]["unverified_axes"]["fixture.external_state"]
