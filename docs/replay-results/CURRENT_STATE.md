@@ -1,10 +1,12 @@
 # CURRENT_STATE
 
-**NAVIGATION POINTER — NOT AUTHORITY.** If this file disagrees with the actual `external-advisor/*`
-branch heads or the newest ruling on `external-advisor/gpt-rulings`, the repository wins. Resolve
-the newest ruling by branch-head commit time (`git log -1 --format="%H %ad %s" --date=iso <ref>`
-across every `refs/remotes/origin/external-advisor/*` branch), never by filename or AR-number sort —
-see `.claude/skills/worker-onboarding/SKILL.md` section 1.
+**NAVIGATION POINTER — NOT AUTHORITY.** If this file disagrees with the newest ruling on
+`external-advisor/gpt-rulings`, the repository wins. The authoritative ruling channel is
+`origin/external-advisor/gpt-rulings` (AR-1382A section 8) — resolve the newest ruling by THAT
+branch's commit time (`git log -1 --format="%H %ad %s" --date=iso origin/external-advisor/gpt-rulings`),
+never by filename or AR-number sort. A newer commit on `gpt-engineering` or any other
+`external-advisor/*` branch does NOT become a ruling by being newer. See
+`.claude/skills/worker-onboarding/SKILL.md` section 1.
 
 - **Path deviation, disclosed:** AR-1381A section 8B asked for this file at
   `docs/governance/CURRENT_STATE.md`. Worker-1's guard `edit_scope` (`.claude/worker1-hook-guard-manifest.json`)
@@ -19,39 +21,52 @@ see `.claude/skills/worker-onboarding/SKILL.md` section 1.
 
 ## Latest controlling GPT ruling
 
-AR-1381A, `origin/external-advisor/gpt-rulings @ e2b66ca9d176d29f3e8294739afda31fec40ad0f`
-(`advisor-reports/AR-1381A-GPT-EXTERNAL-ADVISOR-RULING-AR1389-PASS-E8-FAIL-CONFIRMED-SPEED-CORRECTION-COMPILER-PREFLIGHT-TARGETED-VISION-2026-08-20.md`),
-2026-08-20 20:06:51 -0400. Accepts AR-1389 (worker ingest + independent Claude challenge of the E8
-round-3 V2 GPT-5.6 audit — both HIGH findings and all 9 PARTIAL claims CONFIRMED, FAIL survives).
+AR-1382A, `origin/external-advisor/gpt-rulings @ 188b41e39908518f8909f6e9e54a45c346813276`
+(`advisor-reports/AR-1382A-GPT-EXTERNAL-ADVISOR-RULING-AR1390-PASS-WITH-SOURCE-FAITHFUL-OWNERSHIP-CORRECTION-TARGETED-VISION-3-2026-08-20.md`),
+2026-08-20 20:21:49 -0400. Accepts AR-1390 (read-only compiler-readiness preflight) with one
+load-bearing architecture correction, and authorizes targeted Visual Intelligence for three
+questions.
+
+**The correction matters:** Extraction Compiler Blueprint v4 SUPERSEDES the older scout-pipeline
+assumption that stop/take-profit are always framework-owned. Source-taught stop/target MUST survive
+in `SOURCE_FAITHFUL`; a Trading Forge overlay may be tested separately as `TF_OVERLAY_VARIANT` but
+never reported as the educator's exact strategy. Framework fallback is allowed only for genuinely
+untaught fields and must be provenance-stamped.
 
 ## Worker branch + last verified head
 
-`claude/worker1-h1-20260815`, verified at `f8b00b268c3217dd236644b21e96fbc7527f6e59` (AR-1389 commit)
-at the time AR-1381A was written; advances with each subsequent commit.
+`claude/worker1-h1-20260815`, verified at `f92031b55b93efe4445449d731fd9e5c2581e4c6` (AR-1390 commit)
+at the time AR-1382A was written; advances with each subsequent commit.
 
-## Current locks (AR-1381A)
+## Current locks (AR-1382A section 9)
 
 - No hand-editing/reusing rejected E8 candidate SHA `b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041`.
-- No blind round-4 Opus reconstruction before the Lane A preflight + Lane B evidence map.
-- No invented Fibonacci anchors, wick identity, trading-range boundaries, BOS/FVG thresholds, expiry, or other source rules.
-- No compiler/certifier code changes inside the Lane A preflight.
+- No blind Round-4 Opus reconstruction before visual evidence returns.
+- No invented Fibonacci anchors, wick identity, HTF-range selector, BOS/FVG parameters, target ranking, expiry, or other source semantics.
+- **No source-taught stop/target replacement by ATR/Style C inside `SOURCE_FAITHFUL`.**
+- No new semantic-audit machinery absent a demonstrated new trust defect.
 - No certifier/compiler promotion, SOURCE_FAITHFUL backtest, broad Factory rerun, 160-video intake, PAPER, or broker/Topstep/live.
-- No new semantic-audit infrastructure absent a demonstrated new trust defect (V2 audit path is accepted as sufficient for this calibration).
 
 ## Exact next money-path action
 
-Lane A (highest priority, authorized now): read-only E8 compiler-readiness preflight — one durable
-matrix over every current `source_gaps` item plus every field a downstream certifier/compiler would
-need, classified `COMPILE_BLOCKER_SOURCE_MISSING` / `COMPILE_BLOCKER_REPRESENTATION_DEFECT` /
-`SAFE_TO_REMAIN_UNRESOLVED` / `NON_EXECUTABLE_NOT_REQUIRED` / `UNKNOWN_DOWNSTREAM_CONTRACT`. No
-compile, certify, backtest, compiler-code edit, or default substitution inside this lane.
+**Lane A: CLOSED** (AR-1382A section 5 — do not run another compiler-readiness preflight cycle).
 
-Lane B (parallel, evidence-only): targeted Visual Intelligence for exactly two named questions
-(VI-E8-1 sell-side Fibonacci anchor direction, VI-E8-2 buy-side stop wick identity) — add more only
-if Lane A proves them actual compile blockers.
+**Lane B: BLOCKED, awaiting GPT decision on an executor.** The three questions (VI-E8-1 sell-side
+Fibonacci anchors, VI-E8-2 buy-side stop wick, VI-E8-3 4H premium/discount range construction) are
+fully specified with exact derived timestamp windows in
+`docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/visual-intelligence-e8-round1/E8Wg6tFPYjo/vi_task.json`.
+**MEASURED (AR-1391): the "existing Visual Intelligence capability" AR-1382A section 6 points at does
+not exist in this repository** — no frame extraction, no ffmpeg use, no vision runner; the only
+occurrence of the phrase is a comment string. Worker-side media acquisition also failed on both
+attempted paths (yt-dlp 403 across all clients even with a Node JS runtime; browser automation loads
+the player and seeks correctly but media never buffers). Reported as a ruling-premise contradiction
+rather than routed around.
 
-Lane C (wait on A/B): one fresh E8 candidate identity only after the evidence map — never an edit of
-the rejected SHA.
+**Lane C: WAIT on Lane B.** One fresh E8 candidate identity only after visual evidence returns —
+never an edit of the rejected SHA. If any hard source blocker remains unresolved after the targeted
+visual pass, emit an honest E8 source-completeness refusal and move to the next calibration source
+(AR-1382A section 7 — "no endless reconstruction until green").
 
-Lane D (non-blocking, in progress): this file + the branch-head-by-commit-time onboarding fix in
-`worker-onboarding/SKILL.md` section 1 and the wrong-ref ear-arming warning in section 2a.
+**Lane D: CLOSED.** This file plus the `worker-onboarding/SKILL.md` fixes (branch-head-by-commit-time
+authority scan, the AR-1382A section 8 routing correction that `gpt-rulings` is authoritative and a
+newer `gpt-engineering` commit is not a ruling, and the wrong-ref ear-arming warning in section 2a).

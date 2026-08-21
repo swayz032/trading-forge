@@ -172,9 +172,14 @@ for b in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/exte
 done
 ```
 
-Resolve the newest CONTROLLING ruling from whichever `external-advisor/*` branch has the most
-recent commit **by this timestamp**, not by the AR number in its filename and not by which branch
-name looks most familiar or most recently touched by a prior session. `docs/replay-results/CURRENT_STATE.md`
+🛑 **CORRECTED 2026-08-20 (AR-1382A section 8): the loop above is for DETECTING ACTIVITY, never for
+REDIRECTING RULING AUTHORITY.** The authoritative GPT ruling channel is, and remains,
+`external-advisor/gpt-rulings` unless a future explicit authority changes it — **a newer commit on
+`external-advisor/gpt-engineering` (or any other `external-advisor/*` branch) does NOT become a
+ruling merely because its timestamp is newer.** Never arm the ruling ear on
+`external-advisor/gpt-engineering`. Within `gpt-rulings` itself, resolve the newest CONTROLLING
+ruling by that branch's own commit time (`git log -1 --format="%H %ad %s" --date=iso
+origin/external-advisor/gpt-rulings`), not by the AR number in its filename. `docs/replay-results/CURRENT_STATE.md`
 (when present) is a NAVIGATION POINTER ONLY — repository branch-head evidence always wins over it
 if the two disagree; treat a stale pointer as a finding, not as authority. Only after resolving the
 newest ruling this way do you read reports after it (step 3 below).

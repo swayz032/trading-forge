@@ -1,0 +1,66 @@
+{
+  "schema": "tf-visual-intelligence-task-e8-round1-v1",
+  "ruling": "AR-1382A (188b41e39908518f8909f6e9e54a45c346813276) section 2",
+  "video_id": "E8Wg6tFPYjo",
+  "video_url": "https://www.youtube.com/watch?v=E8Wg6tFPYjo",
+  "transcript_sha256": "62036e6e62ae927c165a7d501e20ae0fcd15684933cd4419c5832ba74756ec67",
+  "candidate_sha256_rejected": "b50729b928e51980088f2e4a73c30771eb3665147443753edcc8be44d5fb0041",
+  "video_duration_seconds": 1179.28,
+  "timed_captions_source": "youtube-transcript-api v1.2.4, auto-generated English track (kind=asr), 598 snippets, fetched directly for this task -- not present anywhere else in this repository, so a copy is preserved at scripts/_worker_vi_e8_timedtext_raw.json for reproducibility. Each timestamp window below was located by matching the anchor transcript quotes against these timed snippets and verified by printing the surrounding snippet text (positive control: exact substring match, not fuzzy).",
+  "known_gap_note": "Timed captions ARE now available and used for all three questions below. Caption timing is auto-generated (ASR) so may drift by up to roughly 1-2 seconds from true speech onset; treat each window's boundaries as approximate to that tolerance, not frame-exact.",
+  "executor_status": "UNASSIGNED -- NO EXECUTOR CAPABILITY EXISTS IN THIS REPOSITORY. AR-1382A section 6 authorizes the worker to 'execute or dispatch the existing Visual Intelligence capability', but a measured search (positive-controlled) found NO such capability: no frame extraction, no ffmpeg invocation, no vision task runner anywhere in src/ or scripts/. The single textual occurrence of 'Visual Intelligence' in the codebase is a comment string in scripts/svkm_stopA_direction_probe.py:131. This task file is therefore a COMPLETE, READY SPECIFICATION awaiting an executor, not a dispatched job.",
+  "measured_media_access_blocker": {
+    "summary": "Worker-side programmatic media acquisition FAILED. Both attempted paths are recorded here so the eventual executor does not repeat them blindly.",
+    "path_1_yt_dlp": "yt-dlp 2026.07.04 with --js-runtimes node (Node v24.13.0 present) returns HTTP 403 Forbidden on every videoplayback URL across player clients android_vr/web/tv/mweb/ios/tv_simply/android_music. --cookies-from-browser chrome fails separately with 'Could not copy Chrome cookie database' because Chrome holds a lock while running.",
+    "path_2_browser_automation": "Driving the real logged-in Chrome session via browser automation loads the page and the player UI seeks correctly (verified: player displayed 6:44 / 19:38, matching this task's caption timing), but the media itself never buffers -- video element stays readyState 0 / duration null / videoWidth 0, and zero googlevideo media requests were observed. A pre-roll ad was present and skipped; that was not the cause.",
+    "corrected_earlier_hypothesis": "An earlier worker note attributed the 403 to signed-URL IP binding. That was WRONG and is struck: the egress IP was measured as 46.110.208.220, which EXACTLY matches the ip= parameter inside the signed URL. The 403 is bot-detection / PO-token related, not an IP mismatch.",
+    "production_route_note": "Browser-automation screenshotting is explicitly NOT proposed as the production route. It cannot satisfy this task's own frame/clip-hash evidence requirement (a live scaled, ad-interrupted, overlay-covered viewport capture is not a reproducible hash-pinnable artifact), it requires an attended human desktop rather than the tower, and it does not scale to the roadmap's multi-video intake. A production Visual Intelligence lane needs deterministic media acquisition into a stored hashed artifact, then exact-timestamp frame extraction into hashed frame files."
+  },
+  "authority_law": [
+    "Original transcript + the actual source video are the only evidence authorities.",
+    "Answer OBSERVABLE questions only. Report what is visibly shown, not what would be conventional trading practice.",
+    "A blurry or ambiguous chart is NOT permission to infer or guess.",
+    "Allowed terminal statuses: MULTIMODAL_RESOLVED | VISUAL_UNRESOLVED | SOURCE_CONFLICT.",
+    "For every answer, preserve: video/source identity, transcript span quoted below, exact timestamp window if determinable, frame/clip hashes if extracted, the question, the observations, the resolution status, and any resolved semantic ONLY when uniquely entailed by what is visible."
+  ],
+  "questions": [
+    {
+      "id": "VI-E8-1",
+      "title": "Sell-side (GBP/AUD) Fibonacci anchor points and draw direction",
+      "question": "In the GBP/AUD sell-side worked example, exactly which visible swing/high/low points does the educator use to anchor the Fibonacci retracement tool, and in which draw direction/order (which point clicked first, which point dragged to)?",
+      "why_load_bearing": "The 71% entry price, the stop (taught at the high of the Fibonacci range), and the take-profit (taught at the low of the Fibonacci range) are all source-owned per the accepted Blueprint v4 ownership law -- source-taught stop/target must survive in SOURCE_FAITHFUL, not be replaced. The transcript narrates the draw direction only for the OTHER (buy-side, NZDUSD) example (\"start at the low, click, and drag to the high\"); applying that same anchor order to the sell-side geometry was AR-1389's independently-confirmed HIGH A defect. Without this fact the sell-side entry price is not deterministic.",
+      "anchor_transcript_quote": "So I like to gauge retracements by using the Fibonacci retracement tool. However, I use it much differently than many other traders... So using the short position tool on Trading View, I place my entry at the 71% right here. I simply drag the stop-loss to the high of the Fibonacci range right here. And then I drag the takerit to the low of the Fibonacci range right here.",
+      "timestamp_window": {"start": "6:44.32", "end": "8:03.36", "start_seconds": 404.32, "end_seconds": 483.36},
+      "timestamp_window_note": "Widened deliberately: the verbal narration in this window states the entry/stop/target RESULT ('I place my entry at 71%... drag stop to high... drag TP to low') but never verbally describes the Fibonacci draw ACTION itself (unlike the buy-side example, which explicitly says 'start at the low, click, and drag to the high'). That silence is the exact gap this question exists to resolve, so the window starts at 6:44.32 ('the last item on the list is the 71% retracement') to give the actor the best chance of catching an on-screen-only (unnarrated) draw action before the verbal result statement at ~7:46-8:03.",
+      "expected_answer_shape": "Either: (a) the two exact chart swing points used (e.g. 'major high at X, major low at Y', described by what is visible, not invented labels) and confirmed draw order: OR (b) VISUAL_UNRESOLVED if the video's screen capture does not clearly show the anchor click/drag actions for this specific draw (e.g. tool was already set up off-screen, or the anchors are visually ambiguous)."
+    },
+    {
+      "id": "VI-E8-2",
+      "title": "Buy-side (NZDUSD) stop wick identity",
+      "question": "In the NZDUSD buy-side worked example, when the educator says he drags the stop-loss to 'that wick,' exactly which candle/wick is visibly selected by the cursor/magnet action, and what is its deterministic structural or Fibonacci-range relationship (e.g. does it coincide with the 0%/100% anchor, a specific swing point, or a level distinct from both)?",
+      "why_load_bearing": "The educator explicitly teaches a stop (not silence) -- per the accepted Blueprint v4 ownership law this taught stop must be preserved in SOURCE_FAITHFUL execution, not replaced by a generic ATR-based stop. The transcript's own wording ('that wick') is a deictic reference to something shown on screen and does not by itself name a determinable price level.",
+      "anchor_transcript_quote": "Now using the magnet tool again, I can click the stop loss, drag it over to that wick, and it'll snap right to it.",
+      "timestamp_window": {"start": "16:06.24", "end": "16:30.24", "start_seconds": 966.24, "end_seconds": 990.24},
+      "timestamp_window_note": "Widened slightly before the anchor quote to include the entry placement immediately preceding it ('I can then click the long position tool... place my entry at the 71%'), since the stop-drag action is described as happening right after entry placement and the actor may need that context to see which candle range is on screen.",
+      "expected_answer_shape": "Either: (a) identification of the specific wick/candle by its visible position relative to the drawn Fibonacci range or nearby structure (e.g. 'the wick immediately preceding the break-of-structure candle', 'the wick at the 0% Fibonacci anchor itself') described from what is actually visible: OR (b) VISUAL_UNRESOLVED if the selected wick cannot be deterministically tied to a structural/Fibonacci level from what is shown."
+    },
+    {
+      "id": "VI-E8-3",
+      "title": "4-hour premium/discount trading-range construction",
+      "question": "In the worked examples, exactly which 4-hour high and low define the trading range whose 50% level separates premium from discount, and does the video demonstrate a general selection rule (e.g. 'most recent major swing high/low on the 4H') or only give example-specific anchors with no generalizable rule shown?",
+      "why_load_bearing": "Higher-timeframe alignment is checklist item 1 of the taught strategy; premium/discount classification (which gates whether the strategy looks for buys or sells at all) cannot be computed without a deterministic range definition. The transcript describes the premium/discount READING as automated by the educator's custom indicator in both worked examples, and never narrates the manual high/low selection rule the indicator is presumably applying.",
+      "anchor_transcript_quote_example_1": "So, my indicator automatically checks premium and discount on the higher time frame. As you can see here, I have it set to 4hour. So, it's already telling me that we're trading at a premium on the 4hour time frame and it's right before selling opportunities.",
+      "timestamp_window_example_1": {"start": "2:18.72", "end": "2:41.52", "start_seconds": 138.72, "end_seconds": 161.52},
+      "anchor_transcript_quote_example_2": "Well, my indicator is showing me that the 4hour time frame is currently at a discount, which means we should not be looking for selling opportunities.",
+      "timestamp_window_example_2": {"start": "12:33.28", "end": "12:50.40", "start_seconds": 753.28, "end_seconds": 770.40},
+      "timestamp_window_note": "Both windows are tight around the verbal statement only. If the exact 4H high/low labels are shown as chart annotations that appear briefly outside these windows (e.g. the camera lingers on the 4H panel before or after the spoken line), the actor should expand up to roughly 30-60 seconds around either window to locate the labeled panel before returning VISUAL_UNRESOLVED.",
+      "expected_answer_shape": "Either: (a) the exact 4H high and low visible on screen for each worked example, plus whatever generalizable selection rule (if any) is visible or stated in the indicator's on-screen labeling: OR (b) VISUAL_UNRESOLVED if the video shows only the indicator's computed premium/discount VERDICT (a label/color) without ever exposing the underlying high/low it used -- in which case do not manufacture a generalized range algorithm; report the absence as such."
+    }
+  ],
+  "locks": [
+    "Do not infer or guess any answer the video does not actually show.",
+    "Do not broaden into whole-video strategy re-generation.",
+    "Do not answer with what would be 'conventional' Fibonacci/ICT practice if the video itself does not show it.",
+    "If media access is blocked (rights, availability), report the exact access blocker -- do not substitute a different creator or video."
+  ]
+}
