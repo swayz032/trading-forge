@@ -37,6 +37,8 @@ def _full_entry_decisions_through(env: dict, dte: date, end: pd.Timestamp, p: en
             env["piv5"], env["full5"], env["h15"], entry_time, p,
             env["pdm"], env["pwm"], dte, float(entry), cand.direction, cand.setup,
             cand.setup == "BRK5", piv15=env["piv15"],
+            entry_location=cand.location,
+            candidate_reason=cand.reason,
         )
         if picked is None:
             continue
