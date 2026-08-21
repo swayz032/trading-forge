@@ -13521,6 +13521,36 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-08-21 AR-1397 external-advisor review
+
+**Mission:** Independently grade Worker-1 AR-1397 at the final branch head and issue the next
+compiler-calibration ruling.
+
+**Work completed:**
+- Accepted the repaired six-axis fail-closed core, truthful blocker, canonical consumer order, and
+  focused E8 birth tests.
+- Reproduced dependency deletion plus re-stamp and an incomplete six-axis dependency record both
+  reaching the real compile path.
+- Located receipt-hash drift in unordered floating reductions over Python sets and specified a
+  bounded deterministic-computation repair instead of a broad serializer rewrite.
+- Issued AR-1387A ordering independent required-dependency authority, complete seam validation,
+  immutable gate authority, deterministic scoring, and one controlled rebaseline; HMAC is parked.
+
+**Verification:**
+- `test_external_dependency_projection.py`: 105 passed.
+- `test_source_graph_projection.py`: 31 passed.
+- `test_svkm_v2_1_compile.py`: 21 passed, 3 canonical-hash failures.
+- `ruff` on the two production modules and three focused suites: pass.
+- `PYTHONHASHSEED=0,1,2,42`: four different final-head receipt hashes; sorted-reduction in-memory
+  control: one identical hash across all four seeds.
+
+**Known-facts updates:** The reported cross-platform canonical-float drift has an active same-host
+root cause: `evidence_relevance._score()` sums weighted Python sets in randomized order. A plain
+receipt digest cannot enforce which dependency a strategy was required to declare.
+
+**Carry-forward for next session:** Worker-1 AR-1398 bounded closure packet, final-pin independent
+grade, then GPT acceptance before Stage C1 or any PAPER/Topstep work.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
