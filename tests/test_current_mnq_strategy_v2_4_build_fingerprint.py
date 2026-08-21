@@ -39,6 +39,8 @@ def test_production_build_contract_covers_transitive_strategy_edge_data_and_exec
         "research/current_mnq_strategy_v2_4_targets.py",
         "research/current_mnq_strategy_v2_4_target_policy.py",
         "research/current_mnq_strategy_v2_4_frozen_replay_regrade.py",
+        "research/current_mnq_strategy_v2_4_replay_lab_v3.py",
+        "research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py",
         "research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py",
         "research/current_mnq_strategy_v2_4_replay_fidelity_grade.py",
         "research/current_mnq_strategy_v2_4_edge.py",
