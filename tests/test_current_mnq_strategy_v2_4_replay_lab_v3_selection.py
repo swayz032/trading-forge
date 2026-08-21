@@ -64,7 +64,10 @@ def test_diverse_builder_uses_momentum_near_misses_instead_of_repeating_sessions
         )
         return cand, t, SimpleNamespace(), t, 100.0, "FIRST_REACTION_TOO_CLOSE"
 
-    monkeypatch.setattr(v3, "_authoritative_first_entry", fake_full)
+    # The diversity builder now owns the production-policy authoritative helper.
+    # Patch that exact seam so this remains a sampling test rather than falling
+    # through into the real market-data kernel with the deliberately empty env.
+    monkeypatch.setattr(sel, "_authoritative_first_entry", fake_full)
     monkeypatch.setattr(sel, "_first_momentum_near_miss", fake_miss)
     monkeypatch.setattr(v3, "_make_case", lambda env, dte, anchor, kind: _case(dte, anchor, kind))
     monkeypatch.setattr(v3, "_zone_rows", lambda *a, **k: [_loc()])
