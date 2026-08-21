@@ -22,8 +22,30 @@ import pandas as pd
 
 from research import current_mnq_strategy_v2_4_engine as eng
 from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates
-from research.current_mnq_strategy_v2_4_targets import build_and_classify
+from research.current_mnq_strategy_v2_4_target_policy import build_and_classify
 from research import current_mnq_strategy_v2_4_replay_lab_v3 as v3
+
+
+def _authoritative_first_entry(env: dict, dte: date, p: eng.Params):
+    """First exact production-policy entry without running any exit/PnL path."""
+    for cand, actionable, plan in iter_actionable_candidates(env, dte, p, as_of=None):
+        ent = eng.core.one_minute_entry(env["one"], actionable, cand.direction, p)
+        if ent is None:
+            continue
+        entry_time, entry, _raw_open = ent
+        if entry_time.time() > v3.LAST_ENTRY:
+            continue
+        picked, path_reason = build_and_classify(
+            env["piv5"], env["full5"], env["h15"], entry_time, p,
+            env["pdm"], env["pwm"], dte, entry, cand.direction, cand.setup,
+            cand.setup == "BRK5", piv15=env["piv15"],
+            entry_location=cand.location,
+            candidate_reason=cand.reason,
+        )
+        if picked is None:
+            continue
+        return cand, actionable, plan, entry_time, float(entry), picked, path_reason
+    return None
 
 
 def _first_momentum_near_miss(env: dict, dte: date, p: eng.Params):
@@ -44,6 +66,8 @@ def _first_momentum_near_miss(env: dict, dte: date, p: eng.Params):
             env["piv5"], env["full5"], env["h15"], entry_time, p,
             env["pdm"], env["pwm"], dte, entry, cand.direction, cand.setup,
             cand.setup == "BRK5", piv15=env["piv15"],
+            entry_location=cand.location,
+            candidate_reason=cand.reason,
         )
         if picked is None:
             return cand, actionable, plan, entry_time, float(entry), str(path_reason)
@@ -88,14 +112,12 @@ def build_replay_pack_v3_diverse(
     non_entry: list[date] = []
 
     for dte in days:
-        full = v3._authoritative_first_entry(env, dte, p)
+        full = _authoritative_first_entry(env, dte, p)
         if full is None:
             non_entry.append(dte)
         else:
             entries.append((dte, full))
 
-    # First cover distinct setup reasons; then fill chronologically. This never
-    # reads an exit, return, PnL field, winner flag, or future trade outcome.
     selected_entries: list[tuple[date, tuple]] = []
     seen_reason: set[str] = set()
     for row in entries:
@@ -172,8 +194,6 @@ def build_replay_pack_v3_diverse(
         used_sessions.add(str(dte))
         near_miss_count += 1
 
-    # Fill only if the sample still lacks enough distinct sessions. Prefer the
-    # established V2 structural controls, then a fixed clock on a no-entry day.
     for dte in remaining_controls:
         if len(cases) >= max_cases:
             break
@@ -220,7 +240,12 @@ def build_replay_pack_v3_diverse(
         "status": "INTERACTIVE_DESKTOP_STYLE_CAPTURE_UI_HIDDEN_FUTURE_NO_PNL",
         "future_visibility": "UI_PROGRESSIVE_DISCLOSURE_ONLY_NOT_CRYPTOGRAPHICALLY_WITHHELD",
         "chart_engine": {"name": "TradingView Lightweight Charts", "version": v3.LWC_VERSION},
-        "tp_instruction": "Mark the first meaningful REACTION CLUSTER you would actually use as TP. Not merely side-by-side candles.",
+        "tp_instruction": (
+            "Mark the first meaningful REACTION CLUSTER you would actually use as TP. "
+            "The trader's direct entry-gap rule uses the planned TP display: $400+ at the "
+            "15-MNQ reference size can still be safe; under $400 blocks an immediate entry "
+            "unless that same reaction is later causally processed by a valid continuation."
+        ),
         "allowed_actions": sorted(v3.ACTIONS),
         "allowed_force_labels": sorted(v3.FORCE_LABELS),
         "allowed_zone_roles": sorted(v3.ZONE_ROLES),
