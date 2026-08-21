@@ -1,6 +1,75 @@
-# E8 — SOURCE-COMPLETENESS REFUSAL
+# E8 — SOURCE-COMPLETENESS REFUSAL 🛑 **SUSPENDED**
 
-**Status:** `REFUSED — SOURCE INCOMPLETE FOR DETERMINISTIC SOURCE_FAITHFUL COMPILATION`
+> # ⛔ SUPERSESSION NOTICE — READ THIS BEFORE ANYTHING BELOW
+>
+> ## Status: `SUSPENDED_PENDING_EXTERNAL_DEPENDENCY_PREFLIGHT`
+>
+> **Suspended 2026-08-21 by AR-1384A** (`861dd4e27f60ea73c614896bf6fda1669b8e7c88`), which
+> **SUPERSEDES AR-1383A sections 4 and 8** as to terminal E8 refusal and "move on". This file is
+> **preserved as history and is NOT authority.** Do not act on its `REFUSED` verdict.
+>
+> ### What this document got wrong
+>
+> It concluded that the required 4H premium/discount state is **absent from the source**. It is not.
+> **The operator caught the error and GPT retracted its own framing.**
+>
+> The educator keeps the chart on **15m for execution** while the **Currency Pros indicator computes
+> and displays the configured 4H Premium/Discount state on that same chart**. The `4H | Premium` and
+> `4H | Discount` badges are the taught state — they are visible in frames this very packet
+> committed, and the narration says the indicator *"automatically checks premium and discount on the
+> higher time frame."* **The absence of a visible 4H chart switch is evidence of an HTF-on-LTF
+> overlay architecture, not evidence that higher-timeframe bias is missing.**
+>
+> ### The mechanism of the error, stated plainly
+>
+> **I measured chart navigation when the question was computation ownership.** The 236-tile scan is
+> correct and its positive control is sound — but "the visible chart stayed on 15m" **does not
+> discriminate** between *"no 4H information exists"* and *"a component overlays 4H information onto
+> the 15m chart."* I ran a true measurement against a question that could not separate the two
+> hypotheses, then reported the result as though it had. **I even quoted the `4H | Premium` badge in
+> the findings and treated it as proof of absence rather than as the answer.**
+>
+> GPT records this as **a ruling defect first** (AR-1384A section 3.1: AR-1382A framed a false
+> binary — *recover the private formula OR refuse the source* — and omitted the third branch,
+> *consume the exact provider output under a pinned dependency contract*). It is also mine: I had
+> the disconfirming evidence in hand and did not let it bite.
+>
+> ### What replaces the single blocker
+>
+> `VI-E8-3` was one question doing two jobs. It is now split, and the two are graded independently:
+>
+> | | Question | Status |
+> |---|---|---|
+> | **`VI-E8-3A`** | What state is used, and what does it do? | ✅ **`MULTIMODAL_RESOLVED`** |
+> | **`VI-E8-3B`** | Can Trading Forge obtain that exact state, live and historically? | ⏳ **`EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED`** — nonterminal |
+> | *native path* | Can we reimplement the range selector ourselves? | ❌ `SOURCE_INCOMPLETE_FOR_NATIVE_REIMPLEMENTATION` |
+>
+> **The native gap is real and is kept** — but it blocks only a *native reimplementation*. It does
+> **not** erase the explicitly taught provider-output path. Full record:
+> [`E8-EXTERNAL-DEPENDENCY-RECORD.md`](./E8-EXTERNAL-DEPENDENCY-RECORD.md).
+>
+> ### What is authorized now
+>
+> One **bounded, no-purchase** Currency Pros capability preflight (AR-1384A section 7), gated on the
+> operator already holding lawful access. **No purchase, no vendor contact, no credential request,
+> no access-control bypass.** If access is unavailable this returns
+> `BLOCKED_OPERATOR_ACCESS_REQUIRED` and stops cleanly.
+>
+> ### The lesson this file now carries
+>
+> ★ **`"THE PRIVATE FORMULA IS NOT SHOWN" IS NOT "THE REQUIRED STATE IS ABSENT."`**
+> ★ **`AN ABSENCE CLAIM MUST BE MEASURED AGAINST A QUESTION THAT COULD HAVE COME OUT THE OTHER WAY.`
+> A 236-sample scan with a working positive control is still worthless if the thing it measures
+> cannot distinguish the two hypotheses in play.**
+>
+> Before any future source-missing ruling, AR-1384A section 6.5 requires seven questions be answered
+> and preserved — beginning with **"who computes this value?"** A terminal refusal cannot pass review
+> with those fields omitted.
+
+---
+
+**Original status, retained as history (NO LONGER AUTHORITY):**
+`REFUSED — SOURCE INCOMPLETE FOR DETERMINISTIC SOURCE_FAITHFUL COMPILATION`
 **Source:** YouTube `E8Wg6tFPYjo` — *"The EASIEST Trading Strategy - 4H & 15M Fibonacci Step by
 Step"*, channel `Ara`
 **Issued:** 2026-08-21, worker-1, under AR-1383A section 8 (`7d7fe29732e9b35dd68eb575fbdc109d363ff3bc`)

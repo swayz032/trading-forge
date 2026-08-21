@@ -13,27 +13,45 @@ a value TradingView itself rendered (a position-tool label or a price-axis label
 closures cross-check those printed values against each other. Pixel geometry is used only as a
 fifth, independent confirmation that the target line and the fib `0` line occupy the same row.
 
+=================================================================================================
+AR-1394: THIS SCRIPT IS READ-ONLY, AND THAT IS ENFORCED BELOW, NOT MERELY PROMISED.
+=================================================================================================
+AR-1393 shipped this file emitting the magnification artifacts as a SIDE EFFECT of running the
+proof. AR-1384A section 5 convicted that: "never let 'run the proof' silently mutate committed
+evidence." A proof that rewrites the evidence it is proving cannot fail in the one way that
+matters. Artifact generation moved to scripts/_worker_vi_e8_generate_magnifications.py, which is
+now the ONLY writer. The guard at the bottom of this module asserts the evidence tree is
+byte-unchanged across this script's own execution, so a future edit that reintroduces a write
+fails loudly instead of silently.
+=================================================================================================
+
 Run:  python scripts/_worker_vi_e8_final_frame_proof.py
-Writes the three magnification artifacts next to the frames; prints the closures.
+Prints the closures. Writes nothing.
 """
 
 from PIL import Image
+import hashlib
 import numpy as np
 import os
 
 FRAMES = ("docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/"
           "visual-intelligence-e8-round1/E8Wg6tFPYjo/frames")
 
-# --- deterministic magnification manifest -------------------------------------------------------
-# (source frame, crop box l/t/r/b, integer scale, output name). Fixed literals: rerunning this
-# script reproduces byte-identical artifacts from byte-identical inputs.
-MAGNIFICATIONS = [
-    ("vi2_00-16-21.png", (1100, 410, 1920, 480), 3, "zoom_vi2_pre_16-21_target.png"),
-    ("vi2_00-16-24.png", (1100, 330, 1920, 480), 2, "zoom_vi2_during_16-24_drag.png"),
-    ("vi2_00-16-28.png", (1150, 330, 1920, 400), 3, "zoom_vi2_post_16-28_target.png"),
-    ("vi2_00-16-28.png", (1150, 600, 1920, 790), 2, "zoom_vi2_post_16-28_stop.png"),
-    ("vi2_00-16-28.png", (1770, 340, 1850, 470), 8, "zoom_vi2_post_16-28_axis.png"),
-]
+
+def _evidence_fingerprint():
+    """sha256 over every committed artifact's bytes -- the read-only guard's witness."""
+    h = hashlib.sha256()
+    for name in sorted(os.listdir(FRAMES)):
+        if not name.lower().endswith(".png"):
+            continue
+        h.update(name.encode())
+        with open(os.path.join(FRAMES, name), "rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+    return h.hexdigest()
+
+
+_FINGERPRINT_BEFORE = _evidence_fingerprint()
 
 # --- what TradingView itself rendered on the final stable frame ---------------------------------
 # Position-tool labels and price-axis labels read from vi2_00-16-28.png, confirmed in the
@@ -47,14 +65,6 @@ RETRACEMENT = 0.71           # the taught entry level
 
 # The intermediate mid-drag reading AR-1392 published, kept for the struck-and-retained record.
 INTERMEDIATE_PRINTED_TGT_DIST = 0.00122  # 16:21, "Target: 0.00122 (0.218%)" -- PRE-FINAL
-
-
-def emit_magnifications():
-    for src, box, scale, out in MAGNIFICATIONS:
-        im = Image.open(os.path.join(FRAMES, src))
-        w, h = box[2] - box[0], box[3] - box[1]
-        im.crop(box).resize((w * scale, h * scale), Image.LANCZOS).save(os.path.join(FRAMES, out))
-        print(f"  wrote {out:<34} from {src} {box} x{scale}")
 
 
 def fib_zero_row(path, x0=1775, x1=1830, thresh=200, cover=0.5):
@@ -75,12 +85,6 @@ def fib_zero_row(path, x0=1775, x1=1830, thresh=200, cover=0.5):
     return (rows[0] + rows[-1]) / 2
 
 
-print("=" * 78)
-print("MAGNIFICATIONS (deterministic)")
-print("=" * 78)
-emit_magnifications()
-
-print()
 print("=" * 78)
 print("BUY SIDE  NZDUSD  --  FINAL STABLE POST-ACTION FRAME  vi2_00-16-28.png")
 print("=" * 78)
@@ -135,3 +139,19 @@ print("  UNIFIED DIRECTION-AWARE RULE, now closing on BOTH worked examples:")
 print("    stop   = Fibonacci level `1`  (the drag's start anchor / impulse origin)")
 print("    entry  = the 0.71 level")
 print("    target = Fibonacci level `0`  (the drag's end anchor)")
+
+# --- READ-ONLY GUARD (AR-1384A section 5) -------------------------------------------------------
+# Positive witness that the path executed: the fingerprint is recomputed, not assumed. An empty
+# diff from a function that never ran would look identical, so the digest is printed.
+_FINGERPRINT_AFTER = _evidence_fingerprint()
+print()
+print("=" * 78)
+print("READ-ONLY GUARD")
+print("=" * 78)
+print(f"  evidence fingerprint before : {_FINGERPRINT_BEFORE}")
+print(f"  evidence fingerprint after  : {_FINGERPRINT_AFTER}")
+if _FINGERPRINT_BEFORE != _FINGERPRINT_AFTER:
+    raise SystemExit(
+        "READ-ONLY VIOLATION: this proof mutated committed evidence. Artifact generation belongs "
+        "in scripts/_worker_vi_e8_generate_magnifications.py (AR-1384A section 5).")
+print("  UNCHANGED -- this proof wrote nothing.")

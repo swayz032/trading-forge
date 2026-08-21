@@ -13,9 +13,13 @@ Task spec: `vi_task.json` in this directory.
 > the teacher narrates. See **[the corrected buy-side target](#corrected-buy-side-target-ar-1393)**.
 >
 > **VI-E8-1 and VI-E8-2 are ACCEPTED by AR-1383A sections 2 and 3 and stand unchanged.**
-> **VI-E8-3 remains `VISUAL_UNRESOLVED` / `COMPILE_BLOCKER_SOURCE_MISSING`** (AR-1383A section 4)
-> and is the sole remaining blocker; it triggers the E8 source-completeness refusal recorded at
-> `docs/replay-results/gpt-engineering/opus-transcript-first-diagnostic/E8-SOURCE-COMPLETENESS-REFUSAL.md`.
+> **🛑 VI-E8-3's VERDICT WAS SUBSEQUENTLY CORRECTED BY AR-1384A** (`861dd4e2`), which supersedes
+> AR-1383A sections 4 and 8. The required 4H state is **not** absent — the Currency Pros indicator
+> computes it and displays it on the 15m chart. `VI-E8-3` is split into `VI-E8-3A`
+> (`MULTIMODAL_RESOLVED`) and `VI-E8-3B` (`EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED`, nonterminal); the
+> native-reimplementation gap is retained separately. The E8 source-completeness refusal is
+> **`SUSPENDED_PENDING_EXTERNAL_DEPENDENCY_PREFLIGHT`** — preserved as history, not authority. See
+> [`../../E8-EXTERNAL-DEPENDENCY-RECORD.md`](../../E8-EXTERNAL-DEPENDENCY-RECORD.md).
 >
 > **Artifact integrity:** every committed artifact for this source is hashed in
 > `../artifact-manifest.sha256` (32 artifacts). Verify with `sha256sum -c artifact-manifest.sha256`.
@@ -90,18 +94,64 @@ This resolves symmetrically with the sell side, where the narration already says
 
 **Stated residual:** agreement is at the ~1-pip precision of this calibration; a sub-pip hand-placement offset like the ~4-tick residual AR-1221 found on the other video would not be detectable here and is NOT claimed to be absent.
 
-## VI-E8-3 — 4H premium/discount trading-range construction · `VISUAL_UNRESOLVED`
+## VI-E8-3 — 4H premium/discount trading-range construction · 🛑 **VERDICT CORRECTED BY AR-1384A**
 
-**The chart is never once set to the 4-hour timeframe.** Full-video scan, not a single-frame read:
+> ## ⛔ THE CONCLUSION BELOW IS WRONG. THE MEASUREMENT IS RIGHT.
+>
+> **AR-1384A** (`861dd4e2`) **supersedes AR-1383A sections 4 and 8.** The operator caught the error
+> and GPT retracted its own framing.
+>
+> Everything measured in this section stands: the chart really never leaves 15m, and the scan's
+> positive control really works. **What was wrong is the inference.** "The visible chart stayed on
+> 15m" does not discriminate between *no 4H information exists* and *a component overlays 4H
+> information onto the 15m chart* — and the narration plus the indicator's own `4H → Premium` /
+> `4H → Discount` rows select the second. **Absence of a chart switch is what an HTF-on-LTF overlay
+> architecture looks like.** I quoted the badge in this very section and read it as proof of absence
+> rather than as the answer.
+>
+> `VI-E8-3` was one question doing two jobs, and it is now split:
+>
+> | | Question | Status |
+> |---|---|---|
+> | **`VI-E8-3A`** | What state is used and what does it do? | ✅ `MULTIMODAL_RESOLVED` — external provider, 4H decision on a 15m chart, PREMIUM ⇒ short-only / DISCOUNT ⇒ long-only |
+> | **`VI-E8-3B`** | Can Trading Forge obtain that exact state, live and historically? | ⏳ `EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED` — **nonterminal**, measured by the AR-1384A section 7 preflight |
+> | *native* | Can the range selector be reimplemented natively? | ❌ `SOURCE_INCOMPLETE_FOR_NATIVE_REIMPLEMENTATION` — retained, blocks only a native rebuild |
+>
+> Full record, with the seven ownership questions answered:
+> [`../../E8-EXTERNAL-DEPENDENCY-RECORD.md`](../../E8-EXTERNAL-DEPENDENCY-RECORD.md).
+> The panel evidence is committed at `frames/zoom_vi3_cp_panel_premium.png` and
+> `frames/zoom_vi3_cp_panel_discount.png` — a structured decision surface carrying the strategy's
+> own checklist (`HTF Alignment`, `Liquidity Sweep`, `BOS + Imbalance`, `71% Retracement`,
+> `Trade Score`), not the mere "categorical verdict badge" this section called it.
+>
+> ★ **`"THE PRIVATE FORMULA IS NOT SHOWN" IS NOT "THE REQUIRED STATE IS ABSENT."`**
+
+**The chart is never once set to the 4-hour timeframe** — true, and expected under an HTF-on-LTF
+overlay. Full-video scan, not a single-frame read:
 
 - `scan_symbol_header_15s.png` — 78 samples at 15 s intervals across the full 19:38.
 - `scan_timeframe_5s.png` — **240 samples at 5 s intervals**, covering the entire runtime. Every tile reads `· 15 ·`. A 4H chart would read `· 240 ·`. There is no such tile.
 - **Positive control on the scanning instrument:** the same scan plainly resolves the symbol change from `British Pound / Australian Dollar` to `New Zealand Dollar / U.S. Dollar` at roughly 11–12 min. The instrument demonstrably detects change in that field, so its failure to show a timeframe change is a real absence and not instrument blindness.
 - Frames `vi3b_00-01-52/02-05/02-14.png`, taken at the exact moment of the premium/discount teaching (*"anything above 50% of the trading range is considered premium…"*), show only the Currency Pros panel's categorical verdict badge — `4H | Premium` (and `4H | Discount` in the second example, `vi3_00-12-38/42/46.png`). No 4H high, no 4H low, no 50% equilibrium line is plotted on the chart at any sampled moment.
 
-Per AR-1382A section 2's own instruction — *"If the video shows only example-specific anchors and no general rule, return `VISUAL_UNRESOLVED`; do not manufacture a generalized range algorithm"* — no range selector is proposed. The educator delegates this entirely to a closed-source custom indicator whose inputs are never exposed.
+Per AR-1382A section 2's own instruction — *"If the video shows only example-specific anchors and no general rule, return `VISUAL_UNRESOLVED`; do not manufacture a generalized range algorithm"* — no range selector is proposed. **That restraint was correct and still is: no 4H range selector has been invented, and none may be.** The educator delegates the computation to a closed-source custom indicator whose *internals* are never exposed.
 
-**Consequence for compilation:** higher-timeframe alignment is checklist item 1 and gates trade direction, so this remains a hard `COMPILE_BLOCKER_SOURCE_MISSING` for a fully deterministic E8, and it is not resolvable from this source at all — neither from its text nor from its pixels.
+~~**Consequence for compilation:** higher-timeframe alignment is checklist item 1 and gates trade direction, so this remains a hard `COMPILE_BLOCKER_SOURCE_MISSING` for a fully deterministic E8, and it is not resolvable from this source at all — neither from its text nor from its pixels.~~
+
+🛑 **STRUCK BY AR-1384A.** The premise "not resolvable from this source at all" is false. Higher-timeframe
+alignment *is* checklist item 1 and *does* gate trade direction — but the source **states the state
+and its consequence explicitly**, and the indicator **displays it on the 15m chart**. What the source
+withholds is the *private formula*, which blocks a **native reimplementation only**. The corrected
+consequence:
+
+- **semantics** → resolved (`VI-E8-3A`);
+- **provider access / historical replay** → `EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED`, **nonterminal**,
+  and the actual live blocker (`VI-E8-3B`);
+- **native reimplementation** → `SOURCE_INCOMPLETE_FOR_NATIVE_REIMPLEMENTATION`, retained.
+
+★ **The error was measuring chart navigation when the question was computation ownership.** The
+236-tile scan is a true measurement of a discriminator that could not separate the two hypotheses in
+play, and it was reported as though it had.
 
 ## ~~NEW FINDING — buy-side target contradicts its own narration · `SOURCE_CONFLICT`~~ 🛑 STRUCK
 
@@ -194,7 +244,7 @@ rule. The claim that they were "not generated by one consistent stated rule" is 
 |---|---|
 | VI-E8-1 sell-side Fibonacci anchors / draw direction | `MULTIMODAL_RESOLVED` — high→low, mirror of buy side; confirms HIGH A |
 | VI-E8-2 buy-side stop wick identity | `MULTIMODAL_RESOLVED` — the fib level-`1` anchor, 0.55826 |
-| VI-E8-3 4H premium/discount range construction | `VISUAL_UNRESOLVED` — never shown; full-video 5 s scan with positive control. **ACCEPTED, AR-1383A section 4** |
+| ~~VI-E8-3 4H premium/discount range construction~~ | 🛑 **VERDICT CORRECTED, AR-1384A.** Split into `VI-E8-3A` (`MULTIMODAL_RESOLVED` — external provider computes the 4H state and displays it on the 15m chart) and `VI-E8-3B` (`EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED`, nonterminal). Native reimplementation stays `SOURCE_INCOMPLETE`. |
 | ~~(new) buy-side target vs its narration~~ | 🛑 **STRUCK, AR-1383A section 5** — measured on a mid-drag frame. On the final stable frame the target is exactly on fib `0`. No conflict. |
 
 Two of the three hard blockers named by AR-1382A section 2A are resolved from source evidence and
