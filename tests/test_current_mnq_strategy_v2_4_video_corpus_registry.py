@@ -63,7 +63,7 @@ OPERATOR_WORDS = {
 
 # A third location holding this file's own bytes. Deliberately NOT the full build
 # fingerprint - see fingerprint_anchor in the registry for why, and for the honest limit.
-REGISTRY_SHA256 = "97e7273e699bfb9be0f918fd9bcf924591ee301c9f53fd935c00eddc0fdd5d24"
+REGISTRY_SHA256 = "8f269859452f959eb160cb408960caba31fa0ed793de6b3a998857792af5faee"
 
 ALLOWED_PROVENANCE = {
     "OPERATOR_STATED",
@@ -363,6 +363,19 @@ def test_enumeration_status_cannot_drift_from_the_entries(registry):
         assert str(entry["duration_seconds"]) in text, (
             f"{name}: status row does not state the duration it claims to cover"
         )
+        # THE DENOMINATOR RULE. The defect this prevents survived its own repair twice:
+        # "1 frame of 90" was labelled ENUMERATED by exhaustion, and the audio retraction
+        # replaced a sampling over-claim with a duration over-claim. A coverage row that
+        # cannot state frames-read OF frames-total is not a measurement.
+        assert "frames total" in text and "coverage" in text.lower(), (
+            f"{name}: coverage row states no denominator. Every MEASURED claim about a "
+            f"video must say frames read OF frames total, in the same sentence."
+        )
+        if "EXHAUSTIVE" in text:
+            assert "100% coverage" in text, (
+                f"{name} claims EXHAUSTIVE without 100% coverage - this is the exact "
+                f"defect that labelled 1 frame of 90 'ENUMERATED by exhaustion'."
+            )
 
 
 def test_this_registry_file_is_anchored_by_its_own_bytes(registry):
@@ -407,6 +420,50 @@ def test_the_custody_receipt_does_not_contradict_the_registry(registry):
         assert required in receipt, f"custody receipt is missing {required!r}"
     for name in OPERATOR_WORDS:
         assert name in receipt, f"custody receipt does not mention {name}"
+
+
+def test_the_no_speech_conclusion_rests_on_spectrum_not_duration(registry):
+    """The retraction of the audio over-claim contained the SAME defect it was correcting:
+    it justified 'no speech' by duration, which does not rule speech out - 1.17s carries
+    4-7 syllables. The conclusion must rest on the measured spectrum."""
+    exc = registry["video_corpus_extension_2026_08_21"]["audio_disposition"]["the_one_exception"]
+    assert exc["retracted_reasoning"].strip(), "the duration argument must stay retracted"
+    reading = exc["reading"]
+    for token in ("197 Hz", "292 Hz", "1-4 kHz", "F2/F3"):
+        assert token in reading, f"the spectral basis is missing {token!r}"
+    assert "NOT transcribed" in reading and "NOT sent to any external service" in reading
+    assert "HYPOTHESIS" in reading, "what the chime IS remains unverified"
+
+
+def test_the_denominator_rule_and_its_pattern_are_recorded(registry):
+    """A rule with no reason attached gets deleted by the next person who finds it noisy."""
+    r = registry["video_corpus_extension_2026_08_21"]["the_denominator_rule"]
+    assert "IN THE SAME SENTENCE" in r["rule"]
+    assert len(r["the_five"]) == 5, "all five convictions stay on record"
+    assert "survived its own repair twice" in r["note"]
+
+
+def test_failed_instruments_stay_recorded(registry):
+    """A blind detector and a true negative are the same output. The instruments that
+    lied here must stay named or the next seat re-runs them and believes them."""
+    f = registry["video_corpus_extension_2026_08_21"]["instruments_that_failed_here"]
+    assert "blind" in f["ffmpeg_scene_change_detection"]
+    assert "discarded" in f["ffmpeg_scene_change_detection"]
+    assert "0.0003" in f["mean_frame_to_frame_pixel_difference"], (
+        "the control that beat the subject must stay on record"
+    )
+    assert f["what_worked"].strip()
+
+
+def test_the_seal_finding_is_recorded_and_scoped(registry):
+    """A finding against the SEALED corpus is not a finding against this extension, and
+    must not be quietly repaired by the seat that found it."""
+    s = registry["video_corpus_extension_2026_08_21"]["finding_against_the_2026_08_20_seal"]
+    assert "audio" in s["zero_hit_terms"]
+    assert s["positive_control"].strip(), "a zero-hit enumeration owes a positive control"
+    assert s["what_this_does_NOT_convict"].strip(), "the finding must state its own limit"
+    assert "NOT repaired" in s["disposition"]
+    assert s["sealed_entry_shape"] == ["name", "roles", "sha256"]
 
 
 def test_the_independent_grade_is_recorded_with_its_confirmed_defects(registry):

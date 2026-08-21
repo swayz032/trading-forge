@@ -242,17 +242,19 @@
         ],
         "audible_duration_seconds": 1.17,
         "rest_of_file": "silent from 0.02 to 571.13 and from 572.30 to 613.64",
-        "reading": "A single 1.17-second burst near the end of a 613.7s file. 1.17 seconds cannot carry a spoken explanation; consistent with a UI or notification sound. HYPOTHESIS, not measured as such - the content was not transcribed and was NOT sent to any external service.",
-        "consequence": "The no-spoken-explanation claim survives, but only because 1.17s is too short to be narration - NOT because the corpus is silent. Those are different claims and the earlier field conflated them."
+        "reading": "Two steady narrowband tones a musical fifth apart - a designed notification chime. MEASURED on my own instrument (ffmpeg extraction to 16 kHz mono WAV, numpy FFT over the active span, all local): dominant bins 197 Hz and 292 Hz, ratio 1.486 where a perfect fifth is 1.500; 99.9% of spectral energy in 100-400 Hz; 0.0% in 1-4 kHz and 0.0% in 4-8 kHz; centroid 249 Hz; active span 0.88s, peak -12.2 dBFS. Intelligible speech REQUIRES substantial 1-4 kHz energy (F2/F3 formants) and consonant energy above 4 kHz. There is none. The content was NOT transcribed and was NOT sent to any external service. Held as HYPOTHESIS for what the chime IS; the exclusion of speech is MEASURED.",
+        "consequence": "No video carries spoken explanation. That now rests on a spectral measurement of the only audible span in the corpus, not on its duration and not on an assumption of silence - three different claims that earlier versions of this block conflated in turn.",
+        "retracted_reasoning": "An earlier version of this block justified the no-speech conclusion by DURATION - '1.17 seconds cannot carry a spoken explanation'. The independent grader refuted that and it is accepted: conversational English runs 4-6 syllables per second, so 1.17s carries 4-7 syllables, which is easily 'that's the retest' or 'there's the entry' - a complete teaching statement about a TP. Duration does NOT rule out speech. The right answer was reached by the wrong reason, and the reason has been replaced by the spectral measurement above. This is the same defect as the retraction it was correcting."
       },
-      "positive_control": "A synthesised tone at speech level measures -36.1 dB on the same detector versus -65 to -71 dB for the silent files, so the instrument discriminates content from floor."
+      "positive_control": "A synthesised tone at speech level measures -36.1 dB on the same detector versus -65 to -71 dB for the silent files, so the instrument discriminates content from floor.",
+      "operator_confirmation_requested": "Surfaced to the operator 2026-08-21: he was asked whether he remembers making a sound or speaking on that recording. A 5-second listen at 571-573s converts this HYPOTHESIS into his MEASURED, and it is a SEALED evidence file, so it is worth the ask. Unanswered as of this commit; the spectral exclusion of speech does not depend on his answer."
     },
     "enumeration_status": {
-      "Desktop 2026.08.19 - 19.49.23.03.mp4": "31.8s, 9 frames - role is OPERATOR_STATED so enumeration is not load-bearing",
-      "Desktop 2026.08.15 - 17.13.57.01.mp4": "14027.6s, 9 frames - UNENUMERATED, not citable for any specific rule",
-      "Desktop 2026.08.16 - 23.06.30.02.mp4": "98.3s, 25 frames at 4s spacing - ENUMERATED",
-      "Desktop 2026.08.21 - 10.40.34.05.mp4": "385.7s, 6 frames - role is OPERATOR_STATED so enumeration is not load-bearing. The price-action sentences in its notes describe chart HISTORY that is visible in every frame, not events unfolding during the recording, so they do not depend on frame density; they are scoped in the notes accordingly.",
-      "Desktop 2026.08.16 - 23.34.40.03.mp4": "1.5s, 1 frame - ENUMERATED by exhaustion"
+      "Desktop 2026.08.19 - 19.49.23.03.mp4": "31.8s, 1907 frames total, 9 frames read = 0.47% coverage. Role is OPERATOR_STATED, so enumeration is not load-bearing for the role; the trade figures in its notes ARE frame-derived at that coverage and are labelled accordingly.",
+      "Desktop 2026.08.15 - 17.13.57.01.mp4": "14027.6s, ~841700 frames total (60fps x duration, derived not counted - counting would require decoding 6.03 GB), 9 frames read = ~0.001% coverage. UNENUMERATED. Not citable for any specific rule until enumerated.",
+      "Desktop 2026.08.16 - 23.06.30.02.mp4": "98.3s, 5898 frames total, 25 frames read at 4s spacing = 0.42% coverage, plus a full-track audio pass. ENUMERATED for the trade lifecycle: entry, timeframe switch, target fill and the analytics tail were each witnessed on a read frame. 0.42% is NOT exhaustive and this row does not claim it is.",
+      "Desktop 2026.08.21 - 10.40.34.05.mp4": "385.7s, 23137 frames total, 6 frames read = 0.026% coverage. Role is OPERATOR_STATED, so enumeration is not load-bearing for the role. The price-action sentences in its notes describe chart HISTORY rendered on screen and readable from any single frame, not events observed unfolding, so they do not depend on frame density; they are scoped in the notes accordingly.",
+      "Desktop 2026.08.16 - 23.34.40.03.mp4": "1.5s, 90 frames total, 90 frames read = 100% coverage, EXHAUSTIVE. Read as a single 10x9 contact sheet of every decoded frame. All 90 are the same FX Replay 5m layout; the ONLY variation across the clip is the 'Recording has started' toast fading out over roughly the first 8 frames. No trade event, no annotation, no dialog."
     },
     "role_provenance_law": "An entry marked DERIVED_NOT_OPERATOR_STATED carries the engineer's reading, not the trader's words, and is outranked by any later direct trader clarification.",
     "operator_stated_entries_are_a_closed_set": [
@@ -318,6 +320,51 @@
       "why_not_the_full_semantics_hash": "Anchoring the whole build fingerprint would red on every unrelated engine edit among its 73 files, and a guard that reds routinely gets its constant updated reflexively - which trains people to ignore it. Scoping the anchor to this file catches the tamper case the grader actually found (a consistent registry + test-constant edit) without coupling to 72 unrelated files.",
       "honest_limit": "A determined editor can still update all three locations. This does not make tampering impossible; it removes the SILENT property, which is what was claimed and was not true.",
       "semantics_hash_is_recorded_not_guarded": "The build fingerprint value at each landed commit is recorded in the custody receipt as a human-checkable anchor. It is a RECORD, not a test."
+    },
+    "instruments_that_failed_here": {
+      "why_recorded": "A blind detector and a true negative are the same output. These cost real time and would have produced false confidence if their controls had not been run.",
+      "ffmpeg_scene_change_detection": "select='gt(scene,0.02)' returned 0 hits on the 1.5s fragment - which looks like proof it is static. The SAME detector returned 0 on a positive control known to change. It was blind. Result discarded, not used.",
+      "mean_frame_to_frame_pixel_difference": "Also non-discriminating at this task. The 1.5s fragment scored mean 0.0093, while a LIVE chart with ticking price scored 0.0003 - lower. Screen recordings of charts are mostly static pixels regardless of activity, so the measure does not separate active from idle. Result discarded.",
+      "what_worked": "Decoding all 90 frames into one contact sheet and reading it. Fewest layers between the question and the answer.",
+      "python_subprocess_path_trap": "MSYS-style paths (/c/Users/...) silently produce ZERO frames when passed to ffmpeg from Windows Python. The failure looks like an empty clip, not an error."
+    },
+    "finding_against_the_2026_08_20_seal": {
+      "status": "MEASURED at commit 7e79d082, by vocabulary enumeration over the seal registry.",
+      "positive_control": "'sha256' returns 17 hits, so the enumeration instrument works.",
+      "zero_hit_terms": [
+        "audio",
+        "sound",
+        "narrat",
+        "transcri",
+        "examin",
+        "exhaust",
+        "coverage",
+        "sampled",
+        "method",
+        "enumerat"
+      ],
+      "sealed_entry_shape": [
+        "name",
+        "roles",
+        "sha256"
+      ],
+      "what_this_does_NOT_convict": "The seal never CLAIMED full examination, so discovering unexamined audio in a sealed video convicts it of no false statement.",
+      "what_it_DOES_establish": "Audio was never considered for ANY video at seal time - the word appears zero times across the registry and both manifests it references. The hypothesis that the original sealing looked at pictures only is now MEASURED, not inferred.",
+      "the_real_gap": "The seal asserts semantic ROLES for three videos with no recorded method, coverage, or derivation basis of any kind. That is not a false claim, it is an UNFALSIFIABLE one - there is nothing to check it against. The key name 'verified_video_evidence' is a caption doing unearned work.",
+      "asymmetry": "The 5 videos added 2026-08-21 carry role_provenance, enumeration_status with denominators, and a stated method. The 3 sealed ones carry none. The founding evidence is the least accountable evidence in the file.",
+      "disposition": "Recorded, NOT repaired. Re-deriving the sealed roles is a separate packet and is not this seat's to authorise - it would mean re-opening three videos the operator already sealed. Flagged for the roadmap."
+    },
+    "the_denominator_rule": {
+      "rule": "Every MEASURED claim about a video states its denominator IN THE SAME SENTENCE - frames read of frames total, seconds scanned of seconds total. A claim that cannot state its denominator is not MEASURED.",
+      "the_pattern_it_prevents": "Named by the independent grader after five convictions, and it is not 'sampling'. All five share one move: STATE THE CONCLUSION AT THE CONFIDENCE OF THE METHOD YOU WISH YOU HAD USED, then record the method actually used somewhere else, or not at all.",
+      "the_five": [
+        "item 5: 9 frames read, a continuous-5m property asserted of the whole clip - refuted, it contains 1D daily segments",
+        "item 6: 25 frames read only on the second pass; the first pass asserted entry-and-stop as the whole trade and missed the entire 138-point target leg",
+        "audio: 3 windows of 60s, silence asserted of ~4 hours - refuted, one sealed video is not silent",
+        "item 7: 1 frame of 90 labelled 'ENUMERATED by exhaustion' - 1.1% coverage described with the word exhaustive",
+        "the burst: duration reasoned, spectrum never measured - right answer, wrong reason, inside the retraction that was correcting the same defect"
+      ],
+      "note": "Instances 4 and 5 were found INSIDE the corrections for instances 1-3. The defect survived its own repair twice. That is why it is a rule with a test and not a resolution to be careful."
     }
   },
   "frozen_replay_evidence": {

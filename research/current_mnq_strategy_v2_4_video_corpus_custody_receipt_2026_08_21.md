@@ -86,11 +86,11 @@ check, which meant a sealed role could be replaced with a banned concept and sta
 A DERIVED role is only as good as the coverage behind it, and nine frames of a 3h54m file is
 not a viewing. Coverage is a declared, tested field, not a footnote:
 
-- `Desktop 2026.08.19 - 19.49.23.03.mp4` - 31.8s, 9 frames - role is OPERATOR_STATED so enumeration is not load-bearing
-- `Desktop 2026.08.15 - 17.13.57.01.mp4` - 14027.6s, 9 frames - UNENUMERATED, not citable for any specific rule
-- `Desktop 2026.08.16 - 23.06.30.02.mp4` - 98.3s, 25 frames at 4s spacing - ENUMERATED
-- `Desktop 2026.08.21 - 10.40.34.05.mp4` - 385.7s, 6 frames - role is OPERATOR_STATED so enumeration is not load-bearing. The price-action sentences in its notes describe chart HISTORY that is visible in every frame, not events unfolding during the recording, so they do not depend on frame density; they are scoped in the notes accordingly.
-- `Desktop 2026.08.16 - 23.34.40.03.mp4` - 1.5s, 1 frame - ENUMERATED by exhaustion
+- `Desktop 2026.08.19 - 19.49.23.03.mp4` - 31.8s, 1907 frames total, 9 frames read = 0.47% coverage. Role is OPERATOR_STATED, so enumeration is not load-bearing for the role; the trade figures in its notes ARE frame-derived at that coverage and are labelled accordingly.
+- `Desktop 2026.08.15 - 17.13.57.01.mp4` - 14027.6s, ~841700 frames total (60fps x duration, derived not counted - counting would require decoding 6.03 GB), 9 frames read = ~0.001% coverage. UNENUMERATED. Not citable for any specific rule until enumerated.
+- `Desktop 2026.08.16 - 23.06.30.02.mp4` - 98.3s, 5898 frames total, 25 frames read at 4s spacing = 0.42% coverage, plus a full-track audio pass. ENUMERATED for the trade lifecycle: entry, timeframe switch, target fill and the analytics tail were each witnessed on a read frame. 0.42% is NOT exhaustive and this row does not claim it is.
+- `Desktop 2026.08.21 - 10.40.34.05.mp4` - 385.7s, 23137 frames total, 6 frames read = 0.026% coverage. Role is OPERATOR_STATED, so enumeration is not load-bearing for the role. The price-action sentences in its notes describe chart HISTORY rendered on screen and readable from any single frame, not events observed unfolding, so they do not depend on frame density; they are scoped in the notes accordingly.
+- `Desktop 2026.08.16 - 23.34.40.03.mp4` - 1.5s, 90 frames total, 90 frames read = 100% coverage, EXHAUSTIVE. Read as a single 10x9 contact sheet of every decoded frame. All 90 are the same FX Replay 5m layout; the ONLY variation across the clip is the 'Recording has started' toast fading out over roughly the first 8 frames. No trade event, no annotation, no dialog.
 
 ## 4. Audio
 
@@ -102,8 +102,8 @@ Method: volumedetect over the COMPLETE audio track of all 8 files (-vn, no video
 
 - Silent end to end, 7 of 8: mean_volume -83 to -84 dB, max_volume -65.7 to -71.2 dB. Dither-floor noise, no content.
 - **The exception:** `Desktop 2026.08.20 - 20.37.47.04.mp4` - THIS IS ONE OF THE THREE SEALED VIDEOS and it is NOT silent. Full-track mean_volume -52.9 dB, max_volume -12.2 dB, integrated loudness -22.5 LUFS. Audible span 571.13s to 572.3s = 1.17s. silent from 0.02 to 571.13 and from 572.30 to 613.64.
-- Reading of that burst: A single 1.17-second burst near the end of a 613.7s file. 1.17 seconds cannot carry a spoken explanation; consistent with a UI or notification sound. HYPOTHESIS, not measured as such - the content was not transcribed and was NOT sent to any external service.
-- Consequence: The no-spoken-explanation claim survives, but only because 1.17s is too short to be narration - NOT because the corpus is silent. Those are different claims and the earlier field conflated them.
+- Reading of that burst: Two steady narrowband tones a musical fifth apart - a designed notification chime. MEASURED on my own instrument (ffmpeg extraction to 16 kHz mono WAV, numpy FFT over the active span, all local): dominant bins 197 Hz and 292 Hz, ratio 1.486 where a perfect fifth is 1.500; 99.9% of spectral energy in 100-400 Hz; 0.0% in 1-4 kHz and 0.0% in 4-8 kHz; centroid 249 Hz; active span 0.88s, peak -12.2 dBFS. Intelligible speech REQUIRES substantial 1-4 kHz energy (F2/F3 formants) and consonant energy above 4 kHz. There is none. The content was NOT transcribed and was NOT sent to any external service. Held as HYPOTHESIS for what the chime IS; the exclusion of speech is MEASURED.
+- Consequence: No video carries spoken explanation. That now rests on a spectral measurement of the only audible span in the corpus, not on its duration and not on an assumption of silence - three different claims that earlier versions of this block conflated in turn.
 - Positive control: A synthesised tone at speech level measures -36.1 dB on the same detector versus -65 to -71 dB for the silent files, so the instrument discriminates content from floor.
 
 ## 5. Independent grading (doer != grader)
