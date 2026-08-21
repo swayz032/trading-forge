@@ -38,6 +38,14 @@ def test_structure_only_premarket_builder_passes_no_daily_weekly_or_prev_close_m
     assert seen["dte"] is dte
 
 
+def test_structure_only_premarket_builder_relabels_inherited_prior_range_audit_field(monkeypatch):
+    inherited = SimpleNamespace(primary="NEUTRAL", location_state="INSIDE_PRIOR_RANGE")
+    monkeypatch.setattr(pm.core, "premarket_plan", lambda *a, **k: inherited)
+    got = pm.build_premarket_plan_v24(object(), object())
+    assert got is inherited
+    assert got.location_state == "STRUCTURE_ONLY_NO_NAMED_REFERENCE"
+
+
 def test_neutral_and_aligned_plan_do_not_add_an_extra_veto():
     p = core.Params()
     assert pm.plan_allows_v24(plan("NEUTRAL"), "L", "BRK5", None, loc(.1), p)
