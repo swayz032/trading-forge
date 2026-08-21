@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `860525ce757ed4aa6c03888ea552952ea19e6220`  (worktree DIRTY at generation time)
+> Generated at commit `24a9564141d0ab6e0336ce0a3dc5e915fb733c36`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -4288,7 +4288,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `validate_graph_edges` | function | `src/engine/extraction/source_graph_projection.py:440` | 0 | unique |
 | `validate_external_dependencies` | function | `src/engine/extraction/source_graph_projection.py:530` | 0 | unique |
 | `_validate_projection_spec` | function | `src/engine/extraction/source_graph_projection.py:742` | 0 | unique |
-| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:841` | 9 | unique |
+| `run_projection` | function | `src/engine/extraction/source_graph_projection.py:841` | 8 | unique |
 | `SpanCollision` | class | `src/engine/extraction/span_collision.py:41` | 0 | unique |
 | `role_of` | function | `src/engine/extraction/span_collision.py:49` | 0 | unique |
 | `_overlap` | function | `src/engine/extraction/span_collision.py:55` | 0 | unique |
