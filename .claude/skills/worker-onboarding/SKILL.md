@@ -159,6 +159,26 @@ authority as an ORDER, but any factual premise inside it is still `RELAYED` unti
 (`[order-premise-grade]`), and a re-paste of an old read carries no new timestamp
 (`[relayed-read-no-timestamp]`).
 
+🛑🛑★★★★★ **RESOLVE THE NEWEST RULING BY BRANCH HEAD COMMIT TIME — NEVER BY FILENAME OR AR-NUMBER
+SORT.** (AR-1381A section 8, on AR-1388's disclosed defect: a cold start filename-sorted
+`gpt-rulings` and a numeric scan missed the controlling ruling; a separate seat armed its GPT
+branch ear on `external-advisor/gpt-engineering` — copied from stale leftover processes on disk —
+when the live ruling channel is `external-advisor/gpt-rulings`, and sat deaf through a ruling
+because of it.) At every cold start:
+
+```bash
+for b in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/external-advisor/); do
+  git log -1 --format="%H %ad %s" --date=iso "$b"
+done
+```
+
+Resolve the newest CONTROLLING ruling from whichever `external-advisor/*` branch has the most
+recent commit **by this timestamp**, not by the AR number in its filename and not by which branch
+name looks most familiar or most recently touched by a prior session. `docs/replay-results/CURRENT_STATE.md`
+(when present) is a NAVIGATION POINTER ONLY — repository branch-head evidence always wins over it
+if the two disagree; treat a stale pointer as a finding, not as authority. Only after resolving the
+newest ruling this way do you read reports after it (step 3 below).
+
 **Do not read the reports file from the top.** It is append-only and hundreds of
 entries deep.
 
@@ -306,6 +326,15 @@ loudly (`exit 2`/`exit 3`) if the dir is not a repo or the ref resolves to nothi
 **The rest of the discipline is unchanged and still binding:**
 - **CENSUS FIRST** by `Win32_Process` + parent walk (**never `TaskList`**), one rig per channel,
   **never kill an ear you did not arm.**
+  🛑 **MEASURED 2026-08-20: a census that finds live ears on the WRONG ref is not evidence that
+  ref is correct.** A seat found several leftover processes all watching
+  `external-advisor/gpt-engineering` and armed its own ear on that SAME ref by pattern-matching
+  them, instead of the literal `refs/heads/external-advisor/gpt-rulings` two paragraphs above —
+  and sat deaf through a live ruling because of it. **The ref this section names, verbatim, is the
+  only authority for which branch to watch. A census tells you whether an ear already exists on the
+  CORRECT ref (so you don't arm a duplicate) — it never tells you which ref is correct.** Before
+  arming, diff whatever ref the census finds against the ref quoted in this file; a mismatch means
+  the found process is stale/wrong, not that the file is out of date.
 - **RED-PROOF THE DETECTOR ON A THROWAWAY, never on the real branch** — a throwaway repo whose
   branch you move by hand. Required: it **EMITS** on a move, **stays SILENT** with no move, and
   **REFUSES** from the non-repo cwd. All three, before you trust it.
