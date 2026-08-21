@@ -232,21 +232,80 @@ def _refuse_if_not_compile_ready(record: dict[str, Any]) -> None:
 
     Deliberately keyed on `compile_readiness`, not on `grade`: `grade` is RED for many ordinary
     reasons this adapter already reports more precisely, and duplicating that here would turn one
-    clear refusal into two competing ones. A receipt with no `compile_readiness` key declares no
-    external dependency and is unaffected -- the omit-when-empty discipline means legacy receipts
-    reach this function unchanged and pass straight through.
+    clear refusal into two competing ones.
+
+    🛑 AR-1386A SECTION 4 -- THE SECOND HOLE, AND THE CHEAPEST POSSIBLE ATTACK ON THIS GATE.
+    The paragraph that used to stand here said a receipt with no `compile_readiness` key "declares
+    no external dependency and is unaffected". THAT WAS AN ASSUMPTION THIS FUNCTION NEVER CHECKED.
+    GPT took the real nine-node certified receipt, added the emitted dependency record, marked it
+    RED, DELETED the readiness key, and called the real entry point:
+
+        external_dependencies present : yes
+        grade                         : RED
+        compile_readiness             : absent
+        build_certified_record()      : COMPILED 1 strategy
+
+    A GATE KEYED TO A FIELD'S VALUE IS DISARMED BY DELETING THE FIELD. The existing seam test
+    proved only that an EXPLICIT blocked value refuses, so it could not see this.
+
+    The two facts must therefore agree, in BOTH directions, and disagreement is itself a refusal:
+    a dependency-bearing receipt with no readiness is laundering; a readiness with no dependency
+    records is a receipt that half-remembers what it declared, and a consumer cannot tell which
+    half to believe. Only a receipt declaring NEITHER passes untouched -- which is what keeps the
+    legacy omit-when-empty path working.
     """
+    has_readiness = "compile_readiness" in record
     readiness = record.get("compile_readiness")
-    if readiness is not None and readiness != _COMPILE_READY:
+    dependencies = record.get("external_dependencies") or ()
+
+    if dependencies and not has_readiness:
+        raise CanonicalNodeNotAcceptedError(
+            "EXTERNAL_DEPENDENCY_READINESS_ABSENT: this receipt carries "
+            f"{len(dependencies)} external dependency record(s) but declares no "
+            "compile_readiness. Refusing to compile. A readiness gate that a DELETION disarms is "
+            "not a gate; a dependency-bearing receipt must state whether it is ready, and a "
+            "missing statement is not a ready one."
+        )
+    if has_readiness and not dependencies:
+        raise CanonicalNodeNotAcceptedError(
+            f"EXTERNAL_DEPENDENCY_RECEIPT_INCONSISTENT: this receipt declares "
+            f"compile_readiness={readiness!r} but carries no external dependency records. "
+            "Refusing to compile. Readiness is emitted ONLY alongside the dependencies it is "
+            "about, so one without the other means the receipt was edited after it was produced "
+            "and neither half can be trusted."
+        )
+
+    if has_readiness and readiness != _COMPILE_READY:
         blocker = record.get("structured_blocker") or {}
+        # AR-1386A section 4, final bullet: the terminal wording is READ FROM the structured
+        # blocker. It used to be the hard-coded sentence "This refusal is NONTERMINAL -- unverified
+        # is not unavailable", which is true of an unverified provider and FALSE of one proven
+        # unavailable -- and it printed either way. Narrating a terminal capability refusal as
+        # nonterminal is the false-terminal error of AR-1383A running in reverse.
+        terminal = blocker.get("terminal")
+        if terminal is True:
+            verdict = (
+                "This refusal is TERMINAL -- the capability is proven unavailable, not merely "
+                "unmeasured."
+            )
+        elif terminal is False:
+            verdict = "This refusal is NONTERMINAL -- unverified is not unavailable."
+        else:
+            # Fail closed on an unreadable blocker rather than picking a verdict for it. Asserting
+            # either terminality here would be inventing the one fact this sentence exists to
+            # report.
+            verdict = (
+                "Terminality is UNDETERMINED -- the receipt carries no readable structured "
+                "blocker, so this refusal states no verdict about whether it can be lifted."
+            )
         raise CanonicalNodeNotAcceptedError(
             f"projection declares compile_readiness={readiness!r}, refusing to compile. "
             f"Structured blocker: reason={blocker.get('reason')!r}, "
+            f"cause_codes={blocker.get('cause_codes')!r}, "
             f"terminal={blocker.get('terminal')!r}, "
             f"dependency_ids={blocker.get('dependency_ids')!r}. "
             "Every canonical node may well have verified; the strategy is still not executable "
-            "because a required value is computed outside Trading Forge and access to it is not "
-            "proven. This refusal is NONTERMINAL -- unverified is not unavailable."
+            f"because a required value is computed outside Trading Forge. {verdict}"
         )
 
 

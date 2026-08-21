@@ -155,6 +155,29 @@ _IMPL_STATUSES = frozenset({IMPL_NOT_STARTED, IMPL_IN_PROGRESS, IMPL_VALIDATED})
 BLOCKER_ACCESS_UNVERIFIED = "EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED"
 BLOCKER_CAPABILITY_UNAVAILABLE = "UNSUPPORTED_CAPABILITY_REFUSAL"
 
+# AR-1386A sections 3 and 5: `reason` used to be a TWO-WAY choice between terminal and nonterminal,
+# so every nonterminal block was labelled ACCESS_UNVERIFIED whatever had actually blocked it. GPT
+# measured a receipt reading `reason=EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED` with
+# `axes=[implementation_status]` and every access axis VERIFIED. The gate was safe and the receipt
+# was false, which sends the next reader to fix the wrong thing.
+#
+# One cause code per axis that can block, so a reason can never contradict its own axes.
+BLOCKER_SEMANTIC_UNRESOLVED = "EXTERNAL_DEPENDENCY_SEMANTIC_UNRESOLVED"
+BLOCKER_SEMANTIC_CONFLICT = "EXTERNAL_DEPENDENCY_SEMANTIC_CONFLICT"
+BLOCKER_IMPLEMENTATION_UNVALIDATED = "EXTERNAL_DEPENDENCY_IMPLEMENTATION_UNVALIDATED"
+
+# Precedence for the single `reason` field, most severe first. `cause_codes` always carries EVERY
+# cause, so this ordering only decides which one is promoted to the headline -- AR-1386A section 5
+# forbids collapsing mixed causes, not summarising them. Terminal outranks everything because it is
+# the fact a reader must not miss; the remaining order follows the ruling's own enumeration.
+_BLOCKER_PRECEDENCE = (
+    BLOCKER_CAPABILITY_UNAVAILABLE,
+    BLOCKER_ACCESS_UNVERIFIED,
+    BLOCKER_IMPLEMENTATION_UNVALIDATED,
+    BLOCKER_SEMANTIC_UNRESOLVED,
+    BLOCKER_SEMANTIC_CONFLICT,
+)
+
 # The axes that must each be independently proven before an external dependency is executable.
 # Access is not one fact: live delivery, historical replay and update policy each separately gate a
 # faithful backtest, so any one of them unproven blocks.
@@ -494,6 +517,7 @@ def validate_external_dependencies(
     seen: set[str] = set()
     unverified: dict[str, list[str]] = {}
     unavailable: list[str] = []
+    cause_codes: set[str] = set()
     records: list[dict] = []
 
     for dep in dependencies:
@@ -607,20 +631,48 @@ def validate_external_dependencies(
                 f"{dep.expected_contract_sha256!r}, canonical serialization gives {computed!r}")
 
         axes = [a for a in _ACCESS_AXES if getattr(dep, a) != ACCESS_VERIFIED]
+        causes: set[str] = set()
+        # Only an axis that is literally UNVERIFIED may be reported as unverified. One that is
+        # proven UNAVAILABLE is a different verdict and gets its own code below -- folding it in
+        # here would restate, inside the cause vocabulary, the very conflation the vocabulary
+        # exists to prevent.
+        if any(getattr(dep, a) == ACCESS_UNVERIFIED for a in _ACCESS_AXES):
+            causes.add(BLOCKER_ACCESS_UNVERIFIED)
         # AR-1395 F-3: implementation is its own blocking axis. Provider access proven and adapter
         # built are different facts; neither implies the other, and only one of them was gating.
         if dep.implementation_status != IMPL_VALIDATED:
             axes.append("implementation_status")
+            causes.add(BLOCKER_IMPLEMENTATION_UNVALIDATED)
+        # 🛑 AR-1386A SECTION 3, THE CRITICAL FAIL-OPEN THIS PACKET EXISTS TO CLOSE.
+        # AR-1396 gave `semantic_status` a closed vocabulary but left it gating NOTHING, so GPT held
+        # every access and implementation axis ready, changed only the meaning, and measured
+        # VISUAL_UNRESOLVED and SOURCE_CONFLICT both reaching READY_PENDING_CERTIFICATION.
+        # A CLOSED VOCABULARY STOPS GIBBERISH; IT DOES NOT MAKE AN UNRESOLVED MEANING EXECUTABLE.
+        # Especially here: the operator's correction was that visual evidence had been MISSED, and
+        # the compiler must not later trade through that same unresolved state just because a
+        # provider and an adapter turned up.
+        if dep.semantic_status != SEMANTIC_RESOLVED:
+            axes.append("semantic_status")
+            causes.add(BLOCKER_SEMANTIC_UNRESOLVED if dep.semantic_status == SEMANTIC_UNRESOLVED
+                       else BLOCKER_SEMANTIC_CONFLICT)
         if axes:
             unverified[dep.dependency_id] = axes
         # AR-1395 F-4: a provider PROVEN UNAVAILABLE is terminal, and distinguishing it from merely
         # unmeasured is the whole point of the vocabulary.
         if any(getattr(dep, a) == ACCESS_UNAVAILABLE for a in _ACCESS_AXES):
             unavailable.append(dep.dependency_id)
+            causes.add(BLOCKER_CAPABILITY_UNAVAILABLE)
+        cause_codes |= causes
 
         records.append({
             "dependency_id": dep.dependency_id,
-            "consumer_refs": list(dep.consumer_refs),
+            # AR-1386A section 6, deterministic correction: SORTED, matching the contract hash.
+            # F-6b sorted the refs for the HASH but left the EMITTED record in caller order, so GPT
+            # measured EQUAL contract hashes with UNEQUAL receipts for the same two consumers
+            # reversed. If two artifacts that are the same contract are not the same receipt, then
+            # receipt identity and contract identity mean different things and neither can be
+            # trusted to detect drift.
+            "consumer_refs": sorted(dep.consumer_refs),
             "kind": dep.kind,
             "provider": dep.provider,
             "artifact": dep.artifact,
@@ -646,6 +698,7 @@ def validate_external_dependencies(
         "records": records,
         "unverified_axes": unverified,
         "unavailable_dependency_ids": sorted(unavailable),
+        "cause_codes": sorted(cause_codes),
         "blocked": bool(unverified),
         "terminal": bool(unavailable),
     }
@@ -1091,10 +1144,22 @@ def run_projection(
             # nonterminal -- the provider may well expose the value and nobody has looked. PROVEN
             # UNAVAILABLE is terminal and must say so. Reporting the second as the first inverted
             # this module's own "unverified is not unavailable" law inside the code enforcing it.
+            #
+            # 🛑 AR-1386A SECTION 5. That fix left `reason` a TWO-WAY choice, so every NONTERMINAL
+            # block was labelled ACCESS_UNVERIFIED whatever had really blocked it. GPT measured
+            # `reason=EXTERNAL_DEPENDENCY_ACCESS_UNVERIFIED` on a receipt whose every access axis
+            # was VERIFIED and whose only blocking axis was `implementation_status`. The gate was
+            # safe and the receipt was FALSE -- and a false cause sends the next reader to fix the
+            # wrong thing, which is how an instrument does damage without ever being unsafe.
+            #
+            # So: `reason` is chosen from the causes that ACTUALLY fired, and `cause_codes` carries
+            # every one of them. Mixed causes are summarised, never collapsed.
             terminal = external_report["terminal"]
+            causes = external_report["cause_codes"]
+            reason = next((c for c in _BLOCKER_PRECEDENCE if c in causes), BLOCKER_ACCESS_UNVERIFIED)
             external_block["structured_blocker"] = {
-                "reason": (BLOCKER_CAPABILITY_UNAVAILABLE if terminal
-                           else BLOCKER_ACCESS_UNVERIFIED),
+                "reason": reason,
+                "cause_codes": causes,
                 "terminal": terminal,
                 "dependency_ids": sorted(external_report["unverified_axes"]),
                 "unverified_axes": external_report["unverified_axes"],
