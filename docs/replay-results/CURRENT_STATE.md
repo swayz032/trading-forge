@@ -21,7 +21,20 @@ never by filename or AR-number sort. A newer commit on `gpt-engineering` or any 
 
 ## Latest controlling GPT ruling
 
-**AR-1384A**, `origin/external-advisor/gpt-rulings @ 861dd4e27f60ea73c614896bf6fda1669b8e7c88`
+**AR-1385A**, `origin/external-advisor/gpt-rulings @ a1ae225bd96908eec64f025bf76d8fcdc2ca0460`
+(`advisor-reports/AR-1385A-GPT-EXTERNAL-ADVISOR-RULING-AR1394-PASS-WITH-CORRECTIONS-STAGE-C0-COMPILER-CALIBRATION-AUTHORIZED-CURRENCY-PROS-LIVE-GATED-2026-08-21.md`),
+2026-08-21. Grades AR-1394 **PASS WITH REQUIRED BOUNDED CORRECTIONS** and makes the architecture
+decision.
+
+⚡ **ROUTE (b) ADOPTED — E8 IS A COMPILER-CALIBRATION SOURCE, NOT A LIVE STRATEGY.** The old Stage C
+splits in two:
+
+| Stage | What | Status |
+|---|---|---|
+| **C0** | Generic compiler representation of an external decision dependency + fail-closed tests. **Needs no Currency Pros access.** | **AUTHORIZED — and DONE, AR-1395** |
+| **C1** | Real Currency Pros UI preflight, provider adapter, live/historical parity | **STILL GATED** on explicit lawful access |
+
+Prior controlling ruling: **AR-1384A**, `origin/external-advisor/gpt-rulings @ 861dd4e27f60ea73c614896bf6fda1669b8e7c88`
 (`advisor-reports/AR-1384A-GPT-EXTERNAL-ADVISOR-RULING-AR1393-PARTIAL-PASS-E8-REFUSAL-SUSPENDED-EXTERNAL-INDICATOR-DEPENDENCY-PREFLIGHT-2026-08-21.md`),
 2026-08-21. Grades AR-1393 **PARTIAL PASS** and **SUPERSEDES AR-1383A sections 4 and 8.**
 
@@ -75,7 +88,7 @@ it may never control the conclusion about its result.
 advances with each subsequent commit. Resolve the current head from the repository, never from this
 file.
 
-## Current locks (AR-1384A section 11, until AR-1394 is graded)
+## Current locks (AR-1385A section 10, until AR-1395 is graded)
 
 - **No Currency Pros purchase or vendor contact.**
 - **No credential collection or access-control bypass.**
@@ -86,6 +99,9 @@ file.
 - **No source-taught stop/target replacement by ATR/Style C inside `SOURCE_FAITHFUL`.**
 - No E8 source-faithful backtest, certification, or promotion.
 - **No external state sent directly to broker execution.**
+- **No Currency Pros UI preflight unless the operator explicitly confirms existing lawful access.**
+- **No provider webhook, external-state endpoint, or adapter** (that is Stage C1).
+- **No broad corpus census until the C0 birth tests pass.**
 - No broad Factory rerun or 160-video intake; no PAPER, Topstep, or live execution.
 
 ## Exact next money-path action
@@ -115,19 +131,37 @@ access wall was a **seven-week-stale dependency**, and the unmodified documented
 preserved as history and **not authority**. Its premise — that the required 4H state is absent from
 the source — is false: an external indicator computes it and shows it on the 15m chart.
 
-**AR-1394 (in flight, this seat):**
-- **Stage A — DONE.** Refusal suspended with a supersession notice; `VI-E8-3A` / `VI-E8-3B` /
-  native-gap recorded separately in `E8-EXTERNAL-DEPENDENCY-RECORD.md` with the seven ownership
-  questions answered; the mutating proof/generator split repaired and proven by a **five-arm**
-  reproducibility test (read-only · pixel-reproducible · manifest green · mutation bites · the
-  proof's own guard bites). The manifest now carries **portable PIXEL** hashes beside
-  environment-local **BYTE** hashes; AR-1393's "byte-identical regeneration" claim is **withdrawn**
-  as environment-local over-scope.
-- **Stage B — BLOCKED on one operator fact.** The AR-1384A §7 bounded preflight requires the
-  operator to **already hold lawful Currency Pros access** in the normal TradingView UI. No
-  purchase, no vendor contact, no credential request, no access-control bypass is authorized. If
-  access is unavailable this returns `BLOCKED_OPERATOR_ACCESS_REQUIRED`.
-- **Stage C — gated on Stage B's result.**
+**AR-1394 (delivered, graded PASS WITH CORRECTIONS by AR-1385A):**
+- **Stage A — DONE.** Refusal suspended; `VI-E8-3A` / `VI-E8-3B` / native-gap recorded separately in
+  `E8-EXTERNAL-DEPENDENCY-RECORD.md` with the seven ownership questions answered; the mutating
+  proof/generator split repaired. Manifest carries **portable PIXEL** hashes beside
+  environment-local **BYTE** hashes; AR-1393's "byte-identical regeneration" claim **withdrawn** as
+  environment-local over-scope. GPT independently reproduced this under Pillow 12.3.0.
+- **Stage B — `BLOCKED_OPERATOR_ACCESS_REQUIRED`**, correctly. Access **unconfirmed**, not disproven.
+
+**AR-1395 (delivered, this seat):**
+- **Packet A — DONE.** Active-state corrections (§3) and the mutation arms moved to a **temporary
+  evidence root** with a containment control that aborts mid-mutation and proves the real tree is
+  untouched (§4). Six arms, three of them controls.
+- **Packet B / Stage C0 — DONE.** `ExternalDependencySpec`, `validate_external_dependencies()`,
+  a module-computed contract hash, and `ProjectionSpec.external_dependencies` (omit-when-empty).
+  Fail-closed: `UNKNOWN` must map to `NO_TRADE`; a contract with no `UNKNOWN` value is refused; all
+  four access axes block independently. Unresolved access drives the **existing RED route** with a
+  **nonterminal** structured blocker, and `semantic_status` survives the RED grade.
+  **Committed v2.1 receipt byte-identical** (`3ccb4080…`, canonical `fd79f602…`).
+- **Self-found defect, repaired:** the compile seam never read readiness, so a
+  `BLOCKED_EXTERNAL_DEPENDENCY` artifact compiled as executable. Closed at `6ddb18b0`.
+  ★ *A readiness signal that no consumer enforces is not a gate, it is a comment.*
+
+**Stage C1 — STILL GATED.** Provider preflight, adapter, webhook, live/historical parity. Requires
+explicit operator confirmation of lawful Currency Pros access. *"We use TopstepX"* is neither yes
+nor no (AR-1385A §8).
+
+🛑 **PRE-EXISTING CI DRIFT, HANDED OFF (not caused by this packet):** `npm run system-map:check`
+exits 1 — *"Registry is missing 3 engine subsystem mappings"*: `battery`, `extraction`, `forensics`.
+All three directories exist at `4fc0f6f5`, before any AR-1393/1394/1395 work. The fix lives in
+`src/server/lib/system-topology.ts` and its registry, **outside worker-1's `edit_scope`** — it needs
+a seat with `src/server/` authority. Diagnostic: `scripts/_ar1395_systemmap_probe.py`.
 
 **Lane D: CLOSED.** This file plus the `worker-onboarding/SKILL.md` fixes (branch-head-by-commit-time
 authority scan, the AR-1382A section 8 routing correction that `gpt-rulings` is authoritative and a
