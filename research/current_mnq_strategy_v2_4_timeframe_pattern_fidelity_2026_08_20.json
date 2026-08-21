@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "LOCKED_DIRECT_TRADER_TIMEFRAME_PATTERN_FIDELITY",
+  "locked_at": "2026-08-20",
+  "stage": "FIDELITY",
+  "purpose": "Preserve the trader-confirmed distinction between 5-minute A+ candle-pattern identity and 1-minute causal intrabar reconstruction so future implementations cannot drift into a separate 1-minute candlestick strategy.",
+  "source_kind": "paired_user_screenshots_plus_direct_trader_clarification",
+  "source_files": [
+    {
+      "name": "Screenshot 2026-08-20 231718.png",
+      "sha256": "8e460dce9bfab2a8de4e216ced02a5d16efae1cafabaea4e531e8120149b773b",
+      "timeframe": "1m"
+    },
+    {
+      "name": "Screenshot 2026-08-20 231723(1).png",
+      "sha256": "85d8d8e94384ed06c7df4e3d8b636c6023216fc577ab69b8bc8d9d0f3c80a985",
+      "timeframe": "5m"
+    }
+  ],
+  "trader_observation": "Price rejected the key level and the trader took the reversal. The same A+ move looks different on 5m versus 1m: the trader recognizes the candle/momentum story on the 5-minute execution chart, while the 1-minute chart shows the smaller internal path of that forming 5-minute candle.",
+  "frozen_rules": {
+    "primary_pattern_timeframe": "5m",
+    "primary_entry_pattern_rule": "A+ candle-pattern identity, rejection/reversal story and momentum-candle geometry are judged on the 5-minute execution candle/sequence unless an already-frozen 15-minute continuation family explicitly applies.",
+    "one_minute_role": "Completed 1-minute sub-bars are causal intrabar observations used to reconstruct the forming 5-minute parent candle and determine whether directional force is sustained before the parent close.",
+    "one_minute_not_separate_pattern_system": true,
+    "one_minute_pattern_names_cannot_replace_5m_pattern_identity": true,
+    "micro_pullbacks_allowed_inside_valid_5m_momentum": "A valid forming 5-minute momentum candle may contain smaller 1-minute pullbacks, pauses or opposite-color sub-bars. Those micro bars do not invalidate the 5-minute momentum story by themselves. The path must still satisfy the frozen sustained-force/tug-of-war controls and regain directional control before entry.",
+    "aggregate_not_vote": "Do not require every completed 1-minute sub-bar to independently satisfy momentum geometry or have the same candle color. Evaluate the causally aggregated forming parent geometry plus path efficiency, giveback and latest-close directional-extreme rules.",
+    "reversal_example": "Key-level rejection -> 5-minute bullish reversal/momentum response can be A+ even though the 1-minute decomposition is a sequence of smaller bullish bars with micro pullbacks rather than one visually identical large momentum candle. Shorts mirror this rule."
+  },
+  "must_have": [
+    "authorized_key_level_or_other_frozen_location_authority",
+    "5m_rejection_or_other_valid_candle_story",
+    "5m_parent_momentum_geometry_when_momentum_is_the_trigger",
+    "causal_completed_1m_force_path_for_preclose_timing",
+    "sustained_directional_control_after_any_micro_pullback"
+  ],
+  "must_not_do": [
+    "classify_the_trade_from_1m_candlestick_pattern_names_instead_of_5m",
+    "require_every_1m_subbar_to_be_same_color",
+    "require_every_1m_subbar_to_independently_be_a_momentum_candle",
+    "let_a_single_1m_burst_override_a_non_A_plus_5m_story",
+    "use_final_5m_ohlc_to_backdate_an_earlier_entry"
+  ],
+  "pnl_used": false,
+  "edge_evidence_eligible": false,
+  "engineering_effect": "This is a direct fidelity clarification, not parameter tuning. Existing force thresholds are unchanged; the guard constrains timeframe interpretation and future refactors."
+}
