@@ -415,7 +415,7 @@
       "Desktop 2026.08.16 - 23.34.40.03.mp4": "C:/Users/tonio/Pictures/"
     },
     "load_bearing_figures": {
-      "why": "A fresh grader falsified item 6's TARGET (19143.50 -> 19043.50) and its realized-PnL step inside the notes prose, re-anchored the registry byte hash, and every test still passed. Prose was the last substantive field with no third location. These figures are now pinned in the test file as well, and each carries its own arithmetic so a self-inconsistent forgery fails on the maths too.",
+      "why": "A fresh grader falsified item 6's TARGET inside the notes prose, re-anchored the registry byte hash, and every test passed - prose was the last substantive field with no third location. The FIRST fix pinned only items 4 and 6, the two the grader happened to attack. It then forged item 8's `quantity widget reads 17` to `reads 5` - a false claim about the trader's own position sizing, in the registry that exists to preserve his fidelity - and got 20 passed. The repair had been scoped to the attack instead of to the CLASS, for the fourth time. Every video making a numeric claim is now pinned.",
       "Desktop 2026.08.16 - 23.06.30.02.mp4": {
         "contracts": 15,
         "entry": 19005.5,
@@ -443,7 +443,29 @@
         "realized_after": 126353.25,
         "point_value": 2.0,
         "filled": true
-      }
+      },
+      "Desktop 2026.08.21 - 10.40.34.05.mp4": {
+        "quantity_widget": 17,
+        "order_placed": false,
+        "upper_zone_low": 29360,
+        "upper_zone_high": 29420,
+        "upper_zone_dashed": 29380,
+        "lower_zone_low": 29200,
+        "lower_zone_high": 29237.75,
+        "lower_zone_dashed": 29237.75,
+        "note": "No entry/stop/target - no order was placed. The zone bands and the quantity widget are the numeric claims this entry makes, so they are what gets pinned."
+      },
+      "Desktop 2026.08.15 - 17.13.57.01.mp4": {
+        "contracts": 17,
+        "note": "UNENUMERATED clip. Its only numeric claim is that it trades 17 contracts, not the frozen 15 - which is exactly the figure a reader must not normalise away. No entry/stop/target is claimed because none was enumerated."
+      },
+      "Desktop 2026.08.16 - 23.34.40.03.mp4": {
+        "frames_total": 90,
+        "frames_read": 90,
+        "coverage_pct": 100.0,
+        "note": "NO_EVIDENCE_VALUE fragment. Its only numeric claim is its own coverage, and that claim is the one that was previously false - 1 of 90 called EXHAUSTIVE."
+      },
+      "what_the_arithmetic_actually_buys": "HONEST SCOPE, corrected after the grader measured it. An earlier commit message said a forgery 'must now also be self-consistent to survive'. That overstates what is holding. The grader built an arithmetically PERFECT forgery - entry 21900.00, stop 21917.25 (17.25 points exactly), target 21830.00 (70.00 points), 15 contracts, target dollars 70 x 2 x 15 = 2100.00, realized step 125303.25 -> 127403.25 = exactly 2100.00 - and every assertion closed in both directions. The arithmetic NEVER FIRED. The only thing that caught it was the hardcoded expected tuple, and re-anchoring that third location took it to green. So: the pinned constants are what hold; the arithmetic is a TYPO GUARD that catches lazy forgeries, not careful ones. Self-consistency is necessary and NOT sufficient."
     },
     "sealed_videos_provenance": {
       "label": "SEALED_2026_08_20_NO_PROVENANCE_RECORDED",
@@ -453,7 +475,9 @@
     "receipt_generation": {
       "generator": "research/gen_video_corpus_receipt.py",
       "mechanism": "The test imports render(), rebuilds the receipt in memory from this registry, and compares byte-for-byte against the committed file. Editing the registry without regenerating goes RED; editing the receipt by hand goes RED.",
-      "retracted_false_claim": "An earlier version of the receipt asserted in bold that it was GENERATED FROM THE REGISTRY and that this 'removes that whole failure class', when NO generator existed anywhere in the repository - it had been rendered by an uncommitted scratch script. The text was faithful; the mechanism was fiction. A fresh grader with no lineage found it. This is the desk's own rule broken inside the custody document: a mechanism claim needs its evidence in the same sentence or an explicit HYPOTHESIS label, and 'removes the failure class' had neither."
+      "retracted_false_claim": "An earlier version of the receipt asserted in bold that it was GENERATED FROM THE REGISTRY and that this 'removes that whole failure class', when NO generator existed anywhere in the repository - it had been rendered by an uncommitted scratch script. The text was faithful; the mechanism was fiction. A fresh grader with no lineage found it. This is the desk's own rule broken inside the custody document: a mechanism claim needs its evidence in the same sentence or an explicit HYPOTHESIS label, and 'removes the failure class' had neither.",
+      "regression_7c": "MEASURED REGRESSION, self-inflicted. At f9ee603e the receipt test carried a `for required in (...)` list of six content strings. At 75e6d8c2 the derivation REPLACED it rather than joining it - grep count 1 -> 0. The grader then measured that the removed greps would have caught the very attack the derivation cannot: gutting render() so the receipt loses 5175 bytes of notes still passes the derivation check, because when you tamper with render() BOTH SIDES OF THE COMPARISON MOVE TOGETHER. That is same-layer agreement - the check cannot fail for the right reason. The greps are content-independent and survive a compromised generator. Both are now present; neither replaces the other.",
+      "generator_is_now_fingerprinted": "The generator and the receipt are added to build_contract.contract_files, so tampering with render() moves the release fingerprint. The generator is ALSO sha256-pinned in the test as a second location. This closes the doer's own suspicion, which the grader confirmed: render() was the authority AND outside the fingerprint, so the artifact and the thing authorising it were the same mutable unguarded file. Note this also repairs a standing contradiction - engineering_invariants claims all authoritative evidence files are build-fingerprinted, and the custody receipt was not."
     },
     "fresh_grade_2026_08_21": {
       "grader": "accuracy-validator, dispatched fresh with NO lineage - it neither built the work nor graded any earlier version, which the prior grader could not claim.",
@@ -483,6 +507,16 @@
           "item 8's 5m timeframe and the quantity widget reading 17 are CONSTANT across all 386 one-per-second samples; the two outlier hashes at seconds 0-1 are sub-pixel antialiasing, magnified and read. A whole-frame change census shows a median of 3 pixels changing between consecutive seconds, corroborating that no order ever opens.",
           "the -v error trap was not over-generalised - all six filters confirmed."
         ]
+      },
+      "third_pin": {
+        "commit_graded": "75e6d8c2",
+        "band": 6,
+        "verdict": "BOUNDED",
+        "scope": "Names 75e6d8c2 and EXPIRES THERE. 911b91a4 and later are ungraded by it.",
+        "seventh_false_green": "Confirmed in three strands: (7a) the generator was outside the fingerprint and the derivation compares render(registry) to a file render() writes, so gutting render() drops 5175 bytes of measured evidence at 20-green; (7b) the figure pin covered 2 of 8 videos, so forging item 8's quantity widget from 17 to 5 stayed green; (7c) the derivation REPLACED a working grep list that would have caught 7a.",
+        "arithmetic_verdict": "Decorative. See what_the_arithmetic_actually_buys.",
+        "verified_closed_by_the_grader": "F-1 and F-2 both genuinely closed - it re-ran its own attack verbatim and got 2 failed without regeneration, 1 failed with it. F-5's relaxation and F-6's labelling both endorsed. Suite 9/957, FAILED set identical to baseline.",
+        "ceiling_on_item_4_agreement": "The grader struck item 4 from NOT-MEASURED - my 73-frame scene-bounded walk and its 17-frame plus 32-header-sample counter-sample agree on every figure, produced without either seeing the other. Its caveat is kept because it is right: two paths that agree bound TRANSCRIPTION error, not INTERPRETATION error. We both read the same UI the same way. If FX Replay's realized-PnL field ever meant something other than what we both took it to mean, both paths fail together. That is the ceiling on what agreement buys, not a defect."
       }
     },
     "session_span_arithmetic": {

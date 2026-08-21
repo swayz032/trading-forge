@@ -17,6 +17,12 @@ import pytest
 
 REGISTRY = "research/current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json"
 RECEIPT = "research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md"
+GENERATOR = "research/gen_video_corpus_receipt.py"
+
+# The generator was the SEVENTH false-green: it writes the receipt AND the test compares
+# render(registry) to that receipt, so tampering with render() moves both sides together.
+# Same-layer agreement. It is now inside the build fingerprint AND pinned here.
+GENERATOR_SHA256 = "dbb511748e71229a5ff40deeb75fdef1801c7ff0029d39f81b340ef24755cb5e"
 
 # The three videos sealed on 2026-08-20, re-verified byte-exact against the operator's
 # local files on 2026-08-21. These may never change without a new operator ruling.
@@ -63,7 +69,7 @@ OPERATOR_WORDS = {
 
 # A third location holding this file's own bytes. Deliberately NOT the full build
 # fingerprint - see fingerprint_anchor in the registry for why, and for the honest limit.
-REGISTRY_SHA256 = "a8eaa258e93d7d0ffe5ffd197ecb760cf8dc0ef8ca4e5ff9add592cb11c260de"
+REGISTRY_SHA256 = "89624ca16b9baff8790541d88448f38922bc9dd8e4d8bee9aed54b2bfa49a683"
 
 ALLOWED_PROVENANCE = {
     "OPERATOR_STATED",
@@ -412,10 +418,49 @@ def test_the_receipt_is_actually_derived_not_merely_claimed_to_be(registry):
         "registry. Either the registry changed without regenerating, or the receipt was "
         "hand-edited. Run: python -m research.gen_video_corpus_receipt"
     )
+    # 7c REGRESSION REPAIR. An earlier commit REPLACED a working grep list with this
+    # derivation. The grader measured that the removed greps would have caught the attack
+    # the derivation cannot - gutting render() drops 5175 bytes of evidence and both sides
+    # of `render(registry) == receipt` move together. These greps are content-independent
+    # and survive a compromised generator. They sit ALONGSIDE the derivation, not instead.
+    for required in ("extended_replay_session_mixed_timeframes", "target_reached_full_tp",
+                     "4140.00", "bee2303b", "OPERATOR_STATED", "UNENUMERATED",
+                     "circled the entry cluster", "17.25", "1050.00"):
+        assert required in actual, (
+            f"custody receipt lost {required!r}. If the generator was edited, this fires "
+            f"where the byte-comparison above cannot."
+        )
+    assert len(actual) > 9000, (
+        f"custody receipt collapsed to {len(actual)} bytes - a gutted generator produces a "
+        f"short document that still matches its own output"
+    )
     gen = registry["video_corpus_extension_2026_08_21"]["receipt_generation"]
     assert gen["generator"] == "research/gen_video_corpus_receipt.py"
+    assert gen["regression_7c"].strip(), "the removed-guard regression stays on record"
     assert gen["retracted_false_claim"].strip(), (
         "the false mechanism claim stays on record - it is the finding, not an embarrassment"
+    )
+
+
+def test_the_generator_itself_is_pinned_and_fingerprinted(registry):
+    """The seventh false-green. The test compares render(registry) to the file render()
+    writes, so an edit to render() moves BOTH sides and the comparison cannot fail for the
+    right reason. The authority and the artifact it authorises were the same unfingerprinted
+    file. Two locations now: the build fingerprint, and this hash."""
+    import hashlib
+    from research.current_mnq_strategy_v2_4_policy import fingerprinted_files
+
+    digest = hashlib.sha256(open(GENERATOR, "rb").read()).hexdigest()
+    assert digest == GENERATOR_SHA256, (
+        f"the receipt generator changed without updating its pin. "
+        f"measured={digest} pinned={GENERATOR_SHA256}. "
+        f"If intended, update GENERATOR_SHA256 deliberately."
+    )
+    fp = set(fingerprinted_files())
+    assert GENERATOR in fp, "the generator must be inside the build fingerprint"
+    assert RECEIPT in fp, (
+        "the custody receipt must be fingerprinted - engineering_invariants claims all "
+        "authoritative evidence files are, and it was not"
     )
 
 
@@ -451,6 +496,45 @@ def test_load_bearing_figures_are_pinned_and_internally_consistent(registry):
         notes = by_name[name]["notes"]
         for v in (entry, stop, target):
             assert f"{v:.2f}" in notes, f"{name}: notes lost the figure {v}"
+
+    # SCOPE THE REPAIR TO THE CLASS, NOT TO THE ATTACK. The first fix pinned only the two
+    # videos the grader happened to forge; it then forged item 8's quantity widget from 17
+    # to 5 and stayed green. Every video making a numeric claim carries a pin.
+    pinned = {k for k in figs if not k.startswith(("why", "what_the_"))}
+    claim_makers = {v["name"] for v in registry["verified_video_evidence"]
+                    if any(ch.isdigit() for ch in v.get("notes", ""))
+                    and "role_provenance" in v}
+    assert claim_makers <= pinned, (
+        f"videos make numeric claims with no figure pin: {sorted(claim_makers - pinned)}"
+    )
+    live = figs["Desktop 2026.08.21 - 10.40.34.05.mp4"]
+    assert live["quantity_widget"] == 17 and live["order_placed"] is False
+    assert live["lower_zone_dashed"] == 29237.75
+    # A pin that the prose may contradict is not a pin. Forging item 8's notes from
+    # "quantity widget reads 17" to "reads 5" passed the first version of this test,
+    # because nothing joined the pin to the sentence it was supposed to be pinning.
+    prose_pins = {
+        "Desktop 2026.08.21 - 10.40.34.05.mp4": [
+            "quantity widget reads 17", "29237.75", "29360", "29420", "29200",
+        ],
+        "Desktop 2026.08.15 - 17.13.57.01.mp4": ["17 contracts, not the frozen 15"],
+        "Desktop 2026.08.16 - 23.34.40.03.mp4": ["90 frames"],
+    }
+    for name, phrases in prose_pins.items():
+        notes = by_name[name]["notes"] + " " +             registry["video_corpus_extension_2026_08_21"]["enumeration_status"][name]
+        for phrase in phrases:
+            assert phrase in notes, (
+                f"{name}: the prose no longer says {phrase!r}, so the pinned figure and the "
+                f"sentence it pins have drifted apart"
+            )
+    assert figs["Desktop 2026.08.15 - 17.13.57.01.mp4"]["contracts"] == 17, (
+        "the 17-vs-frozen-15 discrepancy is exactly what a reader must not normalise away"
+    )
+    frag = figs["Desktop 2026.08.16 - 23.34.40.03.mp4"]
+    assert (frag["frames_read"], frag["frames_total"], frag["coverage_pct"]) == (90, 90, 100.0)
+    assert "NOT sufficient" in figs["what_the_arithmetic_actually_buys"], (
+        "the arithmetic is a typo guard; claiming it forces self-consistency overstates it"
+    )
 
 
 def test_sealed_videos_missing_provenance_is_named_not_guessed(registry):
@@ -619,7 +703,29 @@ def test_no_guard_is_silently_deleted(registry):
         "test_the_independent_grade_is_recorded_with_its_confirmed_defects",
         "test_registry_is_still_bound_into_the_build_fingerprint",
         "test_no_guard_is_silently_deleted",
+        "test_the_generator_itself_is_pinned_and_fingerprinted",
     }
+    # Names are not enough: an assertion can be gutted while its function survives.
+    # Stripping the restored grep list passed the first version of this guard.
+    # A first attempt listed each protected string verbatim - which meant one global
+    # replace removed the assertion AND its own protection together. Self-defeating.
+    # Counting occurrences survives that: strip the assertion and the count drops.
+    required_counts = {
+        "circled the entry cluster": 2,
+        "GENERATOR_SHA256": 3,
+        "REGISTRY_SHA256": 3,
+        "quantity widget reads 17": 2,
+        "len(actual) > 9000": 1,
+    }
+    for token, minimum in required_counts.items():
+        assert src.count(token) >= minimum, (
+            f"a load-bearing assertion was removed: {token!r} appears "
+            f"{src.count(token)}x, expected at least {minimum}. Deleting an assertion is a "
+            f"decision that must be made deliberately, by editing this table and saying why."
+        )
+    # HONEST LIMIT, stated because the alternative is pretending: this check lives in the
+    # file it guards, so an editor who changes the table too defeats it. Same limit as the
+    # byte anchors. It removes the SILENT property; it does not make tampering impossible.
     missing = required - names
     assert not missing, (
         f"guards deleted from this file: {sorted(missing)}. Removing a guard is a decision "
