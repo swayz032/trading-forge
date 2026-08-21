@@ -1,7 +1,7 @@
 {
   "schema_version": 10,
   "release_id": "MNQ-V2.4-BUILD-FINGERPRINT-10-REPLAY-TP-GAP",
-  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, direct trader fidelity evidence, entry/live-force/FVG/target semantics, frozen replay manifest/regrade/calibration generation, replay grading, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when older prose is unchanged.",
+  "purpose": "Any critical executable change in the v2.4 strategy, inherited signal code, direct trader fidelity evidence, entry/live-force/FVG/target semantics, frozen replay manifest/regrade/calibration generation and selection, replay grading, validation/data plumbing, clean-data quarantine, architecture evidence refresh or ProjectX execution chain invalidates prior evidence even when older prose is unchanged.",
   "contract_files": [
     "research/current_mnq_strategy_v2_4_spec.json",
     "research/current_mnq_strategy_v2_4_fvg_semantics.json",
@@ -41,6 +41,8 @@
     "research/current_mnq_strategy_v2_4_engine.py",
     "research/current_mnq_strategy_v2_4_signal.py",
     "research/current_mnq_strategy_v2_4_frozen_replay_regrade.py",
+    "research/current_mnq_strategy_v2_4_replay_lab_v3.py",
+    "research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py",
     "research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py",
     "research/current_mnq_strategy_v2_4_replay_fidelity_grade.py",
     "research/current_mnq_strategy_v2_4_edge.py",
