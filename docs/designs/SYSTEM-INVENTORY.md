@@ -3,7 +3,7 @@
 
 > **GENERATED FILE - DO NOT HAND-EDIT.**
 > Regenerate with `python scripts/system_inventory.py`
-> Generated at commit `db851c6c502ab80ffa96e270b8a607dc09e42845`
+> Generated at commit `088f46216ffe6ff900c2a4574ae6636309a1b7fa`
 > Generator: `scripts/system_inventory.py`.  Staleness check: `python scripts/system_inventory.py --check` (exit 1 if stale).
 >
 > Anyone who hand-edits this file has reintroduced the exact defect it exists to prevent.
@@ -42,10 +42,10 @@ TypeScript symbol rule: every line matching an **exported declaration** pattern
 | Root | Files parsed | Non-test files |
 |---|---:|---:|
 | `src/` | 1915 | 777 |
-| `scripts/` | 306 | 304 |
+| `scripts/` | 309 | 307 |
 | `e2e/` | 0 | 0 |
 | `tests/` | 35 | 0 |
-| **TOTAL** | **2256** | **1081** |
+| **TOTAL** | **2259** | **1084** |
 
 Directories never descended into, anywhere: `.git`, `.mypy_cache`, `.next`, `.numba_cache`, `.pytest_cache`, `.ruff_cache`, `.turbo`, `.venv`, `__pycache__`, `build`, `coverage`, `dist`, `lightning_logs`, `node_modules`, `venv`.
 
@@ -86,7 +86,7 @@ Reachability is meaningless without a published entry-point set.  These were dis
 reading `package.json` scripts, by scanning non-test TypeScript for `src/**.py` subprocess
 path literals (the real TS->Python seam), and by finding `__main__` guards.
 
-Total entry points: **239**.  Modules reachable from them: **795** of **2256** parsed files.
+Total entry points: **239**.  Modules reachable from them: **795** of **2259** parsed files.
 
 <details><summary>All 239 entry points and why each was counted</summary>
 
@@ -6285,7 +6285,7 @@ This is the *we already have this* list.  Check it before writing anything.
 | `SpeakerItem` | interface | `src/server/lib/extraction-coverage-gate.ts:72` | 2 | unique |
 | `ExtractionSnapshot` | interface | `src/server/lib/extraction-coverage-gate.ts:90` | 2 | unique |
 | `CoverageVerdict` | interface | `src/server/lib/extraction-coverage-gate.ts:107` | 2 | unique |
-| `normalize` | function | `src/server/lib/extraction-coverage-gate.ts:120` | 4 | unique |
+| `normalize` | function | `src/server/lib/extraction-coverage-gate.ts:120` | 5 | unique |
 | `contentTokens` | function | `src/server/lib/extraction-coverage-gate.ts:142` | 1 | unique |
 | `runCoverageEnumeration` | function | `src/server/lib/extraction-coverage-gate.ts:315` | 0 | unique |
 | `computeCoverageVerdict` | function | `src/server/lib/extraction-coverage-gate.ts:457` | 1 | unique |
