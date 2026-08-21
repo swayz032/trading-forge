@@ -74,7 +74,7 @@ def test_lone_zone_touching_momentum_cannot_self_confirm_rejection_story():
     assert not story.complete
 
 
-def test_first_break_print_is_setup_then_next_momentum_confirms():
+def test_first_break_print_is_setup_then_next_momentum_pushes_past_it():
     p = core.Params()
     q = frame([
         (99.5, 100.5, 99.0, 100.2),
@@ -83,8 +83,51 @@ def test_first_break_print_is_setup_then_next_momentum_confirms():
     ])
     resistance = loc("R", 100.0, 101.0)
     assert first_break_print(q.iloc[:-1], q.index[-2], q.iloc[-2], "L", resistance)
+    assert float(q.iloc[-1].high) > float(q.iloc[-2].high)
     assert breakout_followthrough_after_first_print(
         q, q.index[-1], q.iloc[-1], "L", resistance, p,
+    )
+
+
+def test_second_5m_momentum_cannot_confirm_without_pushing_past_first_print_extreme():
+    p = core.Params()
+    resistance = loc("R", 100.0, 101.0)
+    long_q = frame([
+        (99.5, 100.5, 99.0, 100.2),
+        (100.2, 103.0, 100.0, 102.4),
+        (102.0, 102.9, 101.8, 102.8),
+    ])
+    assert first_break_print(long_q.iloc[:-1], long_q.index[-2], long_q.iloc[-2], "L", resistance)
+    assert momentum_bar(long_q.iloc[-1], "L", p)
+    assert not breakout_followthrough_after_first_print(
+        long_q, long_q.index[-1], long_q.iloc[-1], "L", resistance, p,
+    )
+
+    support = loc("S", 100.0, 101.0)
+    short_q = frame([
+        (101.5, 102.0, 100.8, 101.4),
+        (101.2, 101.4, 98.0, 98.6),
+        (99.0, 99.2, 98.1, 98.2),
+    ])
+    assert first_break_print(short_q.iloc[:-1], short_q.index[-2], short_q.iloc[-2], "S", support)
+    assert momentum_bar(short_q.iloc[-1], "S", p)
+    assert not breakout_followthrough_after_first_print(
+        short_q, short_q.index[-1], short_q.iloc[-1], "S", support, p,
+    )
+
+
+def test_second_5m_short_momentum_confirms_once_it_pushes_below_first_print_low():
+    p = core.Params()
+    support = loc("S", 100.0, 101.0)
+    q = frame([
+        (101.5, 102.0, 100.8, 101.4),
+        (101.2, 101.4, 98.0, 98.6),
+        (98.8, 99.0, 96.5, 96.8),
+    ])
+    assert first_break_print(q.iloc[:-1], q.index[-2], q.iloc[-2], "S", support)
+    assert float(q.iloc[-1].low) < float(q.iloc[-2].low)
+    assert breakout_followthrough_after_first_print(
+        q, q.index[-1], q.iloc[-1], "S", support, p,
     )
 
 
