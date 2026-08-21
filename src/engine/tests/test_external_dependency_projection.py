@@ -1760,3 +1760,50 @@ def test_AR1397_G3_the_seam_re_derives_every_axis_the_projection_gates_on():
             f"GATING_AXES lists {axis!r} but the projection does not gate on it"
         )
         assert axis in blocked["structured_blocker"]["unverified_axes"]["fixture.external_state"]
+
+
+def test_AR1397_G3b_the_projection_cannot_gate_on_an_axis_the_seam_does_not_re_derive():
+    """🛑 THE DRIFT DIRECTION THAT ACTUALLY MATTERS, and the one `G3` alone could not catch.
+
+    `G3` proves every axis IN the map is gated by the projection. It cannot catch the reverse: a
+    SEVENTH axis added to the projection's gating but not to the map would leave the compile seam
+    silently not re-deriving it -- which is the precise shape of every defect in this packet.
+
+    A test pinning a hand-written list can only ever check one direction. So the projection now
+    BUILDS its blocking-axis list FROM `GATING_AXES` (`source_graph_projection.py`, the `axes =`
+    comprehension), which makes the two structurally incapable of disagreeing. This test pins that
+    structural fact: every axis the projection reports as blocking must be a key of the map the
+    seam re-derives from.
+    """
+    from src.engine.extraction.source_graph_projection import GATING_AXES
+
+    # a dependency with EVERY axis unsatisfied at once, so the emitted axis list is maximal
+    all_bad = _dep(access_status=ACCESS_UNVERIFIED, live_delivery=ACCESS_UNAVAILABLE,
+                   historical_replay=ACCESS_UNVERIFIED, update_policy=ACCESS_UNVERIFIED,
+                   implementation_status="NOT_STARTED", semantic_status=SEMANTIC_CONFLICT)
+    reported = _run(
+        external_dependencies=(all_bad,)
+    )["structured_blocker"]["unverified_axes"]["fixture.external_state"]
+
+    assert set(reported) == set(GATING_AXES), (
+        "the projection reported a blocking axis that GATING_AXES does not carry, so the compile "
+        "seam would not re-derive it -- this is the drift the shared map exists to make impossible"
+    )
+
+
+def test_AR1397_G3c_a_receipt_declaring_no_dependencies_still_passes_the_container_guard():
+    """The grader's own question about the G-1 fix, pinned.
+
+    `_refuse_if_not_compile_ready` defaults `dependencies` to `()` when the key is absent. Making
+    the container guard fail CLOSED must not turn that empty tuple into a blocker, or every legacy
+    receipt refuses and the fix is a bigger outage than the hole it closed.
+    """
+    from src.engine.extraction.svkm_v2_1_compile import _derived_dependency_blockers
+
+    assert _derived_dependency_blockers(()) == {}, "the absent-key default must stay passable"
+    assert _derived_dependency_blockers([]) == {}
+    # ...while the wrong-shaped containers G-1 found still fail closed
+    assert _derived_dependency_blockers({}) != {}, (
+        "an empty DICT is not an empty list -- it is the wrong container type, and G-1 was exactly "
+        "the case where a wrong container read as 'nothing blocks'"
+    )

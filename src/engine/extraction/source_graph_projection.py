@@ -643,7 +643,23 @@ def validate_external_dependencies(
                 f"EXTERNAL_DEPENDENCY_CONTRACT_HASH_MISMATCH: {dep.dependency_id!r} declares "
                 f"{dep.expected_contract_sha256!r}, canonical serialization gives {computed!r}")
 
-        axes = [a for a in _ACCESS_AXES if getattr(dep, a) != ACCESS_VERIFIED]
+        # 🛑 THE BLOCKING AXES COME FROM `GATING_AXES`, AND SO DOES THE COMPILE SEAM'S
+        # RE-DERIVATION. That shared origin is the point, and it was the AR-1397 grader's LOW note
+        # made structural: while this loop was hand-written here and the seam hand-copied two of
+        # the six axis names, a SEVENTH gating axis added here would silently never be re-derived
+        # there -- and a test pinning the map could only catch drift in one direction. Now the map
+        # is load-bearing in BOTH places, so the two cannot disagree about which axes gate or about
+        # what satisfies each. Dict order is the declaration order, so the emitted axis list is
+        # unchanged: the four access axes, then implementation, then semantic.
+        #
+        # AR-1395 F-3 (implementation is its own axis -- access proven and adapter built are
+        # different facts, and only one of them was gating) and AR-1386A section 3 (the CRITICAL
+        # fail-open: `semantic_status` had a closed vocabulary but gated NOTHING, so GPT held every
+        # other axis ready, changed only the MEANING, and measured VISUAL_UNRESOLVED and
+        # SOURCE_CONFLICT both reaching READY_PENDING_CERTIFICATION) are both carried by the map.
+        # A CLOSED VOCABULARY STOPS GIBBERISH; IT DOES NOT MAKE AN UNRESOLVED MEANING EXECUTABLE.
+        axes = [axis for axis, satisfied in GATING_AXES.items()
+                if getattr(dep, axis) != satisfied]
         causes: set[str] = set()
         # Only an axis that is literally UNVERIFIED may be reported as unverified. One that is
         # proven UNAVAILABLE is a different verdict and gets its own code below -- folding it in
@@ -651,21 +667,9 @@ def validate_external_dependencies(
         # exists to prevent.
         if any(getattr(dep, a) == ACCESS_UNVERIFIED for a in _ACCESS_AXES):
             causes.add(BLOCKER_ACCESS_UNVERIFIED)
-        # AR-1395 F-3: implementation is its own blocking axis. Provider access proven and adapter
-        # built are different facts; neither implies the other, and only one of them was gating.
-        if dep.implementation_status != IMPL_VALIDATED:
-            axes.append("implementation_status")
+        if "implementation_status" in axes:
             causes.add(BLOCKER_IMPLEMENTATION_UNVALIDATED)
-        # 🛑 AR-1386A SECTION 3, THE CRITICAL FAIL-OPEN THIS PACKET EXISTS TO CLOSE.
-        # AR-1396 gave `semantic_status` a closed vocabulary but left it gating NOTHING, so GPT held
-        # every access and implementation axis ready, changed only the meaning, and measured
-        # VISUAL_UNRESOLVED and SOURCE_CONFLICT both reaching READY_PENDING_CERTIFICATION.
-        # A CLOSED VOCABULARY STOPS GIBBERISH; IT DOES NOT MAKE AN UNRESOLVED MEANING EXECUTABLE.
-        # Especially here: the operator's correction was that visual evidence had been MISSED, and
-        # the compiler must not later trade through that same unresolved state just because a
-        # provider and an adapter turned up.
-        if dep.semantic_status != SEMANTIC_RESOLVED:
-            axes.append("semantic_status")
+        if "semantic_status" in axes:
             causes.add(BLOCKER_SEMANTIC_UNRESOLVED if dep.semantic_status == SEMANTIC_UNRESOLVED
                        else BLOCKER_SEMANTIC_CONFLICT)
         if axes:
