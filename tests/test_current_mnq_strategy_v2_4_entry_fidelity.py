@@ -269,7 +269,34 @@ def test_range_day_near_zone_loses_entry_authority_but_is_preserved(monkeypatch)
     assert out[1].entry_authorized is True
 
 
-def test_range_room_reconstructs_optional_previous_close_context(monkeypatch):
+def test_range_room_premarket_prior_stays_structure_only_and_never_rebuilds_prior_maps(monkeypatch):
+    """RETIREMENT, with its warrant.
+
+    This replaces test_range_room_reconstructs_optional_previous_close_context, which
+    asserted the OPPOSITE: that `_range_room_authorization` must reconstruct a previous-close
+    map via `core.prev_maps` and pass it into `core.premarket_plan`.
+
+    The two commits, in order:
+      39b44442  2026-08-18 22:28 -0400  test(mnq-v2.4): cover optional range-room premarket context
+      36e60654  2026-08-20 23:45 -0400  fix(mnq-v2.4): remove prior-day/week inputs from active premarket prior
+
+    The trader correction landed TWO DAYS AFTER the test and orphaned it. `build_premarket_plan_v24`
+    now calls `core.premarket_plan(full5, dte, {}, {}, {})` with deliberately empty maps, and
+    `tests/test_current_mnq_strategy_v2_4_premarket.py` asserts `seen["pcm"] == {}` — the exact
+    inverse of the retired assertion, and it passes. Two tests demanded contradictory behaviour
+    from one call; the newer one carries the operator's correction, which outranks every older
+    interpretation. The operator restated it directly on 2026-08-21: "i dont use pdh."
+
+    Greening the old test would have meant IMPLEMENTING the previous-close context flow that the
+    PR body ("previous-close gap scoring are disabled"), the premarket docstring ("cannot
+    contribute to score or location state"), and the evidence registry ("PDH/PDL/PWH/PWL are
+    forbidden") all prohibit. "Fix the source, not the assertion" does not apply when the
+    assertion IS the stale artifact.
+
+    Measured, not inherited from a docstring: `core.premarket_plan` reads the maps as
+    `if dte in pdm`, `pwm.get(dte)` and `prev_close = pcm.get(dte)`, so passing `{}` returns
+    None and the gap scoring genuinely fail-closes.
+    """
     p = core.Params()
     pm = frame(
         [(105.0, 110.0, 100.0, 105.0)] * 12,
@@ -277,17 +304,41 @@ def test_range_room_reconstructs_optional_previous_close_context(monkeypatch):
     )
     env = {"full5": pm, "pdm": {}, "pwm": {}}
     seen = {}
-    monkeypatch.setattr(core, "prev_maps", lambda *args, **kwargs: ({}, {}, {"2026-08-18": 104.0}))
+    called = {"prev_maps": 0}
 
-    def fake_plan(full5, dte, pdm, pwm, pcm):
-        seen["pcm"] = pcm
+    def spy_prev_maps(*args, **kwargs):
+        called["prev_maps"] += 1
+        return ({}, {}, {"2026-08-18": 104.0})
+
+    def spy_plan(full5, dte, pdm, pwm, pcm):
+        seen.update(pdm=pdm, pwm=pwm, pcm=pcm)
         return SimpleNamespace(pm_structure="TREND")
 
-    monkeypatch.setattr(core, "premarket_plan", fake_plan)
+    monkeypatch.setattr(core, "prev_maps", spy_prev_maps)
+    monkeypatch.setattr(core, "premarket_plan", spy_plan)
+
     out = _range_room_authorization(
         [loc("R", 140.0, 141.0, "FAR")], env,
         pd.Timestamp("2026-08-18").date(),
         pd.Timestamp("2026-08-18 09:30", tz=core.TZ), p,
     )
-    assert seen["pcm"] == {"2026-08-18": 104.0}
+
+    # The prior is STRUCTURE-ONLY: every named daily/weekly/close map arrives empty.
+    assert seen["pcm"] == {}, (
+        "a previous-close map reached the premarket prior; v2.4 forbids previous-close "
+        "gap scoring"
+    )
+    assert seen["pdm"] == {} and seen["pwm"] == {}, (
+        "a prior-day or prior-week map reached the premarket prior; PDH/PDL/PWH/PWL are "
+        "forbidden inputs"
+    )
+    # Positive witness that the path actually ran, so the two assertions above are not
+    # vacuously true on a call that never happened.
+    assert seen, "premarket_plan was never called - the assertions above proved nothing"
+    # And the forbidden reconstruction must not be attempted at all, not merely discarded.
+    assert called["prev_maps"] == 0, (
+        "_range_room_authorization called prev_maps to rebuild prior-day/close context. "
+        "The OFF branch must refuse, not fetch and discard."
+    )
+    # Non-MIXED structure leaves authorization untouched, as before.
     assert out[0].entry_authorized is True
