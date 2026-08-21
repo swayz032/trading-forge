@@ -74,11 +74,13 @@
     {
       "name":"Desktop 2026.08.16 - 23.06.30.02.mp4",
       "sha256":"8f4020a8aa7dd6fa48d48508d411e25466577fcd0e140e4ed79a9dd232ec8c8a",
-      "roles":["zone_long_entry","momentum_after_zone_reaction","frozen_17_25_stop_in_situ"],
+      "roles":["zone_long_entry","momentum_after_zone_reaction","frozen_17_25_stop_in_situ","target_reached_full_tp","multi_timeframe_15m_and_5m_views"],
       "added":"2026-08-21",
       "role_provenance":"DERIVED_NOT_OPERATOR_STATED",
       "duration_seconds":98.3,
-      "notes":"FX Replay MNQ 5m, 15 contracts. Long open: entry/BE 19005.50, stop 18988.25 = 17.25 points exactly (-517.50 USD), taken off a drawn zone box (~18920-18960, dashed midline 18940) after a green momentum push. A PDH text label is drawn at 19165.75 - see pdh_label_disposition."
+      "enumerated":true,
+      "enumeration_method":"25 frames at 4-second spacing across 98.3s, plus a volumedetect audio pass. Effectively complete coverage for a clip this short.",
+      "notes":"FX Replay MNQ, 15 contracts, order id 480. A COMPLETE long trade start to finish. Entry/BE 19005.50; stop 18988.25 = 17.25 points exactly (-517.50 USD); TARGET 19143.50 = 138.00 points (+4140.00 USD, and 138 x 2 x 15 = 4140 checks out). The target FILLED on tape: realized PnL steps 76972.00 -> 81112.00, a delta of exactly 4140.00, with unrealized returning to 0.00. Entry was taken off a drawn zone box (~18920-18960, dashed midline 18940) after a green momentum push. CORRECTED 2026-08-21 after full enumeration: an earlier reading called this an MNQ 5-minute clip and recorded only the entry and stop. Both were incomplete - the clip SWITCHES timeframes (15m at t=0-20s, 5m from t=40s), and the whole target leg was missed. The same over-narrow-timeframe error was made on item 5; it is a pattern in frame-sampled readings, not a one-off. The tape ends at t=96s on the FX Replay Analytics/Backtesting dashboard (win-rate donut, performance-by-session New York, Avg RR, Profit), i.e. the operator reviewing aggregate stats - which is NOT strategy evidence and may not be cited as such. A PDH text label is drawn at 19165.75 on both the 15m and 5m layouts - see pdh_label_disposition."
     },
     {
       "name":"Desktop 2026.08.21 - 10.40.34.05.mp4",
@@ -112,6 +114,14 @@
     "edge_evidence_eligible":false,
     "custody_receipt":"research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md",
     "method":"sha256sum plus ffprobe on each file; frames sampled with ffmpeg and read visually. No evidence bytes are committed; only names, hashes, durations and semantic roles.",
+    "audio_is_silent_across_the_whole_corpus":"volumedetect on every video returns max_volume between -66 and -67 dB (item 5 spot-checked at t=600, 7000 and 13500). There is NO narration anywhere in the video corpus, so no role can ever be recovered from a soundtrack. Every role is therefore either OPERATOR_STATED in chat or DERIVED from frames - there is no third source. [MEASURED 2026-08-21]",
+    "enumeration_status":{
+      "Desktop 2026.08.19 - 19.49.23.03.mp4":"31.8s, 9 frames - role is OPERATOR_STATED so enumeration is not load-bearing",
+      "Desktop 2026.08.15 - 17.13.57.01.mp4":"14027.6s, 9 frames - UNENUMERATED, not citable for any specific rule",
+      "Desktop 2026.08.16 - 23.06.30.02.mp4":"98.3s, 25 frames at 4s spacing - ENUMERATED",
+      "Desktop 2026.08.21 - 10.40.34.05.mp4":"385.7s, 6 frames - role is OPERATOR_STATED so enumeration is not load-bearing",
+      "Desktop 2026.08.16 - 23.34.40.03.mp4":"1.5s, 1 frame - ENUMERATED by exhaustion"
+    },
     "role_provenance_law":"An entry marked DERIVED_NOT_OPERATOR_STATED carries the engineer's reading, not the trader's words, and is outranked by any later direct trader clarification.",
     "operator_stated_entries_are_a_closed_set":["Desktop 2026.08.19 - 19.49.23.03.mp4","Desktop 2026.08.21 - 10.40.34.05.mp4"],
     "operator_stated_closed_set_law":"Only a video named in operator_stated_entries_are_a_closed_set may carry role_provenance OPERATOR_STATED. Relabelling a DERIVED entry to OPERATOR_STATED without the operator adding it to this list is a fidelity forgery and is guarded against.",

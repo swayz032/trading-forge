@@ -56,7 +56,8 @@ ADDED_2026_08_21 = {
         "duration_seconds": 98.3,
         "role_provenance": "DERIVED_NOT_OPERATOR_STATED",
         "roles": ["zone_long_entry", "momentum_after_zone_reaction",
-                  "frozen_17_25_stop_in_situ"],
+                  "frozen_17_25_stop_in_situ", "target_reached_full_tp",
+                  "multi_timeframe_15m_and_5m_views"],
     },
     "Desktop 2026.08.21 - 10.40.34.05.mp4": {
         "sha256": "08e87682f683db1b9a37200744006588c4a46bedde7d83c3e2c65b9f19870b2b",
@@ -248,6 +249,27 @@ def test_the_live_wait_example_keeps_its_witness_roles(registry):
         )
         assert by_name[name]["role_provenance"] == "OPERATOR_STATED"
         assert by_name[name]["operator_words"], "a WAIT witness must carry the trader's words"
+
+
+def test_enumeration_status_is_declared_for_every_added_video(registry):
+    """A DERIVED role is only as good as the coverage behind it. Every added video must
+    say how much of it was actually looked at, so no reader mistakes 9 frames of a
+    3h54m file for a viewing."""
+    ext = registry["video_corpus_extension_2026_08_21"]
+    status = ext["enumeration_status"]
+    for name in ADDED_2026_08_21:
+        assert name in status, f"{name} declares no enumeration status"
+        assert status[name].strip(), f"{name} has an empty enumeration status"
+    by_name = {v["name"]: v for v in registry["verified_video_evidence"]}
+    # The one file nobody has watched must still say so, in a field a test can read.
+    assert by_name["Desktop 2026.08.15 - 17.13.57.01.mp4"]["enumerated"] is False
+    assert "UNENUMERATED" in status["Desktop 2026.08.15 - 17.13.57.01.mp4"]
+    # The fully-walked one must claim it and back it with a stated method.
+    six = by_name["Desktop 2026.08.16 - 23.06.30.02.mp4"]
+    assert six["enumerated"] is True
+    assert six["enumeration_method"].strip()
+    # No soundtrack exists anywhere, so no role may ever cite one.
+    assert "NO narration anywhere" in ext["audio_is_silent_across_the_whole_corpus"]
 
 
 def test_the_independent_grade_is_recorded_with_its_confirmed_defects(registry):
