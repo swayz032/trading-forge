@@ -1,7 +1,8 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "LOCKED_DIRECT_TRADER_FIDELITY_ADDENDUM",
   "locked_at": "2026-08-20",
+  "last_direct_clarification_at": "2026-08-20",
   "strategy_release_under_fidelity_repair": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
   "stage": "FIDELITY",
   "purpose": "Bind the trader's frozen 14-case replay, prior master-rulebook knowledge, trade screenshots, force videos, and direct 2026-08-20 clarifications into one non-PnL semantic correction record before executable repair.",
@@ -50,6 +51,24 @@
       "observed_semantic": "MNQ coach panel explicitly carries TP1, TP2 and TP3 while preserving a separate entry and candle-setup decision."
     }
   ],
+  "direct_trader_tp_gap_clarification": {
+    "source": "direct_trader_video_review_and_followup_2026_08_20",
+    "observed_video_tp_display_usd": 200,
+    "trader_statement": "Many valid trades are entered with TP1 close, but there must still be a little gap. The trader gauges that gap from the platform TP display: $400 or more is safe; under $400 is not safe.",
+    "reference_contracts": 15,
+    "mnq_point_value_usd": 2.0,
+    "reference_safe_floor_usd": 400.0,
+    "unrounded_equivalent_points": 13.333333333333334,
+    "first_quarter_tick_distance_at_or_above_floor_points": 13.5,
+    "first_quarter_tick_display_at_or_above_floor_usd": 405.0,
+    "video_200_usd_equivalent_points": 6.666666666666667,
+    "implementation_rule": "Compare planned executable TP distance against the frozen 15-MNQ reference display. Runtime position-size reduction must not change signal semantics.",
+    "under_400_immediate_entry": "BLOCK",
+    "under_400_tp2_behavior": "Do not blindly leapfrog untouched TP1 merely because TP2 is farther away.",
+    "processed_reaction_continuation": "After the nearby TP/reaction area has actually been interacted with, a later test/attack of that same physical area with an already-approved continuation story and sustained momentum/force may earn a new entry whose destination is the next meaningful reaction.",
+    "true_displacement_prebreak_alone_processes_near_tp": false,
+    "pnl_selection_or_optimization": false
+  },
   "direct_trader_rules": {
     "execution_chart": "5m is the trader entry chart; 1m is bot causal intrabar reconstruction only.",
     "force": "The trader may enter while the 5m candle is forming after sustained directional force is real; temporary bursts and tug-of-war are not enough.",
@@ -65,17 +84,19 @@
     "tp_ladder": {
       "multiple_directional_tps_allowed": true,
       "labels": ["TP1", "TP2", "TP3_OR_NEXT_MEANINGFUL_REACTION"],
-      "normal_rule": "Use the first meaningful physical reaction that still gives valid room at the actual entry clock.",
-      "rollover_rule": "If price has already moved so close to TP1 before the A+ entry becomes actionable that TP1 no longer has the frozen minimum room, the trader may take the still-valid A+ entry and promote TP2, the next meaningful physical reaction, as the active target.",
-      "rollover_must_not_be_pnl_selected": true,
-      "rollover_room_threshold": "reuse Params.min_room_r * Params.stop; introduce no new numeric threshold",
+      "normal_rule": "Use the first meaningful physical reaction as TP1 when the planned TP display is $400 or more at the frozen 15-MNQ reference size and all other A+ entry requirements pass.",
+      "too_close_rule": "If the planned TP1 display is under $400 at the frozen 15-MNQ reference size, the immediate entry is not safe.",
+      "no_blind_rollover": "An untouched under-$400 TP1 may not be automatically skipped just because a farther TP2 exists.",
+      "processed_rollover_rule": "A later continuation earned at the same physical TP1/reaction area through repeat-test momentum, completed-break follow-through, or weak-break pullback/15m-bar3 continuation may treat that reaction as processed and use the next meaningful destination.",
+      "reference_gap_is_signal_semantics_not_runtime_sizing": true,
       "entry_requirements_still_apply": true,
       "farther_target_cannot_be_chosen_merely_for_more_profit": true
     },
     "wait_semantics": "WAIT is distinct from NO_TRADE and remains WAIT when the presented replay ends while the trader is still waiting."
   },
   "supersedes_older_clauses": [
-    "Any older clause stating that a meaningful first reaction inside minimum room must always cancel the trade even when the entry arrived late and a preplanned next meaningful TP exists.",
+    "The earlier 2026-08-20 addendum clause that automatically promoted TP2 whenever TP1 fell inside Params.min_room_r * Params.stop at the actual entry clock.",
+    "Any older clause stating that a meaningful first reaction inside minimum room must always cancel every later continuation even after that same reaction has been causally processed by a valid test/attack and momentum path.",
     "Any older clause treating every FVG solely as passive TP/confluence context when the same FVG is demonstrably acting as the support/resistance reaction structure.",
     "Any replay validator that rejects a frozen WAIT label or silently converts WAIT to NO_TRADE."
   ],
