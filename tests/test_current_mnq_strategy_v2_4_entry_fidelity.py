@@ -293,6 +293,25 @@ def test_range_room_premarket_prior_stays_structure_only_and_never_rebuilds_prio
     forbidden") all prohibit. "Fix the source, not the assertion" does not apply when the
     assertion IS the stale artifact.
 
+    THE STRONGEST WARRANT, found after the retirement was already committed. I had argued
+    from the PR body's phrase "previous-close gap scoring are disabled", and flagged as my own
+    weakest joint that banning previous-close GAP SCORING is not the same as banning previous
+    close as an INPUT. The frozen contract closes that distinction directly.
+    `research/current_mnq_strategy_v2_4_premarket_semantics.json`, verbatim:
+
+        "this strategy does not use PDH/PDL/PWH/PWL or prior-close/gap reference levels.
+         The prior is built only from causal premarket net movement, candle control and
+         higher/lower structure and is never a standalone signal."
+
+    "or prior-close/gap REFERENCE LEVELS" bans the reference itself, not merely a scoring use
+    of it. The trader fidelity addendum agrees - it carries the key
+    `premarket_prior_must_not_use_named_daily_weekly_levels_or_prior_close_gap_score` and
+    lists as SUPERSEDED: "Any older contract using previous-close gap scoring as part of this
+    strategy's premarket prior." The retired test was such an older contract.
+
+    Do not confuse this with the other "gap" in the addendum: the trader's $400 TP-display gap
+    is distance-to-target, an entirely separate concept, and it is very much live.
+
     Measured, not inherited from a docstring: `core.premarket_plan` reads the maps as
     `if dte in pdm`, `pwm.get(dte)` and `prev_close = pcm.get(dte)`, so passing `{}` returns
     None and the gap scoring genuinely fail-closes.
