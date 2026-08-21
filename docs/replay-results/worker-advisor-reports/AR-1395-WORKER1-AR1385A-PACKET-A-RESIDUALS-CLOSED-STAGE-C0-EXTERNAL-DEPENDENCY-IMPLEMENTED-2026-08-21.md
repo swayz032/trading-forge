@@ -317,14 +317,47 @@ the dependency record already recorded the contract as *"recorded, not wired"*.
 
 ---
 
-GRADER : `accuracy-validator` dispatched adversarially (DISPROVE mandate, ≥1 novel attack required)
-against frozen pin **`b3cc79cb`**, per `ratify-packet` (instrument changes proceed under mandatory
-independent grading; doer ≠ grader). Its brief hands it a working reproduction recipe, names the
-claims verbatim, nominates eight attack surfaces **against myself**, and lists what I did **not**
-prove. **⏳ VERDICT PENDING AT THE TIME OF WRITING — this AR will be amended with the FULL grader
-report, including any finding that convicts me, and the durable receipt path.** Two results are
-outstanding: the grader's verdict and the full `src/engine/tests/` sweep. **Neither is claimed as
-green here.** No number or band is issued by me; I do not grade my own repair.
+GRADER : `accuracy-validator`, adversarial DISPROVE mandate, frozen pin **`b3cc79cb`**.
+**VERDICT: `BOUNDED` — VERIFIED band 5/10. 14 attacks landed, 7 bounced.**
+FULL durable receipt (committed, not summarised away):
+`docs/replay-results/worker-advisor-reports/GRADE-AR1395-STAGE-C0-BOUNDED-2026-08-21.md`.
+**It convicts me on two CRITICALs and three novel HIGHs. All are now closed — see AR-1396.**
+I issue no band; the grader's is the only one.
+
+**🛑 A PROCESS FAILURE OF MINE THAT THE GRADER PUT FIRST, AND IT OUTRANKS THE CODE.**
+`ratify-packet` says **FREEZE, then dispatch.** I dispatched and then kept committing, so its pin
+went dirty mid-grade and its first certification-seam measurement landed on **my uncommitted
+in-flight fix** rather than the graded commit. It caught that itself by re-running `git status` and
+re-measured in a detached worktree. **That is a real discipline breach on my part, not its error.**
+
+### What it convicted (all repaired in AR-1396, `c1957315`)
+
+| # | Sev | Finding |
+|---|---|---|
+| **F-2** | CRITICAL | **My claim C3 was FALSE.** Gate coverage checked one direction only, so an extra key (`"STALE": …`) passed and the receipt handed consumers a **fail-open mapping** — in the structure whose entire purpose is that action is impossible unless declared. |
+| **F-8** | HIGH, novel | **`build_projection_run_inputs` never passed `external_dependencies`** — *no production caller could declare one*. The feature and every guard behind it were unreachable; the seam requirement was **vacuously** unmet. ★ *Existence is not wiring.* |
+| **F-3** | HIGH, novel | `implementation_status` gated nothing — verified access + `NOT_STARTED` → READY, and the fixture carries `NOT_STARTED`. |
+| **F-4** | HIGH, novel | `UNAVAILABLE` reported as `ACCESS_UNVERIFIED / terminal:false` — **my own "unverified is not unavailable" law inverted inside the code enforcing it.** |
+| F-5/6/6b/7/9/10/14, A14 | MED–LOW | free-text `semantic_status`; blank provider identity; caller's dict aliased so post-validation mutation rewrote the approved gate; consumer order changed the hash; alias ref accepted as consumer; fixture contract unpinned; duplicate consumers emitted 3×; `output_contract["type"]` unvalidated. |
+| F-1 | CRITICAL | The seam hole — which I had already found and fixed at `6ddb18b0` **during** its grade. |
+
+### What it corroborated
+
+`C1` byte-identity **four ways**, the strongest being regeneration in a pristine worktree by
+post-change code. **16 of 17 planted mutants killed** — the structural guards genuinely bite.
+`C4`, `C5`, `C7` confirmed; attack surfaces 2 and 3 closed; no hash collision available.
+**Zero regressions**: a 2394-test blast-radius A/B against the pre-packet parent, with every failure
+identical on both sides. And **my `system-map:check` pre-existing claim independently CORROBORATED.**
+
+⭐ Its own honesty notes are worth recording: it nearly published a SURVIVED mutant caused by its own
+mis-anchored patch, and it explicitly **declined** to call a CRLF-only fixture rewrite a defect.
+
+### Its stated limitation, which I carry rather than bury
+
+The full `src/engine/tests/` sweep **did not complete for it either** (~2h projected). It substituted
+a blast-radius A/B. **Roughly 7,300 tests outside that filter were never executed at either commit —
+by it or by me.** *"The desk should treat 'full engine sweep green' as an unproven claim independent
+of this packet."* I adopt that sentence as written.
 
 STOP : none fired.
 
