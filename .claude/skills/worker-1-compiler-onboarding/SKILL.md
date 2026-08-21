@@ -85,16 +85,31 @@ the thing to act on. Re-install it with `scripts/install_worker1_seat_shortcut.p
    assignment from the **newest GPT ruling on `origin/external-advisor/gpt-rulings`** (its
    `NEXT WORKER AR` / work-order section), never from the oldest card on disk. Assignment is still
    never inferred from a bigger AR number alone — read the ruling and see who it addresses.
-7. 🛑 **PEER SESSION HANDSHAKE — REQUIRED, canonical `worker-onboarding/SKILL.md` §2b.** Mint a
-   new `session_instance_id`, send `WORKER_SESSION_START_HELLO` to `worker-2` on your own branch,
-   fetch+read `worker-2`'s branch for a matching `WORKER_SESSION_START_ACK`, validate it with
-   `scripts/peer-handshake-guard.mjs`. State is `STARTUP_WAITING_FOR_PEER_ACK` until it matches.
-   Do not copy the recipe here — follow §2b.
+7. 🛑 **PEER SESSION HANDSHAKE — ★ SUSPENDED 2026-08-21: THE WORKER-2 SEAT IS CLOSED.**
+   **Operator order, verbatim, 2026-08-21 to the Worker-1 seat: _"worker 2 is closed so don't worry
+   about it."_** The PAPER/runtime seat is no longer staffed, so the §2b exchange can never
+   complete — and an unamended reading of §2b **deadlocks this seat permanently**, because
+   step 9 gates the packet on `messaging_startup_verified=true` and that flag could only ever be
+   set by an ACK from a session that does not exist.
+   - ⇒ **Do NOT mint a HELLO, do NOT wait for an ACK, do NOT enter `STARTUP_WAITING_FOR_PEER_ACK`.**
+   - ⇒ Report `peer_worker_id=worker-2 (CLOSED by operator 2026-08-21)`,
+     `peer_session_instance_id=n/a`, `hello_commit=n/a`, `ack_commit=n/a`,
+     `peer_session_rotated=n/a`, and
+     `messaging_startup_verified=true (vacuous — no peer seat exists to verify against)`.
+   - ⇒ Worker 1 is currently the **only seated worker**, so the `lane-manifest.md` same-file /
+     same-semantic-authority collision rule has no live counterparty to serialize against.
+   - 🛑 **THIS SUSPENSION IS SCOPED TO THE CLOSURE, NOT TO THE RULE.** If the operator re-seats
+     Worker 2, canonical `worker-onboarding/SKILL.md` §2b is live again **unamended** and this
+     step reverts to REQUIRED. Verify the closure still holds (ask, or observe a live worker-2
+     branch advancing) rather than inheriting this paragraph as permanent.
+   - ⚠️ Canonical §2b itself is NOT edited by this note — it is another lane's shared authority.
+     A future seat reading §2b cold will still see "MANDATORY"; **this overlay is the newer order.**
 8. Report the canonical skill path, manifest, overlay, worktree, branch, head, **the armed ear and
    its baseline SHA**, `worker_2_default_inbox_loaded=false`, and the handshake fields §2b
    requires (`session_instance_id`, `peer_worker_id`, `peer_session_instance_id`, `hello_commit`,
    `ack_commit`, `peer_session_rotated`, `messaging_startup_verified`, `intended_packet`).
-9. Execute exactly one authorized Worker 1 packet **only if `messaging_startup_verified=true`**,
+9. Execute exactly one authorized Worker 1 packet **only if `messaging_startup_verified=true`**
+   (satisfied vacuously while step 7's Worker-2 closure holds),
    commit/push/report, then stop for GPT grading. A completed packet is a **fresh-session
    boundary** (AR-1255 §3.1) — do not start the next packet in the spent session.
 
@@ -107,3 +122,8 @@ Do not scan the entire advisor tree. Load global doctrine, this identity package
 ## Stop
 
 Stop on Worker 2 scope, shared-file collision, ambiguous identity/order, invented source semantics, or unprovable worktree identity.
+
+⚠️ **Worker-2 scope is still a STOP even though the Worker-2 seat is closed (see startup step 7).**
+A closed seat removes the *handshake*, not the *lane boundary*. PAPER/runtime work does not become
+Worker-1 work by default just because nobody else is holding it — it becomes unowned, and unowned
+work needs an operator or GPT assignment before Worker 1 may touch it.
