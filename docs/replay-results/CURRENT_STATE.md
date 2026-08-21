@@ -153,6 +153,28 @@ the source — is false: an external indicator computes it and shows it on the 1
   `BLOCKED_EXTERNAL_DEPENDENCY` artifact compiled as executable. Closed at `6ddb18b0`.
   ★ *A readiness signal that no consumer enforces is not a gate, it is a comment.*
 
+**AR-1395 INDEPENDENT GRADE — `BOUNDED`, VERIFIED band 5/10** at pin `b3cc79cb`. Full durable
+receipt: `worker-advisor-reports/GRADE-AR1395-STAGE-C0-BOUNDED-2026-08-21.md`. **14 attacks landed,
+7 bounced.** It corroborated byte-identity four ways, killed 16 of 17 planted mutants, proved **zero
+regressions** across a 2394-test A/B, and independently **confirmed** the `system-map:check`
+pre-existing claim — and it convicted the work on two CRITICALs and three novel HIGHs.
+
+**AR-1396 (delivered) — every grader finding closed.** The two that matter most:
+- **F-2 CRITICAL, a genuine FAIL-OPEN:** gate coverage was one-directional, so an undeclared extra
+  gate key passed validation and reached consumers as an actionable mapping. Now an equality in
+  both directions.
+- **F-8 HIGH:** the spec loader never passed `external_dependencies`, so **no production caller
+  could declare one** — the feature and its guards were unreachable. ★ *Existence is not wiring.*
+Plus `implementation_status` now gates, `UNAVAILABLE` is terminal and correctly named, the caller's
+contract dict is deep-copied, alias/duplicate consumers are refused, and the fixture is hash-pinned.
+C0 suite `41 → 59` passing; sibling 31, downstream 32, certifier `GREEN_ALL_ITEMS_DONE`, committed
+receipt still byte-identical.
+
+🛑 **STILL UNPROVEN, and carried deliberately:** the full `src/engine/tests/` sweep did not complete
+for the worker *or* the grader (~2h; killed partway). **~7,300 tests were never executed at either
+commit by either party.** Treat *"full engine sweep green"* as an **unproven claim independent of
+this packet** — the grader's words, adopted verbatim.
+
 **Stage C1 — STILL GATED.** Provider preflight, adapter, webhook, live/historical parity. Requires
 explicit operator confirmation of lawful Currency Pros access. *"We use TopstepX"* is neither yes
 nor no (AR-1385A §8).
