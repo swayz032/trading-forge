@@ -203,12 +203,22 @@ def breakout_followthrough_after_first_print(full5: pd.DataFrame, ts: pd.Timesta
                                              row, direction: str,
                                              loc: core.Location,
                                              p: core.Params) -> bool:
-    """First close beyond the level is setup; the next momentum candle is trigger."""
+    """First 5m close beyond level is setup; next forming 5m must extend it with force.
+
+    Trader fidelity: do not merely remain beyond the key level. For a long, the
+    following forming 5m candle must trade above the completed breakout candle's
+    high; for a short it must trade below that candle's low. The caller separately
+    proves sustained intra-5m force causally before this function can authorize.
+    """
     prior = full5[full5.index < ts].tail(2)
     if len(prior) < 2 or not momentum_bar(row, direction, p) or not _outside(row, loc, direction):
         return False
     pre, first = prior.iloc[-2], prior.iloc[-1]
-    return bool(_outside(first, loc, direction) and not _outside(pre, loc, direction))
+    if not (_outside(first, loc, direction) and not _outside(pre, loc, direction)):
+        return False
+    if direction == "L":
+        return bool(float(row.high) > float(first.high))
+    return bool(float(row.low) < float(first.low))
 
 
 def repeat_test_momentum_prebreak(full5: pd.DataFrame, ts: pd.Timestamp, row,
