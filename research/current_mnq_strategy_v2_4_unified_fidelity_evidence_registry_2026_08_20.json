@@ -693,10 +693,6 @@
     "custody_path": "C:/Users/tonio/Pictures/Trading screenshots",
     "count": 13,
     "operator_stated_role": "The operator's own words, 2026-08-21: he shot some on 1 minute \"because gpt said the bot uses 1 minute bars to equal 5 minute so i was showing the difference between the 5 minute and 1 minute candlestick patterns or how momentum candles look on different timeframes\".",
-    "roles": [
-      "1m_vs_5m_same_move_appearance",
-      "1m_causal_decomposition_only"
-    ],
     "role_provenance": "OPERATOR_STATED",
     "roles_are_CORPUS_LEVEL_not_per_file": "ALGO-002 §3.2: do not invent unique semantics for every frame merely because a screenshot exists. The operator gave ONE role for the SET. No per-file semantics are claimed, and none may be inferred later from a filename or a timestamp.",
     "NOT_members_of_the_sealed_65_parent_corpus": "These post-date the closed-world 65-file zip (sha da25a057...). They are registered as an operator-authorized ADDITION, exactly as the videos were, and may not be cited as members of the sealed parent corpus.",
@@ -768,7 +764,93 @@
         "bytes": 98389
       }
     ],
-    "enumeration_control": "Glob matched 13 files dated 2026-08-21 and correctly did NOT match the 4 dated 2026-08-20 in the same folder, so the date filter is real. An earlier attempt returned ZERO because the filenames contain spaces and the shell output was split on whitespace - a silent-empty result that would have registered an empty file list under a count of 13."
+    "enumeration_control": "Glob matched 13 files dated 2026-08-21 and correctly did NOT match the 4 dated 2026-08-20 in the same folder, so the date filter is real. An earlier attempt returned ZERO because the filenames contain spaces and the shell output was split on whitespace - a silent-empty result that would have registered an empty file list under a count of 13.",
+    "CORRECTION_2026_08_21": "All thirteen were first registered under ONE 1m-vs-5m role. WRONG: eight of them are pages of the FX Replay closed-position LEDGER, which is a different kind of evidence entirely - and they are the very 'eight ledger screenshots' I had reported as missing in the same commit. Corpus-level roles are still right for the remaining five; applying one role to a mixed set was the error.",
+    "ledger_pages": {
+      "count": 8,
+      "role": "trade_ledger_page_evidence",
+      "role_provenance": "OPERATOR_STATED",
+      "operator_words": "the ledgers was already in the files or my frozen files",
+      "reconciled_in": "research/current_mnq_strategy_v2_4_trade_ledger_reconciliation_2026_08_21.json",
+      "status": "DIAGNOSTIC_ONLY_NEVER_A_RULE_SELECTOR",
+      "files": [
+        {
+          "name": "Screenshot 2026-08-21 030057.png",
+          "sha256": "0269242a875342058ee1fb59a20ca9cf6f5352736ad21d2b439d9ebaeded237b",
+          "bytes": 146145
+        },
+        {
+          "name": "Screenshot 2026-08-21 030106.png",
+          "sha256": "14543d53805bfc5dc5a11c7d7e7bf63170998aa0d03ecd70da75d246a5fb3b5c",
+          "bytes": 145506
+        },
+        {
+          "name": "Screenshot 2026-08-21 030110.png",
+          "sha256": "50a2eb51fda744fd7dc03e692961008933ce076d682ae384c6176254cf4417e6",
+          "bytes": 144488
+        },
+        {
+          "name": "Screenshot 2026-08-21 030115.png",
+          "sha256": "2f9c1dd7fb4eb8ca3784b5d91080b6b3f6f00634b52e2b86e03b9729f631e53f",
+          "bytes": 143898
+        },
+        {
+          "name": "Screenshot 2026-08-21 030119.png",
+          "sha256": "61a3826af6d32a10560e9e86574db85e3cf7fe11a58cfe6e3b9aeaf10acd0f34",
+          "bytes": 144043
+        },
+        {
+          "name": "Screenshot 2026-08-21 030124.png",
+          "sha256": "2ada9b3f001a73667eaf21f86ce1332f004599de8f2119a6d6047a460d113e9f",
+          "bytes": 144638
+        },
+        {
+          "name": "Screenshot 2026-08-21 030129.png",
+          "sha256": "dac086c1b8c23adcf978f9fb84b40e269267f0d3c795648eebd0196c22012425",
+          "bytes": 141383
+        },
+        {
+          "name": "Screenshot 2026-08-21 030134.png",
+          "sha256": "9a2707b19f2b2db1af9385e9577ce1e106a0ac033219d31579954850cdfb98e1",
+          "bytes": 98389
+        }
+      ]
+    },
+    "timeframe_comparison_pages": {
+      "count": 5,
+      "roles": [
+        "1m_vs_5m_same_move_appearance",
+        "1m_causal_decomposition_only"
+      ],
+      "role_provenance": "OPERATOR_STATED",
+      "files": [
+        {
+          "name": "Screenshot 2026-08-21 005935.png",
+          "sha256": "385a131a33657dd4d5caa14f602a5f94c4d54dcc708e58221efa15e44ae3ef83",
+          "bytes": 120080
+        },
+        {
+          "name": "Screenshot 2026-08-21 005941.png",
+          "sha256": "6ebffd77b0f05ee95ab0f1139b67ddc8ec935cf07401d1418b0e0a846f4db5bb",
+          "bytes": 119536
+        },
+        {
+          "name": "Screenshot 2026-08-21 010006.png",
+          "sha256": "1cad28c079f346d130401ed61b27f44bbd37224e84111137b108ff4eab87c365",
+          "bytes": 118712
+        },
+        {
+          "name": "Screenshot 2026-08-21 025202.png",
+          "sha256": "271dddaa5d50e6f7fe10076b4cf85cf786bb32350b1f6db2b1c65fcf2628aa18",
+          "bytes": 134656
+        },
+        {
+          "name": "Screenshot 2026-08-21 025219.png",
+          "sha256": "680a9d5a8a4550208f0fa00bdc502645e5945cc89f2e4e226d0bdc0c11edbf39",
+          "bytes": 133511
+        }
+      ]
+    }
   },
   "trade_ledger_receipt": {
     "authority": "ALGO-002 §3.3",
@@ -776,9 +858,9 @@
     "status": "DIAGNOSTIC_ONLY_NEVER_A_RULE_SELECTOR",
     "headline": "74 rows, all CME_MINI:MNQ, 2025-04-02..2025-06-20, 28 buy / 46 sell. The money model was SOLVED not assumed: `amount` is dollars-per-point, not contracts.",
     "relayed_claims_that_did_NOT_survive": {
-      "7_exact_17_25_point_stops": "UNSUPPORTED - the CSV records NO stop prices at all (initialSL empty on all 74 rows).",
-      "62_target_side_exits": "measured 61, not 62."
+      "62_target_side_exits": "measured 61, not 62.",
+      "7_exact_17_25_point_stops": "count refuted (4, not 7) but SUBSTANCE CONFIRMED; my earlier 'UNSUPPORTED' verdict is RETRACTED."
     },
-    "eight_ledger_screenshots": "NOT RECONCILED - not supplied to this seat. Stated open."
+    "eight_ledger_screenshots": "RECONCILED - they are 8 of the 13 2026-08-21 screenshots; see the receipt's eight_ledger_screenshots block."
   }
 }

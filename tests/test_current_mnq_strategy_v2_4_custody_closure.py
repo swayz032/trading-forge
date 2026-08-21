@@ -66,11 +66,25 @@ def test_the_label_file_on_disk_still_hashes_to_the_recorded_bytes(reg):
     )
 
 
-def test_thirteen_screenshots_are_registered_with_one_corpus_level_role(reg):
-    """GPT: do not invent unique semantics per frame. The operator gave one role for the set."""
+def test_the_thirteen_screenshots_are_split_by_what_they_actually_are(reg):
+    """CORRECTED. All thirteen were first registered under ONE 1m-vs-5m role. Eight of them
+    are pages of the trade LEDGER - a different kind of evidence, and the very eight I had
+    reported missing in the same commit. Corpus-level roles are right; one role for a MIXED
+    set is not."""
     s = reg["screenshots_added_2026_08_21"]
     assert s["count"] == 13 == len(s["files"])
     assert s["role_provenance"] == "OPERATOR_STATED"
+    assert "WRONG" in s["CORRECTION_2026_08_21"]
+    led, tf = s["ledger_pages"], s["timeframe_comparison_pages"]
+    assert led["count"] == 8 and tf["count"] == 5
+    assert led["count"] + tf["count"] == s["count"]
+    assert led["status"] == "DIAGNOSTIC_ONLY_NEVER_A_RULE_SELECTOR"
+    assert led["role"] == "trade_ledger_page_evidence"
+    assert "1m_vs_5m_same_move_appearance" in tf["roles"]
+    # The two sets must be disjoint and together exhaust the thirteen.
+    ln = {x["name"] for x in led["files"]}
+    tn = {x["name"] for x in tf["files"]}
+    assert not (ln & tn) and len(ln | tn) == 13
     assert "do not invent unique semantics" in s["roles_are_CORPUS_LEVEL_not_per_file"]
     assert "may not be cited" in s["NOT_members_of_the_sealed_65_parent_corpus"], (
         "the screenshots must be barred from claiming membership of the sealed 65-file corpus"
@@ -96,10 +110,33 @@ def test_the_ledger_receipt_is_diagnostic_only_and_names_what_did_not_survive(re
     assert r["census"]["side_counts"] == {"buy": 28, "sell": 46}
     assert r["money_model"]["solved_not_assumed"] is True
     assert r["money_model"]["rows_reconciling"] == 69
-    assert r["stop_analysis"]["rows_carrying_an_initialSL"] == 0
-    assert "UNSUPPORTED" in r["relayed_claims_tested"]["7_exact_17_25_stops"]["verdict"]
+    st = r["stop_analysis"]
+    assert st["rows_carrying_an_initialSL_field"] == 0
+    # The correction that matters: an empty COLUMN is not an absent FACT.
+    assert "WRONG" in st["CORRECTION_2026_08_21"]
+    assert st["stop_outs_derived_from_rPnL_and_distance"] == 4
+    assert st["every_one_at_exactly_17_25_points"] is True
+    assert st["every_one_at_15_contracts"] is True
+    assert "RETRACTED" in r["relayed_claims_tested"]["7_exact_17_25_stops"]["verdict"]
+    assert "SUBSTANCE CONFIRMED" in r["relayed_claims_tested"]["7_exact_17_25_stops"]["verdict"]
     assert r["relayed_claims_tested"]["62_target_side_exits"]["measured"] == 61
     assert reg["trade_ledger_receipt"]["status"] == "DIAGNOSTIC_ONLY_NEVER_A_RULE_SELECTOR"
+
+
+def test_the_eight_ledger_screenshots_reconcile_to_the_csv():
+    """GPT ALGO-002 §3.3 asked for this reconciliation. It was reported NOT_RECONCILED in the
+    same commit that had already registered the screenshots under the wrong role."""
+    r = json.load(io.open(LEDGER_RECEIPT, encoding="utf-8"))
+    e = r["eight_ledger_screenshots"]
+    assert e["status"] == "RECONCILED"
+    assert e["count"] == 8 == len(e["files"])
+    assert "SAME ledger" in e["join_to_the_csv"]["verdict"]
+    assert len(e["join_to_the_csv"]["spot_checks"]) >= 3
+    # The screenshots independently corroborate the dollars-per-point reading of `amount`.
+    z = e["size_column_reconciles_the_amount_column"]
+    assert z["their_amount_values"] == {"30": 30}
+    assert "15 contracts" in z["screenshots_show"]
+    assert "N/A" in e["initial_SL_is_N_A_on_the_screenshots_too"]
 
 
 def test_the_ledger_receipt_is_build_fingerprinted():
