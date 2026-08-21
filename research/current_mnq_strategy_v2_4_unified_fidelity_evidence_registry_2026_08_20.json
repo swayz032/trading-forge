@@ -22,153 +22,302 @@
     "older_archive_note": "Trading screenshots (4).zip was an earlier subset/source snapshot used by older gold records. It does not expand authority beyond the locked 65-file parent corpus."
   },
   "hash_bound_screenshot_examples": [
-    {"name":"Screenshot 2026-08-16 075020.png","sha256":"db867045aff322df5b6a5db050afb6cc1354b6d115700f7c8391090fca9e24e4","roles":["true_displacement_sequence_example","5m_entry_story"]},
-    {"name":"Screenshot 2026-08-17 221445.png","sha256":"8ac406fe0d713c632415d380f03f9068e273374e3de792f26554fbdc80dcb562","roles":["true_displacement_sequence_example","third_candle_timing_context"]},
-    {"name":"Screenshot 2026-08-18 175702.png","sha256":"f6fc7b7b4404ed78a2294c357c0fc4d81b6723446e0144dccbff029abd22fedb","roles":["rejection_story","momentum_after_rejection"]},
-    {"name":"Screenshot 2026-08-18 180237.png","sha256":"e9abf16283d41e18c093ededeb326f55fddbcefd935c2ceda80921c85151bb78","roles":["rejection_story","momentum_after_rejection"]},
-    {"name":"Screenshot 2026-08-18 180244.png","sha256":"670c80f2173101f9269f73cf0ef10c8c7a4e3a9cfeb51af9eb3d94e597c9ce42","roles":["liquidity_reaction_cluster_before_fvg","first_reaction_tp_ordering"]},
-    {"name":"Screenshot 2026-08-18 180356.png","sha256":"28570dbf36971a7837a014532edc5bd7e9fa9b8ae68a2c26f5e1fd4638d14730","roles":["rejection_story","liquidity_reaction_cluster_before_fvg","first_reaction_tp_ordering"]},
-    {"name":"Screenshot 2026-08-11 023933.png","sha256":"dd2adf7c186a4d2be31e3bed27dddc864786a8fd951afd69b69fba1d118c372b","roles":["multi_target_ladder","tp1_tp2"]},
-    {"name":"Screenshot 2026-08-10 114924.png","sha256":"bc063ffaa4c052a47059fbe3ef1154126798aae1b8022960e5592edce4bd3d5f","roles":["multi_target_ladder","tp1_tp2"]},
-    {"name":"Screenshot 2026-08-10 164520.png","sha256":"6c4dfaeb8f7d33e5adae0a44f5e8b7d8590d1e60d8d03c49a586c2311c8ffc73","roles":["multi_target_ladder","tp1_tp2_tp3"]},
-    {"name":"Screenshot 2026-08-20 231718.png","sha256":"8e460dce9bfab2a8de4e216ced02a5d16efae1cafabaea4e531e8120149b773b","roles":["1m_causal_decomposition_only","forming_5m_force_path"]},
-    {"name":"Screenshot 2026-08-20 231723.png","sha256":"85d8d8e94384ed06c7df4e3d8b636c6023216fc577ab69b8bc8d9d0f3c80a985","roles":["5m_primary_entry_pattern","rejection_momentum"]},
-    {"name":"Screenshot 2026-08-20 232649.png","sha256":"383f04dbb0b606d8a5e0541f34a4d6f5093aada9e02627fb3cb859c02370fc6d","roles":["normal_breakout_second_5m_extension","15m_context_not_normal_entry_delay"]}
+    {
+      "name": "Screenshot 2026-08-16 075020.png",
+      "sha256": "db867045aff322df5b6a5db050afb6cc1354b6d115700f7c8391090fca9e24e4",
+      "roles": [
+        "true_displacement_sequence_example",
+        "5m_entry_story"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-17 221445.png",
+      "sha256": "8ac406fe0d713c632415d380f03f9068e273374e3de792f26554fbdc80dcb562",
+      "roles": [
+        "true_displacement_sequence_example",
+        "third_candle_timing_context"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-18 175702.png",
+      "sha256": "f6fc7b7b4404ed78a2294c357c0fc4d81b6723446e0144dccbff029abd22fedb",
+      "roles": [
+        "rejection_story",
+        "momentum_after_rejection"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-18 180237.png",
+      "sha256": "e9abf16283d41e18c093ededeb326f55fddbcefd935c2ceda80921c85151bb78",
+      "roles": [
+        "rejection_story",
+        "momentum_after_rejection"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-18 180244.png",
+      "sha256": "670c80f2173101f9269f73cf0ef10c8c7a4e3a9cfeb51af9eb3d94e597c9ce42",
+      "roles": [
+        "liquidity_reaction_cluster_before_fvg",
+        "first_reaction_tp_ordering"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-18 180356.png",
+      "sha256": "28570dbf36971a7837a014532edc5bd7e9fa9b8ae68a2c26f5e1fd4638d14730",
+      "roles": [
+        "rejection_story",
+        "liquidity_reaction_cluster_before_fvg",
+        "first_reaction_tp_ordering"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-11 023933.png",
+      "sha256": "dd2adf7c186a4d2be31e3bed27dddc864786a8fd951afd69b69fba1d118c372b",
+      "roles": [
+        "multi_target_ladder",
+        "tp1_tp2"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-10 114924.png",
+      "sha256": "bc063ffaa4c052a47059fbe3ef1154126798aae1b8022960e5592edce4bd3d5f",
+      "roles": [
+        "multi_target_ladder",
+        "tp1_tp2"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-10 164520.png",
+      "sha256": "6c4dfaeb8f7d33e5adae0a44f5e8b7d8590d1e60d8d03c49a586c2311c8ffc73",
+      "roles": [
+        "multi_target_ladder",
+        "tp1_tp2_tp3"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-20 231718.png",
+      "sha256": "8e460dce9bfab2a8de4e216ced02a5d16efae1cafabaea4e531e8120149b773b",
+      "roles": [
+        "1m_causal_decomposition_only",
+        "forming_5m_force_path"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-20 231723.png",
+      "sha256": "85d8d8e94384ed06c7df4e3d8b636c6023216fc577ab69b8bc8d9d0f3c80a985",
+      "roles": [
+        "5m_primary_entry_pattern",
+        "rejection_momentum"
+      ]
+    },
+    {
+      "name": "Screenshot 2026-08-20 232649.png",
+      "sha256": "383f04dbb0b606d8a5e0541f34a4d6f5093aada9e02627fb3cb859c02370fc6d",
+      "roles": [
+        "normal_breakout_second_5m_extension",
+        "15m_context_not_normal_entry_delay"
+      ]
+    }
   ],
   "verified_video_evidence": [
     {
-      "name":"Desktop 2026.08.19 - 02.12.06.01.mp4",
-      "sha256":"1e39083c6a8078022b5c84827b63e5b63908979177407d1868521934d48d3733",
-      "roles":["forming_5m_directional_force","tug_of_war_giveback","entry_before_5m_close_when_force_is_real"]
+      "name": "Desktop 2026.08.19 - 02.12.06.01.mp4",
+      "sha256": "1e39083c6a8078022b5c84827b63e5b63908979177407d1868521934d48d3733",
+      "roles": [
+        "forming_5m_directional_force",
+        "tug_of_war_giveback",
+        "entry_before_5m_close_when_force_is_real"
+      ]
     },
     {
-      "name":"Desktop 2026.08.19 - 02.13.19.02.mp4",
-      "sha256":"95bcbb3f7bf3893385f77eb612e2bbb82e772c546d53a3a9a816c1f4e1ce4f00",
-      "roles":["forming_5m_directional_force","tug_of_war_giveback","entry_before_5m_close_when_force_is_real"]
+      "name": "Desktop 2026.08.19 - 02.13.19.02.mp4",
+      "sha256": "95bcbb3f7bf3893385f77eb612e2bbb82e772c546d53a3a9a816c1f4e1ce4f00",
+      "roles": [
+        "forming_5m_directional_force",
+        "tug_of_war_giveback",
+        "entry_before_5m_close_when_force_is_real"
+      ]
     },
     {
-      "name":"Desktop 2026.08.20 - 20.37.47.04.mp4",
-      "sha256":"218ca9bb827db2c540d19782f6cef2227e45492a1a04b847dd78a6b3e23cda72",
-      "roles":["exact_200_dollar_unsafe_tp_example","tp1_reaction","retest_then_later_momentum_continuation","no_blind_tp1_to_tp2_leapfrog"]
+      "name": "Desktop 2026.08.20 - 20.37.47.04.mp4",
+      "sha256": "218ca9bb827db2c540d19782f6cef2227e45492a1a04b847dd78a6b3e23cda72",
+      "roles": [
+        "exact_200_dollar_unsafe_tp_example",
+        "tp1_reaction",
+        "retest_then_later_momentum_continuation",
+        "no_blind_tp1_to_tp2_leapfrog"
+      ]
     },
     {
-      "name":"Desktop 2026.08.19 - 19.49.23.03.mp4",
-      "sha256":"74b1585768e77dc394fcef6f94bf445a3faeb7842f19b9cd0b6034328f604d20",
-      "roles":["1m_causal_decomposition_only","forming_5m_force_path"],
-      "added":"2026-08-21",
-      "role_provenance":"OPERATOR_STATED",
-      "duration_seconds":31.8,
-      "operator_words":"i entry on 5 minute; the 1 minute chart is to show what the candles and trade looks like in 1 minute cause the bot uses 1 min candles to equal 5 minute candles; that is already in my files.",
-      "notes":"FX Replay MNQ 1m view of replayed Tue 10 Jun 2025. The 1m chart is a DEMONSTRATION view of the same trade, not the execution view; entry authority remains 5m. Observed on tape: short, 15 contracts, entry/BE 21839.25, stop 21856.50 (=17.25 points, -517.50 USD), target 21804.25 (+1050.00 USD) filled, price continued to 21787.00; operator then circled the entry cluster near 21855. Audio is silent (max -66.2 dB). The trade facts are measured; the clip is registered ONLY for the 1m-vs-5m decomposition role the operator stated, and may not be cited as a TP-hierarchy example."
+      "name": "Desktop 2026.08.19 - 19.49.23.03.mp4",
+      "sha256": "74b1585768e77dc394fcef6f94bf445a3faeb7842f19b9cd0b6034328f604d20",
+      "roles": [
+        "1m_causal_decomposition_only",
+        "forming_5m_force_path"
+      ],
+      "added": "2026-08-21",
+      "role_provenance": "OPERATOR_STATED",
+      "duration_seconds": 31.8,
+      "operator_words": "i entry on 5 minute; the 1 minute chart is to show what the candles and trade looks like in 1 minute cause the bot uses 1 min candles to equal 5 minute candles; that is already in my files.",
+      "notes": "FX Replay MNQ 1m view of replayed Tue 10 Jun 2025. The 1m chart is a DEMONSTRATION view of the same trade, not the execution view; entry authority remains 5m. Observed on tape: short, 15 contracts, entry/BE 21839.25, stop 21856.50 (=17.25 points, -517.50 USD), target 21804.25 (+1050.00 USD) filled, price continued to 21787.00; operator then circled the entry cluster near 21855. Audio is silent (max -66.2 dB). The trade facts are measured; the clip is registered ONLY for the 1m-vs-5m decomposition role the operator stated, and may not be cited as a TP-hierarchy example."
     },
     {
-      "name":"Desktop 2026.08.15 - 17.13.57.01.mp4",
-      "sha256":"7dbc51c72d8b638a1157b294f9ea021f83fda77b6a91e390ee8c5c4c08cf257a",
-      "roles":["extended_replay_session_mixed_timeframes"],
-      "added":"2026-08-21",
-      "role_provenance":"DERIVED_NOT_OPERATOR_STATED",
-      "duration_seconds":14027.6,
-      "enumerated":false,
-      "notes":"FX Replay MNQ, 3h53m48s, 6.03 GB. CONTENT IS UNENUMERATED - 9 frames sampled in total and this entry may NOT be cited for any specific rule until enumerated. CORRECTED 2026-08-21 after independent grading: an earlier role of extended_5m_zone_replay_session and a claim of a continuous 5m session were REFUTED - at t=12600s the chart is on the 1D DAILY timeframe (header reads 1D), and at t=6800s a Symbol Search dialog is open, so the recording mixes timeframes and contains idle UI navigation rather than continuous trading. Realized PnL is identical at t=1200 and t=6800, so nothing closed across that ~1h33m span; PnL climbing end-to-end says nothing about activity density. Traded at 17 contracts, not the frozen 15; no tick/dollar arithmetic from these frames may be normalised at 15. A PDH text label is drawn on the layout - see pdh_label_disposition."
+      "name": "Desktop 2026.08.15 - 17.13.57.01.mp4",
+      "sha256": "7dbc51c72d8b638a1157b294f9ea021f83fda77b6a91e390ee8c5c4c08cf257a",
+      "roles": [
+        "extended_replay_session_mixed_timeframes"
+      ],
+      "added": "2026-08-21",
+      "role_provenance": "DERIVED_NOT_OPERATOR_STATED",
+      "duration_seconds": 14027.6,
+      "enumerated": false,
+      "notes": "FX Replay MNQ, 3h53m48s, 6.03 GB. CONTENT IS UNENUMERATED - 9 frames sampled in total and this entry may NOT be cited for any specific rule until enumerated. CORRECTED 2026-08-21 after independent grading: an earlier role of extended_5m_zone_replay_session and a claim of a continuous 5m session were REFUTED - at t=12600s the chart is on the 1D DAILY timeframe (header reads 1D), and at t=6800s a Symbol Search dialog is open, so the recording mixes timeframes and contains idle UI navigation rather than continuous trading. Realized PnL is identical at t=1200 and t=6800, so nothing closed across that ~1h33m span; PnL climbing end-to-end says nothing about activity density. Traded at 17 contracts, not the frozen 15; no tick/dollar arithmetic from these frames may be normalised at 15. A PDH text label is drawn on the layout - see pdh_label_disposition."
     },
     {
-      "name":"Desktop 2026.08.16 - 23.06.30.02.mp4",
-      "sha256":"8f4020a8aa7dd6fa48d48508d411e25466577fcd0e140e4ed79a9dd232ec8c8a",
-      "roles":["zone_long_entry","momentum_after_zone_reaction","frozen_17_25_stop_in_situ","target_reached_full_tp","multi_timeframe_15m_and_5m_views"],
-      "added":"2026-08-21",
-      "role_provenance":"DERIVED_NOT_OPERATOR_STATED",
-      "duration_seconds":98.3,
-      "enumerated":true,
-      "enumeration_method":"25 frames at 4-second spacing across 98.3s, plus a volumedetect audio pass. Effectively complete coverage for a clip this short.",
-      "notes":"FX Replay MNQ, 15 contracts, order id 480. A COMPLETE long trade start to finish. Entry/BE 19005.50; stop 18988.25 = 17.25 points exactly (-517.50 USD); TARGET 19143.50 = 138.00 points (+4140.00 USD, and 138 x 2 x 15 = 4140 checks out). The target FILLED on tape: realized PnL steps 76972.00 -> 81112.00, a delta of exactly 4140.00, with unrealized returning to 0.00. Entry was taken off a drawn zone box (~18920-18960, dashed midline 18940) after a green momentum push. CORRECTED 2026-08-21 after full enumeration: an earlier reading called this an MNQ 5-minute clip and recorded only the entry and stop. Both were incomplete - the clip SWITCHES timeframes (15m at t=0-20s, 5m from t=40s), and the whole target leg was missed. The same over-narrow-timeframe error was made on item 5; it is a pattern in frame-sampled readings, not a one-off. The tape ends at t=96s on the FX Replay Analytics/Backtesting dashboard (win-rate donut, performance-by-session New York, Avg RR, Profit), i.e. the operator reviewing aggregate stats - which is NOT strategy evidence and may not be cited as such. A PDH text label is drawn at 19165.75 on both the 15m and 5m layouts - see pdh_label_disposition."
+      "name": "Desktop 2026.08.16 - 23.06.30.02.mp4",
+      "sha256": "8f4020a8aa7dd6fa48d48508d411e25466577fcd0e140e4ed79a9dd232ec8c8a",
+      "roles": [
+        "zone_long_entry",
+        "momentum_after_zone_reaction",
+        "frozen_17_25_stop_in_situ",
+        "target_reached_full_tp",
+        "multi_timeframe_15m_and_5m_views"
+      ],
+      "added": "2026-08-21",
+      "role_provenance": "DERIVED_NOT_OPERATOR_STATED",
+      "duration_seconds": 98.3,
+      "enumerated": true,
+      "enumeration_method": "25 frames at 4-second spacing across 98.3s, plus a volumedetect audio pass. Effectively complete coverage for a clip this short.",
+      "notes": "FX Replay MNQ, 15 contracts, order id 480. A COMPLETE long trade start to finish. Entry/BE 19005.50; stop 18988.25 = 17.25 points exactly (-517.50 USD); TARGET 19143.50 = 138.00 points (+4140.00 USD, and 138 x 2 x 15 = 4140 checks out). The target FILLED on tape: realized PnL steps 76972.00 -> 81112.00, a delta of exactly 4140.00, with unrealized returning to 0.00. Entry was taken off a drawn zone box (~18920-18960, dashed midline 18940) after a green momentum push. CORRECTED 2026-08-21 after full enumeration: an earlier reading called this an MNQ 5-minute clip and recorded only the entry and stop. Both were incomplete - the clip SWITCHES timeframes (15m at t=0-20s, 5m from t=40s), and the whole target leg was missed. The same over-narrow-timeframe error was made on item 5; it is a pattern in frame-sampled readings, not a one-off. The tape ends at t=96s on the FX Replay Analytics/Backtesting dashboard (win-rate donut, performance-by-session New York, Avg RR, Profit), i.e. the operator reviewing aggregate stats - which is NOT strategy evidence and may not be cited as such. A PDH text label is drawn at 19165.75 on both the 15m and 5m layouts - see pdh_label_disposition."
     },
     {
-      "name":"Desktop 2026.08.21 - 10.40.34.05.mp4",
-      "sha256":"08e87682f683db1b9a37200744006588c4a46bedde7d83c3e2c65b9f19870b2b",
-      "roles":["rejection_at_key_level_without_momentum_candle_wait","doji_indecision_cluster_is_not_an_entry","live_forward_session","later_breakout_after_failed_rejection_story"],
-      "added":"2026-08-21",
-      "role_provenance":"OPERATOR_STATED",
-      "duration_seconds":385.7,
-      "operator_words":"this video i was showing how price reject key level but the candle stick patterns was terrible to take a trade you see the first candle sellers was still in control as for the second one and the other ones was doji/indecision candles it wasnt until later probably 15 mins it was a break out",
-      "notes":"A WAIT / NO-ENTRY teaching example, and the highest-value item in this extension: it is a LIVE worked instance of two of the operator's four frozen WAIT reasons - rejection-without-a-momentum-candle and doji-without-the-second-strong-candle. The key level was genuinely rejected, but the candle STORY never qualified: the first candle after the rejection still had sellers in control, and the following candles were doji/indecision. Pattern location alone is not entry authority; the story and the force must both qualify. The breakout came roughly 15 minutes later, AFTER the recording ends - so the later breakout is the operator's account, not something visible on this tape. CORRECTED 2026-08-21: an earlier DERIVED reading of this clip as zones_marked_no_trade_observation was replaced by the operator's own statement; the passive no-trade framing missed that this is an ACTIVE demonstration of why the setup was refused. Measured context: TradingView LIVE (not FX Replay), symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:38-10:46:53 ET, inside the 09:30-12:00 window. Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75); price sold from the upper band into the lower one, wicked below ~29225 and bounced, and the candles after the bounce are small-bodied. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence."
+      "name": "Desktop 2026.08.21 - 10.40.34.05.mp4",
+      "sha256": "08e87682f683db1b9a37200744006588c4a46bedde7d83c3e2c65b9f19870b2b",
+      "roles": [
+        "rejection_at_key_level_without_momentum_candle_wait",
+        "doji_indecision_cluster_is_not_an_entry",
+        "live_forward_session",
+        "later_breakout_after_failed_rejection_story"
+      ],
+      "added": "2026-08-21",
+      "role_provenance": "OPERATOR_STATED",
+      "duration_seconds": 385.7,
+      "operator_words": "this video i was showing how price reject key level but the candle stick patterns was terrible to take a trade you see the first candle sellers was still in control as for the second one and the other ones was doji/indecision candles it wasnt until later probably 15 mins it was a break out",
+      "notes": "A WAIT / NO-ENTRY teaching example, and the highest-value item in this extension: it is a LIVE worked instance of two of the operator's four frozen WAIT reasons - rejection-without-a-momentum-candle and doji-without-the-second-strong-candle. The key level was genuinely rejected, but the candle STORY never qualified: the first candle after the rejection still had sellers in control, and the following candles were doji/indecision. Pattern location alone is not entry authority; the story and the force must both qualify. The breakout came roughly 15 minutes later, AFTER the recording ends - so the later breakout is the operator's account, not something visible on this tape. CORRECTED 2026-08-21: an earlier DERIVED reading of this clip as zones_marked_no_trade_observation was replaced by the operator's own statement; the passive no-trade framing missed that this is an ACTIVE demonstration of why the setup was refused. Measured context, scoped honestly - the following describes chart HISTORY rendered on screen, readable from any single frame, NOT events observed unfolding across the recording: TradingView LIVE (not FX Replay), symbol MNQU2026 (Sep 2026 front month), 5m, Paper Trading mode, real session 2026-08-21 10:40:38-10:46:53 ET, inside the 09:30-12:00 window. Two drawn S/R zone boxes (upper ~29360-29420 dashed 29380; lower ~29200-29237.75 dashed 29237.75); price sold from the upper band into the lower one, wicked below ~29225 and bounced, and the candles after the bounce are small-bodied. No order placed across the sampled span; the quantity widget reads 17 but no order ticket was filled. Forward-dated: post-dates the 2026-08-17 development-contamination boundary and is therefore fidelity evidence only, NOT edge evidence."
     },
     {
-      "name":"Desktop 2026.08.16 - 23.34.40.03.mp4",
-      "sha256":"da8b6c2e4f53f26c4946b526ebeb076b26a7813be02c03391c41a4e7ad638c12",
-      "roles":[],
-      "added":"2026-08-21",
-      "role_provenance":"NO_EVIDENCE_VALUE",
-      "duration_seconds":1.5,
-      "notes":"1.5-second fragment of the FX Replay 5m layout, 15 contracts, zone boxes visible. No trade event and no annotation. Registered for custody completeness only; carries no teachable content and may not be cited as evidence for any rule."
+      "name": "Desktop 2026.08.16 - 23.34.40.03.mp4",
+      "sha256": "da8b6c2e4f53f26c4946b526ebeb076b26a7813be02c03391c41a4e7ad638c12",
+      "roles": [],
+      "added": "2026-08-21",
+      "role_provenance": "NO_EVIDENCE_VALUE",
+      "duration_seconds": 1.5,
+      "notes": "1.5-second fragment of the FX Replay 5m layout, 15 contracts, zone boxes visible. No trade event and no annotation. Registered for custody completeness only; carries no teachable content and may not be cited as evidence for any rule."
     }
   ],
   "video_corpus_extension_2026_08_21": {
-    "status":"OPERATOR_AUTHORIZED_EXTENSION_OF_THE_CLOSED_WORLD",
-    "authorizing_words":"and it gets added",
-    "authorized_on":"2026-08-21",
-    "added_video_count":5,
-    "total_video_count_after":8,
-    "prior_three_reverified_byte_exact":true,
-    "manual_collection_remains_closed":true,
-    "no_new_trader_replay_or_labeling_requested_or_implied":true,
-    "edge_evidence_eligible":false,
-    "custody_receipt":"research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md",
-    "method":"sha256sum plus ffprobe on each file; frames sampled with ffmpeg and read visually. No evidence bytes are committed; only names, hashes, durations and semantic roles.",
+    "status": "OPERATOR_AUTHORIZED_EXTENSION_OF_THE_CLOSED_WORLD",
+    "authorizing_words": "and it gets added",
+    "authorized_on": "2026-08-21",
+    "added_video_count": 5,
+    "total_video_count_after": 8,
+    "prior_three_reverified_byte_exact": true,
+    "manual_collection_remains_closed": true,
+    "no_new_trader_replay_or_labeling_requested_or_implied": true,
+    "edge_evidence_eligible": false,
+    "custody_receipt": "research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md",
+    "method": "sha256sum plus ffprobe on each file; frames sampled with ffmpeg and read visually. No evidence bytes are committed; only names, hashes, durations and semantic roles.",
     "audio_disposition": {
-      "claim":"No video in the corpus carries spoken explanation, so no role can be recovered from a soundtrack. Every role is either OPERATOR_STATED in chat or DERIVED from frames - there is no third source.",
-      "retracted_overclaim":"An earlier version of this field said the corpus is silent and that there is NO audio anywhere, based on volumedetect over THREE 60-second windows of item 5. That was an absence claim over ~4h of footage licensed by 3 minutes of it, and MY OWN INSTRUMENT REFUTED IT on re-measurement. Retracted and replaced by the full-track measurement below. Self-caught before the independent grader re-ran.",
-      "method":"volumedetect over the COMPLETE audio track of all 8 files (-vn, no video decode; the 3h53m file measures in 6.3s, so the earlier sampling was never necessary), plus silencedetect at -50dB / 0.3s minimum to locate every non-silent span. [MEASURED 2026-08-21]",
-      "silent_end_to_end_7_of_8":"mean_volume -83 to -84 dB, max_volume -65.7 to -71.2 dB. Dither-floor noise, no content.",
-      "the_one_exception":{
-        "file":"Desktop 2026.08.20 - 20.37.47.04.mp4",
-        "note":"THIS IS ONE OF THE THREE SEALED VIDEOS and it is NOT silent. Full-track mean_volume -52.9 dB, max_volume -12.2 dB, integrated loudness -22.5 LUFS.",
-        "audible_span_seconds":[571.13,572.30],
-        "audible_duration_seconds":1.17,
-        "rest_of_file":"silent from 0.02 to 571.13 and from 572.30 to 613.64",
-        "reading":"A single 1.17-second burst near the end of a 613.7s file. 1.17 seconds cannot carry a spoken explanation; consistent with a UI or notification sound. HYPOTHESIS, not measured as such - the content was not transcribed and was NOT sent to any external service.",
-        "consequence":"The no-spoken-explanation claim survives, but only because 1.17s is too short to be narration - NOT because the corpus is silent. Those are different claims and the earlier field conflated them."
+      "claim": "No video in the corpus carries spoken explanation, so no role can be recovered from a soundtrack. Every role is either OPERATOR_STATED in chat or DERIVED from frames - there is no third source.",
+      "retracted_overclaim": "An earlier version of this field said the corpus is silent and that there is NO audio anywhere, based on volumedetect over THREE 60-second windows of item 5. That was an absence claim over ~4h of footage licensed by 3 minutes of it, and MY OWN INSTRUMENT REFUTED IT on re-measurement. Retracted and replaced by the full-track measurement below. Self-caught before the independent grader re-ran.",
+      "method": "volumedetect over the COMPLETE audio track of all 8 files (-vn, no video decode; the 3h53m file measures in 6.3s, so the earlier sampling was never necessary), plus silencedetect at -50dB / 0.3s minimum to locate every non-silent span. [MEASURED 2026-08-21]",
+      "silent_end_to_end_7_of_8": "mean_volume -83 to -84 dB, max_volume -65.7 to -71.2 dB. Dither-floor noise, no content.",
+      "the_one_exception": {
+        "file": "Desktop 2026.08.20 - 20.37.47.04.mp4",
+        "note": "THIS IS ONE OF THE THREE SEALED VIDEOS and it is NOT silent. Full-track mean_volume -52.9 dB, max_volume -12.2 dB, integrated loudness -22.5 LUFS.",
+        "audible_span_seconds": [
+          571.13,
+          572.3
+        ],
+        "audible_duration_seconds": 1.17,
+        "rest_of_file": "silent from 0.02 to 571.13 and from 572.30 to 613.64",
+        "reading": "A single 1.17-second burst near the end of a 613.7s file. 1.17 seconds cannot carry a spoken explanation; consistent with a UI or notification sound. HYPOTHESIS, not measured as such - the content was not transcribed and was NOT sent to any external service.",
+        "consequence": "The no-spoken-explanation claim survives, but only because 1.17s is too short to be narration - NOT because the corpus is silent. Those are different claims and the earlier field conflated them."
       },
-      "positive_control":"A synthesised tone at speech level measures -36.1 dB on the same detector versus -65 to -71 dB for the silent files, so the instrument discriminates content from floor."
+      "positive_control": "A synthesised tone at speech level measures -36.1 dB on the same detector versus -65 to -71 dB for the silent files, so the instrument discriminates content from floor."
     },
-    "enumeration_status":{
-      "Desktop 2026.08.19 - 19.49.23.03.mp4":"31.8s, 9 frames - role is OPERATOR_STATED so enumeration is not load-bearing",
-      "Desktop 2026.08.15 - 17.13.57.01.mp4":"14027.6s, 9 frames - UNENUMERATED, not citable for any specific rule",
-      "Desktop 2026.08.16 - 23.06.30.02.mp4":"98.3s, 25 frames at 4s spacing - ENUMERATED",
-      "Desktop 2026.08.21 - 10.40.34.05.mp4":"385.7s, 6 frames - role is OPERATOR_STATED so enumeration is not load-bearing",
-      "Desktop 2026.08.16 - 23.34.40.03.mp4":"1.5s, 1 frame - ENUMERATED by exhaustion"
+    "enumeration_status": {
+      "Desktop 2026.08.19 - 19.49.23.03.mp4": "31.8s, 9 frames - role is OPERATOR_STATED so enumeration is not load-bearing",
+      "Desktop 2026.08.15 - 17.13.57.01.mp4": "14027.6s, 9 frames - UNENUMERATED, not citable for any specific rule",
+      "Desktop 2026.08.16 - 23.06.30.02.mp4": "98.3s, 25 frames at 4s spacing - ENUMERATED",
+      "Desktop 2026.08.21 - 10.40.34.05.mp4": "385.7s, 6 frames - role is OPERATOR_STATED so enumeration is not load-bearing. The price-action sentences in its notes describe chart HISTORY that is visible in every frame, not events unfolding during the recording, so they do not depend on frame density; they are scoped in the notes accordingly.",
+      "Desktop 2026.08.16 - 23.34.40.03.mp4": "1.5s, 1 frame - ENUMERATED by exhaustion"
     },
-    "role_provenance_law":"An entry marked DERIVED_NOT_OPERATOR_STATED carries the engineer's reading, not the trader's words, and is outranked by any later direct trader clarification.",
-    "operator_stated_entries_are_a_closed_set":["Desktop 2026.08.19 - 19.49.23.03.mp4","Desktop 2026.08.21 - 10.40.34.05.mp4"],
-    "operator_stated_closed_set_law":"Only a video named in operator_stated_entries_are_a_closed_set may carry role_provenance OPERATOR_STATED. Relabelling a DERIVED entry to OPERATOR_STATED without the operator adding it to this list is a fidelity forgery and is guarded against.",
+    "role_provenance_law": "An entry marked DERIVED_NOT_OPERATOR_STATED carries the engineer's reading, not the trader's words, and is outranked by any later direct trader clarification.",
+    "operator_stated_entries_are_a_closed_set": [
+      "Desktop 2026.08.19 - 19.49.23.03.mp4",
+      "Desktop 2026.08.21 - 10.40.34.05.mp4"
+    ],
+    "operator_stated_closed_set_law": "Only a video named in operator_stated_entries_are_a_closed_set may carry role_provenance OPERATOR_STATED. Relabelling a DERIVED entry to OPERATOR_STATED without the operator adding it to this list is a fidelity forgery and is guarded against.",
     "independent_grade_2026_08_21": {
-      "grader":"accuracy-validator, dispatched by the doer seat, no lineage in the build",
-      "commit_graded":"5341bb6e",
-      "band":6,
-      "verdict":"BOUNDED",
-      "findings_closed_in":"the follow-up commit that carries this block",
-      "confirmed_defects_the_doer_published":[
+      "grader": "accuracy-validator, dispatched by the doer seat, no lineage in the build",
+      "commit_graded": "5341bb6e",
+      "band": 6,
+      "verdict": "BOUNDED",
+      "findings_closed_in": "the follow-up commit that carries this block",
+      "confirmed_defects_the_doer_published": [
         "semantics_hash AFTER value was published as 77d4a9a9... - REFUTED; the reproducing value at 5341bb6e is bee2303b6...; the BEFORE value c764cdda4... does reproduce",
         "red-proof ROW1 was published as 3 failed / 4 passed against an 8-test suite (3+4=7); the reproducing count is 4 failed / 4 passed - the guard is STRONGER than advertised",
         "the instrument note was one-sided: PYTHONUTF8=1 removes 5 cp1252 artifacts but manufactures one of its own (tests/python/test_golden_snapshots.py::TestGoldenSnapshots::test_quantum_mc). Genuinely-failing tests at head = 8, not 9",
         "item 5 was over-graded MEASURED on frame-sampled inferences - see its corrected notes",
-        "item 8 was DERIVED as a passive zones_marked_no_trade_observation; the operator then stated it is an ACTIVE why-I-refused-this-setup demonstration. A derived reading was not merely thin here - it was the wrong shape. Recorded as evidence for the role_provenance_law."
+        "CORRECTED - item 8 was DERIVED as a passive zones_marked_no_trade_observation; the operator then stated it is an ACTIVE why-I-refused-this-setup demonstration. A derived reading was not merely thin here - it was the wrong shape. Recorded as evidence for the role_provenance_law."
       ],
-      "false_green_routes_closed_here":[
+      "false_green_routes_closed_here": [
         "PROBE-A: new-video hashes were format-checked only, not identity-checked - now pinned to constants",
         "PROBE-B: enumerated:false gated nothing; a fabricated role could be appended to the unenumerated entry - roles are now pinned",
         "PROBE-E: a DERIVED entry could be relabelled OPERATOR_STATED and given invented operator_words - the OPERATOR_STATED set is now closed and pinned",
         "duration_seconds was falsifiable with no cross-check - now pinned"
       ],
-      "note":"All four routes moved the file bytes and so already tripped the build fingerprint; they were tamper-EVIDENT, not tamper-proof. They are now caught by the content guard as well."
+      "note": "All four routes moved the file bytes and so already tripped the build fingerprint; they were tamper-EVIDENT, not tamper-proof. They are now caught by the content guard as well."
     },
     "pdh_label_disposition": {
-      "operator_words":"i dont use pdh",
-      "measured":"A PDH text label is RENDERED on the chart layout in the 2026.08.15 and 2026.08.16 videos (the latter at 19165.75). No entry, target or confluence decision was measured to use it.",
-      "ruling":"PDH is NOT a strategy input. The on-screen label is a residual drawing from an older layout and is scenery, not authority.",
-      "tag":"pdh_label_visible_not_a_strategy_input",
-      "changes_the_ban":false,
-      "consistent_with":"semantic_crosswalk.market_map (PDH/PDL/PWH/PWL are forbidden)",
-      "clearance_scope":"Rests on the operator ruling about his own strategy, NOT on an exhaustive frame enumeration; 6 frames of the 2026.08.15 file and 5 of the 2026.08.16 file were sampled."
+      "operator_words": "i dont use pdh",
+      "measured": "A PDH text label is RENDERED on the chart layout in the 2026.08.15 and 2026.08.16 videos (the latter at 19165.75). No entry, target or confluence decision was measured to use it.",
+      "ruling": "PDH is NOT a strategy input. The on-screen label is a residual drawing from an older layout and is scenery, not authority.",
+      "tag": "pdh_label_visible_not_a_strategy_input",
+      "changes_the_ban": false,
+      "consistent_with": "semantic_crosswalk.market_map (PDH/PDL/PWH/PWL are forbidden)",
+      "clearance_scope": "Rests on the operator ruling about his own strategy, NOT on an exhaustive frame enumeration; 6 frames of the 2026.08.15 file and 5 of the 2026.08.16 file were sampled."
+    },
+    "grader_findings_closed_2026_08_21_second_pass": {
+      "regrade_head": "1c6fb449",
+      "band_held": 6,
+      "verdict": "BOUNDED",
+      "grader_lineage_caveat": "The re-grade was performed by the SAME grader that convicted the first pass, so it was certifying the closure of its own findings and said so itself. That is not a neutral certification. A FRESH grader with no lineage is dispatched against the head that carries this block.",
+      "closed_here": [
+        "F-8 HIGH: operator_words CONTENT was unpinned - only its truthiness was checked, so a quote could be rewritten to say the opposite of what the trader said while provenance, roles, hash and duration all stayed valid. The exact text is now pinned.",
+        "F-9 HIGH: the 3 SEALED videos' roles were truthiness-only - a sealed role list could be replaced with a banned concept and stay green. Sealed roles are now pinned field-for-field, matching the 5 added ones.",
+        "F-11 HIGH: the custody receipt's BODY was never corrected and contradicted the registry, still tagged MEASURED HERE. Root cause named by the grader and accepted: the registry has a guard and the receipt does not, so corrections flowed to the guarded artifact and stopped at the unguarded one - and the unguarded one is the custody document. The receipt is now rewritten AND read by a test.",
+        "F-10 MODERATE: enumeration_status could drift freely from reality - a video could be marked ENUMERATED with no method, the map could contradict the entry, or carry rows for files that do not exist. Now pinned and cross-checked.",
+        "F-12 MODERATE: 'tamper-evident via the fingerprint' was weaker than both of us wrote - semantics_hash moves but its value is anchored nowhere and no tests/ path is fingerprinted, so a consistent registry+test edit reds nothing. Scoped anchor added; see fingerprint_anchor."
+      ],
+      "grader_confirmed_good": [
+        "the completeness property that stops a pin being silently deleted",
+        "the WAIT-witness guard (5 attacks, all red)",
+        "the audio retraction guard (5 arms, all red)",
+        "the item 6 re-enumeration - every load-bearing figure survived independent frame-level attack and first-principles arithmetic"
+      ],
+      "not_measured_by_the_grader_at_any_pin": [
+        "item 4's frame readings remain RELAYED and have never been counter-sampled by anyone but me",
+        "the 1.17s burst's actual content - HYPOTHESIS on both instruments, deliberately not transcribed and not sent to any external service"
+      ]
+    },
+    "fingerprint_anchor": {
+      "what_this_pins": "The sha256 of THIS registry file's own bytes, pinned in the test file as a third location.",
+      "why_not_the_full_semantics_hash": "Anchoring the whole build fingerprint would red on every unrelated engine edit among its 73 files, and a guard that reds routinely gets its constant updated reflexively - which trains people to ignore it. Scoping the anchor to this file catches the tamper case the grader actually found (a consistent registry + test-constant edit) without coupling to 72 unrelated files.",
+      "honest_limit": "A determined editor can still update all three locations. This does not make tampering impossible; it removes the SILENT property, which is what was claimed and was not true.",
+      "semantics_hash_is_recorded_not_guarded": "The build fingerprint value at each landed commit is recorded in the custody receipt as a human-checkable anchor. It is a RECORD, not a test."
     }
   },
   "frozen_replay_evidence": {
@@ -179,7 +328,7 @@
     "frozen_wait_at_replay_end_count": 6,
     "manual_collection_closed": true,
     "new_manual_replay_or_labeling_required": false,
-    "roles":[
+    "roles": [
       "ENTER_LONG_ENTER_SHORT_WAIT_NO_TRADE_behavior_fidelity",
       "entry_direction_fidelity",
       "entry_timing_fidelity",
@@ -191,39 +340,72 @@
   },
   "semantic_crosswalk": {
     "market_map": {
-      "final_rule":"Structural support/resistance only as the regular level family. Active 15m FVG may itself be the support/resistance interaction band when it appears first. PDH/PDL/PWH/PWL are forbidden.",
-      "evidence_combination":["latest_direct_trader_clarification","65_screenshot_parent_corpus","frozen_replay_locations","FVG_interaction_examples"],
-      "standalone_source_may_not_override":true
+      "final_rule": "Structural support/resistance only as the regular level family. Active 15m FVG may itself be the support/resistance interaction band when it appears first. PDH/PDL/PWH/PWL are forbidden.",
+      "evidence_combination": [
+        "latest_direct_trader_clarification",
+        "65_screenshot_parent_corpus",
+        "frozen_replay_locations",
+        "FVG_interaction_examples"
+      ],
+      "standalone_source_may_not_override": true
     },
     "rejection_entries": {
-      "final_rule":"Authorized S/R or FVG interaction plus completed 5m rejection/control story plus sustained forming-5m force.",
-      "evidence_combination":["rejection_story_screenshots","5m_primary_screenshot","force_video_pair","frozen_replay_actions"],
-      "standalone_pattern_name_is_not_entry":true
+      "final_rule": "Authorized S/R or FVG interaction plus completed 5m rejection/control story plus sustained forming-5m force.",
+      "evidence_combination": [
+        "rejection_story_screenshots",
+        "5m_primary_screenshot",
+        "force_video_pair",
+        "frozen_replay_actions"
+      ],
+      "standalone_pattern_name_is_not_entry": true
     },
     "normal_breakout": {
-      "final_rule":"First completed 5m beyond S/R or FVG is setup only. The following forming 5m must take the first breakout candle directional extreme and prove sustained force. Normal 5m continuation does not wait for a 15m close.",
-      "evidence_combination":["Screenshot 2026-08-20 232649.png","direct_trader_clarification","force_video_semantics","frozen_replay_timing"],
-      "second_5m_momentum_without_extreme_extension":"WAIT_NO_ENTRY"
+      "final_rule": "First completed 5m beyond S/R or FVG is setup only. The following forming 5m must take the first breakout candle directional extreme and prove sustained force. Normal 5m continuation does not wait for a 15m close.",
+      "evidence_combination": [
+        "Screenshot 2026-08-20 232649.png",
+        "direct_trader_clarification",
+        "force_video_semantics",
+        "frozen_replay_timing"
+      ],
+      "second_5m_momentum_without_extreme_extension": "WAIT_NO_ENTRY"
     },
     "force_timing": {
-      "final_rule":"5m is the trader entry chart; completed 1m observations are causal internal reconstruction only. Entry may occur before 5m close after sustained real force.",
-      "evidence_combination":["two_force_videos","Screenshot 2026-08-20 231718.png","Screenshot 2026-08-20 231723.png","frozen_replay_entry_times"]
+      "final_rule": "5m is the trader entry chart; completed 1m observations are causal internal reconstruction only. Entry may occur before 5m close after sustained real force.",
+      "evidence_combination": [
+        "two_force_videos",
+        "Screenshot 2026-08-20 231718.png",
+        "Screenshot 2026-08-20 231723.png",
+        "frozen_replay_entry_times"
+      ]
     },
     "target_hierarchy": {
-      "final_rule":"The nearest meaningful physical structural S/R reaction, 5m liquidity/reaction cluster, or active 15m FVG owns TP1. If FVG owns the destination, TP is its midpoint.",
-      "evidence_combination":["liquidity_before_fvg_screenshot_pair","multi_target_screenshots","frozen_replay_tp_context","direct_trader_fvg_midpoint_clarification"],
-      "farther_feature_may_not_leapfrog_nearer_meaningful_reaction":true
+      "final_rule": "The nearest meaningful physical structural S/R reaction, 5m liquidity/reaction cluster, or active 15m FVG owns TP1. If FVG owns the destination, TP is its midpoint.",
+      "evidence_combination": [
+        "liquidity_before_fvg_screenshot_pair",
+        "multi_target_screenshots",
+        "frozen_replay_tp_context",
+        "direct_trader_fvg_midpoint_clarification"
+      ],
+      "farther_feature_may_not_leapfrog_nearer_meaningful_reaction": true
     },
     "tp_safe_gap": {
-      "final_rule":"At the frozen 15-MNQ reference display, planned TP1 reward >= $400 is safe enough if every other A+ gate passes; under $400 blocks immediate entry. Untouched close TP1 cannot be blindly skipped.",
-      "evidence_combination":["Desktop 2026.08.20 - 20.37.47.04.mp4","exact_200_dollar_observation","latest_direct_trader_400_plus_clarification","frozen_replay_room_cases"],
-      "reference_distance_points":13.333333333333334,
-      "exact_400_allowed":true
+      "final_rule": "At the frozen 15-MNQ reference display, planned TP1 reward >= $400 is safe enough if every other A+ gate passes; under $400 blocks immediate entry. Untouched close TP1 cannot be blindly skipped.",
+      "evidence_combination": [
+        "Desktop 2026.08.20 - 20.37.47.04.mp4",
+        "exact_200_dollar_observation",
+        "latest_direct_trader_400_plus_clarification",
+        "frozen_replay_room_cases"
+      ],
+      "reference_distance_points": 13.333333333333334,
+      "exact_400_allowed": true
     },
     "wait_semantics": {
-      "final_rule":"WAIT is distinct from NO_TRADE and remains WAIT when the frozen replay ends while the trader is still waiting.",
-      "evidence_combination":["frozen_14_case_labels","direct_trader_confirmation"],
-      "wait_may_not_be_silently_rewritten":true
+      "final_rule": "WAIT is distinct from NO_TRADE and remains WAIT when the frozen replay ends while the trader is still waiting.",
+      "evidence_combination": [
+        "frozen_14_case_labels",
+        "direct_trader_confirmation"
+      ],
+      "wait_may_not_be_silently_rewritten": true
     }
   },
   "conflict_resolution": {

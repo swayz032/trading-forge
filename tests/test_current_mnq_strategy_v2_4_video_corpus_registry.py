@@ -16,6 +16,7 @@ import re
 import pytest
 
 REGISTRY = "research/current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json"
+RECEIPT = "research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md"
 
 # The three videos sealed on 2026-08-20, re-verified byte-exact against the operator's
 # local files on 2026-08-21. These may never change without a new operator ruling.
@@ -27,6 +28,42 @@ SEALED_VIDEOS = {
     "Desktop 2026.08.20 - 20.37.47.04.mp4":
         "218ca9bb827db2c540d19782f6cef2227e45492a1a04b847dd78a6b3e23cda72",
 }
+
+# The founding three were only ever checked for a NON-EMPTY role list, which meant a sealed
+# role could be replaced with a banned concept and stay green. Pinned field-for-field now,
+# exactly like the added five.
+SEALED_ROLES = {
+    "Desktop 2026.08.19 - 02.12.06.01.mp4": [
+        "forming_5m_directional_force", "tug_of_war_giveback",
+        "entry_before_5m_close_when_force_is_real"],
+    "Desktop 2026.08.19 - 02.13.19.02.mp4": [
+        "forming_5m_directional_force", "tug_of_war_giveback",
+        "entry_before_5m_close_when_force_is_real"],
+    "Desktop 2026.08.20 - 20.37.47.04.mp4": [
+        "exact_200_dollar_unsafe_tp_example", "tp1_reaction",
+        "retest_then_later_momentum_continuation", "no_blind_tp1_to_tp2_leapfrog"],
+}
+
+# Guarding WHO may speak is half a guard. The trader's actual sentence is the entire point
+# of this registry, and it was the one field nothing pinned - a quote could be inverted to
+# mean the opposite with provenance, roles, hash and duration all untouched.
+OPERATOR_WORDS = {
+    "Desktop 2026.08.19 - 19.49.23.03.mp4": (
+        "i entry on 5 minute; the 1 minute chart is to show what the candles and trade "
+        "looks like in 1 minute cause the bot uses 1 min candles to equal 5 minute "
+        "candles; that is already in my files."
+    ),
+    "Desktop 2026.08.21 - 10.40.34.05.mp4": (
+        "this video i was showing how price reject key level but the candle stick "
+        "patterns was terrible to take a trade you see the first candle sellers was "
+        "still in control as for the second one and the other ones was doji/indecision "
+        "candles it wasnt until later probably 15 mins it was a break out"
+    ),
+}
+
+# A third location holding this file's own bytes. Deliberately NOT the full build
+# fingerprint - see fingerprint_anchor in the registry for why, and for the honest limit.
+REGISTRY_SHA256 = "97e7273e699bfb9be0f918fd9bcf924591ee301c9f53fd935c00eddc0fdd5d24"
 
 ALLOWED_PROVENANCE = {
     "OPERATOR_STATED",
@@ -104,7 +141,10 @@ def test_every_sealed_video_survives_with_its_exact_hash(registry):
     for name, sha in SEALED_VIDEOS.items():
         assert name in by_name, f"sealed video dropped from the registry: {name}"
         assert by_name[name]["sha256"] == sha, f"sealed video hash substituted: {name}"
-        assert by_name[name]["roles"], f"sealed video lost its roles: {name}"
+        assert by_name[name]["roles"] == SEALED_ROLES[name], (
+            f"sealed video roles were EDITED: {name} now claims "
+            f"{by_name[name]['roles']}, sealed set is {SEALED_ROLES[name]}"
+        )
 
 
 def test_every_video_entry_is_hash_bound_and_uniquely_identified(registry):
@@ -281,6 +321,92 @@ def test_enumeration_status_is_declared_for_every_added_video(registry):
         "the reading of the burst is unverified and must stay labelled as such"
     )
     assert a["positive_control"].strip(), "an absence claim owes a positive control"
+
+
+def test_the_traders_actual_words_are_pinned_not_merely_present(registry):
+    """Guarding WHO may speak is half a guard. A quote rewritten to say the opposite of
+    what he said passed every other check. The text itself is the evidence."""
+    by_name = {v["name"]: v for v in registry["verified_video_evidence"]}
+    for name, words in OPERATOR_WORDS.items():
+        assert by_name[name]["operator_words"] == words, (
+            f"{name}: the trader's words were EDITED. This registry exists to preserve "
+            f"what he actually said; that sentence is not a summary field."
+        )
+    assert set(OPERATOR_WORDS) == OPERATOR_STATED_CLOSED_SET, (
+        "every video permitted to speak as the trader must have its words pinned"
+    )
+
+
+def test_enumeration_status_cannot_drift_from_the_entries(registry):
+    """The status map was prose. It could claim ENUMERATED with no method, contradict the
+    entry it describes, or carry rows for files that do not exist."""
+    ext = registry["video_corpus_extension_2026_08_21"]
+    status = ext["enumeration_status"]
+    by_name = {v["name"]: v for v in registry["verified_video_evidence"]}
+    assert set(status) == set(ADDED_2026_08_21), (
+        "status map and added-video set disagree - a row for a video never added, or an "
+        "added video with no row"
+    )
+    for name in ADDED_2026_08_21:
+        entry, text = by_name[name], status[name]
+        if entry.get("enumerated") is True:
+            assert entry.get("enumeration_method", "").strip(), (
+                f"{name} claims ENUMERATED with no stated method"
+            )
+            assert "UNENUMERATED" not in text, (
+                f"{name}: entry says enumerated, status map says the opposite"
+            )
+        if entry.get("enumerated") is False:
+            assert "UNENUMERATED" in text, (
+                f"{name}: entry says NOT enumerated, status map does not say so"
+            )
+        assert str(entry["duration_seconds"]) in text, (
+            f"{name}: status row does not state the duration it claims to cover"
+        )
+
+
+def test_this_registry_file_is_anchored_by_its_own_bytes(registry):
+    """'Tamper-evident via the fingerprint' was weaker than claimed - the fingerprint moves
+    but its value is anchored nowhere and no tests/ path is fingerprinted, so a consistent
+    registry+test edit red-lit nothing. This is a third location. It does not make tampering
+    impossible; it removes the silent property."""
+    import hashlib
+    digest = hashlib.sha256(open(REGISTRY, "rb").read()).hexdigest()
+    assert digest == REGISTRY_SHA256, (
+        f"registry bytes changed without updating the anchor. measured={digest} "
+        f"anchored={REGISTRY_SHA256}. If intended, update REGISTRY_SHA256 deliberately and "
+        f"say why in the commit message. If not, you have found an unreviewed edit."
+    )
+    anchor = registry["video_corpus_extension_2026_08_21"]["fingerprint_anchor"]
+    assert anchor["honest_limit"].strip(), "an anchor must state what it does NOT prevent"
+
+
+def test_the_custody_receipt_does_not_contradict_the_registry(registry):
+    """Root cause of the stale receipt: the registry had a guard and the receipt did not,
+    so corrections flowed to the guarded artifact and stopped at the unguarded one - and
+    the unguarded one is the custody document. This test reads the receipt."""
+    receipt = open(RECEIPT, encoding="utf-8").read()
+    # A retired role name MAY appear - a retraction that names what it retracts is correct.
+    # What must never happen is it appearing as a CURRENT claim. So every line carrying one
+    # must also carry retraction language.
+    markers = ("REFUTED", "earlier", "CORRECTED", "retired", "replaced", "Retracted")
+    for term in ("extended_5m_zone_replay_session", "zones_marked_no_trade_observation"):
+        for line in receipt.splitlines():
+            if term in line:
+                assert any(m in line for m in markers), (
+                    f"custody receipt states retired role {term!r} as a CURRENT claim, with "
+                    f"no retraction marker on the line: {line[:120]!r}"
+                )
+    # And the live role lists must carry the replacements, never the retired names.
+    for line in receipt.splitlines():
+        if line.startswith("Roles: "):
+            assert "extended_5m_zone_replay_session" not in line
+            assert "zones_marked_no_trade_observation" not in line
+    for required in ("extended_replay_session_mixed_timeframes", "target_reached_full_tp",
+                     "4140.00", "bee2303b", "OPERATOR_STATED", "UNENUMERATED"):
+        assert required in receipt, f"custody receipt is missing {required!r}"
+    for name in OPERATOR_WORDS:
+        assert name in receipt, f"custody receipt does not mention {name}"
 
 
 def test_the_independent_grade_is_recorded_with_its_confirmed_defects(registry):
