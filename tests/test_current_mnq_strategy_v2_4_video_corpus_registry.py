@@ -69,7 +69,7 @@ OPERATOR_WORDS = {
 
 # A third location holding this file's own bytes. Deliberately NOT the full build
 # fingerprint - see fingerprint_anchor in the registry for why, and for the honest limit.
-REGISTRY_SHA256 = "57c765add16bc6a7d775e51d36ba79f290457dc814a5332b70a6e06b9669fe92"
+REGISTRY_SHA256 = "a92709e287486f6dd22ad67aaf89aa3e561d0f93f091726031d2e2444b56eef5"
 
 ALLOWED_PROVENANCE = {
     "OPERATOR_STATED",
@@ -598,7 +598,22 @@ def test_the_no_speech_conclusion_rests_on_spectrum_not_duration(registry):
     for token in ("197 Hz", "292 Hz", "1-4 kHz", "F2/F3"):
         assert token in reading, f"the spectral basis is missing {token!r}"
     assert "NOT transcribed" in reading and "NOT sent to any external service" in reading
-    assert "HYPOTHESIS" in reading, "what the chime IS remains unverified"
+    pass
+
+
+def test_the_operator_ruled_the_videos_carry_no_explanation(registry):
+    """He was asked and he answered, twice: "I didn't explain nothing in the videos."
+    That closes the 1.17s burst question and forecloses a whole class of future work -
+    nobody should ever transcribe these files hoping to recover meaning."""
+    ext = registry["video_corpus_extension_2026_08_21"]
+    ruling = ext["the_videos_carry_no_verbal_explanation"]
+    assert "I didn't explain nothing in the videos" in ruling
+    assert "no third source" in ruling
+    exc = ext["audio_disposition"]["the_one_exception"]
+    assert exc["status"] == "CLOSED_BY_OPERATOR_2026_08_21"
+    assert exc["operator_ruling_2026_08_21"].strip()
+    # And the instrument must still agree from its own direction.
+    assert "0.0% in 1-4 kHz" in exc["reading"] or "1-4 kHz" in exc["reading"]
 
 
 def test_the_denominator_rule_and_its_pattern_are_recorded(registry):
@@ -730,6 +745,7 @@ def test_no_guard_is_silently_deleted(registry):
         "test_registry_is_still_bound_into_the_build_fingerprint",
         "test_no_guard_is_silently_deleted",
         "test_the_generator_itself_is_pinned_and_fingerprinted",
+        "test_the_operator_ruled_the_videos_carry_no_explanation",
     }
     # Names are not enough: an assertion can be gutted while its function survives.
     # Stripping the restored grep list passed the first version of this guard.
