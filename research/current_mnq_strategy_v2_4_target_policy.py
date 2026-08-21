@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Trader-fidelity target policy for Current MNQ v2.4.
 
-The base target builder still owns causal reaction construction, physical ordering,
-15m-FVG midpoint precision, key-zone significance and executable tick rounding.
+The base target builder owns causal reaction construction, physical ordering,
+S/R reaction significance, 5m liquidity/reaction clusters, 15m-FVG midpoint
+precision and executable tick rounding. PDH/PDL/PWH/PWL are forbidden and are
+never passed into reaction construction by this wrapper.
+
 This layer owns the trader's direct TP-display entry-gap rule:
 
 - TP1 is still the first meaningful physical reaction.
@@ -84,17 +87,12 @@ def classify_first_reaction_destination(
     processed: list[ReactionDestination] = []
 
     for d in destinations:
-        # Preserve the inherited weak-blocker contract. The direct $400 TP-display
-        # rule does not weaken unrelated structure/blocker protection.
         if not d.meaningful:
             if d.quality > p.weak_blocker_quality and not (setup == "BRK5" and strong_momentum):
                 if d.first_contact_distance < structural_min_room:
                     return None, f"WEAK_NEAR_BLOCKER:{d.location.source}:{d.first_contact_distance:.2f}"
             continue
 
-        # A later continuation can retire the old TP1 only when this candidate is
-        # actually being earned at that same physical reaction band. This prevents
-        # the old blind TP1->TP2 leapfrog from an unrelated earlier entry location.
         if _current_candidate_processed_reaction(
             d, setup, entry_location, candidate_reason,
         ):
@@ -156,8 +154,10 @@ def build_and_classify(
     entry_location=None,
     candidate_reason: str | None = None,
 ):
+    # pdm/pwm remain API-compatibility parameters only. The current strategy's
+    # reaction map is closed to named daily/weekly levels, so force empty maps.
     destinations = base.build_reaction_destinations(
-        piv5, full5, h15, asof, p, pdm, pwm, dte, entry, direction, piv15=piv15,
+        piv5, full5, h15, asof, p, {}, {}, dte, entry, direction, piv15=piv15,
     )
     return classify_first_reaction_destination(
         destinations, entry, direction, setup, p, strong_momentum,
