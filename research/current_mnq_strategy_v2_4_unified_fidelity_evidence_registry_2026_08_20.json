@@ -20,7 +20,7 @@
     "closed_world": true,
     "all_authoritative_screenshot_examples_must_be_members_of_this_corpus": false,
     "older_archive_note": "Trading screenshots (4).zip was an earlier subset/source snapshot used by older gold records. It does not expand authority beyond the locked 65-file parent corpus.",
-    "CORRECTION_2026_08_21_ALGO_004": "This flag was True while the same registry carried operator-authorized screenshots that are explicitly NOT members of the sealed 65-file archive. That is an evidence-model contradiction, not an evidence problem: the additions are legitimate and the MODEL was wrong. Repaired by declaring three disjoint tiers below. The 65-file archive keeps its sealed identity and its hash; nothing outside it may claim membership in it."
+    "CORRECTION_2026_08_21_ALGO_004": "The closed-world flag was True while the registry carried operator-authorized screenshots outside the sealed archive - an evidence-MODEL contradiction, repaired by declaring the partitions rather than by touching evidence. SUPERSEDED IN PART by ALGO-006: my first repair then over-corrected into a false three-disjoint-tier model claiming a 25-file surface. See screenshot_evidence_model.REJECTED_PRIOR_MODEL."
   },
   "hash_bound_screenshot_examples": [
     {
@@ -865,58 +865,48 @@
     "eight_ledger_screenshots": "RECONCILED - they are 8 of the 13 2026-08-21 screenshots; see the receipt's eight_ledger_screenshots block."
   },
   "screenshot_evidence_model": {
-    "authority": "ALGO-004 §4A",
-    "why": "Three kinds of screenshot evidence coexist and were being described by one flag.",
-    "tiers": {
-      "sealed_parent_archive": {
-        "archive_name": "Trading screenshots (5).zip",
-        "archive_sha256": "da25a0577a1317d3282aa40e7da9da60d36a0416319d8f452cee021a442c9f17",
-        "screenshot_count": 65,
-        "closed": true,
-        "note": "A sealed SNAPSHOT. Its membership is fixed by the archive hash and can never grow."
-      },
-      "hash_bound_examples_pre_parent": {
-        "count": 12,
-        "names": [
-          "Screenshot 2026-08-16 075020.png",
-          "Screenshot 2026-08-17 221445.png",
-          "Screenshot 2026-08-18 175702.png",
-          "Screenshot 2026-08-18 180237.png",
-          "Screenshot 2026-08-18 180244.png",
-          "Screenshot 2026-08-18 180356.png",
-          "Screenshot 2026-08-11 023933.png",
-          "Screenshot 2026-08-10 114924.png",
-          "Screenshot 2026-08-10 164520.png",
-          "Screenshot 2026-08-20 231718.png",
-          "Screenshot 2026-08-20 231723.png",
-          "Screenshot 2026-08-20 232649.png"
-        ],
-        "note": "Individually hash-bound gold examples. They are cited by hash, not by archive membership, and this registry does NOT assert they are members of the sealed archive."
-      },
-      "operator_authorized_additions_post_parent": {
-        "count": 13,
-        "names": [
-          "Screenshot 2026-08-21 005935.png",
-          "Screenshot 2026-08-21 005941.png",
-          "Screenshot 2026-08-21 010006.png",
-          "Screenshot 2026-08-21 025202.png",
-          "Screenshot 2026-08-21 025219.png",
-          "Screenshot 2026-08-21 030057.png",
-          "Screenshot 2026-08-21 030106.png",
-          "Screenshot 2026-08-21 030110.png",
-          "Screenshot 2026-08-21 030115.png",
-          "Screenshot 2026-08-21 030119.png",
-          "Screenshot 2026-08-21 030124.png",
-          "Screenshot 2026-08-21 030129.png",
-          "Screenshot 2026-08-21 030134.png"
-        ],
-        "added": "2026-08-21",
-        "note": "Post-date the sealed archive. Operator-authorized, hash-bound, and explicitly NOT members of it."
-      }
+    "authority": "ALGO-006 §4 (supersedes my ALGO-004 §4A implementation, which GPT REJECTED)",
+    "REJECTED_PRIOR_MODEL": "My first model declared three DISJOINT tiers and published computed_union_size = 25. That is FALSE and the repository refutes it. Its test proved only len(pre | post) == 25 and NEVER JOINED the twelve hash-bound names to actual parent-manifest membership. MEASURED: NINE of the twelve hash-bound examples ARE members of the sealed 65-file manifest. They are CROSS-LINKS, not a disjoint tier, and they add ZERO unique members. The true authoritative surface is 81 unique filenames, not 25. This is the same defect I have been convicted on repeatedly: asserting a relationship instead of deriving it from the artifact that owns it.",
+    "derivation": {
+      "PARENT": "visual_evidence_manifest.screenshot_corpus.filenames",
+      "HASH_BOUND": "registry.hash_bound_screenshot_examples[*].name",
+      "POST": "registry.screenshots_added_2026_08_21.files[*].name",
+      "law": "Every figure below is DERIVED from those three artifacts at test time. No count is hand-maintained and no membership is self-attested."
     },
-    "membership_law": "No item outside the sealed archive may claim membership in it. The three tiers are DISJOINT by name and by hash. Any future total screenshot count must be COMPUTED as the union and proven, never asserted.",
-    "computed_union_size": 25,
-    "tiers_are_disjoint": true
+    "authority_partitions_genuinely_disjoint": {
+      "sealed_parent_members": 65,
+      "separately_hash_bound_outside_parent": 3,
+      "post_parent_operator_authorized_additions": 13,
+      "unique_total": 81,
+      "arithmetic": "65 + 3 + 13 = 81"
+    },
+    "hash_bound_cross_links_inside_parent": {
+      "count": 9,
+      "names": [
+        "Screenshot 2026-08-16 075020.png",
+        "Screenshot 2026-08-17 221445.png",
+        "Screenshot 2026-08-18 175702.png",
+        "Screenshot 2026-08-18 180237.png",
+        "Screenshot 2026-08-18 180244.png",
+        "Screenshot 2026-08-18 180356.png",
+        "Screenshot 2026-08-20 231718.png",
+        "Screenshot 2026-08-20 231723.png",
+        "Screenshot 2026-08-20 232649.png"
+      ],
+      "note": "These are CROSS-REFERENCES into the sealed archive - individually hash-bound for citation, already members of the parent. They add zero unique members and must never be counted as a separate tier."
+    },
+    "hash_bound_outside_parent": {
+      "count": 3,
+      "names": [
+        "Screenshot 2026-08-10 114924.png",
+        "Screenshot 2026-08-10 164520.png",
+        "Screenshot 2026-08-11 023933.png"
+      ],
+      "note": "The only hash-bound examples that are genuinely outside the sealed archive."
+    },
+    "membership_law": "Nothing outside the sealed archive may claim membership in it. POST is disjoint from PARENT and from HASH_BOUND. Any total is COMPUTED as the union of the three source artifacts and proven - never asserted.",
+    "hash_disjointness_NOT_claimed": "ALGO-006 §4. Hash-level disjointness against the sealed parent is claimed ONLY where it is measurable, and it mostly is not. MEASURED: the manifest carries per-file sha256 for just 3 of the 65 parent members (screenshot_corpus.directly_verified_pair - despite the name it holds three entries: the 2026-08-20 231718 / 231723 / 232649 screenshots). The other 62 members are bound only by the archive hash da25a057..., so no per-file hash comparison against them is possible from this repository. My prior model self-attested `tiers_are_disjoint: true` covering hashes it never checked; that flag is REMOVED, not restated. Disjointness is asserted BY NAME only. An unmeasured hash relationship must never become `true` metadata.",
+    "parent_files_with_per_file_hashes": 3
   },
   "user_fidelity_gold_binding": {
     "authority": "ALGO-004 §4B",

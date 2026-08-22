@@ -27,32 +27,101 @@ def reg():
     return json.load(io.open(REGISTRY, encoding="utf-8"))
 
 
-def test_the_three_screenshot_tiers_are_disjoint_and_the_union_is_computed(reg):
-    """The membership law: nothing outside the sealed archive may claim to be in it, and any
-    total is COMPUTED from the tiers, never asserted."""
-    m = reg["screenshot_evidence_model"]
-    t = m["tiers"]
-    sealed = t["sealed_parent_archive"]
-    pre = set(t["hash_bound_examples_pre_parent"]["names"])
-    post = set(t["operator_authorized_additions_post_parent"]["names"])
+MANIFEST = "research/current_mnq_strategy_v2_4_visual_evidence_manifest_2026_08_20.json"
 
-    assert sealed["closed"] is True
-    assert len(sealed["archive_sha256"]) == 64
-    # The tier block MIRRORS visual_parent_corpus. A red-proof arm that shrank the parent's
-    # count passed, because the tier held an independent copy that did not move. Two copies
-    # of one fact drift; join them instead of asserting each.
-    vp = reg["visual_parent_corpus"]
-    assert sealed["screenshot_count"] == vp["screenshot_count"] == 65, (
-        "the sealed-archive count in the tier model and in visual_parent_corpus disagree - "
-        "one of them was edited alone"
+
+def _sets(reg):
+    """DERIVE the three sets from the artifacts that own them. Never from stored counts.
+
+    My rejected model stored its own tier lists and counts, so the test proved only that its
+    own copies agreed with each other. It never joined the hash-bound names to the sealed
+    manifest, and therefore missed that NINE of the twelve are already parent members."""
+    man = json.load(io.open(MANIFEST, encoding="utf-8"))
+    parent = set(man["screenshot_corpus"]["filenames"])
+    hash_bound = {s["name"] for s in reg["hash_bound_screenshot_examples"]}
+    post = {f["name"] for f in reg["screenshots_added_2026_08_21"]["files"]}
+    return parent, hash_bound, post
+
+
+def test_screenshot_membership_is_derived_from_the_sealed_manifest(reg):
+    """ALGO-006 §4. The census, joined to the artifact that owns each fact."""
+    parent, hash_bound, post = _sets(reg)
+    m = reg["screenshot_evidence_model"]
+
+    assert len(parent) == 65, f"sealed parent manifest holds {len(parent)}, expected 65"
+    assert len(hash_bound) == 12
+    assert len(post) == 13
+
+    inside, outside = hash_bound & parent, hash_bound - parent
+    assert len(inside) == 9, (
+        f"{len(inside)} hash-bound examples are parent members; the rejected model treated "
+        f"all twelve as a disjoint tier"
     )
-    assert sealed["archive_sha256"] == vp["archive_sha256"]
-    assert sealed["archive_name"] == vp["archive_name"]
-    assert not (pre & post), f"tiers overlap: {sorted(pre & post)}"
-    assert m["tiers_are_disjoint"] is True
-    assert m["computed_union_size"] == len(pre | post), "the union must be computed, not asserted"
-    assert t["hash_bound_examples_pre_parent"]["count"] == len(pre)
-    assert t["operator_authorized_additions_post_parent"]["count"] == len(post)
+    assert len(outside) == 3
+    assert outside == {
+        "Screenshot 2026-08-10 114924.png",
+        "Screenshot 2026-08-10 164520.png",
+        "Screenshot 2026-08-11 023933.png",
+    }
+
+    # POST must be genuinely outside both.
+    assert not (post & parent), "a 2026-08-21 addition claims sealed-archive membership"
+    assert not (post & hash_bound)
+
+    # The union is COMPUTED, and the stored figure must equal it.
+    union = parent | hash_bound | post
+    assert len(union) == 81, f"authoritative surface is {len(union)}, expected 81"
+    p = m["authority_partitions_genuinely_disjoint"]
+    assert p["unique_total"] == len(union), "stored total drifted from the computed union"
+    assert p["sealed_parent_members"] == len(parent)
+    assert p["separately_hash_bound_outside_parent"] == len(outside)
+    assert p["post_parent_operator_authorized_additions"] == len(post)
+    # The three genuine partitions must actually partition the union.
+    assert len(parent) + len(outside) + len(post) == len(union)
+
+    # And the recorded cross-link/outside name lists must match what we just derived.
+    assert set(m["hash_bound_cross_links_inside_parent"]["names"]) == inside
+    assert set(m["hash_bound_outside_parent"]["names"]) == outside
+
+
+def test_the_rejected_25_file_model_stays_on_record(reg):
+    """A rejected model that is quietly deleted teaches nobody."""
+    m = reg["screenshot_evidence_model"]
+    r = m["REJECTED_PRIOR_MODEL"]
+    assert "25" in r and "FALSE" in r
+    assert "NEVER JOINED" in r
+    assert "81" in r
+
+
+def test_hash_disjointness_is_not_claimed_where_it_cannot_be_measured(reg):
+    """The sealed manifest carries no per-file hashes, so a hash-level disjointness claim
+    against it is unmeasurable. My prior model self-attested exactly that."""
+    m = reg["screenshot_evidence_model"]
+    assert "hash_disjointness_NOT_claimed" in m
+    claim = m["hash_disjointness_NOT_claimed"]
+    # Assert the PROPERTY, not one phrasing of it - an earlier version of this test pinned a
+    # literal that a more precise rewrite legitimately removed.
+    assert "REMOVED, not restated" in claim
+    assert "BY NAME only" in claim
+    assert "never become `true` metadata" in claim
+    assert "tiers_are_disjoint" not in m, (
+        "the self-attested disjointness flag must be removed, not restated"
+    )
+    # PRECISE, because my first assertion here was too broad and went red: the manifest DOES
+    # carry per-file hashes - for three of the sixty-five. The other 62 are bound only by the
+    # archive hash, so a hash comparison across the parent remains unmeasurable.
+    man = json.load(io.open(MANIFEST, encoding="utf-8"))
+    corpus = man["screenshot_corpus"]
+    hashed = [x for x in corpus["directly_verified_pair"] if "sha256" in x]
+    assert len(hashed) == m["parent_files_with_per_file_hashes"] == 3, (
+        "the number of parent members carrying a per-file hash changed - re-derive what is "
+        "measurable before claiming any hash relationship"
+    )
+    assert len(hashed) < len(corpus["filenames"]), (
+        "if every parent member gains a hash, a real hash-disjointness claim becomes "
+        "measurable and this exemption must be revisited"
+    )
+    assert "3 of the 65" in m["hash_disjointness_NOT_claimed"]
 
 
 def test_the_contradicted_closed_world_flag_is_repaired_and_the_repair_is_explained(reg):
