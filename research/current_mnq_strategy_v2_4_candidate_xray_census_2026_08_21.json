@@ -358,5 +358,79 @@
       "mismatch_class": "AGREE",
       "seconds": 28.93
     }
-  ]
+  ],
+  "zero_missed_verification": {
+    "question": "Is MISSED_TRADER_ENTRY = 0 real, or an artifact of the regrade reporting only the FIRST decision through window end? If the bot fired early and that early entry was what got reported, a later candidate matching the trader would be invisible and the zero would be a reporting property, not a kernel property.",
+    "method": "The X-ray sees every candidate, not just the ranked winner. For each of the 7 trader-entry cases, count surviving candidates in the TRADER'S OWN DIRECTION within +/-10 minutes of the TRADER'S OWN decision clock.",
+    "verdict": "SUPPORTED - not a reporting artifact.",
+    "finding": "All 7 trader entries have at least one same-direction surviving candidate within 10 minutes of the trader's clock (range 1-4). Zero cases had none. The kernel genuinely finds every trade the trader took.",
+    "what_it_sharpens": "It also finds 9 to 26 OTHER same-direction survivors in the same session. So zero-missed is not competence, it is a consequence of the 45:1 permission ratio - with that many candidates the kernel can hardly miss anything, and can hardly avoid firing early.",
+    "decisive_for_the_two_opposite_cases": "On 2026-03-23 and 2026-04-09 - the two EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET cases - the kernel HAD 3 and 2 same-direction survivors near the trader's clock respectively. It did not misread the direction; it fired an opposite-direction candidate EARLIER and spent the bullet before reaching them. That is direct evidence for the bullet-consumption classification over direction inversion, and it was measured rather than argued.",
+    "rows": [
+      {
+        "session": "2026-03-23",
+        "trader": "ENTER_SHORT",
+        "mismatch": "EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET",
+        "survivors_total": 38,
+        "survivors_same_direction": 21,
+        "survivors_within_10min_of_trader": 3,
+        "survivors_at_exact_trader_clock": 0
+      },
+      {
+        "session": "2026-03-24",
+        "trader": "ENTER_LONG",
+        "mismatch": "AGREE",
+        "survivors_total": 28,
+        "survivors_same_direction": 15,
+        "survivors_within_10min_of_trader": 1,
+        "survivors_at_exact_trader_clock": 1
+      },
+      {
+        "session": "2026-03-30",
+        "trader": "ENTER_SHORT",
+        "mismatch": "AGREE",
+        "survivors_total": 13,
+        "survivors_same_direction": 9,
+        "survivors_within_10min_of_trader": 4,
+        "survivors_at_exact_trader_clock": 0
+      },
+      {
+        "session": "2026-03-31",
+        "trader": "ENTER_LONG",
+        "mismatch": "AGREE",
+        "survivors_total": 36,
+        "survivors_same_direction": 26,
+        "survivors_within_10min_of_trader": 3,
+        "survivors_at_exact_trader_clock": 1
+      },
+      {
+        "session": "2026-04-06",
+        "trader": "ENTER_SHORT",
+        "mismatch": "AGREE",
+        "survivors_total": 14,
+        "survivors_same_direction": 12,
+        "survivors_within_10min_of_trader": 1,
+        "survivors_at_exact_trader_clock": 1
+      },
+      {
+        "session": "2026-04-09",
+        "trader": "ENTER_LONG",
+        "mismatch": "EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET",
+        "survivors_total": 32,
+        "survivors_same_direction": 17,
+        "survivors_within_10min_of_trader": 2,
+        "survivors_at_exact_trader_clock": 0
+      },
+      {
+        "session": "2026-04-14",
+        "trader": "ENTER_LONG",
+        "mismatch": "AGREE",
+        "survivors_total": 16,
+        "survivors_same_direction": 16,
+        "survivors_within_10min_of_trader": 1,
+        "survivors_at_exact_trader_clock": 0
+      }
+    ],
+    "runner": "research/verify_zero_missed_trader_entries.py"
+  }
 }
