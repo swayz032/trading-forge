@@ -44,7 +44,15 @@
       "17": 27,
       "20": 3
     },
-    "note": "42 rows sit at the frozen 15 contracts; 25 at 17; 2 at 20. The ledger spans more than one sizing regime, so no per-trade dollar figure here may be normalised to 15."
+    "note": "44 rows sit at the frozen 15 contracts, 27 at 17, 3 at 20 - that is the FULL 74-row census. The 42/25/2 figures quoted elsewhere are the NON-DEGENERATE RECONCILIATION SUBSET (69 rows), i.e. the same distribution minus the 5 rows whose close equals their entry. 44+27+3 = 74 and 42+25+2 = 69. These are two scopes of one distribution, NOT an internal contradiction - clarified per ALGO-004 §2 so no later reader reads it as one.",
+    "counts_scope": "FULL LEDGER CENSUS - all 74 rows, including the 5 degenerate rows where close == entry and no multiplier can be solved.",
+    "non_degenerate_subset": {
+      "15": 42,
+      "17": 25,
+      "20": 2,
+      "total": 69
+    },
+    "full_census_total": 74
   },
   "exit_families": {
     "target_side_exit": 61,
@@ -100,7 +108,9 @@
         "rPnL": -517.5
       }
     ],
-    "relayed_claim_was_7": "The relayed figure was 7. MEASURED: 4. The relayed claim is REFUTED on count, but its substance - that exact 17.25-point stops exist in this ledger - is CONFIRMED. My earlier 'UNSUPPORTED' was the worse error of the two."
+    "relayed_claim_was_7": "The relayed figure was 7. MEASURED: 4. The relayed claim is REFUTED on count, but its substance - that exact 17.25-point stops exist in this ledger - is CONFIRMED. My earlier 'UNSUPPORTED' was the worse error of the two.",
+    "what_this_does_and_does_not_prove": "ALGO-004 §2: because the platform's Initial SL field is N/A on every row, this ledger does NOT prove the exchange or order-type mechanics of these exits. Call them EXACT FROZEN-STOP-DISTANCE REALIZED LOSSES, not 'stop orders', unless another source proves the order type.",
+    "naming": "exact_frozen_stop_distance_realized_losses"
   },
   "relayed_claims_tested": {
     "62_target_side_exits": {
@@ -186,6 +196,12 @@
       "meaning": "amount 30 = $30/point = 15 contracts at $2. The screenshots independently confirm the dollars-per-point reading of `amount` that I had to solve for.",
       "the_17_and_20_contract_rows": "Those sit EARLIER than 2025/05/13 and are outside the eight screenshot pages, so they are not contradicted by them."
     },
-    "initial_SL_is_N_A_on_the_screenshots_too": "The screenshots show 'N/A' in the Initial SL column, independently corroborating that the stop price was never recorded by the platform - and therefore that deriving the stop from the money was the only available route."
+    "initial_SL_is_N_A_on_the_screenshots_too": "The screenshots show 'N/A' in the Initial SL column, independently corroborating that the stop price was never recorded by the platform - and therefore that deriving the stop from the money was the only available route.",
+    "reconciliation_strength": {
+      "current": "SAMPLED",
+      "spot_checks_performed": 3,
+      "downgrade_reason": "ALGO-004 §3: the prose said the pages are fully reconciled and 'agreeing to the cent' while the regression only required >=3 spot checks. Until a matched-row census with a mismatch count exists, this is SAMPLED reconciliation and is described as such. It is sufficient for the custody conclusion that the pages belong to the same ledger family; it is NOT yet load-bearing TP/exit fidelity evidence.",
+      "required_before_load_bearing": "matched-row census + explicit mismatch count"
+    }
   }
 }

@@ -18,8 +18,9 @@
     "archive_sha256": "da25a0577a1317d3282aa40e7da9da60d36a0416319d8f452cee021a442c9f17",
     "screenshot_count": 65,
     "closed_world": true,
-    "all_authoritative_screenshot_examples_must_be_members_of_this_corpus": true,
-    "older_archive_note": "Trading screenshots (4).zip was an earlier subset/source snapshot used by older gold records. It does not expand authority beyond the locked 65-file parent corpus."
+    "all_authoritative_screenshot_examples_must_be_members_of_this_corpus": false,
+    "older_archive_note": "Trading screenshots (4).zip was an earlier subset/source snapshot used by older gold records. It does not expand authority beyond the locked 65-file parent corpus.",
+    "CORRECTION_2026_08_21_ALGO_004": "This flag was True while the same registry carried operator-authorized screenshots that are explicitly NOT members of the sealed 65-file archive. That is an evidence-model contradiction, not an evidence problem: the additions are legitimate and the MODEL was wrong. Repaired by declaring three disjoint tiers below. The 65-file archive keeps its sealed identity and its hash; nothing outside it may claim membership in it."
   },
   "hash_bound_screenshot_examples": [
     {
@@ -862,5 +863,68 @@
       "7_exact_17_25_point_stops": "count refuted (4, not 7) but SUBSTANCE CONFIRMED; my earlier 'UNSUPPORTED' verdict is RETRACTED."
     },
     "eight_ledger_screenshots": "RECONCILED - they are 8 of the 13 2026-08-21 screenshots; see the receipt's eight_ledger_screenshots block."
+  },
+  "screenshot_evidence_model": {
+    "authority": "ALGO-004 §4A",
+    "why": "Three kinds of screenshot evidence coexist and were being described by one flag.",
+    "tiers": {
+      "sealed_parent_archive": {
+        "archive_name": "Trading screenshots (5).zip",
+        "archive_sha256": "da25a0577a1317d3282aa40e7da9da60d36a0416319d8f452cee021a442c9f17",
+        "screenshot_count": 65,
+        "closed": true,
+        "note": "A sealed SNAPSHOT. Its membership is fixed by the archive hash and can never grow."
+      },
+      "hash_bound_examples_pre_parent": {
+        "count": 12,
+        "names": [
+          "Screenshot 2026-08-16 075020.png",
+          "Screenshot 2026-08-17 221445.png",
+          "Screenshot 2026-08-18 175702.png",
+          "Screenshot 2026-08-18 180237.png",
+          "Screenshot 2026-08-18 180244.png",
+          "Screenshot 2026-08-18 180356.png",
+          "Screenshot 2026-08-11 023933.png",
+          "Screenshot 2026-08-10 114924.png",
+          "Screenshot 2026-08-10 164520.png",
+          "Screenshot 2026-08-20 231718.png",
+          "Screenshot 2026-08-20 231723.png",
+          "Screenshot 2026-08-20 232649.png"
+        ],
+        "note": "Individually hash-bound gold examples. They are cited by hash, not by archive membership, and this registry does NOT assert they are members of the sealed archive."
+      },
+      "operator_authorized_additions_post_parent": {
+        "count": 13,
+        "names": [
+          "Screenshot 2026-08-21 005935.png",
+          "Screenshot 2026-08-21 005941.png",
+          "Screenshot 2026-08-21 010006.png",
+          "Screenshot 2026-08-21 025202.png",
+          "Screenshot 2026-08-21 025219.png",
+          "Screenshot 2026-08-21 030057.png",
+          "Screenshot 2026-08-21 030106.png",
+          "Screenshot 2026-08-21 030110.png",
+          "Screenshot 2026-08-21 030115.png",
+          "Screenshot 2026-08-21 030119.png",
+          "Screenshot 2026-08-21 030124.png",
+          "Screenshot 2026-08-21 030129.png",
+          "Screenshot 2026-08-21 030134.png"
+        ],
+        "added": "2026-08-21",
+        "note": "Post-date the sealed archive. Operator-authorized, hash-bound, and explicitly NOT members of it."
+      }
+    },
+    "membership_law": "No item outside the sealed archive may claim membership in it. The three tiers are DISJOINT by name and by hash. Any future total screenshot count must be COMPUTED as the union and proven, never asserted.",
+    "computed_union_size": 25,
+    "tiers_are_disjoint": true
+  },
+  "user_fidelity_gold_binding": {
+    "authority": "ALGO-004 §4B",
+    "file": "research/current_mnq_strategy_v2_4_user_fidelity_gold.json",
+    "declared_status": "IMMUTABLE_HASHED_V24_USER_FIDELITY_SET_V3_FORCE1",
+    "sha256": "00c4c140c278883355a3ef578c3d7c21115f4007caf60058da29b6f17bcd2240",
+    "defect_closed": "The gold file is marked IMMUTABLE and carries direct trader rules plus hash-bound fixtures, but was NOT listed in build_contract.contract_files. A load-bearing fidelity file could therefore change without changing the enumerated build identity.",
+    "now_fingerprinted": true,
+    "registry_binds_it": "This registry claims to unify all fidelity evidence, so it now points at the gold file explicitly rather than leaving it unreferenced."
   }
 }

@@ -18,7 +18,8 @@
     "research/current_mnq_strategy_v2_4_build_contract.json",
     "research/gen_video_corpus_receipt.py",
     "research/current_mnq_strategy_v2_4_video_corpus_custody_receipt_2026_08_21.md",
-    "research/current_mnq_strategy_v2_4_trade_ledger_reconciliation_2026_08_21.json"
+    "research/current_mnq_strategy_v2_4_trade_ledger_reconciliation_2026_08_21.json",
+    "research/current_mnq_strategy_v2_4_user_fidelity_gold.json"
   ],
   "strategy_and_edge_source_files": [
     "research/current_mnq_strategy_v1_fast.py",
