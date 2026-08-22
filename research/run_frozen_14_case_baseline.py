@@ -27,11 +27,19 @@ F-4 RIGHT-CENSORED TRADER LABELS. Six of fourteen labels carry
     still watching. The previous version read WAIT as a decline, which is what produced the
     "trigger-happy" conclusion. Censored cases are now segregated and cannot convict the bot.
 
-F-5 A BULLET MECHANISM THAT DOES NOT EXIST. There is no one-trade-per-session rule anywhere in
-    the import closure, and the bot took BOTH directions in 6 of 14 sessions. The
-    "consumed bullet" class is removed rather than renamed.
+F-5 THE BULLET CLASS WAS WRONG, BUT SO WAS MY RETRACTION OF IT. I first classified two cases
+    as EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET, then claimed the mechanism did not exist at
+    all. ALGO-011 §2 refuted the second claim and I reproduced it: the one-trade rule IS
+    real, enforced three separate implicit ways - a `return` inside the candidate loop in
+    `_analysis_run_day`, first-actionable-only in the signal path, and an explicit
+    DAILY_BULLET_ALREADY_RESOLVED guard in the shadow runtime. A rule implemented as control
+    flow has no name to grep for. The defect is that the invariant is DISTRIBUTED, not
+    absent; see `current_mnq_strategy_v2_4_session_budget.py`. The class is still removed
+    here, because on the WINDOW join those two cases are not what it described.
 
-F-7 FORCE RECEIPT NAMING THE WRONG FUNCTION. See FORCE_RECEIPT below.
+F-7 FORCE RECEIPT NAMING THE WRONG FUNCTION. CLOSED: the scorecard now carries the actual
+    `force_snapshot` recomputed at the candidate's own decision clock, and the regrade raises
+    FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever returns unconfirmed.
 
 HARD RAILS, enforced here rather than asserted:
   * No realized PnL, winner/loser, exit outcome or later-session data enters any comparison.
@@ -64,16 +72,6 @@ OUT = Path("research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_
 
 CENSOR_WARNING = "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
 ENTERED = {"ENTER_LONG", "ENTER_SHORT"}
-
-FORCE_RECEIPT = (
-    "NOT_EMITTED. ALGO-008 F-7 refuted the previous justification, which claimed force was "
-    "implied because the entry passed `one_minute_entry` - a v2.2 FILL-PRICE helper with zero "
-    "force logic. The conclusion survives by a different route (`iter_actionable_candidates` "
-    "has exactly one yield and every branch reaching it force-gates first), but an "
-    "implication-by-existence receipt CANNOT GO RED and must be replaced by the actual "
-    "force.confirmed snapshot before any semantic repair."
-)
-
 
 def _bot_window_state(row: dict) -> str:
     """The bot's decision INSIDE the audited window. It is now allowed to decline."""
@@ -179,7 +177,15 @@ def main() -> None:
             },
             "entry_family_receipt": iw.get("bot_setup"),
             "story_receipt": iw.get("bot_reason"),
-            "force_receipt": FORCE_RECEIPT,
+            "force_receipt": iw.get("force_receipt"),
+            "force_receipt_note": (
+                "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was "
+                "implied because the entry passed `one_minute_entry` - a v2.2 fill-price "
+                "helper with zero force logic (ALGO-008 F-7). This is now the actual "
+                "force_snapshot recomputed at the candidate's own decision clock with the "
+                "same pure function the kernel gated on, and the regrade raises "
+                "FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed."
+            ),
             "trader_entry_force": lab.get("entry_force"),
             "trader_final_timeline_force": (tl[-1].get("force") if tl else None),
             "first_tp": {

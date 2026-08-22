@@ -18,6 +18,7 @@ from pathlib import Path
 import pandas as pd
 
 from research import current_mnq_strategy_v2_4_engine as eng
+from research.current_mnq_strategy_v2_4_force import force_snapshot
 from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates
 from research.current_mnq_strategy_v2_4_target_policy import build_and_classify
 
@@ -42,8 +43,39 @@ def _full_entry_decisions_through(env: dict, dte: date, end: pd.Timestamp, p: en
         )
         if picked is None:
             continue
+        # ---- F-7 REPAIR: the ACTUAL force proof, not an implication ---------------------
+        # Recomputed with the same pure function the kernel gated on, at this candidate's own
+        # decision clock. A receipt that cannot go red is not a receipt: falsify
+        # force.confirmed and this block changes.
+        fs = force_snapshot(env["one"], cand.signal_time, 5, cand.direction,
+                            cand.confirmed_time, p)
+        force_receipt = {
+            "confirmed": bool(fs.confirmed),
+            "decision_clock": (fs.decision_time.isoformat() if fs.decision_time is not None
+                               else None),
+            "parent_start": fs.parent_start.isoformat(),
+            "completed_1m_observations": int(fs.completed_1m),
+            "directional_progress": float(fs.directional_progress),
+            "path_distance": float(fs.path_distance),
+            "path_efficiency": float(fs.path_efficiency),
+            "latest_close_at_directional_extreme": bool(fs.latest_close_at_directional_extreme),
+            "partial_momentum_geometry": bool(fs.partial_momentum_geometry),
+            "reason": str(fs.reason),
+            "source": "research.current_mnq_strategy_v2_4_force.force_snapshot, recomputed at "
+                      "the candidate's own (signal_time, confirmed_time, direction) - the "
+                      "same pure call the kernel gated on.",
+        }
+        if not fs.confirmed:
+            # The kernel force-gates before yielding, so an unconfirmed snapshot here means
+            # the recomputation has diverged from the gate. Fail loudly rather than publish
+            # a receipt that disagrees with the decision it describes.
+            raise RuntimeError(
+                f"FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE at {cand.confirmed_time}: "
+                f"{fs.reason}")
+
         yield {
             "bot_action": "ENTER_LONG" if cand.direction == "L" else "ENTER_SHORT",
+            "force_receipt": force_receipt,
             "bot_entry_time": entry_time.isoformat(),
             "bot_setup": str(cand.setup),
             "bot_reason": str(cand.reason),
@@ -119,6 +151,7 @@ def regrade_frozen_case_windows(env: dict, p: eng.Params | None = None,
                 "bot_target_raw": w["bot_target_raw"],
                 "bot_target_executable": w["bot_target_executable"],
                 "bot_path_reason": w["bot_path_reason"],
+                "force_receipt": w.get("force_receipt"),
             }
             row["in_window_actions"] = [d["bot_action"] for d in in_window]
         else:
