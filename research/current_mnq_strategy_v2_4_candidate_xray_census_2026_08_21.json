@@ -1,0 +1,362 @@
+{
+  "artifact": "CANDIDATE_XRAY_CENSUS_14_SESSIONS",
+  "authority": "ALGO-009 §4",
+  "status": "DIAGNOSTIC_ONLY_NO_PRODUCTION_BEHAVIOUR",
+  "produced": "2026-08-21",
+  "scorecard_sha256": "61a1c62c1575cb597f4fe6d3de4738dcac79c66565603f575dfab2f4559bad15",
+  "legal_routes": [
+    "A_NORMAL_REJECTION",
+    "B_NORMAL_BREAKOUT",
+    "C_PREBREAK_DISPLACEMENT",
+    "D_PREBREAK_RETEST_BREAKOUT"
+  ],
+  "pnl_used": false,
+  "totals": {
+    "sessions": 14,
+    "candidate_evaluations": 69791,
+    "runtime_seconds": 343.71
+  },
+  "comparison": {
+    "agree_sessions": {
+      "count": 5,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 5692,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 44,
+        "NO_AUTHORIZED_LOCATION_ON_THIS_SIDE": 19,
+        "NO_LEGAL_ROUTE_MATCHED": 9459,
+        "REJECTION_STORY_INCOMPLETE": 13209,
+        "STRUCTURAL_PRIOR_VETO": 16,
+        "SURVIVED_TO_RANKING": 107
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 94,
+        "B_NORMAL_BREAKOUT": 3,
+        "C_PREBREAK_DISPLACEMENT": 2,
+        "D_PREBREAK_RETEST_BREAKOUT": 8
+      }
+    },
+    "false_positive_sessions": {
+      "count": 9,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 10398,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 160,
+        "NO_LEGAL_ROUTE_MATCHED": 14345,
+        "REJECTION_STORY_INCOMPLETE": 16064,
+        "STRUCTURAL_PRIOR_VETO": 70,
+        "SURVIVED_TO_RANKING": 208
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 184,
+        "B_NORMAL_BREAKOUT": 8,
+        "D_PREBREAK_RETEST_BREAKOUT": 16
+      }
+    }
+  },
+  "sessions": [
+    {
+      "session": "2026-03-23",
+      "total_candidate_evaluations": 4307,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1148,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 15,
+        "NO_LEGAL_ROUTE_MATCHED": 1659,
+        "REJECTION_STORY_INCOMPLETE": 1431,
+        "STRUCTURAL_PRIOR_VETO": 16,
+        "SURVIVED_TO_RANKING": 38
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 33,
+        "B_NORMAL_BREAKOUT": 3,
+        "D_PREBREAK_RETEST_BREAKOUT": 2
+      },
+      "premarket_primary": "BULL",
+      "authorized_locations": 55,
+      "trader_state": "ENTER_SHORT",
+      "bot_state": "ENTER_LONG",
+      "mismatch_class": "EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET",
+      "seconds": 22.96
+    },
+    {
+      "session": "2026-03-24",
+      "total_candidate_evaluations": 4331,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1150,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 7,
+        "NO_LEGAL_ROUTE_MATCHED": 1494,
+        "REJECTION_STORY_INCOMPLETE": 1646,
+        "STRUCTURAL_PRIOR_VETO": 6,
+        "SURVIVED_TO_RANKING": 28
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 23,
+        "B_NORMAL_BREAKOUT": 2,
+        "D_PREBREAK_RETEST_BREAKOUT": 3
+      },
+      "premarket_primary": "BEAR",
+      "authorized_locations": 53,
+      "trader_state": "ENTER_LONG",
+      "bot_state": "ENTER_LONG",
+      "mismatch_class": "AGREE",
+      "seconds": 21.25
+    },
+    {
+      "session": "2026-03-25",
+      "total_candidate_evaluations": 3905,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1156,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 20,
+        "NO_LEGAL_ROUTE_MATCHED": 1275,
+        "REJECTION_STORY_INCOMPLETE": 1424,
+        "SURVIVED_TO_RANKING": 30
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 30
+      },
+      "premarket_primary": "NEUTRAL",
+      "authorized_locations": 50,
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_LONG",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW",
+      "seconds": 20.42
+    },
+    {
+      "session": "2026-03-26",
+      "total_candidate_evaluations": 4895,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1140,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 5,
+        "NO_LEGAL_ROUTE_MATCHED": 1089,
+        "REJECTION_STORY_INCOMPLETE": 2647,
+        "STRUCTURAL_PRIOR_VETO": 2,
+        "SURVIVED_TO_RANKING": 12
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 12
+      },
+      "premarket_primary": "BEAR",
+      "authorized_locations": 54,
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_LONG",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW",
+      "seconds": 23.6
+    },
+    {
+      "session": "2026-03-30",
+      "total_candidate_evaluations": 6258,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1130,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 2,
+        "NO_LEGAL_ROUTE_MATCHED": 2078,
+        "REJECTION_STORY_INCOMPLETE": 3029,
+        "STRUCTURAL_PRIOR_VETO": 6,
+        "SURVIVED_TO_RANKING": 13
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 11,
+        "D_PREBREAK_RETEST_BREAKOUT": 2
+      },
+      "premarket_primary": "BULL",
+      "authorized_locations": 64,
+      "trader_state": "ENTER_SHORT",
+      "bot_state": "ENTER_SHORT",
+      "mismatch_class": "AGREE",
+      "seconds": 25.62
+    },
+    {
+      "session": "2026-03-31",
+      "total_candidate_evaluations": 6996,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1114,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 22,
+        "NO_LEGAL_ROUTE_MATCHED": 3197,
+        "REJECTION_STORY_INCOMPLETE": 2627,
+        "SURVIVED_TO_RANKING": 36
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 33,
+        "D_PREBREAK_RETEST_BREAKOUT": 3
+      },
+      "premarket_primary": "NEUTRAL",
+      "authorized_locations": 68,
+      "trader_state": "ENTER_LONG",
+      "bot_state": "ENTER_LONG",
+      "mismatch_class": "AGREE",
+      "seconds": 28.26
+    },
+    {
+      "session": "2026-04-01",
+      "total_candidate_evaluations": 4016,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1182,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 13,
+        "NO_LEGAL_ROUTE_MATCHED": 1369,
+        "REJECTION_STORY_INCOMPLETE": 1433,
+        "SURVIVED_TO_RANKING": 19
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 13,
+        "B_NORMAL_BREAKOUT": 4,
+        "D_PREBREAK_RETEST_BREAKOUT": 2
+      },
+      "premarket_primary": "NEUTRAL",
+      "authorized_locations": 69,
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_SHORT",
+      "mismatch_class": "BOT_ONLY_ENTRY_IN_WINDOW",
+      "seconds": 24.96
+    },
+    {
+      "session": "2026-04-02",
+      "total_candidate_evaluations": 5272,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1144,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 13,
+        "NO_LEGAL_ROUTE_MATCHED": 2158,
+        "REJECTION_STORY_INCOMPLETE": 1926,
+        "STRUCTURAL_PRIOR_VETO": 11,
+        "SURVIVED_TO_RANKING": 20
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 14,
+        "D_PREBREAK_RETEST_BREAKOUT": 6
+      },
+      "premarket_primary": "BEAR",
+      "authorized_locations": 66,
+      "trader_state": "NO_TRADE",
+      "bot_state": "ENTER_SHORT",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW",
+      "seconds": 26.12
+    },
+    {
+      "session": "2026-04-06",
+      "total_candidate_evaluations": 3329,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1196,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 10,
+        "NO_LEGAL_ROUTE_MATCHED": 1006,
+        "REJECTION_STORY_INCOMPLETE": 1101,
+        "STRUCTURAL_PRIOR_VETO": 2,
+        "SURVIVED_TO_RANKING": 14
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 14
+      },
+      "premarket_primary": "BEAR",
+      "authorized_locations": 67,
+      "trader_state": "ENTER_SHORT",
+      "bot_state": "ENTER_SHORT",
+      "mismatch_class": "AGREE",
+      "seconds": 24.21
+    },
+    {
+      "session": "2026-04-07",
+      "total_candidate_evaluations": 4313,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1172,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 49,
+        "NO_LEGAL_ROUTE_MATCHED": 1499,
+        "REJECTION_STORY_INCOMPLETE": 1573,
+        "SURVIVED_TO_RANKING": 20
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 20
+      },
+      "premarket_primary": "NEUTRAL",
+      "authorized_locations": 69,
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_SHORT",
+      "mismatch_class": "BOT_ONLY_ENTRY_IN_WINDOW",
+      "seconds": 26.79
+    },
+    {
+      "session": "2026-04-08",
+      "total_candidate_evaluations": 4090,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1168,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 6,
+        "NO_LEGAL_ROUTE_MATCHED": 1321,
+        "REJECTION_STORY_INCOMPLETE": 1556,
+        "STRUCTURAL_PRIOR_VETO": 15,
+        "SURVIVED_TO_RANKING": 24
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 19,
+        "D_PREBREAK_RETEST_BREAKOUT": 5
+      },
+      "premarket_primary": "BULL",
+      "authorized_locations": 56,
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_LONG",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW",
+      "seconds": 20.33
+    },
+    {
+      "session": "2026-04-09",
+      "total_candidate_evaluations": 5735,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1128,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 34,
+        "NO_LEGAL_ROUTE_MATCHED": 2220,
+        "REJECTION_STORY_INCOMPLETE": 2300,
+        "STRUCTURAL_PRIOR_VETO": 21,
+        "SURVIVED_TO_RANKING": 32
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 31,
+        "B_NORMAL_BREAKOUT": 1
+      },
+      "premarket_primary": "BULL",
+      "authorized_locations": 62,
+      "trader_state": "ENTER_LONG",
+      "bot_state": "ENTER_SHORT",
+      "mismatch_class": "EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET",
+      "seconds": 25.98
+    },
+    {
+      "session": "2026-04-13",
+      "total_candidate_evaluations": 4712,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1160,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 5,
+        "NO_LEGAL_ROUTE_MATCHED": 1755,
+        "REJECTION_STORY_INCOMPLETE": 1774,
+        "STRUCTURAL_PRIOR_VETO": 5,
+        "SURVIVED_TO_RANKING": 13
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 12,
+        "D_PREBREAK_RETEST_BREAKOUT": 1
+      },
+      "premarket_primary": "BULL",
+      "authorized_locations": 63,
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_SHORT",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW",
+      "seconds": 22.44
+    },
+    {
+      "session": "2026-04-14",
+      "total_candidate_evaluations": 7632,
+      "earliest_gate_census": {
+        "FORCE_NOT_CONFIRMED": 1102,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 3,
+        "NO_AUTHORIZED_LOCATION_ON_THIS_SIDE": 19,
+        "NO_LEGAL_ROUTE_MATCHED": 1684,
+        "REJECTION_STORY_INCOMPLETE": 4806,
+        "STRUCTURAL_PRIOR_VETO": 2,
+        "SURVIVED_TO_RANKING": 16
+      },
+      "surviving_by_route": {
+        "A_NORMAL_REJECTION": 13,
+        "B_NORMAL_BREAKOUT": 1,
+        "C_PREBREAK_DISPLACEMENT": 2
+      },
+      "premarket_primary": "BULL",
+      "authorized_locations": 69,
+      "trader_state": "ENTER_LONG",
+      "bot_state": "ENTER_LONG",
+      "mismatch_class": "AGREE",
+      "seconds": 28.93
+    }
+  ]
+}
