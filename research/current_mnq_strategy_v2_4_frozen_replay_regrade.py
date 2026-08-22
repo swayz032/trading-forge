@@ -72,6 +72,11 @@ def regrade_frozen_case_windows(env: dict, p: eng.Params | None = None,
                 "case_id": case["case_id"], "session": case["session"],
                 "window_status": "NO_FULL_ENTRY_THROUGH_REPLAY_END",
                 "bot_action": "NO_TRADE_THROUGH_WINDOW", "bot_entry_time": None,
+                "decision_count_through_end": 0,
+                "decision_count_in_window": 0,
+                "decisions_discarded_by_first_only": 0,
+                "in_window": None,
+                "in_window_actions": [],
             })
             continue
 
@@ -81,10 +86,45 @@ def regrade_frozen_case_windows(env: dict, p: eng.Params | None = None,
             status = "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW"
         else:
             status = "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW"
-        rows.append({
+
+        # ---- F-1 REPAIR (ALGO-008 grade, band 5 REFUTED) --------------------------------
+        # `_full_entry_decisions_through` filters `entry_time > end` and NEVER
+        # `entry_time < start`. The window filter is asymmetric, so `decisions[0]` is the
+        # first A+ of the SESSION, not of the WINDOW. Seven of fourteen published bot
+        # decisions happened before the audited window opened, by up to 103 minutes, while
+        # the artifact's own status string said SAME_WINDOW.
+        #
+        # ADDITIVE: the session-scoped answer above is what this module's docstring promises
+        # and what the calibration generator consumes, so it is untouched. The window-scoped
+        # answer is emitted beside it and consumers choose explicitly.
+        in_window = [d for d in decisions if pd.Timestamp(d["bot_entry_time"]) >= start]
+        row = {
             "case_id": case["case_id"], "session": case["session"],
             "window_status": status, **first,
-        })
+            "decision_count_through_end": len(decisions),
+            "decision_count_in_window": len(in_window),
+            "decisions_discarded_by_first_only": len(decisions) - 1,
+        }
+        if in_window:
+            w = in_window[0]
+            row["in_window"] = {
+                "bot_action": w["bot_action"],
+                "bot_entry_time": w["bot_entry_time"],
+                "bot_setup": w["bot_setup"],
+                "bot_reason": w["bot_reason"],
+                "bot_location_id": w["bot_location_id"],
+                "bot_location_source": w["bot_location_source"],
+                "bot_target_source": w["bot_target_source"],
+                "bot_target_kind": w["bot_target_kind"],
+                "bot_target_raw": w["bot_target_raw"],
+                "bot_target_executable": w["bot_target_executable"],
+                "bot_path_reason": w["bot_path_reason"],
+            }
+            row["in_window_actions"] = [d["bot_action"] for d in in_window]
+        else:
+            row["in_window"] = None
+            row["in_window_actions"] = []
+        rows.append(row)
 
     return {
         "status": "POST_REPAIR_SAME_WINDOW_BOT_REGRADE_NOT_EDGE_EVIDENCE",
