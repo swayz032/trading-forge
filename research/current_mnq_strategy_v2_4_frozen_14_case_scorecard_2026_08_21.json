@@ -1,0 +1,548 @@
+{
+  "artifact": "FROZEN_14_CASE_FIDELITY_BASELINE_SCORECARD",
+  "authority": "ALGO-007 §6",
+  "produced": "2026-08-21",
+  "status": "SEEN_DEVELOPMENT_FIDELITY_EVIDENCE_ONLY_NOT_EDGE_EVIDENCE",
+  "regrade_status": "POST_REPAIR_SAME_WINDOW_BOT_REGRADE_NOT_EDGE_EVIDENCE",
+  "source_pack_id": "aa4e32104b39e0aaa37eb2bd2c90e67a059604447892411d7dfd530c243910e4",
+  "trader_labels_file_sha256": "1b20b0a810df2009af2df564bc5b4b0d40db55b66d004676b155825d9e058ad8",
+  "case_count": 14,
+  "pnl_or_exit_used": false,
+  "pnl_rail": "No realized PnL, winner/loser status, exit outcome or later-session information participates in any comparison in this artifact.",
+  "runtime": {
+    "total_seconds": 379.59,
+    "data_prepare_seconds": 1.69,
+    "regrade_seconds": 377.7,
+    "per_case_mean_seconds": 26.979
+  },
+  "aggregates": {
+    "exact_action_agreement": "5/14",
+    "entered_vs_not_agreement": "7/14",
+    "opposite_direction_at_decision_count": 0,
+    "earlier_opposite_entry_consumed_bullet_count": 2,
+    "in_window_bot_only_entry_count": 2,
+    "pre_window_bot_only_entry_count": 5,
+    "missed_trader_entry_count": 0,
+    "wait_vs_no_trade_disagreement_count": 0,
+    "cases_affected_by_earlier_same_session_bullet": 7,
+    "same_direction_timing_deltas_seconds": [
+      -120.0,
+      0.0,
+      0.0,
+      120.0,
+      360.0
+    ],
+    "mismatch_class_census": {
+      "AGREE": 5,
+      "BOT_ONLY_ENTRY_BEFORE_WINDOW": 5,
+      "BOT_ONLY_ENTRY_IN_WINDOW": 2,
+      "EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET": 2
+    }
+  },
+  "cases": [
+    {
+      "case_id": "RPL3-1D002C0416219512",
+      "session": "2026-03-25",
+      "replay_window": {
+        "start": "2026-03-25T10:56:00-04:00",
+        "end": "2026-03-25T11:16:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-03-25T09:37:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "direction": {
+        "trader": "WAIT",
+        "bot": "ENTER_LONG"
+      },
+      "interaction_geometry": {
+        "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "first_tp": {
+        "target_source": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "raw_price": 24530.75,
+        "executable_price": 24530.75,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+      },
+      "trader_marked_tp": null,
+      "earlier_same_session_bullet": "BOT_ENTERED_BEFORE_THIS_WINDOW_IN_THE_SAME_SESSION",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW"
+    },
+    {
+      "case_id": "RPL3-2A23163B9B2BBBA0",
+      "session": "2026-04-08",
+      "replay_window": {
+        "start": "2026-04-08T10:41:00-04:00",
+        "end": "2026-04-08T11:01:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-08T10:23:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "direction": {
+        "trader": "WAIT",
+        "bot": "ENTER_LONG"
+      },
+      "interaction_geometry": {
+        "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "first_tp": {
+        "target_source": "STRONG_SWING_DISPLACEMENT",
+        "target_kind": "KEY_ZONE_15M",
+        "raw_price": 25108.0,
+        "executable_price": 25108.0,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+      },
+      "trader_marked_tp": null,
+      "earlier_same_session_bullet": "BOT_ENTERED_BEFORE_THIS_WINDOW_IN_THE_SAME_SESSION",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW"
+    },
+    {
+      "case_id": "RPL3-6183B3E8E76BD914",
+      "session": "2026-04-14",
+      "replay_window": {
+        "start": "2026-04-14T09:30:00-04:00",
+        "end": "2026-04-14T09:46:00-04:00"
+      },
+      "trader_state": "ENTER_LONG",
+      "bot_state": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-14T09:38:00-04:00",
+      "trader_decision_clock": "2026-04-14T09:36:00-04:00",
+      "timing_delta_seconds": 120.0,
+      "direction": {
+        "trader": "ENTER_LONG",
+        "bot": "ENTER_LONG"
+      },
+      "interaction_geometry": {
+        "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "BRK5",
+      "story_receipt": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "FVG_15M_NATIVE_UNMITIGATED",
+        "target_kind": "FVG_15M",
+        "raw_price": 25869.125,
+        "executable_price": 25869.0,
+        "path_reason": "FIRST_REACTION:FVG_15M"
+      },
+      "trader_marked_tp": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT",
+      "earlier_same_session_bullet": null,
+      "mismatch_class": "AGREE"
+    },
+    {
+      "case_id": "RPL3-68AD0631CA2C0011",
+      "session": "2026-04-01",
+      "replay_window": {
+        "start": "2026-04-01T09:32:00-04:00",
+        "end": "2026-04-01T09:52:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-01T09:44:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "direction": {
+        "trader": "WAIT",
+        "bot": "ENTER_SHORT"
+      },
+      "interaction_geometry": {
+        "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "BRK5",
+      "story_receipt": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "first_tp": {
+        "target_source": "WICK_ZONE",
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "raw_price": 24053.375,
+        "executable_price": 24053.5,
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+      },
+      "trader_marked_tp": null,
+      "earlier_same_session_bullet": null,
+      "mismatch_class": "BOT_ONLY_ENTRY_IN_WINDOW"
+    },
+    {
+      "case_id": "RPL3-6E618850C834365C",
+      "session": "2026-04-07",
+      "replay_window": {
+        "start": "2026-04-07T09:36:00-04:00",
+        "end": "2026-04-07T09:56:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-07T09:49:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "direction": {
+        "trader": "WAIT",
+        "bot": "ENTER_SHORT"
+      },
+      "interaction_geometry": {
+        "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "first_tp": {
+        "target_source": "WICK_ZONE",
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "raw_price": 24132.375,
+        "executable_price": 24132.5,
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+      },
+      "trader_marked_tp": null,
+      "earlier_same_session_bullet": null,
+      "mismatch_class": "BOT_ONLY_ENTRY_IN_WINDOW"
+    },
+    {
+      "case_id": "RPL3-85576C2BBB7040F4",
+      "session": "2026-03-23",
+      "replay_window": {
+        "start": "2026-03-23T11:16:00-04:00",
+        "end": "2026-03-23T11:36:00-04:00"
+      },
+      "trader_state": "ENTER_SHORT",
+      "bot_state": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-03-23T10:19:00-04:00",
+      "trader_decision_clock": "2026-03-23T11:21:00-04:00",
+      "timing_delta_seconds": -3720.0,
+      "direction": {
+        "trader": "ENTER_SHORT",
+        "bot": "ENTER_LONG"
+      },
+      "interaction_geometry": {
+        "location_id": "SWING:S:2026-02-17T01:15:00-05:00:98232",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "WICK_ZONE",
+        "target_kind": "KEY_ZONE_15M",
+        "raw_price": 24651.25,
+        "executable_price": 24651.25,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+      },
+      "trader_marked_tp": "MARKED",
+      "earlier_same_session_bullet": "BOT_ENTERED_BEFORE_THIS_WINDOW_IN_THE_SAME_SESSION",
+      "mismatch_class": "EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET"
+    },
+    {
+      "case_id": "RPL3-8E7C268E08366A46",
+      "session": "2026-04-02",
+      "replay_window": {
+        "start": "2026-04-02T10:35:00-04:00",
+        "end": "2026-04-02T10:55:00-04:00"
+      },
+      "trader_state": "NO_TRADE",
+      "bot_state": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-02T09:37:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "direction": {
+        "trader": "NO_TRADE",
+        "bot": "ENTER_SHORT"
+      },
+      "interaction_geometry": {
+        "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "STRONG_SWING_DISPLACEMENT",
+        "target_kind": "KEY_ZONE_15M",
+        "raw_price": 23709.75,
+        "executable_price": 23709.75,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+      },
+      "trader_marked_tp": null,
+      "earlier_same_session_bullet": "BOT_ENTERED_BEFORE_THIS_WINDOW_IN_THE_SAME_SESSION",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW"
+    },
+    {
+      "case_id": "RPL3-911C2D9EAA857BEC",
+      "session": "2026-03-31",
+      "replay_window": {
+        "start": "2026-03-31T09:35:00-04:00",
+        "end": "2026-03-31T09:55:00-04:00"
+      },
+      "trader_state": "ENTER_LONG",
+      "bot_state": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-03-31T09:47:00-04:00",
+      "trader_decision_clock": "2026-03-31T09:49:00-04:00",
+      "timing_delta_seconds": -120.0,
+      "direction": {
+        "trader": "ENTER_LONG",
+        "bot": "ENTER_LONG"
+      },
+      "interaction_geometry": {
+        "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "raw_price": 23525.75,
+        "executable_price": 23525.75,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+      },
+      "trader_marked_tp": "MARKED",
+      "earlier_same_session_bullet": null,
+      "mismatch_class": "AGREE"
+    },
+    {
+      "case_id": "RPL3-A240A60150B98D33",
+      "session": "2026-03-26",
+      "replay_window": {
+        "start": "2026-03-26T10:42:00-04:00",
+        "end": "2026-03-26T11:02:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-03-26T09:52:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "direction": {
+        "trader": "WAIT",
+        "bot": "ENTER_LONG"
+      },
+      "interaction_geometry": {
+        "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "first_tp": {
+        "target_source": "WICK_ZONE+FVG_15M_NATIVE",
+        "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "raw_price": 24234.115178571432,
+        "executable_price": 24234.0,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+      },
+      "trader_marked_tp": null,
+      "earlier_same_session_bullet": "BOT_ENTERED_BEFORE_THIS_WINDOW_IN_THE_SAME_SESSION",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW"
+    },
+    {
+      "case_id": "RPL3-AD0DBC962D7C429F",
+      "session": "2026-04-06",
+      "replay_window": {
+        "start": "2026-04-06T09:52:00-04:00",
+        "end": "2026-04-06T10:12:00-04:00"
+      },
+      "trader_state": "ENTER_SHORT",
+      "bot_state": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-06T10:04:00-04:00",
+      "trader_decision_clock": "2026-04-06T10:04:00-04:00",
+      "timing_delta_seconds": 0.0,
+      "direction": {
+        "trader": "ENTER_SHORT",
+        "bot": "ENTER_SHORT"
+      },
+      "interaction_geometry": {
+        "location_id": "S:2026-03-25T06:30:00-04:00:97649",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "raw_price": 24316.0,
+        "executable_price": 24316.0,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+      },
+      "trader_marked_tp": "MARKED",
+      "earlier_same_session_bullet": null,
+      "mismatch_class": "AGREE"
+    },
+    {
+      "case_id": "RPL3-DE838DC7D547F27C",
+      "session": "2026-04-13",
+      "replay_window": {
+        "start": "2026-04-13T10:31:00-04:00",
+        "end": "2026-04-13T10:51:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "bot_state": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-13T09:37:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "direction": {
+        "trader": "WAIT",
+        "bot": "ENTER_SHORT"
+      },
+      "interaction_geometry": {
+        "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "BRK5",
+      "story_receipt": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "first_tp": {
+        "target_source": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "raw_price": 25159.025,
+        "executable_price": 25159.25,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+      },
+      "trader_marked_tp": null,
+      "earlier_same_session_bullet": "BOT_ENTERED_BEFORE_THIS_WINDOW_IN_THE_SAME_SESSION",
+      "mismatch_class": "BOT_ONLY_ENTRY_BEFORE_WINDOW"
+    },
+    {
+      "case_id": "RPL3-E3CEDD98C6C01E9B",
+      "session": "2026-03-30",
+      "replay_window": {
+        "start": "2026-03-30T09:35:00-04:00",
+        "end": "2026-03-30T09:55:00-04:00"
+      },
+      "trader_state": "ENTER_SHORT",
+      "bot_state": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-03-30T09:47:00-04:00",
+      "trader_decision_clock": "2026-03-30T09:41:00-04:00",
+      "timing_delta_seconds": 360.0,
+      "direction": {
+        "trader": "ENTER_SHORT",
+        "bot": "ENTER_SHORT"
+      },
+      "interaction_geometry": {
+        "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "raw_price": 23324.625,
+        "executable_price": 23324.75,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+      },
+      "trader_marked_tp": "MARKED",
+      "earlier_same_session_bullet": null,
+      "mismatch_class": "AGREE"
+    },
+    {
+      "case_id": "RPL3-EAB79AD9E5485D56",
+      "session": "2026-03-24",
+      "replay_window": {
+        "start": "2026-03-24T09:30:00-04:00",
+        "end": "2026-03-24T09:40:00-04:00"
+      },
+      "trader_state": "ENTER_LONG",
+      "bot_state": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-03-24T09:32:00-04:00",
+      "trader_decision_clock": "2026-03-24T09:32:00-04:00",
+      "timing_delta_seconds": 0.0,
+      "direction": {
+        "trader": "ENTER_LONG",
+        "bot": "ENTER_LONG"
+      },
+      "interaction_geometry": {
+        "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "WICK_ZONE",
+        "target_kind": "KEY_ZONE_15M",
+        "raw_price": 24358.025,
+        "executable_price": 24358.0,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+      },
+      "trader_marked_tp": "MARKED",
+      "earlier_same_session_bullet": null,
+      "mismatch_class": "AGREE"
+    },
+    {
+      "case_id": "RPL3-F1B0058A42B537D6",
+      "session": "2026-04-09",
+      "replay_window": {
+        "start": "2026-04-09T11:15:00-04:00",
+        "end": "2026-04-09T11:35:00-04:00"
+      },
+      "trader_state": "ENTER_LONG",
+      "bot_state": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-09T09:52:00-04:00",
+      "trader_decision_clock": "2026-04-09T11:35:00-04:00",
+      "timing_delta_seconds": -6180.0,
+      "direction": {
+        "trader": "ENTER_LONG",
+        "bot": "ENTER_SHORT"
+      },
+      "interaction_geometry": {
+        "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "BRK5",
+      "story_receipt": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "force_receipt": "NOT_EMITTED_BY_THE_REGRADE — `_full_entry_decisions_through` yields no force field. The entry nevertheless passed `one_minute_entry`, which is the force gate, so force is IMPLIED by the entry existing but is not independently receipted here. Stated rather than invented.",
+      "trader_entry_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "WICK_ZONE",
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "raw_price": 25016.275,
+        "executable_price": 25016.5,
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:STRONG_SWING_DISPLACEMENT->NEXT:LIQUIDITY_CLUSTER"
+      },
+      "trader_marked_tp": "MARKED",
+      "earlier_same_session_bullet": "BOT_ENTERED_BEFORE_THIS_WINDOW_IN_THE_SAME_SESSION",
+      "mismatch_class": "EARLIER_OPPOSITE_ENTRY_CONSUMED_BULLET"
+    }
+  ]
+}
