@@ -37,6 +37,7 @@ from research.current_mnq_strategy_v2_4_force import decision_times, force_snaps
 from research.current_mnq_strategy_v2_4_fvg_interaction import active_fvg_interaction_locations
 from research.current_mnq_strategy_v2_4_kernel import (
     BREAKOUT_ROUTE_ORDER,
+    BREAK_FAMILY_BROKEN_VISIBILITY,
     LOOKBACK,
     REASON_BY_FORM,
     _as_location,
@@ -119,6 +120,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
     # against a rank-1 reversal and never triggered the direction-conflict veto.
     pending: dict = {}
     pending_locs: dict = {}
+    last_active_bucket: dict = {}
     completed_session = r5[r5.index.date == dte]
     meta["premarket_primary"] = str(getattr(plan, "primary", "NEUTRAL"))
     meta["premarket_structure"] = str(getattr(plan, "pm_structure", ""))
@@ -137,19 +139,36 @@ def xray_session(env: dict, dte: date, p: prod.Params,
             continue
         pad = max(core.TICK * 2, p.touch_pad_atr * float(atr_ref))
 
+        # MIRRORS THE KERNEL'S TWO LISTS (ALGO-068 R1). Route A sees ACTIVE zones only; the
+        # break family also sees a zone that turned BROKEN inside the family's own lookback
+        # window, because the break print is what broke it.
         pre_locs: list[core.Location] = []
+        brk_locs: list[core.Location] = []
         for loc in authorized:
             if loc.zone is None:
                 pre_locs.append(loc)
+                brk_locs.append(loc)
                 continue
             before = zone_state_at_v24(loc.zone, full5, ts, p)
             if before.active:
-                pre_locs.append(_as_location(loc, before))
+                last_active_bucket[loc.id] = ts
+                shaped = _as_location(loc, before)
+                pre_locs.append(shaped)
+                brk_locs.append(shaped)
+                continue
+            last_active = last_active_bucket.get(loc.id)
+            if (before.state == core.ZoneState.BROKEN and last_active is not None
+                    and ts - last_active <= BREAK_FAMILY_BROKEN_VISIBILITY):
+                brk_locs.append(_as_location(loc, before))
         known = {x.id for x in pre_locs}
+        brk_known = {x.id for x in brk_locs}
         for fvg_loc in active_fvg_interaction_locations(h15, ts):
             if fvg_loc.id not in known:
                 pre_locs.append(fvg_loc)
                 known.add(fvg_loc.id)
+            if fvg_loc.id not in brk_known:
+                brk_locs.append(fvg_loc)
+                brk_known.add(fvg_loc.id)
 
         for decision_time in decision_times(one, ts, 5, as_of):
             # (tag, the core.Candidate the kernel would build, this record) — the ranker
@@ -226,7 +245,8 @@ def xray_session(env: dict, dte: date, p: prod.Params,
             # ---- ROUTES B / C / D: breakout family ------------------------------------
             for direction, side in (("L", "R"), ("S", "S")):
                 force = force_snapshot(one, ts, 5, direction, decision_time, p)
-                side_locs = [x for x in pre_locs if x.side == side]
+                # ALGO-068 R1: the BREAK family sees recently-broken zones too.
+                side_locs = [x for x in brk_locs if x.side == side]
                 if not force.confirmed:
                     rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                         route="B_C_D_BREAKOUT_FAMILY", direction=direction,
@@ -417,7 +437,8 @@ def xray_session(env: dict, dte: date, p: prod.Params,
         if ts in completed_session.index and (as_of is None or bar_close <= as_of):
             r = completed_session.loc[ts]
             for direction, side in (("L", "R"), ("S", "S")):
-                for loc in [x for x in pre_locs if x.side == side]:
+                # Arming BRK15 is break-family work - mirrors the kernel.
+                for loc in [x for x in brk_locs if x.side == side]:
                     key = (direction, loc.id)
                     if weak_first_break_print(full5, ts, r, direction, loc, p):
                         pending.setdefault(key, core.PendingBreakout(

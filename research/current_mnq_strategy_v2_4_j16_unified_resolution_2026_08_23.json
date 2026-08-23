@@ -275,17 +275,19 @@
         "closed_on_the_wrong_side": true,
         "body_frac": 0.59
       },
-      "J4_story_verdict": "REFUSED",
-      "J4_matching_family_candidates": 2,
+      "J4_story_verdict": "GRANTED",
+      "J4_matching_family_candidates": 3,
       "J4_wrong_family_candidates_NOT_a_refusal": 0,
       "J4_gate_census_matching_family": {
-        "NO_LEGAL_ROUTE_MATCHED": 2
+        "NO_LEGAL_ROUTE_MATCHED": 2,
+        "SURVIVED_TO_RANKING": 1
       },
       "J4_subreasons": {
-        "C_PREBREAK_DISPLACEMENT|ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT": 2,
+        "C_PREBREAK_DISPLACEMENT|ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT": 3,
+        "D_PREBREAK_RETEST_BREAKOUT|repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 3,
         "D_PREBREAK_RETEST_BREAKOUT|accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 2,
-        "D_PREBREAK_RETEST_BREAKOUT|repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 2,
-        "B_NORMAL_BREAKOUT|NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 2
+        "B_NORMAL_BREAKOUT|NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 2,
+        "D_PREBREAK_RETEST_BREAKOUT|accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST": 1
       },
       "J4_routes_asked": [
         "B_NORMAL_BREAKOUT",
@@ -719,6 +721,6 @@
       ]
     }
   ],
-  "runtime_seconds": 121.11,
+  "runtime_seconds": 121.28,
   "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
 }

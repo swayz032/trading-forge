@@ -49,6 +49,20 @@ BREAKOUT_ROUTE_ORDER = (
     auth.ROUTE_B_BREAKOUT,
 )
 
+#: HOW LONG A BROKEN ZONE STAYS VISIBLE TO THE BREAK FAMILY (ALGO-068 R1).
+#:
+#: It is LOOKBACK bars - the exact span of completed history the break derivation already reads
+#: behind its trigger (`authority_bars`). That is deliberate: it is the family's OWN window, so
+#: this introduces NO new threshold and nothing to tune. A zone the break routes can no longer
+#: see into is a zone they cannot build a story on anyway.
+#:
+#: WHY THIS EXISTS. Measured on 2026-03-30 and 2026-03-31: a decisive break sets the zone BROKEN
+#: (zone_lifecycle.py:81-83), BROKEN is not `active` (v2_2_engine.py:135-141), and the kernel
+#: dropped every inactive zone - so THERE WAS NO BUCKET AT WHICH A ZONE WAS BOTH ALIVE AND
+#: CARRIED A COMPLETED BREAK PRINT. Before the break there is nothing to break; after it the
+#: location is gone. The break entry the operator teaches was unreachable by construction.
+BREAK_FAMILY_BROKEN_VISIBILITY = pd.Timedelta(minutes=5 * LOOKBACK)
+
 #: form -> the kernel's reason literal. Keyed on the FORM, never the route, because Route D has
 #: two legal forms and naming an accepted-break-retest grant "PREBREAK_REPEAT_TEST" would put a
 #: false evidence label on a real entry. The four pre-existing literals are unchanged - they are
@@ -188,6 +202,9 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
     authorized = [x for x in locations if x.entry_authorized]
     pending: dict[tuple[str, str], core.PendingBreakout] = {}
     pending_locs: dict[tuple[str, str], core.Location] = {}
+    #: ALGO-068 R1: the last bucket at which each zone was ACTIVE, so a recently-broken zone can
+    #: be recognised in O(1) instead of re-replaying the lifecycle at an earlier anchor.
+    last_active_bucket: dict[str, pd.Timestamp] = {}
     completed_session = r5[r5.index.date == dte]
 
     for ts in bucket_starts:
@@ -201,14 +218,37 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
 
         # Structural key-zone state is frozen at the start of the forming 5m
         # candle. A role change caused by this candle cannot authorize itself.
+        #
+        # TWO LISTS SINCE ALGO-068 R1, AND THE DIFFERENCE IS THE WHOLE REPAIR.
+        #   `pre_locs`  - Route A. ACTIVE zones only. A rejection story at a zone price has
+        #                 already broken is not a rejection, so Route A NEVER sees a BROKEN
+        #                 zone. This list is exactly what the kernel built before.
+        #   `brk_locs`  - the break family (B/C/D and the BRK15 variant). The same active
+        #                 zones, PLUS a zone that turned BROKEN within the family's own
+        #                 lookback window - because the break print IS the thing that broke it.
         pre_locs: list[core.Location] = []
+        brk_locs: list[core.Location] = []
         for loc in authorized:
             if loc.zone is None:
                 pre_locs.append(loc)
+                brk_locs.append(loc)
                 continue
             before = zone_state_at_v24(loc.zone, full5, ts, p)
             if before.active:
-                pre_locs.append(_as_location(loc, before))
+                last_active_bucket[loc.id] = ts
+                shaped = _as_location(loc, before)
+                pre_locs.append(shaped)
+                brk_locs.append(shaped)
+                continue
+            # RECENTLY BROKEN -> visible to the break family only. `last_active_bucket` is
+            # carried across the bucket loop rather than re-replaying the lifecycle at an
+            # earlier anchor: the replay is O(session) and this is O(1), and the two answer the
+            # same question. A zone that was never active in this session is not "recently
+            # broken" - it is absent, and it stays absent.
+            last_active = last_active_bucket.get(loc.id)
+            if (before.state == core.ZoneState.BROKEN and last_active is not None
+                    and ts - last_active <= BREAK_FAMILY_BROKEN_VISIBILITY):
+                brk_locs.append(_as_location(loc, before))
 
         # Direct trader fidelity correction: completed 15m FVGs may themselves be
         # the causal S/R interaction band. They can form intraday, so unlike the
@@ -216,10 +256,14 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         # this 5m bucket start. They do not create trades by themselves; all normal
         # rejection/breakout story + force + structural-prior + room gates remain.
         known_ids = {x.id for x in pre_locs}
+        brk_known = {x.id for x in brk_locs}
         for fvg_loc in active_fvg_interaction_locations(h15, ts):
             if fvg_loc.id not in known_ids:
                 pre_locs.append(fvg_loc)
                 known_ids.add(fvg_loc.id)
+            if fvg_loc.id not in brk_known:
+                brk_locs.append(fvg_loc)
+                brk_known.add(fvg_loc.id)
 
         # Every completed 1m inside the parent 5m is a causal decision clock.
         # The parent close itself is excluded: if force was not proven before the
@@ -264,7 +308,8 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                     continue
                 partial = force.as_row(atr_ref)
                 bars = authority_bars(full5, ts, partial)
-                for loc in [x for x in pre_locs if x.side == side]:
+                # THE BREAK FAMILY'S LIST (ALGO-068 R1) - includes recently-broken zones.
+                for loc in [x for x in brk_locs if x.side == side]:
                     key = (direction, loc.id)
                     # Ask the machine route by route, in the kernel's own precedence, and take
                     # the first grant. The reason is read off the FORM the route actually
@@ -313,7 +358,8 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         if ts in completed_session.index and (as_of is None or bar_close <= as_of):
             r = completed_session.loc[ts]
             for direction, side in (("L", "R"), ("S", "S")):
-                for loc in [x for x in pre_locs if x.side == side]:
+                # Arming the BRK15 pending state is break-family work, so it reads brk_locs.
+                for loc in [x for x in brk_locs if x.side == side]:
                     key = (direction, loc.id)
                     if weak_first_break_print(full5, ts, r, direction, loc, p):
                         pending.setdefault(
