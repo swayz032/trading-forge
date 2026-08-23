@@ -77,8 +77,19 @@ def test_approach_is_never_true_by_default():
 
 # --- INTERACTION: which of the spec's six -------------------------------------------------
 
+#: A neutral trailing trigger. `_classify` drops it, and `derive_story` reads only its
+#: follow-through - it must never be where the interaction evidence lives (ALGO-033).
+TRIGGER = (109.7, 111.0, 109.5, 110.5)
+
+
 def _classify(rows, direction="L"):
-    return D.classify_interaction(bars(rows), direction, LO, HI, BODY, CLOSE_LOC, WICK)
+    """Classify the interaction over the COMPLETED window, dropping the trigger.
+
+    ALGO-033: interaction geometry reads on completed bars ending at the prior bar, and the
+    trigger carries force and follow-through only. `derive_story` splits them itself; this
+    helper mirrors that split so the tests exercise the same call the real path makes.
+    """
+    return D.classify_interaction(bars(rows[:-1]), direction, LO, HI, BODY, CLOSE_LOC, WICK)
 
 
 def test_a_touch_with_no_directional_control_is_refused():
@@ -100,7 +111,7 @@ def test_touch_and_reject_is_named():
     fixed rather than the module.
     """
     r = _classify([(112, 113, 111, 112), (111, 112, 103, 104),
-                   (103.5, 110.0, 100.0, 109.7)])
+                   (103.5, 110.0, 100.0, 109.7), TRIGGER])
     assert r.approach.real is True
     assert r.kind == D.TOUCH_AND_REJECT, r
     assert r.control is True
@@ -109,7 +120,7 @@ def test_touch_and_reject_is_named():
 
 def test_a_sweep_that_takes_liquidity_below_and_closes_back_is_named():
     r = _classify([(110, 111, 109, 110), (109, 110, 104, 105),
-                   (104, 105, 99.0, 104.5)])
+                   (104, 105, 99.0, 104.5), TRIGGER])
     assert r.kind in (D.SWEEP_AND_RECLAIM, D.TOUCH_AND_REJECT), r
     assert r.approach.real is True
 
@@ -117,7 +128,7 @@ def test_a_sweep_that_takes_liquidity_below_and_closes_back_is_named():
 def test_a_failed_breakout_back_inside_is_named():
     """A COMPLETED close beyond the zone, then back inside."""
     r = _classify([(110, 111, 109, 110), (109, 110, 98, 98.5),
-                   (98.5, 101.5, 98.4, 101.2)])
+                   (98.5, 101.5, 98.4, 101.2), TRIGGER])
     assert r.kind == D.FAILED_BREAKOUT_BACK_INSIDE, r
 
 
@@ -178,10 +189,16 @@ def _story(rows, direction="L"):
     return D.derive_story(bars(rows), direction, LO, HI, BODY, CLOSE_LOC, WICK)
 
 
-#: A clean long: comes from above, wicks the zone, closes strongly up. Reused as the POSITIVE
-#: WITNESS everywhere below, so every refusal is proven to be about the defect and not about
-#: the layer refusing everything.
-CLEAN_LONG = [(112, 113, 111, 112), (111, 112, 103, 104), (103.5, 110.0, 100.0, 109.7)]
+#: A clean long IN THE TAUGHT SHAPE (ALGO-033): the rejection candle COMPLETES, and only then
+#: does the trigger follow through. Four bars:
+#:   0  wholly above the zone
+#:   1  travelling down, still wholly above  -> together these make the APPROACH
+#:   2  THE REJECTION - touches the zone, big lower wick, strong body, closes back up
+#:   3  THE TRIGGER   - a forming bar whose only job is to carry the direction forward
+#: Reused as the POSITIVE WITNESS everywhere below, so every refusal is proven to be about the
+#: defect and not about a layer that refuses everything.
+CLEAN_LONG = [(112, 113, 111, 112), (111, 112, 103, 104),
+              (103.5, 110.0, 100.0, 109.7), (109.7, 111.0, 109.5, 110.5)]
 
 
 def test_the_positive_witness_completes():
@@ -192,14 +209,19 @@ def test_the_positive_witness_completes():
 
 
 def test_fixture_mere_approach_that_never_reaches_zone():
-    s = _story([(120, 121, 119, 120), (119, 120, 118, 119), (118, 119, 117, 118)])
+    s = _story([(120, 121, 119, 120), (119, 120, 118, 119),
+                (118, 119, 117, 118), (117, 118, 116, 117)])
     assert s.complete is False
     assert s.refusal == D.NO_TOUCH
 
 
 def test_fixture_mixed_overlap_and_two_sided_wicks():
-    """A bar that argues with itself is not a decision. `mixed_or_indecisive_control -> WAIT`."""
-    rows = CLEAN_LONG[:-1] + [(105, 110.0, 100.0, 105.2)]   # big both wicks, tiny body
+    """A bar that argues with itself is not a decision. `mixed_or_indecisive_control -> WAIT`.
+
+    The conflict now has to be planted on the COMPLETED rejection bar, because that is where
+    the story is read - the trigger's wicks are still forming (ALGO-033).
+    """
+    rows = CLEAN_LONG[:2] + [(105, 110.0, 100.0, 105.2)] + CLEAN_LONG[-1:]
     s = _story(rows)
     assert s.two_sided_conflict is True
     assert s.refusal == D.TWO_SIDED_CONFLICT
@@ -207,19 +229,21 @@ def test_fixture_mixed_overlap_and_two_sided_wicks():
 
 
 def test_fixture_doji_at_zone_without_directional_takeover():
-    """Touches the level, but nobody takes control."""
-    rows = CLEAN_LONG[:-1] + [(101.0, 102.3, 100.2, 101.05)]
+    """Touches the level, but nobody takes control - planted on the completed bar."""
+    rows = CLEAN_LONG[:2] + [(101.0, 102.3, 100.2, 101.05)] + CLEAN_LONG[-1:]
     s = _story(rows)
     assert s.complete is False
     assert s.refusal in (D.NO_TAKEOVER, D.TWO_SIDED_CONFLICT), s
 
 
 def test_fixture_counter_bias_reversal_without_completed_control_transfer():
-    """Control geometry on the bar, but it does not carry the direction forward."""
-    rows = [(112, 113, 111, 112), (111, 112, 103, 111.5),
-            (103.5, 110.0, 100.0, 109.7)]
+    """A complete rejection, and then a TRIGGER that gives the direction straight back.
+
+    This is the cleanest separation of the two stages: the fight is won on the completed bar
+    and the decision is refused on the trigger.
+    """
+    rows = CLEAN_LONG[:-1] + [(109.7, 110.0, 108.0, 108.5)]   # trigger closes DOWN
     s = _story(rows)
-    # the trigger closes BELOW the prior close, so there is no forward decision
     assert s.refusal == D.NO_CONTROL_TRANSFER, s
     assert s.fight is True, "the fight happened; the decision did not"
     assert s.complete is False
@@ -235,9 +259,9 @@ def test_two_sided_wick_conflict_discriminates():
 
 def test_a_refusal_always_names_itself():
     """A story that refuses without saying why teaches nobody anything."""
-    for rows in ([(120, 121, 119, 120)] * 3,
-                 CLEAN_LONG[:-1] + [(105, 110.0, 100.0, 105.2)],
-                 CLEAN_LONG[:-1] + [(101.0, 102.3, 100.2, 101.05)]):
+    for rows in ([(120, 121, 119, 120)] * 4,
+                 CLEAN_LONG[:2] + [(105, 110.0, 100.0, 105.2)] + CLEAN_LONG[-1:],
+                 CLEAN_LONG[:2] + [(101.0, 102.3, 100.2, 101.05)] + CLEAN_LONG[-1:]):
         s = _story(rows)
         assert s.complete is False
         assert s.refusal, f"refused with no reason: {s}"
@@ -278,7 +302,8 @@ def test_a_touch_that_matches_no_interaction_does_not_claim_it_never_touched():
     the refusal named the wrong reason. A refusal that misdirects is worse than a silent one.
     """
     # comes from above, touches, has control, but no named interaction shape
-    rows = [(112, 113, 111, 112), (111, 112, 103, 104), (101.9, 102.0, 101.0, 101.98)]
+    rows = [(112, 113, 111, 112), (111, 112, 103, 104),
+            (101.9, 102.0, 101.0, 101.98), TRIGGER]
     r = _classify(rows)
     if r.kind is None:
         assert r.reason != D.NO_TOUCH, (
@@ -289,8 +314,9 @@ def test_a_touch_that_matches_no_interaction_does_not_claim_it_never_touched():
 
 def test_the_wrong_reason_string_is_unreachable_after_a_real_approach():
     """Whenever the approach IS real, no refusal may claim the approach was not."""
-    for rows in ([(112, 113, 111, 112), (111, 112, 103, 104), (101.9, 102.0, 101.0, 101.98)],
-                 CLEAN_LONG[:-1] + [(101.0, 102.3, 100.2, 101.05)]):
+    for rows in ([(112, 113, 111, 112), (111, 112, 103, 104),
+                  (101.9, 102.0, 101.0, 101.98), TRIGGER],
+                 CLEAN_LONG[:2] + [(101.0, 102.3, 100.2, 101.05)] + CLEAN_LONG[-1:]):
         r = _classify(rows)
         if r.approach.real:
             assert r.reason != D.NO_TOUCH, (rows, r)

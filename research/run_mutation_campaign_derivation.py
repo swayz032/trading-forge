@@ -21,7 +21,12 @@ denominator as if it were the whole campaign.
 EVERY ARM: positive witness that the named test is GREEN first (a red-before proves nothing),
 a mutation target that must be UNIQUE, a SHA256 check that the file actually changed (a silent
 no-op replace already cost a cycle on this campaign), the named test must go RED, then the
-bytes are restored and re-verified by SHA256 AND by `git status`.
+bytes are restored and re-verified by SHA256 against this run's OWN starting bytes.
+
+`git status` is INFORMATIONAL here and is not the restore proof. An earlier version asserted git
+cleanliness, which cannot distinguish "the harness failed to restore" from "the developer has
+uncommitted work in this file" - and it raised a HARD FAIL on legitimate in-progress edits. A
+false alarm on a safety check is worse than none, because it teaches you to ignore the real one.
 
 Run: PYTHONPATH=. python -m research.run_mutation_campaign_derivation
 """
@@ -107,6 +112,9 @@ def run(nodeid: str) -> bool:
 
 def main() -> int:
     results, failures = [], []
+    #: The bytes this run started with. The restore proof is equality against THESE, because
+    #: git cleanliness answers a different question entirely.
+    START = {p: sha(p) for p in (DERIV, AUTH)}
 
     for item, desc, path, find, repl, test in ARMS:
         if not run(test):
@@ -142,12 +150,22 @@ def main() -> int:
             io.open(path, "wb").write(raw)
             assert sha(path) == before, f"RESTORE FAILED for {path}"
 
+    # RESTORE CHECK. Compare against the bytes THIS HARNESS started with, never against git
+    # cleanliness. The first version asserted `git status` was clean, which cannot tell
+    # "the harness failed to restore" from "the developer has uncommitted work in this file" -
+    # and it raised a HARD FAIL on legitimate in-progress edits. A false alarm on a safety
+    # check is worse than none, because it teaches you to ignore the real one.
+    not_restored = [p for p, before in START.items() if sha(p) != before]
+    if not_restored:
+        print(f"\nHARD FAIL: bytes were not restored: {not_restored}")
+        return 1
+    print("\nrestore verified by SHA256 against this run's own starting bytes")
+
     dirty = subprocess.run(["git", "status", "--porcelain", DERIV, AUTH],
                            capture_output=True, text=True).stdout.strip()
-    print(f"\ngit status for the mutated files: {dirty or '(both clean)'}")
     if dirty:
-        print("HARD FAIL: bytes were not restored")
-        return 1
+        print(f"note: these files have uncommitted work unrelated to the campaign:\n{dirty}")
+        print("      (informational - the SHA check above is the restore proof)")
 
     for _, _, _, _, _, test in ARMS:
         if not run(test):

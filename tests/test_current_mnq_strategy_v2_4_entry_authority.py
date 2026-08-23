@@ -28,9 +28,13 @@ def bars(rows):
          "low": [r[2] for r in rows], "close": [r[3] for r in rows]}, index=idx)
 
 
-CLEAN_LONG = [(112, 113, 111, 112), (111, 112, 103, 104), (103.5, 110.0, 100.0, 109.7)]
-NEVER_TOUCHED = [(120, 121, 119, 120), (119, 120, 118, 119), (118, 119, 117, 118)]
-CONFLICTED = CLEAN_LONG[:-1] + [(105, 110.0, 100.0, 105.2)]
+# The taught shape (ALGO-033): rejection COMPLETES on bar 2, the trigger follows on bar 3.
+CLEAN_LONG = [(112, 113, 111, 112), (111, 112, 103, 104),
+              (103.5, 110.0, 100.0, 109.7), (109.7, 111.0, 109.5, 110.5)]
+NEVER_TOUCHED = [(120, 121, 119, 120), (119, 120, 118, 119),
+                 (118, 119, 117, 118), (117, 118, 116, 117)]
+# The conflict is planted on the COMPLETED rejection bar, where the story is read.
+CONFLICTED = CLEAN_LONG[:2] + [(105, 110.0, 100.0, 105.2)] + CLEAN_LONG[-1:]
 
 
 def _decide(rows, *, location=True, force=True, direction="L"):

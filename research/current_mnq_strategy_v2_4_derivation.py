@@ -334,8 +334,37 @@ def _defended(rows: list, direction: str, lo: float, hi: float) -> bool:
 def derive_story(bars: pd.DataFrame, direction: str, lo: float, hi: float,
                  body_frac: float, close_loc: float, reject_wick: float,
                  pad: float = 0.0, lookback: int = 6) -> DerivedStory:
-    """The full story, derived. Refuses by name rather than defaulting to True."""
-    it = classify_interaction(bars, direction, lo, hi, body_frac, close_loc,
+    """The full story, derived. Refuses by name rather than defaulting to True.
+
+    `bars` is the completed-bar history with the TRIGGER as its last row.
+
+    ALGO-033 RULED where each stage is read, and it is not where I first put it. The taught
+    Route A sequence is REAL INTERACTION -> REJECTION/CONTROL STORY -> DIRECTIONAL MOMENTUM ->
+    SUSTAINED FORCE -> ENTER: three distinct stages in TIME. The stage evaluated at the trigger
+    clock is FORCE; the rejection is already history by then, which means COMPLETED bars.
+
+    So:
+        INTERACTION + APPROACH + CONTROL  ->  the completed window ENDING AT THE PRIOR BAR
+        TRIGGER                           ->  follow-through only (force arrives separately)
+
+    Two reasons beyond the sequence, both on the record. Every taught story example has the
+    rejection-shaped candle COMPLETE before the momentum that follows it - a wick is evidence
+    only once the candle carrying it is finished. And the causality rail forbids reading the
+    forming bar's final geometry, which does not exist at decision time: seeking single-bar
+    rejection geometry on the trigger asks for evidence that is either absent (partial) or
+    lookahead (final form).
+
+    The first checkpoint predicted this before the ruling arrived: `touch_and_reject` matched
+    0 of 128 while `prior_momentum_after_rejection` matched 60. That was the ruling appearing
+    in the data.
+    """
+    if bars is None or len(bars) < 3:
+        return DerivedStory(False, False, False, None, False, NOT_ENOUGH_BARS, ())
+
+    completed = bars.iloc[:-1]      # everything the market has finished saying
+    trigger = bars.iloc[-1]         # the forming bar: force and follow-through ONLY
+
+    it = classify_interaction(completed, direction, lo, hi, body_frac, close_loc,
                               reject_wick, pad, lookback)
     approach = it.approach.real
 
@@ -343,10 +372,12 @@ def derive_story(bars: pd.DataFrame, direction: str, lo: float, hi: float,
         return DerivedStory(False, False, False, it.kind, False,
                             it.reason or NO_TOUCH, it.all_kinds)
 
-    q = bars.tail(lookback)
+    q = completed.tail(lookback)
     rows = [q.iloc[i] for i in range(len(q))]
     last = rows[-1]
 
+    # The conflict test is part of the REJECTION story, so it reads the last COMPLETED bar -
+    # not the trigger, whose wicks are still forming.
     conflict = two_sided_wick_conflict(last)
     if conflict:
         return DerivedStory(True, False, False, it.kind, True, TWO_SIDED_CONFLICT,
@@ -370,13 +401,11 @@ def derive_story(bars: pd.DataFrame, direction: str, lo: float, hi: float,
 
     fight = True
 
-    # DECISION = the trigger bar carries the direction FORWARD, not merely sideways.
-    prior = rows[-2] if len(rows) >= 2 else None
-    if prior is None:
-        return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER,
-                            it.all_kinds)
-    follow = (float(last.close) > float(prior.close)) if direction == "L" \
-        else (float(last.close) < float(prior.close))
+    # DECISION = the TRIGGER carries the direction forward past the last completed bar. This
+    # is the trigger's whole contribution to the story - ALGO-033: "the trigger carries force
+    # and follow-through ONLY".
+    follow = (float(trigger.close) > float(last.close)) if direction == "L" \
+        else (float(trigger.close) < float(last.close))
     if not follow:
         return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER,
                             it.all_kinds)

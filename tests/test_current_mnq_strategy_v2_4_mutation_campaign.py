@@ -61,7 +61,11 @@ def test_the_harness_restores_in_a_finally_and_verifies_by_hash():
     assert tries, "the harness must restore in a finally block"
     src = io.open(HARNESS, encoding="utf-8").read()
     assert "RESTORE FAILED" in src, "the restore must be asserted, not assumed"
-    assert "git" in src and "status" in src, "and confirmed independently by git"
+    assert "START = {p: sha(p)" in src, (
+        "the restore proof must compare against the harness's OWN starting bytes")
+    assert "informational" in src, (
+        "git cleanliness must be informational only - it cannot tell a failed restore from "
+        "uncommitted developer work, and a false alarm teaches you to ignore the real one")
 
 
 def test_the_harness_requires_a_positive_witness_before_each_mutation():
