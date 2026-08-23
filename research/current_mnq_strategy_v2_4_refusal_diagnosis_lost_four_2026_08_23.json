@@ -17,16 +17,17 @@
     "FORCE",
     "BUDGET",
     "NO_CANDIDATE_AT_ENTRY",
+    "LOCATION_NOT_IN_MAP",
     "OTHER"
   ],
   "near_window_minutes": 10,
   "verdicts": [
     {
       "session": "2026-03-24",
-      "class_AT_HIS_ENTRY_CLOCK": "NO_CANDIDATE_AT_ENTRY",
-      "why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
+      "class_AT_HIS_ENTRY_CLOCK": "LOCATION_NOT_IN_MAP",
+      "why": "the machine WAS deciding at his clock on his side - 66 authorized candidates in those buckets - but NONE of its locations covers the level he traded. Nearest band 24219.78-24235.97, gap 27.53 points (the frozen stop is 17.25, so this is a different level, not a near-miss)",
       "candidates_at_his_clock": 0,
-      "class_at_acceptance_bars_2": "NO_CANDIDATE_AT_ENTRY",
+      "class_at_acceptance_bars_2": "LOCATION_NOT_IN_MAP",
       "acceptance_landing_implicated": false,
       "CONTEXT_session_census_class": "STORY_NOT_RECOGNIZED",
       "CONTEXT_dominant_gate": "REJECTION_STORY_INCOMPLETE",
@@ -34,10 +35,10 @@
     },
     {
       "session": "2026-03-30",
-      "class_AT_HIS_ENTRY_CLOCK": "NO_CANDIDATE_AT_ENTRY",
-      "why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
+      "class_AT_HIS_ENTRY_CLOCK": "LOCATION_NOT_IN_MAP",
+      "why": "the machine WAS deciding at his clock on his side - 269 authorized candidates in those buckets - but NONE of its locations covers the level he traded. Nearest band 23577.52-23582.48, gap 26.52 points (the frozen stop is 17.25, so this is a different level, not a near-miss)",
       "candidates_at_his_clock": 0,
-      "class_at_acceptance_bars_2": "NO_CANDIDATE_AT_ENTRY",
+      "class_at_acceptance_bars_2": "LOCATION_NOT_IN_MAP",
       "acceptance_landing_implicated": false,
       "CONTEXT_session_census_class": "STORY_NOT_RECOGNIZED",
       "CONTEXT_dominant_gate": "REJECTION_STORY_INCOMPLETE",
@@ -45,21 +46,21 @@
     },
     {
       "session": "2026-03-31",
-      "class_AT_HIS_ENTRY_CLOCK": "NO_CANDIDATE_AT_ENTRY",
-      "why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
-      "candidates_at_his_clock": 0,
-      "class_at_acceptance_bars_2": "NO_CANDIDATE_AT_ENTRY",
+      "class_AT_HIS_ENTRY_CLOCK": "STORY_NOT_RECOGNIZED",
+      "why": "at his clock the machine reached his zone and did not recognise the interaction (REJECTION_STORY_INCOMPLETE 3/3); acceptance is NOT operative. Sub-reasons: [('A_NORMAL_REJECTION|MERE_APPROACH_WITHOUT_TOUCH', 3)]",
+      "candidates_at_his_clock": 3,
+      "class_at_acceptance_bars_2": "STORY_NOT_RECOGNIZED",
       "acceptance_landing_implicated": false,
       "CONTEXT_session_census_class": "STORY_NOT_RECOGNIZED",
       "CONTEXT_dominant_gate": "NO_LEGAL_ROUTE_MATCHED",
-      "at_clock_and_census_DISAGREE": true
+      "at_clock_and_census_DISAGREE": false
     },
     {
       "session": "2026-04-06",
-      "class_AT_HIS_ENTRY_CLOCK": "NO_CANDIDATE_AT_ENTRY",
-      "why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
-      "candidates_at_his_clock": 0,
-      "class_at_acceptance_bars_2": "NO_CANDIDATE_AT_ENTRY",
+      "class_AT_HIS_ENTRY_CLOCK": "STORY_NOT_RECOGNIZED",
+      "why": "at his clock the machine reached his zone and did not recognise the interaction (REJECTION_STORY_INCOMPLETE 1/1); acceptance is NOT operative. Sub-reasons: [('A_NORMAL_REJECTION|TOUCH_WITHOUT_DIRECTIONAL_CONTROL', 1)]",
+      "candidates_at_his_clock": 1,
+      "class_at_acceptance_bars_2": "STORY_NOT_RECOGNIZED",
       "acceptance_landing_implicated": false,
       "CONTEXT_session_census_class": "FORCE",
       "CONTEXT_dominant_gate": "FORCE_NOT_CONFIRMED",
@@ -82,12 +83,18 @@
         "marked_main_timeframe": "15m"
       },
       "entry_buckets_examined": [
-        "2026-03-24 09:25:00-04:00",
-        "2026-03-24 09:30:00-04:00"
+        "2026-03-24T09:25:00-04:00",
+        "2026-03-24T09:30:00-04:00"
       ],
-      "AT_CLOCK_classification": "NO_CANDIDATE_AT_ENTRY",
-      "AT_CLOCK_why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
+      "AT_CLOCK_classification": "LOCATION_NOT_IN_MAP",
+      "AT_CLOCK_why": "the machine WAS deciding at his clock on his side - 66 authorized candidates in those buckets - but NONE of its locations covers the level he traded. Nearest band 24219.78-24235.97, gap 27.53 points (the frozen stop is 17.25, so this is a different level, not a near-miss)",
       "AT_CLOCK_candidates": 0,
+      "AT_CLOCK_authorized_candidates_on_his_side": 66,
+      "AT_CLOCK_nearest_machine_band": {
+        "lo": 24219.78,
+        "hi": 24235.97,
+        "gap_points": 27.53
+      },
       "AT_CLOCK_gate_census": {},
       "AT_CLOCK_subreasons": {},
       "AT_CLOCK_rows": [],
@@ -117,12 +124,18 @@
         "marked_main_timeframe": "5m"
       },
       "entry_buckets_examined": [
-        "2026-03-30 09:35:00-04:00",
-        "2026-03-30 09:40:00-04:00"
+        "2026-03-30T09:35:00-04:00",
+        "2026-03-30T09:40:00-04:00"
       ],
-      "AT_CLOCK_classification": "NO_CANDIDATE_AT_ENTRY",
-      "AT_CLOCK_why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
+      "AT_CLOCK_classification": "LOCATION_NOT_IN_MAP",
+      "AT_CLOCK_why": "the machine WAS deciding at his clock on his side - 269 authorized candidates in those buckets - but NONE of its locations covers the level he traded. Nearest band 23577.52-23582.48, gap 26.52 points (the frozen stop is 17.25, so this is a different level, not a near-miss)",
       "AT_CLOCK_candidates": 0,
+      "AT_CLOCK_authorized_candidates_on_his_side": 269,
+      "AT_CLOCK_nearest_machine_band": {
+        "lo": 23577.52,
+        "hi": 23582.48,
+        "gap_points": 26.52
+      },
       "AT_CLOCK_gate_census": {},
       "AT_CLOCK_subreasons": {},
       "AT_CLOCK_rows": [],
@@ -153,15 +166,74 @@
         "marked_main_timeframe": "5m"
       },
       "entry_buckets_examined": [
-        "2026-03-31 09:40:00-04:00",
-        "2026-03-31 09:45:00-04:00"
+        "2026-03-31T09:40:00-04:00",
+        "2026-03-31T09:45:00-04:00"
       ],
-      "AT_CLOCK_classification": "NO_CANDIDATE_AT_ENTRY",
-      "AT_CLOCK_why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
-      "AT_CLOCK_candidates": 0,
-      "AT_CLOCK_gate_census": {},
-      "AT_CLOCK_subreasons": {},
-      "AT_CLOCK_rows": [],
+      "AT_CLOCK_classification": "STORY_NOT_RECOGNIZED",
+      "AT_CLOCK_why": "at his clock the machine reached his zone and did not recognise the interaction (REJECTION_STORY_INCOMPLETE 3/3); acceptance is NOT operative. Sub-reasons: [('A_NORMAL_REJECTION|MERE_APPROACH_WITHOUT_TOUCH', 3)]",
+      "AT_CLOCK_candidates": 3,
+      "AT_CLOCK_authorized_candidates_on_his_side": 261,
+      "AT_CLOCK_nearest_machine_band": {
+        "lo": 23307.85,
+        "hi": 23315.15,
+        "gap_points": 0.0
+      },
+      "AT_CLOCK_gate_census": {
+        "REJECTION_STORY_INCOMPLETE": 3
+      },
+      "AT_CLOCK_subreasons": {
+        "A_NORMAL_REJECTION|MERE_APPROACH_WITHOUT_TOUCH": 3
+      },
+      "AT_CLOCK_rows": [
+        {
+          "clock": "2026-03-31T09:47:00-04:00",
+          "bucket": "2026-03-31T09:45:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
+          "location_lo": 23307.855,
+          "location_hi": 23315.145,
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:48:00-04:00",
+          "bucket": "2026-03-31T09:45:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
+          "location_lo": 23307.855,
+          "location_hi": 23315.145,
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:49:00-04:00",
+          "bucket": "2026-03-31T09:45:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
+          "location_lo": 23307.855,
+          "location_hi": 23315.145,
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ],
       "CONTEXT_session_census_NOT_THE_CLASS": {
         "FORCE_NOT_CONFIRMED": 62,
         "INTRA_15M_FORCE_NOT_CONFIRMED": 12,
@@ -171,7 +243,7 @@
       "CONTEXT_dominant_gate": "NO_LEGAL_ROUTE_MATCHED",
       "CONTEXT_would_have_classified_as": "STORY_NOT_RECOGNIZED",
       "CONTEXT_records": 335,
-      "at_clock_and_census_DISAGREE": true,
+      "at_clock_and_census_DISAGREE": false,
       "records_in_session": 7236
     },
     {
@@ -189,15 +261,42 @@
         "marked_main_timeframe": "15m"
       },
       "entry_buckets_examined": [
-        "2026-04-06 09:55:00-04:00",
-        "2026-04-06 10:00:00-04:00"
+        "2026-04-06T09:55:00-04:00",
+        "2026-04-06T10:00:00-04:00"
       ],
-      "AT_CLOCK_classification": "NO_CANDIDATE_AT_ENTRY",
-      "AT_CLOCK_why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
-      "AT_CLOCK_candidates": 0,
-      "AT_CLOCK_gate_census": {},
-      "AT_CLOCK_subreasons": {},
-      "AT_CLOCK_rows": [],
+      "AT_CLOCK_classification": "STORY_NOT_RECOGNIZED",
+      "AT_CLOCK_why": "at his clock the machine reached his zone and did not recognise the interaction (REJECTION_STORY_INCOMPLETE 1/1); acceptance is NOT operative. Sub-reasons: [('A_NORMAL_REJECTION|TOUCH_WITHOUT_DIRECTIONAL_CONTROL', 1)]",
+      "AT_CLOCK_candidates": 1,
+      "AT_CLOCK_authorized_candidates_on_his_side": 80,
+      "AT_CLOCK_nearest_machine_band": {
+        "lo": 24407.93,
+        "hi": 24435.07,
+        "gap_points": 0.0
+      },
+      "AT_CLOCK_gate_census": {
+        "REJECTION_STORY_INCOMPLETE": 1
+      },
+      "AT_CLOCK_subreasons": {
+        "A_NORMAL_REJECTION|TOUCH_WITHOUT_DIRECTIONAL_CONTROL": 1
+      },
+      "AT_CLOCK_rows": [
+        {
+          "clock": "2026-04-06T10:04:00-04:00",
+          "bucket": "2026-04-06T10:00:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97649",
+          "location_lo": 24407.929017857143,
+          "location_hi": 24435.070982142857,
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_STORY_INCOMPLETE",
+          "authority_refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ],
       "CONTEXT_session_census_NOT_THE_CLASS": {
         "FORCE_NOT_CONFIRMED": 66,
         "INTRA_15M_FORCE_NOT_CONFIRMED": 22,
@@ -227,12 +326,18 @@
         "marked_main_timeframe": "15m"
       },
       "entry_buckets_examined": [
-        "2026-03-24 09:25:00-04:00",
-        "2026-03-24 09:30:00-04:00"
+        "2026-03-24T09:25:00-04:00",
+        "2026-03-24T09:30:00-04:00"
       ],
-      "AT_CLOCK_classification": "NO_CANDIDATE_AT_ENTRY",
-      "AT_CLOCK_why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
+      "AT_CLOCK_classification": "LOCATION_NOT_IN_MAP",
+      "AT_CLOCK_why": "the machine WAS deciding at his clock on his side - 66 authorized candidates in those buckets - but NONE of its locations covers the level he traded. Nearest band 24219.78-24235.97, gap 27.53 points (the frozen stop is 17.25, so this is a different level, not a near-miss)",
       "AT_CLOCK_candidates": 0,
+      "AT_CLOCK_authorized_candidates_on_his_side": 66,
+      "AT_CLOCK_nearest_machine_band": {
+        "lo": 24219.78,
+        "hi": 24235.97,
+        "gap_points": 27.53
+      },
       "AT_CLOCK_gate_census": {},
       "AT_CLOCK_subreasons": {},
       "AT_CLOCK_rows": [],
@@ -262,12 +367,18 @@
         "marked_main_timeframe": "5m"
       },
       "entry_buckets_examined": [
-        "2026-03-30 09:35:00-04:00",
-        "2026-03-30 09:40:00-04:00"
+        "2026-03-30T09:35:00-04:00",
+        "2026-03-30T09:40:00-04:00"
       ],
-      "AT_CLOCK_classification": "NO_CANDIDATE_AT_ENTRY",
-      "AT_CLOCK_why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
+      "AT_CLOCK_classification": "LOCATION_NOT_IN_MAP",
+      "AT_CLOCK_why": "the machine WAS deciding at his clock on his side - 269 authorized candidates in those buckets - but NONE of its locations covers the level he traded. Nearest band 23577.52-23582.48, gap 26.52 points (the frozen stop is 17.25, so this is a different level, not a near-miss)",
       "AT_CLOCK_candidates": 0,
+      "AT_CLOCK_authorized_candidates_on_his_side": 269,
+      "AT_CLOCK_nearest_machine_band": {
+        "lo": 23577.52,
+        "hi": 23582.48,
+        "gap_points": 26.52
+      },
       "AT_CLOCK_gate_census": {},
       "AT_CLOCK_subreasons": {},
       "AT_CLOCK_rows": [],
@@ -298,15 +409,74 @@
         "marked_main_timeframe": "5m"
       },
       "entry_buckets_examined": [
-        "2026-03-31 09:40:00-04:00",
-        "2026-03-31 09:45:00-04:00"
+        "2026-03-31T09:40:00-04:00",
+        "2026-03-31T09:45:00-04:00"
       ],
-      "AT_CLOCK_classification": "NO_CANDIDATE_AT_ENTRY",
-      "AT_CLOCK_why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
-      "AT_CLOCK_candidates": 0,
-      "AT_CLOCK_gate_census": {},
-      "AT_CLOCK_subreasons": {},
-      "AT_CLOCK_rows": [],
+      "AT_CLOCK_classification": "STORY_NOT_RECOGNIZED",
+      "AT_CLOCK_why": "at his clock the machine reached his zone and did not recognise the interaction (REJECTION_STORY_INCOMPLETE 3/3); acceptance is NOT operative. Sub-reasons: [('A_NORMAL_REJECTION|MERE_APPROACH_WITHOUT_TOUCH', 3)]",
+      "AT_CLOCK_candidates": 3,
+      "AT_CLOCK_authorized_candidates_on_his_side": 261,
+      "AT_CLOCK_nearest_machine_band": {
+        "lo": 23307.85,
+        "hi": 23315.15,
+        "gap_points": 0.0
+      },
+      "AT_CLOCK_gate_census": {
+        "REJECTION_STORY_INCOMPLETE": 3
+      },
+      "AT_CLOCK_subreasons": {
+        "A_NORMAL_REJECTION|MERE_APPROACH_WITHOUT_TOUCH": 3
+      },
+      "AT_CLOCK_rows": [
+        {
+          "clock": "2026-03-31T09:47:00-04:00",
+          "bucket": "2026-03-31T09:45:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
+          "location_lo": 23307.855,
+          "location_hi": 23315.145,
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:48:00-04:00",
+          "bucket": "2026-03-31T09:45:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
+          "location_lo": 23307.855,
+          "location_hi": 23315.145,
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:49:00-04:00",
+          "bucket": "2026-03-31T09:45:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
+          "location_lo": 23307.855,
+          "location_hi": 23315.145,
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ],
       "CONTEXT_session_census_NOT_THE_CLASS": {
         "FORCE_NOT_CONFIRMED": 62,
         "INTRA_15M_FORCE_NOT_CONFIRMED": 12,
@@ -316,7 +486,7 @@
       "CONTEXT_dominant_gate": "NO_LEGAL_ROUTE_MATCHED",
       "CONTEXT_would_have_classified_as": "STORY_NOT_RECOGNIZED",
       "CONTEXT_records": 335,
-      "at_clock_and_census_DISAGREE": true,
+      "at_clock_and_census_DISAGREE": false,
       "records_in_session": 7236
     },
     {
@@ -334,15 +504,42 @@
         "marked_main_timeframe": "15m"
       },
       "entry_buckets_examined": [
-        "2026-04-06 09:55:00-04:00",
-        "2026-04-06 10:00:00-04:00"
+        "2026-04-06T09:55:00-04:00",
+        "2026-04-06T10:00:00-04:00"
       ],
-      "AT_CLOCK_classification": "NO_CANDIDATE_AT_ENTRY",
-      "AT_CLOCK_why": "the derivation produced NO candidate at his entry clock on his zone - it never reached the interaction he traded",
-      "AT_CLOCK_candidates": 0,
-      "AT_CLOCK_gate_census": {},
-      "AT_CLOCK_subreasons": {},
-      "AT_CLOCK_rows": [],
+      "AT_CLOCK_classification": "STORY_NOT_RECOGNIZED",
+      "AT_CLOCK_why": "at his clock the machine reached his zone and did not recognise the interaction (REJECTION_STORY_INCOMPLETE 1/1); acceptance is NOT operative. Sub-reasons: [('A_NORMAL_REJECTION|TOUCH_WITHOUT_DIRECTIONAL_CONTROL', 1)]",
+      "AT_CLOCK_candidates": 1,
+      "AT_CLOCK_authorized_candidates_on_his_side": 80,
+      "AT_CLOCK_nearest_machine_band": {
+        "lo": 24407.93,
+        "hi": 24435.07,
+        "gap_points": 0.0
+      },
+      "AT_CLOCK_gate_census": {
+        "REJECTION_STORY_INCOMPLETE": 1
+      },
+      "AT_CLOCK_subreasons": {
+        "A_NORMAL_REJECTION|TOUCH_WITHOUT_DIRECTIONAL_CONTROL": 1
+      },
+      "AT_CLOCK_rows": [
+        {
+          "clock": "2026-04-06T10:04:00-04:00",
+          "bucket": "2026-04-06T10:00:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97649",
+          "location_lo": 24407.929017857143,
+          "location_hi": 24435.070982142857,
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_STORY_INCOMPLETE",
+          "authority_refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ],
       "CONTEXT_session_census_NOT_THE_CLASS": {
         "FORCE_NOT_CONFIRMED": 66,
         "INTRA_15M_FORCE_NOT_CONFIRMED": 22,
@@ -358,6 +555,6 @@
   ],
   "attribution_note": "the acceptance_bars=2 pass is a LABELLED DIAGNOSTIC for attribution only. R4 stands: nothing here is chosen by agreement, score or outcome, and the landed value is not re-opened by this module.",
   "repairs": "NONE. This module attributes; ALGO-059 rules the repair.",
-  "runtime_seconds": 178.39,
+  "runtime_seconds": 179.96,
   "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
 }

@@ -1,7 +1,0 @@
-{
-  "pid": 55920,
-  "purpose": "research.run_refusal_diagnosis_lost_four",
-  "artifact": "research\\current_mnq_strategy_v2_4_refusal_diagnosis_lost_four_2026_08_23.json",
-  "started": null,
-  "note": "PID-verified. A stopped wrapper is not a stopped child (ALGO-057 4.1)."
-}

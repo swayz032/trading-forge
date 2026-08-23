@@ -1,0 +1,302 @@
+{
+  "artifact": "LOCATION_MAP_RESOLUTION",
+  "status": "DIAGNOSTIC. Resolves WHY a level is absent from the map. Repairs nothing, selects no rule, tunes no parameter. ALGO-063 section 3.",
+  "authority": "ALGO-063 section 3",
+  "produced": "2026-08-23",
+  "question": "for each LOCATION_NOT_IN_MAP session, WHY is his level absent from the map - and does the pre-open freeze explain it?",
+  "pre_registered_ladder": {
+    "L1_MAP_FROZEN_PRE_OPEN": "not covered at 09:30, covered when the SAME rule is recomputed at his marked_time -> the freeze is the cause",
+    "L2_MAP_RULE_EXCLUDES": "covered by neither -> the rule excludes his level",
+    "L3_COVERED_BUT_UNAUTHORIZED": "a zone covers it pre-open but is not entry_authorized -> a gate, not the map",
+    "L4_NEAR_MISS": "nearest band edge within the frozen 17.25-point stop",
+    "L0_UNRESOLVED": "residual, stated rather than forced"
+  },
+  "map_rule_executable_sites": {
+    "pre_open_anchor": "research/current_mnq_strategy_v2_4_kernel.py:180  open_ts = pd.Timestamp(f\"{dte} 09:30\", tz=core.TZ)",
+    "map_built_once_at_that_anchor": "research/current_mnq_strategy_v2_4_kernel.py:187  locations, _ = build_entry_locations_v24(env, dte, open_ts, p)",
+    "zones_causal_as_of_the_anchor": "research/current_mnq_strategy_v2_4_levels.py:229  established_zones = core.build_zones(piv15, h15, open_ts, p, look_days=40)",
+    "atr_causal_as_of_the_anchor": "research/current_mnq_strategy_v2_4_levels.py:231  a15 = h15[h15.index + 15min <= open_ts].atr.tail(20).median()"
+  },
+  "frozen_stop_points": 17.25,
+  "subjects": [
+    "2026-03-24",
+    "2026-03-30"
+  ],
+  "resolutions": {
+    "2026-03-24": "L2_MAP_RULE_EXCLUDES",
+    "2026-03-30": "L2_MAP_RULE_EXCLUDES"
+  },
+  "control_row_2026_04_14": {
+    "session": "2026-04-14",
+    "is_control": true,
+    "trader_final_action": "ENTER_LONG",
+    "his_direction": "L",
+    "his_level": {
+      "lo": 25620.5,
+      "hi": 25620.75,
+      "role": "SUPPORT",
+      "source_method": "VISIBLE_REJECTION",
+      "marked_time": "2026-04-14T09:30:00-04:00",
+      "marked_main_timeframe": "5m",
+      "width_points": 0.25
+    },
+    "map_PRE_OPEN_0930": {
+      "anchor": "2026-04-14T09:30:00-04:00",
+      "locations_built": 69,
+      "authorized_built": 69,
+      "covering_his_level": 1,
+      "covering_and_authorized": 1,
+      "covering_bands": [
+        {
+          "id": "SWING:S:2026-04-14T07:45:00-04:00:102479",
+          "lo": 25618.55,
+          "hi": 25620.95,
+          "side": "S",
+          "source": "STRONG_SWING_DISPLACEMENT",
+          "entry_authorized": true
+        }
+      ],
+      "nearest_band": {
+        "lo": 25618.55,
+        "hi": 25620.95,
+        "gap_points": 0.0,
+        "entry_authorized": true
+      }
+    },
+    "map_RECOMPUTED_AT_HIS_MARKED_TIME": {
+      "anchor": "2026-04-14T09:30:00-04:00",
+      "locations_built": 69,
+      "authorized_built": 69,
+      "covering_his_level": 1,
+      "covering_and_authorized": 1,
+      "covering_bands": [
+        {
+          "id": "SWING:S:2026-04-14T07:45:00-04:00:102479",
+          "lo": 25618.55,
+          "hi": 25620.95,
+          "side": "S",
+          "source": "STRONG_SWING_DISPLACEMENT",
+          "entry_authorized": true
+        }
+      ],
+      "nearest_band": {
+        "lo": 25618.55,
+        "hi": 25620.95,
+        "gap_points": 0.0,
+        "entry_authorized": true
+      }
+    },
+    "resolution": "L3a_COVERED_AND_AUTHORIZED",
+    "why": "an AUTHORIZED zone covered his level pre-open, so for this row the map is NOT the question - any absence at his clock is a later gate",
+    "L2_rule_and_parameter": {
+      "nearest_same_side_pivot": 25619.75,
+      "distance_points": 0.88,
+      "wick": 0.223,
+      "min_wick": 0.2,
+      "wick_passes": true,
+      "disp": 2.1,
+      "single_swing_threshold": 2.094,
+      "disp_passes": true,
+      "threshold_basis": "Q75 of 338 same-side reference pivots",
+      "operative_parameter": null,
+      "rule": "CONTROL: enters via exceptional_single_swing_path, clearing min_wick by 0.023 and the displacement threshold by 0.006"
+    }
+  },
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "trader_final_action": "ENTER_LONG",
+      "his_direction": "L",
+      "his_level": {
+        "lo": 24192,
+        "hi": 24192.25,
+        "role": "SUPPORT",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-03-24T09:32:00-04:00",
+        "marked_main_timeframe": "15m",
+        "width_points": 0.25
+      },
+      "map_PRE_OPEN_0930": {
+        "anchor": "2026-03-24T09:30:00-04:00",
+        "locations_built": 53,
+        "authorized_built": 53,
+        "covering_his_level": 0,
+        "covering_and_authorized": 0,
+        "covering_bands": [],
+        "nearest_band": {
+          "lo": 24219.78348214286,
+          "hi": 24235.96651785714,
+          "gap_points": 27.53,
+          "entry_authorized": true
+        }
+      },
+      "map_RECOMPUTED_AT_HIS_MARKED_TIME": {
+        "anchor": "2026-03-24T09:32:00-04:00",
+        "locations_built": 53,
+        "authorized_built": 53,
+        "covering_his_level": 0,
+        "covering_and_authorized": 0,
+        "covering_bands": [],
+        "nearest_band": {
+          "lo": 24219.78348214286,
+          "hi": 24235.96651785714,
+          "gap_points": 27.53,
+          "entry_authorized": true
+        }
+      },
+      "resolution": "L2_MAP_RULE_EXCLUDES",
+      "why": "the map rule places no zone on his level at EITHER instant, so the freeze is not the cause - the rule itself excludes it",
+      "L2_rule_and_parameter": {
+        "nearest_same_side_pivot": 24193.5,
+        "distance_points": 1.38,
+        "wick": 0.038,
+        "min_wick": 0.2,
+        "wick_passes": false,
+        "disp": 1.798,
+        "single_swing_threshold": 2.189,
+        "disp_passes": false,
+        "threshold_basis": "Q75 of 340 same-side reference pivots",
+        "operative_parameter": "min_wick",
+        "rule": "exceptional_single_swing_path AND established_zone_path both require wick >= min_wick; this pivot fails it, so neither path can admit his level"
+      }
+    },
+    {
+      "session": "2026-03-30",
+      "is_control": false,
+      "trader_final_action": "ENTER_SHORT",
+      "his_direction": "S",
+      "his_level": {
+        "lo": 23609,
+        "hi": 23609.25,
+        "role": "RESISTANCE",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-03-30T09:35:00-04:00",
+        "marked_main_timeframe": "5m",
+        "width_points": 0.25
+      },
+      "map_PRE_OPEN_0930": {
+        "anchor": "2026-03-30T09:30:00-04:00",
+        "locations_built": 64,
+        "authorized_built": 64,
+        "covering_his_level": 0,
+        "covering_and_authorized": 0,
+        "covering_bands": [],
+        "nearest_band": {
+          "lo": 23577.522857142856,
+          "hi": 23582.477142857144,
+          "gap_points": 26.52,
+          "entry_authorized": true
+        }
+      },
+      "map_RECOMPUTED_AT_HIS_MARKED_TIME": {
+        "anchor": "2026-03-30T09:35:00-04:00",
+        "locations_built": 64,
+        "authorized_built": 64,
+        "covering_his_level": 0,
+        "covering_and_authorized": 0,
+        "covering_bands": [],
+        "nearest_band": {
+          "lo": 23577.522857142856,
+          "hi": 23582.477142857144,
+          "gap_points": 26.52,
+          "entry_authorized": true
+        }
+      },
+      "resolution": "L2_MAP_RULE_EXCLUDES",
+      "why": "the map rule places no zone on his level at EITHER instant, so the freeze is not the cause - the rule itself excludes it",
+      "L2_rule_and_parameter": {
+        "nearest_same_side_pivot": 23611.0,
+        "distance_points": 1.88,
+        "wick": 0.589,
+        "min_wick": 0.2,
+        "wick_passes": true,
+        "disp": 1.474,
+        "single_swing_threshold": 2.079,
+        "disp_passes": false,
+        "threshold_basis": "Q75 of 367 same-side reference pivots",
+        "operative_parameter": "exceptional_single_swing_path displacement threshold max(1.0, Q75(same-side disp))",
+        "rule": "wick passes, so the single-swing path is reachable, but displacement 1.474 is below the 2.079 threshold; the established path needs 2 independent rejections and this pivot is alone in its price cluster"
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "trader_final_action": "ENTER_LONG",
+      "his_direction": "L",
+      "his_level": {
+        "lo": 25620.5,
+        "hi": 25620.75,
+        "role": "SUPPORT",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-04-14T09:30:00-04:00",
+        "marked_main_timeframe": "5m",
+        "width_points": 0.25
+      },
+      "map_PRE_OPEN_0930": {
+        "anchor": "2026-04-14T09:30:00-04:00",
+        "locations_built": 69,
+        "authorized_built": 69,
+        "covering_his_level": 1,
+        "covering_and_authorized": 1,
+        "covering_bands": [
+          {
+            "id": "SWING:S:2026-04-14T07:45:00-04:00:102479",
+            "lo": 25618.55,
+            "hi": 25620.95,
+            "side": "S",
+            "source": "STRONG_SWING_DISPLACEMENT",
+            "entry_authorized": true
+          }
+        ],
+        "nearest_band": {
+          "lo": 25618.55,
+          "hi": 25620.95,
+          "gap_points": 0.0,
+          "entry_authorized": true
+        }
+      },
+      "map_RECOMPUTED_AT_HIS_MARKED_TIME": {
+        "anchor": "2026-04-14T09:30:00-04:00",
+        "locations_built": 69,
+        "authorized_built": 69,
+        "covering_his_level": 1,
+        "covering_and_authorized": 1,
+        "covering_bands": [
+          {
+            "id": "SWING:S:2026-04-14T07:45:00-04:00:102479",
+            "lo": 25618.55,
+            "hi": 25620.95,
+            "side": "S",
+            "source": "STRONG_SWING_DISPLACEMENT",
+            "entry_authorized": true
+          }
+        ],
+        "nearest_band": {
+          "lo": 25618.55,
+          "hi": 25620.95,
+          "gap_points": 0.0,
+          "entry_authorized": true
+        }
+      },
+      "resolution": "L3a_COVERED_AND_AUTHORIZED",
+      "why": "an AUTHORIZED zone covered his level pre-open, so for this row the map is NOT the question - any absence at his clock is a later gate",
+      "L2_rule_and_parameter": {
+        "nearest_same_side_pivot": 25619.75,
+        "distance_points": 0.88,
+        "wick": 0.223,
+        "min_wick": 0.2,
+        "wick_passes": true,
+        "disp": 2.1,
+        "single_swing_threshold": 2.094,
+        "disp_passes": true,
+        "threshold_basis": "Q75 of 338 same-side reference pivots",
+        "operative_parameter": null,
+        "rule": "CONTROL: enters via exceptional_single_swing_path, clearing min_wick by 0.023 and the displacement threshold by 0.006"
+      }
+    }
+  ],
+  "repairs": "NONE. This resolves; ALGO-064 rules the repair.",
+  "runtime_seconds": 7.95,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
+}
