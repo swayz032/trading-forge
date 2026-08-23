@@ -247,7 +247,14 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                     route = None
                     form = None
                     refusals: dict[str, str] = {}
+                    # WHICH ROUTES WERE ACTUALLY ASKED, recorded rather than inferred. The
+                    # loop stops at the first grant, so a candidate that Route C granted was
+                    # never put to Route D at all. A consumer selecting a route's CONSIDERED
+                    # population must join on this fact; inferring it from a gate token would
+                    # be a guess about control flow that lives in another file (ALGO-054).
+                    asked: list[str] = []
                     for candidate_route in BREAKOUT_ROUTE_ORDER:
+                        asked.append(candidate_route)
                         a = auth.decide(
                             bars, direction, float(loc.lo), float(loc.hi),
                             location_authorized=True, force_confirmed=True,
@@ -262,18 +269,35 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                         refusals[candidate_route] = a.reason
 
                     if route is None:
-                        rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
-                            route="B_C_D_BREAKOUT_FAMILY", direction=direction,
-                            location_id=str(loc.id), location_source=str(loc.source),
-                            outcome="REJECTED", killed_at=GATE_NO_ROUTE,
-                            route_refusals=refusals)
+                        r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
+                                 route="B_C_D_BREAKOUT_FAMILY", direction=direction,
+                                 location_id=str(loc.id), location_source=str(loc.source),
+                                 outcome="REJECTED", killed_at=GATE_NO_ROUTE,
+                                 routes_asked=list(asked), route_refusals=refusals)
+                        # ALGO-054: the hook fires on the REFUSAL branch too. A parameter
+                        # sensitivity run whose population is the set of candidates the
+                        # CURRENT value granted can never see a grant appear at a laxer value,
+                        # so its monotonicity would hold BY CONSTRUCTION rather than by
+                        # measurement. CONSIDERED, not granted.
+                        if on_breakout_candidate is not None:
+                            on_breakout_candidate(r_, full5=full5, ts=ts, row=partial,
+                                                  direction=direction, loc=loc, p=p, pad=pad,
+                                                  kernel_route=None)
                         continue
 
                     if not plan_allows_v24(plan, direction, "BRK5", None, loc, p):
-                        rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
-                            route=route, direction=direction,
-                            location_id=str(loc.id), location_source=str(loc.source),
-                            outcome="REJECTED", killed_at=GATE_PLAN_VETO)
+                        # The ROUTE granted here and the PLAN vetoed. For a route-parameter
+                        # sensitivity that is still a candidate the route CONSIDERED, so it
+                        # carries `routes_asked` and fires the hook like the others.
+                        r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
+                                 route=route, direction=direction,
+                                 location_id=str(loc.id), location_source=str(loc.source),
+                                 outcome="REJECTED", killed_at=GATE_PLAN_VETO,
+                                 routes_asked=list(asked), form=form)
+                        if on_breakout_candidate is not None:
+                            on_breakout_candidate(r_, full5=full5, ts=ts, row=partial,
+                                                  direction=direction, loc=loc, p=p, pad=pad,
+                                                  kernel_route=route)
                         continue
                     tag = f"{route}|{direction}|{loc.id}"
                     r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
@@ -281,7 +305,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                              location_id=str(loc.id), location_source=str(loc.source),
                              outcome="SURVIVED_TO_RANKING", killed_at=None,
                              form=form, reason=REASON_BY_FORM[form],
-                             route_refusals=refusals, tag=tag)
+                             routes_asked=list(asked), route_refusals=refusals, tag=tag)
                     survivors.append((tag, core.Candidate(
                         direction, "BRK5", loc, None, ts, decision_time, route), r_))
                     # MIRROR THE KERNEL: a BRK5 candidate on this key CONSUMES the pending

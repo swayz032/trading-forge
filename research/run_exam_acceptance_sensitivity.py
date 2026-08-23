@@ -41,8 +41,31 @@ Mechanised, and fixed before the first run:
 
 WHAT THIS MEASURES. `acceptance_bars` is read in exactly one place: `break_retest`, the
 accepted-break-then-retest form of Route D. So the observable is the Route D grant set on the
-real corpus, taken through the X-ray's breakout hook — the SAME candidates the kernel's own
-ranker left standing, never a re-walked loop.
+real corpus, taken through the X-ray's breakout hook — never a re-walked loop.
+
+═══════════════════════════════════════════════════════════════════════════════
+AMENDMENT — ALGO-054. THE POPULATION IS WHAT ROUTE D **CONSIDERED**, NOT WHAT IT GRANTED.
+THE PRE-REGISTERED RULES R1-R4 BELOW ARE UNCHANGED; ONLY THE POPULATION MOVED, AND IT MOVED
+BEFORE ANY RESULT EXISTED.
+═══════════════════════════════════════════════════════════════════════════════
+
+The selector required `outcome == SURVIVED_TO_RANKING`. That was sound while the kernel used
+its own hand-rolled predicates, which never read `acceptance_bars`. After ALGO-047 wired the
+state machine in as the kernel's entry authority, those survivors are selected BY `decide(...)`
+AT `acceptance_bars = 2` — **the value under test**.
+
+    A candidate refused at 2 was then absent from the population, so it could never be observed
+    to be GRANTED at 1. Grants could not rise. R3 asserts monotonicity against the
+    measurement and REFUSES if it does not hold — but on a population filtered by the current
+    value it would have held BY CONSTRUCTION, and R1's "identical at all three ⇒ IMMATERIAL"
+    was unreachable in one direction. The parameter would have been marking its own homework.
+
+The join is now `ROUTE_D in record.routes_asked`, a fact the X-ray RECORDS rather than one this
+module infers. The route loop stops at the first grant, so a candidate Route C granted was
+never put to Route D and is correctly absent from its considered set. Variants stay
+skip-and-count. Guards: `test_..._acceptance_sensitivity.py` pins that the considered set is a
+SUPERSET of the survivors by MEMBERSHIP, and carries a DISCRIMINATES fixture — a candidate
+REFUSED at 2 and GRANTED at 1 — so the monotonicity raise is reachable on real inputs.
 
 STATUS. This is an EXAM instrument, not a checkpoint. It runs on the finished brain and its
 verdict is a ROUTE to a decision, not the decision: a semantic constant changing is reported
@@ -126,13 +149,26 @@ def _grants_at(env, sessions, p, acceptance_bars: int) -> dict:
             # population to the whole breakout family would dilute the very sensitivity this
             # exam exists to measure, and would drag in BRK15 records whose trigger is a 15m
             # parent rather than a 5m partial.
-            if (r.get("outcome") != "SURVIVED_TO_RANKING"
-                    or r.get("route") != ROUTE_D_PREBREAK_RETEST
+            #
+            # AMENDED BY ALGO-054: CONSIDERED, NOT GRANTED. The selector used to require
+            # `outcome == SURVIVED_TO_RANKING`, which after the ALGO-047 wiring meant the
+            # population was chosen by `decide(...)` AT acceptance_bars=2 - the value under
+            # test. A candidate refused at 2 could then never be observed to be granted at 1,
+            # so grants could not rise, R3's monotonicity would hold BY CONSTRUCTION rather
+            # than by measurement, and R1's "identical => immaterial" was unreachable in one
+            # direction. The join is now on `routes_asked`, a fact the X-ray RECORDS: the
+            # route loop stops at the first grant, so a candidate Route C granted was never
+            # put to Route D and is correctly absent.
+            if (ROUTE_D_PREBREAK_RETEST not in (r.get("routes_asked") or ())
                     or r.get("variant") is not None):
                 continue
             inputs = captured.get(id(r))
             if inputs is None:
-                raise RuntimeError(f"BREAKOUT_GRANT_WITHOUT_INPUTS at {s} {r.get('clock')}")
+                raise RuntimeError(
+                    f"ROUTE_D_CANDIDATE_WITHOUT_INPUTS at {s} {r.get('clock')} "
+                    f"(outcome={r.get('outcome')}). Under ALGO-054 the hook must fire on the "
+                    f"refusal branches too; a considered candidate with no captured inputs "
+                    f"means the population and the hook have drifted apart.")
             considered += 1
             full5, ts, row = inputs["full5"], inputs["ts"], inputs["row"]
             loc, direction, pad = inputs["loc"], inputs["direction"], inputs["pad"]

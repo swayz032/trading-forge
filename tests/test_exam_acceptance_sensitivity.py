@@ -153,3 +153,145 @@ def test_the_spec_silence_is_RE_CHECKED_not_remembered():
     src = io.open(MODULE, encoding="utf-8").read()
     assert "R2_TEXTBOOK_SPEAKS" in src, (
         "there must be a branch for the spec growing an acceptance count")
+
+
+# ── ALGO-054: the population is what Route D CONSIDERED, not what it granted ────────────────
+#
+# After ALGO-047 wired the state machine in as the kernel's entry authority, the old selector
+# (`outcome == SURVIVED_TO_RANKING`) chose the population BY `decide(...)` AT the value under
+# test. A candidate refused at 2 could then never be seen granted at 1, so R3's monotonicity
+# would have held BY CONSTRUCTION. These are the two guards ALGO-054 required.
+
+def test_the_selector_joins_on_CONSIDERED_not_on_the_outcome():
+    """The circular selector must not come back. READ THE EXECUTABLE LINE, not the prose.
+
+    Stripping only `#` lines is not enough and it convicted this module's own amendment note,
+    which necessarily quotes the selector it replaced — a substring test that reads prose
+    convicts the sentence written to explain the fix. Docstrings are removed via the AST so
+    only code is examined.
+    """
+    tree = ast.parse(io.open(MODULE, encoding="utf-8").read())
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            body = getattr(node, "body", [])
+            if (body and isinstance(body[0], ast.Expr)
+                    and isinstance(body[0].value, ast.Constant)
+                    and isinstance(body[0].value.value, str)):
+                body.pop(0)
+    code = ast.unparse(tree)
+
+    assert "routes_asked" in code, "the population no longer joins on the recorded routes_asked"
+    assert "SURVIVED_TO_RANKING" not in code, (
+        "the selector is filtering on the OUTCOME again - that is the circularity ALGO-054 "
+        "amended away: the population would be chosen by the value under test")
+
+
+def test_the_considered_set_is_a_SUPERSET_of_the_survivors_BY_MEMBERSHIP():
+    """Widening must never LOSE a candidate. Compared by membership, never by count.
+
+    A count-shaped check passes when one candidate is dropped and another appears, which is
+    exactly the drift a hook fired on two branches can introduce.
+    """
+    from research import current_mnq_strategy_v2_4_candidate_xray as X
+
+    def key(r):
+        return (r.get("bucket"), r.get("clock"), r.get("direction"), r.get("location_id"))
+
+    records = _fake_route_d_records(X)
+    survivors = {key(r) for r in records
+                 if r.get("outcome") == "SURVIVED_TO_RANKING"
+                 and r.get("route") == E.ROUTE_D_PREBREAK_RETEST
+                 and r.get("variant") is None}
+    considered = {key(r) for r in records
+                  if E.ROUTE_D_PREBREAK_RETEST in (r.get("routes_asked") or ())
+                  and r.get("variant") is None}
+
+    assert survivors, "the fixture must contain at least one survivor or it proves nothing"
+    assert survivors <= considered, (
+        f"the widening LOST candidates: {sorted(survivors - considered)}")
+    assert considered - survivors, (
+        "the considered set is no bigger than the survivor set - the amendment did nothing, "
+        "and the population is still selected by the value under test")
+
+
+def _fake_route_d_records(X):
+    """Records shaped exactly as `xray_session` emits them on the three Route D branches."""
+    D, C = E.ROUTE_D_PREBREAK_RETEST, X.ROUTE_C_DISPLACEMENT
+    both = [C, D]
+    return [
+        # granted by D
+        {"bucket": "b1", "clock": "c1", "direction": "L", "location_id": "z1",
+         "outcome": "SURVIVED_TO_RANKING", "route": D, "routes_asked": both, "variant": None},
+        # D asked and refused - INVISIBLE to the old selector, and the whole point
+        {"bucket": "b2", "clock": "c2", "direction": "L", "location_id": "z2",
+         "outcome": "REJECTED", "route": "B_C_D_BREAKOUT_FAMILY",
+         "routes_asked": both + [X.ROUTE_B_BREAKOUT], "variant": None},
+        # D granted, then the PLAN vetoed it - still a candidate D considered
+        {"bucket": "b3", "clock": "c3", "direction": "S", "location_id": "z3",
+         "outcome": "REJECTED", "route": D, "routes_asked": both, "variant": None},
+        # granted by C, so D was NEVER ASKED - correctly absent from D's considered set
+        {"bucket": "b4", "clock": "c4", "direction": "L", "location_id": "z4",
+         "outcome": "SURVIVED_TO_RANKING", "route": C, "routes_asked": [C], "variant": None},
+        # a BRK15 variant - skip-and-count, never in this population
+        {"bucket": "b5", "clock": "c5", "direction": "L", "location_id": "z5",
+         "outcome": "SURVIVED_TO_RANKING", "route": X.ROUTE_B_BREAKOUT,
+         "routes_asked": both, "variant": X.VARIANT_BRK15},
+    ]
+
+
+def test_a_candidate_route_C_granted_is_NOT_in_route_Ds_considered_set():
+    """The loop stops at the first grant, so C's grant means D was never put the question."""
+    from research import current_mnq_strategy_v2_4_candidate_xray as X
+    rec = next(r for r in _fake_route_d_records(X) if r["location_id"] == "z4")
+    assert E.ROUTE_D_PREBREAK_RETEST not in rec["routes_asked"]
+
+
+def test_variants_are_excluded_from_the_population():
+    from research import current_mnq_strategy_v2_4_candidate_xray as X
+    rec = next(r for r in _fake_route_d_records(X) if r["location_id"] == "z5")
+    assert rec["variant"] is not None
+    assert not (E.ROUTE_D_PREBREAK_RETEST in rec["routes_asked"] and rec["variant"] is None)
+
+
+def test_the_monotonicity_RAISE_can_actually_FIRE_discriminating_fixture():
+    """DISCRIMINATES: a candidate REFUSED at 2 and GRANTED at 1, on real bars.
+
+    Without this the amendment is prose. `break_retest` requires `acceptance_bars` consecutive
+    completed closes beyond the level before the retest; one such close satisfies 1 and not 2,
+    so the same bars must flip. If they do not, `acceptance_bars` does not mean what R3
+    believes it means and R3 would be asserting monotonicity it cannot observe.
+    """
+    import pandas as pd
+    from research import current_mnq_strategy_v2_4_entry_authority as EA
+    from research.current_mnq_strategy_v2_4_engine import Params
+
+    tz = "America/New_York"
+    lo, hi = 100.0, 102.0
+    p = Params()
+    # approach · ONE completed close beyond · retest of the broken level · momentum trigger
+    # The retest bar must close back INSIDE. An earlier draft closed it at 102.1 — still
+    # beyond `hi` — so it extended the acceptance run instead of retesting it, and the
+    # candidate was refused at BOTH values for NO_RETEST. It would have looked like the
+    # parameter doing nothing when it was the fixture doing the wrong thing.
+    rows = [(101.0, 101.5, 100.5, 101.0),
+            (101.0, 101.5, 100.5, 101.0),
+            (101.0, 103.5, 100.9, 103.2),   # the SINGLE acceptance close beyond `hi`
+            (103.2, 103.3, 101.2, 101.5),   # retest: back inside, touching the level
+            (101.5, 104.6, 101.4, 104.4)]   # forming trigger: momentum away
+    bars = pd.DataFrame(
+        {"open": [r[0] for r in rows], "high": [r[1] for r in rows],
+         "low": [r[2] for r in rows], "close": [r[3] for r in rows]},
+        index=pd.date_range("2026-04-09 10:00", periods=len(rows), freq="5min", tz=tz))
+
+    def decide_at(n):
+        return EA.decide(bars, "L", lo, hi, location_authorized=True, force_confirmed=True,
+                         body_frac=float(p.body_frac), close_loc=float(p.close_loc),
+                         reject_wick=float(p.reject_wick), lookback=6,
+                         route=E.ROUTE_D_PREBREAK_RETEST, range_ratio=float(p.range_ratio),
+                         acceptance_bars=n)
+
+    at1, at2 = decide_at(1), decide_at(2)
+    assert at1.granted, f"the laxer value must GRANT this candidate: {at1.reason}"
+    assert not at2.granted, "the stricter value must REFUSE it, or the parameter does nothing"
+    assert at2.reason and "ACCEPT" in at2.reason.upper(), (
+        f"it must be refused for the ACCEPTANCE reason, not incidentally: {at2.reason}")
