@@ -16,25 +16,42 @@ from research import current_mnq_strategy_v2_4_bot_entry_rate as B
 from research import current_mnq_strategy_v2_4_censoring_uniformity as U
 
 
-def _fake(tmp_path, pairs):
+def _fake(tmp_path, pairs, session_first="ENTER_LONG"):
     """pairs: list of (trader_state, bot_state)."""
     p = tmp_path / "sc.json"
     p.write_text(json.dumps({"cases": [
-        {"session": f"2026-01-{i+1:02d}", "trader_state": t, "bot_state_in_window": b}
+        {"session": f"2026-01-{i+1:02d}", "trader_state": t, "bot_state_in_window": b,
+         "budget_faithful": {"session_first_action": session_first}}
         for i, (t, b) in enumerate(pairs)]}), encoding="utf-8")
     return p
 
 
-def test_the_measured_corpus_has_the_bot_entering_every_session():
+def test_the_bot_trades_in_every_single_session():
+    """The core ALGO-016 finding, ruled binding by ALGO-020 section 1 item 3."""
     m = B.measure()
     assert m["sessions"] == 14
-    assert m["bot_entered"] == 14 and m["bot_declined"] == 0
-    assert m["distinct_bot_states"] == ["ENTER_LONG", "ENTER_SHORT"], (
-        "a third bot state now exists - the tautology finding may no longer hold")
+    assert m["bot_traded_at_all_in_the_session"] == 14
+    assert m["bot_trades_every_session"] is True
 
 
-def test_not_one_session_has_both_agents_standing_aside():
-    assert B.measure()["cross_tab"]["trader_declined_bot_declined"] == 0
+def test_the_bot_never_GENUINELY_declines():
+    m = B.measure()
+    assert m["bot_genuinely_declined_in_window"] == 0
+    assert m["bot_never_declines"] is True
+
+
+def test_unavailable_is_counted_apart_from_declined():
+    """BUDGET_CONSUMED is not a decline - the bot traded, before the window.
+
+    Conflating them scores a bot trade as agreement and moved the headline 5/8 -> 6/8 in the
+    bot's favour. That mistake was made and caught while writing the F-1 repair.
+    """
+    m = B.measure()
+    assert m["bot_unavailable_in_window"] == 7
+    assert m["bot_entered_in_window"] == 7
+    assert (m["bot_entered_in_window"] + m["bot_genuinely_declined_in_window"]
+            + m["bot_unavailable_in_window"]) == m["sessions"]
+    assert B.UNAVAILABLE in m["distinct_bot_states"]
 
 
 def test_the_trader_declines_on_half_the_same_days():
@@ -42,29 +59,31 @@ def test_the_trader_declines_on_half_the_same_days():
     assert m["trader_declined"] == 7 and m["trader_entered"] == 7
 
 
-def test_missed_entries_is_flagged_as_a_tautology_while_the_bot_never_declines():
+def test_missed_entries_is_NO_LONGER_a_tautology_after_the_F1_repair():
+    """It was one only because the refuted join credited forbidden entries. Now it fires."""
     m = B.measure()
-    assert m["bot_never_declines"] is True
+    assert m["missed_trader_entries_is_a_tautology"] is False
+    assert m["bot_unavailable_in_window"] > 0, (
+        "the metric is reachable precisely because the bullet is spent pre-window somewhere")
+
+
+def test_direction_is_not_the_failure_when_the_bot_is_actually_present():
+    """5 of 5. The old 6-of-7 counted 04-09 as an opposite call; budget-faithfully it is a MISS."""
+    assert B.measure()["direction_agreement_when_both_entered"] == "5 of 5"
+
+
+def test_the_tautology_flag_SETS_when_the_bot_is_never_unavailable(tmp_path):
+    """POSITIVE WITNESS in the other direction, so the False above is not a constant."""
+    p = _fake(tmp_path, [("ENTER_LONG", "ENTER_LONG"), ("WAIT", "ENTER_SHORT")],
+              session_first="ENTER_LONG")
+    m = B.measure(p)
+    assert m["bot_unavailable_in_window"] == 0
     assert m["missed_trader_entries_is_a_tautology"] is True
 
 
-def test_the_tautology_flag_CLEARS_when_the_bot_declines_anywhere(tmp_path):
-    """POSITIVE WITNESS. Otherwise the flag above proves only that it is always set."""
-    p = _fake(tmp_path, [("ENTER_LONG", "ENTER_LONG"), ("ENTER_LONG", "NO_ENTRY_IN_WINDOW")])
-    m = B.measure(p)
-    assert m["bot_declined"] == 1
-    assert m["bot_never_declines"] is False
-    assert m["missed_trader_entries_is_a_tautology"] is False
-    assert m["cross_tab"]["trader_entered_bot_declined"] == 1
-
-
-def test_the_cross_tab_partitions_the_corpus(tmp_path):
-    """Four cells, no double counting, no case unaccounted for."""
-    for scorecard in (None, _fake(tmp_path, [
-            ("ENTER_LONG", "ENTER_LONG"), ("WAIT", "ENTER_SHORT"),
-            ("NO_TRADE", "NO_ENTRY_IN_WINDOW"), ("ENTER_SHORT", "NO_ENTRY_IN_WINDOW")])):
-        m = B.measure(scorecard) if scorecard else B.measure()
-        assert sum(m["cross_tab"].values()) == m["sessions"]
+def test_the_cross_tab_partitions_the_corpus():
+    m = B.measure()
+    assert sum(m["cross_tab"].values()) == m["sessions"]
 
 
 def test_it_reads_no_outcome_field():
@@ -113,7 +132,10 @@ def test_wait_and_no_trade_are_kept_distinct():
     assert r["declared_censored"] is False
     assert r["ends_at_window_end"] is True, (
         "it ends at the window end, which is why a naive rule would have censored it out")
-    assert r["mismatch_class"] == "BOT_ONLY_ENTRY_UNCENSORED_DECLINE"
+    assert r["mismatch_class"] == "TRADER_DECLINED_BOT_TRADED_PRE_WINDOW", (
+        "under the budget-faithful join the bot did not 'only enter' here - it had already "
+        "spent its trade before the window, so this is neither an agreement nor a bot-only "
+        "entry")
 
 
 def test_the_decomposition_accounts_for_every_case():

@@ -1,40 +1,42 @@
 #!/usr/bin/env python3
 """Does ANY recorded field separate the trades the trader wanted from the ones he did not?
 
-[MEASURED 2026-08-22]  NO. Not one.
+[MEASURED 2026-08-23, budget-faithful population, after the ALGO-020 F-1 repair]
 
-The bot entered in 14 of 14 sessions; the trader entered in 7. So the corpus splits cleanly into
-7 wanted and 7 unwanted entries, and the state machine's whole job is to tell them apart. This
-asks the prior question: IS THE INFORMATION EVEN PRESENT in what the kernel records?
+**THE HONEST ANSWER IS NOW: THE CORPUS CANNOT ANSWER THIS QUESTION AT ITS CURRENT SIZE.**
 
-    CATEGORICAL -- the receipts are indistinguishable:
-        wanted     REV 5, BRK5 2 | ZONE_REJECTION 5, PREBREAK_REPEAT 1, FIRST_BREAK 1
-                   | WICK_ZONE 5, STRONG_SWING_DISPLACEMENT 2
-        unwanted   REV 5, BRK5 2 | ZONE_REJECTION 5, PREBREAK_REPEAT 2
-                   | WICK_ZONE 4, STRONG_SWING_DISPLACEMENT 3
+Under the refuted window join this compared 7 wanted entries against 7 unwanted and found no
+separating field. The budget-faithful join removes the 7 sessions whose bullet was spent before
+the window opened -- there is no in-window bot decision to characterise in those, and no force
+receipt attached to one. What remains is **5 wanted vs 2 unwanted**.
 
-    NUMERIC -- 0 of 12 fields show complete separation. Every range overlaps.
+    CATEGORICAL -- still indistinguishable, but now at a size where that means little:
+        wanted     REV 4, BRK5 1 | WICK_ZONE 4, STRONG_SWING_DISPLACEMENT 1
+        unwanted   REV 1, BRK5 1 | WICK_ZONE 1, STRONG_SWING_DISPLACEMENT 1
 
-    WORSE, THREE FIELDS ARE CONSTANT ACROSS ALL FOURTEEN CASES:
-        force_receipt.confirmed                         always True
-        force_receipt.latest_close_at_directional_extreme always True
-        force_receipt.partial_momentum_geometry          always True
-    A field with one value carries no information. These cannot discriminate anything, and a
-    receipt built from them cannot explain a decision.
+    NUMERIC -- ZERO fields testable. The smaller group has 2 members and a separation claim
+    needs at least MIN_GROUP on both sides.
 
-WHAT THIS MEANS, and it is constructive rather than gloomy: THE STATE MACHINE CANNOT BE BUILT
-FROM THE FIELDS THE KERNEL CURRENTLY RECORDS. Whatever separates a trade the trader wants from
-one he does not is not in this instrumentation. Tuning thresholds on these fields cannot
-succeed, because there is no threshold on a field whose two groups overlap completely.
+SO THE VERDICT IS `NOT TESTABLE`, NOT "no discriminator found". Those are different claims and
+only one of them is true. Reporting the second from zero tests would be a green check with no
+path to red -- the exact defect this campaign keeps convicting itself of, and it would have
+gone out under the old wording.
 
-HONEST LIMIT ON THE STRENGTH OF THIS. Seven per group. "Complete separation" is a demanding
-criterion and its absence at n=7 is NOT proof that no signal exists -- a weak but real effect
-would not show. What it does establish is that NO DISCRIMINATOR IS AVAILABLE TO BUILD FROM
-TODAY, which is the decision-relevant claim. It also excludes `trader_label_censored`, which is
-derived from the trader's own label and would be circular.
+WHAT SURVIVES from the pre-repair run: the categorical distributions were indistinguishable at
+7-vs-7, and three force-receipt fields (`confirmed`, `latest_close_at_directional_extreme`,
+`partial_momentum_geometry`) were constant across all 14 cases and so could not discriminate
+anything. That finding was made on a larger population and is recorded in ALGO-017; it is not
+re-derived here at a size that cannot support it.
 
-Re-run this whenever a field is added to the scorecard. That is the point of it being a module
-rather than a note.
+WHAT IT MEANS FOR THE WORK: the state machine still cannot be built from the fields the kernel
+records, but the reason is now sample size as much as signal. Growing the population -- or
+computing genuinely new evidence at the decision clock, which is what ALGO-020 section 4 item 5
+orders -- is the only way this question becomes answerable.
+
+`trader_label_censored` is excluded and enforced by a test: derived from the trader's own label,
+it separates by construction and would be circular.
+
+Re-run whenever a field is added to the scorecard, or the population grows.
 
 Run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_discriminator_search
 """
@@ -56,6 +58,9 @@ ENTERED = frozenset({"ENTER_LONG", "ENTER_SHORT"})
 #: Derived from the trader's own label, so using it as a discriminator is circular.
 CIRCULAR = frozenset({"trader_label_censored"})
 
+#: A separation claim needs enough members on BOTH sides to mean anything.
+MIN_GROUP = 3
+
 
 def _flat(d: dict, prefix: str = "") -> dict:
     out: dict[str, float] = {}
@@ -70,7 +75,15 @@ def _flat(d: dict, prefix: str = "") -> dict:
 
 
 def search(scorecard: Path = SCORECARD) -> dict:
-    cases = json.load(io.open(scorecard, encoding="utf-8"))["cases"]
+    all_cases = json.load(io.open(scorecard, encoding="utf-8"))["cases"]
+    # BUDGET-FAITHFUL POPULATION (ALGO-020 F-1). Only sessions where the bot ACTUALLY entered
+    # inside the audited window can be compared against a trader decision made there. In the
+    # other 7 the bullet was spent before the window opened, so there is no in-window bot
+    # decision to characterise and no force receipt attached to one.
+    # THE DENOMINATOR SHRINKS FROM 7-vs-7 TO 5-vs-2 AND THE FINDING IS WEAKER FOR IT. Said
+    # plainly rather than quietly kept at the old size.
+    cases = [c for c in all_cases if c["bot_state_in_window"] in ENTERED]
+    excluded = len(all_cases) - len(cases)
     wanted = [c for c in cases if c["trader_state"] in ENTERED]
     unwanted = [c for c in cases if c["trader_state"] not in ENTERED]
 
@@ -90,7 +103,7 @@ def search(scorecard: Path = SCORECARD) -> dict:
     for k in keys:
         a = [f[k] for f in fa if k in f]
         b = [f[k] for f in fb if k in f]
-        if len(a) < 3 or len(b) < 3:
+        if len(a) < MIN_GROUP or len(b) < MIN_GROUP:
             continue
         allv = a + b
         if min(allv) == max(allv):
@@ -104,6 +117,10 @@ def search(scorecard: Path = SCORECARD) -> dict:
 
     return {
         "status": DIAGNOSTIC_ONLY,
+        "population": (
+            "sessions where the bot ACTUALLY entered inside the audited window, under the "
+            "one-trade budget. The rest have no in-window bot decision to characterise."),
+        "sessions_excluded_bullet_spent_pre_window": excluded,
         "wanted_entries": len(wanted),
         "unwanted_entries": len(unwanted),
         "categorical": {"wanted": cats(wanted), "unwanted": cats(unwanted)},
@@ -113,16 +130,27 @@ def search(scorecard: Path = SCORECARD) -> dict:
         "numeric_fields_completely_separating": len(separating),
         "separating_fields": separating,
         "constant_across_the_whole_corpus": constant,
+        "min_group_size_for_a_numeric_test": MIN_GROUP,
         "verdict": (
+            f"NOT TESTABLE. {len(numeric)} numeric fields could be tested because the smaller "
+            f"group has {min(len(wanted), len(unwanted))} members and the test needs "
+            f"{MIN_GROUP}. A verdict of 'no discriminator' from ZERO tests would be a green "
+            f"check with no path to red, so none is issued."
+            if not numeric else
             "NO DISCRIMINATOR AVAILABLE IN THE RECORDED FIELDS. The state machine cannot be "
             "built from what the kernel currently records; tuning a threshold on a field whose "
             "two groups overlap completely cannot succeed."
             if not separating else
             f"{len(separating)} field(s) separate the groups completely - investigate."),
+        "testable": bool(numeric),
         "strength_limit": (
-            "7 per group. Absence of COMPLETE separation at n=7 is not proof that no signal "
-            "exists; a weak but real effect would not show. The decision-relevant claim is the "
-            "weaker one: nothing available to build from today."),
+            f"{len(wanted)} wanted vs {len(unwanted)} unwanted after the budget-faithful join "
+            f"excluded {excluded} sessions whose bullet was spent pre-window. THIS IS A MUCH "
+            "WEAKER TEST THAN THE 7-vs-7 IT REPLACES: absence of complete separation at this "
+            "size is close to uninformative, and with an unwanted group this small a spurious "
+            "separation would also be easy to find. The decision-relevant claim survives only "
+            "in its weakest form - nothing available to build from today - and the honest "
+            "summary is that THE CORPUS CANNOT ANSWER THIS QUESTION at its current size."),
     }
 
 

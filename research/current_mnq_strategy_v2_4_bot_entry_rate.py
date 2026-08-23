@@ -1,49 +1,51 @@
 #!/usr/bin/env python3
-"""The bot took a trade in 14 of 14 sessions. It never declines. DIAGNOSTIC ONLY.
+"""The bot trades EVERY session. It never declines. Its failure is TIMING. DIAGNOSTIC ONLY.
 
-[MEASURED 2026-08-22, from the frozen 14-case scorecard]
+[MEASURED 2026-08-23, budget-faithful join, after the ALGO-020 F-1 repair]
 
-    sessions                          14
-    BOT entered in                    14      <-- every single one
-    BOT declined in                    0
-    TRADER entered in                  7
-    TRADER did not enter in            7
+    sessions                                14
+    bot traded AT ALL in the session        14      <-- every single one, unconditionally
+    bot ENTERED inside the audited window    7
+    bot GENUINELY DECLINED in-window         0      <-- not once
+    bot UNAVAILABLE in-window                7      <-- bullet already spent pre-window
+    trader entered                           7
 
-    trader entered  x bot entered      7
-    trader entered  x bot did NOT      0
-    trader did NOT  x bot entered      7
-    trader did NOT  x bot did NOT      0      <-- NOT ONE SESSION where both stood aside
+    trader entered  x bot entered      5     trader declined x bot entered      2
+    trader entered  x bot unavailable  2     trader declined x bot unavailable  5
+    trader entered  x bot declined     0     trader declined x bot declined     0
 
-`bot_state_in_window` takes exactly two values across the whole corpus: ENTER_LONG and
-ENTER_SHORT. There is no third.
+THREE BOT STATES, NOT TWO, AND THE THIRD IS THE POINT. `BUDGET_CONSUMED_BEFORE_WINDOW` is NOT
+a decline -- the bot traded, just earlier than the window being audited. Conflating it with
+"declined" scores a bot trade as agreement and moves the headline 5/8 -> 6/8 in the bot's
+favour. I made exactly that mistake while writing the F-1 repair and the census caught it.
 
-WHY THIS MATTERS MORE THAN THE AGREEMENT FIGURE.
+WHAT SURVIVES FROM THE REFUTED VERSION, and it is the core finding: the bot takes a trade in
+14 of 14 sessions while the trader takes one in 7. It never stands aside. ALGO-020 section 1
+item 3 ruled this binding, and the budget-faithful join confirms it at the session level.
 
-1.  `missed_trader_entries = 0` IS A TAUTOLOGY, not a measurement. A missed entry requires the
-    bot to DECLINE where the trader entered. The bot declines nowhere, so the metric is
-    structurally incapable of being nonzero on this corpus. It was published as evidence that
-    the bot's failure is "one-sided" -- it is, but not because the bot is good at not missing.
-    The same holds for `bot_declined_in_window_count = 0`.
+WHAT CHANGED, and it sharpens rather than softens:
 
-2.  THE HEADLINE MEASURES THE WRONG HALF. "6 of 8 exact agreement" is dominated by DIRECTION,
-    because the decision of WHETHER to trade is a constant. Of the 7 sessions where the trader
-    entered, the bot agreed on 6 -- so the direction model carries real signal. Of the 7 where
-    the trader did NOT enter, the bot entered on all 7 -- so the ENTRY-SELECTION model carries
-    NO measured signal at all. It is not weak; it is constant, and a constant cannot be scored.
+1.  `missed_trader_entries = 0` IS NO LONGER A TAUTOLOGY -- it was one only because the refuted
+    window join credited the bot with entries its own budget forbade. Under the repair the
+    metric is reachable and FIRES TWICE on real data (2026-03-23, 2026-04-09).
 
-3.  It composes badly with the one-trade budget. The daily bullet guarantees AT MOST one trade
-    per session; the authorization layer, as measured, guarantees AT LEAST one. Together they
-    guarantee EXACTLY one trade every session, unconditionally.
+2.  DIRECTION IS NOT THE PROBLEM. When the bot is actually available in-window and the trader
+    trades, it picks the same direction **5 of 5**. The earlier "6 of 7" included 2026-04-09 as
+    an opposite-direction error; budget-faithfully the bot was not there at all, so that is a
+    MISS, not a wrong call.
 
-WHAT THIS IS NOT. It is not a claim that the bot is unprofitable -- no PnL, realized outcome or
-winner/loser label is read here or anywhere in this campaign. It is a claim about SELECTIVITY:
-the trader passes on half these days and the machine passes on none of them.
+3.  SO THE FAILURE IS TIMING AND SELECTIVITY, NOT DIRECTION. The bot fires once a day come what
+    may, and in half the sessions it fires before the window the trader was working in. The
+    entry-SELECTION model still carries no measurable signal: what varies in-window is only
+    whether the single trade had already been spent, which is a clock artifact and not a
+    judgement about the setup.
 
-A SELECTION CAVEAT I CANNOT RESOLVE FROM THIS EVIDENCE. These 14 sessions were chosen for
-review; they are not a random sample of trading days. That biases what fraction of days a
-trader would decline in general. It does NOT touch the finding, because the comparison is
-WITHIN the same 14 sessions: on the identical days, the trader declined 7 times and the bot
-declined 0.
+WHAT THIS IS NOT. Not a claim about profitability -- no PnL, realized outcome or winner/loser
+label is read here or anywhere in this campaign. It is a claim about SELECTIVITY.
+
+SELECTION CAVEAT I CANNOT RESOLVE: these 14 sessions were chosen for review and are not a
+random sample. That biases the absolute decline rate but not this finding, which compares both
+agents WITHIN the identical 14 sessions.
 
 Run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_bot_entry_rate
 """
@@ -60,6 +62,8 @@ DIAGNOSTIC_ONLY = (
 
 SCORECARD = Path("research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json")
 ENTERED = frozenset({"ENTER_LONG", "ENTER_SHORT"})
+#: The bot spent its one trade before the window opened. NOT a decline.
+UNAVAILABLE = "BUDGET_CONSUMED_BEFORE_WINDOW"
 
 
 def measure(scorecard: Path = SCORECARD) -> dict:
@@ -68,45 +72,66 @@ def measure(scorecard: Path = SCORECARD) -> dict:
     def t_in(c):
         return c["trader_state"] in ENTERED
 
-    def b_in(c):
-        return c["bot_state_in_window"] in ENTERED
+    def b_state(c):
+        """THREE states, not two. ALGO-020 F-1: unavailable is not declined."""
+        b = c["bot_state_in_window"]
+        if b in ENTERED:
+            return "ENTERED"
+        if b == UNAVAILABLE:
+            return "UNAVAILABLE"
+        return "DECLINED"
+
+    def traded_at_all(c):
+        return ((c.get("budget_faithful") or {}).get("session_first_action") in ENTERED)
 
     n = len(cases)
-    bot_entered = sum(1 for c in cases if b_in(c))
+    entered = sum(1 for c in cases if b_state(c) == "ENTERED")
+    declined = sum(1 for c in cases if b_state(c) == "DECLINED")
+    unavailable = sum(1 for c in cases if b_state(c) == "UNAVAILABLE")
+    session_traded = sum(1 for c in cases if traded_at_all(c))
     trader_entered = sum(1 for c in cases if t_in(c))
-    cross = {
-        "trader_entered_bot_entered": sum(1 for c in cases if t_in(c) and b_in(c)),
-        "trader_entered_bot_declined": sum(1 for c in cases if t_in(c) and not b_in(c)),
-        "trader_declined_bot_entered": sum(1 for c in cases if not t_in(c) and b_in(c)),
-        "trader_declined_bot_declined": sum(1 for c in cases if not t_in(c) and not b_in(c)),
-    }
-    both_agree_direction = sum(
-        1 for c in cases if t_in(c) and b_in(c) and c["trader_state"] == c["bot_state_in_window"])
+
+    cross = {}
+    for t in (True, False):
+        for b in ("ENTERED", "DECLINED", "UNAVAILABLE"):
+            key = f'trader_{"entered" if t else "declined"}_bot_{b.lower()}'
+            cross[key] = sum(1 for c in cases if t_in(c) == t and b_state(c) == b)
+
+    both_entered = [c for c in cases if t_in(c) and b_state(c) == "ENTERED"]
+    same_dir = sum(1 for c in both_entered
+                   if c["trader_state"] == c["bot_state_in_window"])
 
     return {
         "status": DIAGNOSTIC_ONLY,
         "sessions": n,
-        "bot_entered": bot_entered,
-        "bot_declined": n - bot_entered,
+        "bot_traded_at_all_in_the_session": session_traded,
+        "bot_entered_in_window": entered,
+        "bot_genuinely_declined_in_window": declined,
+        "bot_unavailable_in_window": unavailable,
         "trader_entered": trader_entered,
         "trader_declined": n - trader_entered,
         "distinct_bot_states": sorted({c["bot_state_in_window"] for c in cases}),
         "cross_tab": cross,
-        "bot_never_declines": bot_entered == n,
-        "missed_trader_entries_is_a_tautology": bot_entered == n,
+        "bot_never_declines": declined == 0,
+        "bot_trades_every_session": session_traded == n,
+        "missed_trader_entries_is_a_tautology": session_traded == n and unavailable == 0,
         "why_tautology": (
-            "a missed entry requires the bot to DECLINE where the trader entered. The bot "
-            "declines in 0 of %d sessions, so the metric cannot be nonzero on this corpus." % n),
-        "direction_agreement_when_both_entered":
-            f'{both_agree_direction} of {cross["trader_entered_bot_entered"]}',
+            "a missed entry requires the bot to be absent where the trader entered. Under the "
+            "REFUTED window join the bot appeared to enter in all %d sessions, so the metric "
+            "could not be nonzero. The budget-faithful join makes it reachable: the bullet is "
+            "spent pre-window in %d sessions and MISSED_TRADER_ENTRY now fires on real data."
+            % (n, unavailable)),
+        "direction_agreement_when_both_entered": f"{same_dir} of {len(both_entered)}",
         "entry_selection_signal": (
-            "NONE MEASURABLE. The bot's decision to trade is a constant across all %d sessions, "
-            "and a constant cannot be scored. The published agreement figure is carried entirely "
-            "by DIRECTION." % n),
+            "STILL NONE MEASURABLE, and the reason changed. The bot trades in %d of %d "
+            "sessions unconditionally; what varies in-window is only WHETHER IT HAD ALREADY "
+            "SPENT the trade, which is a clock artifact and not a judgement about the setup. "
+            "It genuinely declines in %d sessions." % (session_traded, n, declined)),
         "composes_with_the_one_trade_budget": (
-            "the daily bullet guarantees AT MOST one trade per session; this measurement says "
-            "the authorization layer guarantees AT LEAST one. Together: exactly one trade every "
-            "session, unconditionally."),
+            "the daily bullet guarantees AT MOST one trade per session; the authorization "
+            "layer guarantees AT LEAST one. Together: exactly one trade every session, "
+            "unconditionally - and in %d of %d it lands OUTSIDE the audited window." %
+            (unavailable, n)),
         "selection_caveat": (
             "these 14 sessions were chosen for review and are not a random sample of trading "
             "days. That biases the absolute decline rate but NOT this finding, which compares "
@@ -116,17 +141,22 @@ def measure(scorecard: Path = SCORECARD) -> dict:
 
 def main() -> None:
     m = measure()
-    print(f'sessions                 : {m["sessions"]}')
-    print(f'BOT entered              : {m["bot_entered"]}   declined {m["bot_declined"]}')
-    print(f'TRADER entered           : {m["trader_entered"]}   declined {m["trader_declined"]}')
-    print(f'distinct bot states      : {m["distinct_bot_states"]}')
+    print(f'sessions                        : {m["sessions"]}')
+    print(f'bot traded at all in the session: {m["bot_traded_at_all_in_the_session"]}')
+    print(f'bot ENTERED in-window           : {m["bot_entered_in_window"]}')
+    print(f'bot GENUINELY DECLINED in-window: {m["bot_genuinely_declined_in_window"]}')
+    print(f'bot UNAVAILABLE in-window       : {m["bot_unavailable_in_window"]}')
+    print(f'TRADER entered                  : {m["trader_entered"]}   '
+          f'declined {m["trader_declined"]}')
+    print(f'distinct bot states             : {m["distinct_bot_states"]}')
     print()
     for k, v in m["cross_tab"].items():
-        print(f'  {k:32} {v}')
+        print(f'  {k:38} {v}')
     print()
-    print(f'bot never declines       : {m["bot_never_declines"]}')
-    print(f'direction agreement      : {m["direction_agreement_when_both_entered"]}')
-    print(f'missed-entries tautology : {m["missed_trader_entries_is_a_tautology"]}')
+    print(f'bot trades every session        : {m["bot_trades_every_session"]}')
+    print(f'bot never genuinely declines    : {m["bot_never_declines"]}')
+    print(f'direction agreement (both in)   : {m["direction_agreement_when_both_entered"]}')
+    print(f'missed-entries still a tautology: {m["missed_trader_entries_is_a_tautology"]}')
     print(f'  {m["why_tautology"]}')
 
 

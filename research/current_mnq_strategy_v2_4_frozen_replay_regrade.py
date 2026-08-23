@@ -19,6 +19,9 @@ import pandas as pd
 
 from research import current_mnq_strategy_v2_4_engine as eng
 from research.current_mnq_strategy_v2_4_force import force_snapshot
+from research.current_mnq_strategy_v2_4_session_budget import (
+    MAX_FULLY_APPROVED_EXECUTED_TRADES_PER_SESSION,
+)
 from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates
 from research.current_mnq_strategy_v2_4_target_policy import build_and_classify
 
@@ -130,16 +133,62 @@ def regrade_frozen_case_windows(env: dict, p: eng.Params | None = None,
         # and what the calibration generator consumes, so it is untouched. The window-scoped
         # answer is emitted beside it and consumers choose explicitly.
         in_window = [d for d in decisions if pd.Timestamp(d["bot_entry_time"]) >= start]
+
+        # ---- F-1 REPAIR (ALGO-019, grader band 5 CRITICAL) ------------------------------
+        # THE WINDOW JOIN ABOVE CREDITS THE BOT WITH TRADES ITS OWN BUDGET FORBIDS.
+        # `session_budget.MAX_FULLY_APPROVED_EXECUTED_TRADES_PER_SESSION` is 1 and three
+        # production sites enforce it, so ONLY `decisions[0]` can ever execute. In 7 of 14
+        # sessions that first A+ lands BEFORE the audited window opens - by up to 103 minutes
+        # - and `in_window[0]` then reports an entry the bullet had already been spent on.
+        # 2026-03-23 was published AGREE while production went the OPPOSITE direction 57
+        # minutes before the window opened.
+        #
+        # The budget-faithful answer: if the bullet is spent before the window, the bot CANNOT
+        # act inside it, and a trader entry there is a MISS - not an agreement.
+        # Emitted beside the window join rather than replacing it, so the session contract the
+        # calibration generator consumes is untouched and consumers choose explicitly.
+        # ---- G-3 REPAIR (ALGO-020 section 1 item 7) ---------------------------------
+        # Everything below indexes `decisions[0]` and `in_window[0]`, which assumes
+        # `iter_actionable_candidates` yields in decision-clock order. NOTHING PINNED THAT,
+        # and 2026-04-02's mixed in-window sequence (L,S,S) makes the recorded direction
+        # order-dependent. Post-F-1 the "first" decides the entire headline. Refuse rather
+        # than assume: this is the one place the order is knowable.
+        clocks = [pd.Timestamp(d["bot_entry_time"]) for d in decisions]
+        if clocks != sorted(clocks):
+            raise RuntimeError(
+                f"DECISION_CLOCKS_NOT_IN_ORDER for {case['case_id']}: {clocks}. "
+                f"`decisions[0]` is not the session's first entry and every figure "
+                f"downstream of it is wrong.")
+
+        session_first = decisions[0] if decisions else None
+        spent_before = bool(
+            session_first is not None
+            and pd.Timestamp(session_first["bot_entry_time"]) < start)
+        executable = None if (session_first is None or spent_before) else session_first
+
         row = {
             "case_id": case["case_id"], "session": case["session"],
             "window_status": status, **first,
             "decision_count_through_end": len(decisions),
             "decision_count_in_window": len(in_window),
             "decisions_discarded_by_first_only": len(decisions) - 1,
+            "budget_faithful": {
+                "one_trade_budget": MAX_FULLY_APPROVED_EXECUTED_TRADES_PER_SESSION,
+                "session_first_entry_time": (
+                    session_first["bot_entry_time"] if session_first else None),
+                "session_first_action": (
+                    session_first["bot_action"] if session_first else None),
+                "bullet_spent_before_window": spent_before,
+                "executable_in_window": bool(executable),
+                "in_window_entries_the_budget_forbids": len(in_window) if spent_before else 0,
+                "note": (
+                    "Only the session's FIRST fully-approved entry can execute. When it "
+                    "precedes the window, every in-window entry is unreachable and must not "
+                    "be scored as the bot's decision."),
+            },
         }
-        if in_window:
-            w = in_window[0]
-            row["in_window"] = {
+        def _payload(w):
+            return {
                 "bot_action": w["bot_action"],
                 "bot_entry_time": w["bot_entry_time"],
                 "bot_setup": w["bot_setup"],
@@ -153,10 +202,25 @@ def regrade_frozen_case_windows(env: dict, p: eng.Params | None = None,
                 "bot_path_reason": w["bot_path_reason"],
                 "force_receipt": w.get("force_receipt"),
             }
-            row["in_window_actions"] = [d["bot_action"] for d in in_window]
-        else:
-            row["in_window"] = None
-            row["in_window_actions"] = []
+
+        # TWO SURFACES, SEPARATELY AND LABELLED — ALGO-020 section 1 repair contract item 1.
+        #   `in_window`           PRODUCTION-FAITHFUL. Budget-honoring, and THE HEADLINE.
+        #   `authorization_view`  the budget-IGNORED kernel view. Diagnostic ONLY. It answers
+        #                         "what would the authorization layer have permitted here",
+        #                         never "what did the bot do".
+        row["in_window"] = _payload(executable) if executable is not None else None
+        row["in_window_actions"] = (
+            [executable["bot_action"]] if executable is not None else [])
+        row["authorization_view"] = {
+            "SURFACE": "BUDGET_IGNORED_DIAGNOSTIC_ONLY_NOT_THE_BOT_S_DECISION",
+            "first_permitted_in_window": _payload(in_window[0]) if in_window else None,
+            "all_in_window_actions": [d["bot_action"] for d in in_window],
+            "count": len(in_window),
+            "why_it_is_not_the_headline": (
+                "the one-trade budget means only the session's first fully-approved entry can "
+                "execute. Where that entry precedes the window, everything listed here is "
+                "unreachable. Scoring it as the bot's decision is exactly the refuted F-1 join."),
+        }
         rows.append(row)
 
     return {

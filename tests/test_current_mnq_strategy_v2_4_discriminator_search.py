@@ -19,6 +19,7 @@ def _sc(tmp_path, cases):
 
 
 def _case(session, trader, value, extra=0.0):
+    # bot_state_in_window must be an ENTRY or the budget-faithful filter drops the case.
     return {
         "session": session, "trader_state": trader, "bot_state_in_window": "ENTER_LONG",
         "entry_family_receipt": "REV", "story_receipt": "S",
@@ -72,33 +73,48 @@ def test_the_circular_field_is_excluded(tmp_path):
 
 # --- the measured corpus ---------------------------------------------------------------
 
-def test_no_recorded_field_separates_the_real_corpus():
+def test_the_real_corpus_is_NOT_TESTABLE_and_says_so():
+    """The verdict must not claim "no discriminator" from ZERO tests.
+
+    Under the refuted window join this was 7-vs-7 and the numeric test ran. Budget-faithfully
+    it is 5-vs-2, the smaller group is below MIN_GROUP, and nothing is testable. Those are
+    different claims and the artifact must make the difference visible.
+    """
     s = D.search()
-    assert s["wanted_entries"] == 7 and s["unwanted_entries"] == 7
-    assert s["numeric_fields_completely_separating"] == 0, s["separating_fields"]
-    assert "NO DISCRIMINATOR AVAILABLE" in s["verdict"]
+    assert s["wanted_entries"] == 5 and s["unwanted_entries"] == 2
+    assert s["sessions_excluded_bullet_spent_pre_window"] == 7
+    assert s["numeric_fields_tested"] == 0
+    assert s["testable"] is False
+    assert "NOT TESTABLE" in s["verdict"]
+    assert "NO DISCRIMINATOR AVAILABLE" not in s["verdict"], (
+        "a no-discriminator verdict from zero tests is a green check with no path to red")
 
 
-def test_the_route_distribution_is_identical_between_the_groups():
+def test_the_strength_limit_states_the_shrunken_population():
     s = D.search()
-    assert s["categorical_distributions_are_indistinguishable"] is True, (
-        s["categorical"])
+    assert "5 wanted vs 2 unwanted" in s["strength_limit"]
+    assert "CANNOT ANSWER THIS QUESTION" in s["strength_limit"]
 
 
-@pytest.mark.parametrize("field", [
-    "force_receipt.confirmed",
-    "force_receipt.latest_close_at_directional_extreme",
-    "force_receipt.partial_momentum_geometry",
-])
-def test_these_force_receipt_fields_are_constant_and_therefore_carry_no_information(field):
-    """A receipt field with one value across the corpus cannot explain any decision."""
-    constants = {c["field"] for c in D.search()["constant_across_the_whole_corpus"]}
-    assert field in constants, (
-        f"{field} is no longer constant - it may now carry information and the finding is stale")
+def test_a_big_enough_population_becomes_TESTABLE_again(tmp_path):
+    """POSITIVE WITNESS. NOT_TESTABLE must be a property of the data, not of the code."""
+    cases = ([_case(f"2026-01-0{i}", "ENTER_LONG", 0.5 + i / 100) for i in range(1, 5)]
+             + [_case(f"2026-02-0{i}", "WAIT", 0.5 + i / 100) for i in range(1, 5)])
+    s = D.search(_sc(tmp_path, cases))
+    assert s["testable"] is True
+    assert s["numeric_fields_tested"] > 0
+    assert "NOT TESTABLE" not in s["verdict"]
 
 
-def test_the_strength_limit_is_stated():
-    """A negative result that hides its sample size overstates itself."""
-    s = D.search()
-    assert "n=7" in s["strength_limit"] or "7 per group" in s["strength_limit"]
-    assert "not proof" in s["strength_limit"]
+def test_min_group_is_enforced_on_BOTH_sides(tmp_path):
+    """One large group cannot rescue a group of two."""
+    cases = ([_case(f"2026-01-{i:02d}", "ENTER_LONG", 0.5) for i in range(1, 9)]
+             + [_case(f"2026-02-0{i}", "WAIT", 0.9) for i in range(1, 3)])
+    s = D.search(_sc(tmp_path, cases))
+    assert s["unwanted_entries"] == 2 and s["testable"] is False
+
+
+def test_the_route_distributions_are_reported_even_when_not_testable():
+    """Categorical shape is still worth seeing; it just cannot carry a verdict at this size."""
+    c = D.search()["categorical"]
+    assert c["wanted"]["route"] and c["unwanted"]["route"]

@@ -73,10 +73,43 @@ OUT = Path("research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_
 CENSOR_WARNING = "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
 ENTERED = {"ENTER_LONG", "ENTER_SHORT"}
 
+#: Both are AGREEMENT. Taking the same trade, and BOTH GENUINELY standing aside.
+#: `BOTH_DECLINED` is the class the semantics work exists to produce, and the refuted raw
+#: string compare scored it as a disagreement (G-1). It is reachable ONLY when the bot still
+#: held its bullet inside the window - a bot that already traded pre-window did not decline,
+#: and `TRADER_DECLINED_BOT_TRADED_PRE_WINDOW` is deliberately NOT in this set.
+AGREEMENT_CLASSES = frozenset({"AGREE", "BOTH_DECLINED"})
+
+#: The bot spent its one trade before the window opened. NOT a decline; it traded.
+BUDGET_CONSUMED = "BUDGET_CONSUMED_BEFORE_WINDOW"
+
 def _bot_window_state(row: dict) -> str:
-    """The bot's decision INSIDE the audited window. It is now allowed to decline."""
+    """The bot's decision INSIDE the audited window, UNDER ITS OWN ONE-TRADE BUDGET.
+
+    F-1 REPAIR (ALGO-019). Only the session's first fully-approved entry can execute. When
+    that entry precedes the window, the bot has no bullet left inside it and CANNOT act -
+    so a trader entry there is a MISS, not an agreement. The previous version reported
+    `in_window[0]` regardless and published 2026-03-23 as AGREE while production had gone
+    the OPPOSITE direction 57 minutes before the window opened.
+    """
+    bf = row.get("budget_faithful")
+    if bf is None:
+        raise RuntimeError(
+            "REGRADE_ROW_PREDATES_THE_F1_REPAIR: no `budget_faithful` block. Re-run the "
+            "regrade; scoring this row would reproduce the refuted window join.")
+    if bf.get("bullet_spent_before_window"):
+        return BUDGET_CONSUMED
     w = row.get("in_window")
     return str(w["bot_action"]) if w else "NO_ENTRY_IN_WINDOW"
+
+
+def _missed_reason(bot: str) -> str | None:
+    """WHY the bot failed to meet a trader entry. Two independent causes, both real."""
+    if bot == BUDGET_CONSUMED:
+        return "BUDGET_CONSUMED_BEFORE_WINDOW"
+    if bot == "NO_ENTRY_IN_WINDOW":
+        return "NO_PERMISSION_IN_WINDOW"
+    return None
 
 
 def _bot_session_state(row: dict) -> str:
@@ -88,10 +121,28 @@ def _bot_session_state(row: dict) -> str:
 
 
 def _mismatch_class(trader: str, bot: str, censored: bool) -> str:
+    """Classify one case.
+
+    BUDGET_CONSUMED_BEFORE_WINDOW IS NOT A DECLINE, and conflating the two is how I nearly
+    re-inflated the very headline the band-5 grade refuted. The bot did not stand aside in
+    those sessions - IT TRADED, before the window opened. Folding that into BOTH_DECLINED
+    scored a bot trade as agreement and moved the figure 5/8 -> 6/8 in the bot's favour.
+    Unavailable, declined, and entered are three states, not two.
+    """
     t_in, b_in = trader in ENTERED, bot in ENTERED
+    unavailable = bot == BUDGET_CONSUMED
+
     if censored:
-        # No decision was ever made. Nothing here can convict or acquit the bot.
+        # No trader decision was ever made. Nothing here can convict or acquit the bot.
+        if unavailable:
+            return "CENSORED_BOT_BUDGET_CONSUMED"
         return "CENSORED_BOT_ENTERED" if b_in else "CENSORED_BOT_DECLINED"
+
+    if unavailable:
+        # The bot spent its one trade before the window. It cannot agree with anything here.
+        return ("MISSED_TRADER_ENTRY" if t_in
+                else "TRADER_DECLINED_BOT_TRADED_PRE_WINDOW")
+
     if trader == bot:
         return "AGREE"
     if t_in and b_in:
@@ -197,6 +248,11 @@ def main() -> None:
             },
             "trader_marked_tp": lab.get("trader_tp_status"),
             "mismatch_class": _mismatch_class(trader, bstate, censored),
+            "missed_reason": (
+                _missed_reason(bstate)
+                if _mismatch_class(trader, bstate, censored) == "MISSED_TRADER_ENTRY"
+                else None),
+            "budget_faithful": bot.get("budget_faithful"),
         })
 
     mism = [c["mismatch_class"] for c in cases]
@@ -208,11 +264,23 @@ def main() -> None:
     agg = {
         "join": "WINDOW",
         "join_note": "The refuted first version joined on SESSION; see F-1 in the docstring.",
-        "exact_action_agreement":
-            f"{sum(1 for c in cases if c['trader_state'] == c['bot_state_in_window'])}/14",
+        # F-2 + G-1 REPAIR (ALGO-020 section 1 item 2). Agreement is now read OFF THE
+        # CLASSIFIER and nowhere else. It used to be a raw string compare with a hardcoded
+        # /14 running parallel to `_mismatch_class`, which guarded censoring while the
+        # headline did not. Two consequences the grader red-proofed and this closes:
+        #   F-2  make one censored label's action equal its bot action and the headline moved
+        #        6/14 -> 7/14 while the census did not move at all.
+        #   G-1  a trader NO_TRADE against a bot NO_ENTRY_IN_WINDOW is BOTH_DECLINED - a
+        #        genuine agreement, and exactly what the semantics work is meant to produce -
+        #        yet a string compare scored it as DISagreement.
+        # AGREEMENT = AGREE union BOTH_DECLINED. Censored cases are excluded by the
+        # classifier itself, so there is no second place for the rule to drift.
+        "agreement_definition": "AGREE + BOTH_DECLINED, from _mismatch_class only",
+        "agreement_decided_cases":
+            f"{sum(1 for c in unc if c['mismatch_class'] in AGREEMENT_CLASSES)}/{len(unc)}",
         "uncensored_case_count": len(unc),
-        "exact_action_agreement_uncensored":
-            f"{sum(1 for c in unc if c['trader_state'] == c['bot_state_in_window'])}/{len(unc)}",
+        "censored_excluded_from_both_numerator_and_denominator":
+            sum(1 for c in cases if c["trader_label_censored"]),
         "opposite_direction_at_decision_count": mism.count("OPPOSITE_DIRECTION_AT_DECISION"),
         "missed_trader_entry_count": mism.count("MISSED_TRADER_ENTRY"),
         "bot_only_entry_uncensored_decline_count":
@@ -220,8 +288,24 @@ def main() -> None:
         "both_declined_count": mism.count("BOTH_DECLINED"),
         "censored_bot_entered_count": mism.count("CENSORED_BOT_ENTERED"),
         "censored_bot_declined_count": mism.count("CENSORED_BOT_DECLINED"),
-        "bot_declined_in_window_count":
+        "missed_reason_census": {
+            r: sum(1 for c in cases if c.get("missed_reason") == r)
+            for r in ("BUDGET_CONSUMED_BEFORE_WINDOW", "NO_PERMISSION_IN_WINDOW")},
+        "sessions_whose_bullet_was_spent_before_the_window":
+            sum(1 for c in cases
+                if (c.get("budget_faithful") or {}).get("bullet_spent_before_window")),
+        "in_window_entries_the_budget_forbids":
+            sum((c.get("budget_faithful") or {}).get("in_window_entries_the_budget_forbids", 0)
+                for c in cases),
+        "bot_genuinely_declined_in_window_count":
             sum(1 for c in cases if c["bot_state_in_window"] == "NO_ENTRY_IN_WINDOW"),
+        "bot_unavailable_in_window_count":
+            sum(1 for c in cases if c["bot_state_in_window"] == BUDGET_CONSUMED),
+        "bot_entered_in_window_count":
+            sum(1 for c in cases if c["bot_state_in_window"] in ENTERED),
+        "bot_traded_at_all_in_the_session_count":
+            sum(1 for c in cases
+                if ((c.get("budget_faithful") or {}).get("session_first_action") in ENTERED)),
         "total_decisions_through_window_end":
             sum(c["decisions_through_window_end"] or 0 for c in cases),
         "total_decisions_in_window": sum(c["decisions_in_window"] or 0 for c in cases),
@@ -263,12 +347,21 @@ def main() -> None:
 
     print(f"wrote {OUT}")
     print("  join                      : WINDOW  (was SESSION - refuted)")
-    print(f"  exact action agreement    : {agg['exact_action_agreement']}")
-    print(f"  ... uncensored only       : {agg['exact_action_agreement_uncensored']}")
+    print(f"  agreement (decided cases) : {agg['agreement_decided_cases']}"
+          f"   [{agg['agreement_definition']}]")
+    print(f"  censored, excluded        : "
+          f"{agg['censored_excluded_from_both_numerator_and_denominator']}")
+    print(f"  bullet spent pre-window   : "
+          f"{agg['sessions_whose_bullet_was_spent_before_the_window']} sessions, hiding "
+          f"{agg['in_window_entries_the_budget_forbids']} unreachable in-window entries")
+    print(f"  missed reasons            : {agg['missed_reason_census']}")
     print(f"  opposite AT decision      : {agg['opposite_direction_at_decision_count']}")
     print(f"  missed trader entries     : {agg['missed_trader_entry_count']}")
     print(f"  bot-only vs REAL decline  : {agg['bot_only_entry_uncensored_decline_count']}")
-    print(f"  bot declined in window    : {agg['bot_declined_in_window_count']}")
+    print(f"  bot entered in window     : {agg['bot_entered_in_window_count']}   "
+          f"declined {agg['bot_genuinely_declined_in_window_count']}   "
+          f"unavailable {agg['bot_unavailable_in_window_count']}")
+    print(f"  bot traded at all (session): {agg['bot_traded_at_all_in_the_session_count']} of 14")
     print(f"  censored (segregated)     : {agg['censored_bot_entered_count']} entered / "
           f"{agg['censored_bot_declined_count']} declined")
     print(f"  decisions end / in-window : {agg['total_decisions_through_window_end']} / "
