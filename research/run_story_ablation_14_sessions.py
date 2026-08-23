@@ -24,6 +24,7 @@ import time
 from datetime import date
 from pathlib import Path
 
+from research.current_mnq_strategy_v2_4_single_writer import single_writer
 from research import current_mnq_strategy_v2_2_engine_final as old
 from research import current_mnq_strategy_v2_4_engine as v24
 from research.current_mnq_strategy_v2_4_candidate_xray import ROUTE_A_REJECTION, xray_session
@@ -158,4 +159,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # ALGO-057 4.1: ONE WRITER PER ARTIFACT, and the lock covers the whole RUN. Two processes
+    # each computing for twenty minutes and then writing the same file is the incident; a
+    # guard at the write instant would have let both do the work and still collide.
+    with single_writer(OUT, purpose=__spec__.name if __spec__ else __file__):
+        main()

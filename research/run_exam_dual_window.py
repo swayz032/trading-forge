@@ -58,6 +58,7 @@ import time
 from datetime import time as _time
 from pathlib import Path
 
+from research.current_mnq_strategy_v2_4_single_writer import single_writer
 from research import current_mnq_strategy_v2_4_exam_window as W
 from research import run_frozen_14_case_baseline as B
 
@@ -231,4 +232,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # ALGO-057 4.1: ONE WRITER PER ARTIFACT, and the lock covers the whole RUN.
+    with single_writer(OUT, purpose=__spec__.name if __spec__ else __file__):
+        raise SystemExit(main())
