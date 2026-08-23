@@ -27,7 +27,9 @@ that produced it and every refusal names the step it stopped at.
 
 THE FOUR ROUTES ARE CLOSED. ALGO-009 §3 says four families and no fifth; ALGO-020 §2 ruled
 BRK15 a VARIANT of Route B rather than a fifth route. Adding a fifth is a semantic change that
-needs its own ruling, and a test pins the count.
+needs its own ruling, and a test pins the count. BRK15 is reached as `route=B, variant=BRK15`
+and is refused under any other route, so the variant cannot become a fifth permission path
+wearing a different name.
 """
 from __future__ import annotations
 
@@ -66,11 +68,12 @@ GRANTED = "GRANTED"
 #: checked. A machine that reports the wrong blocking step sends the reader to the wrong place.
 STATE_ORDER = (WAIT_NO_LOCATION, WAIT_NO_INTERACTION, WAIT_NO_STORY, WAIT_NO_FORCE, GRANTED)
 
-# ALGO-020 section 2: BRK15 is a VARIANT of Route B, not a fifth route. The kernel and the X-ray
-# both carry it; this machine does not derive it yet, and naming the deferral is the point -
-# an unbuilt variant reported as "Route B handled" is a false green.
-VARIANT_BRK15 = "BRK15_WEAK_FIRST_BREAK_CONTINUATION"
-NOT_DERIVED_HERE = (VARIANT_BRK15,)
+# ALGO-020 section 2: BRK15 is a VARIANT of Route B, not a fifth route. It is now derived, so
+# the deferral list is EMPTY rather than deleted - an empty list a test still checks is worth
+# more than a list that quietly disappeared along with the thing it was tracking.
+VARIANT_BRK15 = brk.VARIANT_BRK15
+VARIANTS = (VARIANT_BRK15,)
+NOT_DERIVED_HERE: tuple[str, ...] = ()
 
 #: Route D has two legal forms and either one satisfies it, so a refusal must name BOTH.
 NEITHER_D_FORM = "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED"
@@ -108,7 +111,8 @@ class Authority:
 
 def _breakout_read(bars: pd.DataFrame, route: str, direction: str, lo: float, hi: float,
                    body_frac: float, close_loc: float, reject_wick: float,
-                   range_ratio: float, acceptance_bars: int) -> brk.BreakoutRead:
+                   range_ratio: float, acceptance_bars: int,
+                   variant: str | None) -> brk.BreakoutRead:
     """Route B/C/D evidence, on COMPLETED bars plus the live trigger.
 
     Same split ALGO-033 ruled for Route A: the story is read on what the market has finished
@@ -118,6 +122,11 @@ def _breakout_read(bars: pd.DataFrame, route: str, direction: str, lo: float, hi
     completed, trigger = bars.iloc[:-1], bars.iloc[-1]
 
     if route == ROUTE_B_BREAKOUT:
+        if variant == VARIANT_BRK15:
+            # The caller supplies FIFTEEN-minute parents here, not 5m. The variant's whole
+            # premise is a weak first break, so it refuses one that already had momentum.
+            return brk.weak_break_continuation(completed, trigger, lo, hi, direction,
+                                               body_frac, close_loc)
         return brk.normal_breakout(completed, trigger, lo, hi, direction,
                                    body_frac, close_loc)
     if route == ROUTE_C_PREBREAK_DISPLACEMENT:
@@ -145,7 +154,8 @@ def decide(bars: pd.DataFrame, direction: str, lo: float, hi: float,
            pad: float = 0.0, lookback: int = 6,
            route: str = ROUTE_A_REJECTION,
            range_ratio: float | None = None,
-           acceptance_bars: int = 2) -> Authority:
+           acceptance_bars: int = 2,
+           variant: str | None = None) -> Authority:
     """Walk the machine forward. Every step must be PROVEN; the default is WAIT.
 
     `location_authorized` and `force_confirmed` are supplied by the existing, already-graded
@@ -162,6 +172,16 @@ def decide(bars: pd.DataFrame, direction: str, lo: float, hi: float,
     # it: a default that happens to match the frozen value is luck, and it rots silently the
     # first time the frozen value moves. Route C is the only route that reads it, so only
     # route C is refused without it.
+    # A variant belongs to exactly one route. Accepting BRK15 under route C or D would be a
+    # fifth permission path wearing a variant's name.
+    if variant is not None:
+        if variant not in VARIANTS:
+            raise ValueError(f"UNKNOWN_VARIANT: {variant!r} is not one of {VARIANTS}")
+        if variant == VARIANT_BRK15 and route != ROUTE_B_BREAKOUT:
+            raise ValueError(
+                f"VARIANT_BELONGS_TO_ANOTHER_ROUTE: {VARIANT_BRK15} is a variant of "
+                f"{ROUTE_B_BREAKOUT}, not {route}")
+
     if route == ROUTE_C_PREBREAK_DISPLACEMENT and range_ratio is None:
         raise ValueError(
             "RANGE_RATIO_NOT_SUPPLIED: the frozen range-expansion requirement lives in "
@@ -188,7 +208,7 @@ def decide(bars: pd.DataFrame, direction: str, lo: float, hi: float,
     else:
         read = _breakout_read(bars, route, direction, lo, hi,
                               body_frac, close_loc, reject_wick, range_ratio,
-                              acceptance_bars)
+                              acceptance_bars, variant)
         if not read.valid:
             state = (WAIT_NO_INTERACTION if read.refusal in _INTERACTION_REFUSALS
                      else WAIT_NO_STORY)
@@ -210,7 +230,7 @@ def blocking_step(a: Authority) -> int:
 __all__ = [
     "Authority", "DIAGNOSTIC_ONLY", "GRANTED", "ROUTES", "ROUTE_A_REJECTION",
     "ROUTE_B_BREAKOUT", "ROUTE_C_PREBREAK_DISPLACEMENT", "ROUTE_D_PREBREAK_RETEST",
-    "STATE_ORDER", "VARIANT_BRK15", "NEITHER_D_FORM", "NOT_DERIVED_HERE",
+    "STATE_ORDER", "VARIANT_BRK15", "VARIANTS", "NEITHER_D_FORM", "NOT_DERIVED_HERE",
     "WAIT_NO_FORCE", "WAIT_NO_INTERACTION", "WAIT_NO_LOCATION",
     "WAIT_NO_STORY", "blocking_step", "decide",
 ]

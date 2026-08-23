@@ -151,7 +151,36 @@ ARMS = [
      "def normal_breakout(completed: pd.DataFrame, trigger,",
      "def normal_breakout(bars: pd.DataFrame, trigger,",
      f"{T_BRK}::test_no_function_can_see_the_triggers_finished_form"),
+
+    # --- NOT section 7 items --------------------------------------------------------------
+    # Section 7 enumerates fifteen defects and none of them is about the BRK15 variant, so
+    # these are reported OUTSIDE its denominator. Numbering them 7.16+ would invent coverage
+    # the ruling never asked for, and an inflated denominator is the same lie as a shrunken
+    # one - just in the flattering direction.
+    ("V1", "let a STRONG first break enter through the weak-break variant", BRK,
+     "    if _momentum(bar1, direction, body_frac, close_loc):\n"
+     "        return BreakoutRead(None, BREAK_WAS_NOT_WEAK)",
+     "    if False:\n"
+     "        return BreakoutRead(None, BREAK_WAS_NOT_WEAK)",
+     f"{T_BRK}::test_a_STRONG_first_break_is_refused_by_the_variant"),
+
+    ("V2", "accept a pullback that gave the level back", BRK,
+     "    if not held:\n"
+     "        return BreakoutRead(None, PULLBACK_LOST_THE_LEVEL)",
+     "    if False:\n"
+     "        return BreakoutRead(None, PULLBACK_LOST_THE_LEVEL)",
+     f"{T_BRK}::test_a_pullback_that_gives_the_level_back_is_a_FAILED_break_not_a_setup"),
+
+    ("V3", "let the variant become a fifth route by accepting it under any route", AUTH,
+     "        if variant == VARIANT_BRK15 and route != ROUTE_B_BREAKOUT:",
+     "        if False:",
+     f"{T_AUTH}::test_the_variant_cannot_be_smuggled_in_under_another_route"),
 ]
+
+
+def _section7_items():
+    """DERIVED from ARMS. An arm whose id is not an integer is not a section 7 item."""
+    return {a[0] for a in ARMS if isinstance(a[0], int)}
 
 NOT_APPLICABLE: dict[int, str] = {}
 
@@ -165,6 +194,11 @@ CAVEATS = {
     14: ("defended structurally, not by a predicate - the kill proves the completed/trigger "
          "split is load-bearing, not that a backdated entry clock is refused elsewhere"),
 }
+
+
+def label(item) -> str:
+    """A non-section-7 arm must not print wearing a section 7 number."""
+    return f"S7.{item}" if isinstance(item, int) else f"variant.{item}"
 
 
 def sha(p: str) -> str:
@@ -185,7 +219,7 @@ def main() -> int:
 
     for item, desc, path, find, repl, test in ARMS:
         if not run(test):
-            print(f"  §7.{item:<3} ABORT - {test} is already RED; a kill would prove nothing")
+            print(f"  {label(item):<12} ABORT - {test} is already RED; a kill proves nothing")
             failures.append(item)
             results.append({"item": item, "description": desc, "outcome": "ABORT_ALREADY_RED"})
             continue
@@ -195,7 +229,7 @@ def main() -> int:
         src = io.open(path, encoding="utf-8").read()
         n = src.count(find)
         if n != 1:
-            print(f"  §7.{item:<3} TARGET NOT UNIQUE ({n}) in {path}")
+            print(f"  {label(item):<12} TARGET NOT UNIQUE ({n}) in {path}")
             failures.append(item)
             results.append({"item": item, "description": desc,
                             "outcome": f"TARGET_NOT_UNIQUE_{n}"})
@@ -203,12 +237,12 @@ def main() -> int:
         try:
             io.open(path, "w", encoding="utf-8", newline="\n").write(src.replace(find, repl))
             if sha(path) == before:
-                print(f"  §7.{item:<3} SILENT NO-OP MUTATION")
+                print(f"  {label(item):<12} SILENT NO-OP MUTATION")
                 failures.append(item)
                 results.append({"item": item, "description": desc, "outcome": "SILENT_NO_OP"})
                 continue
             killed = not run(test)
-            print(f"  §7.{item:<3} {'KILLED  ' if killed else 'SURVIVED'}  {desc}")
+            print(f"  {label(item):<12} {'KILLED  ' if killed else 'SURVIVED'}  {desc}")
             if not killed:
                 failures.append(item)
             results.append({"item": item, "description": desc, "file": path, "test": test,
@@ -244,19 +278,27 @@ def main() -> int:
         "artifact": "MUTATION_CAMPAIGN_DERIVATION_LAYERS",
         "authority": "ALGO-009 section 7",
         "produced": "2026-08-23",
-        "owned_and_run": len({a[0] for a in ARMS}),
+        "owned_and_run": len(_section7_items()),
         "mutations_run": len(ARMS),
+        "section7_mutations": sum(1 for a in ARMS if isinstance(a[0], int)),
+        "extra_mutations_outside_section7": {
+            str(a[0]): a[1] for a in ARMS if not isinstance(a[0], int)},
+        "extra_note": (
+            "section 7 enumerates fifteen defects and none is about the BRK15 variant, "
+            "so the V-arms are reported OUTSIDE its denominator. Numbering them 7.16+ "
+            "would invent coverage the ruling never asked for - an inflated denominator "
+            "is the same lie as a shrunken one, in the flattering direction."),
         "killed": sum(1 for r in results if r["outcome"] == "KILLED"),
         "items_with_two_doors": sorted(
-            {i for i in (a[0] for a in ARMS)
-             if sum(1 for a in ARMS if a[0] == i) > 1}),
+            {i for i in (a[0] for a in ARMS) if isinstance(i, int)
+             and sum(1 for a in ARMS if a[0] == i) > 1}),
         "not_yet_applicable": {str(k): v for k, v in NOT_APPLICABLE.items()},
         "caveats": {str(k): v for k, v in CAVEATS.items()},
         "scope_note": (
             "All 15 of section 7's items are now owned and run. Items 6-14 became runnable "
             "when routes B/C/D were built on 2026-08-23; before that they were deferred BY "
             "NAME rather than folded into a smaller denominator. Item 14 carries a caveat: "
-            "its guard is architectural, so read `caveats` before quoting the kill."),
+            "its guard is architectural, so read `caveats` before quoting the kill. The V-arms are NOT section 7 items - see `extra_note`."),
         "restored_byte_exact": True,
         "results": results,
     }
@@ -264,9 +306,9 @@ def main() -> int:
         json.dumps(out, indent=2, ensure_ascii=False) + "\n")
 
     print(f"\nwrote {OUT}")
-    print(f"  killed {out['killed']} of {out['mutations_run']} mutations across "
-          f"{out['owned_and_run']} of section 7's 15 items; "
-          f"{len(NOT_APPLICABLE)} not yet applicable")
+    print(f"  killed {out['killed']} of {out['mutations_run']} mutations: "
+          f"{out['section7_mutations']} across {out['owned_and_run']} of section 7's 15 "
+          f"items, plus {len(out['extra_mutations_outside_section7'])} outside it (BRK15)")
     if failures:
         print(f"\nCAMPAIGN FAILED for section 7 items: {sorted(set(failures))}")
         return 1

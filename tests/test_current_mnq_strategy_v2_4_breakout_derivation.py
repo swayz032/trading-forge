@@ -266,15 +266,101 @@ def test_the_two_exceptions_match_the_frozen_spec_VERBATIM():
 
 # ── §7.14 and BUILD-ONLY ────────────────────────────────────────────────────────────────
 
+def _route_readers():
+    """DERIVED from the source: every public function annotated to return a BreakoutRead.
+
+    Hand-typing this list is how a new route slips past the guard - it was four functions
+    yesterday and is five today. The population comes from the AST so adding a route without
+    the split fails instead of going unchecked.
+    """
+    tree = ast.parse(io.open(
+        "research/current_mnq_strategy_v2_4_breakout_derivation.py", encoding="utf-8").read())
+    return [n.name for n in tree.body
+            if isinstance(n, ast.FunctionDef) and not n.name.startswith("_")
+            and isinstance(n.returns, ast.Name) and n.returns.id == "BreakoutRead"]
+
+
+def test_the_derived_population_is_not_empty_and_covers_every_route():
+    """A derived population that silently comes back empty passes every test over it."""
+    names = _route_readers()
+    assert len(names) >= 5, names
+    for expected in ("normal_breakout", "break_retest", "prebreak_displacement",
+                     "prebreak_repeat_test", "weak_break_continuation"):
+        assert expected in names, f"{expected} is not in the derived population: {names}"
+
+
 def test_no_function_can_see_the_triggers_finished_form():
     """§7.14, structurally: every route takes COMPLETED bars plus a separate live trigger.
 
     A function that never receives the parent's final OHLC cannot backdate an entry with it.
     """
-    for fn in (B.normal_breakout, B.break_retest, B.prebreak_displacement,
-               B.prebreak_repeat_test):
-        params = list(inspect.signature(fn).parameters)
-        assert params[0] == "completed" and params[1] == "trigger", (fn.__name__, params)
+    for name in _route_readers():
+        params = list(inspect.signature(getattr(B, name)).parameters)
+        assert params[0] == "completed" and params[1] == "trigger", (name, params)
+
+
+# ── ROUTE B's BRK15 VARIANT: weak break, controlled pullback, 15m bar 3 ─────────────────
+# 15m parents. bar1 closes beyond 102 but is WEAK (no momentum geometry); bar2 pulls back
+# without giving the level up; the trigger is the forming bar 3.
+
+WEAK_BREAK = [(101, 104.5, 100.8, 102.6), (102.6, 103.0, 101.2, 101.5)]
+
+
+def test_the_BRK15_variant_GRANTS_on_a_weak_break_pullback_and_resumption():
+    """POSITIVE WITNESS for the variant."""
+    r = B.weak_break_continuation(bars(WEAK_BREAK), row(101.5, 106, 101.4, 105.6),
+                                  LO, HI, "L", BODY, CLOSE_LOC)
+    assert r.valid is True and r.form == B.VARIANT_BRK15, r
+
+
+def test_a_STRONG_first_break_is_refused_by_the_variant():
+    """The premise of the variant is that the first break was NOT convincing.
+
+    Letting a momentum break in here would open a second, laxer door to the same trade -
+    which is how a closed family of four routes quietly becomes five.
+    """
+    strong = [(101, 104.5, 100.8, 104.3), (104.3, 104.5, 102.5, 102.8)]
+    r = B.weak_break_continuation(bars(strong), row(102.8, 108, 102.7, 107.6),
+                                  LO, HI, "L", BODY, CLOSE_LOC)
+    assert r.refusal == B.BREAK_WAS_NOT_WEAK, r
+
+
+def test_no_pullback_means_no_continuation_setup():
+    no_pull = [(101, 104.5, 100.8, 102.6), (102.6, 104.0, 102.5, 103.2)]
+    r = B.weak_break_continuation(bars(no_pull), row(103.2, 106, 103.1, 105.6),
+                                  LO, HI, "L", BODY, CLOSE_LOC)
+    assert r.refusal == B.NO_CONTROLLED_PULLBACK, r
+
+
+def test_a_pullback_that_gives_the_level_back_is_a_FAILED_break_not_a_setup():
+    lost = [(101, 104.5, 100.8, 102.6), (102.6, 103.0, 98.0, 98.5)]
+    r = B.weak_break_continuation(bars(lost), row(98.5, 106, 98.4, 105.6),
+                                  LO, HI, "L", BODY, CLOSE_LOC)
+    assert r.refusal == B.PULLBACK_LOST_THE_LEVEL, r
+
+
+def test_bar3_must_resume_BEYOND_the_first_break_close():
+    """Momentum alone is not resumption - it must take out where the break closed."""
+    short_of_it = row(101.5, 102.5, 101.4, 102.4)      # strong, but never exceeds 102.6
+    r = B.weak_break_continuation(bars(WEAK_BREAK), short_of_it, LO, HI, "L", BODY, CLOSE_LOC)
+    assert r.refusal == B.NO_15M_CONTINUATION, r
+
+
+def test_bar3_without_momentum_is_refused_even_if_it_exceeds_the_break_close():
+    limp = row(101.5, 106.0, 101.4, 102.7)             # exceeds 102.6, but gives it all back
+    r = B.weak_break_continuation(bars(WEAK_BREAK), limp, LO, HI, "L", BODY, CLOSE_LOC)
+    assert r.refusal == B.NO_15M_CONTINUATION, r
+
+
+def test_the_variant_mirrors_on_the_short_side():
+    down = [(99, 99.2, 95.5, 97.4), (97.4, 98.8, 97.0, 98.5)]
+    r = B.weak_break_continuation(bars(down), row(98.5, 98.6, 94.0, 94.4),
+                                  LO, HI, "S", BODY, CLOSE_LOC)
+    assert r.valid is True and r.form == B.VARIANT_BRK15, r
+
+
+def test_the_variant_is_not_a_fifth_prebreak_exception():
+    assert B.VARIANT_BRK15 not in B.PREBREAK_EXCEPTIONS
 
 
 def test_it_is_not_wired_into_production():

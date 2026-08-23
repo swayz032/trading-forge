@@ -71,6 +71,9 @@ UNFROZEN_CHOICES = {
 #: The two pre-break exceptions, and there is no third (§7.13).
 EXCEPTION_DISPLACEMENT = "true_displacement_sequence_into_level_with_third_candle_momentum"
 EXCEPTION_REPEAT_TEST = "repeat_test_momentum_attack"
+
+#: ALGO-020 section 2 ruled BRK15 a VARIANT of Route B, never a fifth route.
+VARIANT_BRK15 = "BRK15_WEAK_FIRST_BREAK_CONTINUATION"
 PREBREAK_EXCEPTIONS = (EXCEPTION_DISPLACEMENT, EXCEPTION_REPEAT_TEST)
 
 # Refusals, each named after the spec line or §7 item it enforces.
@@ -78,6 +81,10 @@ NO_COMPLETED_BREAK = "NO_COMPLETED_PRINT_BEYOND_THE_ZONE"
 FIRST_PRINT_IS_SETUP_ONLY = "FIRST_BREAK_CANDLE_IS_SETUP_ONLY_NOT_AN_ENTRY"
 NO_EXTREME_EXTENSION = "SECOND_5M_DID_NOT_EXTEND_BEYOND_THE_FIRST_PRINT_EXTREME"
 NOT_THE_FOLLOWING_BAR = "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT"
+BREAK_WAS_NOT_WEAK = "FIRST_BREAK_HAD_MOMENTUM_THIS_IS_THE_NORMAL_ROUTE_NOT_THE_VARIANT"
+NO_CONTROLLED_PULLBACK = "NO_CONTROLLED_COMPLETED_PULLBACK_AFTER_THE_WEAK_BREAK"
+PULLBACK_LOST_THE_LEVEL = "PULLBACK_GAVE_THE_LEVEL_BACK_THE_BREAK_FAILED"
+NO_15M_CONTINUATION = "THIRD_15M_BAR_DID_NOT_RESUME_BEYOND_THE_FIRST_BREAK_CLOSE"
 NOT_ACCEPTED = "BREAK_NOT_ACCEPTED_BEFORE_RETEST"
 NO_RETEST = "NO_VALID_RETEST_OF_THE_BROKEN_LEVEL"
 NOT_DISPLACEMENT = "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT"
@@ -275,12 +282,62 @@ def prebreak_repeat_test(completed: pd.DataFrame, trigger, lo: float, hi: float,
     return BreakoutRead(EXCEPTION_REPEAT_TEST, None, test_idx)
 
 
+def weak_break_continuation(completed: pd.DataFrame, trigger, lo: float, hi: float,
+                            direction: str, body_frac: float,
+                            close_loc: float) -> BreakoutRead:
+    """Route B's BRK15 variant, on FIFTEEN-minute bars. ALGO-020 section 2: not a fifth route.
+
+    The spec: "weak first break -> controlled completed pullback -> forming 15m bar3 may
+    trigger when sustained intra15 directional force is proven".
+
+    WEAK IS A REQUIREMENT, NOT A DESCRIPTION. A first break that already carries momentum
+    geometry is the NORMAL breakout, and it must be taken through that route with its
+    second-5m extension test - not through a variant whose whole premise is that the first
+    break was not convincing. Letting a strong break in here would create a second, laxer door
+    to the same trade, which is how a route family quietly becomes five.
+
+    `completed` are the completed 15m parents; `trigger` is the forming bar 3. Same split as
+    every other route here.
+    """
+    if completed is None or len(completed) < 2:
+        return BreakoutRead(None, NOT_ENOUGH_BARS)
+
+    bar1, bar2 = completed.iloc[-2], completed.iloc[-1]
+
+    if not _beyond(bar1, lo, hi, direction):
+        return BreakoutRead(None, NO_COMPLETED_BREAK)
+    if _momentum(bar1, direction, body_frac, close_loc):
+        return BreakoutRead(None, BREAK_WAS_NOT_WEAK)
+
+    # A CONTROLLED pullback: it retraces from the break close, and it does not give the level
+    # back. Those are two separate failures with two separate names.
+    if direction == "L":
+        pulled = float(bar2.close) < float(bar1.close)
+        held = float(bar2.close) >= lo
+        resumed = (_momentum(trigger, direction, body_frac, close_loc)
+                   and float(trigger.close) > float(bar1.close))
+    else:
+        pulled = float(bar2.close) > float(bar1.close)
+        held = float(bar2.close) <= hi
+        resumed = (_momentum(trigger, direction, body_frac, close_loc)
+                   and float(trigger.close) < float(bar1.close))
+
+    if not pulled:
+        return BreakoutRead(None, NO_CONTROLLED_PULLBACK)
+    if not held:
+        return BreakoutRead(None, PULLBACK_LOST_THE_LEVEL)
+    if not resumed:
+        return BreakoutRead(None, NO_15M_CONTINUATION)
+    return BreakoutRead(VARIANT_BRK15, None)
+
+
 __all__ = [
     "BreakoutRead", "DIAGNOSTIC_ONLY", "EXCEPTION_DISPLACEMENT", "EXCEPTION_REPEAT_TEST",
     "FIRST_PRINT_IS_SETUP_ONLY", "NOT_ACCEPTED", "NOT_DISPLACEMENT", "NOT_ENOUGH_BARS",
     "NO_COMPLETED_BREAK", "NO_EXTREME_EXTENSION", "NO_PRIOR_TEST", "NO_RESET", "NO_RETEST",
     "NO_RETURN_ATTACK", "NOT_THE_FOLLOWING_BAR", "PREBREAK_EXCEPTIONS",
-    "UNFROZEN_CHOICES",
+    "UNFROZEN_CHOICES", "VARIANT_BRK15", "BREAK_WAS_NOT_WEAK", "NO_CONTROLLED_PULLBACK",
+    "PULLBACK_LOST_THE_LEVEL", "NO_15M_CONTINUATION", "weak_break_continuation",
     "THIRD_CANDLE_LOST_CONTROL", "break_retest",
     "is_true_displacement", "normal_breakout", "prebreak_displacement", "prebreak_repeat_test",
 ]

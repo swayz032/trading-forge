@@ -3,8 +3,15 @@
   "authority": "ALGO-009 section 7",
   "produced": "2026-08-23",
   "owned_and_run": 15,
-  "mutations_run": 16,
-  "killed": 16,
+  "mutations_run": 19,
+  "section7_mutations": 16,
+  "extra_mutations_outside_section7": {
+    "V1": "let a STRONG first break enter through the weak-break variant",
+    "V2": "accept a pullback that gave the level back",
+    "V3": "let the variant become a fifth route by accepting it under any route"
+  },
+  "extra_note": "section 7 enumerates fifteen defects and none is about the BRK15 variant, so the V-arms are reported OUTSIDE its denominator. Numbering them 7.16+ would invent coverage the ruling never asked for - an inflated denominator is the same lie as a shrunken one, in the flattering direction.",
+  "killed": 19,
   "items_with_two_doors": [
     4
   ],
@@ -12,7 +19,7 @@
   "caveats": {
     "14": "defended structurally, not by a predicate - the kill proves the completed/trigger split is load-bearing, not that a backdated entry clock is refused elsewhere"
   },
-  "scope_note": "All 15 of section 7's items are now owned and run. Items 6-14 became runnable when routes B/C/D were built on 2026-08-23; before that they were deferred BY NAME rather than folded into a smaller denominator. Item 14 carries a caveat: its guard is architectural, so read `caveats` before quoting the kill.",
+  "scope_note": "All 15 of section 7's items are now owned and run. Items 6-14 became runnable when routes B/C/D were built on 2026-08-23; before that they were deferred BY NAME rather than folded into a smaller denominator. Item 14 carries a caveat: its guard is architectural, so read `caveats` before quoting the kill. The V-arms are NOT section 7 items - see `extra_note`.",
   "restored_byte_exact": true,
   "results": [
     {
@@ -125,6 +132,27 @@
       "description": "collapse the completed/trigger split so the parent's final OHLC is reachable",
       "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
       "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_no_function_can_see_the_triggers_finished_form",
+      "outcome": "KILLED"
+    },
+    {
+      "item": "V1",
+      "description": "let a STRONG first break enter through the weak-break variant",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_a_STRONG_first_break_is_refused_by_the_variant",
+      "outcome": "KILLED"
+    },
+    {
+      "item": "V2",
+      "description": "accept a pullback that gave the level back",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_a_pullback_that_gives_the_level_back_is_a_FAILED_break_not_a_setup",
+      "outcome": "KILLED"
+    },
+    {
+      "item": "V3",
+      "description": "let the variant become a fifth route by accepting it under any route",
+      "file": "research/current_mnq_strategy_v2_4_entry_authority.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority.py::test_the_variant_cannot_be_smuggled_in_under_another_route",
       "outcome": "KILLED"
     }
   ]

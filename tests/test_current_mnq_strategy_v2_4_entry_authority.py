@@ -167,10 +167,10 @@ ROUTE_EVIDENCE = {
 }
 
 
-def _route(rows, route, *, location=True, force=True, direction="L"):
+def _route(rows, route, *, location=True, force=True, direction="L", variant=None):
     return EA.decide(bars(rows), direction, LO, HI, location_authorized=location,
                      force_confirmed=force, body_frac=BODY, close_loc=CLOSE_LOC,
-                     reject_wick=WICK, route=route, range_ratio=RR)
+                     reject_wick=WICK, route=route, range_ratio=RR, variant=variant)
 
 
 @pytest.mark.parametrize("route", list(EA.ROUTES))
@@ -250,10 +250,43 @@ def test_the_breakout_routes_carry_a_form_instead_of_a_rejection_story():
     assert a.form == "normal_breakout"
 
 
-def test_the_BRK15_variant_is_recorded_as_NOT_DERIVED_HERE():
-    """An unbuilt variant reported as 'Route B handled' would be a false green."""
-    assert EA.VARIANT_BRK15 in EA.NOT_DERIVED_HERE
+# 15m parents: a WEAK completed break beyond 102, a controlled pullback, then forming bar 3.
+BRK15_BARS = [(101, 104.5, 100.8, 102.6), (102.6, 103.0, 101.2, 101.5),
+              (101.5, 106, 101.4, 105.6)]
+
+
+def test_the_BRK15_variant_is_reached_through_route_B_and_GRANTS():
+    """It is derived now, so it is exercised rather than merely declared unbuilt."""
+    a = _route(BRK15_BARS, EA.ROUTE_B_BREAKOUT, variant=EA.VARIANT_BRK15)
+    assert a.granted is True, a.explain()
+    assert a.route == EA.ROUTE_B_BREAKOUT, "the variant does not get a route of its own"
+    assert a.form == EA.VARIANT_BRK15
+
+
+def test_nothing_is_deferred_any_more_but_the_list_still_EXISTS():
+    """An empty list a test still checks beats a list that vanished with what it tracked."""
+    assert EA.NOT_DERIVED_HERE == ()
     assert EA.VARIANT_BRK15 not in EA.ROUTES, "it is a variant of B, never a fifth route"
+    assert len(EA.ROUTES) == 4, "ALGO-009 section 3: four families and no fifth"
+
+
+def test_the_variant_cannot_be_smuggled_in_under_another_route():
+    """A fifth permission path wearing a variant's name is still a fifth permission path."""
+    for route in (EA.ROUTE_A_REJECTION, EA.ROUTE_C_PREBREAK_DISPLACEMENT,
+                  EA.ROUTE_D_PREBREAK_RETEST):
+        with pytest.raises(ValueError, match="VARIANT_BELONGS_TO_ANOTHER_ROUTE"):
+            _route(BRK15_BARS, route, variant=EA.VARIANT_BRK15)
+
+
+def test_an_unknown_variant_is_refused_outright():
+    with pytest.raises(ValueError, match="UNKNOWN_VARIANT"):
+        _route(BRK15_BARS, EA.ROUTE_B_BREAKOUT, variant="BRK30_INVENTED_HERE")
+
+
+def test_route_B_without_the_variant_still_runs_the_NORMAL_breakout():
+    """The variant must be opt-in; a weak break must not sneak through the normal route."""
+    a = _route(BRK15_BARS, EA.ROUTE_B_BREAKOUT)
+    assert a.form != EA.VARIANT_BRK15
 
 
 @pytest.mark.parametrize("route", list(EA.ROUTES))

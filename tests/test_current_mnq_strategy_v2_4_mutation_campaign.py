@@ -41,6 +41,28 @@ def test_all_fifteen_section7_items_are_now_owned():
         "section 7 has fifteen items - every one must be either owned or explicitly deferred")
 
 
+def test_the_extra_arms_are_reported_OUTSIDE_the_section7_denominator():
+    """The BRK15 variant is real work, but section 7 never asked for it.
+
+    An inflated denominator is the same lie as a shrunken one, just in the flattering
+    direction - so the V-arms are counted separately and section 7 stays at fifteen.
+    """
+    a = _a()
+    extra = a["extra_mutations_outside_section7"]
+    assert extra, "the variant arms must be reported, not dropped"
+    assert a["section7_mutations"] + len(extra) == a["mutations_run"]
+    assert a["owned_and_run"] == 15, "the section 7 denominator must not absorb them"
+    for k in extra:
+        assert not k.isdigit(), f"{k} wears a section 7 number it was not given"
+
+
+def test_no_extra_arm_appears_under_a_section7_item_number():
+    """A variant arm printed as 7.16 would read as ruling coverage that does not exist."""
+    a = _a()
+    numbered = {r["item"] for r in a["results"] if isinstance(r["item"], int)}
+    assert numbered == set(range(1, 16)), sorted(numbered)
+
+
 def test_there_are_MORE_mutations_than_items_and_that_is_deliberate():
     """An item with two doors needs two kills, or the repair closed only the shown instance."""
     a = _a()
