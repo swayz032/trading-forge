@@ -240,3 +240,120 @@ __all__ = [
     "PENETRATE_AND_RECLAIM", "PRIOR_MOMENTUM_AFTER_REJECTION", "SWEEP_AND_RECLAIM",
     "TOUCH_AND_REJECT", "classify_interaction", "derive_approach",
 ]
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# THE STORY LAYER — APPROACH / FIGHT / DECISION, all three derived.
+#
+# `spec.candlestick_semantics.story` is literally `[APPROACH, FIGHT, DECISION]`, which is the
+# same triple as `core.Story.complete`. The difference is that here NONE of them is a literal.
+#
+# The spec's negative fixtures are the acceptance criteria, and these are the ones this layer
+# is responsible for refusing:
+#     doji_or_spinning_top_at_zone_without_directional_takeover
+#     mixed_overlap_and_two_sided_wicks
+#     counter_bias_reversal_without_completed_control_transfer
+#     sweep_reclaim_without_hold_or_directional_defense
+#     candlestick_pattern_away_from_authorized_SR_or_FVG
+#     mere_approach_that_never_reaches_zone_and_matches_no_prebreak_exception
+# Each has a test named after it.
+# ─────────────────────────────────────────────────────────────────────────────────────────
+
+#: `mixed_or_indecisive_control -> WAIT_OR_NO_TRADE`. Two-sided wicks with no body is conflict,
+#: not a decision, and the spec refuses it by name.
+TWO_SIDED_CONFLICT = "MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+NO_TAKEOVER = "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+NO_CONTROL_TRANSFER = "COUNTER_BIAS_REVERSAL_WITHOUT_COMPLETED_CONTROL_TRANSFER"
+NO_DEFENSE = "SWEEP_RECLAIM_WITHOUT_HOLD_OR_DIRECTIONAL_DEFENSE"
+
+
+@dataclass(frozen=True)
+class DerivedStory:
+    """APPROACH / FIGHT / DECISION with every field a function of price."""
+    approach: bool
+    fight: bool
+    decision: bool
+    interaction: str | None
+    two_sided_conflict: bool
+    refusal: str | None
+
+    @property
+    def complete(self) -> bool:
+        """All three, and no refusal. The same shape as `core.Story.complete`, none asserted."""
+        return bool(self.approach and self.fight and self.decision and self.refusal is None)
+
+
+def two_sided_wick_conflict(row, min_each: float = 0.30, max_body: float = 0.40) -> bool:
+    """Both wicks substantial and the body small: the bar argues with itself.
+
+    `spec.control_features` lists `two_sided_wick_conflict`, and
+    `negative_semantic_fixtures` refuses `mixed_overlap_and_two_sided_wicks` outright.
+    """
+    g = _geom(row)
+    return bool(g.upper_frac >= min_each and g.lower_frac >= min_each
+                and g.body_frac <= max_body)
+
+
+def _defended(rows: list, direction: str, lo: float, hi: float) -> bool:
+    """A sweep or reclaim must HOLD. The close must not fall back through the level after.
+
+    `sweep_reclaim_without_hold_or_directional_defense` is a named refusal, so a reclaim that
+    immediately gives the level back is not a reclaim.
+    """
+    last = rows[-1]
+    return bool(float(last.close) >= lo) if direction == "L" else bool(float(last.close) <= hi)
+
+
+def derive_story(bars: pd.DataFrame, direction: str, lo: float, hi: float,
+                 body_frac: float, close_loc: float, reject_wick: float,
+                 pad: float = 0.0, lookback: int = 6) -> DerivedStory:
+    """The full story, derived. Refuses by name rather than defaulting to True."""
+    it = classify_interaction(bars, direction, lo, hi, body_frac, close_loc,
+                              reject_wick, pad, lookback)
+    approach = it.approach.real
+
+    if not approach:
+        return DerivedStory(False, False, False, it.kind, False,
+                            it.reason or NO_TOUCH)
+
+    q = bars.tail(lookback)
+    rows = [q.iloc[i] for i in range(len(q))]
+    last = rows[-1]
+
+    conflict = two_sided_wick_conflict(last)
+    if conflict:
+        return DerivedStory(True, False, False, it.kind, True, TWO_SIDED_CONFLICT)
+
+    # `candlestick_pattern_away_from_authorized_SR_or_FVG` and
+    # `mere_approach_that_never_reaches_zone...` are both handled by the approach gate above.
+    if it.kind is None:
+        return DerivedStory(True, False, False, None, False, it.reason or NO_TOUCH)
+
+    # FIGHT = a COMPLETED control transfer at the level. The interaction says a fight
+    # happened; control says which side won it.
+    if not it.control:
+        # An indecision shape at the zone with no takeover is refused by name.
+        return DerivedStory(True, False, False, it.kind, False, NO_TAKEOVER)
+
+    if it.kind in (SWEEP_AND_RECLAIM, PENETRATE_AND_RECLAIM) and \
+            not _defended(rows, direction, lo, hi):
+        return DerivedStory(True, False, False, it.kind, False, NO_DEFENSE)
+
+    fight = True
+
+    # DECISION = the trigger bar carries the direction FORWARD, not merely sideways.
+    prior = rows[-2] if len(rows) >= 2 else None
+    if prior is None:
+        return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER)
+    follow = (float(last.close) > float(prior.close)) if direction == "L" \
+        else (float(last.close) < float(prior.close))
+    if not follow:
+        return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER)
+
+    return DerivedStory(True, True, True, it.kind, False, None)
+
+
+__all__ += [
+    "DerivedStory", "NO_CONTROL_TRANSFER", "NO_DEFENSE", "NO_TAKEOVER", "TWO_SIDED_CONFLICT",
+    "derive_story", "two_sided_wick_conflict",
+]

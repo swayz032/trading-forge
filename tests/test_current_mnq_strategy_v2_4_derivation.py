@@ -166,3 +166,102 @@ def test_it_declares_itself_build_only():
 @pytest.mark.parametrize("name", list(D.INTERACTIONS))
 def test_every_declared_interaction_is_a_real_constant(name):
     assert isinstance(name, str) and name and not name.endswith("_then_live_force")
+
+
+# ═════════════════════════════════════════════════════════════════════════════════════════
+# THE STORY LAYER. The spec's `negative_semantic_fixtures` ARE the acceptance criteria, so
+# each one this layer is responsible for gets a test named after it. A story layer is proven
+# by what it REFUSES, not by what it permits.
+# ═════════════════════════════════════════════════════════════════════════════════════════
+
+def _story(rows, direction="L"):
+    return D.derive_story(bars(rows), direction, LO, HI, BODY, CLOSE_LOC, WICK)
+
+
+#: A clean long: comes from above, wicks the zone, closes strongly up. Reused as the POSITIVE
+#: WITNESS everywhere below, so every refusal is proven to be about the defect and not about
+#: the layer refusing everything.
+CLEAN_LONG = [(112, 113, 111, 112), (111, 112, 103, 104), (103.5, 110.0, 100.0, 109.7)]
+
+
+def test_the_positive_witness_completes():
+    s = _story(CLEAN_LONG)
+    assert s.complete is True, s
+    assert s.approach and s.fight and s.decision
+    assert s.refusal is None
+
+
+def test_fixture_mere_approach_that_never_reaches_zone():
+    s = _story([(120, 121, 119, 120), (119, 120, 118, 119), (118, 119, 117, 118)])
+    assert s.complete is False
+    assert s.refusal == D.NO_TOUCH
+
+
+def test_fixture_mixed_overlap_and_two_sided_wicks():
+    """A bar that argues with itself is not a decision. `mixed_or_indecisive_control -> WAIT`."""
+    rows = CLEAN_LONG[:-1] + [(105, 110.0, 100.0, 105.2)]   # big both wicks, tiny body
+    s = _story(rows)
+    assert s.two_sided_conflict is True
+    assert s.refusal == D.TWO_SIDED_CONFLICT
+    assert s.complete is False
+
+
+def test_fixture_doji_at_zone_without_directional_takeover():
+    """Touches the level, but nobody takes control."""
+    rows = CLEAN_LONG[:-1] + [(101.0, 102.3, 100.2, 101.05)]
+    s = _story(rows)
+    assert s.complete is False
+    assert s.refusal in (D.NO_TAKEOVER, D.TWO_SIDED_CONFLICT), s
+
+
+def test_fixture_counter_bias_reversal_without_completed_control_transfer():
+    """Control geometry on the bar, but it does not carry the direction forward."""
+    rows = [(112, 113, 111, 112), (111, 112, 103, 111.5),
+            (103.5, 110.0, 100.0, 109.7)]
+    s = _story(rows)
+    # the trigger closes BELOW the prior close, so there is no forward decision
+    assert s.refusal == D.NO_CONTROL_TRANSFER, s
+    assert s.fight is True, "the fight happened; the decision did not"
+    assert s.complete is False
+
+
+def test_two_sided_wick_conflict_discriminates():
+    """POSITIVE AND NEGATIVE. It must fire on a conflicted bar and stay silent on a clean one."""
+    conflicted = bars([(105, 110.0, 100.0, 105.2)]).iloc[0]
+    clean = bars([(103.5, 110.0, 100.0, 109.7)]).iloc[0]
+    assert D.two_sided_wick_conflict(conflicted) is True
+    assert D.two_sided_wick_conflict(clean) is False
+
+
+def test_a_refusal_always_names_itself():
+    """A story that refuses without saying why teaches nobody anything."""
+    for rows in ([(120, 121, 119, 120)] * 3,
+                 CLEAN_LONG[:-1] + [(105, 110.0, 100.0, 105.2)],
+                 CLEAN_LONG[:-1] + [(101.0, 102.3, 100.2, 101.05)]):
+        s = _story(rows)
+        assert s.complete is False
+        assert s.refusal, f"refused with no reason: {s}"
+
+
+def test_complete_requires_all_three_and_no_refusal():
+    """The same shape as `core.Story.complete` - but nothing in it is a literal."""
+    import inspect
+    src = inspect.getsource(D.DerivedStory)
+    assert "self.approach and self.fight and self.decision" in src
+    assert "self.refusal is None" in src
+    # and none of the three is ever assigned a bare True in the deriver
+    dsrc = inspect.getsource(D.derive_story)
+    assert "approach=True" not in dsrc and "fight=True" not in dsrc
+
+
+def test_the_refused_fixtures_are_named_in_the_frozen_spec():
+    """The refusals must trace to the spec, not to my judgement."""
+    import io
+    import json
+    spec = json.load(io.open("research/current_mnq_strategy_v2_4_spec.json", encoding="utf-8"))
+    neg = spec["negative_semantic_fixtures"]
+    for needed in ("mixed_overlap_and_two_sided_wicks",
+                   "doji_or_spinning_top_at_zone_without_directional_takeover",
+                   "counter_bias_reversal_without_completed_control_transfer",
+                   "sweep_reclaim_without_hold_or_directional_defense"):
+        assert needed in neg, f"{needed} is not in the frozen spec - do not invent refusals"
