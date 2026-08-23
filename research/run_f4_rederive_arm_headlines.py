@@ -17,6 +17,9 @@ import io
 import json
 import sys
 
+sys.path.insert(0, ".")
+from research import current_mnq_strategy_v2_4_f2_anchor as ANCHOR   # noqa: E402
+
 #: Restated from ALGO-057 / the baseline's own contract, not imported.
 AGREEMENT_CLASSES = {"AGREE", "BOTH_DECLINED"}
 CENSORED_PREFIX = "CENSORED"
@@ -38,11 +41,17 @@ def derive(scorecard):
 
 
 def main(argv):
-    baseline_path, taught_path, frozen_path, exam_path = argv[1:5]
+    # ALGO-060 §2: the frozen comparator is NO LONGER AN ARGUMENT. It was, and the path passed
+    # pointed at a transient scratchpad arena rebuilt by hand from a git blob - an anchor that
+    # arrives as an argument is whatever the caller says it is, and one that lives in a temp
+    # directory is one cleanup away from unverifiable. It is now read by PATH + SHA256.
+    baseline_path, taught_path, exam_path = argv[1:4]
 
     base = derive(load(baseline_path))
     taught = derive(load(taught_path))
-    frozen = derive(load(frozen_path))
+    frozen = {"headline": ANCHOR.headline(),
+              "agreeing": sorted(ANCHOR.agreeing_sessions()),
+              "decided": sorted(ANCHOR.decided_sessions())}
 
     exam = load(exam_path)
     published_base = exam["arms"]["baseline_0930"]["agreement"]
@@ -57,7 +66,7 @@ def main(argv):
         print(f"  {name:16} re-derived {d['headline']:>5}   published {published:>5}   {ok}")
         print(f"      agreeing: {d['agreeing']}")
 
-    print(f"\n  FROZEN comparator (pre-wiring @09:30): {frozen['headline']}")
+    print(f"\n  FROZEN comparator (ANCHOR, sha-verified): {frozen['headline']}")
     print(f"      agreeing set: {frozen['agreeing']}")
 
     fz, b, t = set(frozen["agreeing"]), set(base["agreeing"]), set(taught["agreeing"])

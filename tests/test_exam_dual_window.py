@@ -64,12 +64,35 @@ def test_the_rules_are_stated_before_any_measurement_exists():
 # --- A1: membership, not count ------------------------------------------------------------
 
 def test_A1_PASSES_when_no_agreement_is_lost():
+    """A1 is now a SUB-verdict: since ALGO-060 the composite is A1 AND F2.
+
+    Asserted on `A1_verdict`, because the composite legitimately FAILS here - these synthetic
+    arms agree on nothing the real frozen anchor contains, and F2 is measured against that
+    anchor. Reading the composite would have made this test quietly about F2.
+    """
     base = _arm("baseline_0930", {"d1", "d2"}, {"d1", "d2", "d3"})
     taught = _arm("taught_0800", {"d1", "d2", "d3"}, {"d1", "d2", "d3"})
     v = E.evaluate(base, taught)
-    assert v["verdict"] == "PASS"
+    assert v["A1_verdict"] == "PASS"
     assert v["lost_agreements"] == []
     assert v["gained_agreements"] == ["d3"]
+
+
+def test_the_composite_verdict_is_A1_AND_F2_so_A1_alone_cannot_pass_it():
+    """THE GAP ALGO-057 PRE-REGISTERED F2 TO CLOSE, now enforced by the instrument itself.
+
+    A brain that regressed against the frozen baseline on BOTH arms loses nothing BETWEEN the
+    arms, so A1 passes. Before F2 was wired in, the exam emitted PASS in exactly that case -
+    which is what it did on the real run.
+    """
+    base = _arm("baseline_0930", {"d1"}, {"d1"})
+    taught = _arm("taught_0800", {"d1"}, {"d1"})
+    v = E.evaluate(base, taught)
+    assert v["A1_verdict"] == "PASS", "nothing is lost between the arms"
+    assert v["F2_verdict"] == "FAIL", "but everything is lost against the anchor"
+    assert v["verdict"] == "FAIL", "the composite must not pass on A1 alone"
+    assert "BLOCKED" in v["freeze"]
+    assert v["F2_lost_vs_anchor_baseline_0930"], "F2 must name what was lost"
 
 
 def test_A1_FAILS_when_an_agreement_is_lost():
@@ -141,9 +164,13 @@ def test_A3_a_failing_taught_arm_BLOCKS_freeze_with_no_fallback():
 
 
 def test_A3_a_PASS_is_a_precondition_not_a_grant_of_freeze():
-    v = E.evaluate(_arm("baseline_0930", {"d1"}, {"d1"}),
-                   _arm("taught_0800", {"d1"}, {"d1"}))
+    """Driven with the REAL anchor set so the composite can actually pass."""
+    from research import current_mnq_strategy_v2_4_f2_anchor as A
+    anchored = set(A.agreeing_sessions())
+    v = E.evaluate(_arm("baseline_0930", anchored, anchored),
+                   _arm("taught_0800", anchored, anchored))
     assert v["verdict"] == "PASS"
+    assert v["F2_verdict"] == "PASS"
     assert "advisor" in v["freeze"].lower(), (
         "a passing exam must not read as authorisation to freeze - that is a ruling")
 

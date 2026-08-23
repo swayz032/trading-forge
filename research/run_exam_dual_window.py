@@ -60,6 +60,7 @@ from pathlib import Path
 
 from research.current_mnq_strategy_v2_4_single_writer import single_writer
 from research import current_mnq_strategy_v2_4_exam_window as W
+from research import current_mnq_strategy_v2_4_f2_anchor as ANCHOR
 from research import run_frozen_14_case_baseline as B
 
 #: The two arms. Fixed here, before any result.
@@ -154,9 +155,27 @@ def evaluate(baseline: dict, taught: dict) -> dict:
     lost = sorted(base_agree - taught_agree)
     gained = sorted(taught_agree - base_agree)
 
-    passed = not lost
+    # F2 (ALGO-057, anchored by ALGO-060 §2): no agreement lost against the FROZEN comparator,
+    # read by PATH + SHA256 from the anchor and re-derived from its rows. A1 alone compares the
+    # two arms TO EACH OTHER and cannot convict a brain that regressed against the baseline on
+    # BOTH arms - which is exactly what happened, so the exam now reports both.
+    f2_lost_baseline = ANCHOR.lost_against_anchor(base_agree)
+    f2_lost_taught = ANCHOR.lost_against_anchor(taught_agree)
+    f2_passed = not f2_lost_baseline and not f2_lost_taught
+
+    a1_passed = not lost
+    passed = a1_passed and f2_passed
     return {
-        "rule_applied": "A1_NO_LOST_AGREEMENT_BY_MEMBERSHIP",
+        "rule_applied": "A1_NO_LOST_AGREEMENT_BY_MEMBERSHIP + F2_NO_LOST_AGREEMENT_VS_ANCHOR",
+        "A1_verdict": "PASS" if a1_passed else "FAIL",
+        "F2_verdict": "PASS" if f2_passed else "FAIL",
+        "F2_anchor_sha256": ANCHOR.ANCHOR_SHA256,
+        "F2_anchor_headline": ANCHOR.headline(),
+        "F2_lost_vs_anchor_baseline_0930": f2_lost_baseline,
+        "F2_lost_vs_anchor_taught_0800": f2_lost_taught,
+        "why_A1_alone_is_insufficient": (
+            "A1 compares the two arms to each other; a brain that regressed against the frozen "
+            "baseline on BOTH arms loses nothing BETWEEN them and would pass A1"),
         "verdict": "PASS" if passed else "FAIL",
         "lost_agreements": lost,
         "gained_agreements": gained,

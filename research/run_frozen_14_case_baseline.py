@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Canonical frozen 14-case fidelity baseline — ALGO-007 §6, REPAIRED per ALGO-008.
+"""Canonical frozen 14-case fidelity baseline
+
+    ⚠ ITS OUTPUT IS NOT THE F2 ANCHOR, DESPITE THE WORD "frozen" IN THE FILENAME. ALGO-060 §2.
+    `current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json` IS REWRITTEN BY EVERY
+    RUN OF THIS MODULE — seven distinct blobs in its history, 5/8 at 39bc3985/8166c428/ea6f0940
+    and 1/8 from 025b5a1e on. At head it holds 1/8. The comparator the freeze decision turns on
+    lives in `current_mnq_strategy_v2_4_f2_anchor.py`, a distinct never-rewritten file verified
+    by sha256 on every read. Never cite this module's output as the frozen baseline. — ALGO-007 §6, REPAIRED per ALGO-008.
 
 An independent grade (band 5, REFUTED) found two critical defects in the first version of
 this file. Both are closed here, and the corrections are load-bearing rather than cosmetic:
