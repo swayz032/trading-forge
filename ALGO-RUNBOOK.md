@@ -57,7 +57,7 @@ This replays **14 past sessions** where your own decisions were recorded, and co
 to you. It prints something like:
 
 ```
-  agreement (decided cases) : 5/8
+  agreement (decided cases) : 1/8
   bullet spent pre-window   : 7 sessions, hiding 16 unreachable in-window entries
   missed trader entries     : 2
   bot entered in window     : 7   declined 0   unavailable 7
@@ -68,7 +68,7 @@ to you. It prints something like:
 
 | line | what it means |
 |---|---|
-| `agreement (decided cases) : 5/8` | Of the 8 sessions where you actually made a call, the bot matched you on 5. The other 6 of the 14 are sessions where the replay ran out before you decided — they cannot be scored either way. |
+| `agreement (decided cases) : 1/8` | Of the 8 sessions where you actually made a call, the bot matched you on 1. **It was 5 before the trading window moved to 8:00** — the wider window lets the bot use up its one trade of the day before you have even looked. The other 6 of the 14 are sessions where the replay ran out before you decided — they cannot be scored either way. |
 | `bullet spent pre-window` | The bot had already used its one trade for the day **before** the part of the session being audited. In 7 of 14 sessions. |
 | `missed trader entries : 2` | Twice, you took a trade and the bot could not — its one trade was already gone. |
 | `bot traded at all : 14 of 14` | **The bot trades every single day.** You traded on 7 of those same 14. This is the main thing still wrong with it. |

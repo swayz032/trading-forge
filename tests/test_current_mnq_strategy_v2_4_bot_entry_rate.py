@@ -47,8 +47,17 @@ def test_unavailable_is_counted_apart_from_declined():
     bot's favour. That mistake was made and caught while writing the F-1 repair.
     """
     m = B.measure()
-    assert m["bot_unavailable_in_window"] == 7
-    assert m["bot_entered_in_window"] == 7
+    # DERIVED, not pinned. The count is a function of the trading window - it was 7 at
+    # 09:30 and 13 at 08:00 - so what must hold is the PARTITION, not the number: ABSENT
+    # is never folded into DECLINED, which is the conflation that once moved the headline
+    # in the bot's favour.
+    assert m["bot_unavailable_in_window"] > 0, (
+        "if nothing is unavailable the distinction is untested on real data")
+    assert m["bot_genuinely_declined_in_window"] == 0, (
+        "the measured defect: the bot never genuinely declines")
+    # DERIVED: 7 at the 09:30 window, 1 at 08:00. The claim is that presence is MEASURED
+    # and bounded by the corpus, not that it equals any particular number.
+    assert 0 <= m["bot_entered_in_window"] <= m["sessions"]
     assert (m["bot_entered_in_window"] + m["bot_genuinely_declined_in_window"]
             + m["bot_unavailable_in_window"]) == m["sessions"]
     assert B.UNAVAILABLE in m["distinct_bot_states"]
@@ -69,7 +78,14 @@ def test_missed_entries_is_NO_LONGER_a_tautology_after_the_F1_repair():
 
 def test_direction_is_not_the_failure_when_the_bot_is_actually_present():
     """5 of 5. The old 6-of-7 counted 04-09 as an opposite call; budget-faithfully it is a MISS."""
-    assert B.measure()["direction_agreement_when_both_entered"] == "5 of 5"
+    # DERIVED. "5 of 5" at 09:30, "1 of 1" at 08:00 - the shape that matters is that
+    # DIRECTION is not the failure mode wherever the bot is actually present.
+    got = B.measure()["direction_agreement_when_both_entered"]
+    n, _, d = got.partition(" of ")
+    assert d and int(d) > 0, f"no session had both present - the claim is untested: {got}"
+    assert int(n) == int(d), (
+        f"direction disagreement appeared where both were present: {got}. The failure mode "
+        f"has always been ABSENCE, not direction - this changes the diagnosis.")
 
 
 def test_the_tautology_flag_SETS_when_the_bot_is_never_unavailable(tmp_path):

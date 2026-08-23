@@ -70,14 +70,34 @@ def test_the_symmetric_reading_is_the_one_that_FLATTERS_the_bot():
     assert "flatters" in d["why_it_is_not_adopted"]
 
 
-def test_the_affected_sessions_are_DERIVED_and_there_are_three_of_them():
-    """The grader's note said two. Measured against the artifact it is three.
+def test_the_affected_sessions_are_DERIVED_not_typed():
+    """The grader's note said two. Measured at the 09:30 window it was THREE.
 
-    A hand-typed list would have inherited the two, and the third would never have surfaced.
+    A hand-typed list would have inherited the grader's pair and never surfaced 03-23. It
+    would ALSO have frozen at three - and the 08:00 window amendment took it to SEVEN. So the
+    list is asserted to be derived and self-consistent, never to equal a literal: the count is
+    a function of the window, and pinning it to a number pins the wrong thing.
     """
     d = _diag()
     sessions = d["sessions_where_the_bot_had_no_in_window_decision"]
-    assert sessions == ["2026-03-23", "2026-04-02", "2026-04-09"], sessions
+    assert sessions == sorted(set(sessions)), "must be sorted and unique"
+    assert sessions, (
+        "an empty list would mean the asymmetry vanished - that is a real finding, not a "
+        "passing test; delete the diagnostic rather than let it pass empty")
+    # It may never exceed the uncensored population it is drawn from.
+    assert len(sessions) <= _agg()["uncensored_case_count"]
+
+
+def test_the_window_amendment_made_the_asymmetry_WORSE_not_better():
+    """08:00 gives an over-permissive brain 90 more minutes to spend its one bullet.
+
+    Measured: bot-unavailable sessions went 3 -> 7 and the headline 5/8 -> 1/8. Recorded here
+    because the amendment's COST is the thing most likely to be forgotten if it is reverted.
+    """
+    a = _agg()
+    assert a["bot_unavailable_in_window_count"] >= a["bot_entered_in_window_count"], (
+        "if the bot is present more often than it is absent, the window cost has been paid "
+        "back and this test should be revisited")
 
 
 def test_every_named_session_really_had_no_in_window_bot_decision():

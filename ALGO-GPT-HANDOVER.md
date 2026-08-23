@@ -44,10 +44,13 @@ a report in the wrong place breaks the main campaign's control plane.
 
 **The defect of record.** The bot **takes a trade in 14 of 14 sessions and never once genuinely
 declines.** The trader traded on 7 of the same 14. When the bot is present in-window and he
-trades, it picks the same direction **5 of 5** — so the failure is **timing and selectivity, not
+trades, it picks the same direction **1 of 1** — so the failure is **timing and selectivity, not
 direction**. Everything being built exists to kill that.
 
-**The headline number is 5/8** on the 8 sessions where he actually decided (6 of 14 are
+**The headline number is 1/8**
+
+> **These numbers are measured at the AMENDED 08:00 window (ALGO-041 §3.2).** At the previous 09:30 window they were 5/8 and 5 of 5. The amendment made fidelity WORSE on the current brain — it gives an over-permissive entry gate 90 more minutes to spend the day's single bullet before the trader ever decides. The deltas are in ALGO-042 and the amendment is under advisor review; if it is reverted, these numbers return.
+ on the 8 sessions where he actually decided (6 of 14 are
 right-censored — the replay ran out while he was still watching, and those can never be scored).
 
 **Where it sits on the ladder:** `FIDELITY → FREEZE → CLEAN EDGE → prop-survival → TopstepX`.

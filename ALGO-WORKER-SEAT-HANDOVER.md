@@ -37,7 +37,10 @@ prop-survival → TopstepX` and it is still on the first rung.
 
 **The defect of record:** the bot takes a trade in **14 of 14** sessions and never genuinely
 declines; the trader traded on **7**. When the bot is present in-window and he trades, direction
-agrees **5 of 5**. So the failure is **timing and selectivity, not direction.**
+agrees **1 of 1**
+
+> **These numbers are measured at the AMENDED 08:00 window (ALGO-041 §3.2).** At the previous 09:30 window they were 5/8 and 5 of 5. The amendment made fidelity WORSE on the current brain — it gives an over-permissive entry gate 90 more minutes to spend the day's single bullet before the trader ever decides. The deltas are in ALGO-042 and the amendment is under advisor review; if it is reverted, these numbers return.
+. So the failure is **timing and selectivity, not direction.**
 
 ---
 
@@ -59,7 +62,7 @@ outstanding grade but forbids any candidate being **accepted** against the 14 ca
 fresh independent grade passes the repaired evaluator. **Check whether that grade landed before
 you wire anything.**
 
-**Instrument work, all landed:** the F-1 budget-faithful join (headline **5/8**), the classifier-
+**Instrument work, all landed:** the F-1 budget-faithful join (headline **1/8** at the amended 08:00 window; **5/8** at 09:30), the classifier-
 bound agreement, the force receipt that can now actually disagree, the BRK15 mirror, the
 enumeration guards, and the labels file committed into `research/`.
 

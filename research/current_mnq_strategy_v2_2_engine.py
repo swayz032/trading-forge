@@ -35,7 +35,12 @@ DATA_FILES = {
     "1m": "MNQ/MNQ_1min_20260120_20260415.csv",
     "tick": "MNQ/MNQ_tick_20260309_20260415.csv",
 }
-TRADE_START = pd.Timestamp("09:30").time()
+# ROLE 1 - THE TRADING WINDOW START. Amended 09:30 -> 08:00 (ALGO-041 section 3 item 2).
+# This is the ONLY role that moves. The SESSION-OPEN ANCHOR for the location map
+# (`kernel.py:132` and the other ROLE 2 sites) stays at 09:30 deliberately: moving it would
+# change WHICH S/R zones exist and silently invalidate every number in the campaign.
+# 09:30 was never one constant - see `current_mnq_strategy_v2_4_window_bound_census.py`.
+TRADE_START = pd.Timestamp("08:00").time()
 LAST_ENTRY = pd.Timestamp("12:00").time()
 RTH_END = pd.Timestamp("15:59").time()
 PRE_START = pd.Timestamp("04:00").time()
@@ -864,9 +869,16 @@ def exit_1m_realistic(one: pd.DataFrame, entry_time: pd.Timestamp, direction: st
 
 def prepare(raw5: pd.DataFrame, raw1: pd.DataFrame):
     full5 = v1.feat(raw5.copy())
-    r5 = v1.feat(raw5[(raw5.index.time >= pd.Timestamp("09:30").time()) &
+    # ROLE 4 FLOOR IS DERIVED FROM ROLE 1, NOT DUPLICATED.
+    # `r5` is the set of session bars the strategy iterates and `one` is the 1m series force
+    # is reconstructed from, so their FLOOR is the trading-window start by definition. It was
+    # a second copy of the 09:30 literal, which meant a ROLE-1 amendment moved the window to
+    # a time with no bars in it and changed nothing - a silent no-op that would have reported
+    # zero deltas as if the new window had been tested. The 15:59 CEILING is RTH data hygiene
+    # and stays a literal; it is a different question from where trading may begin.
+    r5 = v1.feat(raw5[(raw5.index.time >= TRADE_START) &
                        (raw5.index.time <= pd.Timestamp("15:59").time())].copy())
-    one = raw1[(raw1.index.time >= pd.Timestamp("09:30").time()) &
+    one = raw1[(raw1.index.time >= TRADE_START) &
                (raw1.index.time <= pd.Timestamp("15:59").time())].copy()
     h15 = v1.htf15(full5)
     piv15 = v1.pivots(h15, mins=15)

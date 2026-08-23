@@ -81,8 +81,18 @@ def test_the_real_corpus_is_NOT_TESTABLE_and_says_so():
     different claims and the artifact must make the difference visible.
     """
     s = D.search()
-    assert s["wanted_entries"] == 5 and s["unwanted_entries"] == 2
-    assert s["sessions_excluded_bullet_spent_pre_window"] == 7
+    # DERIVED. 5-vs-2 at the 09:30 window, 1-vs-0 at 08:00. What must hold is that the
+    # population is too small to test and the artifact SAYS SO - not any particular size.
+    assert s["wanted_entries"] + s["unwanted_entries"] < 14, (
+        "the budget-faithful join must shrink the corpus; if it did not, the join is wrong")
+    assert min(s["wanted_entries"], s["unwanted_entries"]) < 3, (
+        "the smaller group must be below the minimum testable size, or this artifact should "
+        "be issuing a verdict instead of refusing")
+    # DERIVED: 7 at 09:30, 13 at 08:00. What must hold is that exclusions plus the two
+    # groups account for the whole corpus and that something WAS excluded.
+    assert s["sessions_excluded_bullet_spent_pre_window"] > 0
+    assert (s["sessions_excluded_bullet_spent_pre_window"]
+            + s["wanted_entries"] + s["unwanted_entries"]) <= 14
     assert s["numeric_fields_tested"] == 0
     assert s["testable"] is False
     assert "NOT TESTABLE" in s["verdict"]
@@ -92,7 +102,9 @@ def test_the_real_corpus_is_NOT_TESTABLE_and_says_so():
 
 def test_the_strength_limit_states_the_shrunken_population():
     s = D.search()
-    assert "5 wanted vs 2 unwanted" in s["strength_limit"]
+    # DERIVED from the artifact's own counts rather than quoted.
+    assert f'{s["wanted_entries"]} wanted vs {s["unwanted_entries"]} unwanted' \
+        in s["strength_limit"], s["strength_limit"]
     assert "CANNOT ANSWER THIS QUESTION" in s["strength_limit"]
 
 
@@ -117,4 +129,12 @@ def test_min_group_is_enforced_on_BOTH_sides(tmp_path):
 def test_the_route_distributions_are_reported_even_when_not_testable():
     """Categorical shape is still worth seeing; it just cannot carry a verdict at this size."""
     c = D.search()["categorical"]
-    assert c["wanted"]["route"] and c["unwanted"]["route"]
+    # An EMPTY group is a real outcome, not a broken artifact: the 08:00 window leaves
+    # zero unwanted entries, which is itself the finding. What must hold is that the census
+    # is PRESENT for both groups and honest about being empty - a missing key would hide it.
+    for group in ("wanted", "unwanted"):
+        assert group in c, group
+        for field in ("route", "story", "location_source"):
+            assert field in c[group], f"{group}.{field} census is missing entirely"
+    assert c["wanted"]["route"] or c["unwanted"]["route"], (
+        "BOTH groups empty means nothing was measured at all")
