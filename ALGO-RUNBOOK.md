@@ -178,6 +178,18 @@ The ones you could actually see when it is running:
 
 **Anything else:** copy the whole line and report it. You do not have to understand it.
 
+**To get the full, current list** — all 28 of them, in plain English, with what to do:
+
+```
+PYTHONPATH=. python -c "from research.current_mnq_strategy_v2_4_refusal_legibility import PLAIN_ENGLISH as P; [print(f'{k}
+  means : {v[0]}
+  do    : {v[1]}
+') for k in sorted(P) for v in [P[k]]]"
+```
+
+The table above is the short version. That command reads the real list out of the code, so it
+cannot go out of date the way a hand-written table can.
+
 ---
 
 ## 6. If something goes wrong — in your words
