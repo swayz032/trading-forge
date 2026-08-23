@@ -1,0 +1,866 @@
+{
+  "artifact": "REFUSAL_DIAGNOSIS_LOST_FOUR",
+  "status": "DIAGNOSTIC. Attributes refusals; repairs nothing, selects no rule, tunes no parameter. Its output may not be cited as evidence that any rule is correct. ALGO-058 section 3.",
+  "authority": "ALGO-058 section 3",
+  "produced": "2026-08-23",
+  "question": "of the four sessions F2 says were lost, WHY did the wired brain refuse each one, and is the acceptance_bars 2->3 landing implicated?",
+  "lost_sessions_DERIVED_from_the_exam_artifact": [
+    "2026-03-24",
+    "2026-03-30",
+    "2026-03-31",
+    "2026-04-06"
+  ],
+  "classes": [
+    "STORY_NOT_RECOGNIZED",
+    "GATE_OVER_STRICT",
+    "LOCATION",
+    "FORCE",
+    "BUDGET",
+    "OTHER"
+  ],
+  "near_window_minutes": 10,
+  "verdicts": [
+    {
+      "session": "2026-03-24",
+      "classification_as_landed": "GATE_OVER_STRICT",
+      "classification_at_acceptance_2": "GATE_OVER_STRICT",
+      "acceptance_landing_implicated": false,
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 3)"
+    },
+    {
+      "session": "2026-03-30",
+      "classification_as_landed": "GATE_OVER_STRICT",
+      "classification_at_acceptance_2": "GATE_OVER_STRICT",
+      "acceptance_landing_implicated": false,
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 3)"
+    },
+    {
+      "session": "2026-03-31",
+      "classification_as_landed": "GATE_OVER_STRICT",
+      "classification_at_acceptance_2": "GATE_OVER_STRICT",
+      "acceptance_landing_implicated": false,
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 3)"
+    },
+    {
+      "session": "2026-04-06",
+      "classification_as_landed": "GATE_OVER_STRICT",
+      "classification_at_acceptance_2": "GATE_OVER_STRICT",
+      "acceptance_landing_implicated": false,
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 3)"
+    }
+  ],
+  "as_landed": [
+    {
+      "session": "2026-03-24",
+      "arm": "as_landed",
+      "trader_final_action": "ENTER_LONG",
+      "trader_first_entry_time": "2026-03-24T09:32:00-04:00",
+      "classification": "GATE_OVER_STRICT",
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 3)",
+      "records_in_session": 4500,
+      "records_near_his_entry": 295,
+      "gate_census_near_entry": {
+        "FORCE_NOT_CONFIRMED": 32,
+        "REJECTION_STORY_INCOMPLETE": 192,
+        "NO_LEGAL_ROUTE_MATCHED": 71
+      },
+      "routes_asked_near_entry": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "sample_near_entry": [
+        {
+          "clock": "2026-03-24T09:31:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:31:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:31:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:31:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_STORY_INCOMPLETE",
+          "authority_refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ]
+    },
+    {
+      "session": "2026-03-30",
+      "arm": "as_landed",
+      "trader_final_action": "ENTER_SHORT",
+      "trader_first_entry_time": "2026-03-30T09:41:00-04:00",
+      "classification": "GATE_OVER_STRICT",
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 3)",
+      "records_in_session": 6502,
+      "records_near_his_entry": 435,
+      "gate_census_near_entry": {
+        "FORCE_NOT_CONFIRMED": 60,
+        "REJECTION_STORY_INCOMPLETE": 320,
+        "NO_LEGAL_ROUTE_MATCHED": 36,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 19
+      },
+      "routes_asked_near_entry": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "sample_near_entry": [
+        {
+          "clock": "2026-03-30T09:31:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:31:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:31:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:31:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ]
+    },
+    {
+      "session": "2026-03-31",
+      "arm": "as_landed",
+      "trader_final_action": "ENTER_LONG",
+      "trader_first_entry_time": "2026-03-31T09:49:00-04:00",
+      "classification": "GATE_OVER_STRICT",
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 3)",
+      "records_in_session": 7236,
+      "records_near_his_entry": 335,
+      "gate_census_near_entry": {
+        "FORCE_NOT_CONFIRMED": 62,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 12,
+        "REJECTION_STORY_INCOMPLETE": 24,
+        "NO_LEGAL_ROUTE_MATCHED": 237
+      },
+      "routes_asked_near_entry": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "sample_near_entry": [
+        {
+          "clock": "2026-03-31T09:39:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:39:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:39:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:39:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:41:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:41:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ]
+    },
+    {
+      "session": "2026-04-06",
+      "arm": "as_landed",
+      "trader_final_action": "ENTER_SHORT",
+      "trader_first_entry_time": "2026-04-06T10:04:00-04:00",
+      "classification": "GATE_OVER_STRICT",
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 3)",
+      "records_in_session": 3694,
+      "records_near_his_entry": 168,
+      "gate_census_near_entry": {
+        "FORCE_NOT_CONFIRMED": 66,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 22,
+        "REJECTION_STORY_INCOMPLETE": 45,
+        "NO_LEGAL_ROUTE_MATCHED": 35
+      },
+      "routes_asked_near_entry": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "sample_near_entry": [
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "B_NORMAL_BREAKOUT",
+          "direction": "L",
+          "location_id": "SWING:R:2026-03-24T02:00:00-04:00:97222",
+          "outcome": "REJECTED",
+          "killed_at": "INTRA_15M_FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "B_NORMAL_BREAKOUT",
+          "direction": "L",
+          "location_id": "SWING:R:2026-03-24T10:15:00-04:00:97268",
+          "outcome": "REJECTED",
+          "killed_at": "INTRA_15M_FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ]
+    }
+  ],
+  "attribution_acceptance_bars_2": [
+    {
+      "session": "2026-03-24",
+      "arm": "attribution_acceptance_bars_2",
+      "trader_final_action": "ENTER_LONG",
+      "trader_first_entry_time": "2026-03-24T09:32:00-04:00",
+      "classification": "GATE_OVER_STRICT",
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 2)",
+      "records_in_session": 4500,
+      "records_near_his_entry": 295,
+      "gate_census_near_entry": {
+        "FORCE_NOT_CONFIRMED": 32,
+        "REJECTION_STORY_INCOMPLETE": 192,
+        "NO_LEGAL_ROUTE_MATCHED": 71
+      },
+      "routes_asked_near_entry": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "sample_near_entry": [
+        {
+          "clock": "2026-03-24T09:31:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:31:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:31:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:31:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_STORY_INCOMPLETE",
+          "authority_refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-24T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+          "outcome": "REJECTED",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "form": null,
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ]
+    },
+    {
+      "session": "2026-03-30",
+      "arm": "attribution_acceptance_bars_2",
+      "trader_final_action": "ENTER_SHORT",
+      "trader_first_entry_time": "2026-03-30T09:41:00-04:00",
+      "classification": "GATE_OVER_STRICT",
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 2)",
+      "records_in_session": 6502,
+      "records_near_his_entry": 435,
+      "gate_census_near_entry": {
+        "FORCE_NOT_CONFIRMED": 60,
+        "REJECTION_STORY_INCOMPLETE": 320,
+        "NO_LEGAL_ROUTE_MATCHED": 36,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 19
+      },
+      "routes_asked_near_entry": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "sample_near_entry": [
+        {
+          "clock": "2026-03-30T09:31:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:31:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:31:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:31:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-30T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ]
+    },
+    {
+      "session": "2026-03-31",
+      "arm": "attribution_acceptance_bars_2",
+      "trader_final_action": "ENTER_LONG",
+      "trader_first_entry_time": "2026-03-31T09:49:00-04:00",
+      "classification": "GATE_OVER_STRICT",
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 2)",
+      "records_in_session": 7236,
+      "records_near_his_entry": 335,
+      "gate_census_near_entry": {
+        "FORCE_NOT_CONFIRMED": 62,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 12,
+        "REJECTION_STORY_INCOMPLETE": 24,
+        "NO_LEGAL_ROUTE_MATCHED": 237
+      },
+      "routes_asked_near_entry": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "sample_near_entry": [
+        {
+          "clock": "2026-03-31T09:39:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:39:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:39:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:39:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:41:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-03-31T09:41:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ]
+    },
+    {
+      "session": "2026-04-06",
+      "arm": "attribution_acceptance_bars_2",
+      "trader_final_action": "ENTER_SHORT",
+      "trader_first_entry_time": "2026-04-06T10:04:00-04:00",
+      "classification": "GATE_OVER_STRICT",
+      "why": "the acceptance gate refused: ['D_PREBREAK_RETEST_BREAKOUT|NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED'] - the named parameter is `acceptance_bars` (in force: 2)",
+      "records_in_session": 3694,
+      "records_near_his_entry": 168,
+      "gate_census_near_entry": {
+        "FORCE_NOT_CONFIRMED": 66,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 22,
+        "REJECTION_STORY_INCOMPLETE": 45,
+        "NO_LEGAL_ROUTE_MATCHED": 35
+      },
+      "routes_asked_near_entry": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "sample_near_entry": [
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "L",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "B_C_D_BREAKOUT_FAMILY",
+          "direction": "S",
+          "location_id": null,
+          "outcome": "REJECTED",
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "B_NORMAL_BREAKOUT",
+          "direction": "L",
+          "location_id": "SWING:R:2026-03-24T02:00:00-04:00:97222",
+          "outcome": "REJECTED",
+          "killed_at": "INTRA_15M_FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        },
+        {
+          "clock": "2026-04-06T09:54:00-04:00",
+          "route": "B_NORMAL_BREAKOUT",
+          "direction": "L",
+          "location_id": "SWING:R:2026-03-24T10:15:00-04:00:97268",
+          "outcome": "REJECTED",
+          "killed_at": "INTRA_15M_FORCE_NOT_CONFIRMED",
+          "form": null,
+          "authority_state": null,
+          "authority_refusal": null,
+          "route_refusals": null,
+          "routes_asked": null
+        }
+      ]
+    }
+  ],
+  "attribution_note": "the acceptance_bars=2 pass is a LABELLED DIAGNOSTIC for attribution only. R4 stands: nothing here is chosen by agreement, score or outcome, and the landed value is not re-opened by this module.",
+  "repairs": "NONE. This module attributes; ALGO-059 rules the repair.",
+  "runtime_seconds": 179.58,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
+}

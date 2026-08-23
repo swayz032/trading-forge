@@ -38,6 +38,23 @@ TWO ARMS, AND NEITHER IS A CANDIDATE WINDOW.
       the verdict rather than folded into it. The asymmetric-censoring diagnostic stays visible
       and stays unadopted — a party may not adopt the reading that flatters it.
 
+═══════════════════════════════════════════════════════════════════════════════
+AMENDMENT — ALGO-061, ratifying the change made under ALGO-060 §2. THE VERDICT IS NOW THE
+COMPOSITE **A1 AND F2**. A1 AND F2 ARE EMITTED SEPARATELY. NO OTHER RULE TEXT MOVED.
+═══════════════════════════════════════════════════════════════════════════════
+
+A1 compares the two arms TO EACH OTHER. A brain that regressed against the FROZEN baseline on
+BOTH arms loses nothing BETWEEN them, so A1 passes — and on the real run it did exactly that
+while the brain sat at 1/8 against a 5/8 anchor. F2 (pre-registered by ALGO-057 BEFORE this
+exam rendered) is the rule that convicts it, so the instrument now evaluates F2 itself rather
+than leaving it to a reader: it reads the anchor by PATH + SHA256
+(`current_mnq_strategy_v2_4_f2_anchor`) and re-derives the comparator SET from that artifact's
+ROWS, never from a headline field and never from a path handed in by a caller.
+
+The amendment is legal after the render because the rule it enforces was fixed before it, and
+because it can only TIGHTEN: every verdict this change moves goes PASS -> FAIL. It cannot turn
+a failing brain into a passing one.
+
   A5  NEVER PICKED BY SCORE. No PnL, realized outcome, winner/loser label or clean-edge result
       participates. The verdict is a function of the pre-registered predicates ONLY, and
       `evaluate()` is pure so it can be handed fabricated arms and checked.
