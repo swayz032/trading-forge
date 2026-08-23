@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -136,21 +137,98 @@ def test_a_float_within_tolerance_is_not_a_divergence():
 
 # --- the two derivations agree on REAL frozen bars ---------------------------------------
 
-def test_the_two_derivations_agree_across_the_frozen_corpus():
-    """POSITIVE WITNESS on real data. Slow-ish but this is the claim that matters."""
-    from pathlib import Path
+#: FLAKE-1 (ALGO-055). Where a failure's evidence is persisted. A red that leaves nothing
+#: behind is a red you cannot diagnose: this test went red ONCE, passed in seven subsequent
+#: observations, and its assertion text was never captured. That gap is closed structurally
+#: rather than by remembering to look next time.
+FLAKE_EVIDENCE = Path("research/current_mnq_strategy_v2_4_force_crosscheck_failure.json")
+
+DATA_DIR = Path("research/_mnq_v24_replay_lab_v3/data")
+DATA_LOCK = Path("research/current_mnq_strategy_v2_2_data_lock.json")
+
+
+def _custody_report() -> dict:
+    """Hash the fetched CSVs against the committed lock. A DATA question, asked separately.
+
+    `download_pinned` is network-backed and sits inside the test body, so a corrupt or
+    mid-flight file could previously surface as a DERIVATION DISAGREEMENT — a semantic alarm
+    raised by a data incident. ALGO-055 pre-registered the split: custody is verified first and
+    fails with its own name.
+    """
+    import hashlib
     import json
-    data = Path("research/_mnq_v24_replay_lab_v3/data")
-    lock = Path("research/current_mnq_strategy_v2_2_data_lock.json")
-    if not data.exists():
+    lock = json.loads(DATA_LOCK.read_text(encoding="utf-8"))["files"]
+    report = {}
+    for key in ("5m", "1m"):
+        path = DATA_DIR / Path(old.DATA_FILES[key]).name
+        raw = path.read_bytes()
+        got = hashlib.sha256(raw).hexdigest()
+        want = lock[key]["sha256"]
+        report[key] = {"path": str(path), "expected_sha256": want, "observed_sha256": got,
+                       "expected_bytes": lock[key]["bytes"], "observed_bytes": len(raw),
+                       "match": got == want}
+    report["custody"] = "GREEN" if all(v["match"] for v in report.values()
+                                       if isinstance(v, dict)) else "RED"
+    return report
+
+
+def test_the_pinned_data_matches_its_committed_custody_hashes():
+    """FLAKE-1 §1: DATA_CUSTODY_ERROR is its OWN red, distinct from a derivation disagreement.
+
+    Pre-registered recurrence rule (ALGO-055 §3): custody RED alone is a DATA INCIDENT and
+    raises no semantic alarm. A derivation red WITH custody GREEN is genuine nondeterminism in
+    the derivations and is STOP-THE-LINE for the exam.
+    """
+    if not DATA_DIR.exists():
         pytest.skip("pinned replay data not present")
-    observed = old.download_pinned(data, include_tick=False)
-    old.verify_manifest(observed, json.loads(lock.read_text(encoding="utf-8")))
-    one = old.prepare(old.load_csv(data / Path(old.DATA_FILES["5m"]).name),
-                      old.load_csv(data / Path(old.DATA_FILES["1m"]).name))["one"]
+    rep = _custody_report()
+    if rep["custody"] != "GREEN":
+        _persist_failure("DATA_CUSTODY_ERROR", rep, rows=[])
+        pytest.fail(
+            "DATA_CUSTODY_ERROR: the fetched pinned data does not match the committed lock. "
+            "This is a DATA INCIDENT, not a semantic finding - the derivations were not even "
+            f"compared. Evidence: {FLAKE_EVIDENCE}. {rep}")
+
+
+def _persist_failure(kind: str, custody: dict, rows: list) -> None:
+    """FLAKE-1 §2: any red leaves its evidence on disk, so the observation gap cannot recur."""
+    import json
+    FLAKE_EVIDENCE.write_text(json.dumps({
+        "artifact": "FORCE_CROSSCHECK_FAILURE",
+        "authority": "ALGO-055 (FLAKE-1 custody split)",
+        "kind": kind,
+        "custody": custody,
+        "disagreeing_rows": rows,
+        "recurrence_rule": (
+            "derivation red WITH custody GREEN = genuine derivation nondeterminism = "
+            "STOP-THE-LINE for the exam. Custody red alone = data incident, no semantic alarm."),
+    }, indent=2) + "\n", encoding="utf-8")
+
+
+def test_the_two_derivations_agree_across_the_frozen_corpus():
+    """POSITIVE WITNESS on real data. Slow-ish but this is the claim that matters.
+
+    Custody is verified BEFORE any comparison (ALGO-055 §1) so a data incident can never be
+    reported as a derivation disagreement, and every disagreeing row is persisted (§2) instead
+    of living only in a terminal that has already scrolled.
+    """
+    import json
+    if not DATA_DIR.exists():
+        pytest.skip("pinned replay data not present")
+    observed = old.download_pinned(DATA_DIR, include_tick=False)
+    old.verify_manifest(observed, json.loads(DATA_LOCK.read_text(encoding="utf-8")))
+
+    custody = _custody_report()
+    assert custody["custody"] == "GREEN", (
+        f"DATA_CUSTODY_ERROR before any comparison - a data incident, not a semantic finding: "
+        f"{custody}")
+
+    one = old.prepare(old.load_csv(DATA_DIR / Path(old.DATA_FILES["5m"]).name),
+                      old.load_csv(DATA_DIR / Path(old.DATA_FILES["1m"]).name))["one"]
     p = v24.Params()
 
     checked = 0
+    disagreements: list[dict] = []
     for day in ("2026-03-23", "2026-04-09"):
         for hh, mm in ((10, 5), (10, 20), (11, 25)):
             start = pd.Timestamp(f"{day} {hh:02d}:{mm:02d}", tz=TZ)
@@ -159,9 +237,18 @@ def test_the_two_derivations_agree_across_the_frozen_corpus():
                 snap = F.force_snapshot(one, start, 5, direction, known, p)
                 ind = I.independent_force(one, start, 5, direction, known,
                                           float(p.body_frac), float(p.close_loc))
-                assert I.compare(snap, ind) == [], (
-                    f"{day} {start.time()} {direction}: {I.compare(snap, ind)}")
+                diff = I.compare(snap, ind)
+                if diff:
+                    disagreements.append({"day": day, "start": str(start.time()),
+                                          "direction": direction, "differences": list(diff)})
                 checked += 1
+
+    if disagreements:
+        _persist_failure("DERIVATION_DISAGREEMENT_WITH_CUSTODY_GREEN", custody, disagreements)
+        pytest.fail(
+            "DERIVATION_DISAGREEMENT while custody is GREEN. Per the ALGO-055 recurrence rule "
+            "this is genuine derivation nondeterminism and is STOP-THE-LINE for the exam. "
+            f"Evidence retained at {FLAKE_EVIDENCE}: {disagreements}")
     assert checked >= 12, f"only {checked} comparisons ran - too few to mean anything"
 
 
