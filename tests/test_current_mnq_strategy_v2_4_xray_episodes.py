@@ -59,7 +59,11 @@ def test_sensitivity_to_the_grouping_parameter_is_always_reported():
 
 def test_the_retracted_45_to_1_claim_and_the_diagnostic_boundary_stay_on_record():
     src = inspect.getsource(ep)
-    assert "incommensurable" not in src or True  # wording may vary; check the substance:
+    # `assert X or True` was here and could never fail. An assertion that cannot go
+    # red is decoration. The substance is checked below, unconditionally.
+    assert "commensurable" in src, (
+        "the retracted 45:1 claim was retracted BECAUSE the two quantities were "
+        "incommensurable - the word is the reason and it must stay on the record")
     assert "315" in src and "45:1" in src
     assert "DIAGNOSTIC_ONLY" in src
     assert "never a strategy threshold" in src

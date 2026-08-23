@@ -19,6 +19,11 @@ import pandas as pd
 
 from research import current_mnq_strategy_v2_4_engine as eng
 from research.current_mnq_strategy_v2_4_force import force_snapshot
+from research.current_mnq_strategy_v2_4_independent_force import (
+    compare,
+    independent_force,
+    parent_for_setup,
+)
 from research.current_mnq_strategy_v2_4_session_budget import (
     MAX_FULLY_APPROVED_EXECUTED_TRADES_PER_SESSION,
 )
@@ -50,9 +55,34 @@ def _full_entry_decisions_through(env: dict, dte: date, end: pd.Timestamp, p: en
         # Recomputed with the same pure function the kernel gated on, at this candidate's own
         # decision clock. A receipt that cannot go red is not a receipt: falsify
         # force.confirmed and this block changes.
-        fs = force_snapshot(env["one"], cand.signal_time, 5, cand.direction,
+        # ---- F-4 REPAIR (ALGO-020 section 1 item 4) --------------------------------
+        # The parent the KERNEL gated on, PER SETUP. BRK15 confirms through a 15m parent
+        # floored to the DECISION clock; this hardcoded a 5m parent anchored at the
+        # signal time and would have raised against correct BRK15 decisions.
+        parent_start, parent_minutes = parent_for_setup(
+            cand.setup, cand.signal_time, cand.confirmed_time)
+        fs = force_snapshot(env["one"], parent_start, parent_minutes, cand.direction,
                             cand.confirmed_time, p)
+        # A SECOND, INDEPENDENT DERIVATION from the raw 1m bars, calling neither
+        # `force_snapshot` nor `momentum_bar`. The previous check re-called the SAME pure
+        # function with IDENTICAL arguments and so could never disagree - the whole of
+        # F-4. Two implementations agreeing is evidence; one agreeing with itself is not.
+        indep = independent_force(
+            env["one"], parent_start, parent_minutes, cand.direction,
+            cand.confirmed_time, float(p.body_frac), float(p.close_loc))
+        divergences = compare(fs, indep)
+        if divergences:
+            raise RuntimeError(
+                f"FORCE_DERIVATIONS_DISAGREE at {cand.confirmed_time} "
+                f"({cand.setup}, parent {parent_minutes}m @ {parent_start}): "
+                f"{divergences}")
+
         force_receipt = {
+            "cross_checked_against_an_independent_derivation": True,
+            "independent_derivation_agreed": not divergences,
+            "parent_minutes": int(parent_minutes),
+            "parent_start_used": parent_start.isoformat(),
+            "setup": str(cand.setup),
             "confirmed": bool(fs.confirmed),
             "decision_clock": (fs.decision_time.isoformat() if fs.decision_time is not None
                                else None),

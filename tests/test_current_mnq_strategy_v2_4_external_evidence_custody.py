@@ -6,6 +6,7 @@ come from the committed artifact, and a test has to prove it does.
 """
 from __future__ import annotations
 
+import ast
 import hashlib
 import io
 import json
@@ -88,13 +89,44 @@ def test_the_expectation_comes_from_the_ARTIFACT_not_the_live_file(tmp_path, mon
 
 
 def test_it_copies_moves_and_commits_nothing():
-    src = io.open(C.__file__, encoding="utf-8").read()
-    for banned in ("shutil", "copyfile", "copy2", "os.rename", "subprocess", "git "):
-        assert banned not in src, (
-            f"custody checking must not move the operator's data: found {banned!r}")
+    """Checked on the AST, not the text.
+
+    A substring version of this convicted the module's own docstring, which names shutil,
+    copy, rename and subprocess in order to promise it does not use them. That is the fourth
+    time today a prose-reading guard has convicted the sentence written to make the promise -
+    the lesson is not "be careful with wording", it is CHECK THE CODE, NOT THE PROSE.
+    """
+    tree = ast.parse(io.open(C.__file__, encoding="utf-8").read())
+    imported, called = set(), set()
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Import):
+            imported.update(a.name.split(".")[0] for a in n.names)
+        elif isinstance(n, ast.ImportFrom):
+            imported.add((n.module or "").split(".")[0])
+        elif isinstance(n, ast.Call):
+            nm = getattr(n.func, "id", None) or getattr(n.func, "attr", None)
+            if nm:
+                called.add(nm)
+    for mod in ("shutil", "subprocess", "os"):
+        assert mod not in imported, f"custody checking must not import {mod}"
+    for fn in ("copyfile", "copy2", "copy", "rename", "replace", "move", "unlink", "rmtree"):
+        assert fn not in called, f"custody checking must not call {fn}()"
+    # POSITIVE WITNESS: it does open files for READING, so the emptiness above is not vacuous.
+    assert "open" in called or "read_bytes" in called
 
 
-def test_both_real_files_are_declared_outside_the_repository():
-    for r in C.verify():
-        assert r["in_repository"] is False
-        assert "Downloads" in r["path"] or not r["path"].startswith("research")
+def test_the_labels_are_under_git_custody_and_the_ledger_is_not():
+    """The labels moved in-repo (ALGO-020 section 4 item 4); the ledger deliberately did not."""
+    rows = {r["label"]: r for r in C.verify()}
+    assert rows["trader_labels_COMMITTED"]["in_repository"] is True
+    assert rows["trade_ledger"]["in_repository"] is False, (
+        "the ledger holds the operator's realized P&L - committing it is his call")
+
+
+def test_a_missing_external_ORIGIN_is_tolerated_but_a_mismatch_is_not():
+    """Corroboration, not custody. The repository copy is canonical."""
+    rows = C.verify()
+    origin = next(r for r in rows if r["label"] == "trader_labels_external_origin")
+    C.assert_intact([dict(origin, status=C.MISSING)])          # tolerated
+    with pytest.raises(RuntimeError):
+        C.assert_intact([dict(origin, status=C.CHANGED)])      # never tolerated

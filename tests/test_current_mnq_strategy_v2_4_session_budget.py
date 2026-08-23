@@ -7,6 +7,7 @@ implementations cannot drift apart, and so the absence claim that produced this 
 from __future__ import annotations
 
 import ast
+import pathlib
 import importlib
 import inspect
 import io
@@ -19,6 +20,31 @@ from research import current_mnq_strategy_v2_4_session_budget as budget
 
 def _source(module: str) -> str:
     return inspect.getsource(importlib.import_module(module))
+
+
+# ---- F-5 REPAIR (ALGO-020 section 1 item 5) ----------------------------------------------
+# Both guards below globbed `pathlib.Path("research")`, which is RELATIVE TO THE CWD. Run from
+# the parent directory they scanned ZERO FILES and still passed. A guard over an empty
+# population is a green check with no path to red. The path is now anchored to this file, and
+# every loop asserts it actually enumerated something.
+_RESEARCH = pathlib.Path(__file__).resolve().parent.parent / "research"
+
+
+def _v24_modules():
+    mods = sorted(_RESEARCH.glob("current_mnq_strategy_v2_4_*.py"))
+    assert mods, f"no v2.4 modules found under {_RESEARCH} - the guard would be vacuous"
+    return mods
+
+
+def _assert_enumerated(n, floor=1):
+    assert n >= floor, (
+        f"the guard scanned {n} files - it proved nothing. Population empty or misfiltered.")
+
+
+def _is_diagnostic(text):
+    """A module escapes the production guard only by SAYING it is diagnostic."""
+    head = text[:2000].upper()
+    return "DIAGNOSTIC ONLY" in head or "DIAGNOSTIC_ONLY" in head
 
 
 def test_the_budget_is_one_and_is_not_a_tunable():
@@ -86,34 +112,92 @@ def test_the_diagnostic_override_cannot_touch_production():
     assert "MUST NOT change production behaviour" in budget.DIAGNOSTIC_ONLY
 
     # No production module may set the override.
-    import pathlib
-    for f in pathlib.Path("research").glob("current_mnq_strategy_v2_4_*.py"):
+    scanned = 0
+    for f in _v24_modules():
         if f.name in {"current_mnq_strategy_v2_4_session_budget.py",
                       "current_mnq_strategy_v2_4_candidate_xray.py"}:
             continue
+        scanned += 1
         text = f.read_text(encoding="utf-8")
         assert budget.DIAGNOSTIC_OVERRIDE_FLAG not in text, (
             f"{f.name} references the diagnostic enumeration override"
         )
+    _assert_enumerated(scanned)
+
+
+def _appends_inside_the_candidate_loop(text):
+    """Every `.append(...)` inside a `for ... in iter_actionable_candidates(...)` body."""
+    hits = []
+    for node in ast.walk(ast.parse(text)):
+        if not isinstance(node, ast.For):
+            continue
+        it = node.iter
+        name = None
+        if isinstance(it, ast.Call):
+            name = getattr(it.func, "id", None) or getattr(it.func, "attr", None)
+        if name != "iter_actionable_candidates":
+            continue
+        for sub in ast.walk(node):
+            if (isinstance(sub, ast.Call) and isinstance(sub.func, ast.Attribute)
+                    and sub.func.attr == "append"):
+                hits.append(sub.lineno)
+    return hits
 
 
 def test_no_production_path_emits_a_second_trade_in_one_session():
-    """Concept-level guard: no v2.4 execution module may accumulate approved trades into a
-    per-session collection. A list append inside the candidate loop is how a second trade
-    would appear."""
-    import pathlib
-    offenders = []
-    for f in pathlib.Path("research").glob("current_mnq_strategy_v2_4_*.py"):
-        if "xray" in f.name or "session_budget" in f.name:
-            continue
+    """Concept-level guard, STRUCTURAL not textual.
+
+    The previous version grepped for a collection whose NAME contained "trade". The grader
+    planted two semantically identical second-trade emitters inside the candidate loop:
+    `trades.append(cand)` was caught and `approved_entries_for_session.append(cand)` went
+    green. The module's own docstring says why that had to happen -
+    A RULE IMPLEMENTED AS CONTROL FLOW HAS NO NAME TO GREP FOR - and the guard was grepping
+    for a name.
+
+    This walks the AST instead: any `.append(...)` anywhere inside the candidate loop is an
+    accumulation, whatever the collection is called.
+    """
+    offenders, scanned = [], 0
+    for f in _v24_modules():
         text = f.read_text(encoding="utf-8")
-        if "iter_actionable_candidates" not in text:
+        if "iter_actionable_candidates" not in text or _is_diagnostic(text):
             continue
-        for m in re.finditer(r"for .*iter_actionable_candidates.*?:\n(.*?)(?=\n\S)", text,
-                             re.S):
-            body = m.group(1)
-            if re.search(r"\b\w*trades?\w*\.append\(", body):
-                offenders.append(f.name)
+        scanned += 1
+        offenders += [f"{f.name}:{ln}" for ln in _appends_inside_the_candidate_loop(text)]
+    _assert_enumerated(scanned)
     assert not offenders, (
-        f"these modules accumulate multiple approved trades per session: {offenders}"
+        f"these accumulate multiple approved trades per session: {offenders}")
+
+
+def test_the_structural_guard_CATCHES_what_the_grep_missed():
+    """RED-PROOF on a synthetic module: the exact plant that went green before."""
+    src = (
+        "from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates\n"
+        "def go(env, dte, p):\n"
+        "    approved_entries_for_session = []\n"
+        "    for cand, actionable, plan in iter_actionable_candidates(env, dte, p):\n"
+        "        approved_entries_for_session.append(cand)\n"
     )
+    assert _appends_inside_the_candidate_loop(src), (
+        "the structural guard must catch an append the old regex missed because the "
+        "collection is not named 'trades'")
+    # NEGATIVE CONTROL: an append OUTSIDE the candidate loop is not an offence.
+    outside = (
+        "from research.current_mnq_strategy_v2_4_kernel import iter_actionable_candidates\n"
+        "def go(xs):\n"
+        "    out = []\n"
+        "    for x in xs:\n"
+        "        out.append(x)\n"
+    )
+    assert not _appends_inside_the_candidate_loop(outside)
+
+
+def test_the_diagnostic_exemption_is_narrow_and_declared():
+    """A module escapes the guard only by DECLARING itself diagnostic in its docstring."""
+    exempt = [f.name for f in _v24_modules()
+              if "iter_actionable_candidates" in f.read_text(encoding="utf-8")
+              and _is_diagnostic(f.read_text(encoding="utf-8"))]
+    assert len(exempt) <= 3, f"the diagnostic exemption is growing: {exempt}"
+    for name in exempt:
+        assert any(k in name for k in ("xray", "regrade", "ablation")), (
+            f"{name} claims a diagnostic exemption but is not a known diagnostic")

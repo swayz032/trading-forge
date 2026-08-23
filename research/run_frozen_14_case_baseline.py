@@ -67,7 +67,19 @@ from research.current_mnq_strategy_v2_4_frozen_replay_regrade import (
 
 DATA = Path("research/_mnq_v24_replay_lab_v3/data")
 LOCK = Path("research/current_mnq_strategy_v2_2_data_lock.json")
-LABELS = Path("C:/Users/tonio/Downloads/mnq_replay_v3_labels_FROZEN.json")
+# ---- F-6 REPAIR (ALGO-020 section 1 item 6 / section 4 item 4) --------------------------
+# The trader oracle used to live ONLY in a Downloads folder, outside git. Two hashes were
+# recorded for it and NOTHING COMPARED THEM, because they cover DIFFERENT BYTE RANGES:
+#   whole-file sha256      1b20b0a8...  (the scorecard's `trader_labels_file_sha256`)
+#   internal labels_sha256 11d8dec0...  (the manifest's, over {schema_version, pack_id,
+#                                        frozen_at, labels} only)
+# So `status`, `wait_at_replay_end_count` and `capture_warnings` -- THE ENTIRE CENSORING
+# ANNOTATION -- sat outside the signed payload, unsigned and unchecked.
+# The file is now COMMITTED, byte-identical, after a field scan confirmed it carries no
+# monetary field. Git custody covers the WHOLE byte range, which closes the hole without
+# needing to reproduce the freeze signature. The Downloads copy is now optional corroboration.
+LABELS = Path("research/current_mnq_strategy_v2_4_replay_v3_labels_FROZEN.json")
+LABELS_EXTERNAL_ORIGIN = Path("C:/Users/tonio/Downloads/mnq_replay_v3_labels_FROZEN.json")
 OUT = Path("research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json")
 
 CENSOR_WARNING = "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
@@ -176,6 +188,14 @@ def main() -> None:
 
     windows = {c["case_id"]: c for c in json.loads(Path(MANIFEST).read_text())["cases"]}
     labels_raw = io.open(LABELS, "rb").read()
+    if LABELS_EXTERNAL_ORIGIN.exists():
+        ext = LABELS_EXTERNAL_ORIGIN.read_bytes()
+        if ext != labels_raw:
+            raise RuntimeError(
+                "COMMITTED_LABELS_DIVERGE_FROM_THE_EXTERNAL_ORIGIN: "
+                f"{hashlib.sha256(labels_raw).hexdigest()} in-repo vs "
+                f"{hashlib.sha256(ext).hexdigest()} at {LABELS_EXTERNAL_ORIGIN}. The frozen "
+                "labels are never edited; one of these two has moved.")
     doc = json.loads(labels_raw.decode("utf-8"))
     labels = {x["case_id"]: x for x in doc["labels"]}
     bot_rows = {r["case_id"]: r for r in regrade["rows"]}
@@ -322,6 +342,22 @@ def main() -> None:
         "supersedes": "the SESSION-joined scorecard whose two headline figures were refuted",
         "regrade_status": regrade["status"],
         "source_pack_id": regrade["source_pack_id"],
+        "trader_labels_custody": {
+            "path": str(LABELS),
+            "committed_to_git": True,
+            "whole_file_sha256": hashlib.sha256(labels_raw).hexdigest(),
+            "whole_file_sha256_covers": "every byte, including the censoring annotation",
+            "internal_labels_sha256": doc.get("labels_sha256"),
+            "internal_labels_sha256_covers":
+                "{schema_version, pack_id, frozen_at, labels} only",
+            "keys_OUTSIDE_the_internal_signature":
+                [k for k in doc if k not in
+                 {"schema_version", "pack_id", "frozen_at", "labels", "labels_sha256"}],
+            "why_both_are_recorded": (
+                "these two digests cover DIFFERENT BYTE RANGES and comparing them to each "
+                "other is meaningless. Each is now named with its scope so nobody tries."),
+            "corroborated_against_external_origin": LABELS_EXTERNAL_ORIGIN.exists(),
+        },
         "trader_labels_file_sha256": hashlib.sha256(labels_raw).hexdigest(),
         "trader_labels_status": doc.get("status"),
         "right_censored_case_count": len(censored_ids),

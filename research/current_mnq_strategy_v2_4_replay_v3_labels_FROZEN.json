@@ -1,0 +1,1063 @@
+{
+  "schema_version": 3,
+  "pack_id": "aa4e32104b39e0aaa37eb2bd2c90e67a059604447892411d7dfd530c243910e4",
+  "frozen_at": "2026-08-20T22:43:49.005Z",
+  "status": "FROZEN_WITH_TRADER_WAIT_AT_REPLAY_END",
+  "wait_at_replay_end_count": 6,
+  "capture_warnings": [
+    {
+      "case_id": "RPL3-1D002C0416219512",
+      "warning": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
+    },
+    {
+      "case_id": "RPL3-A240A60150B98D33",
+      "warning": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
+    },
+    {
+      "case_id": "RPL3-2A23163B9B2BBBA0",
+      "warning": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
+    },
+    {
+      "case_id": "RPL3-DE838DC7D547F27C",
+      "warning": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
+    },
+    {
+      "case_id": "RPL3-68AD0631CA2C0011",
+      "warning": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
+    },
+    {
+      "case_id": "RPL3-6E618850C834365C",
+      "warning": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING"
+    }
+  ],
+  "labels": [
+    {
+      "case_id": "RPL3-85576C2BBB7040F4",
+      "final_action": "ENTER_SHORT",
+      "first_entry_time": "2026-03-23T11:21:00-04:00",
+      "entry_force": "FORCE_REAL",
+      "trader_zones": [
+        {
+          "lo": 24340,
+          "hi": 24347.25,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-23T11:21:00-04:00",
+          "marked_main_timeframe": "15m"
+        },
+        {
+          "lo": 24758.25,
+          "hi": 24765.5,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-23T11:21:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": {
+        "lo": 24160.5,
+        "hi": 24160.5,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-23T11:21:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "decision_timeline": [
+        {
+          "time": "2026-03-23T11:21:00-04:00",
+          "action": "ENTER_SHORT",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 5,
+      "trader_tp_short": {
+        "lo": 24160.5,
+        "hi": 24160.5,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-23T11:21:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_long": {
+        "lo": 24934.25,
+        "hi": 24934.25,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-23T11:21:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_status": "MARKED"
+    },
+    {
+      "case_id": "RPL3-EAB79AD9E5485D56",
+      "final_action": "ENTER_LONG",
+      "first_entry_time": "2026-03-24T09:32:00-04:00",
+      "entry_force": "FORCE_REAL",
+      "trader_zones": [
+        {
+          "lo": 24192,
+          "hi": 24192.25,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-24T09:32:00-04:00",
+          "marked_main_timeframe": "15m"
+        },
+        {
+          "lo": 24510.25,
+          "hi": 24510.5,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-24T09:32:00-04:00",
+          "marked_main_timeframe": "15m"
+        }
+      ],
+      "trader_tp_reaction_cluster": {
+        "lo": 24641.5,
+        "hi": 24641.5,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-24T09:32:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "decision_timeline": [
+        {
+          "time": "2026-03-24T09:32:00-04:00",
+          "action": "ENTER_LONG",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 2,
+      "trader_tp_short": {
+        "lo": 24014.75,
+        "hi": 24014.75,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-24T09:32:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_long": {
+        "lo": 24641.5,
+        "hi": 24641.5,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-24T09:32:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "trader_tp_status": "MARKED"
+    },
+    {
+      "case_id": "RPL3-6183B3E8E76BD914",
+      "final_action": "ENTER_LONG",
+      "first_entry_time": "2026-04-14T09:36:00-04:00",
+      "entry_force": "FORCE_REAL",
+      "trader_zones": [
+        {
+          "lo": 25716.5,
+          "hi": 25716.75,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-14T09:30:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 25620.5,
+          "hi": 25620.75,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-14T09:30:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": null,
+      "decision_timeline": [
+        {
+          "time": "2026-04-14T09:36:00-04:00",
+          "action": "ENTER_LONG",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 6,
+      "trader_tp_short": {
+        "lo": 25595.5,
+        "hi": 25595.5,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-14T09:30:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_long": null,
+      "trader_tp_long_status": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT",
+      "trader_tp_status": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT"
+    },
+    {
+      "case_id": "RPL3-1D002C0416219512",
+      "final_action": "WAIT",
+      "first_entry_time": null,
+      "entry_force": "NOT_APPLICABLE",
+      "trader_zones": [
+        {
+          "lo": 24327,
+          "hi": 24327.25,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-25T10:56:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 24538.5,
+          "hi": 24539.25,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-25T10:56:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": null,
+      "decision_timeline": [
+        {
+          "time": "2026-03-25T11:16:00-04:00",
+          "action": "WAIT",
+          "force": "NOT_APPLICABLE"
+        }
+      ],
+      "note": "",
+      "reveal_count": 20,
+      "trader_tp_long": {
+        "lo": 24680.5,
+        "hi": 24680.5,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-25T10:56:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_short": {
+        "lo": 24255,
+        "hi": 24255,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-25T10:56:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "correction_history": [
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 17,
+          "to_reveal_count": 16,
+          "from_time": "2026-03-25T11:13:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 16,
+          "to_reveal_count": 15,
+          "from_time": "2026-03-25T11:12:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 15,
+          "to_reveal_count": 14,
+          "from_time": "2026-03-25T11:11:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 14,
+          "to_reveal_count": 13,
+          "from_time": "2026-03-25T11:10:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 13,
+          "to_reveal_count": 12,
+          "from_time": "2026-03-25T11:09:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 12,
+          "to_reveal_count": 11,
+          "from_time": "2026-03-25T11:08:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 11,
+          "to_reveal_count": 10,
+          "from_time": "2026-03-25T11:07:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 10,
+          "to_reveal_count": 9,
+          "from_time": "2026-03-25T11:06:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 9,
+          "to_reveal_count": 8,
+          "from_time": "2026-03-25T11:05:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 8,
+          "to_reveal_count": 7,
+          "from_time": "2026-03-25T11:04:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 7,
+          "to_reveal_count": 6,
+          "from_time": "2026-03-25T11:03:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 6,
+          "to_reveal_count": 5,
+          "from_time": "2026-03-25T11:02:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 5,
+          "to_reveal_count": 4,
+          "from_time": "2026-03-25T11:01:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 4,
+          "to_reveal_count": 3,
+          "from_time": "2026-03-25T11:00:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 3,
+          "to_reveal_count": 2,
+          "from_time": "2026-03-25T10:59:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 2,
+          "to_reveal_count": 1,
+          "from_time": "2026-03-25T10:58:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 1,
+          "to_reveal_count": 0,
+          "from_time": "2026-03-25T10:57:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        }
+      ],
+      "finalization_recovery": {
+        "status": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING",
+        "reveal_count": 20,
+        "replay_count": 20,
+        "reason": "The trader chose WAIT and the presented replay window ended. WAIT is preserved and is not converted to NO_TRADE."
+      }
+    },
+    {
+      "case_id": "RPL3-A240A60150B98D33",
+      "final_action": "WAIT",
+      "first_entry_time": null,
+      "entry_force": "NOT_APPLICABLE",
+      "trader_zones": [
+        {
+          "lo": 24241.5,
+          "hi": 24241.75,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-26T10:42:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 24068.25,
+          "hi": 24068.5,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-26T10:42:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": null,
+      "decision_timeline": [
+        {
+          "time": "2026-03-26T11:02:00-04:00",
+          "action": "WAIT",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 20,
+      "trader_tp_long": {
+        "lo": 24284.25,
+        "hi": 24284.25,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-26T10:42:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_short": {
+        "lo": 23998.25,
+        "hi": 23998.25,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-26T10:42:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "finalization_recovery": {
+        "status": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING",
+        "reveal_count": 20,
+        "replay_count": 20,
+        "reason": "The trader chose WAIT and the presented replay window ended. WAIT is preserved and is not converted to NO_TRADE."
+      }
+    },
+    {
+      "case_id": "RPL3-E3CEDD98C6C01E9B",
+      "final_action": "ENTER_SHORT",
+      "first_entry_time": "2026-03-30T09:41:00-04:00",
+      "entry_force": "FORCE_REAL",
+      "trader_zones": [
+        {
+          "lo": 23609,
+          "hi": 23609.25,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-30T09:35:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 23436.5,
+          "hi": 23436.75,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-30T09:35:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": {
+        "lo": 23355.25,
+        "hi": 23355.25,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-30T09:41:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "decision_timeline": [
+        {
+          "time": "2026-03-30T09:41:00-04:00",
+          "action": "ENTER_SHORT",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 6,
+      "trader_tp_short": {
+        "lo": 23355.25,
+        "hi": 23355.25,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-30T09:41:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_long": {
+        "lo": 23660.75,
+        "hi": 23660.75,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-30T09:41:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_status": "MARKED"
+    },
+    {
+      "case_id": "RPL3-911C2D9EAA857BEC",
+      "final_action": "ENTER_LONG",
+      "first_entry_time": "2026-03-31T09:49:00-04:00",
+      "entry_force": "FORCE_REAL",
+      "trader_zones": [
+        {
+          "lo": 23311.75,
+          "hi": 23312,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-31T09:35:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 23436.5,
+          "hi": 23436.75,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-03-31T09:35:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": {
+        "lo": 23540.75,
+        "hi": 23540.75,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-31T09:35:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "decision_timeline": [
+        {
+          "time": "2026-03-31T09:49:00-04:00",
+          "action": "ENTER_LONG",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 14,
+      "trader_tp_short": {
+        "lo": 23255.5,
+        "hi": 23255.5,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-31T09:35:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_long": {
+        "lo": 23540.75,
+        "hi": 23540.75,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-31T09:35:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_status": "MARKED"
+    },
+    {
+      "case_id": "RPL3-8E7C268E08366A46",
+      "final_action": "NO_TRADE",
+      "first_entry_time": null,
+      "entry_force": "FORCE_REAL",
+      "trader_zones": [
+        {
+          "lo": 24042.5,
+          "hi": 24042.75,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-02T10:35:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 23665.5,
+          "hi": 23665.75,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-02T10:35:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": null,
+      "decision_timeline": [
+        {
+          "time": "2026-04-02T10:55:00-04:00",
+          "action": "NO_TRADE",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 20,
+      "trader_tp_long": {
+        "lo": 24162.25,
+        "hi": 24162.25,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-02T10:35:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_short": {
+        "lo": 23615.5,
+        "hi": 23615.5,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-02T10:35:00-04:00",
+        "marked_main_timeframe": "5m"
+      }
+    },
+    {
+      "case_id": "RPL3-2A23163B9B2BBBA0",
+      "final_action": "WAIT",
+      "first_entry_time": null,
+      "entry_force": "NOT_APPLICABLE",
+      "trader_zones": [
+        {
+          "lo": 25256.5,
+          "hi": 25256.75,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-08T10:41:00-04:00",
+          "marked_main_timeframe": "15m"
+        },
+        {
+          "lo": 24615,
+          "hi": 24615.25,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-08T10:41:00-04:00",
+          "marked_main_timeframe": "15m"
+        }
+      ],
+      "trader_tp_reaction_cluster": null,
+      "decision_timeline": [
+        {
+          "time": "2026-04-08T11:01:00-04:00",
+          "action": "WAIT",
+          "force": "NOT_APPLICABLE"
+        }
+      ],
+      "note": "",
+      "reveal_count": 20,
+      "trader_tp_short": {
+        "lo": 24399,
+        "hi": 24399,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-08T10:41:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "trader_tp_long": null,
+      "trader_tp_long_status": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT",
+      "finalization_recovery": {
+        "status": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING",
+        "reveal_count": 20,
+        "replay_count": 20,
+        "reason": "The trader chose WAIT and the presented replay window ended. WAIT is preserved and is not converted to NO_TRADE."
+      }
+    },
+    {
+      "case_id": "RPL3-F1B0058A42B537D6",
+      "final_action": "ENTER_LONG",
+      "first_entry_time": "2026-04-09T11:35:00-04:00",
+      "entry_force": "FORCE_REAL",
+      "trader_zones": [
+        {
+          "lo": 24960.5,
+          "hi": 24960.75,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-09T11:15:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 25112,
+          "hi": 25112.25,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-09T11:15:00-04:00",
+          "marked_main_timeframe": "15m"
+        }
+      ],
+      "trader_tp_reaction_cluster": {
+        "lo": 25157.25,
+        "hi": 25157.25,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-09T11:15:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "decision_timeline": [
+        {
+          "time": "2026-04-09T11:35:00-04:00",
+          "action": "ENTER_LONG",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 20,
+      "trader_tp_long": {
+        "lo": 25157.25,
+        "hi": 25157.25,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-09T11:15:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "trader_tp_short": {
+        "lo": 24879.5,
+        "hi": 24879.5,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-09T11:15:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "correction_history": [
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 5,
+          "to_reveal_count": 4,
+          "from_time": "2026-04-09T11:20:00-04:00",
+          "cleared_final_action": "ENTER_LONG",
+          "cleared_entry_time": "2026-04-09T11:20:00-04:00"
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 4,
+          "to_reveal_count": 3,
+          "from_time": "2026-04-09T11:19:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 3,
+          "to_reveal_count": 2,
+          "from_time": "2026-04-09T11:18:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 2,
+          "to_reveal_count": 1,
+          "from_time": "2026-04-09T11:17:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 1,
+          "to_reveal_count": 0,
+          "from_time": "2026-04-09T11:16:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 19,
+          "to_reveal_count": 18,
+          "from_time": "2026-04-09T11:34:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 18,
+          "to_reveal_count": 17,
+          "from_time": "2026-04-09T11:33:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 17,
+          "to_reveal_count": 16,
+          "from_time": "2026-04-09T11:32:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 16,
+          "to_reveal_count": 15,
+          "from_time": "2026-04-09T11:31:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 15,
+          "to_reveal_count": 14,
+          "from_time": "2026-04-09T11:30:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 14,
+          "to_reveal_count": 13,
+          "from_time": "2026-04-09T11:29:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 13,
+          "to_reveal_count": 12,
+          "from_time": "2026-04-09T11:28:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        },
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 20,
+          "to_reveal_count": 19,
+          "from_time": "2026-04-09T11:35:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        }
+      ],
+      "trader_tp_status": "MARKED"
+    },
+    {
+      "case_id": "RPL3-DE838DC7D547F27C",
+      "final_action": "WAIT",
+      "first_entry_time": null,
+      "entry_force": "NOT_APPLICABLE",
+      "trader_zones": [
+        {
+          "lo": 25331.5,
+          "hi": 25333,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-13T10:31:00-04:00",
+          "marked_main_timeframe": "15m"
+        },
+        {
+          "lo": 25158.25,
+          "hi": 25158.5,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-13T10:31:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": null,
+      "decision_timeline": [
+        {
+          "time": "2026-04-13T10:51:00-04:00",
+          "action": "WAIT",
+          "force": "TUG_OF_WAR"
+        }
+      ],
+      "note": "",
+      "reveal_count": 20,
+      "trader_tp_long": {
+        "lo": 25390.25,
+        "hi": 25390.25,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-13T10:31:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "trader_tp_short": {
+        "lo": 25104.75,
+        "hi": 25104.75,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-13T10:31:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "finalization_recovery": {
+        "status": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING",
+        "reveal_count": 20,
+        "replay_count": 20,
+        "reason": "The trader chose WAIT and the presented replay window ended. WAIT is preserved and is not converted to NO_TRADE."
+      }
+    },
+    {
+      "case_id": "RPL3-68AD0631CA2C0011",
+      "final_action": "WAIT",
+      "first_entry_time": null,
+      "entry_force": "NOT_APPLICABLE",
+      "trader_zones": [
+        {
+          "lo": 24244.75,
+          "hi": 24245,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-01T09:32:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 24006,
+          "hi": 24006.25,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-01T09:32:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": null,
+      "decision_timeline": [
+        {
+          "time": "2026-04-01T09:52:00-04:00",
+          "action": "WAIT",
+          "force": "TUG_OF_WAR"
+        }
+      ],
+      "note": "",
+      "reveal_count": 20,
+      "trader_tp_short": {
+        "lo": 23945,
+        "hi": 23945,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-01T09:32:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_long": {
+        "lo": 24283.5,
+        "hi": 24283.5,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-01T09:32:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "finalization_recovery": {
+        "status": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING",
+        "reveal_count": 20,
+        "replay_count": 20,
+        "reason": "The trader chose WAIT and the presented replay window ended. WAIT is preserved and is not converted to NO_TRADE."
+      }
+    },
+    {
+      "case_id": "RPL3-AD0DBC962D7C429F",
+      "final_action": "ENTER_SHORT",
+      "first_entry_time": "2026-04-06T10:04:00-04:00",
+      "entry_force": "FORCE_REAL",
+      "trader_zones": [
+        {
+          "lo": 24421.5,
+          "hi": 24421.75,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-06T09:52:00-04:00",
+          "marked_main_timeframe": "15m"
+        },
+        {
+          "lo": 24248,
+          "hi": 24248.25,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-06T09:52:00-04:00",
+          "marked_main_timeframe": "15m"
+        }
+      ],
+      "trader_tp_reaction_cluster": {
+        "lo": 24257.25,
+        "hi": 24257.25,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-06T10:04:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "decision_timeline": [
+        {
+          "time": "2026-04-06T10:04:00-04:00",
+          "action": "ENTER_SHORT",
+          "force": "FORCE_REAL"
+        }
+      ],
+      "note": "",
+      "reveal_count": 12,
+      "trader_tp_long": {
+        "lo": 24524,
+        "hi": 24524,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-06T09:52:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "trader_tp_short": {
+        "lo": 24257.25,
+        "hi": 24257.25,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-06T10:04:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "correction_history": [
+        {
+          "kind": "USER_REWIND_ENTRY_CORRECTION",
+          "from_reveal_count": 12,
+          "to_reveal_count": 11,
+          "from_time": "2026-04-06T10:04:00-04:00",
+          "cleared_final_action": "",
+          "cleared_entry_time": null
+        }
+      ],
+      "trader_tp_status": "MARKED"
+    },
+    {
+      "case_id": "RPL3-6E618850C834365C",
+      "final_action": "WAIT",
+      "first_entry_time": null,
+      "entry_force": "NOT_APPLICABLE",
+      "trader_zones": [
+        {
+          "lo": 24134.75,
+          "hi": 24135,
+          "role": "SUPPORT",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-07T09:36:00-04:00",
+          "marked_main_timeframe": "5m"
+        },
+        {
+          "lo": 24302,
+          "hi": 24302.25,
+          "role": "RESISTANCE",
+          "source_method": "VISIBLE_REJECTION",
+          "marked_time": "2026-04-07T09:36:00-04:00",
+          "marked_main_timeframe": "5m"
+        }
+      ],
+      "trader_tp_reaction_cluster": null,
+      "decision_timeline": [
+        {
+          "time": "2026-04-07T09:56:00-04:00",
+          "action": "WAIT",
+          "force": "TUG_OF_WAR"
+        }
+      ],
+      "note": "",
+      "reveal_count": 20,
+      "trader_tp_short": {
+        "lo": 24050.25,
+        "hi": 24050.25,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-07T09:36:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "trader_tp_long": {
+        "lo": 24399.75,
+        "hi": 24399.75,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-04-07T09:36:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "finalization_recovery": {
+        "status": "TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING",
+        "reveal_count": 20,
+        "replay_count": 20,
+        "reason": "The trader chose WAIT and the presented replay window ended. WAIT is preserved and is not converted to NO_TRADE."
+      }
+    }
+  ],
+  "labels_sha256": "11d8dec0749301c16c7d3b553d06dd564149edf78b4bab4b897fe3635783059c"
+}

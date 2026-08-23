@@ -6,6 +6,21 @@
   "supersedes": "the SESSION-joined scorecard whose two headline figures were refuted",
   "regrade_status": "POST_REPAIR_SAME_WINDOW_BOT_REGRADE_NOT_EDGE_EVIDENCE",
   "source_pack_id": "aa4e32104b39e0aaa37eb2bd2c90e67a059604447892411d7dfd530c243910e4",
+  "trader_labels_custody": {
+    "path": "research\\current_mnq_strategy_v2_4_replay_v3_labels_FROZEN.json",
+    "committed_to_git": true,
+    "whole_file_sha256": "1b20b0a810df2009af2df564bc5b4b0d40db55b66d004676b155825d9e058ad8",
+    "whole_file_sha256_covers": "every byte, including the censoring annotation",
+    "internal_labels_sha256": "11d8dec0749301c16c7d3b553d06dd564149edf78b4bab4b897fe3635783059c",
+    "internal_labels_sha256_covers": "{schema_version, pack_id, frozen_at, labels} only",
+    "keys_OUTSIDE_the_internal_signature": [
+      "status",
+      "wait_at_replay_end_count",
+      "capture_warnings"
+    ],
+    "why_both_are_recorded": "these two digests cover DIFFERENT BYTE RANGES and comparing them to each other is meaningless. Each is now named with its scope so nobody tries.",
+    "corroborated_against_external_origin": true
+  },
   "trader_labels_file_sha256": "1b20b0a810df2009af2df564bc5b4b0d40db55b66d004676b155825d9e058ad8",
   "trader_labels_status": "FROZEN_WITH_TRADER_WAIT_AT_REPLAY_END",
   "right_censored_case_count": 6,
@@ -13,10 +28,10 @@
   "case_count": 14,
   "pnl_or_exit_used": false,
   "runtime": {
-    "total_seconds": 365.61,
-    "data_prepare_seconds": 1.76,
-    "regrade_seconds": 363.67,
-    "per_case_mean_seconds": 25.977
+    "total_seconds": 381.15,
+    "data_prepare_seconds": 1.67,
+    "regrade_seconds": 379.3,
+    "per_case_mean_seconds": 27.093
   },
   "aggregates": {
     "join": "WINDOW",
@@ -136,6 +151,11 @@
       "entry_family_receipt": "REV",
       "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
       "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-03-24T09:30:00-04:00",
+        "setup": "REV",
         "confirmed": true,
         "decision_clock": "2026-03-24T09:32:00-04:00",
         "parent_start": "2026-03-24T09:30:00-04:00",
@@ -297,6 +317,11 @@
       "entry_family_receipt": "REV",
       "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
       "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-03-30T09:45:00-04:00",
+        "setup": "REV",
         "confirmed": true,
         "decision_clock": "2026-03-30T09:47:00-04:00",
         "parent_start": "2026-03-30T09:45:00-04:00",
@@ -360,6 +385,11 @@
       "entry_family_receipt": "REV",
       "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
       "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-03-31T09:45:00-04:00",
+        "setup": "REV",
         "confirmed": true,
         "decision_clock": "2026-03-31T09:47:00-04:00",
         "parent_start": "2026-03-31T09:45:00-04:00",
@@ -423,6 +453,11 @@
       "entry_family_receipt": "BRK5",
       "story_receipt": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
       "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-04-01T09:40:00-04:00",
+        "setup": "BRK5",
         "confirmed": true,
         "decision_clock": "2026-04-01T09:44:00-04:00",
         "parent_start": "2026-04-01T09:40:00-04:00",
@@ -535,6 +570,11 @@
       "entry_family_receipt": "REV",
       "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
       "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-04-06T10:00:00-04:00",
+        "setup": "REV",
         "confirmed": true,
         "decision_clock": "2026-04-06T10:04:00-04:00",
         "parent_start": "2026-04-06T10:00:00-04:00",
@@ -598,6 +638,11 @@
       "entry_family_receipt": "REV",
       "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
       "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-04-07T09:45:00-04:00",
+        "setup": "REV",
         "confirmed": true,
         "decision_clock": "2026-04-07T09:49:00-04:00",
         "parent_start": "2026-04-07T09:45:00-04:00",
@@ -808,6 +853,11 @@
       "entry_family_receipt": "BRK5",
       "story_receipt": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
       "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-04-14T09:35:00-04:00",
+        "setup": "BRK5",
         "confirmed": true,
         "decision_clock": "2026-04-14T09:38:00-04:00",
         "parent_start": "2026-04-14T09:35:00-04:00",
