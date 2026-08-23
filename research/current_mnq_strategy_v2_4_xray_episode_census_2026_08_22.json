@@ -2516,5 +2516,31 @@
       "bot_state_in_window": "ENTER_LONG",
       "mismatch_class": "AGREE"
     }
-  ]
+  ],
+  "april9_root_cause": {
+    "authority": "ALGO-011 §4 — explain why the short route was legally granted; do NOT patch the case.",
+    "status": "DIAGNOSED_NOT_PATCHED",
+    "the_case": "2026-04-09, window 11:15-11:35. Trader ENTER_LONG at 11:35. Bot ENTER_SHORT at 11:27.",
+    "what_granted_the_short": {
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "story": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "location": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "force": "confirmed, path_efficiency 1.0, directional_progress 14.75, 2 completed 1m observations, SUSTAINED_DIRECTIONAL_FORCE"
+    },
+    "THE_FINDING_THAT_CHANGES_THE_DIAGNOSIS": "IN-WINDOW LONG PERMISSIONS: ZERO. The kernel did not choose the short over the long. The trader's own direction WAS NEVER PERMITTED inside the audited window at all. 122 in-window long candidates died at REJECTION_STORY_INCOMPLETE and 32 more at NO_LEGAL_ROUTE_MATCHED. So April 9 is TWO defects, not one: a false positive (a short granted through Route A) AND a false negative (the trader's long never authorized). It is not a selection error between two available options.",
+    "in_window_rejections_by_gate": {
+      "SHORT NO_LEGAL_ROUTE_MATCHED": 124,
+      "LONG REJECTION_STORY_INCOMPLETE": 122,
+      "LONG NO_LEGAL_ROUTE_MATCHED": 32,
+      "SHORT REJECTION_STORY_INCOMPLETE": 30,
+      "LONG FORCE_NOT_CONFIRMED": 28,
+      "SHORT FORCE_NOT_CONFIRMED": 28
+    },
+    "MY_OWN_VERIFICATION_WAS_ALSO_WRONG": "My earlier commit c59f77c6 concluded 'zero-missed is REAL' by counting same-direction survivors within +/-10 MINUTES of the trader's clock. That radius reaches OUTSIDE the audited window - the same session-vs-window confusion the grader convicted in F-1, propagated into my verification of it. Re-measured on WINDOW scope: 6 of 7 trader entries have an in-window same-direction permission; 2026-04-09 has ZERO. The two survivors my check credited were outside the window. RETRACTED for that case.",
+    "consequence_for_missed_trader_entry": "The scorecard's missed_trader_entry = 0 is correct BY CLASSIFICATION - the bot did enter, so the branch does not fire - but it understates reality. On 2026-04-09 the trader's direction was genuinely unavailable to the kernel. A future scorecard should record 'trader direction not permitted in-window' as its own class.",
+    "what_the_state_machine_must_explain": "Both halves. Why Route A granted a rejection story to a SHORT at a resistance swing while simultaneously refusing 122 long candidates at REJECTION_STORY_INCOMPLETE in the same window. A repair that only kills the short leaves the trader's trade still unreachable.",
+    "runner": "research/diagnose_april9_direction_conflict.py"
+  }
 }
