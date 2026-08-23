@@ -86,13 +86,31 @@ SHARED_GATES = tuple(sorted(kernel_gates() - set(NOT_MIRRORED_PENDING_RULING)))
 
 
 def test_the_xray_imports_the_gates_rather_than_reimplementing_them():
-    """A reimplemented gate can agree today and diverge silently tomorrow."""
-    src = inspect.getsource(xray)
+    """A reimplemented gate can agree today and diverge silently tomorrow.
+
+    STRUCTURAL, NOT A SUBSTRING SCAN (ALGO-057 §4.2). The previous form asserted
+    `"import" in src and gate_name in src`, which a DOCSTRING mentioning the gate satisfies
+    just as well as an actual import - and this file's docstrings name every gate it discusses.
+    It now reads the import statements and the function definitions from the AST.
+    """
+    import ast as _ast
+    tree = _ast.parse(inspect.getsource(xray))
+
+    imported = set()
+    for n in _ast.walk(tree):
+        if isinstance(n, _ast.ImportFrom):
+            imported.update(a.asname or a.name for a in n.names)
+        elif isinstance(n, _ast.Import):
+            imported.update((a.asname or a.name).split(".")[0] for a in n.names)
+    # A gate reached through a module alias (`brk.foo`) counts as imported too.
+    attrs = {n.attr for n in _ast.walk(tree) if isinstance(n, _ast.Attribute)}
+    defined = {n.name for n in _ast.walk(tree) if isinstance(n, _ast.FunctionDef)}
+
     for g in SHARED_GATES:
-        assert f"import" in src and g in src, g
-    # It must not define its own version of any gate.
-    for g in SHARED_GATES:
-        assert f"def {g}(" not in src, f"the X-ray defines its own {g} instead of importing it"
+        assert g in imported or g in attrs, (
+            f"the X-ray does not actually import or call {g} - it is only mentioned in prose")
+        assert g not in defined, (
+            f"the X-ray defines its own {g} instead of importing it")
 
 
 def test_there_is_no_fifth_legal_route():

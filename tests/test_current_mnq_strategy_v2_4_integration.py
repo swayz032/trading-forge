@@ -181,22 +181,43 @@ def test_live_asof_and_historical_mode_agree_on_first_force_minute_without_futur
 
 
 def test_entry_fidelity_paths_are_present_in_shared_kernel():
-    source = open(ker.__file__, encoding="utf-8").read()
-    assert "force_snapshot" in source
-    assert "decision_times" in source
-    # The four reads are no longer four hand-rolled predicates in this file — ALGO-047 wired
-    # them into the state machine, which is asked once per route. What must still be true is
-    # that the kernel reaches every route family and the BRK15 variant.
-    assert "entry_authority" in source
-    assert "ROUTE_A_REJECTION" in source
-    assert "ROUTE_B_BREAKOUT" in source
-    assert "ROUTE_C_PREBREAK_DISPLACEMENT" in source
-    assert "ROUTE_D_PREBREAK_RETEST" in source
-    assert "VARIANT_BRK15" in source
-    assert "_intra15_confirmation" in source
-    assert "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE" in source
-    assert "WEAK_BREAK_PULLBACK_15M_BAR3_INTRA_FORCE" in source
-    assert "PREBREAK_REPEAT_TEST_INTRA5_FORCE" in source
-    assert "PREBREAK_DISPLACEMENT_THIRD_CANDLE_INTRA5_FORCE" in source
-    assert "pending_locs" in source
-    assert "WAIT_FOR_NEW_COMPLETED_15M_ACCEPTANCE" not in source
+    """Every route family and the BRK15 variant must be REACHED BY CODE, not named in prose.
+
+    STRUCTURAL (ALGO-057 §4.2). This asserted substrings against the kernel's source text, and
+    the kernel's own comments discuss every route by name - so a kernel that imported the
+    authority and then used none of it would have passed. It now reads the attribute accesses
+    and string constants that the CODE actually contains, with docstrings stripped.
+    """
+    import ast as _ast
+    tree = _ast.parse(open(ker.__file__, encoding="utf-8").read())
+    for node in _ast.walk(tree):
+        body = getattr(node, "body", None)
+        if isinstance(node, (_ast.Module, _ast.FunctionDef, _ast.ClassDef)) and body:
+            if (isinstance(body[0], _ast.Expr) and isinstance(body[0].value, _ast.Constant)
+                    and isinstance(body[0].value.value, str)):
+                body.pop(0)
+
+    attrs = {n.attr for n in _ast.walk(tree) if isinstance(n, _ast.Attribute)}
+    names = {n.id for n in _ast.walk(tree) if isinstance(n, _ast.Name)}
+    consts = {n.value for n in _ast.walk(tree)
+              if isinstance(n, _ast.Constant) and isinstance(n.value, str)}
+    called = attrs | names
+
+    for gate in ("force_snapshot", "decision_times", "_intra15_confirmation"):
+        assert gate in called, f"the kernel does not call {gate}"
+
+    # Every route family and the variant must be REACHED, through the authority module.
+    for route in ("ROUTE_A_REJECTION", "ROUTE_B_BREAKOUT", "ROUTE_C_PREBREAK_DISPLACEMENT",
+                  "ROUTE_D_PREBREAK_RETEST", "VARIANT_BRK15"):
+        assert route in attrs, f"the kernel never reaches {route} in code"
+
+    # The frozen reason literals must be present as actual STRING CONSTANTS in the code.
+    for reason in ("FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+                   "WEAK_BREAK_PULLBACK_15M_BAR3_INTRA_FORCE",
+                   "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+                   "PREBREAK_DISPLACEMENT_THIRD_CANDLE_INTRA5_FORCE",
+                   "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"):
+        assert reason in consts, f"{reason} is not a string constant in the kernel"
+
+    assert "pending_locs" in names
+    assert "WAIT_FOR_NEW_COMPLETED_15M_ACCEPTANCE" not in consts
