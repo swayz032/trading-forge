@@ -56,9 +56,15 @@ def test_the_selectivity_claims_match_the_measurement():
     m = B.measure()
     text = _text()
     assert f"{m['bot_traded_at_all_in_the_session']} of {m['sessions']}" in text.replace(
-        "**", ""), "the 14-of-14 claim does not match the measurement"
-    assert m["bot_never_declines"] is True, (
-        "the handover says the bot never genuinely declines - that is no longer true")
+        "**", ""), "the entry-rate claim does not match the measurement"
+    # The doc must describe the CURRENT bot. This used to assert `bot_never_declines is True`,
+    # which was the measured defect; ALGO-047's wiring falsified it, so the check is now that
+    # the document and the measurement AGREE about which world we are in — in both directions.
+    never = m["bot_never_declines"]
+    says_never = "never once genuinely decline." in text or "never genuinely\ndeclines" in text
+    assert never == says_never, (
+        f"the handover and the measurement disagree: bot_never_declines={never} but the "
+        f"document {'claims' if says_never else 'does not claim'} it never declines")
     assert m["direction_agreement_when_both_entered"] in text
 
 

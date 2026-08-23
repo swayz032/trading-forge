@@ -4,6 +4,7 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from research import current_mnq_strategy_v2_4_engine as eng
 from research import current_mnq_strategy_v2_4_kernel as ker
@@ -48,6 +49,31 @@ def _env(direction="L"):
     }
 
 
+def _grant(story_complete: bool = True):
+    """A Route A GRANT from the entry authority, built as the real dataclass."""
+    return ker.auth.Authority(
+        ker.auth.GRANTED, ker.auth.ROUTE_A_REJECTION,
+        SimpleNamespace(complete=story_complete), True, None)
+
+
+def _wait(state=None):
+    """A refusal from the entry authority. `granted` is False by construction."""
+    state = state or ker.auth.WAIT_NO_STORY
+    return ker.auth.Authority(state, None, None, False, state)
+
+
+def _patch_authority(monkeypatch, verdict):
+    """Stub the ENTRY AUTHORITY, which is what the kernel now asks.
+
+    It is stubbed rather than driven with real bars for the same reason its predecessor stubbed
+    `reversal_story_v24`: these are kernel-plumbing tests, and the derived machine refuses the
+    overwhelming majority of synthetic frames, so an unstubbed veto test would pass no matter
+    what the kernel did with the verdict — a green with no path to red. Both directions are
+    reachable here because both verdicts are injectable.
+    """
+    monkeypatch.setattr(ker.auth, "decide", lambda *a, **k: verdict)
+
+
 def _patch_long_reversal(monkeypatch):
     loc = ker.core.Location(
         id="S1", side="S", lo=99.0, hi=100.0, mid=99.5, source="WICK_ZONE",
@@ -55,7 +81,7 @@ def _patch_long_reversal(monkeypatch):
     )
     monkeypatch.setattr(ker.core, "premarket_plan", lambda *a, **k: SimpleNamespace(primary="BULL"))
     monkeypatch.setattr(ker, "build_entry_locations_v24", lambda *a, **k: ([loc], []))
-    monkeypatch.setattr(ker, "reversal_story_v24", lambda *a, **k: SimpleNamespace(complete=True))
+    _patch_authority(monkeypatch, _grant())
     monkeypatch.setattr(ker, "plan_allows_v24", lambda *a, **k: True)
     return loc
 
@@ -71,7 +97,15 @@ def test_kernel_uses_v24_level_builder_not_legacy_entry_map():
     assert "core.build_entry_locations(env" not in source
 
 
-def test_new_rejection_story_can_veto_even_when_live_force_is_present(monkeypatch):
+@pytest.mark.parametrize("verdict,expected", [(_wait(), 0), (_grant(), 1)])
+def test_the_entry_authority_can_veto_even_when_live_force_is_present(verdict, expected,
+                                                                     monkeypatch):
+    """The story layer's veto survives the wiring — and the positive control proves it bites.
+
+    Parametrised so the SAME frame, with the same force, produces a trade or no trade purely on
+    the authority's verdict. Without the grant arm this test could pass against a kernel that
+    never yields anything at all.
+    """
     env = _env("L"); ts = env["r5"].index[0]
     loc = ker.core.Location(
         id="S1", side="S", lo=99.0, hi=100.0, mid=99.5, source="WICK_ZONE",
@@ -79,10 +113,10 @@ def test_new_rejection_story_can_veto_even_when_live_force_is_present(monkeypatc
     )
     monkeypatch.setattr(ker.core, "premarket_plan", lambda *a, **k: SimpleNamespace(primary="BULL"))
     monkeypatch.setattr(ker, "build_entry_locations_v24", lambda *a, **k: ([loc], []))
-    monkeypatch.setattr(ker, "reversal_story_v24", lambda *a, **k: SimpleNamespace(complete=False))
+    _patch_authority(monkeypatch, verdict)
     monkeypatch.setattr(ker, "plan_allows_v24", lambda *a, **k: True)
     got = list(ker.iter_actionable_candidates(env, ts.date(), eng.Params()))
-    assert got == []
+    assert len(got) == expected
 
 
 def test_role_flip_already_confirmed_before_forming_bar_can_use_live_force(monkeypatch):
@@ -105,7 +139,7 @@ def test_role_flip_already_confirmed_before_forming_bar_can_use_live_force(monke
     monkeypatch.setattr(ker.core, "premarket_plan", lambda *a, **k: SimpleNamespace(primary="BEAR"))
     monkeypatch.setattr(ker, "build_entry_locations_v24", lambda *a, **k: ([loc], []))
     monkeypatch.setattr(ker, "zone_state_at_v24", lambda z, bars, asof, p: flipped)
-    monkeypatch.setattr(ker, "reversal_story_v24", lambda *a, **k: SimpleNamespace(complete=True))
+    _patch_authority(monkeypatch, _grant())
     monkeypatch.setattr(ker, "plan_allows_v24", lambda *a, **k: True)
 
     got = list(ker.iter_actionable_candidates(env, ts.date(), eng.Params()))
@@ -150,10 +184,15 @@ def test_entry_fidelity_paths_are_present_in_shared_kernel():
     source = open(ker.__file__, encoding="utf-8").read()
     assert "force_snapshot" in source
     assert "decision_times" in source
-    assert "reversal_story_v24" in source
-    assert "breakout_followthrough_after_first_print" in source
-    assert "repeat_test_momentum_prebreak" in source
-    assert "displacement_sequence_prebreak" in source
+    # The four reads are no longer four hand-rolled predicates in this file — ALGO-047 wired
+    # them into the state machine, which is asked once per route. What must still be true is
+    # that the kernel reaches every route family and the BRK15 variant.
+    assert "entry_authority" in source
+    assert "ROUTE_A_REJECTION" in source
+    assert "ROUTE_B_BREAKOUT" in source
+    assert "ROUTE_C_PREBREAK_DISPLACEMENT" in source
+    assert "ROUTE_D_PREBREAK_RETEST" in source
+    assert "VARIANT_BRK15" in source
     assert "_intra15_confirmation" in source
     assert "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE" in source
     assert "WEAK_BREAK_PULLBACK_15M_BAR3_INTRA_FORCE" in source

@@ -182,18 +182,40 @@ def test_every_named_session_really_had_no_in_window_bot_decision():
         assert (c["session"] in named) == unavailable, c["session"]
 
 
-def test_the_bot_still_never_genuinely_declines():
-    """The defect this whole phase exists to kill, restated from the artifact.
+def test_the_published_decline_count_is_RE_DERIVED_from_the_case_rows():
+    """THE DEFECT THIS PINNED IS GONE, SO THE PIN MOVES TO THE NUMBER'S HONESTY.
 
-    Whichever denominator wins, `bot_genuinely_declined_in_window_count` is 0 - the entry
-    decision is still a constant, and no censoring convention changes that.
+    It asserted `bot_genuinely_declined_in_window_count == 0` — the constant entry decision
+    that this whole phase existed to kill. ALGO-047 wired the entry authority into the kernel
+    and the end-to-end re-run moved it to 1: the machine now stands aside. The old assertion
+    was falsifiable by design (that is why the F-1 repair mattered) and it has been falsified
+    BY THE REPAIR IT WAS WATCHING FOR.
 
-    UNTIL THE F-1 REPAIR THIS WAS UNFALSIFIABLE. The state it counts was unreachable, so the
-    zero was a construction and this test pinned a number that could not move. The regrade now
-    emits `budget_faithful` on the no-decision branch, so a genuinely declining session would
-    make this go red. The claim is unchanged; it is now actually tested.
+    Re-pointing it at `== 1` would pin today's kernel and, worse, would be the party the
+    number flatters choosing the number. So it is re-anchored to a stronger property instead:
+    the published aggregate must be RE-DERIVABLE FROM THE ROW DATA. A summary field checked
+    against another summary field passes any internally consistent lie — including a generous
+    emitter that updates every field it writes.
     """
-    assert _agg()["bot_genuinely_declined_in_window_count"] == 0
+    sc = json.load(io.open(SCORECARD, encoding="utf-8"))
+    agg, cases = sc["aggregates"], sc["cases"]
+
+    entered = {"ENTER_LONG", "ENTER_SHORT"}
+    absent = "BUDGET_CONSUMED_BEFORE_WINDOW"
+    declined = [c for c in cases
+                if c["bot_state_in_window"] not in entered
+                and c["bot_state_in_window"] != absent]
+
+    assert agg["bot_genuinely_declined_in_window_count"] == len(declined), (
+        f"the published decline count {agg['bot_genuinely_declined_in_window_count']} is not "
+        f"what the {len(cases)} case rows say ({len(declined)})")
+    # The three states must still partition the corpus - an absence folded into a decline is
+    # the conflation that once moved the headline in the bot's favour.
+    in_window = sum(1 for c in cases if c["bot_state_in_window"] in entered)
+    unavailable = sum(1 for c in cases if c["bot_state_in_window"] == absent)
+    assert in_window + unavailable + len(declined) == len(cases)
+    assert agg["bot_entered_in_window_count"] == in_window
+    assert agg["bot_unavailable_in_window_count"] == unavailable
 
 
 def test_the_diagnostic_says_out_loud_that_it_is_not_a_worker_decision():

@@ -21,9 +21,9 @@ grade as this is written and must not be touched.
 from __future__ import annotations
 
 import ast
+import importlib.util
 import inspect
 import textwrap
-from types import SimpleNamespace
 
 from research import current_mnq_strategy_v2_4_frozen_replay_regrade as regrade
 from research import current_mnq_strategy_v2_4_kernel as kernel
@@ -75,19 +75,32 @@ def test_the_regrade_consumes_the_kernel_rather_than_mirroring_it():
     )
 
 
-def test_the_predicate_CATCHES_a_mirror():
+def test_the_predicate_CATCHES_a_mirror(tmp_path):
     """RED-PROOF, on a synthetic module, so the graded file is never touched.
 
     Without this the test above proves only that the predicate never fires.
-    """
-    def mirrors():
-        reversal_story_v24()      # noqa: F821  - never executed, only parsed
-        plan_allows_v24()         # noqa: F821
 
-    fake = SimpleNamespace(__name__="fake_mirror", mirrors=mirrors)
-    mirrors.__module__ = "fake_mirror"
+    THE PLANTED NAMES ARE DERIVED FROM `kernel_gates()`, NOT TYPED. The previous version planted
+    `reversal_story_v24` by hand; when ALGO-047's wiring replaced that predicate with the entry
+    authority the name stopped being a kernel gate, so the control stopped controlling anything
+    and went red — a hand-typed population failing exactly the way this file's own docstring
+    says a hand-typed population failed. Derived, it plants whatever the gates are today.
+    """
+    gates = sorted(kernel_gates() - set(MAY_CALL_DIRECTLY))
+    assert len(gates) >= 2, f"too few kernel gates to plant a mirror with: {gates}"
+    planted = gates[:2]
+
+    # Written to a real file because the predicate reads SOURCE: an `exec`-ed function has none,
+    # and a control that cannot be parsed would pass for the wrong reason.
+    mod_path = tmp_path / "fake_mirror.py"
+    mod_path.write_text(
+        "def mirrors():\n" + "".join(f"    {g}()\n" for g in planted), encoding="utf-8")
+    spec = importlib.util.spec_from_file_location("fake_mirror", mod_path)
+    fake = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fake)
+
     caught = mirroring_violations(fake)
-    assert "reversal_story_v24" in caught and "plan_allows_v24" in caught, caught
+    assert set(planted) <= set(caught), (planted, caught)
 
 
 def test_the_exception_list_does_not_swallow_a_real_mirror():

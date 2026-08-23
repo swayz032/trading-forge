@@ -76,6 +76,17 @@ EXCEPTION_REPEAT_TEST = "repeat_test_momentum_attack"
 VARIANT_BRK15 = "BRK15_WEAK_FIRST_BREAK_CONTINUATION"
 PREBREAK_EXCEPTIONS = (EXCEPTION_DISPLACEMENT, EXCEPTION_REPEAT_TEST)
 
+#: The two post-break forms, named. They were bare string literals until the kernel began
+#: joining on them: a form the kernel must recognise is a JOIN KEY, and a join key duplicated
+#: as a literal in two files drifts the first time one of them is edited.
+FORM_NORMAL_BREAKOUT = "normal_breakout"
+FORM_BREAK_RETEST = "break_retest"
+
+#: Every form this module can return. Route D has TWO legal forms, so a consumer that maps
+#: form -> anything must cover both or it will silently mis-name one of them.
+FORMS = (FORM_NORMAL_BREAKOUT, FORM_BREAK_RETEST, EXCEPTION_DISPLACEMENT,
+         EXCEPTION_REPEAT_TEST, VARIANT_BRK15)
+
 # Refusals, each named after the spec line or §7 item it enforces.
 NO_COMPLETED_BREAK = "NO_COMPLETED_PRINT_BEYOND_THE_ZONE"
 FIRST_PRINT_IS_SETUP_ONLY = "FIRST_BREAK_CANDLE_IS_SETUP_ONLY_NOT_AN_ENTRY"
@@ -168,7 +179,7 @@ def normal_breakout(completed: pd.DataFrame, trigger, lo: float, hi: float, dire
         return BreakoutRead(None, NO_EXTREME_EXTENSION, first_idx)
     if not _momentum(trigger, direction, body_frac, close_loc):
         return BreakoutRead(None, FIRST_PRINT_IS_SETUP_ONLY, first_idx)
-    return BreakoutRead("normal_breakout", None, first_idx)
+    return BreakoutRead(FORM_NORMAL_BREAKOUT, None, first_idx)
 
 
 def break_retest(completed: pd.DataFrame, trigger, lo: float, hi: float, direction: str,
@@ -205,7 +216,7 @@ def break_retest(completed: pd.DataFrame, trigger, lo: float, hi: float, directi
         return BreakoutRead(None, NO_RETEST, accepted_end)
     if not _momentum(trigger, direction, body_frac, close_loc):
         return BreakoutRead(None, FIRST_PRINT_IS_SETUP_ONLY, accepted_end)
-    return BreakoutRead("break_retest", None, accepted_end)
+    return BreakoutRead(FORM_BREAK_RETEST, None, accepted_end)
 
 
 def prebreak_displacement(completed: pd.DataFrame, trigger, lo: float, hi: float,
@@ -333,6 +344,7 @@ def weak_break_continuation(completed: pd.DataFrame, trigger, lo: float, hi: flo
 
 __all__ = [
     "BreakoutRead", "DIAGNOSTIC_ONLY", "EXCEPTION_DISPLACEMENT", "EXCEPTION_REPEAT_TEST",
+    "FORMS", "FORM_BREAK_RETEST", "FORM_NORMAL_BREAKOUT",
     "FIRST_PRINT_IS_SETUP_ONLY", "NOT_ACCEPTED", "NOT_DISPLACEMENT", "NOT_ENOUGH_BARS",
     "NO_COMPLETED_BREAK", "NO_EXTREME_EXTENSION", "NO_PRIOR_TEST", "NO_RESET", "NO_RETEST",
     "NO_RETURN_ATTACK", "NOT_THE_FOLLOWING_BAR", "PREBREAK_EXCEPTIONS",

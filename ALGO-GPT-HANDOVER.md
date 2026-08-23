@@ -42,16 +42,27 @@ a report in the wrong place breaks the main campaign's control plane.
 
 ## 3. State of the work, honestly
 
-**The defect of record.** The bot **takes a trade in 14 of 14 sessions and never once genuinely
-declines.** The trader traded on 7 of the same 14. When the bot is present in-window and he
-trades, it picks the same direction **1 of 1** — so the failure is **timing and selectivity, not
-direction**. Everything being built exists to kill that.
+**The defect of record, and its first measured movement.** The bot **used to take a trade in 14
+of 14 sessions and never once genuinely decline** — an entry decision that is a constant, and
+therefore carries no information. Everything built in this phase existed to kill that. After
+ALGO-047's wiring of the entry authority into the kernel, re-measured end-to-end: **13 of 14,
+with one genuine in-window decline.** The trader traded on 7 of the same 14. When the bot is
+present in-window and he trades, it picks the same direction **1 of 1** — so the failure is
+**timing and selectivity, not direction**.
 
-**The headline number is 1/8**
+**The headline number is 1/8, unchanged by the wiring** (it was 1/8 before).
 
-> **These numbers are measured at the AMENDED 08:00 window (ALGO-041 §3.2).** At the previous 09:30 window they were 5/8 and 5 of 5. The amendment made fidelity WORSE on the current brain — it gives an over-permissive entry gate 90 more minutes to spend the day's single bullet before the trader ever decides. The deltas are in ALGO-042 and the amendment is under advisor review; if it is reverted, these numbers return.
- on the 8 sessions where he actually decided (6 of 14 are
-right-censored — the replay ran out while he was still watching, and those can never be scored).
+> **These numbers are measured at the 08:00 window**, which ALGO-049 made the standing
+> configuration: the ALGO-043 revert to 09:30 is WITHDRAWN and 08:00–12:00 is the unconditional
+> deployment window. The 09:30 arm — where the frozen **5/8** lives — now runs as a
+> RUN-CONFIGURATION of the dual-window exam rather than as a committed constant.
+
+That 1/8 is on the 8 sessions where he actually decided (6 of 14 are right-censored — the replay
+ran out while he was still watching, and those can never be scored). **Read the two together:
+the constant is gone but the score did not improve, and one case moved to
+`BOT_ONLY_ENTRY_UNCENSORED_DECLINE` — the bot taking an in-window trade the trader declined,
+which is the unflattering direction.** Whether the brain refuses on the RIGHT sessions is the
+dual-window exam's question under its own pre-registration, not a claim this packet makes.
 
 **Where it sits on the ladder:** `FIDELITY → FREEZE → CLEAN EDGE → prop-survival → TopstepX`.
 Still on the first rung.

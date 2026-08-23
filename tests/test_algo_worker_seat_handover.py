@@ -41,20 +41,33 @@ def test_every_module_it_names_exists():
         assert Path(f"research/{stem}.py").exists(), f"names {stem} but it does not exist"
 
 
-def test_the_build_only_claim_is_still_true():
-    """It tells the next seat these are not wired. If that changes, this must too."""
+def test_the_wiring_claim_matches_the_code():
+    """The handover must not lie to the next seat about whether the brain is wired.
+
+    Re-anchored, not patched: it used to assert the modules were NOT imported, which was true
+    until ALGO-047 discharged §9.2 and ordered the wiring. The property is unchanged — the
+    document and the code agree — so it is now checked in the direction the code actually runs.
+    Both halves are asserted, so this goes red if the doc is edited without the code OR the code
+    is reverted without the doc.
+    """
     import ast
-    for mod in ("current_mnq_strategy_v2_4_kernel", "current_mnq_strategy_v2_4_entries"):
-        tree = ast.parse(io.open(f"research/{mod}.py", encoding="utf-8").read())
-        for n in ast.walk(tree):
-            mods = []
-            if isinstance(n, ast.ImportFrom):
-                mods = [n.module or ""]
-            elif isinstance(n, ast.Import):
-                mods = [a.name for a in n.names]
-            for m in mods:
-                assert "v2_4_derivation" not in m and "entry_authority" not in m, (
-                    f"{mod} now imports the new layers - the handover says they are BUILD ONLY")
+    text = _text()
+    assert "BUILD ONLY" not in text, (
+        "the handover still calls the new layers BUILD ONLY, but ALGO-047 ordered them wired")
+    assert "WIRED" in text, "the handover should tell the next seat the brain is wired"
+
+    tree = ast.parse(io.open("research/current_mnq_strategy_v2_4_kernel.py",
+                             encoding="utf-8").read())
+    # Both halves of every import: `from research import X` carries X in `names`, not `.module`.
+    imported = []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.ImportFrom):
+            imported.append(n.module or "")
+            imported.extend(f"{n.module or ''}.{a.name}" for a in n.names)
+        elif isinstance(n, ast.Import):
+            imported.extend(a.name for a in n.names)
+    assert any("entry_authority" in m for m in imported), (
+        "the handover says WIRED but the kernel does not import the state machine")
 
 
 def test_the_selectivity_numbers_match_the_measurement():

@@ -1,7 +1,31 @@
 #!/usr/bin/env python3
-"""The bot trades EVERY session. It never declines. Its failure is TIMING. DIAGNOSTIC ONLY.
+"""How often the bot stands aside, measured rather than assumed. DIAGNOSTIC ONLY.
 
-[MEASURED 2026-08-23, budget-faithful join, after the ALGO-020 F-1 repair]
+★ THE FINDING THIS FILE WAS BUILT AROUND HAS BEEN OVERTAKEN BY A REPAIR, AND THE NUMBERS BELOW
+ARE THE OLD KERNEL'S. Its title used to be a verdict — "The bot trades EVERY session, it never
+declines" — and that was true of every kernel measured up to 2026-08-23. ALGO-047 then
+discharged §9.2 and ordered the derivation layer and the four-route WAIT-by-default state
+machine wired in as the kernel's entry authority. Re-measured end-to-end at the 08:00 window
+immediately after that wiring:
+
+    bot traded at all in the session        14 -> 13    (it stood aside for a whole session)
+    bot GENUINELY DECLINED in-window         0 ->  1     (the constant is no longer constant)
+    total decisions through window end      87 -> 45
+    in-window entries the budget forbids    24 ->  6
+    headline agreement (decided cases)      1/8 -> 1/8   (UNCHANGED)
+
+WHAT THAT DOES AND DOES NOT SHOW. The measured defect this phase existed to kill — an entry
+decision that is a CONSTANT and therefore carries no information — is gone: the machine can now
+refuse. It does NOT show that it refuses on the right sessions. The headline did not move, and
+one case moved to BOT_ONLY_ENTRY_UNCENSORED_DECLINE — the bot taking an in-window trade the
+trader really declined — which is not a flattering direction. Whether the brain is FAITHFUL is
+the dual-window exam's question under its own pre-registration, not this census's.
+
+The historical measurement is kept verbatim below, because the tautology argument in it is what
+made the current numbers meaningful and deleting it would erase the reason they can be trusted.
+
+[MEASURED 2026-08-23 ON THE PRE-WIRING KERNEL, budget-faithful join, after the ALGO-020 F-1
+ repair — SUPERSEDED AS A DESCRIPTION OF THE CURRENT KERNEL]
 
     sessions                                14
     bot traded AT ALL in the session        14      <-- every single one, unconditionally
@@ -115,6 +139,10 @@ def measure(scorecard: Path = SCORECARD) -> dict:
         "bot_never_declines": declined == 0,
         "bot_trades_every_session": session_traded == n,
         "missed_trader_entries_is_a_tautology": session_traded == n and unavailable == 0,
+        "kernel_entry_authority": (
+            "the derivation layer + four-route WAIT-by-default state machine, wired as the "
+            "kernel's entry authority by ALGO-047. Before that wiring these same fields "
+            "measured a bot that entered in 14 of 14 sessions and declined in 0."),
         "why_tautology": (
             "a missed entry requires the bot to be absent where the trader entered. Under the "
             "REFUTED window join the bot appeared to enter in all %d sessions, so the metric "
@@ -122,16 +150,27 @@ def measure(scorecard: Path = SCORECARD) -> dict:
             "spent pre-window in %d sessions and MISSED_TRADER_ENTRY now fires on real data."
             % (n, unavailable)),
         "direction_agreement_when_both_entered": f"{same_dir} of {len(both_entered)}",
+        # DERIVED FROM THE COUNTS, NOT ASSERTED. These two fields used to state
+        # "unconditionally" and "AT LEAST one" as flat prose. That was a measured fact about
+        # the pre-ALGO-047 kernel which the wiring falsified, and a hard-coded sentence would
+        # have gone on asserting it while the numbers beside it disagreed - the exact shape of
+        # a report table that outlives its instrument.
         "entry_selection_signal": (
-            "STILL NONE MEASURABLE, and the reason changed. The bot trades in %d of %d "
-            "sessions unconditionally; what varies in-window is only WHETHER IT HAD ALREADY "
-            "SPENT the trade, which is a clock artifact and not a judgement about the setup. "
-            "It genuinely declines in %d sessions." % (session_traded, n, declined)),
+            ("NONE MEASURABLE: the bot trades in all %d sessions, so what varies in-window is "
+             "only WHETHER IT HAD ALREADY SPENT the trade - a clock artifact, not a judgement "
+             "about the setup." % n) if session_traded == n else
+            ("REACHABLE: the bot stands aside in %d of %d sessions and genuinely declines "
+             "in-window in %d, so the entry decision is no longer a constant. Whether it "
+             "declines on the RIGHT sessions is a fidelity question the exam answers, not "
+             "this census." % (n - session_traded, n, declined))),
         "composes_with_the_one_trade_budget": (
-            "the daily bullet guarantees AT MOST one trade per session; the authorization "
-            "layer guarantees AT LEAST one. Together: exactly one trade every session, "
-            "unconditionally - and in %d of %d it lands OUTSIDE the audited window." %
-            (unavailable, n)),
+            "the daily bullet guarantees AT MOST one trade per session. %s In %d of %d "
+            "sessions the trade lands OUTSIDE the audited window." % (
+                ("The authorization layer also guarantees AT LEAST one, so: exactly one trade "
+                 "every session, unconditionally.") if session_traded == n else
+                ("The authorization layer no longer guarantees AT LEAST one: in %d of %d "
+                 "sessions no entry was authorized at all." % (n - session_traded, n)),
+                unavailable, n)),
         "selection_caveat": (
             "these 14 sessions were chosen for review and are not a random sample of trading "
             "days. That biases the absolute decline rate but NOT this finding, which compares "

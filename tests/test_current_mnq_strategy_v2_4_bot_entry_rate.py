@@ -14,6 +14,7 @@ import pytest
 
 from research import current_mnq_strategy_v2_4_bot_entry_rate as B
 from research import current_mnq_strategy_v2_4_censoring_uniformity as U
+from research.run_frozen_14_case_baseline import AGREEMENT_CLASSES
 
 
 def _fake(tmp_path, pairs, session_first="ENTER_LONG"):
@@ -26,18 +27,52 @@ def _fake(tmp_path, pairs, session_first="ENTER_LONG"):
     return p
 
 
-def test_the_bot_trades_in_every_single_session():
-    """The core ALGO-016 finding, ruled binding by ALGO-020 section 1 item 3."""
+def test_whether_the_bot_trades_every_session_is_MEASURED_not_ASSERTED(tmp_path):
+    """RE-ANCHORED, NOT PATCHED — and deliberately not re-pointed at the new number.
+
+    This test used to assert `bot_traded_at_all == 14` and `bot_trades_every_session is True`.
+    That was the core ALGO-016 finding and it was true of every kernel measured until ALGO-047
+    wired the entry authority in; the re-measurement immediately after the wiring is 13 of 14.
+
+    Asserting `== 13` instead would be a goalpost with a citation: I am the party the new
+    number flatters, and a count I pin today is a count that stops being a measurement. What is
+    pinned instead is that the FLAG CANNOT LIE — it must equal the comparison it claims to
+    report — witnessed in BOTH directions on synthetic data, so it has a path to red whichever
+    way the real corpus goes. The corpus size stays pinned because that IS frozen.
+    """
     m = B.measure()
-    assert m["sessions"] == 14
-    assert m["bot_traded_at_all_in_the_session"] == 14
-    assert m["bot_trades_every_session"] is True
+    assert m["sessions"] == 14, "the frozen corpus is 14 sessions"
+    assert m["bot_trades_every_session"] == (
+        m["bot_traded_at_all_in_the_session"] == m["sessions"]), (
+        "the flag disagrees with the counts it summarises")
+
+    every = B.measure(_fake(tmp_path, [("WAIT", "ENTER_LONG")], session_first="ENTER_LONG"))
+    assert every["bot_trades_every_session"] is True
+    not_every = B.measure(_fake(tmp_path, [("WAIT", "WAIT")], session_first="WAIT"))
+    assert not_every["bot_trades_every_session"] is False
 
 
-def test_the_bot_never_GENUINELY_declines():
+def test_the_GENUINE_DECLINE_metric_discriminates(tmp_path):
+    """The metric that convicted the old kernel must still be able to convict the new one.
+
+    Same re-anchoring as above: the old assertion was `declined == 0`, which was the DEFECT
+    being pinned. It is now 1. The property that outlives the number is that a genuine decline
+    is DISTINGUISHABLE from an absence — the conflation that once moved the headline 5/8 -> 6/8
+    in the bot's favour — and that the summary flag tracks the count rather than a memory of it.
+    """
     m = B.measure()
-    assert m["bot_genuinely_declined_in_window"] == 0
-    assert m["bot_never_declines"] is True
+    assert m["bot_never_declines"] == (m["bot_genuinely_declined_in_window"] == 0)
+
+    declines = B.measure(_fake(tmp_path, [("ENTER_LONG", "WAIT")], session_first="ENTER_LONG"))
+    assert declines["bot_genuinely_declined_in_window"] == 1
+    assert declines["bot_never_declines"] is False
+
+    absent = B.measure(_fake(tmp_path, [("ENTER_LONG", B.UNAVAILABLE)],
+                             session_first="ENTER_LONG"))
+    assert absent["bot_genuinely_declined_in_window"] == 0, (
+        "an absent bot was counted as a declining one - that is the conflation this "
+        "three-state partition exists to prevent")
+    assert absent["bot_unavailable_in_window"] == 1
 
 
 def test_unavailable_is_counted_apart_from_declined():
@@ -53,8 +88,10 @@ def test_unavailable_is_counted_apart_from_declined():
     # in the bot's favour.
     assert m["bot_unavailable_in_window"] > 0, (
         "if nothing is unavailable the distinction is untested on real data")
-    assert m["bot_genuinely_declined_in_window"] == 0, (
-        "the measured defect: the bot never genuinely declines")
+    # The `declined == 0` line that stood here pinned the DEFECT, not the partition, and
+    # ALGO-047's wiring falsified it (0 -> 1). The partition assertions below are what this
+    # test was actually for, and they bite regardless of which way the counts go.
+    assert m["bot_genuinely_declined_in_window"] >= 0
     # DERIVED: 7 at the 09:30 window, 1 at 08:00. The claim is that presence is MEASURED
     # and bounded by the corpus, not that it equals any particular number.
     assert 0 <= m["bot_entered_in_window"] <= m["sessions"]
@@ -148,10 +185,20 @@ def test_wait_and_no_trade_are_kept_distinct():
     assert r["declared_censored"] is False
     assert r["ends_at_window_end"] is True, (
         "it ends at the window end, which is why a naive rule would have censored it out")
-    assert r["mismatch_class"] == "TRADER_DECLINED_BOT_TRADED_PRE_WINDOW", (
-        "under the budget-faithful join the bot did not 'only enter' here - it had already "
-        "spent its trade before the window, so this is neither an agreement nor a bot-only "
-        "entry")
+    # The BOT-side class here is a measurement and it MOVED with ALGO-047's wiring:
+    # TRADER_DECLINED_BOT_TRADED_PRE_WINDOW -> BOT_ONLY_ENTRY_UNCENSORED_DECLINE. The wired
+    # brain now takes an in-window trade on a day the trader really declined, which is a
+    # WORSE result here, not a better one. Pinning either literal would pin a kernel rather
+    # than the property. The property is that this case stays DECIDED and in the denominator:
+    # the naive censoring rule would have removed it and flattered the headline.
+    assert r["mismatch_class"] not in AGREEMENT_CLASSES, (
+        "2026-04-02 is a case the bot FAILS; it must never be scored as an agreement")
+    # PREFIX, not substring: the censored classes are the ones NAMED `CENSORED_*`, and a
+    # substring test matches `BOT_ONLY_ENTRY_UNCENSORED_DECLINE` — whose name contains the very
+    # word that means the opposite. Caught by this test on its first run.
+    assert not r["mismatch_class"].startswith("CENSORED"), (
+        "it ends at the window end but the trader DECIDED - censoring it out would move a "
+        "failing case out of the denominator, which is the shape of a manufactured score")
 
 
 def test_the_decomposition_accounts_for_every_case():

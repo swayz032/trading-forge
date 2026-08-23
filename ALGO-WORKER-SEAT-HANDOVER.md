@@ -35,18 +35,28 @@ frozen replay sessions carrying his recorded decisions. **PR #38 is DRAFT / DO N
 Nothing is connected to a broker. The ladder is `FIDELITY → FREEZE → CLEAN EDGE →
 prop-survival → TopstepX` and it is still on the first rung.
 
-**The defect of record:** the bot takes a trade in **14 of 14** sessions and never genuinely
-declines; the trader traded on **7**. When the bot is present in-window and he trades, direction
-agrees **1 of 1**
+**The defect of record — AND ITS FIRST MEASURED MOVEMENT.** The bot used to take a trade in
+**14 of 14** sessions and never genuinely decline; the trader traded on **7**. After ALGO-047's
+wiring of the entry authority, re-measured end-to-end at the 08:00 window: it trades in
+**13 of 14** and genuinely declines in-window **once**. When the bot is present in-window and
+he trades, direction agrees **1 of 1**.
 
-> **These numbers are measured at the AMENDED 08:00 window (ALGO-041 §3.2).** At the previous 09:30 window they were 5/8 and 5 of 5. The amendment made fidelity WORSE on the current brain — it gives an over-permissive entry gate 90 more minutes to spend the day's single bullet before the trader ever decides. The deltas are in ALGO-042 and the amendment is under advisor review; if it is reverted, these numbers return.
-. So the failure is **timing and selectivity, not direction.**
+> **These numbers are measured at the 08:00 window**, which ALGO-049 made the standing
+> configuration — the ALGO-043 revert to 09:30 is WITHDRAWN and 08:00–12:00 is the
+> unconditional deployment window. The 09:30 arm (where the frozen **5/8** lives) now runs as a
+> RUN-CONFIGURATION of the dual-window exam, not as a committed constant.
+
+**The headline did not move: 1/8 before the wiring, 1/8 after.** What moved is that the entry
+decision is no longer a CONSTANT — that constant was the reason the metric carried no
+information. Whether the brain declines on the RIGHT sessions is the exam's question, and one
+case moved to `BOT_ONLY_ENTRY_UNCENSORED_DECLINE`, which is not a flattering direction. So the
+failure is **timing and selectivity, not direction.**
 
 ---
 
 ## 3. What is built, and what state it is in
 
-**BUILD ONLY — deliberately not wired into production, enforced by test:**
+**WIRED — the state machine is the kernel's entry authority, enforced by test:**
 
 All under `research/`. Names spelled out so you can copy them straight into a command.
 
@@ -57,10 +67,20 @@ All under `research/`. Names spelled out so you can copy them straight into a co
 | `run_derivation_checkpoint.py` | DIAGNOSTIC: what the new brain would do with current grants |
 | `run_mutation_campaign_derivation.py` | ALGO-009 §7, 6 of 15 items owned, all killed |
 
-**Why not wired:** ALGO-029 §2 authorizes semantics to be **built** in parallel with an
-outstanding grade but forbids any candidate being **accepted** against the 14 cases until a
-fresh independent grade passes the repaired evaluator. **Check whether that grade landed before
-you wire anything.**
+**Wired when, and by whose authority:** ALGO-029 §2 authorized these to be **built** in parallel
+with an outstanding grade but forbade any candidate being **accepted** until a fresh independent
+grade passed the repaired evaluator. That gate — §9.2 — was **DISCHARGED by ALGO-047**
+(`9d739b90`), which then ORDERED the wiring: the derivation layer and the four-route
+WAIT-by-default state machine are now `iter_actionable_candidates`' entry authority on all four
+routes, including the BRK15 variant. It is the first authorized kernel/entries change since
+`068bb24a`.
+
+**What the wiring changed, and what it deliberately did not.** The machine decides the GRANT;
+the premarket plan gate, the location gate and the force gate are unchanged and are supplied to
+it rather than re-implemented. The four pre-existing reason literals are byte-identical because
+frozen custody artifacts pin them; `ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE` is new, because
+Route D's accepted-break-retest form is a grant path the kernel did not previously have and
+borrowing the repeat-test label would have put false evidence on a real entry.
 
 **Instrument work, all landed:** the F-1 budget-faithful join (headline **1/8** at the amended 08:00 window; **5/8** at 09:30), the classifier-
 bound agreement, the force receipt that can now actually disagree, the BRK15 mirror, the

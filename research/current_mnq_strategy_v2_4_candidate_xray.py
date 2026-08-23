@@ -28,22 +28,23 @@ import numpy as np
 import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
+from research import current_mnq_strategy_v2_4_entry_authority as auth
 from research.current_mnq_strategy_v2_4_entries import (
     breakout_failed,
-    breakout_followthrough_after_first_print,
-    displacement_sequence_prebreak,
-    repeat_test_momentum_prebreak,
-    reversal_story_v24,
     weak_first_break_print,
 )
 from research.current_mnq_strategy_v2_4_force import decision_times, force_snapshot
 from research.current_mnq_strategy_v2_4_fvg_interaction import active_fvg_interaction_locations
 from research.current_mnq_strategy_v2_4_kernel import (
+    BREAKOUT_ROUTE_ORDER,
+    LOOKBACK,
+    REASON_BY_FORM,
     _as_location,
     _bucket_starts,
     _intra15_confirmation,
     _latest_completed_atr,
     _rank_and_yield,
+    authority_bars,
 )
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
 from research.current_mnq_strategy_v2_4_premarket import build_premarket_plan_v24, plan_allows_v24
@@ -174,13 +175,28 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                         locations_on_side=0)
                     continue
                 partial = force.as_row(atr_ref)
+                bars = authority_bars(full5, ts, partial)
                 for loc in side_locs:
-                    story = reversal_story_v24(full5, ts, partial, direction, loc, p, pad)
-                    if not story.complete:
+                    # THE SAME AUTHORITY THE KERNEL ASKS, on the same frame. Both gates are
+                    # supplied rather than recomputed, exactly as the kernel supplies them.
+                    a = auth.decide(
+                        bars, direction, float(loc.lo), float(loc.hi),
+                        location_authorized=True, force_confirmed=True,
+                        body_frac=float(p.body_frac), close_loc=float(p.close_loc),
+                        reject_wick=float(p.reject_wick), pad=float(pad), lookback=LOOKBACK,
+                        route=auth.ROUTE_A_REJECTION,
+                    )
+                    story = a.story
+                    if not a.granted:
+                        # The machine names the EARLIEST unmet step, which is strictly more
+                        # information than the single old gate token. The token is kept so the
+                        # earliest-gate census stays comparable across the wiring, and the
+                        # machine's own state and refusal ride alongside it.
                         rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                             route=ROUTE_A_REJECTION, direction=direction,
                             location_id=str(loc.id), location_source=str(loc.source),
                             outcome="REJECTED", killed_at=GATE_STORY_INCOMPLETE,
+                            authority_state=a.state, authority_refusal=a.reason,
                             story_flags=_story_flags(story))
                         continue
                     if not plan_allows_v24(plan, direction, "REV", story, loc, p):
@@ -195,6 +211,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                              route=ROUTE_A_REJECTION, direction=direction,
                              location_id=str(loc.id), location_source=str(loc.source),
                              outcome="SURVIVED_TO_RANKING", killed_at=None,
+                             authority_state=a.state, authority_refusal=None,
                              story_flags=_story_flags(story), tag=tag)
                     survivors.append((tag, core.Candidate(
                         direction, "REV", loc, story, ts, decision_time,
@@ -222,27 +239,34 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                         locations_on_side=0)
                     continue
                 partial = force.as_row(atr_ref)
+                bars = authority_bars(full5, ts, partial)
                 for loc in side_locs:
-                    disp = displacement_sequence_prebreak(full5, ts, partial, direction, loc, p, pad)
-                    retest = False
-                    if not disp:
-                        retest = repeat_test_momentum_prebreak(
-                            full5, ts, partial, direction, loc, p, pad)
-                    post = breakout_followthrough_after_first_print(
-                        full5, ts, partial, direction, loc, p)
+                    # The kernel's own route precedence, asked of the same authority. The
+                    # per-route refusals are all recorded: a family rejection that says only
+                    # "no legal route" hides WHICH door was closest to opening.
+                    route = None
+                    form = None
+                    refusals: dict[str, str] = {}
+                    for candidate_route in BREAKOUT_ROUTE_ORDER:
+                        a = auth.decide(
+                            bars, direction, float(loc.lo), float(loc.hi),
+                            location_authorized=True, force_confirmed=True,
+                            body_frac=float(p.body_frac), close_loc=float(p.close_loc),
+                            reject_wick=float(p.reject_wick), pad=float(pad),
+                            lookback=LOOKBACK, route=candidate_route,
+                            range_ratio=float(p.range_ratio),
+                        )
+                        if a.granted:
+                            route, form = candidate_route, a.form
+                            break
+                        refusals[candidate_route] = a.reason
 
-                    if disp:
-                        route = ROUTE_C_DISPLACEMENT
-                    elif retest:
-                        route = ROUTE_D_RETEST
-                    elif post:
-                        route = ROUTE_B_BREAKOUT
-                    else:
+                    if route is None:
                         rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                             route="B_C_D_BREAKOUT_FAMILY", direction=direction,
                             location_id=str(loc.id), location_source=str(loc.source),
                             outcome="REJECTED", killed_at=GATE_NO_ROUTE,
-                            displacement=False, retest=False, post_break=False)
+                            route_refusals=refusals)
                         continue
 
                     if not plan_allows_v24(plan, direction, "BRK5", None, loc, p):
@@ -256,8 +280,8 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                              route=route, direction=direction,
                              location_id=str(loc.id), location_source=str(loc.source),
                              outcome="SURVIVED_TO_RANKING", killed_at=None,
-                             displacement=bool(disp), retest=bool(retest),
-                             post_break=bool(post), tag=tag)
+                             form=form, reason=REASON_BY_FORM[form],
+                             route_refusals=refusals, tag=tag)
                     survivors.append((tag, core.Candidate(
                         direction, "BRK5", loc, None, ts, decision_time, route), r_))
                     # MIRROR THE KERNEL: a BRK5 candidate on this key CONSUMES the pending
@@ -379,9 +403,22 @@ def xray_session(env: dict, dte: date, p: prod.Params,
 
 
 def _story_flags(story) -> dict:
-    """Expose the story's self-reported states so §5 H1/H2/H6 can be tested."""
-    return {k: bool(getattr(story, k, False))
-            for k in ("complete", "approach", "takeover", "rejection", "momentum")}
+    """Expose the story's self-reported states so §5 H1/H2/H6 can be tested.
+
+    Re-keyed to the DERIVED story's vocabulary when the wiring made that the story the kernel
+    actually reads. The old keys (`takeover`, `rejection`, `momentum`) belonged to the legacy
+    `core.Story`; kept as a `getattr` default they would have reported a confident `False` for
+    three states the object does not model at all, which is worse than not reporting them.
+    `interaction` is the named form the entry earned, and it is the field this census is for.
+    """
+    if story is None:
+        return {}
+    flags = {k: bool(getattr(story, k, False))
+             for k in ("complete", "approach", "fight", "decision")}
+    flags["interaction"] = getattr(story, "interaction", None)
+    flags["all_kinds"] = list(getattr(story, "all_kinds", ()) or ())
+    flags["two_sided_conflict"] = bool(getattr(story, "two_sided_conflict", False))
+    return flags
 
 
 def summarise(xr: dict) -> dict:

@@ -19,12 +19,10 @@ import numpy as np
 import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
+from research import current_mnq_strategy_v2_4_breakout_derivation as brk
+from research import current_mnq_strategy_v2_4_entry_authority as auth
 from research.current_mnq_strategy_v2_4_entries import (
     breakout_failed,
-    breakout_followthrough_after_first_print,
-    displacement_sequence_prebreak,
-    repeat_test_momentum_prebreak,
-    reversal_story_v24,
     weak_first_break_print,
 )
 from research.current_mnq_strategy_v2_4_force import decision_times, force_snapshot
@@ -35,9 +33,50 @@ from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
 
 core = prod.core
 
+#: The completed-bar history the derivation layer reads behind the trigger. It is the SAME
+#: value the derivation's own default, its checkpoint and the acceptance-bars exam used, so the
+#: wired kernel asks the question those instruments already answered rather than a neighbouring
+#: one. Changing it changes what every one of them measured.
+LOOKBACK = 6
+
+#: Route precedence for the breakout family, PRESERVED FROM THE KERNEL'S OWN elif CHAIN
+#: (displacement -> repeat-test -> post-break). The state machine decides whether a route
+#: grants; it does not decide which route is asked first, and inventing a new precedence here
+#: would be a semantic change nobody ruled.
+BREAKOUT_ROUTE_ORDER = (
+    auth.ROUTE_C_PREBREAK_DISPLACEMENT,
+    auth.ROUTE_D_PREBREAK_RETEST,
+    auth.ROUTE_B_BREAKOUT,
+)
+
+#: form -> the kernel's reason literal. Keyed on the FORM, never the route, because Route D has
+#: two legal forms and naming an accepted-break-retest grant "PREBREAK_REPEAT_TEST" would put a
+#: false evidence label on a real entry. The four pre-existing literals are unchanged - they are
+#: pinned in frozen custody artifacts - and `break_retest` is the one grant path the kernel did
+#: not previously have, so it gets its own name instead of borrowing another's.
+REASON_BY_FORM = {
+    brk.EXCEPTION_DISPLACEMENT: "PREBREAK_DISPLACEMENT_THIRD_CANDLE_INTRA5_FORCE",
+    brk.EXCEPTION_REPEAT_TEST: "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+    brk.FORM_BREAK_RETEST: "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+    brk.FORM_NORMAL_BREAKOUT: "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+    brk.VARIANT_BRK15: "WEAK_BREAK_PULLBACK_15M_BAR3_INTRA_FORCE",
+}
+
 
 def completed_candle_window(full5: pd.DataFrame, ts: pd.Timestamp, n: int = 5) -> pd.DataFrame:
     return full5[full5.index <= ts].tail(n)[["open", "high", "low", "close"]].copy()
+
+
+def authority_bars(history: pd.DataFrame, ts: pd.Timestamp, trigger) -> pd.DataFrame:
+    """Completed history behind `ts`, with the still-forming bar as the last row.
+
+    ALGO-033's split, in one place: the story is read on what the market has FINISHED saying and
+    the forming bar carries force and follow-through only. Built here rather than at each call
+    site so all four routes see the same frame - a second copy of this two-line join is how the
+    X-ray came to disagree with the kernel about what it was reading.
+    """
+    prior = history[history.index < ts].tail(LOOKBACK)
+    return pd.concat([prior, pd.DataFrame([trigger], index=[ts])])
 
 
 def _as_location(loc: core.Location, z) -> core.Location:
@@ -68,7 +107,18 @@ def _latest_completed_atr(full5: pd.DataFrame, ts: pd.Timestamp) -> float | None
 
 def _intra15_confirmation(h15: pd.DataFrame, one: pd.DataFrame, pending,
                           known_at: pd.Timestamp, p: prod.Params):
-    """Weak break -> completed 15m break/pullback -> LIVE force in forming bar 3."""
+    """Weak break -> completed 15m break/pullback -> LIVE force in forming bar 3.
+
+    The read itself is now the state machine's, through Route B's BRK15 variant, so the variant
+    is judged by the SAME derivation as every other route instead of by a second hand-rolled
+    copy of the rule. That copy was measurably laxer: it never tested that the first break was
+    WEAK, so a first break that already carried momentum geometry - the NORMAL breakout, which
+    owes the second-5m extension test - could also enter here. ALGO-038/039 ruled weakness a
+    REQUIREMENT precisely because a laxer second door to the same trade is how four route
+    families quietly become five.
+
+    Returns the force snapshot on a grant, as before, so callers are unchanged.
+    """
     parent_start = known_at.floor("15min")
     parent_end = parent_start + pd.Timedelta(minutes=15)
     if not (parent_start < known_at < parent_end):
@@ -81,31 +131,29 @@ def _intra15_confirmation(h15: pd.DataFrame, one: pd.DataFrame, pending,
     if c is None:
         return None
 
+    # The causal window is unchanged: completed parents from the break attempt up to the bar
+    # now forming. The variant reads the LAST TWO, so they must be contiguous and bar 2 must be
+    # the parent immediately before this one - the same adjacency the previous scan required.
     completed = h15[
         ((h15.index + pd.Timedelta(minutes=15)) >= pending.attempted_at)
         & ((h15.index + pd.Timedelta(minutes=15)) <= parent_start)
     ].copy()
     if len(completed) < 2:
         return None
+    if completed.index[-1] + pd.Timedelta(minutes=15) != parent_start:
+        return None
+    if completed.index[-1] != completed.index[-2] + pd.Timedelta(minutes=15):
+        return None
 
-    for i in range(1, len(completed)):
-        a, b = completed.iloc[i - 1], completed.iloc[i]
-        a_ts, b_ts = completed.index[i - 1], completed.index[i]
-        if b_ts != a_ts + pd.Timedelta(minutes=15):
-            continue
-        if b_ts + pd.Timedelta(minutes=15) != parent_start:
-            continue
-        if pending.direction == "L":
-            bar1 = float(a.close) > float(pending.zone_hi)
-            pullback = float(b.close) < float(a.close) and float(b.close) >= float(pending.zone_lo)
-            resume = float(c.close) > float(a.close)
-        else:
-            bar1 = float(a.close) < float(pending.zone_lo)
-            pullback = float(b.close) > float(a.close) and float(b.close) <= float(pending.zone_hi)
-            resume = float(c.close) < float(a.close)
-        if bar1 and pullback and resume:
-            return snap
-    return None
+    bars15 = authority_bars(completed, parent_start, c)
+    a = auth.decide(
+        bars15, pending.direction, float(pending.zone_lo), float(pending.zone_hi),
+        location_authorized=True, force_confirmed=True,
+        body_frac=float(p.body_frac), close_loc=float(p.close_loc),
+        reject_wick=float(p.reject_wick), lookback=LOOKBACK,
+        route=auth.ROUTE_B_BREAKOUT, variant=auth.VARIANT_BRK15,
+    )
+    return snap if a.granted else None
 
 
 def _rank_and_yield(candidates: list[core.Candidate], actionable: pd.Timestamp,
@@ -181,16 +229,28 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
 
             # Rejection momentum is live: prior rejection/control event must be
             # complete, then the forming 5m must prove sustained directional force.
+            # Route A's read is the state machine's: WAIT unless an approach, a real
+            # interaction and a complete story are each PROVEN, and the story it carries is the
+            # derived one - the evidence that actually authorized the entry.
             for direction, side in (("L", "S"), ("S", "R")):
                 force = force_snapshot(one, ts, 5, direction, decision_time, p)
                 if not force.confirmed:
                     continue
                 partial = force.as_row(atr_ref)
+                bars = authority_bars(full5, ts, partial)
                 for loc in [x for x in pre_locs if x.side == side]:
-                    story = reversal_story_v24(full5, ts, partial, direction, loc, p, pad)
-                    if story.complete and plan_allows_v24(plan, direction, "REV", story, loc, p):
+                    # Both gates are supplied, never recomputed: `pre_locs` are already the
+                    # authorized, still-active locations and force is confirmed above.
+                    a = auth.decide(
+                        bars, direction, float(loc.lo), float(loc.hi),
+                        location_authorized=True, force_confirmed=True,
+                        body_frac=float(p.body_frac), close_loc=float(p.close_loc),
+                        reject_wick=float(p.reject_wick), pad=float(pad), lookback=LOOKBACK,
+                        route=auth.ROUTE_A_REJECTION,
+                    )
+                    if a.granted and plan_allows_v24(plan, direction, "REV", a.story, loc, p):
                         candidates.append(core.Candidate(
-                            direction, "REV", loc, story, ts, decision_time,
+                            direction, "REV", loc, a.story, ts, decision_time,
                             "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
                         ))
 
@@ -203,27 +263,26 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                 if not force.confirmed:
                     continue
                 partial = force.as_row(atr_ref)
+                bars = authority_bars(full5, ts, partial)
                 for loc in [x for x in pre_locs if x.side == side]:
                     key = (direction, loc.id)
-                    early_displacement = displacement_sequence_prebreak(
-                        full5, ts, partial, direction, loc, p, pad,
-                    )
-                    early_repeat_test = False
-                    if not early_displacement:
-                        early_repeat_test = repeat_test_momentum_prebreak(
-                            full5, ts, partial, direction, loc, p, pad,
-                        )
-                    post_break_momentum = breakout_followthrough_after_first_print(
-                        full5, ts, partial, direction, loc, p,
-                    )
-
+                    # Ask the machine route by route, in the kernel's own precedence, and take
+                    # the first grant. The reason is read off the FORM the route actually
+                    # proved, so an entry can never carry the label of evidence it does not
+                    # have - Route D grants through two different forms.
                     reason = None
-                    if early_displacement:
-                        reason = "PREBREAK_DISPLACEMENT_THIRD_CANDLE_INTRA5_FORCE"
-                    elif early_repeat_test:
-                        reason = "PREBREAK_REPEAT_TEST_INTRA5_FORCE"
-                    elif post_break_momentum:
-                        reason = "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+                    for route in BREAKOUT_ROUTE_ORDER:
+                        a = auth.decide(
+                            bars, direction, float(loc.lo), float(loc.hi),
+                            location_authorized=True, force_confirmed=True,
+                            body_frac=float(p.body_frac), close_loc=float(p.close_loc),
+                            reject_wick=float(p.reject_wick), pad=float(pad),
+                            lookback=LOOKBACK, route=route,
+                            range_ratio=float(p.range_ratio),
+                        )
+                        if a.granted:
+                            reason = REASON_BY_FORM[a.form]
+                            break
 
                     if reason and plan_allows_v24(plan, direction, "BRK5", None, loc, p):
                         candidates.append(core.Candidate(

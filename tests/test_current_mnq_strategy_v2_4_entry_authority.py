@@ -303,20 +303,66 @@ def test_location_is_required_on_EVERY_route(route):
     assert a.state == EA.WAIT_NO_LOCATION, a
 
 
-# --- it is BUILD ONLY, and it re-implements no gate ---------------------------------------
+# --- it IS the kernel's entry authority, and it re-implements no gate -----------------------
 
-def test_it_is_not_wired_into_production():
+def _imported_modules(mod: str) -> list[str]:
+    """Every module token an import mentions — the package AND the names it pulls from it.
+
+    `from research import current_mnq_strategy_v2_4_entry_authority as auth` puts the module
+    being imported in `names`, not in `.module`; a walker that reads only `.module` sees the
+    string "research" and reports the wiring as absent. That is exactly how this helper first
+    went red against a kernel that does import the machine.
+    """
+    tree = ast.parse(io.open(f"research/{mod}.py", encoding="utf-8").read())
+    out: list[str] = []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.ImportFrom):
+            out.append(n.module or "")
+            out.extend(f"{n.module or ''}.{a.name}" for a in n.names)
+        elif isinstance(n, ast.Import):
+            out.extend(a.name for a in n.names)
+    return out
+
+
+def test_the_kernel_asks_this_machine_for_entry_authority():
+    """ALGO-047 discharged §9.2 and ORDERED the wiring. This pins that it happened.
+
+    The predecessor of this test asserted the opposite - that the kernel must NOT import the
+    machine - and it was correct until the gate opened. It is re-anchored rather than patched:
+    the property worth pinning is that the machine is the authority, and the way that regresses
+    is silently, by someone restoring the hand-rolled predicates during a merge.
+    """
+    assert any("entry_authority" in m for m in _imported_modules(
+        "current_mnq_strategy_v2_4_kernel")), (
+        "the kernel no longer imports the state machine - ALGO-047 ordered it wired in as the "
+        "entry authority")
+
+
+def test_the_kernel_no_longer_carries_its_own_copy_of_the_reads():
+    """The old predicates are the laxer second door. Importing them again re-opens it.
+
+    Named individually rather than by prefix: `breakout_failed` and `weak_first_break_print` are
+    still legitimately the kernel's (invalidation, and ARMING the pending state - neither is an
+    entry grant), so a blanket ban on the module would be wrong and a blanket allow would miss
+    the four that matter.
+    """
+    src = io.open("research/current_mnq_strategy_v2_4_kernel.py", encoding="utf-8").read()
+    tree = ast.parse(src)
+    imported_names = {a.name for n in ast.walk(tree)
+                      if isinstance(n, ast.ImportFrom) for a in n.names}
+    for gone in ("reversal_story_v24", "displacement_sequence_prebreak",
+                 "repeat_test_momentum_prebreak", "breakout_followthrough_after_first_print"):
+        assert gone not in imported_names, (
+            f"the kernel imports {gone} again - the state machine is meant to be the single "
+            "entry authority, and a second read of the same rule is how they drift apart")
+
+
+def test_the_diagnostics_still_do_not_leak_into_production():
+    """The X-ray mirrors the kernel; it may never become an input to it."""
     for mod in ("current_mnq_strategy_v2_4_kernel", "current_mnq_strategy_v2_4_entries",
                 "current_mnq_strategy_v2_4_engine", "current_mnq_strategy_v2_4_signal"):
-        tree = ast.parse(io.open(f"research/{mod}.py", encoding="utf-8").read())
-        for n in ast.walk(tree):
-            mods = []
-            if isinstance(n, ast.ImportFrom):
-                mods = [n.module or ""]
-            elif isinstance(n, ast.Import):
-                mods = [a.name for a in n.names]
-            assert not any("entry_authority" in m for m in mods), (
-                f"{mod} imports the state machine - acceptance is gated on the grade")
+        for m in _imported_modules(mod):
+            assert "candidate_xray" not in m, f"{mod} imports the diagnostic X-ray"
 
 
 def test_it_does_not_reimplement_the_location_or_force_gates():
