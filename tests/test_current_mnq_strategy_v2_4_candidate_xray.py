@@ -57,14 +57,11 @@ def kernel_gates() -> set[str]:
 # option: adding to this set is a deliberate, reviewable act, which is exactly what omission
 # from the old hand-typed tuple was not.
 NOT_MIRRORED_PENDING_RULING = {
-    "weak_first_break_print":
-        "BRK15 weak-break pending path. The X-ray produces no BRK15 candidate at all, so a "
-        "BRK15 (rank 2) never beats a REV (rank 1) in its ranking and never triggers the "
-        "direction-conflict veto. Whether BRK15 is a fifth route or a variant of "
-        "B_NORMAL_BREAKOUT is not decided by ALGO-009 section 3 -- raised in ALGO-013 "
-        "section 5 and NOT invented here.",
-    "breakout_failed": "same BRK15 pending path -- expires a PendingBreakout.",
-    "_intra15_confirmation": "same BRK15 pending path -- confirms the 15m continuation.",
+    # EMPTY as of ALGO-020 section 2. The three BRK15 gates that lived here
+    # (weak_first_break_print, breakout_failed, _intra15_confirmation) are now MIRRORED:
+    # BRK15 was ruled a VARIANT of B_NORMAL_BREAKOUT, not a fifth route, so mirroring it
+    # neither creates a new pre-break permission path nor breaks ALGO-009 section 3.
+    # An empty dict is the correct state, and the stale-excuse test keeps it honest.
 }
 
 

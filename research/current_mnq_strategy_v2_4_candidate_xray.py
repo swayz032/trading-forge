@@ -29,16 +29,19 @@ import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
 from research.current_mnq_strategy_v2_4_entries import (
+    breakout_failed,
     breakout_followthrough_after_first_print,
     displacement_sequence_prebreak,
     repeat_test_momentum_prebreak,
     reversal_story_v24,
+    weak_first_break_print,
 )
 from research.current_mnq_strategy_v2_4_force import decision_times, force_snapshot
 from research.current_mnq_strategy_v2_4_fvg_interaction import active_fvg_interaction_locations
 from research.current_mnq_strategy_v2_4_kernel import (
     _as_location,
     _bucket_starts,
+    _intra15_confirmation,
     _latest_completed_atr,
     _rank_and_yield,
 )
@@ -53,6 +56,13 @@ ROUTE_A_REJECTION = "A_NORMAL_REJECTION"
 ROUTE_B_BREAKOUT = "B_NORMAL_BREAKOUT"
 ROUTE_C_DISPLACEMENT = "C_PREBREAK_DISPLACEMENT"
 ROUTE_D_RETEST = "D_PREBREAK_RETEST_BREAKOUT"
+
+# ALGO-020 section 2 RULED: BRK15 is a VARIANT of Route B, not a fifth route. ALGO-009 section 3
+# forbids new pre-break PERMISSION paths; it does not forbid mirroring a route the kernel already
+# ranks (`kernel.py:115` ranks BRK5=3 > BRK15=2 > REV=1 and `:242` builds the candidates).
+# Recording it under Route B with an explicit variant tag keeps the four-route taxonomy intact
+# and stops the X-ray under-counting a family that OUTRANKS every reversal.
+VARIANT_BRK15 = "BRK15_WEAK_FIRST_BREAK_CONTINUATION"
 LEGAL_ROUTES = (ROUTE_A_REJECTION, ROUTE_B_BREAKOUT, ROUTE_C_DISPLACEMENT, ROUTE_D_RETEST)
 
 # Earliest-gate vocabulary. A candidate dies at exactly one of these.
@@ -64,6 +74,8 @@ GATE_NO_ROUTE = "NO_LEGAL_ROUTE_MATCHED"
 GATE_NOT_RANKED = "LOST_RANKING_TO_ANOTHER_CANDIDATE"
 GATE_DIRECTION_CONFLICT = "BOTH_DIRECTIONS_PERMITTED_KERNEL_YIELDS_NOTHING"
 GATE_PAST_LAST_ENTRY = "DECISION_CLOCK_PAST_LAST_ENTRY"
+GATE_PENDING_EXPIRED = "WEAK_BREAK_PENDING_WINDOW_EXPIRED"
+GATE_NO_INTRA15_FORCE = "INTRA_15M_FORCE_NOT_CONFIRMED"
 
 
 def xray_session(env: dict, dte: date, p: prod.Params,
@@ -94,6 +106,12 @@ def xray_session(env: dict, dte: date, p: prod.Params,
     plan = build_premarket_plan_v24(full5, dte)
     locations, _ = build_entry_locations_v24(env, dte, open_ts, p)
     authorized = [x for x in locations if x.entry_authorized]
+    # BRK15 pending state, mirroring `iter_actionable_candidates` exactly. Without it the
+    # X-ray produced NO BRK15 candidate at all, so a rank-2 continuation never competed
+    # against a rank-1 reversal and never triggered the direction-conflict veto.
+    pending: dict = {}
+    pending_locs: dict = {}
+    completed_session = r5[r5.index.date == dte]
     meta["premarket_primary"] = str(getattr(plan, "primary", "NEUTRAL"))
     meta["premarket_structure"] = str(getattr(plan, "pm_structure", ""))
     meta["authorized_locations"] = len(authorized)
@@ -105,6 +123,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
     for ts in bucket_starts:
         if ts.time() < core.TRADE_START:
             continue
+        bar_close = ts + pd.Timedelta(minutes=5)
         atr_ref = _latest_completed_atr(full5, ts)
         if atr_ref is None or not np.isfinite(atr_ref):
             continue
@@ -235,6 +254,46 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                     survivors.append((tag, core.Candidate(
                         direction, "BRK5", loc, None, ts, decision_time, route), r_))
 
+            # ---- BRK15: pending weak-first-break 15m continuation ----------------------
+            # Route B variant. Uses LIVE force in bar 3 through a FIFTEEN-minute parent.
+            for key, pen in list(pending.items()):
+                loc = pending_locs[key]
+                if decision_time - pen.attempted_at > pd.Timedelta(minutes=60):
+                    rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
+                        route=ROUTE_B_BREAKOUT, variant=VARIANT_BRK15,
+                        direction=pen.direction, location_id=str(loc.id),
+                        location_source=str(loc.source),
+                        outcome="REJECTED", killed_at=GATE_PENDING_EXPIRED)
+                    pending.pop(key, None)
+                    pending_locs.pop(key, None)
+                    continue
+                force15 = _intra15_confirmation(h15, one, pen, decision_time, p)
+                if force15 is None:
+                    rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
+                        route=ROUTE_B_BREAKOUT, variant=VARIANT_BRK15,
+                        direction=pen.direction, location_id=str(loc.id),
+                        location_source=str(loc.source),
+                        outcome="REJECTED", killed_at=GATE_NO_INTRA15_FORCE)
+                    continue
+                if not plan_allows_v24(plan, pen.direction, "BRK15", None, loc, p):
+                    rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
+                        route=ROUTE_B_BREAKOUT, variant=VARIANT_BRK15,
+                        direction=pen.direction, location_id=str(loc.id),
+                        location_source=str(loc.source),
+                        outcome="REJECTED", killed_at=GATE_PLAN_VETO)
+                    continue
+                tag = f"{ROUTE_B_BREAKOUT}|{VARIANT_BRK15}|{pen.direction}|{loc.id}"
+                r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
+                         route=ROUTE_B_BREAKOUT, variant=VARIANT_BRK15,
+                         direction=pen.direction, location_id=str(loc.id),
+                         location_source=str(loc.source),
+                         outcome="SURVIVED_TO_RANKING", killed_at=None, tag=tag)
+                survivors.append((tag, core.Candidate(
+                    pen.direction, "BRK15", loc, None, pen.attempted_at, decision_time,
+                    "WEAK_BREAK_PULLBACK_15M_BAR3_INTRA_FORCE"), r_))
+                pending.pop(key, None)
+                pending_locs.pop(key, None)
+
             # ---- RANKING: the kernel's own `_rank_and_yield`, not a local rule ---------
             # PREVIOUSLY THIS WAS WRONG IN FOUR WAYS and a positive control caught it:
             #   (a) it kept `survivors[0]` — LIST ORDER — while the kernel takes the MAX by
@@ -267,6 +326,22 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                         if cand is not won:
                             r_["outcome"] = "REJECTED"
                             r_["killed_at"] = GATE_NOT_RANKED
+
+        # Only a COMPLETED weak first break can arm the 15m continuation path.
+        if ts in completed_session.index and (as_of is None or bar_close <= as_of):
+            r = completed_session.loc[ts]
+            for direction, side in (("L", "R"), ("S", "S")):
+                for loc in [x for x in pre_locs if x.side == side]:
+                    key = (direction, loc.id)
+                    if weak_first_break_print(full5, ts, r, direction, loc, p):
+                        pending.setdefault(key, core.PendingBreakout(
+                            direction, loc.id, bar_close, loc.lo, loc.hi))
+                        pending_locs.setdefault(key, loc)
+            # Fail-closed invalidation for already-pending attempts.
+            for key, pen in list(pending.items()):
+                if breakout_failed(r, pen.direction, pen.zone_lo, pen.zone_hi):
+                    pending.pop(key, None)
+                    pending_locs.pop(key, None)
 
     return {"meta": meta, "records": records}
 

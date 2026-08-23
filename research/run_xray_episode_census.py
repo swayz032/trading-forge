@@ -69,6 +69,9 @@ def main() -> None:
     trades_unc = sum(1 for c in sc["cases"]
                      if not c["trader_label_censored"] and c["trader_state"].startswith("ENTER"))
 
+    exec_all = sum(s["executable_under_one_trade_budget"] for s in sessions)
+    exec_unc = sum(s["executable_under_one_trade_budget"] for s in uncensored)
+
     by_route = Counter()
     for s in sessions:
         for e in s["episodes"]:
@@ -102,8 +105,25 @@ def main() -> None:
             "trader_trades_all_14": trader_trades,
             "episodes_uncensored_sessions": ep_unc,
             "trader_trades_uncensored": trades_unc,
-            "episodes_per_trader_trade_uncensored":
+            # ---- DUAL-RATIO HONESTY (ALGO-020 section 1 item 8) ------------------------
+            # TWO LAYERS, BOTH NAMED, NEITHER SUBSTITUTING FOR THE OTHER. The grader caught
+            # this: `executable_under_one_trade_budget` was in the per-session rows and
+            # absent from the totals and from every commit message, while "15:1" was
+            # narrated. Under the one-trade budget only the FIRST episode of a session can
+            # ever execute, so against EXECUTABLE opportunity the ratio is near parity.
+            # Citing the authorization ratio alone overstates the machine's promiscuity by an
+            # order of magnitude; citing the executable ratio alone hides that the
+            # authorization layer says yes to everything. Both, always, side by side.
+            "authorization_layer_episodes_per_trader_trade_uncensored":
                 round(ep_unc / max(trades_unc, 1), 1),
+            "executable_episodes_uncensored": exec_unc,
+            "executable_episodes_per_trader_trade_uncensored":
+                round(exec_unc / max(trades_unc, 1), 1),
+            "executable_episodes_all_14": exec_all,
+            "both_ratios_must_be_cited_together": (
+                f"authorization-layer {round(ep_unc / max(trades_unc, 1), 1)}:1 and "
+                f"executable {round(exec_unc / max(trades_unc, 1), 1)}:1. Quoting either "
+                "alone misrepresents the machine."),
             "runtime_seconds": round(time.perf_counter() - t0, 2),
         },
         "episode_count_sensitivity_to_gap_minutes": sens_totals,
@@ -119,9 +139,13 @@ def main() -> None:
     print(f"  DEDUPLICATED EPISODES     : {t['deduplicated_episodes']}"
           f"  ({t['observations_per_episode']} observations each)")
     print(f"  episodes per session      : {t['episodes_per_session']}")
-    print(f"  uncensored episodes/trade : {t['episodes_uncensored_sessions']} episodes vs "
+    print(f"  AUTHORIZATION ratio       : {t['episodes_uncensored_sessions']} episodes vs "
           f"{t['trader_trades_uncensored']} trades = "
-          f"{t['episodes_per_trader_trade_uncensored']}:1")
+          f"{t['authorization_layer_episodes_per_trader_trade_uncensored']}:1")
+    print(f"  EXECUTABLE ratio          : {t['executable_episodes_uncensored']} executable vs "
+          f"{t['trader_trades_uncensored']} trades = "
+          f"{t['executable_episodes_per_trader_trade_uncensored']}:1"
+          f"   <- both, always, or neither")
     print(f"  sensitivity to gap        : {sens_totals}")
     print(f"  by route                  : {out['episodes_by_legal_route']}")
 

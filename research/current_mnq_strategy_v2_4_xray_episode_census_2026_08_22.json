@@ -15,8 +15,12 @@
     "trader_trades_all_14": 7,
     "episodes_uncensored_sessions": 60,
     "trader_trades_uncensored": 7,
-    "episodes_per_trader_trade_uncensored": 8.6,
-    "runtime_seconds": 375.3
+    "authorization_layer_episodes_per_trader_trade_uncensored": 8.6,
+    "executable_episodes_uncensored": 8,
+    "executable_episodes_per_trader_trade_uncensored": 1.1,
+    "executable_episodes_all_14": 14,
+    "both_ratios_must_be_cited_together": "authorization-layer 8.6:1 and executable 1.1:1. Quoting either alone misrepresents the machine.",
+    "runtime_seconds": 357.46
   },
   "episode_count_sensitivity_to_gap_minutes": {
     "1": 123,
@@ -43,12 +47,14 @@
         "30": 7
       },
       "never_permitted_by_earliest_gate": {
-        "DECISION_CLOCK_PAST_LAST_ENTRY": 26,
+        "DECISION_CLOCK_PAST_LAST_ENTRY": 29,
         "FORCE_NOT_CONFIRMED": 1148,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 291,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 10,
         "NO_LEGAL_ROUTE_MATCHED": 1659,
         "REJECTION_STORY_INCOMPLETE": 1431,
-        "STRUCTURAL_PRIOR_VETO": 16
+        "STRUCTURAL_PRIOR_VETO": 20,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 1
       },
       "episodes": [
         {
@@ -150,8 +156,8 @@
       ],
       "trader_state": "ENTER_SHORT",
       "trader_label_censored": false,
-      "bot_state_in_window": "ENTER_SHORT",
-      "mismatch_class": "AGREE"
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "MISSED_TRADER_ENTRY"
     },
     {
       "session": "2026-03-24",
@@ -168,10 +174,12 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 19,
         "FORCE_NOT_CONFIRMED": 1150,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 168,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 2,
         "NO_LEGAL_ROUTE_MATCHED": 1494,
         "REJECTION_STORY_INCOMPLETE": 1646,
-        "STRUCTURAL_PRIOR_VETO": 6
+        "STRUCTURAL_PRIOR_VETO": 6,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 1
       },
       "episodes": [
         {
@@ -313,11 +321,13 @@
         "30": 8
       },
       "never_permitted_by_earliest_gate": {
-        "DECISION_CLOCK_PAST_LAST_ENTRY": 23,
+        "DECISION_CLOCK_PAST_LAST_ENTRY": 24,
         "FORCE_NOT_CONFIRMED": 1156,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 316,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 13,
         "NO_LEGAL_ROUTE_MATCHED": 1275,
-        "REJECTION_STORY_INCOMPLETE": 1424
+        "REJECTION_STORY_INCOMPLETE": 1424,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 3
       },
       "episodes": [
         {
@@ -431,8 +441,8 @@
       ],
       "trader_state": "WAIT",
       "trader_label_censored": true,
-      "bot_state_in_window": "ENTER_SHORT",
-      "mismatch_class": "CENSORED_BOT_ENTERED"
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED"
     },
     {
       "session": "2026-03-26",
@@ -449,10 +459,12 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 7,
         "FORCE_NOT_CONFIRMED": 1140,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 228,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 5,
         "NO_LEGAL_ROUTE_MATCHED": 1089,
         "REJECTION_STORY_INCOMPLETE": 2647,
-        "STRUCTURAL_PRIOR_VETO": 2
+        "STRUCTURAL_PRIOR_VETO": 2,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 4
       },
       "episodes": [
         {
@@ -506,8 +518,8 @@
       ],
       "trader_state": "WAIT",
       "trader_label_censored": true,
-      "bot_state_in_window": "ENTER_SHORT",
-      "mismatch_class": "CENSORED_BOT_ENTERED"
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED"
     },
     {
       "session": "2026-03-30",
@@ -524,9 +536,11 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 9,
         "FORCE_NOT_CONFIRMED": 1130,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 240,
         "NO_LEGAL_ROUTE_MATCHED": 2078,
         "REJECTION_STORY_INCOMPLETE": 3029,
-        "STRUCTURAL_PRIOR_VETO": 6
+        "STRUCTURAL_PRIOR_VETO": 6,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 4
       },
       "episodes": [
         {
@@ -584,11 +598,13 @@
         "30": 5
       },
       "never_permitted_by_earliest_gate": {
-        "DECISION_CLOCK_PAST_LAST_ENTRY": 35,
+        "DECISION_CLOCK_PAST_LAST_ENTRY": 36,
         "FORCE_NOT_CONFIRMED": 1114,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 237,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 7,
         "NO_LEGAL_ROUTE_MATCHED": 3197,
-        "REJECTION_STORY_INCOMPLETE": 2627
+        "REJECTION_STORY_INCOMPLETE": 2627,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 2
       },
       "episodes": [
         {
@@ -708,9 +724,11 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 23,
         "FORCE_NOT_CONFIRMED": 1182,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 528,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 3,
         "NO_LEGAL_ROUTE_MATCHED": 1369,
-        "REJECTION_STORY_INCOMPLETE": 1433
+        "REJECTION_STORY_INCOMPLETE": 1433,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 8
       },
       "episodes": [
         {
@@ -794,10 +812,12 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 1,
         "FORCE_NOT_CONFIRMED": 1144,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 232,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 13,
         "NO_LEGAL_ROUTE_MATCHED": 2158,
         "REJECTION_STORY_INCOMPLETE": 1926,
-        "STRUCTURAL_PRIOR_VETO": 11
+        "STRUCTURAL_PRIOR_VETO": 11,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 4
       },
       "episodes": [
         {
@@ -947,8 +967,8 @@
       ],
       "trader_state": "NO_TRADE",
       "trader_label_censored": false,
-      "bot_state_in_window": "ENTER_LONG",
-      "mismatch_class": "BOT_ONLY_ENTRY_UNCENSORED_DECLINE"
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "TRADER_DECLINED_BOT_TRADED_PRE_WINDOW"
     },
     {
       "session": "2026-04-06",
@@ -965,10 +985,12 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 15,
         "FORCE_NOT_CONFIRMED": 1196,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 364,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 4,
         "NO_LEGAL_ROUTE_MATCHED": 1006,
         "REJECTION_STORY_INCOMPLETE": 1101,
-        "STRUCTURAL_PRIOR_VETO": 2
+        "STRUCTURAL_PRIOR_VETO": 2,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 1
       },
       "episodes": [
         {
@@ -1052,9 +1074,11 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 26,
         "FORCE_NOT_CONFIRMED": 1172,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 668,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 28,
         "NO_LEGAL_ROUTE_MATCHED": 1499,
-        "REJECTION_STORY_INCOMPLETE": 1573
+        "REJECTION_STORY_INCOMPLETE": 1573,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 10
       },
       "episodes": [
         {
@@ -1198,10 +1222,12 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 14,
         "FORCE_NOT_CONFIRMED": 1168,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 560,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 3,
         "NO_LEGAL_ROUTE_MATCHED": 1321,
         "REJECTION_STORY_INCOMPLETE": 1556,
-        "STRUCTURAL_PRIOR_VETO": 15
+        "STRUCTURAL_PRIOR_VETO": 15,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 6
       },
       "episodes": [
         {
@@ -1291,8 +1317,8 @@
       ],
       "trader_state": "WAIT",
       "trader_label_censored": true,
-      "bot_state_in_window": "ENTER_SHORT",
-      "mismatch_class": "CENSORED_BOT_ENTERED"
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED"
     },
     {
       "session": "2026-04-09",
@@ -1309,10 +1335,12 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 31,
         "FORCE_NOT_CONFIRMED": 1128,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 536,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 18,
         "NO_LEGAL_ROUTE_MATCHED": 2220,
         "REJECTION_STORY_INCOMPLETE": 2300,
-        "STRUCTURAL_PRIOR_VETO": 21
+        "STRUCTURAL_PRIOR_VETO": 21,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 4
       },
       "episodes": [
         {
@@ -1414,8 +1442,8 @@
       ],
       "trader_state": "ENTER_LONG",
       "trader_label_censored": false,
-      "bot_state_in_window": "ENTER_SHORT",
-      "mismatch_class": "OPPOSITE_DIRECTION_AT_DECISION"
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "MISSED_TRADER_ENTRY"
     },
     {
       "session": "2026-04-13",
@@ -1430,12 +1458,14 @@
         "30": 6
       },
       "never_permitted_by_earliest_gate": {
-        "DECISION_CLOCK_PAST_LAST_ENTRY": 6,
+        "DECISION_CLOCK_PAST_LAST_ENTRY": 7,
         "FORCE_NOT_CONFIRMED": 1160,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 96,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 4,
         "NO_LEGAL_ROUTE_MATCHED": 1755,
         "REJECTION_STORY_INCOMPLETE": 1774,
-        "STRUCTURAL_PRIOR_VETO": 5
+        "STRUCTURAL_PRIOR_VETO": 5,
+        "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 1
       },
       "episodes": [
         {
@@ -1513,8 +1543,8 @@
       ],
       "trader_state": "WAIT",
       "trader_label_censored": true,
-      "bot_state_in_window": "ENTER_LONG",
-      "mismatch_class": "CENSORED_BOT_ENTERED"
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED"
     },
     {
       "session": "2026-04-14",
@@ -1531,6 +1561,7 @@
       "never_permitted_by_earliest_gate": {
         "DECISION_CLOCK_PAST_LAST_ENTRY": 4,
         "FORCE_NOT_CONFIRMED": 1102,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 44,
         "LOST_RANKING_TO_ANOTHER_CANDIDATE": 3,
         "NO_AUTHORIZED_LOCATION_ON_THIS_SIDE": 19,
         "NO_LEGAL_ROUTE_MATCHED": 1684,
@@ -1616,27 +1647,5 @@
       "bot_state_in_window": "ENTER_LONG",
       "mismatch_class": "AGREE"
     }
-  ],
-  "retraction_of_the_2026_08_22_first_run": {
-    "what_was_published": {
-      "where": "ALGO-012 section 3, published to the GPT algo branch at 9745ece0",
-      "raw_survivor_observations": 315,
-      "deduplicated_episodes": 177,
-      "episodes_per_session": 12.6,
-      "uncensored_episodes_per_trader_trade": "15.1:1",
-      "route_a_share": "152 of 177 = 86%"
-    },
-    "what_is_true_after_the_instrument_repair": {
-      "raw_survivor_observations": 167,
-      "deduplicated_episodes": 101,
-      "episodes_per_session": 7.2,
-      "uncensored_episodes_per_trader_trade": "8.6:1",
-      "route_a_share": "73 of 101"
-    },
-    "why_every_number_moved": "The X-ray's own ranking step diverged from `kernel._rank_and_yield` in FOUR ways. It kept `survivors[0]` (LIST ORDER, Route A first) where the kernel takes the MAX by (BRK5=3 > BRK15=2 > REV=1, location.quality, location.confluence) - so whenever a breakout coexisted with a reversal the X-ray recorded the OPPOSITE winner from the machine that trades. It had no direction-conflict veto, where the kernel yields NOTHING if both directions have candidates at one clock. It had no decision-clock LAST_ENTRY cutoff (bucket starts are filtered, 1-minute decision clocks inside them were not). And its demotion loop scanned ALL accumulated records for a matching tag, so a tag that WON at an earlier clock was retroactively demoted when the same tag lost at a later one.",
-    "how_it_was_caught": "NOT by review. A positive control on a NEW diagnostic - a mirror of Route A that asserted it reproduced the X-ray's survivor tag multiset - refused at the first session with MIRROR_DIVERGED_FROM_XRAY. Investigating which of the two was wrong found it was the X-ray.",
-    "why_the_correspondence_test_did_not_catch_it": "`test_the_xray_consults_every_gate_the_kernel_consults` compares against a HAND-MAINTAINED `SHARED_GATES` tuple, and `_rank_and_yield` was simply not in it. A pinned population that nothing checks for completeness certifies only itself. `_rank_and_yield` is now in the tuple and five arms are red-proofed.",
-    "direction_of_the_error": "I OVERSTATED permissiveness by roughly three quarters. The 5B conclusion that Route A dominates SURVIVES - it is still the largest route - but at a smaller magnitude, and every figure I gave for it must be replaced by the ones above.",
-    "what_this_is": "The THIRD wrong number I have published on this campaign in two days, after the 0/14 field-name mismatch and the 9/14 session-versus-window join. All three were instrument defects, not strategy defects, and all three were caught by a control rather than by reading the code."
-  }
+  ]
 }
