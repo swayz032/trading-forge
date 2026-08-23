@@ -227,7 +227,7 @@ def main() -> None:
     print(f'observed 2025 behaviour: {b["days_with_exactly_one_trade"]} of {b["days"]} days had '
           f'exactly one trade; {b["entries_inside_0930_1200"]} of {b["entries_total"]} entries '
           f'inside 09:30-12:00')
-    print(f'  {b["TIMEZONE_UNRESOLVED"]}')
+    print(f'  {b["TIMEZONE_RESOLVED"]}')
 
 
 if __name__ == "__main__":
