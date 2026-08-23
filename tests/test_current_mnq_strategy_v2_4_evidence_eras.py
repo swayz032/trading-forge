@@ -91,12 +91,24 @@ def test_the_apr30_join_is_reported_as_out_of_band_rather_than_hidden():
     assert apr30["all_inside_the_videos_visible_price_band"] is False
 
 
-def test_the_observed_behaviour_is_recorded_with_its_timezone_caveat():
+def test_the_timezone_is_RESOLVED_by_the_0930_floor():
+    """The teaching lane's stated prerequisite (ALGO-020 section 3 item 1).
+
+    A hard floor at exactly the RTH open, with nothing before it across 74 entries, is a
+    boundary rather than a tendency. It holds even if FX Replay restricts replay to RTH: a
+    UTC export would show the floor at 13:30.
+    """
+    b = _real()["observed_behaviour_2025"]
+    assert b["earliest_entry_clock"] == 9 * 60 + 30
+    assert b["entries_before_0930"] == 0
+    assert "EASTERN" in b["TIMEZONE_RESOLVED"]
+    assert "no longer conditional" in b["TIMEZONE_RESOLVED"]
+
+
+def test_the_observed_behaviour_figures_stand():
     b = _real()["observed_behaviour_2025"]
     assert b["days_with_exactly_one_trade"] == 41 and b["days"] == 55
     assert b["entries_inside_0930_1200"] == 64 and b["entries_total"] == 74
-    assert "NOT established" in b["TIMEZONE_UNRESOLVED"]
-    assert "CONDITIONAL" in b["TIMEZONE_UNRESOLVED"]
 
 
 def test_the_frozen_rules_tighten_rather_than_describe_the_record():

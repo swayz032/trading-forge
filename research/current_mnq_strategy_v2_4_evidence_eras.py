@@ -27,7 +27,7 @@ WHAT THE VIDEO ALSO CONTAINS, extending the custody receipt rather than replacin
 Any claim about "3h53m of trading" is wrong. Much of it is idle UI and one long stretch is not
 FX Replay at all.
 
-THE TRADER'S OBSERVED 2025 BEHAVIOUR vs THE FROZEN RULES -- read the caveat before using this:
+THE TRADER'S OBSERVED 2025 BEHAVIOUR vs THE FROZEN RULES (timezone resolved, see below):
     one trade per day        41 of 55 days   (10 days had 2, three had 3, one had 4)
     entries inside 0930-1200 64 of 74        (8 in the 12:00 hour, 2 in the 13:00 hour)
 So the frozen rules -- one A+ trade per session, 09:30 to 12:00 -- TIGHTEN his observed behaviour
@@ -35,11 +35,20 @@ rather than describe it. That is not a contradiction: a rule he settled on later
 exactly like this against an earlier record, and FX Replay backtesting is not live trading.
 It is flagged, not resolved.
 
-TIMEZONE IS UNRESOLVED AND THE WINDOW FIGURE DEPENDS ON IT. The ledger's clock is whatever FX
-Replay exported and I have NOT established it. Suggestive but not proof: the video's FX Replay
-UI reads `01:15:00 PM UTC-4` while its crosshair reads 11:30 AM on 11 Apr '25, and the ledger's
-last trade that day starts 13:18 -- consistent with ET. Treat `64 of 74` as CONDITIONAL on the
-ledger being ET.
+TIMEZONE RESOLVED 2026-08-23 -- THE LEDGER CLOCK IS EASTERN. It was the stated prerequisite for
+the teaching lane (ALGO-020 section 3) and `64 of 74` is no longer conditional. Three independent
+lines:
+
+  1. THE HARD 09:30 FLOOR. The earliest of all 74 entries is EXACTLY 09:30 and ZERO fall before
+     it. That is the RTH open to the minute. Note the argument survives even if FX Replay itself
+     restricts replay to RTH: if the export were UTC the floor would appear at 13:30, not 09:30.
+     A floor AT 09:30 in the recorded clock means the RECORDED CLOCK IS ET, whatever caused it.
+  2. UNDER UTC THE RECORD IS ABSURD. The same entries become 05:30-09:18 ET -- entirely
+     overnight and pre-dawn, with NOT ONE in the session this operator trades.
+  3. THE UI SAYS SO. The long video's FX Replay clock reads `01:15:00 PM UTC-4`, and the ledger
+     is an FX Replay export.
+
+(3) alone was suggestive; (1) is the measurement, and it is a boundary rather than a tendency.
 
 Run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_evidence_eras
 """
@@ -137,9 +146,15 @@ def measure(ledger: Path = LEDGER, scorecard: Path = SCORECARD) -> dict:
             "entries_total": len(rows),
             "entry_hour_distribution":
                 dict(sorted(Counter(_minutes(r["dateStart"]) // 60 for r in rows).items())),
-            "TIMEZONE_UNRESOLVED": (
-                "the ledger clock is whatever FX Replay exported and I have NOT established it. "
-                "The in-window figure is CONDITIONAL on it being ET."),
+            "earliest_entry_clock": min(_minutes(r["dateStart"]) for r in rows),
+            "entries_before_0930": sum(1 for r in rows
+                                       if _minutes(r["dateStart"]) < WINDOW_START_MIN),
+            "TIMEZONE_RESOLVED": (
+                "EASTERN. Measured 2026-08-23: the earliest of all 74 entries is exactly 09:30 "
+                "and zero fall before it - the RTH open to the minute. Under UTC the same "
+                "entries would be 05:30-09:18 ET, entirely overnight with none in the session. "
+                "The FX Replay UI in the long video independently reads UTC-4. The in-window "
+                "figure is no longer conditional."),
         },
         "video_observations": VIDEO_OBSERVATIONS,
     }
