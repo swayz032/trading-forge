@@ -203,5 +203,26 @@
       "downgrade_reason": "ALGO-004 §3: the prose said the pages are fully reconciled and 'agreeing to the cent' while the regression only required >=3 spot checks. Until a matched-row census with a mismatch count exists, this is SAMPLED reconciliation and is described as such. It is sufficient for the custody conclusion that the pages belong to the same ledger family; it is NOT yet load-bearing TP/exit fidelity evidence.",
       "required_before_load_bearing": "matched-row census + explicit mismatch count"
     }
+  },
+  "corpus_join": {
+    "measured": "2026-08-22",
+    "question": "can this ledger validate the 14 frozen replay sessions row by row?",
+    "answer": "NO, AND IT IS STRUCTURAL - the two sets share NO date.",
+    "ledger_range": [
+      "2025-04-02",
+      "2025-06-20"
+    ],
+    "ledger_distinct_dates": 55,
+    "corpus_range": [
+      "2026-03-23",
+      "2026-04-14"
+    ],
+    "corpus_sessions": 14,
+    "overlap_count": 0,
+    "date_cells_that_failed_to_parse": 0,
+    "why_the_parse_count_matters": "0 unparsed. A join that silently dropped unreadable rows would report a small or zero overlap and it would look like the same finding.",
+    "what_the_ledger_IS_still_good_for": "evidence of WHAT THE TRADER DOES - stop discipline (four rows at exactly -517.50 dollars, 17.25 points), contract sizing, hold times. That evidence stands and is unaffected.",
+    "what_it_CANNOT_do": "serve as row-level ground truth for any of the 14 replay sessions, because it does not describe those days.",
+    "guard": "research/current_mnq_strategy_v2_4_ledger_corpus_join.assert_ledger_can_ground_truth_the_corpus refuses out loud, gating on the MEASUREMENT so it stops refusing on its own if overlapping rows are ever supplied."
   }
 }
