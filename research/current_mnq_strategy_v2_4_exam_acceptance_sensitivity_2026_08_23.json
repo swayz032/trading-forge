@@ -20,73 +20,73 @@
   "measurements": [
     {
       "acceptance_bars": 1,
-      "route_d_grants": 40,
-      "candidates_considered": 56,
+      "route_d_grants": 363,
+      "candidates_considered": 29775,
       "refusal_census": {
-        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 16
+        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 29412
       },
       "grants_per_session": {
-        "2026-03-23": 8,
-        "2026-03-24": 6,
-        "2026-03-25": 4,
-        "2026-03-26": 2,
-        "2026-03-30": 0,
-        "2026-03-31": 3,
-        "2026-04-01": 6,
-        "2026-04-02": 1,
-        "2026-04-06": 1,
-        "2026-04-07": 4,
-        "2026-04-08": 2,
-        "2026-04-09": 2,
-        "2026-04-13": 1,
-        "2026-04-14": 0
+        "2026-03-23": 56,
+        "2026-03-24": 31,
+        "2026-03-25": 33,
+        "2026-03-26": 11,
+        "2026-03-30": 2,
+        "2026-03-31": 46,
+        "2026-04-01": 24,
+        "2026-04-02": 13,
+        "2026-04-06": 20,
+        "2026-04-07": 41,
+        "2026-04-08": 19,
+        "2026-04-09": 31,
+        "2026-04-13": 31,
+        "2026-04-14": 5
       }
     },
     {
       "acceptance_bars": 2,
-      "route_d_grants": 28,
-      "candidates_considered": 56,
+      "route_d_grants": 228,
+      "candidates_considered": 29775,
       "refusal_census": {
-        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 28
+        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 29547
       },
       "grants_per_session": {
-        "2026-03-23": 6,
-        "2026-03-24": 6,
-        "2026-03-25": 1,
-        "2026-03-26": 2,
-        "2026-03-30": 0,
-        "2026-03-31": 2,
-        "2026-04-01": 5,
-        "2026-04-02": 1,
-        "2026-04-06": 0,
-        "2026-04-07": 3,
-        "2026-04-08": 1,
-        "2026-04-09": 0,
-        "2026-04-13": 1,
-        "2026-04-14": 0
+        "2026-03-23": 32,
+        "2026-03-24": 31,
+        "2026-03-25": 16,
+        "2026-03-26": 7,
+        "2026-03-30": 2,
+        "2026-03-31": 32,
+        "2026-04-01": 11,
+        "2026-04-02": 7,
+        "2026-04-06": 15,
+        "2026-04-07": 25,
+        "2026-04-08": 12,
+        "2026-04-09": 19,
+        "2026-04-13": 18,
+        "2026-04-14": 1
       }
     },
     {
       "acceptance_bars": 3,
-      "route_d_grants": 25,
-      "candidates_considered": 56,
+      "route_d_grants": 186,
+      "candidates_considered": 29775,
       "refusal_census": {
-        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 31
+        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 29589
       },
       "grants_per_session": {
-        "2026-03-23": 4,
-        "2026-03-24": 5,
-        "2026-03-25": 1,
-        "2026-03-26": 2,
-        "2026-03-30": 0,
-        "2026-03-31": 2,
-        "2026-04-01": 5,
-        "2026-04-02": 1,
-        "2026-04-06": 0,
-        "2026-04-07": 3,
-        "2026-04-08": 1,
-        "2026-04-09": 0,
-        "2026-04-13": 1,
+        "2026-03-23": 26,
+        "2026-03-24": 23,
+        "2026-03-25": 8,
+        "2026-03-26": 6,
+        "2026-03-30": 2,
+        "2026-03-31": 26,
+        "2026-04-01": 11,
+        "2026-04-02": 6,
+        "2026-04-06": 13,
+        "2026-04-07": 19,
+        "2026-04-08": 12,
+        "2026-04-09": 17,
+        "2026-04-13": 17,
         "2026-04-14": 0
       }
     }
@@ -96,8 +96,8 @@
     "verdict": "LOAD_BEARING",
     "chosen": 3,
     "changed": true,
-    "why": "the values differ ({1: 40, 2: 28, 3: 25}), the textbook is silent, and the strictest tested value grants fewest. Chosen by STRICTNESS alone - no agreement rate or outcome participated."
+    "why": "the values differ ({1: 363, 2: 228, 3: 186}), the textbook is silent, and the strictest tested value grants fewest. Chosen by STRICTNESS alone - no agreement rate or outcome participated."
   },
   "outcome_blindness": "no agreement rate, fidelity headline, PnL, realized outcome or winner/loser label was computed or read by this module.",
-  "runtime_seconds": 1308.22
+  "runtime_seconds": 1292.65
 }

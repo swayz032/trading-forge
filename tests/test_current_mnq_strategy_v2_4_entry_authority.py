@@ -14,6 +14,7 @@ import io
 import pandas as pd
 import pytest
 
+from research import current_mnq_strategy_v2_4_breakout_derivation as brk
 from research import current_mnq_strategy_v2_4_entry_authority as EA
 from research.current_mnq_strategy_v2_4_engine import Params
 
@@ -155,9 +156,14 @@ ROUTE_B_BARS = [(99, 100, 98, 99.5), (100, 104, 99.8, 103.5), (103.6, 106, 103.5
 ROUTE_C_BARS = [(90, 90.5, 89.5, 90), (90, 90.5, 89.5, 90), (90, 90.5, 89.5, 90),
                 (90, 99.0, 89.9, 98.5), (98.5, 99.5, 98.0, 99.0), (99.0, 101.8, 98.9, 101.6),
                 (101.6, 104, 101.5, 103.8)]
-# Broken, ACCEPTED over two completed closes, then retested and attacked.
-ROUTE_D_BARS = [(100, 104, 99.8, 103.5), (103.5, 105, 103, 104.5), (104.5, 105, 101.5, 102.0),
-                (102, 106, 102, 105.5)]
+# Broken, ACCEPTED over the required run of completed closes, then retested and attacked.
+# The run length is READ FROM THE CODE, not typed: this fixture was written when "durable"
+# meant 2 closes and it broke the moment the pre-registered sensitivity rule landed 3. What it
+# tests - acceptance, retest, attack - never depended on the number.
+ACCEPT_N = inspect.signature(brk.break_retest).parameters["acceptance_bars"].default
+ROUTE_D_BARS = ([(100 + i, 104 + i, 99.8 + i, 103.5 + i) for i in range(ACCEPT_N)]
+                + [(103.5 + ACCEPT_N, 105 + ACCEPT_N, 101.5, 102.0),
+                   (102, 106, 102, 105.5)])
 
 ROUTE_EVIDENCE = {
     EA.ROUTE_A_REJECTION: CLEAN_LONG,

@@ -58,14 +58,24 @@ DIAGNOSTIC_ONLY = (
 #:
 #: `acceptance_bars` is NOT frozen. The spec refuses
 #: `break_retest_without_prior_durable_acceptance` and calls the property "durable", but names
-#: no bar count anywhere. Two consecutive completed closes beyond is this module's DERIVATION
+#: no bar count anywhere. THREE consecutive completed closes beyond is this module's DERIVATION
 #: of "durable", not a value read off the spec, and it is recorded here so nobody later quotes
 #: it as frozen. Changing it is a semantics question for the advisor, not a tuning knob - and
 #: it may never be selected by looking at outcomes.
+#:
+#: IT WAS 2 UNTIL 2026-08-23 AND IT MOVED MECHANICALLY, NOT BY JUDGEMENT. ALGO-037 ruling 1
+#: attached a mandatory exam-time sensitivity run at {1,2,3} to this choice; ALGO-054 first
+#: amended the population to what Route D CONSIDERED, because after the ALGO-047 wiring the
+#: old population was selected BY the value under test and grants could not rise. On the
+#: honest population the run measured 363 / 228 / 186 grants, re-checked the spec's silence,
+#: and R3 - silent means the STRICTER reading wins - selected 3. No agreement rate, PnL,
+#: realized outcome or winner/loser label participated.
 UNFROZEN_CHOICES = {
     "acceptance_bars": (
-        "2 consecutive completed closes beyond the level. The spec requires DURABLE acceptance "
-        "and names no count; this is a derivation of 'durable', not a frozen value."),
+        "3 consecutive completed closes beyond the level. The spec requires DURABLE acceptance "
+        "and names no count; this is a derivation of 'durable', not a frozen value. Landed from "
+        "2 on 2026-08-23 by the PRE-REGISTERED rule R3 (silent => stricter wins) over the "
+        "measured sensitivity 363/228/186 at {1,2,3}, never by score."),
 }
 
 #: The two pre-break exceptions, and there is no third (§7.13).
@@ -184,7 +194,7 @@ def normal_breakout(completed: pd.DataFrame, trigger, lo: float, hi: float, dire
 
 def break_retest(completed: pd.DataFrame, trigger, lo: float, hi: float, direction: str,
                  body_frac: float, close_loc: float,
-                 acceptance_bars: int = 2) -> BreakoutRead:
+                 acceptance_bars: int = 3) -> BreakoutRead:
     """Route D. Genuinely broken AND ACCEPTED, then retested as the opposite role.
 
     "Accepted" is why a single transient close beyond does not qualify - the spec refuses

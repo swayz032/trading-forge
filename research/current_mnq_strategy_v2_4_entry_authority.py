@@ -154,7 +154,7 @@ def decide(bars: pd.DataFrame, direction: str, lo: float, hi: float,
            pad: float = 0.0, lookback: int = 6,
            route: str = ROUTE_A_REJECTION,
            range_ratio: float | None = None,
-           acceptance_bars: int = 2,
+           acceptance_bars: int = 3,
            variant: str | None = None) -> Authority:
     """Walk the machine forward. Every step must be PROVEN; the default is WAIT.
 

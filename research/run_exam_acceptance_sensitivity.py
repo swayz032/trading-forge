@@ -99,7 +99,7 @@ from research.current_mnq_strategy_v2_4_entry_authority import (
 TESTED = (1, 2, 3)
 
 #: The value in force today, and the one the module declares as unfrozen.
-CURRENT = 2
+CURRENT = 3
 
 BREAKOUT_ROUTES = (ROUTE_B_BREAKOUT, ROUTE_C_PREBREAK_DISPLACEMENT, ROUTE_D_PREBREAK_RETEST)
 

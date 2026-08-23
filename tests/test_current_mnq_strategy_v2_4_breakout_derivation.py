@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import re
 import io
 import json
 
@@ -107,24 +108,37 @@ def test_short_side_mirrors_the_long_side():
 
 # ── ROUTE D: break, acceptance, retest ──────────────────────────────────────────────────
 
-ACCEPTED = [(100, 104, 99.8, 103.5),        # closes beyond
-            (103.5, 105, 103, 104.5),       # closes beyond again -> ACCEPTED
-            (104.5, 105, 101.5, 102.0)]     # returns to the level -> the retest
+#: How many consecutive closes beyond count as DURABLE acceptance, read from the code rather
+#: than typed. These fixtures were built when the answer was 2; the pre-registered sensitivity
+#: rule landed 3 on 2026-08-23 and every one of them broke, because each had the count baked
+#: into the SHAPE of its bars. What they are actually testing - acceptance, retest, force - is
+#: independent of the number, so the number is now derived and the bars are built from it.
+ACCEPT_N = inspect.signature(B.break_retest).parameters["acceptance_bars"].default
+
+#: One completed close beyond, repeated until acceptance is satisfied, then a return to the
+#: level. Built, not literal, so the fixture follows the landed value.
+_BEYOND = [(100 + i, 104 + i, 99.8 + i, 103.5 + i) for i in range(ACCEPT_N)]
+_RETEST = (103.5 + ACCEPT_N, 105 + ACCEPT_N, 101.5, 102.0)
+ACCEPTED = _BEYOND + [_RETEST]
 
 
 def test_a_single_transient_close_beyond_is_not_ACCEPTANCE():
-    """The spec refuses `break_retest_without_prior_durable_acceptance` by name."""
-    one_close = [(100, 104, 99.8, 103.5), (103.5, 104, 101.0, 101.5),
-                 (101.5, 102, 100.5, 101.0)]
-    r = B.break_retest(bars(one_close), row(102, 106, 102, 105), LO, HI, "L", BODY, CLOSE_LOC)
+    """The spec refuses `break_retest_without_prior_durable_acceptance` by name.
+
+    ONE FEWER than the required run, whatever the required run currently is - so this keeps
+    testing the boundary rather than the number 2.
+    """
+    short = _BEYOND[:ACCEPT_N - 1] + [(101.5, 102, 100.5, 101.0), (101.0, 102, 100.4, 101.2)]
+    r = B.break_retest(bars(short), row(102, 106, 102, 105), LO, HI, "L", BODY, CLOSE_LOC)
     assert r.refusal == B.NOT_ACCEPTED, r
 
 
 def test_acceptance_without_a_retest_is_refused():
-    never_back = [(100, 104, 99.8, 103.5), (103.5, 105, 103, 104.5),
-                  (104.5, 106, 104.4, 105.5)]
-    r = B.break_retest(bars(never_back), row(105, 108, 105, 107.5), LO, HI, "L",
-                       BODY, CLOSE_LOC)
+    never_back = _BEYOND + [(103.5 + ACCEPT_N, 106 + ACCEPT_N, 103.4 + ACCEPT_N,
+                             105.5 + ACCEPT_N)]
+    r = B.break_retest(bars(never_back), row(105 + ACCEPT_N, 108 + ACCEPT_N,
+                                             105 + ACCEPT_N, 107.5 + ACCEPT_N),
+                       LO, HI, "L", BODY, CLOSE_LOC)
     assert r.refusal == B.NO_RETEST, r
 
 
@@ -408,8 +422,17 @@ def test_the_unfrozen_choice_is_declared_rather_than_buried_in_a_default():
     """`acceptance_bars` is this module's reading of 'durable', not a value from the spec."""
     assert "acceptance_bars" in B.UNFROZEN_CHOICES
     assert "not a frozen value" in B.UNFROZEN_CHOICES["acceptance_bars"]
+    # DERIVED FROM THE DECLARATION, NOT TYPED. This asserted `== 2` until the pre-registered
+    # sensitivity rule landed 3 on 2026-08-23, and a hand-typed copy of the value is exactly
+    # what the declaration exists to prevent: the property is that the DECLARED choice and the
+    # ACTUAL default are the same number, whatever that number currently is.
+    declared = re.search(r"(\d+) consecutive completed closes",
+                         B.UNFROZEN_CHOICES["acceptance_bars"])
+    assert declared, "the declaration must state the count it is declaring"
     default = inspect.signature(B.break_retest).parameters["acceptance_bars"].default
-    assert default == 2, "the declared choice and the actual default must be the same number"
+    assert default == int(declared.group(1)), (
+        f"the declaration says {declared.group(1)} consecutive closes but the default is "
+        f"{default} - a declared choice that does not match the code is worse than none")
 
 
 def test_the_spec_really_does_not_fix_an_acceptance_bar_COUNT():

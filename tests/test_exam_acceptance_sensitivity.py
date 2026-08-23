@@ -117,7 +117,11 @@ def test_R3_when_they_differ_the_STRICTEST_wins_not_the_best_scoring():
     v = E.evaluate([_row(1, 9, {"s": 9}), _row(2, 5, {"s": 5}), _row(3, 2, {"s": 2})])
     assert v["rule_applied"] == "R3_SILENT_STRICTER_WINS"
     assert v["chosen"] == 3, "fewest grants = strictest"
-    assert v["changed"] is True
+    # `changed` must TRACK the comparison against the value in force, not remember an answer.
+    # This asserted `is True` while the value in force was 2; the rule then selected 3 on the
+    # real corpus and 3 was LANDED, so the same fabricated inputs now legitimately report no
+    # change. Pinning True would have pinned a moment, not a property.
+    assert v["changed"] == (v["chosen"] != E.CURRENT)
 
 
 def test_R3_REFUSES_to_pick_when_the_parameter_is_not_monotone():
