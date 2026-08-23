@@ -1,0 +1,724 @@
+{
+  "artifact": "J16_UNIFIED_SESSION_RESOLUTION",
+  "status": "DIAGNOSTIC. Resolves each session under the ALGO-066 J1-J6 join. Repairs nothing, selects no rule, tunes no parameter.",
+  "authority": "ALGO-066 J1-J6",
+  "produced": "2026-08-23",
+  "supersedes": "my location/story/M2/M2b conclusions for 2026-03-30, 2026-03-31 and 2026-04-14, which selected the zone by an unstated assumption that every entry is a rejection",
+  "J6_positive_control": {
+    "session": "2026-04-14",
+    "its_level_is_covered_and_authorized_at_0930": true,
+    "verdict": "the coverage lane HAS a positive control"
+  },
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "role_in_lane": "NEGATIVE_CONTROL",
+      "trader_final_action": "ENTER_LONG",
+      "his_direction": "L",
+      "J1_selection": {
+        "candidates": [
+          {
+            "zone": {
+              "lo": 24192,
+              "hi": 24192.25,
+              "role": "SUPPORT",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-03-24T09:32:00-04:00",
+              "marked_main_timeframe": "15m"
+            },
+            "line": 24192.125,
+            "role": "SUPPORT",
+            "inside_entry_bar": true,
+            "distance_points": 0.0
+          },
+          {
+            "zone": {
+              "lo": 24510.25,
+              "hi": 24510.5,
+              "role": "RESISTANCE",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-03-24T09:32:00-04:00",
+              "marked_main_timeframe": "15m"
+            },
+            "line": 24510.375,
+            "role": "RESISTANCE",
+            "inside_entry_bar": false,
+            "distance_points": 193.38
+          }
+        ],
+        "selected": {
+          "zone": {
+            "lo": 24192,
+            "hi": 24192.25,
+            "role": "SUPPORT",
+            "source_method": "VISIBLE_REJECTION",
+            "marked_time": "2026-03-24T09:32:00-04:00",
+            "marked_main_timeframe": "15m"
+          },
+          "line": 24192.125,
+          "role": "SUPPORT",
+          "inside_entry_bar": true,
+          "distance_points": 0.0
+        },
+        "selection_basis": "inside the entry bar",
+        "ambiguous": false
+      },
+      "J2_selected_role": "SUPPORT",
+      "J2_selected_line": 24192.125,
+      "J3_interaction": "REJECT",
+      "his_marked_timeframe": "15m",
+      "marked_time": "2026-03-24 09:32:00-04:00",
+      "entry_time": "2026-03-24 09:32:00-04:00",
+      "J5_coverage_at_0930": {
+        "anchor": "2026-03-24T09:30:00-04:00",
+        "locations_built": 53,
+        "covering_his_line": 0,
+        "covering_and_authorized": 0,
+        "nearest_band": {
+          "lo": 24219.78,
+          "hi": 24235.97,
+          "source": "WICK_ZONE",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 27.66,
+        "band_width_that_would_reach": 27.66
+      },
+      "J5_coverage_at_marked_time": {
+        "anchor": "2026-03-24T09:32:00-04:00",
+        "locations_built": 53,
+        "covering_his_line": 0,
+        "covering_and_authorized": 0,
+        "nearest_band": {
+          "lo": 24219.78,
+          "hi": 24235.97,
+          "source": "WICK_ZONE",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 27.66,
+        "band_width_that_would_reach": 27.66
+      },
+      "M2_nearest_causal_pivot": {
+        "price": 24193.5,
+        "distance_points": 1.38,
+        "confirm": "2026-03-24 02:00:00-04:00",
+        "wick": 0.038,
+        "disp": 1.798
+      },
+      "M2_pivot_at_his_price": {
+        "price": 24189.25,
+        "distance_points": 2.88,
+        "confirm": "2026-03-24 16:30:00-04:00",
+        "confirm_minus_marked_minutes": 418.0,
+        "confirmed_before_he_marked": false,
+        "wick": 0.562,
+        "disp": 5.245
+      },
+      "M2b_at_marked_time": {
+        "ohlc": [
+          24255.5,
+          24317.0,
+          24140.25,
+          24173.75
+        ],
+        "touched_the_line": true,
+        "penetration_points": 51.88,
+        "close_away_points": -18.38,
+        "closed_on_the_wrong_side": true,
+        "body_frac": 0.463
+      },
+      "M2b_at_entry_clock": {
+        "ohlc": [
+          24255.5,
+          24317.0,
+          24140.25,
+          24173.75
+        ],
+        "touched_the_line": true,
+        "penetration_points": 51.88,
+        "close_away_points": -18.38,
+        "closed_on_the_wrong_side": true,
+        "body_frac": 0.463
+      },
+      "J4_story_verdict": "NO_CANDIDATE_OF_THE_MATCHING_FAMILY",
+      "J4_matching_family_candidates": 0,
+      "J4_wrong_family_candidates_NOT_a_refusal": 0,
+      "J4_gate_census_matching_family": {},
+      "J4_subreasons": {},
+      "J4_routes_asked": []
+    },
+    {
+      "session": "2026-03-30",
+      "role_in_lane": "subject",
+      "trader_final_action": "ENTER_SHORT",
+      "his_direction": "S",
+      "J1_selection": {
+        "candidates": [
+          {
+            "zone": {
+              "lo": 23609,
+              "hi": 23609.25,
+              "role": "RESISTANCE",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-03-30T09:35:00-04:00",
+              "marked_main_timeframe": "5m"
+            },
+            "line": 23609.125,
+            "role": "RESISTANCE",
+            "inside_entry_bar": false,
+            "distance_points": 183.62
+          },
+          {
+            "zone": {
+              "lo": 23436.5,
+              "hi": 23436.75,
+              "role": "SUPPORT",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-03-30T09:35:00-04:00",
+              "marked_main_timeframe": "5m"
+            },
+            "line": 23436.625,
+            "role": "SUPPORT",
+            "inside_entry_bar": false,
+            "distance_points": 11.12
+          }
+        ],
+        "selected": {
+          "zone": {
+            "lo": 23436.5,
+            "hi": 23436.75,
+            "role": "SUPPORT",
+            "source_method": "VISIBLE_REJECTION",
+            "marked_time": "2026-03-30T09:35:00-04:00",
+            "marked_main_timeframe": "5m"
+          },
+          "line": 23436.625,
+          "role": "SUPPORT",
+          "inside_entry_bar": false,
+          "distance_points": 11.12
+        },
+        "selection_basis": "nearest (neither inside the entry bar)",
+        "ambiguous": false
+      },
+      "J2_selected_role": "SUPPORT",
+      "J2_selected_line": 23436.625,
+      "J3_interaction": "BREAK",
+      "his_marked_timeframe": "5m",
+      "marked_time": "2026-03-30 09:35:00-04:00",
+      "entry_time": "2026-03-30 09:41:00-04:00",
+      "J5_coverage_at_0930": {
+        "anchor": "2026-03-30T09:30:00-04:00",
+        "locations_built": 64,
+        "covering_his_line": 1,
+        "covering_and_authorized": 1,
+        "nearest_band": {
+          "lo": 23432.11,
+          "hi": 23447.39,
+          "source": "WICK_ZONE",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 0.0,
+        "band_width_that_would_reach": 0.0
+      },
+      "J5_coverage_at_marked_time": {
+        "anchor": "2026-03-30T09:35:00-04:00",
+        "locations_built": 64,
+        "covering_his_line": 1,
+        "covering_and_authorized": 1,
+        "nearest_band": {
+          "lo": 23432.11,
+          "hi": 23447.39,
+          "source": "WICK_ZONE",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 0.0,
+        "band_width_that_would_reach": 0.0
+      },
+      "M2_nearest_causal_pivot": {
+        "price": 23435.5,
+        "distance_points": 1.12,
+        "confirm": "2026-03-30 08:45:00-04:00",
+        "wick": 0.651,
+        "disp": 2.071
+      },
+      "M2_pivot_at_his_price": {
+        "price": 23435.5,
+        "distance_points": 1.12,
+        "confirm": "2026-03-30 08:45:00-04:00",
+        "confirm_minus_marked_minutes": -50.0,
+        "confirmed_before_he_marked": true,
+        "wick": 0.651,
+        "disp": 2.071
+      },
+      "M2b_at_marked_time": {
+        "ohlc": [
+          23463.75,
+          23467.75,
+          23410.5,
+          23424.5
+        ],
+        "touched_the_line": true,
+        "penetration_points": 26.12,
+        "close_away_points": -12.12,
+        "closed_on_the_wrong_side": true,
+        "body_frac": 0.686
+      },
+      "M2b_at_entry_clock": {
+        "ohlc": [
+          23423.75,
+          23425.5,
+          23374.25,
+          23393.5
+        ],
+        "touched_the_line": false,
+        "penetration_points": 62.38,
+        "close_away_points": -43.12,
+        "closed_on_the_wrong_side": true,
+        "body_frac": 0.59
+      },
+      "J4_story_verdict": "REFUSED",
+      "J4_matching_family_candidates": 2,
+      "J4_wrong_family_candidates_NOT_a_refusal": 0,
+      "J4_gate_census_matching_family": {
+        "NO_LEGAL_ROUTE_MATCHED": 2
+      },
+      "J4_subreasons": {
+        "C_PREBREAK_DISPLACEMENT|ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT": 2,
+        "D_PREBREAK_RETEST_BREAKOUT|accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 2,
+        "D_PREBREAK_RETEST_BREAKOUT|repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 2,
+        "B_NORMAL_BREAKOUT|NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 2
+      },
+      "J4_routes_asked": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ]
+    },
+    {
+      "session": "2026-03-31",
+      "role_in_lane": "subject",
+      "trader_final_action": "ENTER_LONG",
+      "his_direction": "L",
+      "J1_selection": {
+        "candidates": [
+          {
+            "zone": {
+              "lo": 23311.75,
+              "hi": 23312,
+              "role": "SUPPORT",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-03-31T09:35:00-04:00",
+              "marked_main_timeframe": "5m"
+            },
+            "line": 23311.875,
+            "role": "SUPPORT",
+            "inside_entry_bar": false,
+            "distance_points": 104.88
+          },
+          {
+            "zone": {
+              "lo": 23436.5,
+              "hi": 23436.75,
+              "role": "RESISTANCE",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-03-31T09:35:00-04:00",
+              "marked_main_timeframe": "5m"
+            },
+            "line": 23436.625,
+            "role": "RESISTANCE",
+            "inside_entry_bar": true,
+            "distance_points": 0.0
+          }
+        ],
+        "selected": {
+          "zone": {
+            "lo": 23436.5,
+            "hi": 23436.75,
+            "role": "RESISTANCE",
+            "source_method": "VISIBLE_REJECTION",
+            "marked_time": "2026-03-31T09:35:00-04:00",
+            "marked_main_timeframe": "5m"
+          },
+          "line": 23436.625,
+          "role": "RESISTANCE",
+          "inside_entry_bar": true,
+          "distance_points": 0.0
+        },
+        "selection_basis": "inside the entry bar",
+        "ambiguous": false
+      },
+      "J2_selected_role": "RESISTANCE",
+      "J2_selected_line": 23436.625,
+      "J3_interaction": "BREAK",
+      "his_marked_timeframe": "5m",
+      "marked_time": "2026-03-31 09:35:00-04:00",
+      "entry_time": "2026-03-31 09:49:00-04:00",
+      "J5_coverage_at_0930": {
+        "anchor": "2026-03-31T09:30:00-04:00",
+        "locations_built": 68,
+        "covering_his_line": 2,
+        "covering_and_authorized": 2,
+        "nearest_band": {
+          "lo": 23430.71,
+          "hi": 23441.29,
+          "source": "WICK_ZONE",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 0.0,
+        "band_width_that_would_reach": 0.0
+      },
+      "J5_coverage_at_marked_time": {
+        "anchor": "2026-03-31T09:35:00-04:00",
+        "locations_built": 65,
+        "covering_his_line": 0,
+        "covering_and_authorized": 0,
+        "nearest_band": {
+          "lo": 23520.93,
+          "hi": 23531.32,
+          "source": "WICK_ZONE",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 84.31,
+        "band_width_that_would_reach": 84.31
+      },
+      "M2_nearest_causal_pivot": {
+        "price": 23436.25,
+        "distance_points": 0.38,
+        "confirm": "2026-03-31 09:15:00-04:00",
+        "wick": 0.306,
+        "disp": 1.297
+      },
+      "M2_pivot_at_his_price": {
+        "price": 23436.25,
+        "distance_points": 0.38,
+        "confirm": "2026-03-31 09:15:00-04:00",
+        "confirm_minus_marked_minutes": -20.0,
+        "confirmed_before_he_marked": true,
+        "wick": 0.306,
+        "disp": 1.297
+      },
+      "M2b_at_marked_time": {
+        "ohlc": [
+          23458.0,
+          23460.5,
+          23402.75,
+          23444.5
+        ],
+        "touched_the_line": true,
+        "penetration_points": 23.88,
+        "close_away_points": -7.88,
+        "closed_on_the_wrong_side": true,
+        "body_frac": 0.234
+      },
+      "M2b_at_entry_clock": {
+        "ohlc": [
+          23416.75,
+          23531.5,
+          23416.75,
+          23531.25
+        ],
+        "touched_the_line": true,
+        "penetration_points": 94.88,
+        "close_away_points": -94.62,
+        "closed_on_the_wrong_side": true,
+        "body_frac": 0.998
+      },
+      "J4_story_verdict": "NO_CANDIDATE_OF_THE_MATCHING_FAMILY",
+      "J4_matching_family_candidates": 0,
+      "J4_wrong_family_candidates_NOT_a_refusal": 0,
+      "J4_gate_census_matching_family": {},
+      "J4_subreasons": {},
+      "J4_routes_asked": []
+    },
+    {
+      "session": "2026-04-06",
+      "role_in_lane": "subject",
+      "trader_final_action": "ENTER_SHORT",
+      "his_direction": "S",
+      "J1_selection": {
+        "candidates": [
+          {
+            "zone": {
+              "lo": 24421.5,
+              "hi": 24421.75,
+              "role": "RESISTANCE",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-04-06T09:52:00-04:00",
+              "marked_main_timeframe": "15m"
+            },
+            "line": 24421.625,
+            "role": "RESISTANCE",
+            "inside_entry_bar": true,
+            "distance_points": 0.0
+          },
+          {
+            "zone": {
+              "lo": 24248,
+              "hi": 24248.25,
+              "role": "SUPPORT",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-04-06T09:52:00-04:00",
+              "marked_main_timeframe": "15m"
+            },
+            "line": 24248.125,
+            "role": "SUPPORT",
+            "inside_entry_bar": false,
+            "distance_points": 22.38
+          }
+        ],
+        "selected": {
+          "zone": {
+            "lo": 24421.5,
+            "hi": 24421.75,
+            "role": "RESISTANCE",
+            "source_method": "VISIBLE_REJECTION",
+            "marked_time": "2026-04-06T09:52:00-04:00",
+            "marked_main_timeframe": "15m"
+          },
+          "line": 24421.625,
+          "role": "RESISTANCE",
+          "inside_entry_bar": true,
+          "distance_points": 0.0
+        },
+        "selection_basis": "inside the entry bar",
+        "ambiguous": false
+      },
+      "J2_selected_role": "RESISTANCE",
+      "J2_selected_line": 24421.625,
+      "J3_interaction": "REJECT",
+      "his_marked_timeframe": "15m",
+      "marked_time": "2026-04-06 09:52:00-04:00",
+      "entry_time": "2026-04-06 10:04:00-04:00",
+      "J5_coverage_at_0930": {
+        "anchor": "2026-04-06T09:30:00-04:00",
+        "locations_built": 67,
+        "covering_his_line": 1,
+        "covering_and_authorized": 1,
+        "nearest_band": {
+          "lo": 24407.93,
+          "hi": 24435.07,
+          "source": "WICK_ZONE",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 0.0,
+        "band_width_that_would_reach": 0.0
+      },
+      "J5_coverage_at_marked_time": {
+        "anchor": "2026-04-06T09:52:00-04:00",
+        "locations_built": 67,
+        "covering_his_line": 1,
+        "covering_and_authorized": 1,
+        "nearest_band": {
+          "lo": 24407.93,
+          "hi": 24435.07,
+          "source": "WICK_ZONE",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 0.0,
+        "band_width_that_would_reach": 0.0
+      },
+      "M2_nearest_causal_pivot": {
+        "price": 24421.25,
+        "distance_points": 0.38,
+        "confirm": "2026-03-26 00:15:00-04:00",
+        "wick": 0.243,
+        "disp": 1.476
+      },
+      "M2_pivot_at_his_price": {
+        "price": 24421.0,
+        "distance_points": 0.62,
+        "confirm": "2026-04-07 06:15:00-04:00",
+        "confirm_minus_marked_minutes": 1223.0,
+        "confirmed_before_he_marked": false,
+        "wick": 0.554,
+        "disp": 3.138
+      },
+      "M2b_at_marked_time": {
+        "ohlc": [
+          24329.25,
+          24418.0,
+          24326.5,
+          24418.0
+        ],
+        "touched_the_line": false,
+        "penetration_points": 0.0,
+        "close_away_points": 3.62,
+        "closed_on_the_wrong_side": false,
+        "body_frac": 0.97
+      },
+      "M2b_at_entry_clock": {
+        "ohlc": [
+          24417.75,
+          24453.0,
+          24270.5,
+          24355.0
+        ],
+        "touched_the_line": true,
+        "penetration_points": 31.38,
+        "close_away_points": 66.62,
+        "closed_on_the_wrong_side": false,
+        "body_frac": 0.344
+      },
+      "J4_story_verdict": "REFUSED",
+      "J4_matching_family_candidates": 1,
+      "J4_wrong_family_candidates_NOT_a_refusal": 0,
+      "J4_gate_census_matching_family": {
+        "REJECTION_STORY_INCOMPLETE": 1
+      },
+      "J4_subreasons": {
+        "A_NORMAL_REJECTION|TOUCH_WITHOUT_DIRECTIONAL_CONTROL": 1
+      },
+      "J4_routes_asked": []
+    },
+    {
+      "session": "2026-04-14",
+      "role_in_lane": "POSITIVE_CONTROL",
+      "trader_final_action": "ENTER_LONG",
+      "his_direction": "L",
+      "J1_selection": {
+        "candidates": [
+          {
+            "zone": {
+              "lo": 25716.5,
+              "hi": 25716.75,
+              "role": "RESISTANCE",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-04-14T09:30:00-04:00",
+              "marked_main_timeframe": "5m"
+            },
+            "line": 25716.625,
+            "role": "RESISTANCE",
+            "inside_entry_bar": true,
+            "distance_points": 0.0
+          },
+          {
+            "zone": {
+              "lo": 25620.5,
+              "hi": 25620.75,
+              "role": "SUPPORT",
+              "source_method": "VISIBLE_REJECTION",
+              "marked_time": "2026-04-14T09:30:00-04:00",
+              "marked_main_timeframe": "5m"
+            },
+            "line": 25620.625,
+            "role": "SUPPORT",
+            "inside_entry_bar": false,
+            "distance_points": 82.88
+          }
+        ],
+        "selected": {
+          "zone": {
+            "lo": 25716.5,
+            "hi": 25716.75,
+            "role": "RESISTANCE",
+            "source_method": "VISIBLE_REJECTION",
+            "marked_time": "2026-04-14T09:30:00-04:00",
+            "marked_main_timeframe": "5m"
+          },
+          "line": 25716.625,
+          "role": "RESISTANCE",
+          "inside_entry_bar": true,
+          "distance_points": 0.0
+        },
+        "selection_basis": "inside the entry bar",
+        "ambiguous": false
+      },
+      "J2_selected_role": "RESISTANCE",
+      "J2_selected_line": 25716.625,
+      "J3_interaction": "BREAK",
+      "his_marked_timeframe": "5m",
+      "marked_time": "2026-04-14 09:30:00-04:00",
+      "entry_time": "2026-04-14 09:36:00-04:00",
+      "J5_coverage_at_0930": {
+        "anchor": "2026-04-14T09:30:00-04:00",
+        "locations_built": 69,
+        "covering_his_line": 1,
+        "covering_and_authorized": 1,
+        "nearest_band": {
+          "lo": 25714.67,
+          "hi": 25717.83,
+          "source": "STRONG_SWING_DISPLACEMENT",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 0.0,
+        "band_width_that_would_reach": 0.0
+      },
+      "J5_coverage_at_marked_time": {
+        "anchor": "2026-04-14T09:30:00-04:00",
+        "locations_built": 69,
+        "covering_his_line": 1,
+        "covering_and_authorized": 1,
+        "nearest_band": {
+          "lo": 25714.67,
+          "hi": 25717.83,
+          "source": "STRONG_SWING_DISPLACEMENT",
+          "entry_authorized": true
+        },
+        "gap_points_line_to_nearest_band": 0.0,
+        "band_width_that_would_reach": 0.0
+      },
+      "M2_nearest_causal_pivot": {
+        "price": 25716.25,
+        "distance_points": 0.38,
+        "confirm": "2026-04-14 09:15:00-04:00",
+        "wick": 0.442,
+        "disp": 2.126
+      },
+      "M2_pivot_at_his_price": {
+        "price": 25716.25,
+        "distance_points": 0.38,
+        "confirm": "2026-04-14 09:15:00-04:00",
+        "confirm_minus_marked_minutes": -15.0,
+        "confirmed_before_he_marked": true,
+        "wick": 0.442,
+        "disp": 2.126
+      },
+      "M2b_at_marked_time": {
+        "ohlc": [
+          25656.25,
+          25727.0,
+          25655.75,
+          25718.25
+        ],
+        "touched_the_line": true,
+        "penetration_points": 10.38,
+        "close_away_points": -1.62,
+        "closed_on_the_wrong_side": true,
+        "body_frac": 0.87
+      },
+      "M2b_at_entry_clock": {
+        "ohlc": [
+          25718.25,
+          25748.5,
+          25703.5,
+          25708.5
+        ],
+        "touched_the_line": true,
+        "penetration_points": 31.88,
+        "close_away_points": 8.12,
+        "closed_on_the_wrong_side": false,
+        "body_frac": 0.217
+      },
+      "J4_story_verdict": "GRANTED",
+      "J4_matching_family_candidates": 3,
+      "J4_wrong_family_candidates_NOT_a_refusal": 0,
+      "J4_gate_census_matching_family": {
+        "NO_LEGAL_ROUTE_MATCHED": 2,
+        "SURVIVED_TO_RANKING": 1
+      },
+      "J4_subreasons": {
+        "C_PREBREAK_DISPLACEMENT|ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT": 3,
+        "D_PREBREAK_RETEST_BREAKOUT|repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 3,
+        "D_PREBREAK_RETEST_BREAKOUT|accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 2,
+        "B_NORMAL_BREAKOUT|NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 2,
+        "D_PREBREAK_RETEST_BREAKOUT|accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST": 1
+      },
+      "J4_routes_asked": [
+        "B_NORMAL_BREAKOUT",
+        "C_PREBREAK_DISPLACEMENT",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ]
+    }
+  ],
+  "runtime_seconds": 121.11,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
+}

@@ -144,3 +144,63 @@ def test_a_long_joins_SUPPORT_and_a_short_joins_RESISTANCE():
                               {"lo": 9, "hi": 10, "role": "RESISTANCE"}]}
     assert D._his_zone(label, "L")["role"] == "SUPPORT"
     assert D._his_zone(label, "S")["role"] == "RESISTANCE"
+
+
+# ── ALGO-066: a BREAK entry must never be read against Route A ──────────────────────────────
+#
+# My zone join assumed every entry is a REJECTION (long at support, short at resistance) and
+# picked the wrong zone on THREE of five sessions, including the control. ALGO-009's contract
+# says price either REJECTS or BREAKS the level; on a BREAK a long interacts with RESISTANCE
+# and a short with SUPPORT. These pin the derivation so the assumption cannot come back.
+
+from research import run_j16_unified_session_resolution as J  # noqa: E402
+
+
+@pytest.mark.parametrize("role,direction,expected", [
+    ("SUPPORT", "L", "REJECT"),        # long bouncing off support
+    ("RESISTANCE", "S", "REJECT"),     # short rejecting resistance
+    ("RESISTANCE", "L", "BREAK"),      # long THROUGH resistance - the case I deleted
+    ("SUPPORT", "S", "BREAK"),         # short THROUGH support - likewise
+])
+def test_the_interaction_is_derived_from_role_and_direction(role, direction, expected):
+    assert J.interaction_of(role, direction) == expected
+
+
+def test_an_unknown_role_is_PUBLISHED_not_forced_into_a_family():
+    assert J.interaction_of("FVG_BAND", "L") == J.UNCLASSIFIED
+
+
+def test_a_BREAK_entry_is_not_judged_against_the_REJECTION_family():
+    """THE WITNESS ALGO-066 ORDERED. A long at resistance is a BREAK; asking Route A for a
+    rejection story there and calling the refusal a finding is what produced my 03-31 reading.
+
+    A refusal of the WRONG family is not a refusal.
+    """
+    assert J.interaction_of("RESISTANCE", "L") == J.BREAK
+    assert J.interaction_of("RESISTANCE", "L") != J.REJECT
+    # And the break family the story lane must ask is the B/C/D set, never Route A.
+    assert J.ROUTE_A not in J.BREAK_FAMILY
+    assert len(J.BREAK_FAMILY) == 3
+
+
+def test_zone_selection_is_GEOMETRIC_and_prefers_the_bar_it_is_inside():
+    """J1: inside the entry bar wins; the role plays no part in the selection."""
+    class Bar:
+        low, high = 23416.75, 23531.5          # 2026-03-31's entry bar
+    zones = [{"lo": 23311.75, "hi": 23312.0, "role": "SUPPORT", "marked_time": "x"},
+             {"lo": 23436.5, "hi": 23436.75, "role": "RESISTANCE", "marked_time": "x"}]
+    sel = J.select_zone(zones, Bar())
+    assert sel["selected"]["role"] == "RESISTANCE", "geometry must beat the role assumption"
+    assert sel["selected"]["inside_entry_bar"] is True
+    assert sel["ambiguous"] is False
+
+
+def test_BOTH_zones_plausible_is_published_as_AMBIGUOUS_never_picked():
+    """J1: an ambiguity resolved by a preference is a preference wearing a measurement's coat."""
+    class Bar:
+        low, high = 100.0, 200.0
+    zones = [{"lo": 120.0, "hi": 120.25, "role": "SUPPORT", "marked_time": "x"},
+             {"lo": 180.0, "hi": 180.25, "role": "RESISTANCE", "marked_time": "x"}]
+    sel = J.select_zone(zones, Bar())
+    assert sel["ambiguous"] is True
+    assert sel["selected"] is None, "an ambiguous selection must not silently pick one"
