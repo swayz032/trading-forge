@@ -1,6 +1,6 @@
 """The section 7 campaign's RESULT is pinned; the campaign itself runs on demand.
 
-ALGO-009 section 7. Running twelve pytest subprocesses inside the suite would triple its
+ALGO-009 section 7. Running sixteen pytest subprocesses inside the suite would triple its
 runtime, so the harness is a module you invoke and this pins what it last reported - including
 the honesty of its own denominator.
 """
@@ -23,27 +23,42 @@ def _a():
     return json.load(io.open(ART, encoding="utf-8"))
 
 
-def test_every_owned_item_was_killed():
+def test_every_mutation_was_killed():
     a = _a()
-    assert a["killed"] == a["owned_and_run"], a["results"]
-    assert a["owned_and_run"] == 6
+    assert a["killed"] == a["mutations_run"], a["results"]
 
 
-def test_the_denominator_is_honest_about_what_is_not_built():
-    """6 of 15. Reporting 6/6 as the whole campaign would be a false green."""
+def test_all_fifteen_section7_items_are_now_owned():
+    """Items 6-14 became runnable when routes B/C/D were built on 2026-08-23.
+
+    Until then they were deferred BY NAME. The denominator was never quietly shrunk, and this
+    asserts the arithmetic still closes now that it has grown.
+    """
     a = _a()
-    assert len(a["not_yet_applicable"]) == 9
+    assert a["owned_and_run"] == 15
+    assert len(a["not_yet_applicable"]) == 0
     assert a["owned_and_run"] + len(a["not_yet_applicable"]) == 15, (
         "section 7 has fifteen items - every one must be either owned or explicitly deferred")
-    assert "NOT YET BUILT" in a["scope_note"]
 
 
-def test_the_deferred_items_really_are_unbuilt_routes():
-    """A deferral must be true, not convenient. Those routes have no module."""
+def test_there_are_MORE_mutations_than_items_and_that_is_deliberate():
+    """An item with two doors needs two kills, or the repair closed only the shown instance."""
     a = _a()
-    for text in a["not_yet_applicable"].values():
-        assert any(k in text.lower() for k in
-                   ("breakout", "displacement", "exception", "retest", "parent")), text
+    assert a["mutations_run"] > a["owned_and_run"]
+    assert a["items_with_two_doors"], (
+        "at least one item must be attacked through more than one door")
+
+
+def test_item_14_carries_its_caveat_because_its_guard_is_ARCHITECTURAL():
+    """A kill whose scope is overstated is a false green.
+
+    14's defence is that no function ever receives the forming parent's finished OHLC. The
+    mutation proves that split is load-bearing - not that some other layer refuses a backdated
+    entry clock. The artifact must say so.
+    """
+    a = _a()
+    assert "14" in a["caveats"]
+    assert "structurally" in a["caveats"]["14"]
 
 
 def test_the_bytes_were_restored():
@@ -79,9 +94,11 @@ def test_the_harness_refuses_a_silent_no_op():
     assert "SILENT_NO_OP" in src and "TARGET_NOT_UNIQUE" in src
 
 
-@pytest.mark.parametrize("item", [1, 2, 3, 4, 5, 15])
-def test_each_owned_section7_item_is_present_and_killed(item):
+@pytest.mark.parametrize("item", list(range(1, 16)))
+def test_each_section7_item_is_present_and_every_door_killed(item):
+    """Enumerated over all fifteen, so a vanished item fails instead of going unnoticed."""
     a = _a()
-    row = next((r for r in a["results"] if r["item"] == item), None)
-    assert row is not None, f"section 7 item {item} was not run"
-    assert row["outcome"] == "KILLED", row
+    rows = [r for r in a["results"] if r["item"] == item]
+    assert rows, f"section 7 item {item} was not run"
+    for row in rows:
+        assert row["outcome"] == "KILLED", row

@@ -37,9 +37,1410 @@
     "prior_momentum_after_rejection": 6
   },
   "shadowed_by_label_order": [],
+  "breakout_family": {
+    "question": "of the B/C/D entries the kernel grants, how many does the new breakout derivation grant, and does it agree about WHICH route?",
+    "kernel_grants": 39,
+    "new_machine_grants_any_route": 23,
+    "agrees_with_kernel_on_route": 23,
+    "kernel_route_census": {
+      "D_PREBREAK_RETEST_BREAKOUT": 28,
+      "B_NORMAL_BREAKOUT": 11
+    },
+    "derived_route_census": {
+      "D_PREBREAK_RETEST_BREAKOUT": 14,
+      "B_NORMAL_BREAKOUT": 11
+    },
+    "state_on_the_kernels_own_route": {
+      "GRANTED": 23,
+      "WAIT_STORY_INCOMPLETE": 16
+    },
+    "refusal_on_the_kernels_own_route": {
+      "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 6,
+      "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 6,
+      "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK": 3,
+      "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET": 1
+    },
+    "reading": "the derivation grants 23 of the kernel's 39 and agrees on the route in 23. A disagreement is not automatically the derivation's error - the kernel's route choice is an elif chain, and which of the two is right is a semantics question, not a checkpoint question.",
+    "rows": [
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:02:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:27:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:28:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:29:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:57:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:58:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:59:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-24",
+        "clock": "2026-03-24T11:34:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "break_retest",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-25",
+        "clock": "2026-03-25T11:39:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-25",
+        "clock": "2026-03-25T11:43:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-25",
+        "clock": "2026-03-25T11:44:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-26",
+        "clock": "2026-03-26T10:23:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-26",
+        "clock": "2026-03-26T10:39:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-31",
+        "clock": "2026-03-31T10:37:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-01",
+        "clock": "2026-04-01T09:44:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-01",
+        "clock": "2026-04-01T11:37:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-01",
+        "clock": "2026-04-01T11:58:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-01",
+        "clock": "2026-04-01T11:59:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T09:53:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T10:58:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T10:59:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T11:13:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T11:37:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-06",
+        "clock": "2026-04-06T10:39:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-07",
+        "clock": "2026-04-07T10:07:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-07",
+        "clock": "2026-04-07T10:09:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-07",
+        "clock": "2026-04-07T10:24:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-07",
+        "clock": "2026-04-07T11:27:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-08",
+        "clock": "2026-04-08T11:04:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T09:52:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T09:53:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:27:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:28:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:37:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:53:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT",
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:54:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT",
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-13",
+        "clock": "2026-04-13T09:37:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-13",
+        "clock": "2026-04-13T10:43:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-14",
+        "clock": "2026-04-14T09:38:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      }
+    ]
+  },
   "drift_reading": "discriminates: keeps 8 of 128. Whether it keeps the RIGHT ones is a fidelity question the exam answers AFTER the grade passes - not here.",
   "may_not_be_used_to": "select a threshold, tune a parameter, or argue any rule is correct. The teachings steer; this only says whether the build is drifting.",
-  "runtime_seconds": 341.82,
+  "runtime_seconds": 341.32,
   "rows": [
     {
       "session": "2026-03-23",

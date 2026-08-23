@@ -35,6 +35,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from research import current_mnq_strategy_v2_4_breakout_derivation as brk
 from research.current_mnq_strategy_v2_4_derivation import (
     DerivedStory,
     derive_story,
@@ -65,6 +66,22 @@ GRANTED = "GRANTED"
 #: checked. A machine that reports the wrong blocking step sends the reader to the wrong place.
 STATE_ORDER = (WAIT_NO_LOCATION, WAIT_NO_INTERACTION, WAIT_NO_STORY, WAIT_NO_FORCE, GRANTED)
 
+# ALGO-020 section 2: BRK15 is a VARIANT of Route B, not a fifth route. The kernel and the X-ray
+# both carry it; this machine does not derive it yet, and naming the deferral is the point -
+# an unbuilt variant reported as "Route B handled" is a false green.
+VARIANT_BRK15 = "BRK15_WEAK_FIRST_BREAK_CONTINUATION"
+NOT_DERIVED_HERE = (VARIANT_BRK15,)
+
+#: Route D has two legal forms and either one satisfies it, so a refusal must name BOTH.
+NEITHER_D_FORM = "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED"
+
+#: Which WAIT step a breakout refusal belongs to. Derived once, in one place, so the mapping
+#: cannot drift between routes - "price never earned the level" is a different failure from
+#: "it earned it and the sequence is incomplete", and the reader is sent to a different place.
+_INTERACTION_REFUSALS = frozenset({
+    brk.NO_COMPLETED_BREAK, brk.NOT_ENOUGH_BARS, brk.NO_PRIOR_TEST, brk.NOT_DISPLACEMENT,
+})
+
 
 @dataclass(frozen=True)
 class Authority:
@@ -74,6 +91,8 @@ class Authority:
     story: DerivedStory | None
     force_confirmed: bool
     reason: str | None
+    #: For routes B/C/D there is no rejection story; the breakout form is the evidence.
+    form: str | None = None
 
     @property
     def granted(self) -> bool:
@@ -82,43 +101,105 @@ class Authority:
     def explain(self) -> str:
         """One plain line. The operator and GPT read these after the 27th."""
         if self.granted:
-            return f"ENTER via {self.route}: {self.story.interaction}, force proven"
+            what = self.story.interaction if self.story is not None else self.form
+            return f"ENTER via {self.route}: {what}, force proven"
         return f"WAIT — {self.reason or self.state}"
+
+
+def _breakout_read(bars: pd.DataFrame, route: str, direction: str, lo: float, hi: float,
+                   body_frac: float, close_loc: float, reject_wick: float,
+                   range_ratio: float, acceptance_bars: int) -> brk.BreakoutRead:
+    """Route B/C/D evidence, on COMPLETED bars plus the live trigger.
+
+    Same split ALGO-033 ruled for Route A: the story is read on what the market has finished
+    saying, and the still-forming bar carries force and follow-through only. That is also what
+    makes section 7 item 14 - backdating an entry from the parent's final OHLC - unreachable.
+    """
+    completed, trigger = bars.iloc[:-1], bars.iloc[-1]
+
+    if route == ROUTE_B_BREAKOUT:
+        return brk.normal_breakout(completed, trigger, lo, hi, direction,
+                                   body_frac, close_loc)
+    if route == ROUTE_C_PREBREAK_DISPLACEMENT:
+        return brk.prebreak_displacement(completed, trigger, lo, hi, direction,
+                                         body_frac, close_loc, range_ratio)
+
+    # Route D has TWO legal forms and either satisfies it. A refusal must therefore name why
+    # BOTH failed - reporting one of them would send the reader to half the evidence.
+    accepted = brk.break_retest(completed, trigger, lo, hi, direction, body_frac, close_loc,
+                                acceptance_bars)
+    if accepted.valid:
+        return accepted
+    repeat = brk.prebreak_repeat_test(completed, trigger, lo, hi, direction,
+                                      body_frac, close_loc, reject_wick)
+    if repeat.valid:
+        return repeat
+    return brk.BreakoutRead(
+        None,
+        f"{NEITHER_D_FORM}: accepted_break={accepted.refusal}; repeat_test={repeat.refusal}")
 
 
 def decide(bars: pd.DataFrame, direction: str, lo: float, hi: float,
            *, location_authorized: bool, force_confirmed: bool,
            body_frac: float, close_loc: float, reject_wick: float,
            pad: float = 0.0, lookback: int = 6,
-           route: str = ROUTE_A_REJECTION) -> Authority:
+           route: str = ROUTE_A_REJECTION,
+           range_ratio: float | None = None,
+           acceptance_bars: int = 2) -> Authority:
     """Walk the machine forward. Every step must be PROVEN; the default is WAIT.
 
     `location_authorized` and `force_confirmed` are supplied by the existing, already-graded
     gates (`build_entry_locations_v24`, `force_snapshot`) rather than re-implemented here —
-    re-implementing a gate is how the X-ray came to diverge from the kernel.
+    re-implementing a gate is how the X-ray came to diverge from the kernel. `range_ratio` is
+    supplied the same way and for the same reason: it is FROZEN as `Params.range_ratio`, so
+    route C refuses rather than inventing one. See `breakout_derivation.UNFROZEN_CHOICES` for
+    the one value the spec genuinely does not fix.
     """
     if route not in ROUTES:
         raise ValueError(f"NO_FIFTH_ROUTE: {route!r} is not one of {ROUTES}")
+
+    # `range_ratio` is FROZEN as `Params.range_ratio`. This module must not carry a default for
+    # it: a default that happens to match the frozen value is luck, and it rots silently the
+    # first time the frozen value moves. Route C is the only route that reads it, so only
+    # route C is refused without it.
+    if route == ROUTE_C_PREBREAK_DISPLACEMENT and range_ratio is None:
+        raise ValueError(
+            "RANGE_RATIO_NOT_SUPPLIED: the frozen range-expansion requirement lives in "
+            "Params.range_ratio and must be passed in; this module may not invent one")
 
     # Step 3a — an authorized key zone, or nothing to interact with.
     if not location_authorized:
         return Authority(WAIT_NO_LOCATION, None, None, False, WAIT_NO_LOCATION)
 
-    # Steps 3b-5 — a real interaction and a complete control story, all derived.
-    story = derive_story(bars, direction, lo, hi, body_frac, close_loc,
-                         reject_wick, pad, lookback)
-    if not story.approach:
-        return Authority(WAIT_NO_INTERACTION, None, story, False,
-                         story.refusal or WAIT_NO_INTERACTION)
-    if not story.complete:
-        return Authority(WAIT_NO_STORY, None, story, False,
-                         story.refusal or WAIT_NO_STORY)
+    # Steps 3b-5 — a real interaction and a complete story, DERIVED BY THE ROUTE ASKED FOR.
+    # Running the rejection story for every route would accept a breakout on rejection
+    # evidence, which is the wrong-route class this machine exists to refuse.
+    story: DerivedStory | None = None
+    form: str | None = None
+    if route == ROUTE_A_REJECTION:
+        story = derive_story(bars, direction, lo, hi, body_frac, close_loc,
+                             reject_wick, pad, lookback)
+        if not story.approach:
+            return Authority(WAIT_NO_INTERACTION, None, story, False,
+                             story.refusal or WAIT_NO_INTERACTION)
+        if not story.complete:
+            return Authority(WAIT_NO_STORY, None, story, False,
+                             story.refusal or WAIT_NO_STORY)
+    else:
+        read = _breakout_read(bars, route, direction, lo, hi,
+                              body_frac, close_loc, reject_wick, range_ratio,
+                              acceptance_bars)
+        if not read.valid:
+            state = (WAIT_NO_INTERACTION if read.refusal in _INTERACTION_REFUSALS
+                     else WAIT_NO_STORY)
+            return Authority(state, None, None, False, read.refusal)
+        form = read.form
 
     # Step 6 — causal force. Proven by the existing gate, never assumed.
     if not force_confirmed:
-        return Authority(WAIT_NO_FORCE, None, story, False, WAIT_NO_FORCE)
+        return Authority(WAIT_NO_FORCE, None, story, False, WAIT_NO_FORCE, form)
 
-    return Authority(GRANTED, route, story, True, None)
+    return Authority(GRANTED, route, story, True, None, form)
 
 
 def blocking_step(a: Authority) -> int:
@@ -129,6 +210,7 @@ def blocking_step(a: Authority) -> int:
 __all__ = [
     "Authority", "DIAGNOSTIC_ONLY", "GRANTED", "ROUTES", "ROUTE_A_REJECTION",
     "ROUTE_B_BREAKOUT", "ROUTE_C_PREBREAK_DISPLACEMENT", "ROUTE_D_PREBREAK_RETEST",
-    "STATE_ORDER", "WAIT_NO_FORCE", "WAIT_NO_INTERACTION", "WAIT_NO_LOCATION",
+    "STATE_ORDER", "VARIANT_BRK15", "NEITHER_D_FORM", "NOT_DERIVED_HERE",
+    "WAIT_NO_FORCE", "WAIT_NO_INTERACTION", "WAIT_NO_LOCATION",
     "WAIT_NO_STORY", "blocking_step", "decide",
 ]

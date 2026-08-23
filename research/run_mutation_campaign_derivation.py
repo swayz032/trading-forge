@@ -41,8 +41,10 @@ from pathlib import Path
 
 DERIV = "research/current_mnq_strategy_v2_4_derivation.py"
 AUTH = "research/current_mnq_strategy_v2_4_entry_authority.py"
+BRK = "research/current_mnq_strategy_v2_4_breakout_derivation.py"
 T_DERIV = "tests/test_current_mnq_strategy_v2_4_derivation.py"
 T_AUTH = "tests/test_current_mnq_strategy_v2_4_entry_authority.py"
+T_BRK = "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py"
 OUT = Path("research/current_mnq_strategy_v2_4_mutation_campaign_2026_08_23.json")
 
 #: (§7 item, description, file, find, replace, test that MUST go red)
@@ -65,14 +67,22 @@ ARMS = [
      "    return True",
      f"{T_DERIV}::test_a_touch_with_no_directional_control_is_refused"),
 
-    (4, "allow force alone to authorize a trade", AUTH,
-     "    if not story.complete:\n"
-     "        return Authority(WAIT_NO_STORY, None, story, False,\n"
-     "                         story.refusal or WAIT_NO_STORY)",
-     "    if False:\n"
-     "        return Authority(WAIT_NO_STORY, None, story, False,\n"
-     "                         story.refusal or WAIT_NO_STORY)",
+    (4, "allow force alone to authorize a trade (route A story gate)", AUTH,
+     "        if not story.complete:\n"
+     "            return Authority(WAIT_NO_STORY, None, story, False,\n"
+     "                             story.refusal or WAIT_NO_STORY)",
+     "        if False:\n"
+     "            return Authority(WAIT_NO_STORY, None, story, False,\n"
+     "                             story.refusal or WAIT_NO_STORY)",
      f"{T_AUTH}::test_an_incomplete_story_stops_before_force"),
+
+    # The SECOND door into the same defect. Routes B/C/D do not have a rejection story, so
+    # they have their own gate - and a campaign that killed only the route A door would have
+    # closed the instance it was shown and left the condition wide open.
+    (4, "allow force alone to authorize a trade (routes B/C/D evidence gate)", AUTH,
+     "        if not read.valid:",
+     "        if False and not read.valid:",
+     f"{T_AUTH}::test_the_three_breakout_routes_refuse_PURE_rejection_evidence"),
 
     (5, "allow a candle pattern away from the key level to authorize", DERIV,
      "    ap = derive_approach(bars, lo, hi, pad, lookback)\n"
@@ -85,18 +95,75 @@ ARMS = [
      "        return bool(self.state == GRANTED and self.route in ROUTES)",
      "        return True",
      f"{T_AUTH}::test_no_authorized_location_stops_at_step_one"),
+
+    # --- items 6-14: the breakout and pre-break routes, built 2026-08-23 -------------------
+
+    (6, "let the first completed breakout candle enter automatically", BRK,
+     "    first = rows[first_idx]",
+     "    return BreakoutRead(\"normal_breakout\", None, first_idx)\n"
+     "    first = rows[first_idx]",
+     f"{T_BRK}::test_the_first_completed_break_candle_NEVER_enters_on_its_own"),
+
+    (7, "remove the second-5m extreme extension from the normal breakout", BRK,
+     "    extended = (float(trigger.high) > float(first.high)) if direction == \"L\" \\\n"
+     "        else (float(trigger.low) < float(first.low))",
+     "    extended = True",
+     f"{T_BRK}::test_second_5m_momentum_without_extreme_extension_is_WAIT"),
+
+    (8, "let ordinary momentum satisfy displacement exception #1", BRK,
+     "    return bool(_geom(row).range >= reference_range * range_ratio)",
+     "    return True",
+     f"{T_BRK}::test_ordinary_momentum_is_NOT_displacement"),
+
+    (9, "accept a displacement third candle after it loses directional control", BRK,
+     "    if not _momentum(seq[2], direction, body_frac, close_loc):\n"
+     "        return BreakoutRead(None, THIRD_CANDLE_LOST_CONTROL)",
+     "    if False:\n"
+     "        return BreakoutRead(None, THIRD_CANDLE_LOST_CONTROL)",
+     f"{T_BRK}::test_a_third_candle_that_reverses_control_kills_the_sequence"),
+
+    (10, "satisfy exception #2 with no real prior test or rejection", BRK,
+     "    if test_idx is None:\n"
+     "        return BreakoutRead(None, NO_PRIOR_TEST)",
+     "    if test_idx is None:\n"
+     "        test_idx = 0",
+     f"{T_BRK}::test_repeat_test_without_a_real_prior_test_is_refused"),
+
+    (11, "satisfy exception #2 with no meaningful reset", BRK,
+     "    reset = any(not touches(r) for r in after)",
+     "    reset = True",
+     f"{T_BRK}::test_repeat_test_without_a_meaningful_reset_is_refused"),
+
+    (12, "satisfy exception #2 with no true retest or return attack", BRK,
+     "    if not _momentum(trigger, direction, body_frac, close_loc):\n"
+     "        return BreakoutRead(None, NO_RETURN_ATTACK, test_idx)\n"
+     "    return BreakoutRead(EXCEPTION_REPEAT_TEST, None, test_idx)",
+     "    return BreakoutRead(EXCEPTION_REPEAT_TEST, None, test_idx)",
+     f"{T_BRK}::test_repeat_test_without_a_true_return_attack_is_refused"),
+
+    (13, "create a third pre-break exception", BRK,
+     "PREBREAK_EXCEPTIONS = (EXCEPTION_DISPLACEMENT, EXCEPTION_REPEAT_TEST)",
+     "PREBREAK_EXCEPTIONS = (EXCEPTION_DISPLACEMENT, EXCEPTION_REPEAT_TEST,\n"
+     "                       \"third_exception_invented_here\")",
+     f"{T_BRK}::test_the_two_exceptions_match_the_frozen_spec_VERBATIM"),
+
+    (14, "collapse the completed/trigger split so the parent's final OHLC is reachable", BRK,
+     "def normal_breakout(completed: pd.DataFrame, trigger,",
+     "def normal_breakout(bars: pd.DataFrame, trigger,",
+     f"{T_BRK}::test_no_function_can_see_the_triggers_finished_form"),
 ]
 
-NOT_APPLICABLE = {
-    6: "allow the first completed breakout candle to enter automatically",
-    7: "remove second-5m extreme extension from normal breakout",
-    8: "allow ordinary momentum to satisfy displacement exception #1",
-    9: "allow displacement third candle after it loses directional control",
-    10: "satisfy exception #2 without a real prior test/rejection",
-    11: "satisfy exception #2 without a meaningful reset",
-    12: "satisfy exception #2 without a true retest/return breakout attack",
-    13: "create a third pre-break exception",
-    14: "use final parent-5m OHLC to backdate an earlier entry",
+NOT_APPLICABLE: dict[int, str] = {}
+
+#: Item 14 is defended STRUCTURALLY rather than by a predicate: no function in the breakout
+#: module ever receives the forming parent's finished OHLC, so there is nothing to backdate
+#: from. The mutation therefore attacks the architecture - it collapses the completed/trigger
+#: split - and what it proves is that the split is load-bearing. It does NOT prove that some
+#: other layer refuses a backdated entry clock; that belongs to the kernel and is not built
+#: here. Saying so is the point: a kill whose scope is overstated is a false green.
+CAVEATS = {
+    14: ("defended structurally, not by a predicate - the kill proves the completed/trigger "
+         "split is load-bearing, not that a backdated entry clock is refused elsewhere"),
 }
 
 
@@ -114,7 +181,7 @@ def main() -> int:
     results, failures = [], []
     #: The bytes this run started with. The restore proof is equality against THESE, because
     #: git cleanliness answers a different question entirely.
-    START = {p: sha(p) for p in (DERIV, AUTH)}
+    START = {p: sha(p) for p in (DERIV, AUTH, BRK)}
 
     for item, desc, path, find, repl, test in ARMS:
         if not run(test):
@@ -161,7 +228,7 @@ def main() -> int:
         return 1
     print("\nrestore verified by SHA256 against this run's own starting bytes")
 
-    dirty = subprocess.run(["git", "status", "--porcelain", DERIV, AUTH],
+    dirty = subprocess.run(["git", "status", "--porcelain", DERIV, AUTH, BRK],
                            capture_output=True, text=True).stdout.strip()
     if dirty:
         print(f"note: these files have uncommitted work unrelated to the campaign:\n{dirty}")
@@ -177,13 +244,19 @@ def main() -> int:
         "artifact": "MUTATION_CAMPAIGN_DERIVATION_LAYERS",
         "authority": "ALGO-009 section 7",
         "produced": "2026-08-23",
-        "owned_and_run": len(ARMS),
+        "owned_and_run": len({a[0] for a in ARMS}),
+        "mutations_run": len(ARMS),
         "killed": sum(1 for r in results if r["outcome"] == "KILLED"),
+        "items_with_two_doors": sorted(
+            {i for i in (a[0] for a in ARMS)
+             if sum(1 for a in ARMS if a[0] == i) > 1}),
         "not_yet_applicable": {str(k): v for k, v in NOT_APPLICABLE.items()},
+        "caveats": {str(k): v for k, v in CAVEATS.items()},
         "scope_note": (
-            "6 of section 7's 15 items belong to the layers built so far. Items 6-14 concern "
-            "the breakout and pre-break routes, which are NOT YET BUILT - reporting 6/6 as if "
-            "it were the whole campaign would be a false green."),
+            "All 15 of section 7's items are now owned and run. Items 6-14 became runnable "
+            "when routes B/C/D were built on 2026-08-23; before that they were deferred BY "
+            "NAME rather than folded into a smaller denominator. Item 14 carries a caveat: "
+            "its guard is architectural, so read `caveats` before quoting the kill."),
         "restored_byte_exact": True,
         "results": results,
     }
@@ -191,8 +264,9 @@ def main() -> int:
         json.dumps(out, indent=2, ensure_ascii=False) + "\n")
 
     print(f"\nwrote {OUT}")
-    print(f"  killed {out['killed']} of {out['owned_and_run']} owned; "
-          f"{len(NOT_APPLICABLE)} items not yet applicable (routes not built)")
+    print(f"  killed {out['killed']} of {out['mutations_run']} mutations across "
+          f"{out['owned_and_run']} of section 7's 15 items; "
+          f"{len(NOT_APPLICABLE)} not yet applicable")
     if failures:
         print(f"\nCAMPAIGN FAILED for section 7 items: {sorted(set(failures))}")
         return 1

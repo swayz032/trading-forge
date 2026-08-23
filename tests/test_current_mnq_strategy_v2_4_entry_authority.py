@@ -15,10 +15,14 @@ import pandas as pd
 import pytest
 
 from research import current_mnq_strategy_v2_4_entry_authority as EA
+from research.current_mnq_strategy_v2_4_engine import Params
 
 TZ = "America/New_York"
 LO, HI = 100.0, 102.0
 BODY, CLOSE_LOC, WICK = 0.62, 0.78, 0.35
+#: Read from Params, never typed. The state machine refuses to invent this one, and a test
+#: that typed its own copy would quietly stop tracking the frozen value.
+RR = float(Params().range_ratio)
 
 
 def bars(rows):
@@ -139,12 +143,131 @@ def test_a_fifth_route_is_refused_loudly():
                   reject_wick=WICK, route="E_SOMETHING_NEW")
 
 
+# --- each route is judged on ITS OWN evidence ---------------------------------------------
+# The previous version of this block fed the REJECTION fixture to all four routes and asserted
+# each one granted. It passed only because `decide` ignored `route` and ran the rejection story
+# whatever it was asked for - a breakout accepted on rejection evidence. The green was an
+# artifact of the defect, so the test is replaced rather than adjusted.
+
+# Resistance at 102: a completed print beyond it (high 104), then a trigger that takes out 104.
+ROUTE_B_BARS = [(99, 100, 98, 99.5), (100, 104, 99.8, 103.5), (103.6, 106, 103.5, 105.8)]
+# Quiet context, a displacement candle, then a third that still holds control INTO the level.
+ROUTE_C_BARS = [(90, 90.5, 89.5, 90), (90, 90.5, 89.5, 90), (90, 90.5, 89.5, 90),
+                (90, 99.0, 89.9, 98.5), (98.5, 99.5, 98.0, 99.0), (99.0, 101.8, 98.9, 101.6),
+                (101.6, 104, 101.5, 103.8)]
+# Broken, ACCEPTED over two completed closes, then retested and attacked.
+ROUTE_D_BARS = [(100, 104, 99.8, 103.5), (103.5, 105, 103, 104.5), (104.5, 105, 101.5, 102.0),
+                (102, 106, 102, 105.5)]
+
+ROUTE_EVIDENCE = {
+    EA.ROUTE_A_REJECTION: CLEAN_LONG,
+    EA.ROUTE_B_BREAKOUT: ROUTE_B_BARS,
+    EA.ROUTE_C_PREBREAK_DISPLACEMENT: ROUTE_C_BARS,
+    EA.ROUTE_D_PREBREAK_RETEST: ROUTE_D_BARS,
+}
+
+
+def _route(rows, route, *, location=True, force=True, direction="L"):
+    return EA.decide(bars(rows), direction, LO, HI, location_authorized=location,
+                     force_confirmed=force, body_frac=BODY, close_loc=CLOSE_LOC,
+                     reject_wick=WICK, route=route, range_ratio=RR)
+
+
 @pytest.mark.parametrize("route", list(EA.ROUTES))
-def test_each_declared_route_is_accepted(route):
-    r = EA.decide(bars(CLEAN_LONG), "L", LO, HI, location_authorized=True,
-                  force_confirmed=True, body_frac=BODY, close_loc=CLOSE_LOC,
-                  reject_wick=WICK, route=route)
-    assert r.route == route
+def test_every_declared_route_is_a_legal_name(route):
+    """It must not raise NO_FIFTH_ROUTE for any of the four."""
+    assert _route(ROUTE_EVIDENCE[route], route) is not None
+
+
+@pytest.mark.parametrize("route", list(EA.ROUTES))
+def test_each_route_GRANTS_on_its_own_evidence(route):
+    """POSITIVE WITNESS per route. Four separate ones, because they are four separate reads."""
+    a = _route(ROUTE_EVIDENCE[route], route)
+    assert a.granted is True, a
+    assert a.route == route
+    assert "ENTER via" in a.explain()
+
+
+#: The ONE off-diagonal grant in the matrix below, and it is not a defect. The Route C fixture
+#: displaces up into the zone, closes back INSIDE it, then reclaims - which is a genuine
+#: `failed_breakout_back_inside_with_control` rejection as well as a displacement sequence.
+#: Real price action can satisfy two routes at once; which one the kernel would rank is a
+#: separate question from whether each read is correct. It is pinned so that a SECOND overlap
+#: appearing later fails this test instead of passing quietly.
+KNOWN_OVERLAPS = frozenset({
+    (EA.ROUTE_A_REJECTION, EA.ROUTE_C_PREBREAK_DISPLACEMENT),
+})
+
+
+def _grant_matrix():
+    """MEASURED, not typed. route -> evidence -> granted."""
+    return {r: {e: _route(rows, r).granted for e, rows in ROUTE_EVIDENCE.items()}
+            for r in EA.ROUTES}
+
+
+def test_the_route_by_evidence_matrix_is_the_diagonal_plus_named_overlaps():
+    """The wrong-route class: rejection evidence must not buy a breakout, or the reverse."""
+    m = _grant_matrix()
+    unexpected = [(r, e) for r in m for e in m[r]
+                  if m[r][e] and r != e and (r, e) not in KNOWN_OVERLAPS]
+    assert not unexpected, f"routes granted on foreign evidence: {unexpected}"
+
+
+def test_every_pinned_overlap_is_REAL_and_none_has_gone_stale():
+    """A pinned exception that no longer fires is a licence nobody is using - delete it."""
+    m = _grant_matrix()
+    stale = [(r, e) for (r, e) in KNOWN_OVERLAPS if not m[r][e]]
+    assert not stale, f"pinned overlaps that no longer occur: {stale}"
+
+
+def test_the_three_breakout_routes_refuse_PURE_rejection_evidence():
+    """Stated as its own claim, because it is the direction that matters most.
+
+    CLEAN_LONG never breaks the zone at all, so nothing about it can read as a breakout.
+    """
+    for route in (EA.ROUTE_B_BREAKOUT, EA.ROUTE_C_PREBREAK_DISPLACEMENT,
+                  EA.ROUTE_D_PREBREAK_RETEST):
+        a = _route(CLEAN_LONG, route)
+        assert a.granted is False, f"{route} granted on a pure rejection: {a.explain()}"
+
+
+def test_route_A_refuses_a_clean_breakout_with_no_rejection():
+    a = _route(ROUTE_B_BARS, EA.ROUTE_A_REJECTION)
+    assert a.granted is False, a.explain()
+
+
+def test_a_route_D_refusal_names_BOTH_of_its_forms():
+    """Either form satisfies D, so a refusal that names one sends the reader to half of it."""
+    a = _route(NEVER_TOUCHED, EA.ROUTE_D_PREBREAK_RETEST)
+    assert a.granted is False
+    assert EA.NEITHER_D_FORM in a.reason
+    assert "accepted_break=" in a.reason and "repeat_test=" in a.reason
+
+
+def test_the_breakout_routes_carry_a_form_instead_of_a_rejection_story():
+    a = _route(ROUTE_B_BARS, EA.ROUTE_B_BREAKOUT)
+    assert a.story is None, "there is no rejection story on a breakout"
+    assert a.form == "normal_breakout"
+
+
+def test_the_BRK15_variant_is_recorded_as_NOT_DERIVED_HERE():
+    """An unbuilt variant reported as 'Route B handled' would be a false green."""
+    assert EA.VARIANT_BRK15 in EA.NOT_DERIVED_HERE
+    assert EA.VARIANT_BRK15 not in EA.ROUTES, "it is a variant of B, never a fifth route"
+
+
+@pytest.mark.parametrize("route", list(EA.ROUTES))
+def test_force_is_required_on_EVERY_route(route):
+    """No route may buy its way past step 6."""
+    a = _route(ROUTE_EVIDENCE[route], route, force=False)
+    assert a.state == EA.WAIT_NO_FORCE, a
+    assert a.granted is False
+
+
+@pytest.mark.parametrize("route", list(EA.ROUTES))
+def test_location_is_required_on_EVERY_route(route):
+    a = _route(ROUTE_EVIDENCE[route], route, location=False)
+    assert a.state == EA.WAIT_NO_LOCATION, a
 
 
 # --- it is BUILD ONLY, and it re-implements no gate ---------------------------------------

@@ -80,7 +80,8 @@ GATE_NO_INTRA15_FORCE = "INTRA_15M_FORCE_NOT_CONFIRMED"
 
 def xray_session(env: dict, dte: date, p: prod.Params,
                  as_of: pd.Timestamp | None = None,
-                 on_rejection_candidate=None) -> dict:
+                 on_rejection_candidate=None,
+                 on_breakout_candidate=None) -> dict:
     """Return every candidate considered in one session, with its killing gate.
 
     `on_rejection_candidate(record, **inputs)` is an OPTIONAL diagnostic hook fired for each
@@ -88,6 +89,12 @@ def xray_session(env: dict, dte: date, p: prod.Params,
     on. It exists so a downstream diagnostic never has to RE-WALK this loop: a duplicated loop
     is precisely how the ranking rule came to diverge from the kernel's. The hook cannot
     change any outcome, and when it is None this function behaves exactly as before.
+
+    `on_breakout_candidate(record, **inputs)` is the same thing for the B/C/D family, added
+    when those routes were derived. Same reason and same guarantee: without it a breakout
+    census would have to re-walk this loop, and a re-walked loop is what diverged last time.
+    It also carries `kernel_route`, so a census can ask whether the kernel and the derivation
+    agree on WHICH route this is - a question that cannot be asked from a re-walk at all.
     """
     full5, r5, h15, one = env["full5"], env["r5"], env["h15"], env["one"]
     records: list[dict] = []
@@ -253,6 +260,10 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                              post_break=bool(post), tag=tag)
                     survivors.append((tag, core.Candidate(
                         direction, "BRK5", loc, None, ts, decision_time, route), r_))
+                    if on_breakout_candidate is not None:
+                        on_breakout_candidate(r_, full5=full5, ts=ts, row=partial,
+                                              direction=direction, loc=loc, p=p, pad=pad,
+                                              kernel_route=route)
 
             # ---- BRK15: pending weak-first-break 15m continuation ----------------------
             # Route B variant. Uses LIVE force in bar 3 through a FIFTEEN-minute parent.
