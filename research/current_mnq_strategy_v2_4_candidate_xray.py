@@ -195,6 +195,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                         rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                             route=ROUTE_A_REJECTION, direction=direction,
                             location_id=str(loc.id), location_source=str(loc.source),
+                            location_lo=float(loc.lo), location_hi=float(loc.hi),
                             outcome="REJECTED", killed_at=GATE_STORY_INCOMPLETE,
                             authority_state=a.state, authority_refusal=a.reason,
                             story_flags=_story_flags(story))
@@ -203,6 +204,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                         rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                             route=ROUTE_A_REJECTION, direction=direction,
                             location_id=str(loc.id), location_source=str(loc.source),
+                            location_lo=float(loc.lo), location_hi=float(loc.hi),
                             outcome="REJECTED", killed_at=GATE_PLAN_VETO,
                             story_flags=_story_flags(story))
                         continue
@@ -210,6 +212,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                     r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                              route=ROUTE_A_REJECTION, direction=direction,
                              location_id=str(loc.id), location_source=str(loc.source),
+                            location_lo=float(loc.lo), location_hi=float(loc.hi),
                              outcome="SURVIVED_TO_RANKING", killed_at=None,
                              authority_state=a.state, authority_refusal=None,
                              story_flags=_story_flags(story), tag=tag)
@@ -272,6 +275,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                         r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                                  route="B_C_D_BREAKOUT_FAMILY", direction=direction,
                                  location_id=str(loc.id), location_source=str(loc.source),
+                            location_lo=float(loc.lo), location_hi=float(loc.hi),
                                  outcome="REJECTED", killed_at=GATE_NO_ROUTE,
                                  routes_asked=list(asked), route_refusals=refusals)
                         # ALGO-054: the hook fires on the REFUSAL branch too. A parameter
@@ -292,6 +296,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                         r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                                  route=route, direction=direction,
                                  location_id=str(loc.id), location_source=str(loc.source),
+                            location_lo=float(loc.lo), location_hi=float(loc.hi),
                                  outcome="REJECTED", killed_at=GATE_PLAN_VETO,
                                  routes_asked=list(asked), form=form)
                         if on_breakout_candidate is not None:
@@ -303,6 +308,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                     r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
                              route=route, direction=direction,
                              location_id=str(loc.id), location_source=str(loc.source),
+                            location_lo=float(loc.lo), location_hi=float(loc.hi),
                              outcome="SURVIVED_TO_RANKING", killed_at=None,
                              form=form, reason=REASON_BY_FORM[form],
                              routes_asked=list(asked), route_refusals=refusals, tag=tag)

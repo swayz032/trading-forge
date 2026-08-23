@@ -92,6 +92,15 @@ def lost_sessions() -> list[str]:
     return ANCHOR.lost_against_anchor(agreeing)
 
 
+def _raw_labels() -> dict[str, dict]:
+    """The full label row per session - `_session_report` needs his marked ZONES, not just the
+    entry time, because ALGO-062 joins on clock + direction + LOCATION."""
+    doc = json.load(io.open(LABELS, encoding="utf-8"))
+    manifest = {c["case_id"]: c for c in json.load(io.open(MANIFEST, encoding="utf-8"))["cases"]}
+    return {manifest[l["case_id"]]["session"]: l
+            for l in doc["labels"] if l["case_id"] in manifest}
+
+
 def _trader_entries() -> dict[str, dict]:
     doc = json.load(io.open(LABELS, encoding="utf-8"))
     manifest = {c["case_id"]: c for c in json.load(io.open(MANIFEST, encoding="utf-8"))["cases"]}
@@ -111,93 +120,217 @@ def _trader_entries() -> dict[str, dict]:
     return out
 
 
-def _classify(records: list[dict], near: list[dict]) -> tuple[str, str]:
-    """One class, and the sentence that justifies it. Residual category is REAL."""
-    if not records:
-        return "OTHER", "the X-ray produced no records at all for this session"
-    if not near:
-        return "OTHER", (
-            f"no decision clock within {NEAR_MINUTES} minutes of the trader's labelled entry; "
-            "the machine was not deciding when he decided")
+def _subreasons(rows: list[dict]) -> dict[str, int]:
+    """Route D's refusal is a COMPOSITE. Split it into the sub-forms it actually reports.
 
-    gates = [r.get("killed_at") for r in near if r.get("killed_at")]
-    survived = [r for r in near if r.get("outcome") == "SURVIVED_TO_RANKING"]
-    if survived:
-        return "BUDGET", (
-            "the machine DID grant a candidate near his entry, so the in-window absence is the "
-            "one-trade budget rather than a refusal")
-
-    def has(tok):
-        return any(tok in (g or "") for g in gates)
-
-    if has("NO_AUTHORIZED_LOCATION"):
-        return "LOCATION", "no authorized location on the side he traded at that clock"
-    if has("FORCE_NOT_CONFIRMED") and not has("REJECTION_STORY_INCOMPLETE") \
-            and not has("NO_LEGAL_ROUTE"):
-        return "FORCE", "the force gate refused at every clock near his entry"
-
-    # Which named breakout refusal dominates - this is where a gate is NAMED with its parameter.
-    refusals: dict[str, int] = {}
-    for r in near:
+    `NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=X;
+    repeat_test=Y` names BOTH failing forms, and X is what says whether the acceptance
+    requirement is even reachable. The first version did `str(why).split(":")[0]`, threw X and
+    Y away, then matched the substring "ACCEPTED_BREAK" inside the composite HEAD - so a
+    composite meaning "neither D form qualified" was read as "the acceptance gate refused".
+    That is the substring-over-name habit, in analysis code rather than in a test.
+    """
+    out: dict[str, int] = {}
+    for r in rows:
         for route, why in (r.get("route_refusals") or {}).items():
-            head = str(why).split(":")[0]
-            refusals[f"{route}|{head}"] = refusals.get(f"{route}|{head}", 0) + 1
+            head, _, detail = str(why).partition(":")
+            if detail.strip():
+                for part in detail.split(";"):
+                    if "=" in part:
+                        form, _, reason = part.strip().partition("=")
+                        k = f"{route}|{form.strip()}={reason.strip()}"
+                        out[k] = out.get(k, 0) + 1
+            else:
+                k = f"{route}|{head.strip()}"
+                out[k] = out.get(k, 0) + 1
         if r.get("authority_refusal"):
-            head = str(r["authority_refusal"]).split(":")[0]
-            refusals[f"A_NORMAL_REJECTION|{head}"] = \
-                refusals.get(f"A_NORMAL_REJECTION|{head}", 0) + 1
+            k = f"A_NORMAL_REJECTION|{str(r['authority_refusal']).partition(':')[0]}"
+            out[k] = out.get(k, 0) + 1
+    return out
 
-    acceptance = [k for k in refusals if "NOT_ACCEPTED" in k or "ACCEPTED_BREAK" in k]
-    if acceptance:
+
+#: The acceptance requirement, BY NAME. `acceptance_bars` is implicated only when THIS exact
+#: sub-reason is operative at his clock - never because it appears inside a composite's name.
+ACCEPTANCE_REFUSAL = "BREAK_NOT_ACCEPTED_BEFORE_RETEST"
+
+#: ALGO-062: no candidate at his clock and his zone gets its OWN class. It is arguably the most
+#: important answer - the derivation never reached the interaction he traded.
+NO_CANDIDATE_AT_ENTRY = "NO_CANDIDATE_AT_ENTRY"
+
+#: It WAS deciding on his side with authorized locations, but none covers his level. Split out
+#: of NO_CANDIDATE_AT_ENTRY once the repaired join showed the buckets were far from empty -
+#: one class covering both would have hidden which of two very different repairs is needed.
+LOCATION_NOT_IN_MAP = "LOCATION_NOT_IN_MAP"
+
+CLASSES = ("STORY_NOT_RECOGNIZED", "GATE_OVER_STRICT", "LOCATION", "FORCE", "BUDGET",
+           NO_CANDIDATE_AT_ENTRY, LOCATION_NOT_IN_MAP, "OTHER")
+
+#: Which zone he traded AT: a long is taken at support, a short at resistance.
+ROLE_FOR_DIRECTION = {"L": "SUPPORT", "S": "RESISTANCE"}
+
+
+def _his_zone(label: dict, direction: str):
+    role = ROLE_FOR_DIRECTION.get(direction)
+    for z in label.get("trader_zones") or ():
+        if str(z.get("role")).upper() == role:
+            return z
+    return None
+
+
+def _overlaps(rec: dict, zone) -> bool:
+    """Does this candidate's LOCATION overlap the band he marked? A PRICE join, not an id join."""
+    lo, hi = rec.get("location_lo"), rec.get("location_hi")
+    if lo is None or hi is None or not zone:
+        return False
+    return float(lo) <= float(zone["hi"]) and float(hi) >= float(zone["lo"])
+
+
+def _census(rows: list[dict]) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for r in rows:
+        k = r.get("killed_at") or "SURVIVED_TO_RANKING"
+        out[k] = out.get(k, 0) + 1
+    return out
+
+
+def _nearest_band(rows: list[dict], zone) -> tuple:
+    """The machine band closest to his zone, and the gap in points. Evidence, not a boolean."""
+    best = None
+    for r in rows:
+        lo, hi = r.get("location_lo"), r.get("location_hi")
+        if lo is None or hi is None:
+            continue
+        gap = 0.0 if (lo <= zone["hi"] and hi >= zone["lo"]) else min(
+            abs(float(lo) - float(zone["hi"])), abs(float(zone["lo"]) - float(hi)))
+        if best is None or gap < best[0]:
+            best = (round(gap, 2), round(float(lo), 2), round(float(hi), 2))
+    return best or (None, None, None)
+
+
+def classify_at_clock(at_clock: list[dict], on_his_side: list[dict] | None = None,
+                      zone=None) -> tuple[str, str]:
+    """THE CLASS COMES FROM HIS ENTRY CLOCK (ALGO-062 3), never from a session census.
+
+    Most of a session's evaluations happen when and where he was NOT trading, so ranking by
+    session-wide dominance answers a different question than "why was HE refused HERE". The
+    census is still reported, as labelled CONTEXT, in the same row.
+    """
+    if not at_clock:
+        # TWO DIFFERENT ANSWERS, and the repaired join is what made them separable.
+        if on_his_side:
+            gap, lo, hi = _nearest_band(on_his_side, zone) if zone else (None, None, None)
+            return LOCATION_NOT_IN_MAP, (
+                f"the machine WAS deciding at his clock on his side - {len(on_his_side)} "
+                f"authorized candidates in those buckets - but NONE of its locations covers "
+                f"the level he traded. Nearest band {lo}-{hi}, gap {gap} points "
+                f"(the frozen stop is 17.25, so this is a different level, not a near-miss)")
+        return NO_CANDIDATE_AT_ENTRY, (
+            "the derivation evaluated NOTHING in his entry buckets - it was not deciding at "
+            "all when he decided")
+
+    if any(r.get("outcome") == "SURVIVED_TO_RANKING" for r in at_clock):
+        return "BUDGET", (
+            "a candidate at his clock and zone SURVIVED to ranking, so the in-window absence "
+            "is the one-trade budget rather than a refusal")
+
+    gates = {k: v for k, v in _census(at_clock).items() if k != "SURVIVED_TO_RANKING"}
+    if not gates:
+        return "OTHER", "candidates at his clock, but none carries a killing gate"
+
+    subs = _subreasons(at_clock)
+    acceptance_operative = {k: v for k, v in subs.items() if ACCEPTANCE_REFUSAL in k}
+    dominant, n = max(gates.items(), key=lambda kv: kv[1])
+    share = f"{n}/{sum(gates.values())}"
+
+    if dominant == "NO_AUTHORIZED_LOCATION_ON_THIS_SIDE":
+        return "LOCATION", f"no authorized location on his side at his clock ({share})"
+    if dominant == "FORCE_NOT_CONFIRMED":
+        return "FORCE", f"the force gate refused at his clock ({share})"
+    if acceptance_operative:
         return "GATE_OVER_STRICT", (
-            f"the acceptance gate refused: {sorted(acceptance)} - the named parameter is "
-            f"`acceptance_bars` (in force: "
-            f"{brk.break_retest.__defaults__[-1] if brk.break_retest.__defaults__ else '?'})")
-    if has("REJECTION_STORY_INCOMPLETE") or has("NO_LEGAL_ROUTE"):
-        top = sorted(refusals.items(), key=lambda kv: -kv[1])[:4]
+            f"at his clock the OPERATIVE Route D sub-reason is the acceptance requirement "
+            f"{sorted(acceptance_operative)} - named parameter `acceptance_bars` "
+            f"(in force: {brk.break_retest.__defaults__[-1]})")
+    if dominant in ("REJECTION_STORY_INCOMPLETE", "NO_LEGAL_ROUTE_MATCHED"):
         return "STORY_NOT_RECOGNIZED", (
-            f"no route recognised an interaction at the level; dominant refusals {top}")
-    return "OTHER", f"gates seen: {sorted(set(gates))}"
+            f"at his clock the machine reached his zone and did not recognise the interaction "
+            f"({dominant} {share}); acceptance is NOT operative. Sub-reasons: "
+            f"{sorted(subs.items(), key=lambda kv: -kv[1])[:4]}")
+    return "OTHER", f"at his clock the dominant gate is {dominant} ({share})"
 
 
-def _session_report(env, session: str, trader: dict, p, label: str) -> dict:
+def _session_report(env, session, trader, label, p, arm):
     recs = xray_session(env, date.fromisoformat(session), p)["records"]
     entry = trader.get("first_entry_time")
-    near: list[dict] = []
+    direction = {"ENTER_LONG": "L", "ENTER_SHORT": "S"}.get(trader.get("final_action"))
+    zone = _his_zone(label, direction) if direction else None
+
+    at_clock, context, buckets, on_his_side = [], [], [], []
     if entry:
         t = pd.Timestamp(entry)
-        lo, hi = t - pd.Timedelta(minutes=NEAR_MINUTES), t + pd.Timedelta(minutes=NEAR_MINUTES)
+        # THE COMPLETED BAR HE ENTERED ON, AND THE ONE BEFORE (ALGO-062 3).
+        b0 = t.floor("5min")
+        # JOIN ON INSTANTS, NEVER ON THEIR TEXT. The X-ray writes `bucket=ts.isoformat()`
+        # ("...T09:35:00-04:00") and `str(pd.Timestamp)` renders the SAME instant with a space
+        # ("...  09:35:00-04:00"). Compared as strings they are never equal, so every bucket
+        # match silently failed and all four sessions looked like NO_CANDIDATE_AT_ENTRY - which
+        # would have been published as "the derivation never reached the interaction he
+        # traded". The positive control on the AGREE session is what caught it.
+        want = {b0 - pd.Timedelta(minutes=5), b0}
+        buckets = [b.isoformat() for b in sorted(want)]
+        lo = t - pd.Timedelta(minutes=NEAR_MINUTES)
+        hi = t + pd.Timedelta(minutes=NEAR_MINUTES)
         for r in recs:
             clock = r.get("clock")
-            if not clock:
-                continue
-            ts = pd.Timestamp(clock)
-            if lo <= ts <= hi:
-                near.append(r)
+            if clock and lo <= pd.Timestamp(clock) <= hi:
+                context.append(r)
+            b = r.get("bucket")
+            if (b is not None and pd.Timestamp(b) in want
+                    and r.get("direction") == direction):
+                if r.get("location_lo") is not None:
+                    on_his_side.append(r)
+                if _overlaps(r, zone):
+                    at_clock.append(r)
 
-    cls, why = _classify(recs, near)
-    gate_census: dict[str, int] = {}
-    for r in near:
-        k = r.get("killed_at") or "SURVIVED_TO_RANKING"
-        gate_census[k] = gate_census.get(k, 0) + 1
+    cls, why = classify_at_clock(at_clock, on_his_side, zone)
+    gap, nlo, nhi = _nearest_band(on_his_side, zone) if zone else (None, None, None)
+    ctx_census = _census(context)
+    ctx_dominant = max(ctx_census.items(), key=lambda kv: kv[1])[0] if ctx_census else None
+    ctx_class = classify_at_clock(context)[0] if context else None
 
     return {
         "session": session,
-        "arm": label,
+        "arm": arm,
         "trader_final_action": trader.get("final_action"),
         "trader_first_entry_time": entry,
-        "classification": cls,
-        "why": why,
-        "records_in_session": len(recs),
-        "records_near_his_entry": len(near),
-        "gate_census_near_entry": gate_census,
-        "routes_asked_near_entry": sorted({
-            route for r in near for route in (r.get("routes_asked") or ())}),
-        "sample_near_entry": [
-            {k: r.get(k) for k in ("clock", "route", "direction", "location_id", "outcome",
-                                   "killed_at", "form", "authority_state", "authority_refusal",
+        "his_direction": direction,
+        "his_zone": zone,
+        "entry_buckets_examined": buckets,
+
+        "AT_CLOCK_classification": cls,
+        "AT_CLOCK_why": why,
+        "AT_CLOCK_candidates": len(at_clock),
+        "AT_CLOCK_authorized_candidates_on_his_side": len(on_his_side),
+        "AT_CLOCK_nearest_machine_band": {"lo": nlo, "hi": nhi, "gap_points": gap},
+        "AT_CLOCK_gate_census": _census(at_clock),
+        "AT_CLOCK_subreasons": dict(sorted(_subreasons(at_clock).items(),
+                                           key=lambda kv: -kv[1])[:12]),
+        "AT_CLOCK_rows": [
+            {k: r.get(k) for k in ("clock", "bucket", "route", "direction", "location_id",
+                                   "location_lo", "location_hi", "outcome", "killed_at",
+                                   "form", "authority_state", "authority_refusal",
                                    "route_refusals", "routes_asked")}
-            for r in near[:6]],
+            for r in at_clock[:12]],
+
+        # CONTEXT ONLY (ALGO-062 3). Most of these evaluations happened when and where he was
+        # NOT trading, so this does not answer "why was HE refused HERE" - and where it
+        # disagrees with the at-clock class, THE DISAGREEMENT IS THE FINDING.
+        "CONTEXT_session_census_NOT_THE_CLASS": ctx_census,
+        "CONTEXT_dominant_gate": ctx_dominant,
+        "CONTEXT_would_have_classified_as": ctx_class,
+        "CONTEXT_records": len(context),
+        "at_clock_and_census_DISAGREE": bool(context) and ctx_class != cls,
+        "records_in_session": len(recs),
     }
 
 
@@ -205,6 +338,7 @@ def main() -> int:
     t0 = time.perf_counter()
     sessions = lost_sessions()
     traders = _trader_entries()
+    labels = _raw_labels()
 
     observed = old.download_pinned(DATA, include_tick=False)
     old.verify_manifest(observed, json.loads(LOCK.read_text(encoding="utf-8")))
@@ -218,7 +352,8 @@ def main() -> int:
                           old.load_csv(DATA / Path(old.DATA_FILES["1m"]).name))
         p = v24.Params()
         for s in sessions:
-            rows.append(_session_report(env, s, traders.get(s, {}), p, "as_landed"))
+            rows.append(_session_report(env, s, traders.get(s, {}), labels.get(s, {}),
+                                        p, "as_landed"))
 
     # ARM 2 - LABELLED ATTRIBUTION DIAGNOSTIC at acceptance_bars=2. Runtime override; nothing
     # is edited and nothing is chosen by this. It answers ONE question: is the 2 -> 3 landing
@@ -231,24 +366,28 @@ def main() -> int:
                                old.load_csv(DATA / Path(old.DATA_FILES["1m"]).name))
             for s in sessions:
                 attribution.append(
-                    _session_report(env2, s, traders.get(s, {}), v24.Params(),
-                                    "attribution_acceptance_bars_2"))
+                    _session_report(env2, s, traders.get(s, {}), labels.get(s, {}),
+                                    v24.Params(), "attribution_acceptance_bars_2"))
     finally:
         brk.break_retest.__defaults__ = original
 
     by_session = {r["session"]: r for r in rows}
     by_session_2 = {r["session"]: r for r in attribution}
     verdicts = []
-    for s in sessions:
-        a, b = by_session[s], by_session_2[s]
-        implicated = (a["classification"] != b["classification"]
-                      or a["gate_census_near_entry"] != b["gate_census_near_entry"])
+    for s_ in sessions:
+        a, b = by_session[s_], by_session_2[s_]
+        implicated = (a["AT_CLOCK_classification"] != b["AT_CLOCK_classification"]
+                      or a["AT_CLOCK_gate_census"] != b["AT_CLOCK_gate_census"])
         verdicts.append({
-            "session": s,
-            "classification_as_landed": a["classification"],
-            "classification_at_acceptance_2": b["classification"],
+            "session": s_,
+            "class_AT_HIS_ENTRY_CLOCK": a["AT_CLOCK_classification"],
+            "why": a["AT_CLOCK_why"],
+            "candidates_at_his_clock": a["AT_CLOCK_candidates"],
+            "class_at_acceptance_bars_2": b["AT_CLOCK_classification"],
             "acceptance_landing_implicated": implicated,
-            "why": a["why"],
+            "CONTEXT_session_census_class": a["CONTEXT_would_have_classified_as"],
+            "CONTEXT_dominant_gate": a["CONTEXT_dominant_gate"],
+            "at_clock_and_census_DISAGREE": a["at_clock_and_census_DISAGREE"],
         })
 
     out = {
@@ -275,12 +414,17 @@ def main() -> int:
     }
     OUT.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    print(f"lost sessions (derived): {sessions}\n")
+    print(f"lost sessions (derived from the anchor): {sessions}\n")
     for v in verdicts:
-        print(f"  {v['session']}  {v['classification_as_landed']:<22} "
-              f"acceptance-2: {v['classification_at_acceptance_2']:<22} "
+        print(f"  {v['session']}  AT HIS CLOCK: {v['class_AT_HIS_ENTRY_CLOCK']:<24} "
+              f"candidates={v['candidates_at_his_clock']}  "
+              f"acceptance-2: {v['class_at_acceptance_bars_2']:<24} "
               f"implicated={v['acceptance_landing_implicated']}")
         print(f"      {v['why']}")
+        if v["at_clock_and_census_DISAGREE"]:
+            print(f"      !! AT-CLOCK AND SESSION CENSUS DISAGREE - census would have said "
+                  f"{v['CONTEXT_session_census_class']} "
+                  f"(dominant {v['CONTEXT_dominant_gate']}). THE DISAGREEMENT IS A FINDING.")
     print(f"\nwrote {OUT}")
     return 0
 
