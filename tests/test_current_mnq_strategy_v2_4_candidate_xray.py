@@ -7,8 +7,10 @@ boundary.
 """
 from __future__ import annotations
 
+import ast
 import inspect
 import re
+import textwrap
 from types import SimpleNamespace
 
 import pandas as pd
@@ -18,34 +20,72 @@ import pytest
 from research import current_mnq_strategy_v2_4_candidate_xray as xray
 from research import current_mnq_strategy_v2_4_kernel as kernel
 
-# Every gate the production kernel consults must also be consulted by the X-ray, or the
-# X-ray is diagnosing a different machine than the one that trades.
-SHARED_GATES = (
-    "reversal_story_v24",
-    "displacement_sequence_prebreak",
-    "repeat_test_momentum_prebreak",
-    "breakout_followthrough_after_first_print",
-    "force_snapshot",
-    "plan_allows_v24",
-    "decision_times",
-    "build_premarket_plan_v24",
-    "build_entry_locations_v24",
-    "zone_state_at_v24",
-    "active_fvg_interaction_locations",
-    # The RANKER. It was missing from this tuple, and that omission is exactly how the X-ray
-    # came to pick a different winner than the machine it claims to mirror.
-    "_rank_and_yield",
-)
+# Every gate the production kernel consults must also be consulted by the X-ray, or the X-ray
+# is diagnosing a different machine than the one that trades.
+#
+# THIS SET IS DERIVED FROM THE KERNEL, NOT TYPED BY HAND, and that is the whole point. It used
+# to be a hand-maintained tuple. `_rank_and_yield` was simply never added to it, so the test
+# passed for as long as the X-ray ranked by its own rule -- a pinned population that nothing
+# checks for completeness certifies only itself. Deriving it means a gate added to the kernel
+# tomorrow becomes a requirement today, with no one having to remember.
+
+
+def _calls_in(fn) -> set[str]:
+    """Every function/method name called in fn's body."""
+    out: set[str] = set()
+    for n in ast.walk(ast.parse(textwrap.dedent(inspect.getsource(fn)))):
+        if isinstance(n, ast.Call):
+            f = n.func
+            if isinstance(f, ast.Name):
+                out.add(f.id)
+            elif isinstance(f, ast.Attribute):
+                out.add(f.attr)
+    return out
+
+
+def kernel_gates() -> set[str]:
+    """Names the kernel's decision path calls that are callables in the kernel's namespace.
+
+    Restricting to the kernel's own namespace drops builtins and pandas methods and leaves the
+    real gates -- the things it imported or defined in order to decide.
+    """
+    calls = _calls_in(kernel.iter_actionable_candidates) | _calls_in(kernel._rank_and_yield)
+    return {n for n in calls if callable(vars(kernel).get(n))}
+
+
+# A gate may be absent from the X-ray ONLY by appearing here with a reason. Silence is not an
+# option: adding to this set is a deliberate, reviewable act, which is exactly what omission
+# from the old hand-typed tuple was not.
+NOT_MIRRORED_PENDING_RULING = {
+    "weak_first_break_print":
+        "BRK15 weak-break pending path. The X-ray produces no BRK15 candidate at all, so a "
+        "BRK15 (rank 2) never beats a REV (rank 1) in its ranking and never triggers the "
+        "direction-conflict veto. Whether BRK15 is a fifth route or a variant of "
+        "B_NORMAL_BREAKOUT is not decided by ALGO-009 section 3 -- raised in ALGO-013 "
+        "section 5 and NOT invented here.",
+    "breakout_failed": "same BRK15 pending path -- expires a PendingBreakout.",
+    "_intra15_confirmation": "same BRK15 pending path -- confirms the 15m continuation.",
+}
 
 
 def test_the_xray_consults_every_gate_the_kernel_consults():
-    ksrc = inspect.getsource(kernel.iter_actionable_candidates)
     xsrc = inspect.getsource(xray.xray_session)
-    missing = [g for g in SHARED_GATES if g in ksrc and g not in xsrc]
+    missing = sorted(g for g in kernel_gates()
+                     if g not in xsrc and g not in NOT_MIRRORED_PENDING_RULING)
     assert not missing, (
         f"the kernel consults {missing} and the X-ray does not - the diagnosis would be of a "
-        f"different machine than the one that trades"
+        f"different machine than the one that trades. Mirror it, or add it to "
+        f"NOT_MIRRORED_PENDING_RULING with a reason."
     )
+
+
+def test_every_excused_gate_is_still_a_real_kernel_gate():
+    """An excuse for a gate that no longer exists is dead paperwork hiding a live hole."""
+    stale = sorted(NOT_MIRRORED_PENDING_RULING.keys() - kernel_gates())
+    assert not stale, f"excused but the kernel no longer calls them: {stale}"
+
+
+SHARED_GATES = tuple(sorted(kernel_gates() - set(NOT_MIRRORED_PENDING_RULING)))
 
 
 def test_the_xray_imports_the_gates_rather_than_reimplementing_them():
