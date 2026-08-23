@@ -159,7 +159,7 @@ def test_safe_html_is_simple_functional_and_has_no_answer_key(tmp_path):
     }
     key = {"schema_version": 2, "pack_id": "PACK", "answers": {"A": {"bot_action": "ENTER_LONG"}}}
     lab.write_lab(tmp_path, review, key)
-    html = (tmp_path / "review.html").read_text()
+    html = (tmp_path / "review.html").read_text(encoding="utf-8")
     assert "chart15" in html and "chart5" in html and "chart1" in html
     assert "Draw Key Zone" in html and "Draw TP Zone" in html
     assert "Freeze & Export Labels" in html

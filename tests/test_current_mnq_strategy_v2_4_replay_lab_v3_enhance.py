@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 def _js() -> str:
-    return Path("research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js").read_text()
+    return Path("research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js").read_text(encoding="utf-8")
 
 
 def test_v3_unifies_structure_and_tp_on_one_main_chart_with_zoomable_context():

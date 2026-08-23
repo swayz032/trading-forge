@@ -14,7 +14,7 @@ GOLD = ROOT / "research" / "current_mnq_strategy_v2_4_user_fidelity_gold.json"
 
 
 def _j(path: Path) -> dict:
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def test_fast_robust_roadmap_is_locked_and_release_aligned():
@@ -72,7 +72,7 @@ def test_roadmap_clean_contract_matches_frozen_evidence_chronology():
 
 
 def test_onboarding_is_zero_chat_history_complete_on_critical_contracts():
-    text = ONBOARDING.read_text()
+    text = ONBOARDING.read_text(encoding="utf-8")
     required_literals = [
         "research/current_mnq_strategy_v2_4_roadmap.json",
         "research/current_mnq_strategy_v2_4_spec.json",
@@ -97,7 +97,7 @@ def test_onboarding_is_zero_chat_history_complete_on_critical_contracts():
 
 
 def test_onboarding_and_machine_contract_agree_on_prebreak_exclusivity_and_force():
-    text = ONBOARDING.read_text()
+    text = ONBOARDING.read_text(encoding="utf-8")
     entry = _j(ENTRY)
     gold = _j(GOLD)
     assert entry["pre_break_early_entry_exceptions"]["exclusive"] is True

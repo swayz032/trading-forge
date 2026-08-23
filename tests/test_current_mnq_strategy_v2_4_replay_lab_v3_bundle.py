@@ -137,7 +137,7 @@ def test_v3_bundle_inlines_required_browser_runtimes_unified_controls_and_storag
 
 
 def test_v3_generator_explicitly_excludes_all_prior_v2_review_sessions():
-    text = Path("research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py").read_text()
+    text = Path("research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py").read_text(encoding="utf-8")
     for session in (
         "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26",
         "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02",

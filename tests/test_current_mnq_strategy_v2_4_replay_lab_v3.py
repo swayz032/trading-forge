@@ -20,7 +20,7 @@ def _loc(i="Z", side="S", mid=100.0):
 
 
 def test_v3_contract_locks_desktop_reaction_cluster_and_noncryptographic_future():
-    contract = json.loads(Path("research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json").read_text())
+    contract = json.loads(Path("research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json").read_text(encoding="utf-8"))
     assert contract["status"] == "LOCKED_DESKTOP_INTERACTIVE_FIDELITY_LAB_V3"
     assert contract["chart_engine"]["name"] == "TradingView Lightweight Charts"
     assert contract["chart_engine"]["version"] == "5.2.0"
@@ -117,7 +117,7 @@ def test_v3_html_uses_lightweight_charts_real_replay_controls_and_reaction_clust
     }
     key = {"pack_id": "P", "answers": {}}
     lab.write_lab_v3(tmp_path, review, key)
-    html = (tmp_path / "review_v3.html").read_text()
+    html = (tmp_path / "review_v3.html").read_text(encoding="utf-8")
     assert lab.LWC_FILE in html
     assert "LC.createChart" in html and "LC.CandlestickSeries" in html
     assert "+1m" in html and "+5m" in html and "▶ Play" in html

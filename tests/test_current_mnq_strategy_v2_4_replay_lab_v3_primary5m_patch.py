@@ -32,9 +32,9 @@ document.title = 'MNQ Replay Lab — Unified Main + 1m Entry';
 
 
 def test_primary5m_contract_files_lock_5m_and_bilateral_context():
-    req = Path("research/current_mnq_strategy_v2_4_replay_calibration_requirements.json").read_text()
-    gold = Path("research/current_mnq_strategy_v2_4_user_momentum_visual_gold.json").read_text()
-    contract = Path("research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json").read_text()
+    req = Path("research/current_mnq_strategy_v2_4_replay_calibration_requirements.json").read_text(encoding="utf-8")
+    gold = Path("research/current_mnq_strategy_v2_4_user_momentum_visual_gold.json").read_text(encoding="utf-8")
+    contract = Path("research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json").read_text(encoding="utf-8")
     assert '"primary_trader_entry_timeframe": "5m"' in req
     assert '"5m_is_primary_trader_entry_timeframe"' in gold
     assert '"primary_trader_entry_chart": "5m"' in contract

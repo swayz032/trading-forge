@@ -21,7 +21,7 @@ def _bars(index):
 
 
 def test_calibration_requirements_lock_bilateral_context_momentum_and_fvg_midpoint():
-    req = json.loads(Path("research/current_mnq_strategy_v2_4_replay_calibration_requirements.json").read_text())
+    req = json.loads(Path("research/current_mnq_strategy_v2_4_replay_calibration_requirements.json").read_text(encoding="utf-8"))
     assert req["status"] == "LOCKED_TRADER_FIDELITY_CALIBRATION_REQUIREMENTS"
     assert req["chart_context"]["context_15m_lookback_calendar_days"] == 40
     assert req["chart_context"]["context_5m_lookback_calendar_days"] == 10

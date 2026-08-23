@@ -12,7 +12,7 @@ MANIFEST = (
 
 
 def load():
-    return json.loads(MANIFEST.read_text())
+    return json.loads(MANIFEST.read_text(encoding="utf-8"))
 
 
 def test_screenshot_archive_is_exact_closed_world_65_file_corpus():

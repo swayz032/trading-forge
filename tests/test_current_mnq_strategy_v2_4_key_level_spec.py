@@ -8,7 +8,7 @@ SPEC = Path(__file__).resolve().parents[1] / "research" / "current_mnq_strategy_
 
 
 def spec():
-    return json.loads(SPEC.read_text())
+    return json.loads(SPEC.read_text(encoding="utf-8"))
 
 
 def test_candlestick_video_pack_is_joint_candle_and_support_resistance_evidence():
