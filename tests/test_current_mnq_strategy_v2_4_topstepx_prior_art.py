@@ -1,9 +1,13 @@
-"""The TopstepX adapter exists, is wired, and its kill switch is untested. Pin all three.
+"""The TopstepX adapter exists, is wired, and its kill switch is now proven offline.
 
 ALGO-025 section 2 item 1 applied prior-art law: assess and reuse the existing ProjectX
 adapter rather than authoring a new one, and MEASURE its working state rather than assuming
-it. These tests hold the measurement, and the one that matters is that not a single
-safety-critical method is exercised.
+it. The measurement first found NOT ONE safety-critical method exercised. ALGO-026 section 1(c)
+made closing that the first task of the operator self-sufficiency pack, and it is closed --
+coverage went 2/13 to 10/13 and safety-critical unexercised is empty.
+
+These tests hold the measurement in its current state. The safety assertion was INVERTED
+deliberately when the hole closed, not deleted, so a regression turns it red again.
 """
 from __future__ import annotations
 
@@ -33,17 +37,26 @@ def test_it_is_already_wired_into_the_v24_family():
     assert "current_mnq_strategy_v2_4_shadow_runtime.py" in importers, importers
 
 
-def test_NOT_ONE_safety_critical_method_is_exercised():
-    """THE FINDING. flatten / cancel / position-read is what stops a runaway bot.
+def test_every_safety_critical_method_is_now_exercised():
+    """The finding is CLOSED, and the assertion was inverted deliberately rather than deleted.
 
-    ALGO-025 section 2 item 3 names a dead-man switch and EOD flatten discipline as PART OF
-    THE PRODUCT. If this test ever goes green by someone adding coverage, that is progress and
-    the assertion should be inverted deliberately - not deleted.
+    It first measured NOT ONE safety-critical method covered. ALGO-026 section 1(c) made that
+    the first task of the self-sufficiency pack, and the broker-safety-core test file closed
+    it. If coverage ever regresses this goes red again, which is the whole point of deriving
+    the finding from the measurement rather than freezing it in prose.
     """
     a = _a()
-    assert a["safety_critical_exercised"] == [], a["safety_critical_exercised"]
-    assert set(a["safety_critical_UNEXERCISED"]) >= {
+    assert a["safety_critical_UNEXERCISED"] == [], a["safety_critical_UNEXERCISED"]
+    assert a["kill_switch_proven_offline"] is True
+    assert set(a["safety_critical_exercised"]) >= {
         "flatten", "cancel_all", "cancel_order", "get_open_position"}, a
+
+
+def test_discovery_is_by_import_not_by_filename():
+    """It globbed test_*projectx*.py and could not see the file that closed the finding."""
+    files = _a()["test_files_discovered_by_import"]
+    assert "test_current_mnq_strategy_v2_4_broker_safety_core.py" in files, files
+    assert len(files) >= 3, files
 
 
 def test_the_coverage_detector_CAN_find_a_covered_method():

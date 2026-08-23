@@ -26,13 +26,27 @@ This is that measurement. It answers three questions and refuses to answer a fou
      `covered_methods` below names exactly which of the broker's public surface any test
      touches; the rest is unexercised.
 
-  3b. AND THE FINDING THAT MATTERS: THE KILL SWITCH IS UNTESTED. Only 2 of 13 public methods
-     are exercised by any test, and the unexercised list is almost exactly the safety core --
-     `flatten`, `flatten_contract`, `cancel_all`, `cancel_order`, `get_open_position`,
-     `get_open_positions`, `get_working_orders`. ALGO-025 section 2 item 3 names a dead-man
-     switch and EOD flatten discipline as PART OF THE PRODUCT, not a Trading Forge extra. The
-     adapter exists and is wired; the half of it that protects the account is unproven even at
-     the request-shaping level the other tests reach.
+  3b. THE FINDING THAT MATTERED, AND ITS CLOSURE. This module first measured 2 of 13 public
+     methods exercised, with the unexercised list almost exactly the safety core -- the KILL
+     SWITCH WAS UNTESTED. ALGO-026 section 1(c) turned that into the first task of the
+     self-sufficiency pack, and `test_..._v2_4_broker_safety_core.py` now covers all seven
+     offline. Coverage 2/13 -> 10/13; safety-critical unexercised: none.
+
+     `THE_FINDING` below is DERIVED from the measurement, not frozen prose, so it re-opens by
+     itself if coverage ever regresses. A guard that keeps asserting a hole after the hole is
+     closed is the mirror image of one that never fires.
+
+     WHAT THE NEW COVERAGE ESTABLISHES, and its honest limit: request shaping and LOOP
+     BEHAVIOUR. The most useful thing it measured is a defect, not a reassurance --
+     A FAILED CLOSE ABORTS `flatten()` AND LEAVES LATER POSITIONS OPEN. "Stop everything" can
+     leave the operator partly in the market, and the runbook must say so.
+
+  3c. A DISCOVERY BUG IN THIS MODULE, worth recording because it is the day's recurring shape.
+     Test discovery globbed `test_*projectx*.py` -- by FILENAME. It could not see the new
+     safety file, so it kept reporting the methods as unexercised after they were covered.
+     Coverage is a property of what a test IMPORTS and CALLS, never of what its file is
+     called. Discovery is now by import, and `test_files_discovered_by_import` names the
+     files counted so the denominator is inspectable.
 
   4. WHAT THIS MODULE WILL NOT DO.  It does not connect, and it does not estimate whether the
      adapter "works" against the live API. ALGO-025 section 2 item 2 is a HARD GATE: nothing
@@ -87,9 +101,37 @@ def _public_methods(path: Path) -> dict[str, list[str]]:
     return out
 
 
-def _names_used_in_tests() -> set[str]:
+def _test_files_covering(stems: set[str]) -> list[Path]:
+    """Every test file that IMPORTS the prior-art modules.
+
+    The first version globbed `test_*projectx*.py` - discovery by FILENAME. It could not see
+    `test_current_mnq_strategy_v2_4_broker_safety_core.py`, which imports the broker and
+    exercises the entire safety surface, so the assessment kept reporting those methods as
+    unexercised after they had been covered. Coverage is a property of what a test IMPORTS
+    and CALLS, never of what its file is called.
+    """
+    out = []
+    for p in sorted(TESTS.glob("test_*.py")):
+        try:
+            tree = ast.parse(io.open(p, encoding="utf-8").read())
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        mods: set[str] = set()
+        for n in ast.walk(tree):
+            if isinstance(n, ast.ImportFrom):
+                mods.add(n.module or "")
+                mods.update(a.name for a in n.names)
+            elif isinstance(n, ast.Import):
+                mods.update(a.name for a in n.names)
+        if any(any(st in m for m in mods) for st in stems):
+            out.append(p)
+    return out
+
+
+def _names_used_in_tests(stems: set[str] | None = None) -> set[str]:
+    stems = stems or {p.stem for p in PRIOR_ART.values()}
     used: set[str] = set()
-    for p in TESTS.glob("test_*projectx*.py"):
+    for p in _test_files_covering(stems):
         for n in ast.walk(ast.parse(io.open(p, encoding="utf-8").read())):
             if isinstance(n, ast.Call):
                 nm = getattr(n.func, "attr", None) or getattr(n.func, "id", None)
@@ -161,18 +203,25 @@ def assess() -> dict:
         "what_the_tests_establish": (
             "REQUEST SHAPING ONLY. They prove the adapter builds the calls it intends to "
             "build. They cannot and do not prove TopstepX accepts them."),
+        "test_files_discovered_by_import":
+            [p.name for p in _test_files_covering({p.stem for p in PRIOR_ART.values()})],
         "public_methods_total": n_methods,
         "public_methods_touched_by_a_test": n_covered,
         "safety_critical_methods": sorted(SAFETY_CRITICAL),
         "safety_critical_exercised": sorted(SAFETY_CRITICAL & all_covered),
         "safety_critical_UNEXERCISED": sorted(SAFETY_CRITICAL & all_defined - all_covered),
         "THE_FINDING": (
-            "the kill switch is UNTESTED. Every method that stops a runaway bot - flatten, "
+            "THE KILL SWITCH IS UNTESTED. Every method that stops a runaway bot - flatten, "
             "flatten_contract, cancel_all, cancel_order, and the position/order readers they "
             "depend on - has NO test exercising it. ALGO-025 section 2 item 3 names a "
-            "dead-man switch and EOD flatten discipline as PART OF THE PRODUCT. The adapter "
-            "exists and is wired; the half of it that protects the account is unproven even "
-            "at the request-shaping level the other tests reach."),
+            "dead-man switch and EOD flatten discipline as PART OF THE PRODUCT."
+            if (SAFETY_CRITICAL & all_defined) - all_covered else
+            "CLOSED 2026-08-23. Every safety-critical method is now exercised offline "
+            "(ALGO-026 section 1c). What that establishes is REQUEST SHAPING AND LOOP "
+            "BEHAVIOUR - including the measured fact that a failed close ABORTS `flatten()` "
+            "and leaves later positions OPEN. It does not establish that TopstepX accepts the "
+            "calls, and the section 2.2 hard gate is untouched."),
+        "kill_switch_proven_offline": not ((SAFETY_CRITICAL & all_defined) - all_covered),
         "surface": surface,
         "verdict": (
             "PRIOR ART EXISTS AND IS ALREADY WIRED - a new adapter should not be authored. "
