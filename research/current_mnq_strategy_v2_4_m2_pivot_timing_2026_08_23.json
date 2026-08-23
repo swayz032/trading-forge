@@ -1,0 +1,333 @@
+{
+  "artifact": "M2_PIVOT_TIMING_VS_MARKED",
+  "status": "DIAGNOSTIC. Measures pivot confirmation timing against his marked_time. Repairs nothing, selects no rule, tunes no parameter. ALGO-064 M2.",
+  "authority": "ALGO-064 M2",
+  "produced": "2026-08-23",
+  "question": "does the machine's nearest pivot CONFIRM before or after he marked the level - i.e. is his level the in-progress rejection?",
+  "why_it_matters": "M1 says the bar was not big enough (a magnitude question, answerable by a threshold). M2 asks whether the bar had not FINISHED (a semantic question, which no threshold fixes). They point at different repairs and must not be conflated.",
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "his_level": {
+        "lo": 24192,
+        "hi": 24192.25,
+        "role": "SUPPORT",
+        "marked_time": "2026-03-24T09:32:00-04:00",
+        "marked_main_timeframe": "15m",
+        "source_method": "VISIBLE_REJECTION"
+      },
+      "nearest_causal_pivot": {
+        "price": 24193.5,
+        "distance_points": 1.38,
+        "t": "2026-03-24 01:15:00-04:00",
+        "confirm": "2026-03-24 02:00:00-04:00",
+        "confirm_minus_marked_minutes": -452.0,
+        "wick": 0.038,
+        "disp": 1.798
+      },
+      "nearest_pivot_at_his_price_any_time": {
+        "price": 24189.25,
+        "distance_points": 2.88,
+        "t": "2026-03-24 15:45:00-04:00",
+        "confirm": "2026-03-24 16:30:00-04:00",
+        "confirm_minus_marked_minutes": 418.0,
+        "confirmed_before_he_marked": false,
+        "wick": 0.562,
+        "disp": 5.245
+      },
+      "bar_containing_his_mark": {
+        "timeframe": "15m",
+        "start": "2026-03-24 09:30:00-04:00",
+        "range": 176.75,
+        "body_frac": 0.463,
+        "upper_wick_frac": 0.348,
+        "lower_wick_frac": 0.19,
+        "close_loc": 0.19,
+        "bullish": false,
+        "ohlc": [
+          24255.5,
+          24317.0,
+          24140.25,
+          24173.75
+        ]
+      },
+      "completed_bar_before_his_mark": {
+        "timeframe": "15m",
+        "start": "2026-03-24 09:15:00-04:00",
+        "range": 47.25,
+        "body_frac": 0.011,
+        "upper_wick_frac": 0.333,
+        "lower_wick_frac": 0.656,
+        "close_loc": 0.667,
+        "bullish": true,
+        "ohlc": [
+          24254.75,
+          24271.0,
+          24223.75,
+          24255.25
+        ]
+      },
+      "M2_verdict": "PIVOT_CONFIRMS_AFTER_HE_MARKED (a TIMING question - the event had not finished)"
+    },
+    {
+      "session": "2026-03-30",
+      "is_control": false,
+      "his_level": {
+        "lo": 23609,
+        "hi": 23609.25,
+        "role": "RESISTANCE",
+        "marked_time": "2026-03-30T09:35:00-04:00",
+        "marked_main_timeframe": "5m",
+        "source_method": "VISIBLE_REJECTION"
+      },
+      "nearest_causal_pivot": {
+        "price": 23611.0,
+        "distance_points": 1.88,
+        "t": "2026-03-27 11:30:00-04:00",
+        "confirm": "2026-03-27 12:15:00-04:00",
+        "confirm_minus_marked_minutes": -4160.0,
+        "wick": 0.589,
+        "disp": 1.474
+      },
+      "nearest_pivot_at_his_price_any_time": {
+        "price": 23611.0,
+        "distance_points": 1.88,
+        "t": "2026-03-27 11:30:00-04:00",
+        "confirm": "2026-03-27 12:15:00-04:00",
+        "confirm_minus_marked_minutes": -4160.0,
+        "confirmed_before_he_marked": true,
+        "wick": 0.589,
+        "disp": 1.474
+      },
+      "bar_containing_his_mark": {
+        "timeframe": "5m",
+        "start": "2026-03-30 09:35:00-04:00",
+        "range": 57.25,
+        "body_frac": 0.686,
+        "upper_wick_frac": 0.07,
+        "lower_wick_frac": 0.245,
+        "close_loc": 0.245,
+        "bullish": false,
+        "ohlc": [
+          23463.75,
+          23467.75,
+          23410.5,
+          23424.5
+        ]
+      },
+      "completed_bar_before_his_mark": {
+        "timeframe": "5m",
+        "start": "2026-03-30 09:30:00-04:00",
+        "range": 81.0,
+        "body_frac": 0.556,
+        "upper_wick_frac": 0.358,
+        "lower_wick_frac": 0.086,
+        "close_loc": 0.086,
+        "bullish": false,
+        "ohlc": [
+          23509.0,
+          23538.0,
+          23457.0,
+          23464.0
+        ]
+      },
+      "M2_verdict": "PIVOT_ALREADY_CONFIRMED_WHEN_HE_MARKED (a MAGNITUDE question, M1)"
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "his_level": {
+        "lo": 23311.75,
+        "hi": 23312,
+        "role": "SUPPORT",
+        "marked_time": "2026-03-31T09:35:00-04:00",
+        "marked_main_timeframe": "5m",
+        "source_method": "VISIBLE_REJECTION"
+      },
+      "nearest_causal_pivot": {
+        "price": 23311.5,
+        "distance_points": 0.38,
+        "t": "2026-03-31 08:15:00-04:00",
+        "confirm": "2026-03-31 09:00:00-04:00",
+        "confirm_minus_marked_minutes": -35.0,
+        "wick": 0.208,
+        "disp": 2.053
+      },
+      "nearest_pivot_at_his_price_any_time": {
+        "price": 23311.5,
+        "distance_points": 0.38,
+        "t": "2026-03-31 08:15:00-04:00",
+        "confirm": "2026-03-31 09:00:00-04:00",
+        "confirm_minus_marked_minutes": -35.0,
+        "confirmed_before_he_marked": true,
+        "wick": 0.208,
+        "disp": 2.053
+      },
+      "bar_containing_his_mark": {
+        "timeframe": "5m",
+        "start": "2026-03-31 09:35:00-04:00",
+        "range": 57.75,
+        "body_frac": 0.234,
+        "upper_wick_frac": 0.043,
+        "lower_wick_frac": 0.723,
+        "close_loc": 0.723,
+        "bullish": false,
+        "ohlc": [
+          23458.0,
+          23460.5,
+          23402.75,
+          23444.5
+        ]
+      },
+      "completed_bar_before_his_mark": {
+        "timeframe": "5m",
+        "start": "2026-03-31 09:30:00-04:00",
+        "range": 80.75,
+        "body_frac": 0.938,
+        "upper_wick_frac": 0.019,
+        "lower_wick_frac": 0.043,
+        "close_loc": 0.981,
+        "bullish": true,
+        "ohlc": [
+          23382.25,
+          23459.5,
+          23378.75,
+          23458.0
+        ]
+      },
+      "M2_verdict": "PIVOT_ALREADY_CONFIRMED_WHEN_HE_MARKED (a MAGNITUDE question, M1)"
+    },
+    {
+      "session": "2026-04-06",
+      "is_control": false,
+      "his_level": {
+        "lo": 24421.5,
+        "hi": 24421.75,
+        "role": "RESISTANCE",
+        "marked_time": "2026-04-06T09:52:00-04:00",
+        "marked_main_timeframe": "15m",
+        "source_method": "VISIBLE_REJECTION"
+      },
+      "nearest_causal_pivot": {
+        "price": 24421.25,
+        "distance_points": 0.38,
+        "t": "2026-03-25 23:30:00-04:00",
+        "confirm": "2026-03-26 00:15:00-04:00",
+        "confirm_minus_marked_minutes": -16417.0,
+        "wick": 0.243,
+        "disp": 1.476
+      },
+      "nearest_pivot_at_his_price_any_time": {
+        "price": 24421.0,
+        "distance_points": 0.62,
+        "t": "2026-04-07 05:30:00-04:00",
+        "confirm": "2026-04-07 06:15:00-04:00",
+        "confirm_minus_marked_minutes": 1223.0,
+        "confirmed_before_he_marked": false,
+        "wick": 0.554,
+        "disp": 3.138
+      },
+      "bar_containing_his_mark": {
+        "timeframe": "15m",
+        "start": "2026-04-06 09:45:00-04:00",
+        "range": 91.5,
+        "body_frac": 0.97,
+        "upper_wick_frac": 0.0,
+        "lower_wick_frac": 0.03,
+        "close_loc": 1.0,
+        "bullish": true,
+        "ohlc": [
+          24329.25,
+          24418.0,
+          24326.5,
+          24418.0
+        ]
+      },
+      "completed_bar_before_his_mark": {
+        "timeframe": "15m",
+        "start": "2026-04-06 09:30:00-04:00",
+        "range": 128.5,
+        "body_frac": 0.496,
+        "upper_wick_frac": 0.35,
+        "lower_wick_frac": 0.154,
+        "close_loc": 0.65,
+        "bullish": true,
+        "ohlc": [
+          24265.0,
+          24373.75,
+          24245.25,
+          24328.75
+        ]
+      },
+      "M2_verdict": "PIVOT_CONFIRMS_AFTER_HE_MARKED (a TIMING question - the event had not finished)"
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "his_level": {
+        "lo": 25620.5,
+        "hi": 25620.75,
+        "role": "SUPPORT",
+        "marked_time": "2026-04-14T09:30:00-04:00",
+        "marked_main_timeframe": "5m",
+        "source_method": "VISIBLE_REJECTION"
+      },
+      "nearest_causal_pivot": {
+        "price": 25619.75,
+        "distance_points": 0.88,
+        "t": "2026-04-14 07:00:00-04:00",
+        "confirm": "2026-04-14 07:45:00-04:00",
+        "confirm_minus_marked_minutes": -105.0,
+        "wick": 0.223,
+        "disp": 2.1
+      },
+      "nearest_pivot_at_his_price_any_time": {
+        "price": 25619.75,
+        "distance_points": 0.88,
+        "t": "2026-04-14 07:00:00-04:00",
+        "confirm": "2026-04-14 07:45:00-04:00",
+        "confirm_minus_marked_minutes": -105.0,
+        "confirmed_before_he_marked": true,
+        "wick": 0.223,
+        "disp": 2.1
+      },
+      "bar_containing_his_mark": {
+        "timeframe": "5m",
+        "start": "2026-04-14 09:30:00-04:00",
+        "range": 71.25,
+        "body_frac": 0.87,
+        "upper_wick_frac": 0.123,
+        "lower_wick_frac": 0.007,
+        "close_loc": 0.877,
+        "bullish": true,
+        "ohlc": [
+          25656.25,
+          25727.0,
+          25655.75,
+          25718.25
+        ]
+      },
+      "completed_bar_before_his_mark": {
+        "timeframe": "5m",
+        "start": "2026-04-14 09:25:00-04:00",
+        "range": 33.0,
+        "body_frac": 0.432,
+        "upper_wick_frac": 0.076,
+        "lower_wick_frac": 0.492,
+        "close_loc": 0.492,
+        "bullish": false,
+        "ohlc": [
+          25670.0,
+          25672.5,
+          25639.5,
+          25655.75
+        ]
+      },
+      "M2_verdict": "PIVOT_ALREADY_CONFIRMED_WHEN_HE_MARKED (a MAGNITUDE question, M1)"
+    }
+  ],
+  "repairs": "NONE. This measures; the repair is ruled elsewhere.",
+  "runtime_seconds": 1.86,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
+}
