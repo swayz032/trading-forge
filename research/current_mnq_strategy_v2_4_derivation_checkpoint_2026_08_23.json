@@ -1,0 +1,1812 @@
+{
+  "artifact": "DERIVATION_CHECKPOINT",
+  "status": "DIAGNOSTIC CHECKPOINT. Steers no rule, selects no threshold, tunes no parameter. Its output may not be cited as evidence that any rule is correct. ALGO-029 section 2.",
+  "authority": "ALGO-029 section 2",
+  "produced": "2026-08-23",
+  "question": "of the Route A entries the CURRENT kernel grants, how many would the NEW derivation + story + state machine refuse, and at which step?",
+  "kernel_route_a_grants": 128,
+  "new_machine_grants": 68,
+  "new_machine_refuses": 60,
+  "refusal_rate": 46.9,
+  "state_census": {
+    "GRANTED": 68,
+    "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL": 55,
+    "WAIT_STORY_INCOMPLETE": 5
+  },
+  "refusal_census": {
+    "MERE_APPROACH_WITHOUT_TOUCH": 55,
+    "TOUCHED_BUT_NO_RECOGNISED_INTERACTION": 5
+  },
+  "interaction_census_primary_label": {
+    "sweep_and_reclaim_with_control": 25,
+    "prior_momentum_after_rejection": 18,
+    "failed_breakout_back_inside_with_control": 16,
+    "penetrate_and_reclaim_with_defense": 7,
+    "doji_pin_inside_or_shrinking_approach_story": 2
+  },
+  "interaction_census_ALL_MATCHES": {
+    "prior_momentum_after_rejection": 60,
+    "sweep_and_reclaim_with_control": 37,
+    "doji_pin_inside_or_shrinking_approach_story": 28,
+    "penetrate_and_reclaim_with_defense": 20,
+    "failed_breakout_back_inside_with_control": 16
+  },
+  "shadowed_by_label_order": [],
+  "drift_reading": "discriminates: keeps 68 of 128. Whether it keeps the RIGHT ones is a fidelity question the exam answers AFTER the grade passes - not here.",
+  "may_not_be_used_to": "select a threshold, tune a parameter, or argue any rule is correct. The teachings steer; this only says whether the build is drifting.",
+  "runtime_seconds": 340.46,
+  "rows": [
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T09:47:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T10:14:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T10:18:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T10:19:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T10:24:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:03:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:37:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:38:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:39:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:47:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T09:32:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T09:42:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCHED_BUT_NO_RECOGNISED_INTERACTION",
+      "explain": "WAIT — TOUCHED_BUT_NO_RECOGNISED_INTERACTION"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T10:17:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T10:23:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T10:37:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T10:38:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:02:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:04:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:17:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:37:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:38:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:39:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:52:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T09:37:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T09:38:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T09:52:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T10:22:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T10:23:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:07:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:08:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:17:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:18:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:38:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: penetrate_and_reclaim_with_defense, force proven"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:52:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-03-26",
+      "clock": "2026-03-26T09:52:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-03-26",
+      "clock": "2026-03-26T09:54:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-03-26",
+      "clock": "2026-03-26T10:54:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T09:37:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T09:39:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T09:42:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T09:47:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T11:17:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "doji_pin_inside_or_shrinking_approach_story",
+      "all_interactions": [
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: doji_pin_inside_or_shrinking_approach_story, force proven"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T11:57:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T09:47:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T09:48:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T09:49:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:08:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCHED_BUT_NO_RECOGNISED_INTERACTION",
+      "explain": "WAIT — TOUCHED_BUT_NO_RECOGNISED_INTERACTION"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:09:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCHED_BUT_NO_RECOGNISED_INTERACTION",
+      "explain": "WAIT — TOUCHED_BUT_NO_RECOGNISED_INTERACTION"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:32:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "doji_pin_inside_or_shrinking_approach_story",
+      "all_interactions": [
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: doji_pin_inside_or_shrinking_approach_story, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:38:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:39:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:02:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:03:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:07:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:13:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:14:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:44:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:48:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-01",
+      "clock": "2026-04-01T10:03:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-01",
+      "clock": "2026-04-01T11:08:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T09:37:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T09:39:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:27:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:37:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:38:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:47:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:49:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:02:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: penetrate_and_reclaim_with_defense, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:03:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: penetrate_and_reclaim_with_defense, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:08:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: penetrate_and_reclaim_with_defense, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:23:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:43:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:49:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:52:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "2026-04-06T10:04:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "2026-04-06T10:49:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "2026-04-06T11:02:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "2026-04-06T11:33:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:48:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:49:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:57:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:58:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:59:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:02:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: penetrate_and_reclaim_with_defense, force proven"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:04:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: penetrate_and_reclaim_with_defense, force proven"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:44:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:52:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:59:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T11:37:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:23:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:47:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:52:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:53:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:54:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:57:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:02:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:03:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:13:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:38:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:47:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:48:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T09:54:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T10:18:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T10:19:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:27:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:28:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:42:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:44:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:49:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:53:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:54:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:22:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: penetrate_and_reclaim_with_defense, force proven"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:52:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:53:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:54:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:59:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T11:38:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:07:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:08:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:09:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:22:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:23:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:48:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCHED_BUT_NO_RECOGNISED_INTERACTION",
+      "explain": "WAIT — TOUCHED_BUT_NO_RECOGNISED_INTERACTION"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:49:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCHED_BUT_NO_RECOGNISED_INTERACTION",
+      "explain": "WAIT — TOUCHED_BUT_NO_RECOGNISED_INTERACTION"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T11:12:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T11:14:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T11:47:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T11:49:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    }
+  ],
+  "FINDING_touch_and_reject_never_matches": {
+    "observed": "0 of 128 candidates match touch_and_reject, even with ALL matches reported so shadowing is excluded",
+    "why": "the trigger bar handed to the gate is the SYNTHETIC FORCE ROW - a partial composite of the completed 1m sub-bars inside the still-forming 5m parent - not a completed 5m candle. A forming partial rarely carries a large rejection wick because the wick forms as the candle completes. Single-bar rejection geometry ON THE TRIGGER is therefore looking for a shape that cannot be there yet.",
+    "corroboration": "prior_momentum_after_rejection matches 60 of 128 - the rejection is on an EARLIER COMPLETED bar, which is exactly what that branch tests for",
+    "what_it_does_NOT_mean": "it does NOT mean the trader never takes a touch-and-reject. It means this pipeline cannot SEE one on the trigger bar. Whether the frozen teachings intend the rejection to be read on the completed prior bar is a question for the textbook, not for this checkpoint - and this checkpoint may not answer it.",
+    "status": "OPEN - raised to the advisor, not resolved here"
+  }
+}

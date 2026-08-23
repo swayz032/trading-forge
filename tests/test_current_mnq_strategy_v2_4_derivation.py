@@ -265,3 +265,53 @@ def test_the_refused_fixtures_are_named_in_the_frozen_spec():
                    "counter_bias_reversal_without_completed_control_transfer",
                    "sweep_reclaim_without_hold_or_directional_defense"):
         assert needed in neg, f"{needed} is not in the frozen spec - do not invent refusals"
+
+
+# ═════════════════════════════════════════════════════════════════════════════════════════
+# Two defects the FIRST REAL CHECKPOINT exposed that no synthetic test had. Both are about
+# telling the truth rather than about being strict.
+# ═════════════════════════════════════════════════════════════════════════════════════════
+
+def test_a_touch_that_matches_no_interaction_does_not_claim_it_never_touched():
+    """The checkpoint reported 5 cases as MERE_APPROACH_WITHOUT_TOUCH in state
+    WAIT_STORY_INCOMPLETE. They HAD touched - the approach gate had already passed them - and
+    the refusal named the wrong reason. A refusal that misdirects is worse than a silent one.
+    """
+    # comes from above, touches, has control, but no named interaction shape
+    rows = [(112, 113, 111, 112), (111, 112, 103, 104), (101.9, 102.0, 101.0, 101.98)]
+    r = _classify(rows)
+    if r.kind is None:
+        assert r.reason != D.NO_TOUCH, (
+            "it touched - saying MERE_APPROACH_WITHOUT_TOUCH sends the reader to the wrong "
+            "place entirely")
+        assert r.reason in (D.NO_RECOGNISED_INTERACTION, D.NO_CONTROL)
+
+
+def test_the_wrong_reason_string_is_unreachable_after_a_real_approach():
+    """Whenever the approach IS real, no refusal may claim the approach was not."""
+    for rows in ([(112, 113, 111, 112), (111, 112, 103, 104), (101.9, 102.0, 101.0, 101.98)],
+                 CLEAN_LONG[:-1] + [(101.0, 102.3, 100.2, 101.05)]):
+        r = _classify(rows)
+        if r.approach.real:
+            assert r.reason != D.NO_TOUCH, (rows, r)
+
+
+def test_all_matching_interactions_are_reported_not_just_the_first():
+    """The checkpoint named `touch_and_reject` ZERO times in 68 grants.
+
+    Not because it never happens - because the sequence-level forms shadowed it in an elif
+    chain. A single-label classifier hides that; `all_kinds` makes it visible.
+    """
+    r = _classify(CLEAN_LONG)
+    assert r.all_kinds, "no interaction reported at all"
+    assert r.kind == r.all_kinds[0], "kind must be the first of all_kinds"
+    assert D.TOUCH_AND_REJECT in r.all_kinds, (
+        "the clean fixture IS a touch-and-reject; if it cannot be named the ordering is "
+        "shadowing it again")
+
+
+def test_all_kinds_is_a_subset_of_the_frozen_six():
+    for rows in (CLEAN_LONG, [(110, 111, 109, 110), (109, 110, 98, 98.5),
+                              (98.5, 101.5, 98.4, 101.2)]):
+        r = _classify(rows)
+        assert set(r.all_kinds) <= set(D.INTERACTIONS), r.all_kinds

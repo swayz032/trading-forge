@@ -67,6 +67,12 @@ INTERACTIONS = (
 NO_TOUCH = "MERE_APPROACH_WITHOUT_TOUCH"
 NO_CONTROL = "TOUCH_WITHOUT_DIRECTIONAL_CONTROL"
 NOT_ENOUGH_BARS = "INSUFFICIENT_PRIOR_BARS"
+#: Touched the level and had control, but the price action matches NONE of the six.
+#: Distinct from NO_TOUCH on purpose: the first checkpoint reported 5 cases as
+#: MERE_APPROACH_WITHOUT_TOUCH while they were in WAIT_STORY_INCOMPLETE - they HAD
+#: touched, and the refusal named the wrong reason. A refusal that misdirects the
+#: reader is worse than a silent one, and after the 27th the reader is the operator.
+NO_RECOGNISED_INTERACTION = "TOUCHED_BUT_NO_RECOGNISED_INTERACTION"
 
 
 @dataclass(frozen=True)
@@ -132,11 +138,19 @@ def derive_approach(bars: pd.DataFrame, lo: float, hi: float,
 
 @dataclass(frozen=True)
 class Interaction:
-    """Which of the spec's six happened, if any."""
+    """Which of the spec's six happened, if any.
+
+    `kind` is the primary label; `all_kinds` is EVERY form the price action matches. The first
+    checkpoint over real data named `touch_and_reject` ZERO times out of 68 grants - not
+    because it never happens, but because the branch order let the sequence-level forms shadow
+    it. A single-label classifier hides that; reporting all of them makes the census truthful
+    and the shadowing visible.
+    """
     kind: str | None
     approach: Approach
     control: bool
     reason: str | None
+    all_kinds: tuple = ()
 
     @property
     def valid(self) -> bool:
@@ -190,35 +204,41 @@ def classify_interaction(bars: pd.DataFrame, direction: str, lo: float, hi: floa
         pierced = (float(row.low) < lo) if direction == "L" else (float(row.high) > hi)
         return bool(pierced and not beyond(row))
 
-    kind = None
+    # EVERY form the action matches, not the first one an elif-chain reaches. Order here is
+    # reporting priority only - `all_kinds` carries the rest so nothing is silently shadowed.
+    matched: list[str] = []
+    # 1. this bar touched the level and was pushed away from it
+    if _touches(last, lo, hi, pad) and _rejection_wick(last, direction, reject_wick):
+        matched.append(TOUCH_AND_REJECT)
     # 4. a COMPLETED close beyond, then a close back inside -> failed breakout
     if any(beyond(r) for r in rows[:-1]) and (back_inside(last) or origin_side(last)):
-        kind = FAILED_BREAKOUT_BACK_INSIDE
+        matched.append(FAILED_BREAKOUT_BACK_INSIDE)
     # 3. wick beyond, close held -> sweep and reclaim
-    elif any(swept(r) for r in rows[-3:]):
-        kind = SWEEP_AND_RECLAIM
+    if any(swept(r) for r in rows[-3:]):
+        matched.append(SWEEP_AND_RECLAIM)
     # 2. closed INTO the band, then reclaimed the origin side
-    elif any(back_inside(r) for r in rows[:-1]) and origin_side(last):
-        kind = PENETRATE_AND_RECLAIM
-    # 1. this bar touched the level and was pushed away from it
-    elif _touches(last, lo, hi, pad) and _rejection_wick(last, direction, reject_wick):
-        kind = TOUCH_AND_REJECT
-    # 6. an EARLIER bar rejected AT THE LEVEL, then momentum followed.
-    #    The wick must belong to a bar that actually touched the zone: a wick ten points away
-    #    is not a rejection OF THE LEVEL, and scanning every bar made a distant pin outrank
-    #    the real touch on this bar. Caught by a fixture that expected touch_and_reject.
-    elif any(_touches(r, lo, hi, pad) and _rejection_wick(r, direction, reject_wick)
-             for r in rows[:-1]) and control:
-        kind = PRIOR_MOMENTUM_AFTER_REJECTION
+    if any(back_inside(r) for r in rows[:-1]) and origin_side(last):
+        matched.append(PENETRATE_AND_RECLAIM)
+    # 6. an EARLIER bar rejected AT THE LEVEL, then momentum followed. The wick must belong to
+    #    a bar that actually TOUCHED the zone - a wick ten points away is not a rejection OF
+    #    THE LEVEL, and scanning every bar let a distant pin outrank the real touch.
+    if any(_touches(r, lo, hi, pad) and _rejection_wick(r, direction, reject_wick)
+           for r in rows[:-1]) and control:
+        matched.append(PRIOR_MOMENTUM_AFTER_REJECTION)
     # 5. the approach itself is the story: doji / pin / inside / shrinking
-    elif _approach_story(rows):
-        kind = APPROACH_STORY
+    if _approach_story(rows):
+        matched.append(APPROACH_STORY)
+
+    kinds = tuple(matched)
+    kind = matched[0] if matched else None
 
     if kind is None:
-        return Interaction(None, ap, control, NO_CONTROL if not control else NO_TOUCH)
+        # It TOUCHED - the approach gate above already proved that. Say so accurately.
+        return Interaction(None, ap, control,
+                           NO_CONTROL if not control else NO_RECOGNISED_INTERACTION, kinds)
     if not control:
-        return Interaction(kind, ap, False, NO_CONTROL)
-    return Interaction(kind, ap, True, None)
+        return Interaction(kind, ap, False, NO_CONTROL, kinds)
+    return Interaction(kind, ap, True, None, kinds)
 
 
 def _approach_story(rows: list) -> bool:
@@ -236,7 +256,7 @@ def _approach_story(rows: list) -> bool:
 
 __all__ = [
     "APPROACH_STORY", "Approach", "DIAGNOSTIC_ONLY", "FAILED_BREAKOUT_BACK_INSIDE",
-    "INTERACTIONS", "Interaction", "NOT_ENOUGH_BARS", "NO_CONTROL", "NO_TOUCH",
+    "INTERACTIONS", "Interaction", "NOT_ENOUGH_BARS", "NO_CONTROL", "NO_RECOGNISED_INTERACTION", "NO_TOUCH",
     "PENETRATE_AND_RECLAIM", "PRIOR_MOMENTUM_AFTER_REJECTION", "SWEEP_AND_RECLAIM",
     "TOUCH_AND_REJECT", "classify_interaction", "derive_approach",
 ]
@@ -269,13 +289,20 @@ NO_DEFENSE = "SWEEP_RECLAIM_WITHOUT_HOLD_OR_DIRECTIONAL_DEFENSE"
 
 @dataclass(frozen=True)
 class DerivedStory:
-    """APPROACH / FIGHT / DECISION with every field a function of price."""
+    """APPROACH / FIGHT / DECISION with every field a function of price.
+
+    `all_kinds` carries EVERY interaction form the action matches, not just the reported
+    label. It was added to `Interaction` first and not threaded through here, so the real
+    checkpoint reported an empty all-matches census while the unit test - which reads
+    `Interaction` directly - passed. The empty census is what caught it.
+    """
     approach: bool
     fight: bool
     decision: bool
     interaction: str | None
     two_sided_conflict: bool
     refusal: str | None
+    all_kinds: tuple = ()
 
     @property
     def complete(self) -> bool:
@@ -314,7 +341,7 @@ def derive_story(bars: pd.DataFrame, direction: str, lo: float, hi: float,
 
     if not approach:
         return DerivedStory(False, False, False, it.kind, False,
-                            it.reason or NO_TOUCH)
+                            it.reason or NO_TOUCH, it.all_kinds)
 
     q = bars.tail(lookback)
     rows = [q.iloc[i] for i in range(len(q))]
@@ -322,35 +349,39 @@ def derive_story(bars: pd.DataFrame, direction: str, lo: float, hi: float,
 
     conflict = two_sided_wick_conflict(last)
     if conflict:
-        return DerivedStory(True, False, False, it.kind, True, TWO_SIDED_CONFLICT)
+        return DerivedStory(True, False, False, it.kind, True, TWO_SIDED_CONFLICT,
+                            it.all_kinds)
 
     # `candlestick_pattern_away_from_authorized_SR_or_FVG` and
     # `mere_approach_that_never_reaches_zone...` are both handled by the approach gate above.
     if it.kind is None:
-        return DerivedStory(True, False, False, None, False, it.reason or NO_TOUCH)
+        return DerivedStory(True, False, False, None, False,
+                            it.reason or NO_RECOGNISED_INTERACTION, it.all_kinds)
 
     # FIGHT = a COMPLETED control transfer at the level. The interaction says a fight
     # happened; control says which side won it.
     if not it.control:
         # An indecision shape at the zone with no takeover is refused by name.
-        return DerivedStory(True, False, False, it.kind, False, NO_TAKEOVER)
+        return DerivedStory(True, False, False, it.kind, False, NO_TAKEOVER, it.all_kinds)
 
     if it.kind in (SWEEP_AND_RECLAIM, PENETRATE_AND_RECLAIM) and \
             not _defended(rows, direction, lo, hi):
-        return DerivedStory(True, False, False, it.kind, False, NO_DEFENSE)
+        return DerivedStory(True, False, False, it.kind, False, NO_DEFENSE, it.all_kinds)
 
     fight = True
 
     # DECISION = the trigger bar carries the direction FORWARD, not merely sideways.
     prior = rows[-2] if len(rows) >= 2 else None
     if prior is None:
-        return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER)
+        return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER,
+                            it.all_kinds)
     follow = (float(last.close) > float(prior.close)) if direction == "L" \
         else (float(last.close) < float(prior.close))
     if not follow:
-        return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER)
+        return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER,
+                            it.all_kinds)
 
-    return DerivedStory(True, True, True, it.kind, False, None)
+    return DerivedStory(True, True, True, it.kind, False, None, it.all_kinds)
 
 
 __all__ += [
