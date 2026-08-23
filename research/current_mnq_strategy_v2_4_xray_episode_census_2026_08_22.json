@@ -2542,5 +2542,25 @@
     "consequence_for_missed_trader_entry": "The scorecard's missed_trader_entry = 0 is correct BY CLASSIFICATION - the bot did enter, so the branch does not fire - but it understates reality. On 2026-04-09 the trader's direction was genuinely unavailable to the kernel. A future scorecard should record 'trader direction not permitted in-window' as its own class.",
     "what_the_state_machine_must_explain": "Both halves. Why Route A granted a rejection story to a SHORT at a resistance swing while simultaneously refusing 122 long candidates at REJECTION_STORY_INCOMPLETE in the same window. A repair that only kills the short leaves the trader's trade still unreachable.",
     "runner": "research/diagnose_april9_direction_conflict.py"
+  },
+  "rejection_gate_source_defect": {
+    "authority": "ALGO-011 §5B — 'rejection authorization is too self-attested'. Measured to the line.",
+    "status": "DIAGNOSED_NOT_PATCHED",
+    "the_completeness_gate": "core.Story.complete = approach AND fight AND decision",
+    "THE_DEFECT": "`approach` is returned as the LITERAL True by reversal_story_v24 (entries.py:168), unconditionally, on every call. It is one of the three conjuncts of `complete`. ONE THIRD OF THE REJECTION-STORY GATE IS VACUOUS: `complete` reduces to `fight AND decision`. The trader's 'price actually came to the level' is never proven - it is asserted.",
+    "takeover_is_worse": "`takeover` is ALSO returned as literal True (entries.py:174) and is not referenced by `complete` at all. It is asserted AND unused - misleading metadata that a reader would take for a proven control-transfer state.",
+    "what_actually_remains": {
+      "fight": "reclaimed AND (wick_rejection OR pattern_story OR shrink OR first_momentum)",
+      "decision": "follow - for a short: row.close <= event.close AND close_loc <= 0.40",
+      "note": "`fight` is satisfiable by `reclaimed AND first_momentum` alone. `reclaimed` for a long is merely event.close >= loc.lo. So: price reaches the zone, closes at or above its lower edge, and a momentum bar prints - and the 'rejection story' is complete. No rejection is required. This is exactly the raw-touch-promoted-to-rejection path ALGO-011 §5B describes."
+    },
+    "_valid_rejection_side": "entries.py:88-94. For a LONG it returns True when the row reaches the location AND close >= loc.lo - pad. 'Reached it and did not close below the bottom' is not the trader's reject/push-away/control-transfer semantics.",
+    "why_this_matters_more_than_the_score": "This is source-level and score-independent. It holds whether the baseline is 5/14, 6/14 or 6/8, and it is the kind of justification ALGO-011 §5 said the breakthrough should rest on instead of the refuted failure shape. It also explains the episode census: Route A supplies 152 of 177 permission episodes (86%).",
+    "what_it_does_NOT_explain": "It does not by itself explain April 9's ZERO in-window long permissions. A gate this permissive granting nothing to the trader's direction while granting a short is the asymmetry the state machine must account for. Recorded as open.",
+    "first_mutation_targets_when_authorized": [
+      "derive `approach` from measured evidence instead of returning True",
+      "derive `takeover` from control-transfer evidence or delete it",
+      "require a genuine level response, not close-on-an-acceptable-side, in _valid_rejection_side"
+    ]
   }
 }
