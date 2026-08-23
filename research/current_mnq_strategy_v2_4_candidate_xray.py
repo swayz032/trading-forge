@@ -40,6 +40,7 @@ from research.current_mnq_strategy_v2_4_kernel import (
     _as_location,
     _bucket_starts,
     _latest_completed_atr,
+    _rank_and_yield,
 )
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
 from research.current_mnq_strategy_v2_4_premarket import build_premarket_plan_v24, plan_allows_v24
@@ -61,11 +62,21 @@ GATE_STORY_INCOMPLETE = "REJECTION_STORY_INCOMPLETE"
 GATE_PLAN_VETO = "STRUCTURAL_PRIOR_VETO"
 GATE_NO_ROUTE = "NO_LEGAL_ROUTE_MATCHED"
 GATE_NOT_RANKED = "LOST_RANKING_TO_ANOTHER_CANDIDATE"
+GATE_DIRECTION_CONFLICT = "BOTH_DIRECTIONS_PERMITTED_KERNEL_YIELDS_NOTHING"
+GATE_PAST_LAST_ENTRY = "DECISION_CLOCK_PAST_LAST_ENTRY"
 
 
 def xray_session(env: dict, dte: date, p: prod.Params,
-                 as_of: pd.Timestamp | None = None) -> dict:
-    """Return every candidate considered in one session, with its killing gate."""
+                 as_of: pd.Timestamp | None = None,
+                 on_rejection_candidate=None) -> dict:
+    """Return every candidate considered in one session, with its killing gate.
+
+    `on_rejection_candidate(record, **inputs)` is an OPTIONAL diagnostic hook fired for each
+    Route A candidate that reaches ranking, carrying the live objects the story was evaluated
+    on. It exists so a downstream diagnostic never has to RE-WALK this loop: a duplicated loop
+    is precisely how the ranking rule came to diverge from the kernel's. The hook cannot
+    change any outcome, and when it is None this function behaves exactly as before.
+    """
     full5, r5, h15, one = env["full5"], env["r5"], env["h15"], env["one"]
     records: list[dict] = []
     meta = {"session": str(dte), "aborted": None}
@@ -89,6 +100,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
 
     def rec(**kw):
         records.append(kw)
+        return kw
 
     for ts in bucket_starts:
         if ts.time() < core.TRADE_START:
@@ -113,7 +125,9 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                 known.add(fvg_loc.id)
 
         for decision_time in decision_times(one, ts, 5, as_of):
-            survivors: list[str] = []
+            # (tag, the core.Candidate the kernel would build, this record) — the ranker
+            # is the KERNEL'S OWN `_rank_and_yield`, never a local re-implementation.
+            survivors: list[tuple] = []
 
             # ---- ROUTE A: normal rejection -------------------------------------------
             for direction, side in (("L", "S"), ("S", "R")):
@@ -151,12 +165,17 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                             story_flags=_story_flags(story))
                         continue
                     tag = f"{ROUTE_A_REJECTION}|{direction}|{loc.id}"
-                    survivors.append(tag)
-                    rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
-                        route=ROUTE_A_REJECTION, direction=direction,
-                        location_id=str(loc.id), location_source=str(loc.source),
-                        outcome="SURVIVED_TO_RANKING", killed_at=None,
-                        story_flags=_story_flags(story), tag=tag)
+                    r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
+                             route=ROUTE_A_REJECTION, direction=direction,
+                             location_id=str(loc.id), location_source=str(loc.source),
+                             outcome="SURVIVED_TO_RANKING", killed_at=None,
+                             story_flags=_story_flags(story), tag=tag)
+                    survivors.append((tag, core.Candidate(
+                        direction, "REV", loc, story, ts, decision_time,
+                        "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"), r_))
+                    if on_rejection_candidate is not None:
+                        on_rejection_candidate(r_, full5=full5, ts=ts, row=partial,
+                                               direction=direction, loc=loc, p=p, pad=pad)
 
             # ---- ROUTES B / C / D: breakout family ------------------------------------
             for direction, side in (("L", "R"), ("S", "S")):
@@ -207,20 +226,47 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                             outcome="REJECTED", killed_at=GATE_PLAN_VETO)
                         continue
                     tag = f"{route}|{direction}|{loc.id}"
-                    survivors.append(tag)
-                    rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
-                        route=route, direction=direction,
-                        location_id=str(loc.id), location_source=str(loc.source),
-                        outcome="SURVIVED_TO_RANKING", killed_at=None,
-                        displacement=bool(disp), retest=bool(retest), post_break=bool(post),
-                        tag=tag)
+                    r_ = rec(bucket=ts.isoformat(), clock=decision_time.isoformat(),
+                             route=route, direction=direction,
+                             location_id=str(loc.id), location_source=str(loc.source),
+                             outcome="SURVIVED_TO_RANKING", killed_at=None,
+                             displacement=bool(disp), retest=bool(retest),
+                             post_break=bool(post), tag=tag)
+                    survivors.append((tag, core.Candidate(
+                        direction, "BRK5", loc, None, ts, decision_time, route), r_))
 
-            # Ranking is where survivors compete. Losers are recorded, not discarded.
-            if len(survivors) > 1:
-                for r in records:
-                    if r.get("tag") in survivors[1:] and r["outcome"] == "SURVIVED_TO_RANKING":
-                        r["outcome"] = "REJECTED"
-                        r["killed_at"] = GATE_NOT_RANKED
+            # ---- RANKING: the kernel's own `_rank_and_yield`, not a local rule ---------
+            # PREVIOUSLY THIS WAS WRONG IN FOUR WAYS and a positive control caught it:
+            #   (a) it kept `survivors[0]` — LIST ORDER — while the kernel takes the MAX by
+            #       (BRK5=3 > BRK15=2 > REV=1, location.quality, location.confluence). Route A
+            #       is appended first and is REV, the LOWEST rank, so whenever a breakout
+            #       coexisted the X-ray recorded the OPPOSITE winner from the one that trades.
+            #   (b) it had no direction-conflict veto. The kernel yields NOTHING when both
+            #       directions have candidates at one clock; the X-ray granted one anyway.
+            #   (c) it had no decision-clock LAST_ENTRY cutoff. `_bucket_starts` filters BUCKET
+            #       starts, but a 1-minute decision clock inside a legal bucket can still fall
+            #       past LAST_ENTRY, and the kernel refuses those.
+            #   (d) it demoted by scanning ALL accumulated `records` for a matching tag, so a
+            #       tag that WON at an earlier clock was retroactively demoted when the same
+            #       tag lost at a later one.
+            # Calling the kernel's function removes all four and makes a future divergence a
+            # test failure rather than a silent one.
+            if survivors:
+                chosen = _rank_and_yield([c for _, c, _ in survivors], decision_time,
+                                         plan, as_of)
+                if chosen is None:
+                    gate = (GATE_DIRECTION_CONFLICT
+                            if len({c.direction for _, c, _ in survivors}) != 1
+                            else GATE_PAST_LAST_ENTRY)
+                    for _, _, r_ in survivors:
+                        r_["outcome"] = "REJECTED"
+                        r_["killed_at"] = gate
+                else:
+                    won = chosen[0]
+                    for _, cand, r_ in survivors:
+                        if cand is not won:
+                            r_["outcome"] = "REJECTED"
+                            r_["killed_at"] = GATE_NOT_RANKED
 
     return {"meta": meta, "records": records}
 
