@@ -125,3 +125,25 @@ def test_the_video_observations_declare_their_coverage():
     assert "UNENUMERATED" in v["coverage"]
     assert len(v["replayed_dates_read_from_the_chart"]) >= 4
     assert set(v["non_trading_content"]) >= {"10800", "12600"}
+
+
+def test_the_static_screen_measurement_is_recorded_with_its_caveat():
+    """71% of the long video is a frozen screen. The bound is on PERSISTENT change only."""
+    m = E.VIDEO_OBSERVATIONS["static_screen_measurement"]
+    assert m["static_intervals"] == 27 and m["intervals"] == 38
+    assert m["longest_static_run_minutes"] == 96
+    assert "PERSISTENT change, not all activity" in m["SAMPLING_CAVEAT"]
+    assert "transient" in m["SAMPLING_CAVEAT"]
+
+
+def test_the_clock_dead_end_is_on_the_record():
+    """A failed anchor recorded is worth more than a failed anchor quietly retried."""
+    m = E.VIDEO_OBSERVATIONS["static_screen_measurement"]
+    assert "cannot be used to map video time to replay time" in m["why_the_clock_never_moved"]
+
+
+def test_the_static_share_is_derived_not_asserted():
+    m = E.VIDEO_OBSERVATIONS["static_screen_measurement"]
+    pct = round(100 * m["static_intervals"] / m["intervals"])
+    assert m["static_share"] == f"{pct}%", (
+        f"the recorded share {m['static_share']} does not match the counts {pct}%")

@@ -20,6 +20,19 @@ The long video's chart reads `Fri 11 Apr '25` at t=1800, 3600 and 5400s, with vi
 18,648.25 and 18,669.50 -- all inside that band. Decision evidence and outcome evidence for the
 same day, which no other pair in this corpus offers.
 
+HOW MUCH OF THE VIDEO IS EVEN A CHART. [MEASURED 2026-08-23, objective, no OCR]
+39 frames at 360s spacing, chart area, greyscale, mean absolute pixel delta between
+consecutive samples. **27 of 38 intervals (71%) are STATIC** - delta below 1.0. The longest run
+is t=420..6180, **96 MINUTES PIXEL-IDENTICAL**; a second runs t=6540..9780, 54 minutes. Activity
+is concentrated in roughly the final hour. So the "3h53m48s" file is about 71% frozen screen and
+any claim resting on nearly four hours of trading is wrong by roughly a factor of four.
+
+That also explains a dead end worth recording: the bottom-right clock reads exactly
+`01:15:00 PM UTC-4` at ALL TEN offsets sampled between t=300 and t=5700 - not a stuck widget,
+the whole screen is unchanged. It cannot map video time to replay time, so locating his four
+2025-04-11 entries needs a different anchor. The obvious one, the realized-PnL field, is an
+OUTCOME field and is barred by the ALGO-020 section 3 hard rail.
+
 WHAT THE VIDEO ALSO CONTAINS, extending the custody receipt rather than replacing it:
     t=7200 and t=9200   IDENTICAL OHLC 30 minutes apart -- the chart is frozen, not trading
     t=10800             a CHATGPT CONVERSATION fills the screen. Not a chart at all.
@@ -85,6 +98,36 @@ VIDEO_OBSERVATIONS = {
     },
     "coverage": "9 sampled offsets of a 14027s file. UNENUMERATED; this bounds the DATES, "
                 "not the content.",
+    # ---- BOUNDED ENUMERATION AT THE JOIN (ALGO-020 section 3 item 2) --------------------
+    # Not a full 3h53m census, which the ruling explicitly did not ask for. An OBJECTIVE
+    # bound on how much of the file is a frozen screen: 39 frames at 360s spacing, cropped
+    # to the chart area, greyscaled, mean absolute pixel delta between consecutive samples.
+    # No OCR and no interpretation.
+    "static_screen_measurement": {
+        "method": "39 frames at 360s spacing, chart area cropped, greyscale, mean abs delta "
+                  "between consecutive samples; STATIC means delta < 1.0",
+        "intervals": 38,
+        "static_intervals": 27,
+        "static_share": "71%",
+        "longest_static_run_seconds": [420, 6180],
+        "longest_static_run_minutes": 96,
+        "second_static_run_seconds": [6540, 9780],
+        "second_static_run_minutes": 54,
+        "activity_concentrated_in": "roughly the final hour, t=9780 onward",
+        "finding": (
+            "the 3h53m48s file is about 71% FROZEN SCREEN. Two runs of 96 and 54 minutes are "
+            "pixel-identical end to end. Any claim resting on '3h53m of trading' is wrong by "
+            "roughly a factor of four."),
+        "why_the_clock_never_moved": (
+            "the bottom-right field reads exactly `01:15:00 PM UTC-4` at all ten offsets "
+            "sampled between t=300 and t=5700. That is not a stuck widget - the whole screen "
+            "is unchanged across that span. It also means the field cannot be used to map "
+            "video time to replay time, so locating his entries needs a different anchor."),
+        "SAMPLING_CAVEAT": (
+            "this bounds PERSISTENT change, not all activity. A transient that appeared and "
+            "reverted between two samples would be invisible. What is established is that 27 "
+            "of 38 six-minute intervals BEGIN AND END on an identical screen."),
+    },
 }
 
 WINDOW_START_MIN, WINDOW_END_MIN = 9 * 60 + 30, 12 * 60
