@@ -19,10 +19,21 @@ It measures the SIZE of each change.  Which of them the trader actually means is
 question that only the source evidence can answer.  ALGO-011 §10 authorizes A/B of the semantic
 model against frozen evidence; this is that A/B and nothing more.
 
-POSITIVE CONTROL.  The runner re-walks Route A itself rather than reading the X-ray's records,
-because the records do not carry the synthetic force row the story was evaluated on.  A
-duplicated loop can silently diverge, so the runner ASSERTS its Route A survivor tag multiset
-equals `xray_session`'s.  Divergence is a broken instrument, not a finding.
+POSITIVE CONTROL.  The runner does NOT re-walk the kernel loop -- it hooks
+`xray_session(on_rejection_candidate=...)` and evaluates only what the kernel's own
+`_rank_and_yield` left standing as a grant.  An earlier version of the runner did re-walk it,
+and its control caught the X-RAY'S own ranking bug within one session.
+
+A LIMITATION I HAVE NOT FIXED, STATED PLAINLY BECAUSE IT IS THE SAME DEFECT CLASS I SPENT TODAY
+REPAIRING.  `ablation_verdicts` DUPLICATES the event-selection scan out of `reversal_story_v24`
+-- same window, same predicate, same backward range -- so that a verdict is about the bar the
+production gate actually used.  A duplicated rule can silently diverge.  The proper fix is at
+source: extract the scan into one function both call, or have the story return the event it
+chose.  `entries.py` is a STRATEGY-SEMANTIC file and ALGO-011 section 9 gates semantic edits on
+an independent grade that has not landed, so that fix is not available yet.  What is in place
+instead is a TEXTUAL CORRESPONDENCE PIN in the tests: edit the scan in `entries.py` and the pin
+goes red, rather than these numbers going quietly wrong.  It is a stopgap, not a solution, and
+it should be replaced by the shared function the moment semantics unlock.
 """
 from __future__ import annotations
 
