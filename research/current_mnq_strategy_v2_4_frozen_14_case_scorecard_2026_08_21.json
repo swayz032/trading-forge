@@ -28,10 +28,10 @@
   "case_count": 14,
   "pnl_or_exit_used": false,
   "runtime": {
-    "total_seconds": 559.11,
+    "total_seconds": 555.76,
     "data_prepare_seconds": 1.67,
-    "regrade_seconds": 557.26,
-    "per_case_mean_seconds": 39.804
+    "regrade_seconds": 553.91,
+    "per_case_mean_seconds": 39.565
   },
   "aggregates": {
     "join": "WINDOW",
@@ -111,7 +111,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "FORCE_REAL",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {
@@ -160,7 +160,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "FORCE_REAL",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {
@@ -209,7 +209,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "NOT_APPLICABLE",
       "trader_final_timeline_force": "NOT_APPLICABLE",
       "first_tp": {
@@ -258,7 +258,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "NOT_APPLICABLE",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {
@@ -307,7 +307,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "FORCE_REAL",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {
@@ -356,7 +356,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "FORCE_REAL",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {
@@ -405,7 +405,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "NOT_APPLICABLE",
       "trader_final_timeline_force": "TUG_OF_WAR",
       "first_tp": {
@@ -454,7 +454,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "FORCE_REAL",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {
@@ -503,7 +503,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "FORCE_REAL",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {
@@ -552,7 +552,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "NOT_APPLICABLE",
       "trader_final_timeline_force": "TUG_OF_WAR",
       "first_tp": {
@@ -601,7 +601,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "NOT_APPLICABLE",
       "trader_final_timeline_force": "NOT_APPLICABLE",
       "first_tp": {
@@ -650,7 +650,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "FORCE_REAL",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {
@@ -699,7 +699,7 @@
       "entry_family_receipt": null,
       "story_receipt": null,
       "force_receipt": null,
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "NOT_APPLICABLE",
       "trader_final_timeline_force": "TUG_OF_WAR",
       "first_tp": {
@@ -767,7 +767,7 @@
         "reason": "SUSTAINED_DIRECTIONAL_FORCE",
         "source": "research.current_mnq_strategy_v2_4_force.force_snapshot, recomputed at the candidate's own (signal_time, confirmed_time, direction) - the same pure call the kernel gated on."
       },
-      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is now the actual force_snapshot recomputed at the candidate's own decision clock with the same pure function the kernel gated on, and the regrade raises FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed.",
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "FORCE_REAL",
       "trader_final_timeline_force": "FORCE_REAL",
       "first_tp": {

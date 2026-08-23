@@ -1,36 +1,31 @@
 #!/usr/bin/env python3
-"""An INDEPENDENT re-derivation of directional force, so the receipt can actually disagree.
+"""A SECOND derivation of intra-candle directional force, from raw 1m bars.
 
-F-4 REPAIR (ALGO-020 section 1 item 4), on the band-5 grade.
+WHAT IT DETECTS, AND WHAT IT CANNOT — corrected 2026-08-23 after the arena grade (F-3) measured
+it rather than taking the caption's word.
 
-WHAT WAS WRONG. The frozen-replay regrade "verified" the kernel's force gate by calling
-`force_snapshot(one, cand.signal_time, 5, cand.direction, cand.confirmed_time, p)` --
-**IDENTICAL ARGUMENTS TO A PURE FUNCTION.** `FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE` could
-therefore never fire on any REV or BRK5 candidate, which is every published case. I called it
-"real and falsifiable" and red-proofed that the RAISE exists, not that it is REACHABLE.
-A green check with no path to red.
+    one-sided mutation of `force.py` alone      6000 / 6000 caught
+    40,000 random windows                       0 disagreements
+    SHARED `body_frac` 0.62 -> 0.05 / 0.95      883 / 988 verdict flips, 0 disagreements
+    SHARED `parent_start` +1m / +2m             344 / 387 flips, 0 disagreements
 
-WHAT THIS IS. A second implementation of the same five conditions, written from the raw 1m
-bars and the frozen parameters, calling NEITHER `force_snapshot` NOR `momentum_bar`. Two
-implementations agreeing is evidence; one implementation agreeing with itself is not.
+**It has full power against implementation drift inside `force.py`, and ZERO power against
+specification error.** Both derivations read `body_frac`, `close_loc` and the parent anchor from
+the same `Params`, so anything wrong upstream is wrong identically in both — and fidelity to the
+trader is a *specification* question, which is exactly the axis this does not cover.
 
-    completed observations   sub-bars fully inside the parent AND fully known at the clock
-    geometry                 directional body_frac and close_loc on the composite bar
-    efficiency               net directional progress over total path distance
-    at extreme               the latest close has regained the directional extreme
-    before parent close      the parent candle has not already closed
+The grade also observed that the two implementations share the same algebra and compare the same
+six `reason` constants in the same ladder order: this is a re-derivation by one author from one
+conception, not two independent readings of the market. **Same-layer agreement is not evidence
+about the layer itself.** `test_it_calls_neither_force_snapshot_nor_momentum_bar` is an AST scan
+— it proves non-delegation, never non-transliteration.
 
-THE BRK15 PARENT, which the grader found latent and ALGO-020 section 2 ruled on. The kernel
-confirms a BRK15 through a **15-minute** parent floored to the decision clock
-(`_intra15_confirmation`), while the old receipt recomputed a **5-minute** parent anchored at
-`pen.attempted_at`. Any BRK15 confirmed more than one 5m bucket after the weak break would have
-raised against a CORRECT kernel decision. `parent_for_setup` returns the parent the kernel
-actually used, per setup, so the comparison is like-for-like.
+So the honest claim is: **this is a drift detector between two copies of one rule.** It is worth
+having and it is not a validation of the rule. Closing the remaining gap means anchoring the
+thresholds and the parent rule to an independent authority (the frozen spec JSON) rather than to
+`Params`; that is a semantics change and is not made here.
 
-Zero BRK15 candidates exist in any committed artifact, so that path is exercised by test
-fixtures rather than by the corpus, and this module says so rather than implying coverage.
-
-DIAGNOSTIC ONLY. Computes no strategy decision; it only re-derives and compares.
+BUILD/DIAGNOSTIC. Calls neither `force_snapshot` nor `momentum_bar`.
 """
 from __future__ import annotations
 
@@ -75,7 +70,20 @@ def independent_force(one: pd.DataFrame, parent_start: pd.Timestamp, parent_minu
     q = one.loc[mask, ["open", "high", "low", "close"]]
     n = int(len(q))
     if n == 0:
-        return {"confirmed": False, "reason": "NO_COMPLETED_1M", "completed_1m": 0}
+        # F-12 REPAIR (arena grade 2026-08-23). This branch used to return only three keys,
+        # while `compare()` reads `directional_progress`, `path_distance` and
+        # `path_efficiency`. Missing, they defaulted to NaN, and `abs(a - nan) <= tol` is
+        # False - so two derivations that AGREED perfectly on NO_COMPLETED_1M reported a
+        # SPURIOUS three-field divergence. Unreachable through the kernel today (it only
+        # yields on `confirmed`), which is exactly why it would have surfaced as a mystery
+        # FORCE_DERIVATIONS_DISAGREE for the first caller with a different call pattern.
+        #
+        # The kernel's own snapshot reports 0.0 for all three when there is nothing to
+        # measure, so this now says the same thing rather than saying nothing.
+        return {"confirmed": False, "reason": "NO_COMPLETED_1M", "completed_1m": 0,
+                "directional_progress": 0.0, "path_distance": 0.0, "path_efficiency": 0.0,
+                "latest_close_at_directional_extreme": False,
+                "partial_momentum_geometry": False, "before_parent_close": False}
 
     o = float(q.iloc[0].open)
     h = float(q.high.max())
@@ -128,8 +136,22 @@ def independent_force(one: pd.DataFrame, parent_start: pd.Timestamp, parent_minu
     }
 
 
+#: Every key `compare()` reads. Derived once so a return path cannot quietly omit one.
+COMPARED_KEYS = ("confirmed", "reason", "completed_1m",
+                 "directional_progress", "path_distance", "path_efficiency")
+
+
 def compare(kernel_snapshot, independent: dict, tol: float = 1e-6) -> list[str]:
-    """Every way the two derivations can disagree. Empty list means they agree."""
+    """Every way the two derivations can disagree. Empty list means they agree.
+
+    A MISSING key is not agreement and is not disagreement - it is a broken caller, and it
+    used to masquerade as a three-field divergence (F-12). It now says so in its own words.
+    """
+    missing = [k for k in COMPARED_KEYS if k not in independent]
+    if missing:
+        raise KeyError(
+            f"INDEPENDENT_FORCE_RESULT_INCOMPLETE: {missing}. A return path omitted fields "
+            f"`compare` reads; NaN defaults would have reported this as a false divergence.")
     d = []
     if bool(kernel_snapshot.confirmed) != bool(independent["confirmed"]):
         d.append(f"confirmed {kernel_snapshot.confirmed} vs {independent['confirmed']}")
@@ -138,15 +160,14 @@ def compare(kernel_snapshot, independent: dict, tol: float = 1e-6) -> list[str]:
     if int(kernel_snapshot.completed_1m) != int(independent["completed_1m"]):
         d.append(f"completed_1m {kernel_snapshot.completed_1m} vs "
                  f"{independent['completed_1m']}")
-    for field, key in (("directional_progress", "directional_progress"),
-                       ("path_distance", "path_distance"),
-                       ("path_efficiency", "path_efficiency")):
+    for field in ("directional_progress", "path_distance", "path_efficiency"):
         a = float(getattr(kernel_snapshot, field))
-        b = float(independent.get(key, float("nan")))
+        b = float(independent[field])
         if not (abs(a - b) <= tol):
             d.append(f"{field} {a!r} vs {b!r}")
     return d
 
 
-__all__ = ["DIAGNOSTIC_ONLY", "MIN_COMPLETED_1M", "compare", "independent_force",
+__all__ = ["COMPARED_KEYS", "DIAGNOSTIC_ONLY", "MIN_COMPLETED_1M", "compare",
+           "independent_force",
            "parent_for_setup"]

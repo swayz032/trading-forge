@@ -311,6 +311,18 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                 survivors.append((tag, core.Candidate(
                     pen.direction, "BRK15", loc, None, pen.attempted_at, decision_time,
                     "WEAK_BREAK_PULLBACK_15M_BAR3_INTRA_FORCE"), r_))
+                if on_breakout_candidate is not None:
+                    # The BRK15 trigger is a FIFTEEN-minute parent, not a forming 5m partial,
+                    # so this carries `h15` and sets `row=None`. A consumer shaped for 5m must
+                    # SKIP variant records explicitly and count what it skipped - silently
+                    # dropping them is how a whole family goes unmeasured. Until the window
+                    # amendment no BRK15 candidate ever survived on this corpus, so the gap
+                    # was invisible; at 08:00 they survive and the missing hook surfaced as a
+                    # BREAKOUT_GRANT_WITHOUT_INPUTS abort, which is the guard working.
+                    on_breakout_candidate(r_, full5=full5, h15=h15, ts=ts, row=None,
+                                          direction=pen.direction, loc=loc, p=p, pad=pad,
+                                          kernel_route=ROUTE_B_BREAKOUT,
+                                          variant=VARIANT_BRK15, pending=pen)
                 pending.pop(key, None)
                 pending_locs.pop(key, None)
 

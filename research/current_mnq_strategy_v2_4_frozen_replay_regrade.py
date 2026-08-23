@@ -98,13 +98,22 @@ def _full_entry_decisions_through(env: dict, dte: date, end: pd.Timestamp, p: en
                       "the candidate's own (signal_time, confirmed_time, direction) - the "
                       "same pure call the kernel gated on.",
         }
-        if not fs.confirmed:
-            # The kernel force-gates before yielding, so an unconfirmed snapshot here means
-            # the recomputation has diverged from the gate. Fail loudly rather than publish
-            # a receipt that disagrees with the decision it describes.
-            raise RuntimeError(
-                f"FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE at {cand.confirmed_time}: "
-                f"{fs.reason}")
+        # ---- F-2 REPAIR (arena grade 2026-08-23, HIGH) ------------------------------
+        # THE RAISE THAT USED TO LIVE HERE COULD NEVER FIRE, and the artifact advertised it
+        # as a live guard. For REV and BRK5, `parent_for_setup` returns
+        # `(cand.signal_time, 5)` - the EXACT argument tuple the kernel already gated on -
+        # and `force_snapshot` is pure, so `confirmed` was True by construction on 100% of
+        # the corpus. A green check with no path to red, wearing the name of a disagreement
+        # detector.
+        #
+        # What this receipt actually establishes is REPRODUCIBILITY: the gate's own decision
+        # can be recomputed from the recorded inputs. That is worth publishing and it is not
+        # nothing - but it is not a cross-check, and it is no longer captioned as one. The
+        # real cross-check is `independent_force`, whose own power is narrower than its
+        # caption claimed (see the same grade, F-3).
+        assert fs.confirmed, (
+            "force_snapshot is pure and the kernel gated on this same tuple; a False here "
+            "would mean the recorded inputs do not reproduce the decision at all")
 
         yield {
             "bot_action": "ENTER_LONG" if cand.direction == "L" else "ENTER_SHORT",
@@ -133,6 +142,23 @@ def regrade_frozen_case_windows(env: dict, p: eng.Params | None = None,
         end = pd.Timestamp(case["replay_end"])
         decisions = list(_full_entry_decisions_through(env, dte, end, p))
         if not decisions:
+            # ---- F-1 REPAIR (arena grade 2026-08-23, CRITICAL) ----------------------
+            # THIS BRANCH USED TO OMIT `budget_faithful` ENTIRELY, and that one missing key
+            # made a GENUINE DECLINE unrepresentable:
+            #
+            #   `_bot_window_state` returns NO_ENTRY_IN_WINDOW only when `budget_faithful`
+            #   exists, the bullet is NOT spent, and there is no in-window entry. With the
+            #   key absent, the scorer raised `REGRADE_ROW_PREDATES_THE_F1_REPAIR` instead -
+            #   a message that sends the reader chasing a stale artifact that does not exist.
+            #
+            # Four published metrics were therefore STRUCTURALLY ZERO rather than measured:
+            # `bot_genuinely_declined_in_window_count`, `both_declined_count`,
+            # `censored_bot_declined_count` and `missed_reason_census[NO_PERMISSION_IN_WINDOW]`
+            # - and `AGREEMENT_CLASSES = {AGREE, BOTH_DECLINED}` degenerated to `{AGREE}`,
+            # making the whole G-1 repair dead code.
+            #
+            # A bot that took NO entry through the window end HAS NOT SPENT ITS BULLET. That
+            # is the honest reading and it is what makes all four metrics live again.
             rows.append({
                 "case_id": case["case_id"], "session": case["session"],
                 "window_status": "NO_FULL_ENTRY_THROUGH_REPLAY_END",
@@ -142,6 +168,18 @@ def regrade_frozen_case_windows(env: dict, p: eng.Params | None = None,
                 "decisions_discarded_by_first_only": 0,
                 "in_window": None,
                 "in_window_actions": [],
+                "budget_faithful": {
+                    "one_trade_budget": MAX_FULLY_APPROVED_EXECUTED_TRADES_PER_SESSION,
+                    "session_first_entry_time": None,
+                    "session_first_action": None,
+                    "bullet_spent_before_window": False,
+                    "executable_in_window": False,
+                    "in_window_entries_the_budget_forbids": 0,
+                    "note": (
+                        "No fully-approved entry existed anywhere through the replay end, so "
+                        "the bullet was never spent and the bot GENUINELY DECLINED. Emitting "
+                        "this block is what makes that state reachable at all."),
+                },
             })
             continue
 

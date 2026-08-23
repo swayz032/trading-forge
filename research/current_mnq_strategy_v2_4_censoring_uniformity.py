@@ -3,7 +3,8 @@
 
 WHY THIS IS THE MOST DANGEROUS NUMBER IN THE CAMPAIGN. Censoring is the mechanism by which a bad
 score becomes a good one: every case moved into the censored bucket leaves the denominator, and
-the published 6/8 looks far better than 6/14. Selective application -- leaving a case in the
+the published headline looks far better than the same numerator over 14. Selective application
+-- leaving a case in the
 denominator because it happens to AGREE, or censoring one out because it does not -- would
 manufacture the headline, and nothing else in the evaluator would show it.
 
@@ -23,12 +24,27 @@ censoring condition. That lumps two different things together:
     NO_TRADE  the trader positively decided NOT to trade. That IS a decision.
               It belongs in the denominator, and it is counted against the bot.
 
-2026-04-02 is `NO_TRADE` at exactly the window end, is NOT censored, and carries
-`BOT_ONLY_ENTRY_UNCENSORED_DECLINE` -- the bot entered where the trader declined. So the one
-place the labels file departs from a naive rule is a place where it is STRICTER, keeping in the
-denominator a case the bot FAILS. That is the opposite of manufacturing a good score.
+2026-04-02 is `NO_TRADE` at exactly the window end and is NOT censored, so it stays in the
+denominator as a case the bot FAILS. The one place the labels file departs from a naive rule is
+a place where it is STRICTER. That is the opposite of manufacturing a good score, and the
+conclusion is unchanged.
 
     14 = 7 trader entries + 1 positive decline + 6 right-censored
+
+STALE-CAPTION CORRECTION [2026-08-23, arena grade F-8]. This docstring used to state the
+conclusion over a classification the artifact NO LONGER CARRIES: it said 04-02 "carries
+`BOT_ONLY_ENTRY_UNCENSORED_DECLINE`", and it cited "the published 6/8". After the F-1
+budget-faithful join, 04-02 is classified `TRADER_DECLINED_BOT_TRADED_PRE_WINDOW`,
+`bot_only_entry_uncensored_decline_count` is 0, and the published headline moved. The REASONING
+survives intact -- 04-02 is still uncensored, still in the denominator, still not an agreement --
+but the evidence sentence had gone stale, and a caption is a claim. The specific class name and
+the specific headline are removed rather than re-pinned, because they are not what this module
+measures and re-pinning them would only schedule the next staleness.
+
+The grade also noted `LABELS` still points at the out-of-git `Downloads` origin the F-6 repair
+moved the baseline off, so this module cannot run in an isolated arena. That is recorded here
+rather than silently fixed: repointing it changes which bytes the diagnostic reads, which is a
+custody question, not a typo.
 
 This module is a MEASUREMENT, not a grade. I cannot grade my own evaluator. Whether the
 measurement is adequate is for the independent grader and the advisor to say.

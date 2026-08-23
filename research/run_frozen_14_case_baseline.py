@@ -51,6 +51,7 @@ Run:  PYTHONPATH=. python -m research.run_frozen_14_case_baseline
 from __future__ import annotations
 
 import hashlib
+import ast
 import io
 import json
 import time
@@ -130,6 +131,39 @@ def _bot_session_state(row: dict) -> str:
     if not a:
         raise RuntimeError(f"regrade row has no bot_action: {sorted(row)}")
     return str(a)
+
+
+#: Outcome vocabulary. If any of these is COMPUTED by the scoring path, an outcome has entered
+#: a lane that is outcome-blind by standing rule.
+_OUTCOME_NAMES = frozenset({
+    "net_pnl", "rPnL", "pnl", "realized", "mfe", "mae", "exit_1m_realistic", "winner", "loser",
+})
+
+#: The modules that actually produce the scorecard. Named, so the claim has a subject.
+_SCORING_PATH = (
+    "research/run_frozen_14_case_baseline.py",
+    "research/current_mnq_strategy_v2_4_frozen_replay_regrade.py",
+)
+
+
+def _pnl_or_exit_used() -> bool:
+    """DERIVED, not asserted. F-13 (arena grade 2026-08-23).
+
+    This used to be the literal `False` sitting in the artifact - a field that cannot go red,
+    published as though it were a guarantee. It now reads the scoring path's own AST for
+    outcome identifiers, so the claim is checkable and can be wrong.
+
+    Identifiers only: docstrings and comments in these modules deliberately DISCUSS PnL while
+    explaining that none may be used, and a substring scan would convict that prose. That
+    mistake has been made repeatedly in this lane.
+    """
+    for path in _SCORING_PATH:
+        tree = ast.parse(io.open(path, encoding="utf-8").read())
+        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+        names |= {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
+        if names & _OUTCOME_NAMES:
+            return True
+    return False
 
 
 def _mismatch_class(trader: str, bot: str, censored: bool) -> str:
@@ -250,12 +284,17 @@ def main() -> None:
             "story_receipt": iw.get("bot_reason"),
             "force_receipt": iw.get("force_receipt"),
             "force_receipt_note": (
-                "REAL SNAPSHOT as of ALGO-011 §9.3. The previous receipt claimed force was "
-                "implied because the entry passed `one_minute_entry` - a v2.2 fill-price "
-                "helper with zero force logic (ALGO-008 F-7). This is now the actual "
-                "force_snapshot recomputed at the candidate's own decision clock with the "
-                "same pure function the kernel gated on, and the regrade raises "
-                "FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE if it ever comes back unconfirmed."
+                "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force "
+                "was implied because the entry passed `one_minute_entry` - a v2.2 fill-price "
+                "helper with zero force logic (ALGO-008 F-7). This is the actual "
+                "force_snapshot recomputed at the candidate's own decision clock. "
+                "WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact "
+                "argument tuple the kernel already gated on and force_snapshot is pure, so it "
+                "cannot come back unconfirmed. The previous version of this caption advertised "
+                "a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena "
+                "grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is "
+                "gone. The cross-check that has real power is `independent_force`, and its "
+                "power is one-sided - see its own docstring."
             ),
             "trader_entry_force": lab.get("entry_force"),
             "trader_final_timeline_force": (tl[-1].get("force") if tl else None),
@@ -277,7 +316,17 @@ def main() -> None:
 
     mism = [c["mismatch_class"] for c in cases]
     unc = [c for c in cases if not c["trader_label_censored"]]
-    deltas = sorted(c["timing_delta_seconds"] for c in cases
+    # ---- F-6 REPAIR (arena grade 2026-08-23) ------------------------------------------
+    # THIS ITERATED `cases`, NOT `unc` - a second, censoring-blind agreement rule, and a raw
+    # string compare, three lines above a comment asserting "there is no second place for the
+    # rule to drift". It was that second place. A right-censored label whose action happened
+    # to equal the bot's would have entered a PUBLISHED statistic; red-proofed by planting
+    # one, which added a sixth delta to the list.
+    #
+    # Latent rather than live today - no censored label's action is an ENTER_* - and it moves
+    # a diagnostic list rather than the headline. Fixed anyway: a latent leak in a published
+    # field is the same failure mode with a shorter fuse.
+    deltas = sorted(c["timing_delta_seconds"] for c in unc
                     if c["timing_delta_seconds"] is not None
                     and c["trader_state"] == c["bot_state_in_window"])
 
@@ -404,7 +453,7 @@ def main() -> None:
             "and are segregated from every agreement and disagreement count."
         ),
         "case_count": len(cases),
-        "pnl_or_exit_used": False,
+        "pnl_or_exit_used": _pnl_or_exit_used(),
         "runtime": {
             "total_seconds": round(total_s, 2),
             "data_prepare_seconds": round(prep_s, 2),

@@ -141,6 +141,7 @@ def main() -> None:
 
     rows: list[dict] = []
     brk_rows: list[dict] = []
+    brk_variants = 0
     for s in sessions:
         captured: dict[int, dict] = {}
         captured_brk: dict[int, dict] = {}
@@ -165,7 +166,14 @@ def main() -> None:
 
         brk_grants = [r for r in xr["records"]
                       if r.get("outcome") == "SURVIVED_TO_RANKING"
-                      and r.get("route") in BREAKOUT_ROUTES]
+                      and r.get("route") in BREAKOUT_ROUTES
+                      and r.get("variant") is None]
+        # VARIANT records are counted and reported, never silently dropped. BRK15's trigger is
+        # a 15m parent, so it cannot go through the 5m-shaped read below; saying how many were
+        # set aside is the difference between a scoped census and a quietly incomplete one.
+        brk_variants += sum(1 for r in xr["records"]
+                            if r.get("outcome") == "SURVIVED_TO_RANKING"
+                            and r.get("variant") is not None)
         for g in brk_grants:
             inputs = captured_brk.get(id(g))
             if inputs is None:
@@ -215,6 +223,11 @@ def main() -> None:
             "question": ("of the B/C/D entries the kernel grants, how many does the new "
                          "breakout derivation grant, and does it agree about WHICH route?"),
             "kernel_grants": b_total,
+            "variant_grants_set_aside_not_read_here": brk_variants,
+            "variant_note": (
+                "BRK15 survivors are counted but not read by the 5m-shaped "
+                "census - its trigger is a 15m parent. Zero of them existed at "
+                "the 09:30 window; they appear only under the 08:00 amendment."),
             "new_machine_grants_any_route": b_kept,
             "agrees_with_kernel_on_route": b_agree,
             "kernel_route_census": dict(b_kernel_routes.most_common()),

@@ -1,0 +1,103 @@
+{
+  "artifact": "EXAM_ACCEPTANCE_BARS_SENSITIVITY",
+  "authority": "ALGO-037 ruling 1, carried into the exam by ALGO-041",
+  "produced": "2026-08-23",
+  "unfrozen_choice_under_test": "2 consecutive completed closes beyond the level. The spec requires DURABLE acceptance and names no count; this is a derivation of 'durable', not a frozen value.",
+  "value_in_force": 2,
+  "values_tested": [
+    1,
+    2,
+    3
+  ],
+  "pre_registered_decision_rule": {
+    "authority": "ALGO-037 ruling 1",
+    "R1_invariant": "identical output at all three values => IMMATERIAL, change nothing",
+    "R2_load_bearing": "outputs differ => consult the textbook; its silence is re-checked here",
+    "R3_silent_stricter_wins": "the strictest tested value is the one granting the FEWEST entries; monotonicity is ASSERTED against the measurement, and the run REFUSES to pick if it does not hold",
+    "R4_never_by_score": "no agreement rate, fidelity headline, PnL, realized outcome or winner/loser label participates; ties break to the LOWER value, which assumes less"
+  },
+  "spec_is_silent_on_the_count": true,
+  "measurements": [
+    {
+      "acceptance_bars": 1,
+      "route_d_grants": 40,
+      "candidates_considered": 56,
+      "refusal_census": {
+        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 16
+      },
+      "grants_per_session": {
+        "2026-03-23": 8,
+        "2026-03-24": 6,
+        "2026-03-25": 4,
+        "2026-03-26": 2,
+        "2026-03-30": 0,
+        "2026-03-31": 3,
+        "2026-04-01": 6,
+        "2026-04-02": 1,
+        "2026-04-06": 1,
+        "2026-04-07": 4,
+        "2026-04-08": 2,
+        "2026-04-09": 2,
+        "2026-04-13": 1,
+        "2026-04-14": 0
+      }
+    },
+    {
+      "acceptance_bars": 2,
+      "route_d_grants": 28,
+      "candidates_considered": 56,
+      "refusal_census": {
+        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 28
+      },
+      "grants_per_session": {
+        "2026-03-23": 6,
+        "2026-03-24": 6,
+        "2026-03-25": 1,
+        "2026-03-26": 2,
+        "2026-03-30": 0,
+        "2026-03-31": 2,
+        "2026-04-01": 5,
+        "2026-04-02": 1,
+        "2026-04-06": 0,
+        "2026-04-07": 3,
+        "2026-04-08": 1,
+        "2026-04-09": 0,
+        "2026-04-13": 1,
+        "2026-04-14": 0
+      }
+    },
+    {
+      "acceptance_bars": 3,
+      "route_d_grants": 25,
+      "candidates_considered": 56,
+      "refusal_census": {
+        "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED": 31
+      },
+      "grants_per_session": {
+        "2026-03-23": 4,
+        "2026-03-24": 5,
+        "2026-03-25": 1,
+        "2026-03-26": 2,
+        "2026-03-30": 0,
+        "2026-03-31": 2,
+        "2026-04-01": 5,
+        "2026-04-02": 1,
+        "2026-04-06": 0,
+        "2026-04-07": 3,
+        "2026-04-08": 1,
+        "2026-04-09": 0,
+        "2026-04-13": 1,
+        "2026-04-14": 0
+      }
+    }
+  ],
+  "verdict": {
+    "rule_applied": "R3_SILENT_STRICTER_WINS",
+    "verdict": "LOAD_BEARING",
+    "chosen": 3,
+    "changed": true,
+    "why": "the values differ ({1: 40, 2: 28, 3: 25}), the textbook is silent, and the strictest tested value grants fewest. Chosen by STRICTNESS alone - no agreement rate or outcome participated."
+  },
+  "outcome_blindness": "no agreement rate, fidelity headline, PnL, realized outcome or winner/loser label was computed or read by this module.",
+  "runtime_seconds": 1308.22
+}
