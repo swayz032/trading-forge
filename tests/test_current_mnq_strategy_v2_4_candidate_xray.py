@@ -228,3 +228,75 @@ def test_a_decision_clock_past_last_entry_yields_nothing():
     # POSITIVE WITNESS: the identical candidate before the cutoff yields.
     assert kernel._rank_and_yield(
         [_cand("L", "REV")], BEFORE_LAST_ENTRY, None, None) is not None
+
+
+# --- correspondence of STATE, not just of gates -------------------------------------------
+# The gate-correspondence tests above mirror which gates get CALLED. They are structurally
+# blind to shared mutable STATE, and that blindness hid a real divergence: the kernel pops the
+# pending weak-break entry when a BRK5 candidate is appended on the same key, and the X-ray did
+# not - so the X-ray could emit a BRK15 candidate the kernel would never produce. On this
+# corpus zero BRK15 candidates survive, so it changed no published number; it was a LATENT
+# divergence, which is exactly the kind that surfaces later as a retraction. Found by the
+# independent grader.
+
+PENDING_DICTS = ("pending", "pending_locs")
+
+
+def _pending_mutations(path: str, fname: str) -> dict:
+    """DERIVED census of every method called on the shared pending dicts."""
+    import ast
+    import io as _io
+    tree = ast.parse(_io.open(path, encoding="utf-8").read())
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == fname)
+    out: dict[str, int] = {}
+    for m in ast.walk(fn):
+        if (isinstance(m, ast.Call) and isinstance(m.func, ast.Attribute)
+                and isinstance(m.func.value, ast.Name)
+                and m.func.value.id in PENDING_DICTS):
+            k = f"{m.func.value.id}.{m.func.attr}"
+            out[k] = out.get(k, 0) + 1
+    return out
+
+
+KERNEL_SRC = "research/current_mnq_strategy_v2_4_kernel.py"
+XRAY_SRC = "research/current_mnq_strategy_v2_4_candidate_xray.py"
+
+
+def test_the_xray_mutates_the_pending_state_exactly_as_the_kernel_does():
+    """Same operations, same counts. A missing pop is a candidate the kernel never emits."""
+    k = _pending_mutations(KERNEL_SRC, "iter_actionable_candidates")
+    x = _pending_mutations(XRAY_SRC, "xray_session")
+    assert k, "the kernel census came back empty - the check would pass on nothing"
+    assert x == k, (
+        f"pending-state divergence.\n  kernel: {sorted(k.items())}\n  x-ray : "
+        f"{sorted(x.items())}\nA pop the X-ray does not perform leaves a pending weak break "
+        f"alive and lets it emit a BRK15 candidate the kernel would never produce.")
+
+
+def test_the_pending_census_is_not_vacuous():
+    """A derived census that silently returns {} passes any comparison against another {}."""
+    k = _pending_mutations(KERNEL_SRC, "iter_actionable_candidates")
+    assert k.get("pending.pop", 0) >= 2, k
+    assert k.get("pending_locs.pop", 0) >= 2, k
+    assert k.get("pending.setdefault", 0) >= 1, k
+
+
+def test_the_pending_census_CATCHES_a_dropped_pop():
+    """Red-proof. Without it the equality above proves only that the checker never fires."""
+    import ast
+    import tempfile
+    from pathlib import Path
+    import io as _io
+    src = _io.open(XRAY_SRC, encoding="utf-8").read()
+    # Remove exactly the pop the grader found missing.
+    broken = src.replace("                    pending.pop((direction, loc.id), None)\n", "", 1)
+    assert broken != src, "the BRK5 pop is not where this test thinks it is"
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "broken_xray.py"
+        p.write_text(broken, encoding="utf-8")
+        ast.parse(broken)
+        x = _pending_mutations(str(p), "xray_session")
+    k = _pending_mutations(KERNEL_SRC, "iter_actionable_candidates")
+    assert x != k, "removing the BRK5 pop must make the censuses disagree"
+    assert x["pending.pop"] == k["pending.pop"] - 1

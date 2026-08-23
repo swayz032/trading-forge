@@ -301,6 +301,43 @@ def main() -> None:
         "uncensored_case_count": len(unc),
         "censored_excluded_from_both_numerator_and_denominator":
             sum(1 for c in cases if c["trader_label_censored"]),
+
+        # THE CENSORING IS ASYMMETRIC, AND THE HEADLINE DOES NOT SAY SO.
+        #
+        # A trader who never rendered a decision is removed from BOTH numerator and
+        # denominator - that is the F-1 repair and it is right. But a BOT that never rendered
+        # a decision inside the window (its daily bullet was already spent) is left in the
+        # denominator and scored as a DISAGREEMENT. The same argument that excuses one
+        # excuses the other, and nothing here was applying it to the bot.
+        #
+        # Surfaced by the independent grader as "prose selects 8, flags select 6". Measured,
+        # it is THREE sessions, not two: 03-23, 04-02 and 04-09 all carry
+        # BUDGET_CONSUMED_BEFORE_WINDOW and all three currently count against the bot.
+        #
+        # THE HEADLINE IS NOT CHANGED HERE. The symmetric denominator FLATTERS the bot, which
+        # is precisely why it may not be adopted by the party it flatters, and the standing
+        # rule of this lane is that the stricter reading holds while the textbook is silent.
+        # This block exists so the choice is VISIBLE instead of implicit, and so the advisor
+        # rules on a number he can see rather than one he has to derive.
+        "asymmetric_censoring_diagnostic": {
+            "STATUS": "DIAGNOSTIC_ONLY_NOT_THE_HEADLINE",
+            "question": (
+                "trader-side non-decision is excluded from both numerator and denominator; "
+                "bot-side non-decision is counted as a disagreement. Should it also be "
+                "excluded, or is an unavailable bot a real failure that must count?"),
+            "sessions_where_the_bot_had_no_in_window_decision": sorted(
+                c["session"] for c in unc
+                if c.get("bot_state_in_window") == BUDGET_CONSUMED),
+            "headline_as_published_stricter_reading":
+                f"{sum(1 for c in unc if c['mismatch_class'] in AGREEMENT_CLASSES)}/{len(unc)}",
+            "if_bot_side_were_censored_symmetrically": (
+                lambda d: f"{sum(1 for c in d if c['mismatch_class'] in AGREEMENT_CLASSES)}"
+                          f"/{len(d)}")(
+                [c for c in unc if c.get("bot_state_in_window") != BUDGET_CONSUMED]),
+            "why_it_is_not_adopted": (
+                "it raises the fidelity number, and a party may not adopt the reading that "
+                "flatters it. This is an ALGO question, not a worker decision."),
+        },
         "opposite_direction_at_decision_count": mism.count("OPPOSITE_DIRECTION_AT_DECISION"),
         "missed_trader_entry_count": mism.count("MISSED_TRADER_ENTRY"),
         "bot_only_entry_uncensored_decline_count":

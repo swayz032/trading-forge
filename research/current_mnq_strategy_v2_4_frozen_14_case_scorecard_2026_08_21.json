@@ -28,10 +28,10 @@
   "case_count": 14,
   "pnl_or_exit_used": false,
   "runtime": {
-    "total_seconds": 381.15,
-    "data_prepare_seconds": 1.67,
-    "regrade_seconds": 379.3,
-    "per_case_mean_seconds": 27.093
+    "total_seconds": 366.21,
+    "data_prepare_seconds": 1.73,
+    "regrade_seconds": 364.29,
+    "per_case_mean_seconds": 26.02
   },
   "aggregates": {
     "join": "WINDOW",
@@ -40,6 +40,18 @@
     "agreement_decided_cases": "5/8",
     "uncensored_case_count": 8,
     "censored_excluded_from_both_numerator_and_denominator": 6,
+    "asymmetric_censoring_diagnostic": {
+      "STATUS": "DIAGNOSTIC_ONLY_NOT_THE_HEADLINE",
+      "question": "trader-side non-decision is excluded from both numerator and denominator; bot-side non-decision is counted as a disagreement. Should it also be excluded, or is an unavailable bot a real failure that must count?",
+      "sessions_where_the_bot_had_no_in_window_decision": [
+        "2026-03-23",
+        "2026-04-02",
+        "2026-04-09"
+      ],
+      "headline_as_published_stricter_reading": "5/8",
+      "if_bot_side_were_censored_symmetrically": "5/5",
+      "why_it_is_not_adopted": "it raises the fidelity number, and a party may not adopt the reading that flatters it. This is an ALGO question, not a worker decision."
+    },
     "opposite_direction_at_decision_count": 0,
     "missed_trader_entry_count": 2,
     "bot_only_entry_uncensored_decline_count": 0,

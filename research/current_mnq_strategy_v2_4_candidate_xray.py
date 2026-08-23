@@ -260,6 +260,15 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                              post_break=bool(post), tag=tag)
                     survivors.append((tag, core.Candidate(
                         direction, "BRK5", loc, None, ts, decision_time, route), r_))
+                    # MIRROR THE KERNEL: a BRK5 candidate on this key CONSUMES the pending
+                    # weak-break attempt (`kernel.py` pops it at the same point). Without this
+                    # the X-ray keeps the pending alive and the BRK15 block below can emit a
+                    # SECOND candidate for the same (direction, location) that the kernel
+                    # would never produce. Found by the independent grader; on this corpus it
+                    # changes nothing because zero BRK15 candidates survive, so it is a LATENT
+                    # divergence rather than a wrong number - which is exactly when to fix it.
+                    pending.pop((direction, loc.id), None)
+                    pending_locs.pop((direction, loc.id), None)
                     if on_breakout_candidate is not None:
                         on_breakout_candidate(r_, full5=full5, ts=ts, row=partial,
                                               direction=direction, loc=loc, p=p, pad=pad,

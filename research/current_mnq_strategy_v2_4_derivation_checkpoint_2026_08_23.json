@@ -1440,7 +1440,7 @@
   },
   "drift_reading": "discriminates: keeps 8 of 128. Whether it keeps the RIGHT ones is a fidelity question the exam answers AFTER the grade passes - not here.",
   "may_not_be_used_to": "select a threshold, tune a parameter, or argue any rule is correct. The teachings steer; this only says whether the build is drifting.",
-  "runtime_seconds": 338.67,
+  "runtime_seconds": 340.64,
   "rows": [
     {
       "session": "2026-03-23",
