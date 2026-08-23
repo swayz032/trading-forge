@@ -1,0 +1,215 @@
+{
+  "artifact": "APRIL_9_DIRECTION_CONFLICT_EXPLANATION",
+  "authority": "ALGO-011 section 4",
+  "status": "DIAGNOSTIC_ONLY. Explains; patches nothing.",
+  "produced": "2026-08-22",
+  "computed_after": "the X-ray ranker repair; the pre-repair counts are withdrawn",
+  "case": {
+    "session": "2026-04-09",
+    "replay_window": [
+      "2026-04-09 11:15:00-04:00",
+      "2026-04-09 11:35:00-04:00"
+    ],
+    "trader": "ENTER_LONG at 2026-04-09 11:35:00-04:00",
+    "bot": "ENTER_SHORT at 2026-04-09T11:27:00-04:00",
+    "bot_route": "REV",
+    "bot_location": {
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT"
+    }
+  },
+  "THE_EXPLANATION": "It is NOT that the machine cannot see the trader's long. It sees one -- on the SAME route the trader used -- but SEVEN MINUTES AFTER the trader has already acted, and it has already spent its one-trade bullet EIGHT MINUTES BEFORE, on a short in the opposite direction. A fifteen-minute bracket straddles the trader's decision and the machine is on the wrong side of both edges of it.",
+  "session_wide_permissions": 17,
+  "in_window_permissions": 2,
+  "long_permissions_total": 7,
+  "short_permissions_total": 10,
+  "first_rejection_route_long": {
+    "clock": "2026-04-09T11:42:00-04:00",
+    "direction": "L",
+    "route": "A_NORMAL_REJECTION",
+    "location_source": "STRONG_SWING_DISPLACEMENT",
+    "in_replay_window": false,
+    "minutes_from_trader_decision": 7.0
+  },
+  "minutes_the_rejection_long_arrives_after_the_trader": 7.0,
+  "minutes_the_short_fires_before_the_trader": -8.0,
+  "a_caveat_on_the_earlier_breakout_longs": "Two B_NORMAL_BREAKOUT longs appear at 10:53 and 10:54, 42 minutes BEFORE the trader. They are a DIFFERENT route from the one the trader took and must not be cited as the machine agreeing early. The route-matched comparison is the A_NORMAL_REJECTION long, and that one is LATE.",
+  "in_window_deaths_by_direction_and_earliest_gate": {
+    "S|NO_LEGAL_ROUTE_MATCHED": 124,
+    "L|REJECTION_STORY_INCOMPLETE": 122,
+    "L|NO_LEGAL_ROUTE_MATCHED": 32,
+    "S|REJECTION_STORY_INCOMPLETE": 30,
+    "L|FORCE_NOT_CONFIRMED": 28,
+    "S|FORCE_NOT_CONFIRMED": 28
+  },
+  "the_grant_that_traded": [
+    {
+      "clock": "2026-04-09T11:27:00-04:00",
+      "direction": "S",
+      "restored_requirements_it_FAILS": [
+        "R4_WICK_REJECTION_REQUIRED",
+        "R6_DISPLACEMENT_REQUIRED"
+      ],
+      "restored_requirements_it_PASSES": [
+        "R1_APPROACH_TRAVEL",
+        "R2_RECLAIM_AT_ZONE_MID",
+        "R3_RECLAIM_IS_A_TURN",
+        "R5_FOLLOW_ANCHORED_AT_MID"
+      ]
+    },
+    {
+      "clock": "2026-04-09T11:28:00-04:00",
+      "direction": "S",
+      "restored_requirements_it_FAILS": [
+        "R4_WICK_REJECTION_REQUIRED",
+        "R6_DISPLACEMENT_REQUIRED"
+      ],
+      "restored_requirements_it_PASSES": [
+        "R1_APPROACH_TRAVEL",
+        "R2_RECLAIM_AT_ZONE_MID",
+        "R3_RECLAIM_IS_A_TURN",
+        "R5_FOLLOW_ANCHORED_AT_MID"
+      ]
+    }
+  ],
+  "WHY_RESTORING_V22_IS_NOT_THE_FIX": "The in-window short that traded FAILS exactly two restored requirements -- a rejection wick and displacement -- so v2.2's gate would have refused it. That looks like the repair until you check the other side: on this session restoring ALL SIX kills 10 of 10 Route A grants, INCLUDING the machine's own long. Restoring v2.2 wholesale removes the false positive WITHOUT producing the true positive. The state machine has to be built from the source evidence. It cannot be reached by reverting.",
+  "what_the_short_did_have": "It passes R1 approach-travel, R2 reclaim-at-mid, R3 reclaim-is-a-turn and R5. So price genuinely travelled to the level and genuinely turned. What it lacks is a rejection wick and any range expansion: a control-transfer read taken without the rejection evidence and without displacement.",
+  "permission_timeline": [
+    {
+      "clock": "2026-04-09T09:52:00-04:00",
+      "direction": "S",
+      "route": "D_PREBREAK_RETEST_BREAKOUT",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -103.0
+    },
+    {
+      "clock": "2026-04-09T09:53:00-04:00",
+      "direction": "S",
+      "route": "D_PREBREAK_RETEST_BREAKOUT",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -102.0
+    },
+    {
+      "clock": "2026-04-09T09:54:00-04:00",
+      "direction": "S",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -101.0
+    },
+    {
+      "clock": "2026-04-09T10:18:00-04:00",
+      "direction": "S",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -77.0
+    },
+    {
+      "clock": "2026-04-09T10:19:00-04:00",
+      "direction": "S",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -76.0
+    },
+    {
+      "clock": "2026-04-09T10:27:00-04:00",
+      "direction": "S",
+      "route": "D_PREBREAK_RETEST_BREAKOUT",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -68.0
+    },
+    {
+      "clock": "2026-04-09T10:28:00-04:00",
+      "direction": "S",
+      "route": "D_PREBREAK_RETEST_BREAKOUT",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -67.0
+    },
+    {
+      "clock": "2026-04-09T10:37:00-04:00",
+      "direction": "S",
+      "route": "B_NORMAL_BREAKOUT",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -58.0
+    },
+    {
+      "clock": "2026-04-09T10:53:00-04:00",
+      "direction": "L",
+      "route": "B_NORMAL_BREAKOUT",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -42.0
+    },
+    {
+      "clock": "2026-04-09T10:54:00-04:00",
+      "direction": "L",
+      "route": "B_NORMAL_BREAKOUT",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": -41.0
+    },
+    {
+      "clock": "2026-04-09T11:27:00-04:00",
+      "direction": "S",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": true,
+      "minutes_from_trader_decision": -8.0
+    },
+    {
+      "clock": "2026-04-09T11:28:00-04:00",
+      "direction": "S",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": true,
+      "minutes_from_trader_decision": -7.0
+    },
+    {
+      "clock": "2026-04-09T11:42:00-04:00",
+      "direction": "L",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": 7.0
+    },
+    {
+      "clock": "2026-04-09T11:44:00-04:00",
+      "direction": "L",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": 9.0
+    },
+    {
+      "clock": "2026-04-09T11:49:00-04:00",
+      "direction": "L",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": 14.0
+    },
+    {
+      "clock": "2026-04-09T11:53:00-04:00",
+      "direction": "L",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": 18.0
+    },
+    {
+      "clock": "2026-04-09T11:54:00-04:00",
+      "direction": "L",
+      "route": "A_NORMAL_REJECTION",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "in_replay_window": false,
+      "minutes_from_trader_decision": 19.0
+    }
+  ]
+}
