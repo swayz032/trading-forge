@@ -116,15 +116,40 @@ def test_the_xray_is_diagnostic_only():
     outcome = {f for f in fields
                if any(k in f for k in ("pnl", "realized", "profit", "win", "loss"))}
     assert not outcome, f"the X-ray reads outcome fields: {sorted(outcome)}"
-    # Nothing in production may import it.
+    # Nothing in production may IMPORT it. Checked on the AST, not the text.
+    #
+    # A substring version of this asserted `"candidate_xray" not in f.read_text()`, which
+    # convicts any module that so much as CITES the X-ray in a docstring. It fired on
+    # `..._window_bound_census.py`, whose docstring quotes `candidate_xray.py:101` as EVIDENCE
+    # for where a constant lives. That is the fifth time today a prose-reading guard has
+    # convicted a sentence written to explain the very property being guarded. The property is
+    # "does not import", and only the import table can answer it.
+    #
+    # The path is anchored to this file, not the CWD - a sibling guard scanned 0 files from the
+    # parent directory and passed vacuously (ALGO-020 F-5).
     import pathlib
-    for f in pathlib.Path("research").glob("current_mnq_strategy_v2_4_*.py"):
+    root = pathlib.Path(__file__).resolve().parent.parent / "research"
+    mods = sorted(root.glob("current_mnq_strategy_v2_4_*.py"))
+    assert mods, f"no v2.4 modules found under {root} - this guard would be vacuous"
+    scanned = 0
+    for f in mods:
         if f.name.endswith("candidate_xray.py"):
             continue
-        assert "candidate_xray" not in f.read_text(encoding="utf-8"), (
-            f"{f.name} imports the X-ray - it is diagnostic only and must stay out of the "
-            f"production path"
+        scanned += 1
+        tree = ast.parse(f.read_text(encoding="utf-8"))
+        imported = set()
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Import):
+                imported.update(a.name for a in n.names)
+            elif isinstance(n, ast.ImportFrom):
+                imported.add(n.module or "")
+                imported.update(a.name for a in n.names)
+        offending = {m for m in imported if "candidate_xray" in m}
+        assert not offending, (
+            f"{f.name} IMPORTS the X-ray ({sorted(offending)}) - it is diagnostic only and "
+            f"must stay out of the production namespace"
         )
+    assert scanned >= 20, f"only {scanned} modules scanned - the guard proved little"
 
 
 def test_every_rejection_names_exactly_one_earliest_gate():
