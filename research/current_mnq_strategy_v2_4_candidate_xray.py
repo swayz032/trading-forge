@@ -40,7 +40,9 @@ from research.current_mnq_strategy_v2_4_kernel import (
     BREAK_FAMILY_BROKEN_VISIBILITY,
     LOOKBACK,
     REASON_BY_FORM,
+    _as_break_location,
     _as_location,
+    _break_side,
     _bucket_starts,
     _intra15_confirmation,
     _latest_completed_atr,
@@ -121,6 +123,8 @@ def xray_session(env: dict, dte: date, p: prod.Params,
     pending: dict = {}
     pending_locs: dict = {}
     last_active_bucket: dict = {}
+    last_side: dict = {}
+    flipped_at: dict = {}
     completed_session = r5[r5.index.date == dte]
     meta["premarket_primary"] = str(getattr(plan, "primary", "NEUTRAL"))
     meta["premarket_structure"] = str(getattr(plan, "pm_structure", ""))
@@ -150,16 +154,22 @@ def xray_session(env: dict, dte: date, p: prod.Params,
                 brk_locs.append(loc)
                 continue
             before = zone_state_at_v24(loc.zone, full5, ts, p)
+            seen = last_side.get(loc.id)
+            if seen is not None and before.side != seen:
+                flipped_at[loc.id] = ts
+            last_side[loc.id] = before.side
+
             if before.active:
                 last_active_bucket[loc.id] = ts
-                shaped = _as_location(loc, before)
-                pre_locs.append(shaped)
-                brk_locs.append(shaped)
+                pre_locs.append(_as_location(loc, before))
+                brk_locs.append(_as_break_location(
+                    loc, before, _break_side(before, flipped_at.get(loc.id), ts)))
                 continue
             last_active = last_active_bucket.get(loc.id)
             if (before.state == core.ZoneState.BROKEN and last_active is not None
                     and ts - last_active <= BREAK_FAMILY_BROKEN_VISIBILITY):
-                brk_locs.append(_as_location(loc, before))
+                brk_locs.append(_as_break_location(
+                    loc, before, _break_side(before, flipped_at.get(loc.id), ts)))
         known = {x.id for x in pre_locs}
         brk_known = {x.id for x in brk_locs}
         for fvg_loc in active_fvg_interaction_locations(h15, ts):

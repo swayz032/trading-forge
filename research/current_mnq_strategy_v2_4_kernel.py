@@ -29,7 +29,10 @@ from research.current_mnq_strategy_v2_4_force import decision_times, force_snaps
 from research.current_mnq_strategy_v2_4_fvg_interaction import active_fvg_interaction_locations
 from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
 from research.current_mnq_strategy_v2_4_premarket import build_premarket_plan_v24, plan_allows_v24
-from research.current_mnq_strategy_v2_4_zone_lifecycle import zone_state_at_v24
+from research.current_mnq_strategy_v2_4_zone_lifecycle import (
+    origin_side,
+    zone_state_at_v24,
+)
 
 core = prod.core
 
@@ -95,6 +98,31 @@ def authority_bars(history: pd.DataFrame, ts: pd.Timestamp, trigger) -> pd.DataF
 
 def _as_location(loc: core.Location, z) -> core.Location:
     return replace(loc, zone=z, side=z.side, quality=z.quality, confluence=z.confluence)
+
+
+def _break_side(z, flipped_at, ts) -> str:
+    """Which polarity a BREAK story is keyed on. ALGO-072.
+
+    ORIGIN side governs ONLY when the zone flipped IN THIS SESSION and that flip is inside the
+    R1 window. ALGO-009's exception 2 is a WITHIN-SESSION sequence — reject/test -> reset ->
+    retest/return -> breakout attack — and 2026-03-31 is exactly that shape: break 09:35, flip
+    09:40, re-break 09:45, his entry 09:49. Keyed on the CURRENT role, the level had stopped
+    being the resistance he broke, so his break story had no location to stand on.
+
+    A zone that flipped DAYS AGO is simply support now and carries its CURRENT role for every
+    family. Unscoped origin matching would have deleted 2026-04-08's flipped-support break — a
+    real grant, verified through the ALGO-070 membership clauses — which is why the scope is
+    ruled rather than assumed. `origin_side()` supplies the polarity; the WINDOW decides when
+    it governs.
+    """
+    if flipped_at is not None and ts - flipped_at <= BREAK_FAMILY_BROKEN_VISIBILITY:
+        return origin_side(z)
+    return z.side
+
+
+def _as_break_location(loc: core.Location, z, side: str) -> core.Location:
+    """The break family's shape of a location: same band, explicitly-chosen polarity."""
+    return replace(loc, zone=z, side=side, quality=z.quality, confluence=z.confluence)
 
 
 def _bucket_starts(r5: pd.DataFrame, one: pd.DataFrame, dte: date,
@@ -205,6 +233,11 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
     #: ALGO-068 R1: the last bucket at which each zone was ACTIVE, so a recently-broken zone can
     #: be recognised in O(1) instead of re-replaying the lifecycle at an earlier anchor.
     last_active_bucket: dict[str, pd.Timestamp] = {}
+    #: ALGO-072 R1b: the side seen last bucket, and the bucket at which it CHANGED. Only a flip
+    #: we WITNESSED in-session counts; a zone that arrives already flipped has no flip bucket
+    #: and keeps its current role everywhere.
+    last_side: dict[str, str] = {}
+    flipped_at: dict[str, pd.Timestamp] = {}
     completed_session = r5[r5.index.date == dte]
 
     for ts in bucket_starts:
@@ -234,11 +267,16 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
                 brk_locs.append(loc)
                 continue
             before = zone_state_at_v24(loc.zone, full5, ts, p)
+            seen = last_side.get(loc.id)
+            if seen is not None and before.side != seen:
+                flipped_at[loc.id] = ts
+            last_side[loc.id] = before.side
+
             if before.active:
                 last_active_bucket[loc.id] = ts
-                shaped = _as_location(loc, before)
-                pre_locs.append(shaped)
-                brk_locs.append(shaped)
+                pre_locs.append(_as_location(loc, before))
+                brk_locs.append(_as_break_location(
+                    loc, before, _break_side(before, flipped_at.get(loc.id), ts)))
                 continue
             # RECENTLY BROKEN -> visible to the break family only. `last_active_bucket` is
             # carried across the bucket loop rather than re-replaying the lifecycle at an
@@ -248,7 +286,8 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
             last_active = last_active_bucket.get(loc.id)
             if (before.state == core.ZoneState.BROKEN and last_active is not None
                     and ts - last_active <= BREAK_FAMILY_BROKEN_VISIBILITY):
-                brk_locs.append(_as_location(loc, before))
+                brk_locs.append(_as_break_location(
+                    loc, before, _break_side(before, flipped_at.get(loc.id), ts)))
 
         # Direct trader fidelity correction: completed 15m FVGs may themselves be
         # the causal S/R interaction band. They can form intraday, so unlike the
