@@ -28,10 +28,10 @@
   "case_count": 14,
   "pnl_or_exit_used": false,
   "runtime": {
-    "total_seconds": 306.8,
-    "data_prepare_seconds": 1.73,
-    "regrade_seconds": 304.89,
-    "per_case_mean_seconds": 21.778
+    "total_seconds": 327.22,
+    "data_prepare_seconds": 1.66,
+    "regrade_seconds": 325.38,
+    "per_case_mean_seconds": 23.241
   },
   "aggregates": {
     "join": "WINDOW",
@@ -55,20 +55,20 @@
     "missed_trader_entry_count": 6,
     "bot_only_entry_uncensored_decline_count": 1,
     "both_declined_count": 0,
-    "censored_bot_entered_count": 1,
-    "censored_bot_declined_count": 1,
+    "censored_bot_entered_count": 2,
+    "censored_bot_declined_count": 0,
     "missed_reason_census": {
       "BUDGET_CONSUMED_BEFORE_WINDOW": 2,
       "NO_PERMISSION_IN_WINDOW": 4
     },
     "sessions_whose_bullet_was_spent_before_the_window": 6,
-    "in_window_entries_the_budget_forbids": 5,
-    "bot_genuinely_declined_in_window_count": 5,
+    "in_window_entries_the_budget_forbids": 6,
+    "bot_genuinely_declined_in_window_count": 4,
     "bot_unavailable_in_window_count": 6,
-    "bot_entered_in_window_count": 3,
-    "bot_traded_at_all_in_the_session_count": 9,
-    "total_decisions_through_window_end": 21,
-    "total_decisions_in_window": 8,
+    "bot_entered_in_window_count": 4,
+    "bot_traded_at_all_in_the_session_count": 10,
+    "total_decisions_through_window_end": 23,
+    "total_decisions_in_window": 10,
     "same_direction_timing_deltas_seconds": [
       120.0
     ],
@@ -76,8 +76,7 @@
       "AGREE": 1,
       "BOT_ONLY_ENTRY_UNCENSORED_DECLINE": 1,
       "CENSORED_BOT_BUDGET_CONSUMED": 4,
-      "CENSORED_BOT_DECLINED": 1,
-      "CENSORED_BOT_ENTERED": 1,
+      "CENSORED_BOT_ENTERED": 2,
       "MISSED_TRADER_ENTRY": 6
     }
   },
@@ -571,43 +570,62 @@
       "trader_state": "WAIT",
       "trader_label_censored": true,
       "trader_censor_note": "Replay ended while the trader was still watching. This is NOT a decline and may not be counted against the bot.",
-      "bot_state_in_window": "NO_ENTRY_IN_WINDOW",
-      "bot_state_session_first_REFUTED_JOIN": "NO_TRADE_THROUGH_WINDOW",
-      "bot_window_status": "NO_FULL_ENTRY_THROUGH_REPLAY_END",
-      "bot_decision_clock": null,
+      "bot_state_in_window": "ENTER_SHORT",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-07T09:49:00-04:00",
       "trader_decision_clock": null,
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 0,
-      "decisions_in_window": 0,
-      "in_window_action_sequence": [],
+      "decisions_through_window_end": 1,
+      "decisions_in_window": 1,
+      "in_window_action_sequence": [
+        "ENTER_SHORT"
+      ],
       "interaction_geometry": {
-        "location_id": null,
-        "location_source": null
+        "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
       },
-      "entry_family_receipt": null,
-      "story_receipt": null,
-      "force_receipt": null,
+      "entry_family_receipt": "BRK5",
+      "story_receipt": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-04-07T09:45:00-04:00",
+        "setup": "BRK5",
+        "confirmed": true,
+        "decision_clock": "2026-04-07T09:49:00-04:00",
+        "parent_start": "2026-04-07T09:45:00-04:00",
+        "completed_1m_observations": 4,
+        "directional_progress": 40.75,
+        "path_distance": 40.75,
+        "path_efficiency": 1.0,
+        "latest_close_at_directional_extreme": true,
+        "partial_momentum_geometry": true,
+        "reason": "SUSTAINED_DIRECTIONAL_FORCE",
+        "source": "research.current_mnq_strategy_v2_4_force.force_snapshot, recomputed at the candidate's own (signal_time, confirmed_time, direction) - the same pure call the kernel gated on."
+      },
       "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
       "trader_entry_force": "NOT_APPLICABLE",
       "trader_final_timeline_force": "TUG_OF_WAR",
       "first_tp": {
-        "target_source": null,
-        "target_kind": null,
-        "raw_price": null,
-        "executable_price": null,
-        "path_reason": null
+        "target_source": "WICK_ZONE",
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "raw_price": 24132.375,
+        "executable_price": 24132.5,
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
       },
       "trader_marked_tp": null,
-      "mismatch_class": "CENSORED_BOT_DECLINED",
+      "mismatch_class": "CENSORED_BOT_ENTERED",
       "missed_reason": null,
       "budget_faithful": {
         "one_trade_budget": 1,
-        "session_first_entry_time": null,
-        "session_first_action": null,
+        "session_first_entry_time": "2026-04-07T09:49:00-04:00",
+        "session_first_action": "ENTER_SHORT",
         "bullet_spent_before_window": false,
-        "executable_in_window": false,
+        "executable_in_window": true,
         "in_window_entries_the_budget_forbids": 0,
-        "note": "No fully-approved entry existed anywhere through the replay end, so the bullet was never spent and the bot GENUINELY DECLINED. Emitting this block is what makes that state reachable at all."
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
       }
     },
     {
@@ -626,8 +644,8 @@
       "bot_decision_clock": null,
       "trader_decision_clock": null,
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 1,
-      "decisions_in_window": 0,
+      "decisions_through_window_end": 2,
+      "decisions_in_window": 1,
       "in_window_action_sequence": [],
       "interaction_geometry": {
         "location_id": null,
@@ -655,7 +673,7 @@
         "session_first_action": "ENTER_LONG",
         "bullet_spent_before_window": true,
         "executable_in_window": false,
-        "in_window_entries_the_budget_forbids": 0,
+        "in_window_entries_the_budget_forbids": 1,
         "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
       }
     },

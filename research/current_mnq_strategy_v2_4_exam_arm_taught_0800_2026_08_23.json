@@ -28,10 +28,10 @@
   "case_count": 14,
   "pnl_or_exit_used": false,
   "runtime": {
-    "total_seconds": 413.37,
-    "data_prepare_seconds": 1.73,
-    "regrade_seconds": 411.49,
-    "per_case_mean_seconds": 29.392
+    "total_seconds": 438.54,
+    "data_prepare_seconds": 1.76,
+    "regrade_seconds": 436.63,
+    "per_case_mean_seconds": 31.188
   },
   "aggregates": {
     "join": "WINDOW",
@@ -46,11 +46,12 @@
       "sessions_where_the_bot_had_no_in_window_decision": [
         "2026-03-23",
         "2026-03-24",
+        "2026-03-31",
         "2026-04-06",
         "2026-04-09"
       ],
       "headline_as_published_stricter_reading": "1/8",
-      "if_bot_side_were_censored_symmetrically": "1/4",
+      "if_bot_side_were_censored_symmetrically": "1/3",
       "why_it_is_not_adopted": "it raises the fidelity number, and a party may not adopt the reading that flatters it. This is an ALGO question, not a worker decision."
     },
     "opposite_direction_at_decision_count": 0,
@@ -60,17 +61,17 @@
     "censored_bot_entered_count": 0,
     "censored_bot_declined_count": 0,
     "missed_reason_census": {
-      "BUDGET_CONSUMED_BEFORE_WINDOW": 4,
-      "NO_PERMISSION_IN_WINDOW": 2
+      "BUDGET_CONSUMED_BEFORE_WINDOW": 5,
+      "NO_PERMISSION_IN_WINDOW": 1
     },
-    "sessions_whose_bullet_was_spent_before_the_window": 10,
-    "in_window_entries_the_budget_forbids": 6,
-    "bot_genuinely_declined_in_window_count": 2,
-    "bot_unavailable_in_window_count": 10,
+    "sessions_whose_bullet_was_spent_before_the_window": 11,
+    "in_window_entries_the_budget_forbids": 8,
+    "bot_genuinely_declined_in_window_count": 1,
+    "bot_unavailable_in_window_count": 11,
     "bot_entered_in_window_count": 2,
-    "bot_traded_at_all_in_the_session_count": 12,
-    "total_decisions_through_window_end": 39,
-    "total_decisions_in_window": 8,
+    "bot_traded_at_all_in_the_session_count": 13,
+    "total_decisions_through_window_end": 40,
+    "total_decisions_in_window": 10,
     "same_direction_timing_deltas_seconds": [
       120.0
     ],
@@ -98,7 +99,7 @@
       "bot_decision_clock": null,
       "trader_decision_clock": "2026-03-23T11:21:00-04:00",
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 9,
+      "decisions_through_window_end": 7,
       "decisions_in_window": 3,
       "in_window_action_sequence": [],
       "interaction_geometry": {
@@ -337,13 +338,13 @@
       "trader_state": "ENTER_LONG",
       "trader_label_censored": false,
       "trader_censor_note": null,
-      "bot_state_in_window": "NO_ENTRY_IN_WINDOW",
-      "bot_state_session_first_REFUTED_JOIN": "NO_TRADE_THROUGH_WINDOW",
-      "bot_window_status": "NO_FULL_ENTRY_THROUGH_REPLAY_END",
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
       "bot_decision_clock": null,
       "trader_decision_clock": "2026-03-31T09:49:00-04:00",
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 0,
+      "decisions_through_window_end": 1,
       "decisions_in_window": 0,
       "in_window_action_sequence": [],
       "interaction_geometry": {
@@ -365,15 +366,15 @@
       },
       "trader_marked_tp": "MARKED",
       "mismatch_class": "MISSED_TRADER_ENTRY",
-      "missed_reason": "NO_PERMISSION_IN_WINDOW",
+      "missed_reason": "BUDGET_CONSUMED_BEFORE_WINDOW",
       "budget_faithful": {
         "one_trade_budget": 1,
-        "session_first_entry_time": null,
-        "session_first_action": null,
-        "bullet_spent_before_window": false,
+        "session_first_entry_time": "2026-03-31T09:03:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": true,
         "executable_in_window": false,
         "in_window_entries_the_budget_forbids": 0,
-        "note": "No fully-approved entry existed anywhere through the replay end, so the bullet was never spent and the bot GENUINELY DECLINED. Emitting this block is what makes that state reachable at all."
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
       }
     },
     {
@@ -392,7 +393,7 @@
       "bot_decision_clock": null,
       "trader_decision_clock": null,
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 6,
+      "decisions_through_window_end": 5,
       "decisions_in_window": 1,
       "in_window_action_sequence": [],
       "interaction_geometry": {
@@ -509,7 +510,7 @@
       "bot_decision_clock": null,
       "trader_decision_clock": "2026-04-06T10:04:00-04:00",
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 2,
+      "decisions_through_window_end": 1,
       "decisions_in_window": 0,
       "in_window_action_sequence": [],
       "interaction_geometry": {
@@ -534,7 +535,7 @@
       "missed_reason": "BUDGET_CONSUMED_BEFORE_WINDOW",
       "budget_faithful": {
         "one_trade_budget": 1,
-        "session_first_entry_time": "2026-04-06T09:02:00-04:00",
+        "session_first_entry_time": "2026-04-06T09:07:00-04:00",
         "session_first_action": "ENTER_SHORT",
         "bullet_spent_before_window": true,
         "executable_in_window": false,
@@ -558,8 +559,8 @@
       "bot_decision_clock": null,
       "trader_decision_clock": null,
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 2,
-      "decisions_in_window": 0,
+      "decisions_through_window_end": 3,
+      "decisions_in_window": 1,
       "in_window_action_sequence": [],
       "interaction_geometry": {
         "location_id": null,
@@ -587,7 +588,7 @@
         "session_first_action": "ENTER_LONG",
         "bullet_spent_before_window": true,
         "executable_in_window": false,
-        "in_window_entries_the_budget_forbids": 0,
+        "in_window_entries_the_budget_forbids": 1,
         "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
       }
     },
@@ -607,8 +608,8 @@
       "bot_decision_clock": null,
       "trader_decision_clock": null,
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 2,
-      "decisions_in_window": 0,
+      "decisions_through_window_end": 3,
+      "decisions_in_window": 1,
       "in_window_action_sequence": [],
       "interaction_geometry": {
         "location_id": null,
@@ -636,7 +637,7 @@
         "session_first_action": "ENTER_LONG",
         "bullet_spent_before_window": true,
         "executable_in_window": false,
-        "in_window_entries_the_budget_forbids": 0,
+        "in_window_entries_the_budget_forbids": 1,
         "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
       }
     },
@@ -651,12 +652,12 @@
       "trader_label_censored": false,
       "trader_censor_note": null,
       "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
-      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_LONG",
       "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
       "bot_decision_clock": null,
       "trader_decision_clock": "2026-04-09T11:35:00-04:00",
       "timing_delta_seconds": null,
-      "decisions_through_window_end": 3,
+      "decisions_through_window_end": 5,
       "decisions_in_window": 2,
       "in_window_action_sequence": [],
       "interaction_geometry": {
@@ -681,8 +682,8 @@
       "missed_reason": "BUDGET_CONSUMED_BEFORE_WINDOW",
       "budget_faithful": {
         "one_trade_budget": 1,
-        "session_first_entry_time": "2026-04-09T10:37:00-04:00",
-        "session_first_action": "ENTER_SHORT",
+        "session_first_entry_time": "2026-04-09T09:37:00-04:00",
+        "session_first_action": "ENTER_LONG",
         "bullet_spent_before_window": true,
         "executable_in_window": false,
         "in_window_entries_the_budget_forbids": 2,

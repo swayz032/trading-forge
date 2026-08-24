@@ -1,0 +1,399 @@
+{
+  "artifact": "EXAM2_LOSS_ATTRIBUTION",
+  "status": "DIAGNOSTIC. Attributes each lost anchor member to the stage that refuses it.",
+  "authority": "ALGO-074 (2), re-exam #2 follow-through",
+  "produced": "2026-08-23",
+  "pipeline": [
+    "1_ENTRY_AUTHORITY_iter_actionable_candidates",
+    "2_FILL_one_minute_entry",
+    "3_TARGET_POLICY_build_and_classify"
+  ],
+  "arms_traced": [
+    "baseline_0930",
+    "taught_0800"
+  ],
+  "positive_control_session": "2026-04-14",
+  "positive_control_reached_approval_in_every_arm": true,
+  "rows": [
+    {
+      "arm": "baseline_0930",
+      "session": "2026-03-24",
+      "is_positive_control": false,
+      "replay_window": [
+        "2026-03-24 09:30:00-04:00",
+        "2026-03-24 09:40:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 0,
+      "fully_approved_entries": 0,
+      "first_approved_entry_time": null,
+      "bullet_spent_before_window": false,
+      "candidates": [],
+      "killed_by_stage": {},
+      "attribution": "NO_ACTIONABLE_CANDIDATE"
+    },
+    {
+      "arm": "baseline_0930",
+      "session": "2026-03-30",
+      "is_positive_control": false,
+      "replay_window": [
+        "2026-03-30 09:35:00-04:00",
+        "2026-03-30 09:55:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 1,
+      "fully_approved_entries": 0,
+      "first_approved_entry_time": null,
+      "bullet_spent_before_window": false,
+      "candidates": [
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-03-30 09:40:00-04:00",
+          "confirmed_time": "2026-03-30 09:42:00-04:00",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": "3_TARGET_POLICY_build_and_classify",
+          "refusal": "TP1_REFERENCE_REWARD_UNDER_400:112.50:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-03-30 09:42:00-04:00",
+          "entry_price": 23377.5,
+          "entry_is_in_replay_window": true
+        }
+      ],
+      "killed_by_stage": {
+        "3_TARGET_POLICY_build_and_classify": [
+          "TP1_REFERENCE_REWARD_UNDER_400:112.50:LIQUIDITY_CLUSTER:WICK_ZONE"
+        ]
+      },
+      "attribution": "3_TARGET_POLICY_build_and_classify"
+    },
+    {
+      "arm": "baseline_0930",
+      "session": "2026-03-31",
+      "is_positive_control": false,
+      "replay_window": [
+        "2026-03-31 09:35:00-04:00",
+        "2026-03-31 09:55:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 0,
+      "fully_approved_entries": 0,
+      "first_approved_entry_time": null,
+      "bullet_spent_before_window": false,
+      "candidates": [],
+      "killed_by_stage": {},
+      "attribution": "NO_ACTIONABLE_CANDIDATE"
+    },
+    {
+      "arm": "baseline_0930",
+      "session": "2026-04-06",
+      "is_positive_control": false,
+      "replay_window": [
+        "2026-04-06 09:52:00-04:00",
+        "2026-04-06 10:12:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 0,
+      "fully_approved_entries": 0,
+      "first_approved_entry_time": null,
+      "bullet_spent_before_window": false,
+      "candidates": [],
+      "killed_by_stage": {},
+      "attribution": "NO_ACTIONABLE_CANDIDATE"
+    },
+    {
+      "arm": "baseline_0930",
+      "session": "2026-04-14",
+      "is_positive_control": true,
+      "replay_window": [
+        "2026-04-14 09:30:00-04:00",
+        "2026-04-14 09:46:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 1,
+      "fully_approved_entries": 1,
+      "first_approved_entry_time": "2026-04-14 09:38:00-04:00",
+      "bullet_spent_before_window": false,
+      "candidates": [
+        {
+          "direction": "L",
+          "setup": "BRK5",
+          "signal_time": "2026-04-14 09:35:00-04:00",
+          "confirmed_time": "2026-04-14 09:38:00-04:00",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-04-14 09:38:00-04:00",
+          "entry_price": 25746.0,
+          "entry_is_in_replay_window": true,
+          "FULLY_APPROVED": true
+        }
+      ],
+      "killed_by_stage": {},
+      "attribution": "APPROVED_IN_WINDOW"
+    },
+    {
+      "arm": "taught_0800",
+      "session": "2026-03-24",
+      "is_positive_control": false,
+      "replay_window": [
+        "2026-03-24 09:30:00-04:00",
+        "2026-03-24 09:40:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 6,
+      "fully_approved_entries": 5,
+      "first_approved_entry_time": "2026-03-24 08:17:00-04:00",
+      "bullet_spent_before_window": true,
+      "candidates": [
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-03-24 08:15:00-04:00",
+          "confirmed_time": "2026-03-24 08:17:00-04:00",
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-03-24 08:17:00-04:00",
+          "entry_price": 24333.25,
+          "entry_is_in_replay_window": false,
+          "FULLY_APPROVED": true
+        },
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-03-24 08:15:00-04:00",
+          "confirmed_time": "2026-03-24 08:18:00-04:00",
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-03-24 08:18:00-04:00",
+          "entry_price": 24330.75,
+          "entry_is_in_replay_window": false,
+          "FULLY_APPROVED": true
+        },
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-03-24 08:30:00-04:00",
+          "confirmed_time": "2026-03-24 08:32:00-04:00",
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-03-24 08:32:00-04:00",
+          "entry_price": 24333.5,
+          "entry_is_in_replay_window": false,
+          "FULLY_APPROVED": true
+        },
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-03-24 08:30:00-04:00",
+          "confirmed_time": "2026-03-24 08:33:00-04:00",
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-03-24 08:33:00-04:00",
+          "entry_price": 24319.25,
+          "entry_is_in_replay_window": false,
+          "FULLY_APPROVED": true
+        },
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-03-24 08:30:00-04:00",
+          "confirmed_time": "2026-03-24 08:34:00-04:00",
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-03-24 08:34:00-04:00",
+          "entry_price": 24296.0,
+          "entry_is_in_replay_window": false,
+          "FULLY_APPROVED": true
+        },
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-03-24 08:35:00-04:00",
+          "confirmed_time": "2026-03-24 08:38:00-04:00",
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": "3_TARGET_POLICY_build_and_classify",
+          "refusal": "TP1_REFERENCE_REWARD_UNDER_400:382.50:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-03-24 08:38:00-04:00",
+          "entry_price": 24278.75,
+          "entry_is_in_replay_window": false
+        }
+      ],
+      "killed_by_stage": {
+        "3_TARGET_POLICY_build_and_classify": [
+          "TP1_REFERENCE_REWARD_UNDER_400:382.50:LIQUIDITY_CLUSTER:WICK_ZONE"
+        ]
+      },
+      "attribution": "BULLET_SPENT_BEFORE_WINDOW"
+    },
+    {
+      "arm": "taught_0800",
+      "session": "2026-03-30",
+      "is_positive_control": false,
+      "replay_window": [
+        "2026-03-30 09:35:00-04:00",
+        "2026-03-30 09:55:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 1,
+      "fully_approved_entries": 0,
+      "first_approved_entry_time": null,
+      "bullet_spent_before_window": false,
+      "candidates": [
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-03-30 09:40:00-04:00",
+          "confirmed_time": "2026-03-30 09:42:00-04:00",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": "3_TARGET_POLICY_build_and_classify",
+          "refusal": "TP1_REFERENCE_REWARD_UNDER_400:112.50:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-03-30 09:42:00-04:00",
+          "entry_price": 23377.5,
+          "entry_is_in_replay_window": true
+        }
+      ],
+      "killed_by_stage": {
+        "3_TARGET_POLICY_build_and_classify": [
+          "TP1_REFERENCE_REWARD_UNDER_400:112.50:LIQUIDITY_CLUSTER:WICK_ZONE"
+        ]
+      },
+      "attribution": "3_TARGET_POLICY_build_and_classify"
+    },
+    {
+      "arm": "taught_0800",
+      "session": "2026-03-31",
+      "is_positive_control": false,
+      "replay_window": [
+        "2026-03-31 09:35:00-04:00",
+        "2026-03-31 09:55:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 2,
+      "fully_approved_entries": 1,
+      "first_approved_entry_time": "2026-03-31 09:03:00-04:00",
+      "bullet_spent_before_window": true,
+      "candidates": [
+        {
+          "direction": "L",
+          "setup": "BRK5",
+          "signal_time": "2026-03-31 09:00:00-04:00",
+          "confirmed_time": "2026-03-31 09:03:00-04:00",
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-03-31 09:03:00-04:00",
+          "entry_price": 23383.25,
+          "entry_is_in_replay_window": false,
+          "FULLY_APPROVED": true
+        },
+        {
+          "direction": "L",
+          "setup": "BRK5",
+          "signal_time": "2026-03-31 09:15:00-04:00",
+          "confirmed_time": "2026-03-31 09:19:00-04:00",
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": "3_TARGET_POLICY_build_and_classify",
+          "refusal": "TP1_REFERENCE_REWARD_UNDER_400:397.50:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-03-31 09:19:00-04:00",
+          "entry_price": 23399.25,
+          "entry_is_in_replay_window": false
+        }
+      ],
+      "killed_by_stage": {
+        "3_TARGET_POLICY_build_and_classify": [
+          "TP1_REFERENCE_REWARD_UNDER_400:397.50:LIQUIDITY_CLUSTER:WICK_ZONE"
+        ]
+      },
+      "attribution": "BULLET_SPENT_BEFORE_WINDOW"
+    },
+    {
+      "arm": "taught_0800",
+      "session": "2026-04-06",
+      "is_positive_control": false,
+      "replay_window": [
+        "2026-04-06 09:52:00-04:00",
+        "2026-04-06 10:12:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 1,
+      "fully_approved_entries": 1,
+      "first_approved_entry_time": "2026-04-06 09:07:00-04:00",
+      "bullet_spent_before_window": true,
+      "candidates": [
+        {
+          "direction": "S",
+          "setup": "BRK5",
+          "signal_time": "2026-04-06 09:05:00-04:00",
+          "confirmed_time": "2026-04-06 09:07:00-04:00",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-04-06 09:07:00-04:00",
+          "entry_price": 24278.5,
+          "entry_is_in_replay_window": false,
+          "FULLY_APPROVED": true
+        }
+      ],
+      "killed_by_stage": {},
+      "attribution": "BULLET_SPENT_BEFORE_WINDOW"
+    },
+    {
+      "arm": "taught_0800",
+      "session": "2026-04-14",
+      "is_positive_control": true,
+      "replay_window": [
+        "2026-04-14 09:30:00-04:00",
+        "2026-04-14 09:46:00-04:00"
+      ],
+      "actionable_candidates_through_window_end": 1,
+      "fully_approved_entries": 1,
+      "first_approved_entry_time": "2026-04-14 09:38:00-04:00",
+      "bullet_spent_before_window": false,
+      "candidates": [
+        {
+          "direction": "L",
+          "setup": "BRK5",
+          "signal_time": "2026-04-14 09:35:00-04:00",
+          "confirmed_time": "2026-04-14 09:38:00-04:00",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "reached_stage": "3_TARGET_POLICY_build_and_classify",
+          "killed_at": null,
+          "refusal": null,
+          "entry_time": "2026-04-14 09:38:00-04:00",
+          "entry_price": 25746.0,
+          "entry_is_in_replay_window": true,
+          "FULLY_APPROVED": true
+        }
+      ],
+      "killed_by_stage": {},
+      "attribution": "APPROVED_IN_WINDOW"
+    }
+  ],
+  "attribution_summary": {
+    "baseline_0930": {
+      "2026-03-24": "NO_ACTIONABLE_CANDIDATE",
+      "2026-03-30": "3_TARGET_POLICY_build_and_classify",
+      "2026-03-31": "NO_ACTIONABLE_CANDIDATE",
+      "2026-04-06": "NO_ACTIONABLE_CANDIDATE",
+      "2026-04-14": "APPROVED_IN_WINDOW"
+    },
+    "taught_0800": {
+      "2026-03-24": "BULLET_SPENT_BEFORE_WINDOW",
+      "2026-03-30": "3_TARGET_POLICY_build_and_classify",
+      "2026-03-31": "BULLET_SPENT_BEFORE_WINDOW",
+      "2026-04-06": "BULLET_SPENT_BEFORE_WINDOW",
+      "2026-04-14": "APPROVED_IN_WINDOW"
+    }
+  },
+  "why_R1_and_R1b_could_not_move_the_headline": "R1 and R1b act on stage 1. A session whose loss is decided at stage 3, or by the one-bullet budget being spent before the window opens, is untouched by any amount of entry-authority repair - its candidate-level recovery is real but invisible to the exam. 'SURVIVED_TO_RANKING' and 'fully-approved in-window entry' are different objects and I reported the first as if it were the second.",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 236.03
+}

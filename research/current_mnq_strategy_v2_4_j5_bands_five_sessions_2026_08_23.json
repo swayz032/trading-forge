@@ -1,0 +1,144 @@
+{
+  "artifact": "J5_BANDS_FIVE_SESSIONS",
+  "status": "DIAGNOSTIC. Derives the five J5 bands from the operator's rule. Repairs nothing.",
+  "authority": "ALGO-074 (3); band rule from the operator's ALGO-071/073 answers",
+  "produced": "2026-08-23",
+  "rule": "band = [wick extreme, close] of the rejection candle, measured on the zone's own `marked_main_timeframe`. The role picks the wick: RESISTANCE -> upper, SUPPORT -> lower.",
+  "published_BEFORE_the_0324_coverage_rerun": true,
+  "coverage_is_TAUTOLOGICAL_under_this_rule": "`band_covers_his_line` is true BY CONSTRUCTION: a band from a penetrating wick through the level to a close on the far side always contains the level. It is a self-check on the derivation, NOT evidence that any location gap is closed.",
+  "widths_sit_ABOVE_the_held_teaching_span": "41.75-143.25 pts here vs ~4-75 pts held. 03-24's 143.25 is ~2x the widest measured teaching example (74.5) and is flagged rather than reconciled.",
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "his_direction": "L",
+      "role_at_his_entry": "SUPPORT",
+      "role_AT_MARKING_derived_from_the_candle": "RESISTANCE",
+      "marking_role_differs_from_entry_role": true,
+      "his_line": 24192.125,
+      "marked_time": "2026-03-24T09:32:00-04:00",
+      "marked_main_timeframe": "15m",
+      "rejection_candle_bucket": "2026-03-24 09:30:00-04:00",
+      "rejection_candle_ohlc": [
+        24255.5,
+        24317.0,
+        24140.25,
+        24173.75
+      ],
+      "rejection_wick_used": "upper",
+      "rejection_wick_points": 61.5,
+      "opposite_wick_points": 33.5,
+      "candle_range_points": 176.75,
+      "REJECTION_WICK_IS_THE_SMALLER_ONE": false,
+      "band_lo": 24173.75,
+      "band_hi": 24317.0,
+      "band_width_points": 143.25,
+      "band_covers_his_line": true
+    },
+    {
+      "session": "2026-03-30",
+      "his_direction": "S",
+      "role_at_his_entry": "SUPPORT",
+      "role_AT_MARKING_derived_from_the_candle": "RESISTANCE",
+      "marking_role_differs_from_entry_role": true,
+      "his_line": 23436.625,
+      "marked_time": "2026-03-30T09:35:00-04:00",
+      "marked_main_timeframe": "5m",
+      "rejection_candle_bucket": "2026-03-30 09:35:00-04:00",
+      "rejection_candle_ohlc": [
+        23463.75,
+        23467.75,
+        23410.5,
+        23424.5
+      ],
+      "rejection_wick_used": "upper",
+      "rejection_wick_points": 4.0,
+      "opposite_wick_points": 14.0,
+      "candle_range_points": 57.25,
+      "REJECTION_WICK_IS_THE_SMALLER_ONE": true,
+      "band_lo": 23424.5,
+      "band_hi": 23467.75,
+      "band_width_points": 43.25,
+      "band_covers_his_line": true
+    },
+    {
+      "session": "2026-03-31",
+      "his_direction": "L",
+      "role_at_his_entry": "RESISTANCE",
+      "role_AT_MARKING_derived_from_the_candle": "SUPPORT",
+      "marking_role_differs_from_entry_role": true,
+      "his_line": 23436.625,
+      "marked_time": "2026-03-31T09:35:00-04:00",
+      "marked_main_timeframe": "5m",
+      "rejection_candle_bucket": "2026-03-31 09:35:00-04:00",
+      "rejection_candle_ohlc": [
+        23458.0,
+        23460.5,
+        23402.75,
+        23444.5
+      ],
+      "rejection_wick_used": "lower",
+      "rejection_wick_points": 41.75,
+      "opposite_wick_points": 2.5,
+      "candle_range_points": 57.75,
+      "REJECTION_WICK_IS_THE_SMALLER_ONE": false,
+      "band_lo": 23402.75,
+      "band_hi": 23444.5,
+      "band_width_points": 41.75,
+      "band_covers_his_line": true
+    },
+    {
+      "session": "2026-04-06",
+      "ERROR": "no unambiguous rejection wick: the close does not sit on one side of the level with the opposite wick through it",
+      "level": 24421.625,
+      "ohlc": [
+        24329.25,
+        24418.0,
+        24326.5,
+        24418.0
+      ],
+      "close_above_level": false,
+      "high_above_level": false,
+      "low_below_level": true,
+      "marked_time": "2026-04-06T09:52:00-04:00",
+      "marked_main_timeframe": "15m",
+      "rejection_candle_bucket": "2026-04-06 09:45:00-04:00"
+    },
+    {
+      "session": "2026-04-14",
+      "his_direction": "L",
+      "role_at_his_entry": "RESISTANCE",
+      "role_AT_MARKING_derived_from_the_candle": "SUPPORT",
+      "marking_role_differs_from_entry_role": true,
+      "his_line": 25716.625,
+      "marked_time": "2026-04-14T09:30:00-04:00",
+      "marked_main_timeframe": "5m",
+      "rejection_candle_bucket": "2026-04-14 09:30:00-04:00",
+      "rejection_candle_ohlc": [
+        25656.25,
+        25727.0,
+        25655.75,
+        25718.25
+      ],
+      "rejection_wick_used": "lower",
+      "rejection_wick_points": 0.5,
+      "opposite_wick_points": 8.75,
+      "candle_range_points": 71.25,
+      "REJECTION_WICK_IS_THE_SMALLER_ONE": true,
+      "band_lo": 25655.75,
+      "band_hi": 25718.25,
+      "band_width_points": 62.5,
+      "band_covers_his_line": true
+    }
+  ],
+  "width_range_points": [
+    41.75,
+    143.25
+  ],
+  "sessions_where_the_rejection_wick_is_smaller": [
+    "2026-03-30",
+    "2026-04-14"
+  ],
+  "held_teaching_width_span_for_comparison": "~4-75 points across the six screenshots (4/8/19/22/30/32) and the two zones measured off the 11 Apr '25 tape (~27 and ~74.5). ALGO-073 ruled width is not a constant, and these bands are not expected to agree on one number.",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 1.87
+}
