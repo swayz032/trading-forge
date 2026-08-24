@@ -1,0 +1,288 @@
+{
+  "artifact": "L3_TP_PROVENANCE",
+  "status": "DIAGNOSTIC. Locates his TPs in held structure. Repairs nothing.",
+  "authority": "ALGO-078 lane 3",
+  "produced": "2026-08-24",
+  "arm": "taught_0800",
+  "subjects": [
+    "2026-03-30",
+    "2026-03-31"
+  ],
+  "control_session": "2026-03-24",
+  "control_verdict": "TP_INSIDE_AN_HTF_REJECTION_BAND",
+  "control_is_meaningful": true,
+  "searched_surfaces": [
+    "prior day 1 and 2 high / low / close",
+    "session high and low up to his entry",
+    "30m and 1h rejection bands, wick extreme to close (his own zone rule, higher tf)"
+  ],
+  "rows": [
+    {
+      "session": "2026-03-30",
+      "is_control": false,
+      "his_action": "ENTER_SHORT",
+      "his_tp": 23355.25,
+      "his_entry_clock": "2026-03-30 09:41:00-04:00",
+      "exact_tolerance_points": 0.25,
+      "band_tolerance_points": 2.0,
+      "tolerances_fixed_before_the_search": true,
+      "exact_level_matches": [],
+      "nearest_structural_levels": [
+        {
+          "kind": "prior_day_1_high",
+          "level": 23306.25,
+          "distance": 49.0
+        },
+        {
+          "kind": "prior_day_1_close",
+          "level": 23295.25,
+          "distance": 60.0
+        },
+        {
+          "kind": "session_low_to_entry",
+          "level": 23288.5,
+          "distance": 66.75
+        },
+        {
+          "kind": "prior_day_2_close",
+          "level": 23255.0,
+          "distance": 100.25
+        },
+        {
+          "kind": "prior_day_2_low",
+          "level": 23231.0,
+          "distance": 124.25
+        },
+        {
+          "kind": "session_high_to_entry",
+          "level": 23580.0,
+          "distance": 224.75
+        },
+        {
+          "kind": "prior_day_1_low",
+          "level": 23093.75,
+          "distance": 261.5
+        },
+        {
+          "kind": "prior_day_2_high",
+          "level": 23975.75,
+          "distance": 620.5
+        }
+      ],
+      "htf_rejection_bands_containing_it": [
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "bucket": "2026-03-30 00:30:00-04:00",
+          "band": [
+            23320.75,
+            23362.0
+          ],
+          "width_points": 41.25,
+          "contains_his_tp": true
+        },
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "bucket": "2026-03-30 01:00:00-04:00",
+          "band": [
+            23341.25,
+            23364.25
+          ],
+          "width_points": 23.0,
+          "contains_his_tp": true
+        },
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "bucket": "2026-03-30 01:30:00-04:00",
+          "band": [
+            23345.5,
+            23357.75
+          ],
+          "width_points": 12.25,
+          "contains_his_tp": true
+        },
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "bucket": "2026-03-30 02:00:00-04:00",
+          "band": [
+            23336.75,
+            23369.0
+          ],
+          "width_points": 32.25,
+          "contains_his_tp": true
+        },
+        {
+          "kind": "60m_rejection_band_lower_wick_to_close",
+          "bucket": "2026-03-27 13:30:00-04:00",
+          "band": [
+            23327.0,
+            23362.25
+          ],
+          "width_points": 35.25,
+          "contains_his_tp": true
+        },
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "bucket": "2026-03-27 14:30:00-04:00",
+          "band": [
+            23330.5,
+            23396.75
+          ],
+          "width_points": 66.25,
+          "contains_his_tp": true
+        },
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "bucket": "2026-03-30 00:30:00-04:00",
+          "band": [
+            23341.25,
+            23364.25
+          ],
+          "width_points": 23.0,
+          "contains_his_tp": true
+        },
+        {
+          "kind": "60m_rejection_band_lower_wick_to_close",
+          "bucket": "2026-03-30 01:30:00-04:00",
+          "band": [
+            23322.25,
+            23369.0
+          ],
+          "width_points": 46.75,
+          "contains_his_tp": true
+        }
+      ],
+      "VERDICT": "TP_INSIDE_AN_HTF_REJECTION_BAND",
+      "matched_by": "30m_rejection_band_upper_wick_to_close"
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "his_action": "ENTER_LONG",
+      "his_tp": 23540.75,
+      "his_entry_clock": "2026-03-31 09:49:00-04:00",
+      "exact_tolerance_points": 0.25,
+      "band_tolerance_points": 2.0,
+      "tolerances_fixed_before_the_search": true,
+      "exact_level_matches": [],
+      "nearest_structural_levels": [
+        {
+          "kind": "session_high_to_entry",
+          "level": 23531.5,
+          "distance": 9.25
+        },
+        {
+          "kind": "prior_day_1_high",
+          "level": 23580.0,
+          "distance": 39.25
+        },
+        {
+          "kind": "prior_day_1_close",
+          "level": 23318.5,
+          "distance": 222.25
+        },
+        {
+          "kind": "prior_day_2_high",
+          "level": 23306.25,
+          "distance": 234.5
+        },
+        {
+          "kind": "prior_day_2_close",
+          "level": 23295.25,
+          "distance": 245.5
+        },
+        {
+          "kind": "session_low_to_entry",
+          "level": 23234.0,
+          "distance": 306.75
+        },
+        {
+          "kind": "prior_day_2_low",
+          "level": 23093.75,
+          "distance": 447.0
+        },
+        {
+          "kind": "prior_day_1_low",
+          "level": 22960.5,
+          "distance": 580.25
+        }
+      ],
+      "htf_rejection_bands_containing_it": [],
+      "VERDICT": "TP_PROVENANCE_UNKNOWN_FROM_HELD",
+      "matched_by": null
+    },
+    {
+      "session": "2026-03-24",
+      "is_control": true,
+      "his_action": "ENTER_LONG",
+      "his_tp": 24641.5,
+      "his_entry_clock": "2026-03-24 09:32:00-04:00",
+      "exact_tolerance_points": 0.25,
+      "band_tolerance_points": 2.0,
+      "tolerances_fixed_before_the_search": true,
+      "exact_level_matches": [],
+      "nearest_structural_levels": [
+        {
+          "kind": "prior_day_1_high",
+          "level": 24763.5,
+          "distance": 122.0
+        },
+        {
+          "kind": "session_high_to_entry",
+          "level": 24507.0,
+          "distance": 134.5
+        },
+        {
+          "kind": "prior_day_1_close",
+          "level": 24276.0,
+          "distance": 365.5
+        },
+        {
+          "kind": "session_low_to_entry",
+          "level": 24193.5,
+          "distance": 448.0
+        },
+        {
+          "kind": "prior_day_2_high",
+          "level": 24095.75,
+          "distance": 545.75
+        },
+        {
+          "kind": "prior_day_2_close",
+          "level": 23953.25,
+          "distance": 688.25
+        },
+        {
+          "kind": "prior_day_2_low",
+          "level": 23888.0,
+          "distance": 753.5
+        },
+        {
+          "kind": "prior_day_1_low",
+          "level": 23772.75,
+          "distance": 868.75
+        }
+      ],
+      "htf_rejection_bands_containing_it": [
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "bucket": "2026-03-23 10:30:00-04:00",
+          "band": [
+            24612.0,
+            24689.0
+          ],
+          "width_points": 77.0,
+          "contains_his_tp": true
+        }
+      ],
+      "VERDICT": "TP_INSIDE_AN_HTF_REJECTION_BAND",
+      "matched_by": "60m_rejection_band_upper_wick_to_close"
+    }
+  ],
+  "verdicts": {
+    "2026-03-30": "TP_INSIDE_AN_HTF_REJECTION_BAND",
+    "2026-03-31": "TP_PROVENANCE_UNKNOWN_FROM_HELD",
+    "2026-03-24": "TP_INSIDE_AN_HTF_REJECTION_BAND"
+  },
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 1.86
+}

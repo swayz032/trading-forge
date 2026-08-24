@@ -1,0 +1,463 @@
+{
+  "artifact": "L4_UNIFORM_BAND_REDERIVATION",
+  "status": "DIAGNOSTIC. Re-derives every band under the §5 law. Repairs nothing.",
+  "authority": "ALGO-078 lane 4, §5 law",
+  "produced": "2026-08-24",
+  "arm": "taught_0800",
+  "law": "marked_time is UNTRUSTED. Join on LINE PRICE; among COMPLETED bars at or before his entry take the candle that PENETRATES the line; band = [wick extreme, close]. Latest such candle wins.",
+  "controls": [
+    "2026-03-31",
+    "2026-04-14"
+  ],
+  "controls_all_derived": true,
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "his_entry_clock": "2026-03-24 09:32:00-04:00",
+      "his_line": 24192.125,
+      "OLD_band_from_marked_time": [
+        24173.75,
+        24317.0
+      ],
+      "OLD_state_at_marked_time": "FORMING",
+      "OLD_source_candle": "2026-03-24 09:30:00-04:00",
+      "OLD_error": null,
+      "completed_penetrations_at_or_before_his_entry": 0,
+      "all_candidates": [],
+      "NEW_band": null,
+      "NEW_source_candle": null,
+      "NEW_source_closes_at": null,
+      "NEW_timeframe": null,
+      "NEW_acting_role": null,
+      "NEW_width_points": null,
+      "NEW_is_completed_at_his_entry": false,
+      "S1_locations_overlapping_the_NEW_band": [],
+      "S1_locations_overlapping_count": 0,
+      "verdict": "NO_COMPLETED_PENETRATION_BEFORE_HIS_ENTRY"
+    },
+    {
+      "session": "2026-03-30",
+      "is_control": false,
+      "his_entry_clock": "2026-03-30 09:41:00-04:00",
+      "his_line": 23436.625,
+      "OLD_band_from_marked_time": [
+        23424.5,
+        23467.75
+      ],
+      "OLD_state_at_marked_time": "FORMING",
+      "OLD_source_candle": "2026-03-30 09:35:00-04:00",
+      "OLD_error": null,
+      "completed_penetrations_at_or_before_his_entry": 22,
+      "all_candidates": [
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 04:30:00-04:00",
+          "closes_at": "2026-03-30 04:35:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23426.25,
+            23442.0,
+            23421.5,
+            23426.5
+          ],
+          "band": [
+            23426.5,
+            23442.0
+          ],
+          "width_points": 15.5,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 04:35:00-04:00",
+          "closes_at": "2026-03-30 04:40:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23426.0,
+            23444.75,
+            23419.0,
+            23435.25
+          ],
+          "band": [
+            23435.25,
+            23444.75
+          ],
+          "width_points": 9.5,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 04:40:00-04:00",
+          "closes_at": "2026-03-30 04:45:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23434.5,
+            23439.5,
+            23426.75,
+            23433.0
+          ],
+          "band": [
+            23433.0,
+            23439.5
+          ],
+          "width_points": 6.5,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 04:45:00-04:00",
+          "closes_at": "2026-03-30 04:50:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23433.25,
+            23444.25,
+            23417.75,
+            23436.5
+          ],
+          "band": [
+            23436.5,
+            23444.25
+          ],
+          "width_points": 7.75,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 04:50:00-04:00",
+          "closes_at": "2026-03-30 04:55:00-04:00",
+          "acting_role": "SUPPORT",
+          "ohlc": [
+            23437.0,
+            23442.0,
+            23433.5,
+            23436.75
+          ],
+          "band": [
+            23433.5,
+            23436.75
+          ],
+          "width_points": 3.25,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 04:55:00-04:00",
+          "closes_at": "2026-03-30 05:00:00-04:00",
+          "acting_role": "SUPPORT",
+          "ohlc": [
+            23436.0,
+            23449.75,
+            23430.75,
+            23443.25
+          ],
+          "band": [
+            23430.75,
+            23443.25
+          ],
+          "width_points": 12.5,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 05:00:00-04:00",
+          "closes_at": "2026-03-30 05:05:00-04:00",
+          "acting_role": "SUPPORT",
+          "ohlc": [
+            23443.75,
+            23450.0,
+            23433.5,
+            23447.75
+          ],
+          "band": [
+            23433.5,
+            23447.75
+          ],
+          "width_points": 14.25,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 05:05:00-04:00",
+          "closes_at": "2026-03-30 05:10:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23448.75,
+            23451.5,
+            23430.0,
+            23432.5
+          ],
+          "band": [
+            23432.5,
+            23451.5
+          ],
+          "width_points": 19.0,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 05:10:00-04:00",
+          "closes_at": "2026-03-30 05:15:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23432.0,
+            23440.5,
+            23419.5,
+            23423.75
+          ],
+          "band": [
+            23423.75,
+            23440.5
+          ],
+          "width_points": 16.75,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-30 05:15:00-04:00",
+          "closes_at": "2026-03-30 05:20:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23423.0,
+            23442.25,
+            23394.5,
+            23412.5
+          ],
+          "band": [
+            23412.5,
+            23442.25
+          ],
+          "width_points": 29.75,
+          "completed_at_his_entry": true
+        }
+      ],
+      "NEW_band": [
+        23424.5,
+        23467.75
+      ],
+      "NEW_source_candle": "2026-03-30 09:35:00-04:00",
+      "NEW_source_closes_at": "2026-03-30 09:40:00-04:00",
+      "NEW_timeframe": "5m",
+      "NEW_acting_role": "RESISTANCE",
+      "NEW_width_points": 43.25,
+      "NEW_is_completed_at_his_entry": true,
+      "S1_locations_overlapping_the_NEW_band": [
+        {
+          "id": "S:2026-03-30T08:45:00-04:00:93755",
+          "band": [
+            23432.107589285715,
+            23447.392410714285
+          ]
+        }
+      ],
+      "S1_locations_overlapping_count": 1,
+      "verdict": "BAND_DERIVED_FROM_A_COMPLETED_BAR"
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": true,
+      "his_entry_clock": "2026-03-31 09:49:00-04:00",
+      "his_line": 23436.625,
+      "OLD_band_from_marked_time": [
+        23402.75,
+        23444.5
+      ],
+      "OLD_state_at_marked_time": "FORMING",
+      "OLD_source_candle": "2026-03-31 09:35:00-04:00",
+      "OLD_error": null,
+      "completed_penetrations_at_or_before_his_entry": 4,
+      "all_candidates": [
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-31 09:30:00-04:00",
+          "closes_at": "2026-03-31 09:35:00-04:00",
+          "acting_role": "SUPPORT",
+          "ohlc": [
+            23382.25,
+            23459.5,
+            23378.75,
+            23458.0
+          ],
+          "band": [
+            23378.75,
+            23458.0
+          ],
+          "width_points": 79.25,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-31 09:35:00-04:00",
+          "closes_at": "2026-03-31 09:40:00-04:00",
+          "acting_role": "SUPPORT",
+          "ohlc": [
+            23458.0,
+            23460.5,
+            23402.75,
+            23444.5
+          ],
+          "band": [
+            23402.75,
+            23444.5
+          ],
+          "width_points": 41.75,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "5m",
+          "bucket": "2026-03-31 09:40:00-04:00",
+          "closes_at": "2026-03-31 09:45:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23443.75,
+            23470.0,
+            23407.0,
+            23418.0
+          ],
+          "band": [
+            23418.0,
+            23470.0
+          ],
+          "width_points": 52.0,
+          "completed_at_his_entry": true
+        },
+        {
+          "timeframe": "15m",
+          "bucket": "2026-03-31 09:30:00-04:00",
+          "closes_at": "2026-03-31 09:45:00-04:00",
+          "acting_role": "RESISTANCE",
+          "ohlc": [
+            23382.25,
+            23470.0,
+            23378.75,
+            23418.0
+          ],
+          "band": [
+            23418.0,
+            23470.0
+          ],
+          "width_points": 52.0,
+          "completed_at_his_entry": true
+        }
+      ],
+      "NEW_band": [
+        23418.0,
+        23470.0
+      ],
+      "NEW_source_candle": "2026-03-31 09:40:00-04:00",
+      "NEW_source_closes_at": "2026-03-31 09:45:00-04:00",
+      "NEW_timeframe": "5m",
+      "NEW_acting_role": "RESISTANCE",
+      "NEW_width_points": 52.0,
+      "NEW_is_completed_at_his_entry": true,
+      "S1_locations_overlapping_the_NEW_band": [
+        {
+          "id": "R:2026-03-31T09:15:00-04:00:93745",
+          "band": [
+            23430.708035714284,
+            23441.291964285716
+          ]
+        },
+        {
+          "id": "S:2026-03-30T08:45:00-04:00:93755",
+          "band": [
+            23432.107589285715,
+            23447.392410714285
+          ]
+        }
+      ],
+      "S1_locations_overlapping_count": 2,
+      "verdict": "BAND_DERIVED_FROM_A_COMPLETED_BAR"
+    },
+    {
+      "session": "2026-04-06",
+      "is_control": false,
+      "his_entry_clock": "2026-04-06 10:04:00-04:00",
+      "his_line": 24421.625,
+      "OLD_band_from_marked_time": null,
+      "OLD_state_at_marked_time": null,
+      "OLD_source_candle": "2026-04-06 09:45:00-04:00",
+      "OLD_error": "no unambiguous rejection wick: the close does not sit on one side of the level with the opposite wick through it",
+      "completed_penetrations_at_or_before_his_entry": 0,
+      "all_candidates": [],
+      "NEW_band": null,
+      "NEW_source_candle": null,
+      "NEW_source_closes_at": null,
+      "NEW_timeframe": null,
+      "NEW_acting_role": null,
+      "NEW_width_points": null,
+      "NEW_is_completed_at_his_entry": false,
+      "S1_locations_overlapping_the_NEW_band": [],
+      "S1_locations_overlapping_count": 0,
+      "verdict": "NO_COMPLETED_PENETRATION_BEFORE_HIS_ENTRY"
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "his_entry_clock": "2026-04-14 09:36:00-04:00",
+      "his_line": 25716.625,
+      "OLD_band_from_marked_time": [
+        25655.75,
+        25718.25
+      ],
+      "OLD_state_at_marked_time": "FORMING",
+      "OLD_source_candle": "2026-04-14 09:30:00-04:00",
+      "OLD_error": null,
+      "completed_penetrations_at_or_before_his_entry": 1,
+      "all_candidates": [
+        {
+          "timeframe": "5m",
+          "bucket": "2026-04-14 09:30:00-04:00",
+          "closes_at": "2026-04-14 09:35:00-04:00",
+          "acting_role": "SUPPORT",
+          "ohlc": [
+            25656.25,
+            25727.0,
+            25655.75,
+            25718.25
+          ],
+          "band": [
+            25655.75,
+            25718.25
+          ],
+          "width_points": 62.5,
+          "completed_at_his_entry": true
+        }
+      ],
+      "NEW_band": [
+        25655.75,
+        25718.25
+      ],
+      "NEW_source_candle": "2026-04-14 09:30:00-04:00",
+      "NEW_source_closes_at": "2026-04-14 09:35:00-04:00",
+      "NEW_timeframe": "5m",
+      "NEW_acting_role": "SUPPORT",
+      "NEW_width_points": 62.5,
+      "NEW_is_completed_at_his_entry": true,
+      "S1_locations_overlapping_the_NEW_band": [
+        {
+          "id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+          "band": [
+            25714.66964285714,
+            25717.83035714286
+          ]
+        }
+      ],
+      "S1_locations_overlapping_count": 1,
+      "verdict": "BAND_DERIVED_FROM_A_COMPLETED_BAR"
+    }
+  ],
+  "sessions_derived": [
+    "2026-03-30",
+    "2026-03-31",
+    "2026-04-14"
+  ],
+  "sessions_with_no_completed_penetration": [
+    "2026-03-24",
+    "2026-04-06"
+  ],
+  "completed_by_construction_note": "NEW_is_completed_at_his_entry is True by construction under this law - it is an implementation self-check, NOT evidence.",
+  "downstream_is_report_only": true,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 6.97
+}

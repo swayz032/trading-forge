@@ -1,0 +1,227 @@
+{
+  "artifact": "L2_SPENT_ZONE_SEPARATION",
+  "status": "DIAGNOSTIC. Tests a structural spent-zone predicate. Repairs nothing.",
+  "authority": "ALGO-078 lane 2",
+  "produced": "2026-08-24",
+  "arm": "taught_0800",
+  "predicate_under_test": "SPENT := a COMPLETED bar strictly before his entry has already traded INTO the band (bar range overlaps [lo, hi]). Structural only - reads no distance, no reward, and no outcome.",
+  "nearest_first_is_not_repealed": "This lane changes no ordering. It asks only whether a structurally SPENT zone can be removed from the UNIVERSE before nearest-first is applied.",
+  "control_session": "2026-04-14",
+  "control_limitation": "04-14 has no marked TP in his direction, so it constrains the winner side only and cannot confirm or refute separation.",
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-03-24 09:32:00-04:00",
+      "his_entry_price": 24312.25,
+      "machine_winner": {
+        "band": [
+          24343.953571428574,
+          24372.09642857143
+        ],
+        "kind": "KEY_ZONE_15M",
+        "source_map": "WICK_ZONE",
+        "target_executable": 24358.0,
+        "distance_points": 45.75,
+        "SPENT": true,
+        "bars_already_in_the_band": [
+          {
+            "bucket": "2026-03-24 08:00:00-04:00",
+            "ohlc": [
+              24383.25,
+              24398.0,
+              24353.25,
+              24354.0
+            ]
+          },
+          {
+            "bucket": "2026-03-24 08:05:00-04:00",
+            "ohlc": [
+              24353.75,
+              24356.5,
+              24329.0,
+              24341.5
+            ]
+          },
+          {
+            "bucket": "2026-03-24 08:10:00-04:00",
+            "ohlc": [
+              24342.0,
+              24356.25,
+              24320.0,
+              24344.25
+            ]
+          },
+          {
+            "bucket": "2026-03-24 08:15:00-04:00",
+            "ohlc": [
+              24344.0,
+              24346.0,
+              24328.25,
+              24337.25
+            ]
+          },
+          {
+            "bucket": "2026-03-24 08:20:00-04:00",
+            "ohlc": [
+              24336.75,
+              24351.5,
+              24328.25,
+              24345.5
+            ]
+          },
+          {
+            "bucket": "2026-03-24 08:25:00-04:00",
+            "ohlc": [
+              24344.75,
+              24375.5,
+              24341.5,
+              24355.75
+            ]
+          }
+        ],
+        "bars_already_in_the_band_count": 7
+      },
+      "his_tp_zone": {
+        "tp_price": 24641.5,
+        "band_tested": [
+          24627.84642857143,
+          24660.35357142857
+        ],
+        "band_source": "a considered destination containing it",
+        "SPENT": false,
+        "bars_already_in_the_band": [],
+        "bars_already_in_the_band_count": 0
+      },
+      "PREDICATE_SEPARATES": true,
+      "note": "the predicate separates: the winner is spent and his TP zone is fresh",
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "session": "2026-03-30",
+      "is_control": false,
+      "his_action": "ENTER_SHORT",
+      "his_entry_clock": "2026-03-30 09:41:00-04:00",
+      "his_entry_price": 23388.25,
+      "machine_winner": {
+        "band": [
+          23372.725892857143,
+          23374.774107142857
+        ],
+        "kind": "LIQUIDITY_CLUSTER",
+        "source_map": "WICK_ZONE",
+        "target_executable": 23373.75,
+        "distance_points": 14.5,
+        "SPENT": true,
+        "bars_already_in_the_band": [
+          {
+            "bucket": "2026-03-30 09:40:00-04:00",
+            "ohlc": [
+              23423.75,
+              23425.5,
+              23374.25,
+              23393.5
+            ]
+          }
+        ],
+        "bars_already_in_the_band_count": 1
+      },
+      "his_tp_zone": {
+        "tp_price": 23355.25,
+        "band_tested": [
+          23355.0,
+          23355.5
+        ],
+        "band_source": "one tick either side (his TP is in no destination)",
+        "SPENT": false,
+        "bars_already_in_the_band": [],
+        "bars_already_in_the_band_count": 0
+      },
+      "PREDICATE_SEPARATES": true,
+      "note": "the predicate separates: the winner is spent and his TP zone is fresh",
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-03-31 09:49:00-04:00",
+      "his_entry_price": 23483.5,
+      "machine_winner": {
+        "band": [
+          23521.57857142857,
+          23529.92142857143
+        ],
+        "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+        "target_executable": 23525.75,
+        "distance_points": 42.25,
+        "SPENT": true,
+        "bars_already_in_the_band": [
+          {
+            "bucket": "2026-03-31 09:45:00-04:00",
+            "ohlc": [
+              23416.75,
+              23531.5,
+              23416.75,
+              23531.25
+            ]
+          }
+        ],
+        "bars_already_in_the_band_count": 1
+      },
+      "his_tp_zone": {
+        "tp_price": 23540.75,
+        "band_tested": [
+          23540.5,
+          23541.0
+        ],
+        "band_source": "one tick either side (his TP is in no destination)",
+        "SPENT": false,
+        "bars_already_in_the_band": [],
+        "bars_already_in_the_band_count": 0
+      },
+      "PREDICATE_SEPARATES": true,
+      "note": "the predicate separates: the winner is spent and his TP zone is fresh",
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-04-14 09:36:00-04:00",
+      "his_entry_price": 25743.0,
+      "machine_winner": {
+        "band": [
+          25811.5,
+          25926.75
+        ],
+        "kind": "FVG_15M",
+        "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+        "target_executable": 25869.0,
+        "distance_points": 126.0,
+        "SPENT": false,
+        "bars_already_in_the_band": [],
+        "bars_already_in_the_band_count": 0
+      },
+      "his_tp_zone": null,
+      "PREDICATE_SEPARATES": null,
+      "note": "no marked TP in his direction - constrains the winner side only",
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    }
+  ],
+  "testable_sessions": [
+    "2026-03-24",
+    "2026-03-30",
+    "2026-03-31"
+  ],
+  "sessions_where_it_separates": [
+    "2026-03-24",
+    "2026-03-30",
+    "2026-03-31"
+  ],
+  "VERDICT": "SPENT_PREDICATE_SEPARATES_ON_ALL_TESTABLE_SESSIONS",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 7.25
+}
