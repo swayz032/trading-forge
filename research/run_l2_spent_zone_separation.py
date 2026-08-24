@@ -52,9 +52,20 @@ SESSIONS = ("2026-03-24", "2026-03-30", "2026-03-31", "2026-04-14")
 CONTROL = "2026-04-14"
 ARM_NAME, ARM_START = "taught_0800", _time(8, 0)
 
-PREDICATE = ("SPENT := a COMPLETED bar strictly before his entry has already traded INTO the "
+PREDICATE = ("SPENT := a bar that COMPLETES at or before his entry has already traded INTO the "
              "band (bar range overlaps [lo, hi]). Structural only - reads no distance, no "
              "reward, and no outcome.")
+
+#: ALGO-080 O1. THE FIRST VERSION OF THIS MODULE BROKE ITS OWN PREDICATE. `_spent` filtered on
+#: `index < his_entry` - the bar's START - so a 5m bar opening 09:40 counted as evidence at a
+#: 09:41 entry although it does not COMPLETE until 09:45. 03-30 and 03-31 each rested on exactly
+#: one such bar, so "3/3 separates" was really 1/3: only 03-24 (bars all complete by 08:30
+#: against a 09:32 entry) was ever valid. The desk caught it.
+#:
+#: This is the ALGO-078 completed-bar law applied to our own instrument - a law I wrote into L4
+#: in the same packet and did not carry one module across. So the fix is not only the filter: the
+#: predicate is now asked on BOTH timeframes, and each arm states the completion rule it used.
+TIMEFRAME_MINUTES = {"5m": 5, "1m": 1}
 
 
 def _labels():
@@ -74,14 +85,22 @@ def _his_tp(label):
     return None, act
 
 
-def _spent(full5, lo, hi, before_ts, session_open):
-    """Has a completed bar strictly before `before_ts` traded into [lo, hi] this session?"""
-    win = full5[(full5.index >= session_open) & (full5.index < before_ts)]
+def _spent(frame, minutes, lo, hi, before_ts, session_open):
+    """Bars that COMPLETE at or before `before_ts` and traded into [lo, hi] this session.
+
+    Completion, not the opening stamp, is the test: a bar bucketed at 09:40 on a 5m frame has
+    not printed its high, low or close until 09:45 and cannot be evidence at a 09:41 entry.
+    """
+    win = frame[(frame.index >= session_open) & (frame.index < before_ts)]
     hits = []
     for t, r in win.iterrows():
+        closes_at = t + pd.Timedelta(minutes=minutes)
+        if closes_at > before_ts:
+            continue                       # still forming at his entry - not evidence
         if float(r.low) <= hi and float(r.high) >= lo:
-            hits.append({"bucket": str(t), "ohlc": [float(r.open), float(r.high),
-                                                    float(r.low), float(r.close)]})
+            hits.append({"bucket": str(t), "closes_at": str(closes_at),
+                         "ohlc": [float(r.open), float(r.high),
+                                  float(r.low), float(r.close)]})
     return hits
 
 
@@ -118,16 +137,22 @@ def main() -> int:
             winner = None
             if picked is not None:
                 wlo, whi = float(picked.location.lo), float(picked.location.hi)
-                hits = _spent(full5, wlo, whi, his_clock, session_open)
+                arms = {}
+                for tf, frame in (("5m", full5), ("1m", one)):
+                    h = _spent(frame, TIMEFRAME_MINUTES[tf], wlo, whi, his_clock, session_open)
+                    arms[tf] = {"SPENT": bool(h), "bars": h[:6], "count": len(h)}
                 winner = {
                     "band": [wlo, whi],
                     "kind": str(getattr(picked, "kind", "")),
                     "source_map": str(picked.location.source),
                     "target_executable": round(float(picked.executable_price), 2),
                     "distance_points": round(float(picked.distance), 2),
-                    "SPENT": bool(hits),
-                    "bars_already_in_the_band": hits[:6],
-                    "bars_already_in_the_band_count": len(hits),
+                    "by_timeframe": arms,
+                    # The 1m arm is the finer evidence and decides; 5m is reported beside it.
+                    "SPENT": bool(arms["1m"]["SPENT"]),
+                    "SPENT_5m": bool(arms["5m"]["SPENT"]),
+                    "bars_already_in_the_band": arms["1m"]["bars"],
+                    "bars_already_in_the_band_count": arms["1m"]["count"],
                 }
 
             his_tp_zone = None
@@ -140,15 +165,20 @@ def main() -> int:
                                if float(d.location.lo) <= tp_px <= float(d.location.hi)), None)
                 zlo, zhi = ((float(holder.location.lo), float(holder.location.hi)) if holder
                             else (tp_px - float(eng.core.TICK), tp_px + float(eng.core.TICK)))
-                hits = _spent(full5, zlo, zhi, his_clock, session_open)
+                arms_h = {}
+                for tf, frame in (("5m", full5), ("1m", one)):
+                    hh = _spent(frame, TIMEFRAME_MINUTES[tf], zlo, zhi, his_clock, session_open)
+                    arms_h[tf] = {"SPENT": bool(hh), "bars": hh[:6], "count": len(hh)}
+                hits = arms_h["1m"]["bars"]
                 his_tp_zone = {
+                    "by_timeframe": arms_h,
                     "tp_price": tp_px,
                     "band_tested": [zlo, zhi],
                     "band_source": ("a considered destination containing it" if holder
                                     else "one tick either side (his TP is in no destination)"),
-                    "SPENT": bool(hits),
-                    "bars_already_in_the_band": hits[:6],
-                    "bars_already_in_the_band_count": len(hits),
+                    "SPENT": bool(arms_h["1m"]["SPENT"]),
+                    "bars_already_in_the_band": hits,
+                    "bars_already_in_the_band_count": arms_h["1m"]["count"],
                 }
 
             if winner is None or his_tp_zone is None:
@@ -188,6 +218,13 @@ def main() -> int:
         "produced": "2026-08-24",
         "arm": ARM_NAME,
         "predicate_under_test": PREDICATE,
+        "completed_bar_clause_now_enforced": True,
+        "prior_labelling_defect": (
+            "The first run filtered on the bar's START, so a 5m bar opening 09:40 counted at a "
+            "09:41 entry though it completes 09:45. 03-30 and 03-31 each rested on exactly one "
+            "such bar: the published '3/3 separates' was really 1/3, with only 03-24 valid. "
+            "Corrected here and evaluated on 1m as well as 5m."),
+        "deciding_timeframe": "1m",
         "nearest_first_is_not_repealed": (
             "This lane changes no ordering. It asks only whether a structurally SPENT zone can "
             "be removed from the UNIVERSE before nearest-first is applied."),

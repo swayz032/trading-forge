@@ -86,10 +86,16 @@ def test_the_spent_predicate_is_structural_and_reads_no_reward(l2):
         assert f"no {banned}" in txt or banned not in txt.split("structural only")[-1], txt
 
 
-def test_the_predicate_separates_on_every_testable_session(l2):
-    assert l2["VERDICT"] == "SPENT_PREDICATE_SEPARATES_ON_ALL_TESTABLE_SESSIONS"
-    assert l2["sessions_where_it_separates"] == l2["testable_sessions"]
+def test_all_three_sessions_remain_testable(l2):
+    """The population is unchanged by the O1 correction - only the LABELLING was wrong.
+
+    This test previously asserted SPENT_PREDICATE_SEPARATES_ON_ALL_TESTABLE_SESSIONS. That was
+    the pre-correction verdict, produced by filtering on bar START instead of completion. The
+    corrected expectation lives in `test_L2_verdict_is_now_NO_SEPARATION_and_only_0324_is_valid`;
+    what survives here is the population, which the correction did not change.
+    """
     assert len(l2["testable_sessions"]) == 3
+    assert set(l2["sessions_where_it_separates"]) <= set(l2["testable_sessions"])
 
 
 def test_on_the_agreeing_day_the_chosen_target_is_NOT_spent(l2):
@@ -154,3 +160,69 @@ def test_0324_and_0406_have_no_completed_penetration(l4):
     """Both were derivable only from bars that postdate his entry - which is the finding."""
     assert sorted(l4["sessions_with_no_completed_penetration"]) == [
         "2026-03-24", "2026-04-06"]
+
+
+# ---- ALGO-080 O1 / O2 -----------------------------------------------------------------
+
+def test_L2_now_enforces_the_completed_bar_clause(l2):
+    """The defect the desk caught: SPENT evidence must COMPLETE at or before his entry.
+
+    The first version filtered on the bar's START, so a 5m bar opening 09:40 counted at a 09:41
+    entry although it completes 09:45. That turned 1/3 into a published 3/3.
+    """
+    import pandas as pd
+    assert l2["completed_bar_clause_now_enforced"] is True
+    assert l2["prior_labelling_defect"]
+    for r in l2["rows"]:
+        w = r["machine_winner"]
+        if not w:
+            continue
+        for b in w["bars_already_in_the_band"]:
+            assert pd.Timestamp(b["closes_at"]) <= pd.Timestamp(r["his_entry_clock"]), r["session"]
+
+
+def test_L2_verdict_is_now_NO_SEPARATION_and_only_0324_is_valid(l2):
+    """Corrected result. If this flips back to 3/3, the completed clause has been lost."""
+    assert l2["VERDICT"] == "NO_SEPARATION"
+    assert l2["sessions_where_it_separates"] == ["2026-03-24"]
+
+
+def test_L2_controls_reproduce_what_ALGO_080_pre_registered(l2):
+    """03-24 must reproduce VALID-SPENT; 04-14 must reproduce FRESH."""
+    r24 = next(r for r in l2["rows"] if r["session"] == "2026-03-24")
+    assert r24["machine_winner"]["SPENT"] is True
+    assert r24["PREDICATE_SEPARATES"] is True
+    ctrl = next(r for r in l2["rows"] if r["is_control"])
+    assert ctrl["machine_winner"]["SPENT"] is False
+
+
+def test_O2_distinguishes_containment_from_a_tolerance_hit():
+    """A band ending 1.375 pts short of his line does NOT contain it - the same
+    evidence-labelling error the desk caught in L2, guarded here at its source."""
+    o2 = _load(Path("research/current_mnq_strategy_v2_4_o2_entry_line_provenance_2026_08_24.json"))
+    for r in o2["rows"]:
+        if r["VERDICT"] == "ENTRY_LINE_INSIDE_A_TAUGHT_HTF_BAND":
+            assert r["bands_that_CONTAIN_the_line"], r["session"]
+        if r["VERDICT"] == "ENTRY_LINE_ONLY_WITHIN_TOLERANCE_NOT_CONTAINED":
+            assert not r["bands_that_CONTAIN_the_line"], r["session"]
+
+
+def test_O2_capability_control_passed_before_any_absence_is_claimed():
+    o2 = _load(Path("research/current_mnq_strategy_v2_4_o2_entry_line_provenance_2026_08_24.json"))
+    assert o2["capability_control_passed"] is True
+
+
+def test_O2_prospective_marking_is_NOT_demonstrated_on_either_focus_session():
+    """Empty result -> the question goes to the operator. Do not soften this."""
+    o2 = _load(Path("research/current_mnq_strategy_v2_4_o2_entry_line_provenance_2026_08_24.json"))
+    assert o2["PROSPECTIVE_MARKING_DEMONSTRATED_ON"] == []
+    assert o2["recurring_gap_note"]
+
+
+def test_O3_design_scopes_R_A_to_one_session_and_leaves_0331_lost():
+    import io as _io
+    txt = _io.open("research/current_mnq_strategy_v2_4_repair_design_2026_08_24.md",
+                   encoding="utf-8").read()
+    assert "03-24 only" in txt, "R-A must be scoped to the single session O1 supports"
+    assert "03-31 stays lost" in txt, "R-B must not be widened to recover 03-31"
+    assert "TAUGHT_CITATION_ABSENT" in txt
