@@ -1,0 +1,868 @@
+{
+  "artifact": "ENTRY_ZONE_CENSUS",
+  "status": "DIAGNOSTIC. Describes entry zones. Proposes no predicate, scores no row.",
+  "authority": "ALGO-090 order 2",
+  "produced": "2026-08-24",
+  "no_predicate_proposed": true,
+  "no_row_scored": true,
+  "his_rule_used_for_drawable_column": "[wick extreme, close] of a completed 5m/15m rejection candle - his ratified construction, confirmed to 0.6 pts against his 11 Jul '25 demo. Tolerance 1.5 pts.",
+  "rows": [
+    {
+      "row_type": "convicted_early_zone",
+      "session": "2026-03-23",
+      "fire_clock": "2026-03-23 08:14:00-04:00",
+      "band": [
+        24443.76,
+        24453.24
+      ],
+      "band_width_points": 9.48,
+      "construction_kind": "machine_entry_location",
+      "source_map": "WICK_ZONE",
+      "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+      "birth": "2026-03-03 09:30:00-05:00",
+      "birth_session": "2026-03-03",
+      "age_in_sessions_at_fire": 14,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-03-13 03:45:00-04:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          24443.25,
+          24452.0
+        ],
+        "ohlc": [
+          24461.0,
+          24463.0,
+          24443.25,
+          24452.0
+        ],
+        "edge_errors": [
+          0.51,
+          1.24
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": 129,
+      "completed_tests_since_DEFINING_REJECTION": 97,
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "direction": "S",
+      "setup": "BRK5"
+    },
+    {
+      "row_type": "convicted_early_zone",
+      "session": "2026-03-24",
+      "fire_clock": "2026-03-24 08:17:00-04:00",
+      "band": [
+        24308.25,
+        24327.5
+      ],
+      "band_width_points": 19.24,
+      "construction_kind": "machine_entry_location",
+      "source_map": "WICK_ZONE",
+      "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "birth": "2026-03-23 14:00:00-04:00",
+      "birth_session": "2026-03-23",
+      "age_in_sessions_at_fire": 1,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": 18,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "direction": "S",
+      "setup": "BRK5"
+    },
+    {
+      "row_type": "convicted_early_zone",
+      "session": "2026-03-31",
+      "fire_clock": "2026-03-31 09:03:00-04:00",
+      "band": [
+        23392.69,
+        23404.11
+      ],
+      "band_width_points": 11.42,
+      "construction_kind": "machine_entry_location",
+      "source_map": "WICK_ZONE",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "birth": "2026-03-31 07:45:00-04:00",
+      "birth_session": "2026-03-31",
+      "age_in_sessions_at_fire": 0,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": 10,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "direction": "L",
+      "setup": "BRK5"
+    },
+    {
+      "row_type": "other_decided_day_zone",
+      "session": "2026-04-02",
+      "fire_clock": "2026-04-02 10:38:00-04:00",
+      "band": [
+        23964.55,
+        23973.2
+      ],
+      "band_width_points": 8.65,
+      "construction_kind": "machine_entry_location",
+      "source_map": "WICK_ZONE",
+      "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+      "birth": "2026-03-31 22:15:00-04:00",
+      "birth_session": "2026-03-31",
+      "age_in_sessions_at_fire": 2,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-04-01 21:25:00-04:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          23963.5,
+          23974.0
+        ],
+        "ohlc": [
+          23996.0,
+          24006.25,
+          23963.5,
+          23974.0
+        ],
+        "edge_errors": [
+          1.05,
+          0.8
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": 22,
+      "completed_tests_since_DEFINING_REJECTION": 8,
+      "story": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "direction": "L",
+      "setup": "REV"
+    },
+    {
+      "row_type": "convicted_early_zone",
+      "session": "2026-04-06",
+      "fire_clock": "2026-04-06 09:07:00-04:00",
+      "band": [
+        24289.33,
+        24293.17
+      ],
+      "band_width_points": 3.83,
+      "construction_kind": "machine_entry_location",
+      "source_map": "STRONG_SWING_DISPLACEMENT",
+      "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+      "birth": "2026-04-06 03:30:00-04:00",
+      "birth_session": "2026-04-06",
+      "age_in_sessions_at_fire": 0,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": 10,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "direction": "S",
+      "setup": "BRK5"
+    },
+    {
+      "row_type": "convicted_early_zone",
+      "session": "2026-04-09",
+      "fire_clock": "2026-04-09 09:37:00-04:00",
+      "band": [
+        25029.72,
+        25035.78
+      ],
+      "band_width_points": 6.06,
+      "construction_kind": "machine_entry_location",
+      "source_map": "STRONG_SWING_DISPLACEMENT",
+      "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+      "birth": "2026-03-16 15:45:00-04:00",
+      "birth_session": "2026-03-16",
+      "age_in_sessions_at_fire": 18,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-04-09 07:55:00-04:00",
+        "which_wick": "upper",
+        "band_drawn": [
+          25030.25,
+          25035.75
+        ],
+        "ohlc": [
+          25027.25,
+          25035.75,
+          25024.75,
+          25030.25
+        ],
+        "edge_errors": [
+          0.53,
+          0.03
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": 142,
+      "completed_tests_since_DEFINING_REJECTION": 15,
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "direction": "L",
+      "setup": "BRK5"
+    },
+    {
+      "row_type": "CONTROL_zone",
+      "session": "2026-04-14",
+      "fire_clock": "2026-04-14 09:38:00-04:00",
+      "band": [
+        25714.67,
+        25717.83
+      ],
+      "band_width_points": 3.16,
+      "construction_kind": "machine_entry_location",
+      "source_map": "STRONG_SWING_DISPLACEMENT",
+      "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "birth": "2026-04-14 09:15:00-04:00",
+      "birth_session": "2026-04-14",
+      "age_in_sessions_at_fire": 0,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": 1,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "direction": "L",
+      "setup": "BRK5"
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-03-23",
+      "fire_clock": "2026-03-23 11:21:00-04:00",
+      "band": [
+        24340.0,
+        24347.25
+      ],
+      "band_width_points": 7.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "role": "SUPPORT",
+      "marked_main_timeframe": "15m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-03-23",
+      "fire_clock": "2026-03-23 11:21:00-04:00",
+      "band": [
+        24758.25,
+        24765.5
+      ],
+      "band_width_points": 7.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-03-17 04:20:00-04:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          24758.5,
+          24765.5
+        ],
+        "ohlc": [
+          24785.75,
+          24791.0,
+          24758.5,
+          24765.5
+        ],
+        "edge_errors": [
+          0.25,
+          0.0
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 11,
+      "role": "RESISTANCE",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-03-24",
+      "fire_clock": "2026-03-24 09:32:00-04:00",
+      "band": [
+        24192.0,
+        24192.25
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-03-20 14:00:00-04:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          24190.5,
+          24191.5
+        ],
+        "ohlc": [
+          24212.25,
+          24222.25,
+          24190.5,
+          24191.5
+        ],
+        "edge_errors": [
+          1.5,
+          0.75
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 3,
+      "role": "SUPPORT",
+      "marked_main_timeframe": "15m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-03-24",
+      "fire_clock": "2026-03-24 09:32:00-04:00",
+      "band": [
+        24510.25,
+        24510.5
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-03-23 14:30:00-04:00",
+        "which_wick": "upper",
+        "band_drawn": [
+          24510.0,
+          24511.75
+        ],
+        "ohlc": [
+          24445.75,
+          24511.75,
+          24445.75,
+          24510.0
+        ],
+        "edge_errors": [
+          0.25,
+          1.25
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 8,
+      "role": "RESISTANCE",
+      "marked_main_timeframe": "15m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-03-30",
+      "fire_clock": "2026-03-30 09:41:00-04:00",
+      "band": [
+        23609.0,
+        23609.25
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "role": "RESISTANCE",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-03-30",
+      "fire_clock": "2026-03-30 09:41:00-04:00",
+      "band": [
+        23436.5,
+        23436.75
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "role": "SUPPORT",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-03-31",
+      "fire_clock": "2026-03-31 09:49:00-04:00",
+      "band": [
+        23311.75,
+        23312.0
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "role": "SUPPORT",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-03-31",
+      "fire_clock": "2026-03-31 09:49:00-04:00",
+      "band": [
+        23436.5,
+        23436.75
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "role": "RESISTANCE",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-04-02",
+      "fire_clock": null,
+      "band": [
+        24042.5,
+        24042.75
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "role": "RESISTANCE",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-04-02",
+      "fire_clock": null,
+      "band": [
+        23665.5,
+        23665.75
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": false,
+      "defining_rejection": null,
+      "defining_timeframe": null,
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": null,
+      "role": "SUPPORT",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-04-06",
+      "fire_clock": "2026-04-06 10:04:00-04:00",
+      "band": [
+        24421.5,
+        24421.75
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-03-24 21:50:00-04:00",
+        "which_wick": "upper",
+        "band_drawn": [
+          24421.25,
+          24423.0
+        ],
+        "ohlc": [
+          24415.5,
+          24423.0,
+          24412.0,
+          24421.25
+        ],
+        "edge_errors": [
+          0.25,
+          1.25
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 42,
+      "role": "RESISTANCE",
+      "marked_main_timeframe": "15m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-04-06",
+      "fire_clock": "2026-04-06 10:04:00-04:00",
+      "band": [
+        24248.0,
+        24248.25
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-04-01 11:25:00-04:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          24247.75,
+          24249.75
+        ],
+        "ohlc": [
+          24268.25,
+          24278.75,
+          24247.75,
+          24249.75
+        ],
+        "edge_errors": [
+          0.25,
+          1.5
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 24,
+      "role": "SUPPORT",
+      "marked_main_timeframe": "15m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-04-09",
+      "fire_clock": "2026-04-09 11:35:00-04:00",
+      "band": [
+        24960.5,
+        24960.75
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-03-11 16:45:00-04:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          24959.25,
+          24962.25
+        ],
+        "ohlc": [
+          24967.5,
+          24969.0,
+          24959.25,
+          24962.25
+        ],
+        "edge_errors": [
+          1.25,
+          1.5
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 38,
+      "role": "SUPPORT",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-04-09",
+      "fire_clock": "2026-04-09 11:35:00-04:00",
+      "band": [
+        25112.0,
+        25112.25
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-04-07 22:55:00-04:00",
+        "which_wick": "upper",
+        "band_drawn": [
+          25111.25,
+          25112.25
+        ],
+        "ohlc": [
+          25106.5,
+          25112.25,
+          25102.75,
+          25111.25
+        ],
+        "edge_errors": [
+          0.75,
+          0.0
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 14,
+      "role": "RESISTANCE",
+      "marked_main_timeframe": "15m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-04-14",
+      "fire_clock": "2026-04-14 09:36:00-04:00",
+      "band": [
+        25716.5,
+        25716.75
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-01-23 02:25:00-05:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          25715.75,
+          25717.5
+        ],
+        "ohlc": [
+          25722.75,
+          25725.0,
+          25715.75,
+          25717.5
+        ],
+        "edge_errors": [
+          0.75,
+          0.75
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 76,
+      "role": "RESISTANCE",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    },
+    {
+      "row_type": "his_labelled_zone",
+      "session": "2026-04-14",
+      "fire_clock": "2026-04-14 09:36:00-04:00",
+      "band": [
+        25620.5,
+        25620.75
+      ],
+      "band_width_points": 0.25,
+      "construction_kind": "trader_marked",
+      "source_map": "VISIBLE_REJECTION",
+      "location_id": null,
+      "birth": null,
+      "birth_session": null,
+      "age_in_sessions_at_fire": null,
+      "drawable_under_his_rule": true,
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-01-23 03:35:00-05:00",
+        "which_wick": "upper",
+        "band_drawn": [
+          25620.0,
+          25620.25
+        ],
+        "ohlc": [
+          25607.25,
+          25620.25,
+          25604.0,
+          25620.0
+        ],
+        "edge_errors": [
+          0.5,
+          0.5
+        ]
+      },
+      "defining_timeframe": "5m",
+      "completed_tests_since_BIRTH": null,
+      "completed_tests_since_DEFINING_REJECTION": 86,
+      "role": "SUPPORT",
+      "marked_main_timeframe": "5m",
+      "day_grain_context_only": true
+    }
+  ],
+  "machine_zone_rows": 7,
+  "his_zone_rows": 16,
+  "population_check": {
+    "convicted_rows_found": 5,
+    "convicted_expected": 5,
+    "control_rows_found": 1,
+    "note": "03-30 has no approved entry at all, so it contributes no machine zone; 04-02 is a NO_TRADE decline day and is tagged other_decided_day_zone, never convicted."
+  },
+  "summary_machine_zones": [
+    {
+      "session": "2026-03-23",
+      "type": "convicted_early_zone",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "age_sessions": 14,
+      "drawable_under_his_rule": true,
+      "tests_since_birth": 129,
+      "tests_since_definer": 97,
+      "source_map": "WICK_ZONE",
+      "width": 9.48
+    },
+    {
+      "session": "2026-03-24",
+      "type": "convicted_early_zone",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "age_sessions": 1,
+      "drawable_under_his_rule": false,
+      "tests_since_birth": 18,
+      "tests_since_definer": null,
+      "source_map": "WICK_ZONE",
+      "width": 19.24
+    },
+    {
+      "session": "2026-03-31",
+      "type": "convicted_early_zone",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "age_sessions": 0,
+      "drawable_under_his_rule": false,
+      "tests_since_birth": 10,
+      "tests_since_definer": null,
+      "source_map": "WICK_ZONE",
+      "width": 11.42
+    },
+    {
+      "session": "2026-04-02",
+      "type": "other_decided_day_zone",
+      "story": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "age_sessions": 2,
+      "drawable_under_his_rule": true,
+      "tests_since_birth": 22,
+      "tests_since_definer": 8,
+      "source_map": "WICK_ZONE",
+      "width": 8.65
+    },
+    {
+      "session": "2026-04-06",
+      "type": "convicted_early_zone",
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "age_sessions": 0,
+      "drawable_under_his_rule": false,
+      "tests_since_birth": 10,
+      "tests_since_definer": null,
+      "source_map": "STRONG_SWING_DISPLACEMENT",
+      "width": 3.83
+    },
+    {
+      "session": "2026-04-09",
+      "type": "convicted_early_zone",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "age_sessions": 18,
+      "drawable_under_his_rule": true,
+      "tests_since_birth": 142,
+      "tests_since_definer": 15,
+      "source_map": "STRONG_SWING_DISPLACEMENT",
+      "width": 6.06
+    },
+    {
+      "session": "2026-04-14",
+      "type": "CONTROL_zone",
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "age_sessions": 0,
+      "drawable_under_his_rule": false,
+      "tests_since_birth": 1,
+      "tests_since_definer": null,
+      "source_map": "STRONG_SWING_DISPLACEMENT",
+      "width": 3.16
+    }
+  ],
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 90.26
+}
