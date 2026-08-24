@@ -1,0 +1,257 @@
+{
+  "artifact": "TP_SWEEP_5M_15M_ONLY",
+  "status": "DIAGNOSTIC. 5m/15m-only TP provenance sweep. Repairs nothing.",
+  "authority": "ALGO-086 order 2",
+  "produced": "2026-08-24",
+  "operator_correction": "'i never saod nothing obut 30 minturws' / 'yes i onyl draw zones on 5 minbute and 15 mintues'. 30m and 60m bands are NOT his teaching; L3/O2's 30m and 60m findings are re-labelled DERIVED OBSERVATIONS and are not sources.",
+  "timeframes_searched": [
+    "5m",
+    "15m"
+  ],
+  "tolerances_frozen_by_ALGO_085": {
+    "exact_ticks": 1,
+    "band_points": 2.0
+  },
+  "capability_control": {
+    "session": "2026-03-31",
+    "price": 23436.625,
+    "what": "entry line",
+    "re_found": true,
+    "bands": [
+      {
+        "timeframe": "5m",
+        "which_wick": "lower",
+        "bucket": "2026-03-31 09:35:00-04:00",
+        "closes_at": "2026-03-31 09:40:00-04:00",
+        "band": [
+          23402.75,
+          23444.5
+        ],
+        "width_points": 41.75
+      },
+      {
+        "timeframe": "5m",
+        "which_wick": "upper",
+        "bucket": "2026-03-31 09:40:00-04:00",
+        "closes_at": "2026-03-31 09:45:00-04:00",
+        "band": [
+          23418.0,
+          23470.0
+        ],
+        "width_points": 52.0
+      },
+      {
+        "timeframe": "15m",
+        "which_wick": "upper",
+        "bucket": "2026-03-31 09:30:00-04:00",
+        "closes_at": "2026-03-31 09:45:00-04:00",
+        "band": [
+          23418.0,
+          23470.0
+        ],
+        "width_points": 52.0
+      }
+    ],
+    "near": [
+      {
+        "timeframe": "5m",
+        "which_wick": "upper",
+        "bucket": "2026-03-31 08:35:00-04:00",
+        "closes_at": "2026-03-31 08:40:00-04:00",
+        "band": [
+          23405.0,
+          23436.25
+        ],
+        "width_points": 31.25,
+        "gap_points": 0.375
+      },
+      {
+        "timeframe": "15m",
+        "which_wick": "upper",
+        "bucket": "2026-03-31 08:30:00-04:00",
+        "closes_at": "2026-03-31 08:45:00-04:00",
+        "band": [
+          23422.5,
+          23436.25
+        ],
+        "width_points": 13.75,
+        "gap_points": 0.375
+      }
+    ],
+    "band_coverage_pct": 79.3
+  },
+  "BASE_RATE_FINDING": "5m/15m wick-to-close bands built from every bar of a session TILE THE WHOLE TRADED RANGE. Measured on 03-30: 306 bands cover 100.0% of the 291.5-point range, so any price whatsoever is 'inside a band'. CONTAINMENT UNDER THAT COVERAGE IS NOT EVIDENCE OF PROVENANCE - it is arithmetic. This retro-actively weakens the containment findings in L3 and O2, which reported hits without their base rate; those verdicts should be re-read with coverage attached before any of them is used to justify a repair.",
+  "capability_control_passed": true,
+  "control_note": "L3's control WAS the 60m find on 03-24; removing 60m removed it. The control is rebuilt from 03-31's ENTRY line, which must be re-found on 5m/15m alone.",
+  "rows": [
+    {
+      "session": "2026-03-30",
+      "his_tp": 23355.25,
+      "his_entry_clock": "2026-03-30 09:41:00-04:00",
+      "bands_CONTAINING_it": [
+        {
+          "timeframe": "5m",
+          "which_wick": "upper",
+          "bucket": "2026-03-30 01:20:00-04:00",
+          "closes_at": "2026-03-30 01:25:00-04:00",
+          "band": [
+            23352.0,
+            23357.0
+          ],
+          "width_points": 5.0
+        },
+        {
+          "timeframe": "5m",
+          "which_wick": "upper",
+          "bucket": "2026-03-30 02:10:00-04:00",
+          "closes_at": "2026-03-30 02:15:00-04:00",
+          "band": [
+            23352.25,
+            23358.5
+          ],
+          "width_points": 6.25
+        },
+        {
+          "timeframe": "5m",
+          "which_wick": "lower",
+          "bucket": "2026-03-30 02:15:00-04:00",
+          "closes_at": "2026-03-30 02:20:00-04:00",
+          "band": [
+            23352.75,
+            23362.0
+          ],
+          "width_points": 9.25
+        },
+        {
+          "timeframe": "5m",
+          "which_wick": "upper",
+          "bucket": "2026-03-30 01:55:00-04:00",
+          "closes_at": "2026-03-30 02:00:00-04:00",
+          "band": [
+            23345.5,
+            23355.75
+          ],
+          "width_points": 10.25
+        },
+        {
+          "timeframe": "5m",
+          "which_wick": "upper",
+          "bucket": "2026-03-30 00:30:00-04:00",
+          "closes_at": "2026-03-30 00:35:00-04:00",
+          "band": [
+            23349.75,
+            23362.0
+          ],
+          "width_points": 12.25
+        },
+        {
+          "timeframe": "15m",
+          "which_wick": "upper",
+          "bucket": "2026-03-30 01:45:00-04:00",
+          "closes_at": "2026-03-30 02:00:00-04:00",
+          "band": [
+            23345.5,
+            23357.75
+          ],
+          "width_points": 12.25
+        }
+      ],
+      "containing_count": 17,
+      "near_misses_within_tolerance": [
+        {
+          "timeframe": "5m",
+          "which_wick": "upper",
+          "bucket": "2026-03-30 01:30:00-04:00",
+          "closes_at": "2026-03-30 01:35:00-04:00",
+          "band": [
+            23353.75,
+            23355.0
+          ],
+          "width_points": 1.25,
+          "gap_points": 0.25
+        },
+        {
+          "timeframe": "5m",
+          "which_wick": "lower",
+          "bucket": "2026-03-30 02:05:00-04:00",
+          "closes_at": "2026-03-30 02:10:00-04:00",
+          "band": [
+            23355.5,
+            23358.75
+          ],
+          "width_points": 3.25,
+          "gap_points": 0.25
+        },
+        {
+          "timeframe": "5m",
+          "which_wick": "upper",
+          "bucket": "2026-03-30 01:50:00-04:00",
+          "closes_at": "2026-03-30 01:55:00-04:00",
+          "band": [
+            23356.25,
+            23357.75
+          ],
+          "width_points": 1.5,
+          "gap_points": 1.0
+        },
+        {
+          "timeframe": "5m",
+          "which_wick": "upper",
+          "bucket": "2026-03-30 01:15:00-04:00",
+          "closes_at": "2026-03-30 01:20:00-04:00",
+          "band": [
+            23348.0,
+            23354.0
+          ],
+          "width_points": 6.0,
+          "gap_points": 1.25
+        },
+        {
+          "timeframe": "5m",
+          "which_wick": "lower",
+          "bucket": "2026-03-30 01:30:00-04:00",
+          "closes_at": "2026-03-30 01:35:00-04:00",
+          "band": [
+            23335.75,
+            23353.75
+          ],
+          "width_points": 18.0,
+          "gap_points": 1.5
+        }
+      ],
+      "VERDICT": "CONTAINMENT_IS_VACUOUS_BAND_COVERAGE_IS_TOTAL",
+      "band_coverage_pct_of_the_days_range": 100.0,
+      "containment_is_vacuous": true,
+      "tightest_containing_band": {
+        "timeframe": "5m",
+        "which_wick": "upper",
+        "bucket": "2026-03-30 01:20:00-04:00",
+        "closes_at": "2026-03-30 01:25:00-04:00",
+        "band": [
+          23352.0,
+          23357.0
+        ],
+        "width_points": 5.0
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "his_tp": 24641.5,
+      "his_entry_clock": "2026-03-24 09:32:00-04:00",
+      "bands_CONTAINING_it": [],
+      "containing_count": 0,
+      "near_misses_within_tolerance": [],
+      "VERDICT": "TP_PROVENANCE_UNKNOWN_FROM_HELD_5M_15M",
+      "band_coverage_pct_of_the_days_range": 100.0,
+      "containment_is_vacuous": true,
+      "tightest_containing_band": null
+    }
+  ],
+  "verdicts": {
+    "2026-03-30": "CONTAINMENT_IS_VACUOUS_BAND_COVERAGE_IS_TOTAL",
+    "2026-03-24": "TP_PROVENANCE_UNKNOWN_FROM_HELD_5M_15M"
+  },
+  "consequence_for_0330": "If 03-30's TP has no 5m/15m source, its S5 block stands as an HONEST LOSS and the batch must not be widened to recover it.",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 1.96
+}

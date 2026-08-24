@@ -35,32 +35,53 @@ from research import current_mnq_strategy_v2_4_targets as base
 core = base.core
 ReactionDestination = base.ReactionDestination
 
-#: ALGO-076: DECLARED UNFROZEN WITH PROVENANCE `UNCITED`. The VALUE IS NOT MOVED by this
-#: declaration and may not be moved to recover a session.
+#: PROVENANCE: TAUGHT AND RECORDED. VALUE FROZEN AT 400.0. The code was right all along.
 #:
-#: This module's docstring calls the $400 gap "the trader's direct TP-display entry-gap rule",
-#: which is a claim of TAUGHT provenance. That claim has no citation. Surfaces searched
-#: [MEASURED 2026-08-23, worktree wt-mnq-v24]: the v2.3 spec JSON, the v2.4 video-evidence docs,
-#: every repo *.md / *.json / *.txt, BOTH advisor branches (gpt-rulings-algo and gpt-rulings),
-#: and the introducing commit 42c53c6c (subject line only, no body, no ruling id). Nothing.
-#: POSITIVE CONTROL for that absence: the same sweep DOES surface ALGO-004's
-#: "17.25 points x 15 MNQ x $2/point = $517.50", and ALGO-051/052's target arithmetic at
-#: "$30/point" - so TP_GAP_REFERENCE_CONTRACTS = 15 and the $2 point value ARE grounded, and a
-#: $400 citation would have been found had one existed on those surfaces.
+#: THE CITATION IS IN THE RESEARCH CORPUS AND ALWAYS WAS -
+#: `current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json`,
+#: `direct_trader_tp_gap_clarification`, source `direct_trader_video_review_and_followup`:
+#:   trader_statement          "...$400 or more is safe; under $400 is not safe."
+#:   reference_safe_floor_usd  400.0        reference_contracts 15    point value $2.0
+#:   under_400_immediate_entry "BLOCK"
+#:   under_400_tp2_behavior    "Do not blindly leapfrog untouched TP1 merely because TP2 is
+#:                              farther away."
+#:   processed_reaction_continuation - roll only after that area has actually been interacted
+#:                              with (implemented as PROCESSED_REACTION_REASONS below).
+#: The operator confirmed it in his own words on 2026-08-24 ("i had a rule that said if the tp
+#: is under 400$ dont target it cxause the tp zone is too close") and said it was in his files
+#: already. It was.
 #:
-#: For scale: the frozen stop at that same reference size is $517.50, so $400 is 0.77x risk -
-#: not a round R-multiple either, which makes an unrecorded derivation from the stop unlikely.
+#: HOW I GOT IT WRONG, recorded because the METHOD is the lesson, not the number. ALGO-076
+#: graded this UNCITED after sweeping the spec, the video-evidence docs, repo md/json, BOTH
+#: advisor branches and the introducing commit. The grade was published with a POSITIVE CONTROL
+#: - ALGO-004's "17.25 x 15 MNQ x $2 = $517.50" - which appeared to prove the sweep could find a
+#: citation when one existed. IT PROVED NOTHING OF THE KIND: ALGO-004 is a RULING, so the
+#: control only demonstrated that the rulings branches were searchable. It never exercised the
+#: RESEARCH CORPUS, which is where this rule actually lived. A control in the wrong surface is a
+#: better false proof than no control at all, because it makes an unsearched surface look
+#: searched.
 #:
-#: ALGO-076 also measured that this floor is NOT what separates him from the machine: at HIS
-#: OWN entry every destination considered clears it in all four T/P/G sessions
-#: (81/81, 10/10, 122/122, 3/3). The refusals at 112.50 / 382.50 / 397.50 reported in ALGO-075
-#: were measured at the BOT's candidate prices and clocks, which are different instants.
+#: STANDING RULE from that error: every provenance grade NAMES ITS SURFACES, and the research
+#: corpus - spec, addenda, video-evidence, fidelity-gold - is always among them.
+#:
+#: THE ROLLOVER QUESTION IS CLOSED. `under_400_tp2_behavior` answers it: no blind rollover. The
+#: single-shot refusal below plus PROCESSED_REACTION_REASONS is that rule, already implemented.
+#: This is also why R-A (a structural "spent" filter) was retracted permanently: dropping a
+#: nearby untouched destination so a farther one could win IS blind leapfrogging, and the
+#: 18-entry blast radius its guard caught was the taught rule pushing back.
+#:
+#: STILL TRUE (ALGO-077): at HIS OWN entry the floor refuses nothing - every destination
+#: considered clears it in all four T/P/G sessions (81/81, 10/10, 122/122, 3/3). The refusals at
+#: 112.50 / 382.50 / 397.50 were at the BOT's candidate prices and clocks. The floor is his rule
+#: AND it is not what separates him from the machine on those days; both hold at once.
 UNFROZEN_CHOICES = {
     "TP_GAP_REFERENCE_USD": (
         "400.0 USD minimum planned TP1 display at the frozen 15-MNQ reference size. "
-        "PROVENANCE: UNCITED - no spec, transcript, video-evidence doc, ruling on either "
-        "advisor branch, or commit body names it. Declared under ALGO-076 so it can never "
-        "again be quoted as frozen or as taught. NOT to be moved to recover a session."),
+        "PROVENANCE: TAUGHT - trader_fidelity_addendum_2026_08_20.json, "
+        "direct_trader_tp_gap_clarification ('$400 or more is safe; under $400 is not safe'; "
+        "under_400_immediate_entry BLOCK; no blind leapfrog of an untouched TP1). Confirmed by "
+        "the operator 2026-08-24. Value FROZEN. Retracts ALGO-076's UNCITED grade, which "
+        "searched the rulings branches with a control that only exercised those same branches."),
 }
 
 TP_GAP_REFERENCE_USD = 400.0
