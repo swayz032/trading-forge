@@ -35,6 +35,34 @@ from research import current_mnq_strategy_v2_4_targets as base
 core = base.core
 ReactionDestination = base.ReactionDestination
 
+#: ALGO-076: DECLARED UNFROZEN WITH PROVENANCE `UNCITED`. The VALUE IS NOT MOVED by this
+#: declaration and may not be moved to recover a session.
+#:
+#: This module's docstring calls the $400 gap "the trader's direct TP-display entry-gap rule",
+#: which is a claim of TAUGHT provenance. That claim has no citation. Surfaces searched
+#: [MEASURED 2026-08-23, worktree wt-mnq-v24]: the v2.3 spec JSON, the v2.4 video-evidence docs,
+#: every repo *.md / *.json / *.txt, BOTH advisor branches (gpt-rulings-algo and gpt-rulings),
+#: and the introducing commit 42c53c6c (subject line only, no body, no ruling id). Nothing.
+#: POSITIVE CONTROL for that absence: the same sweep DOES surface ALGO-004's
+#: "17.25 points x 15 MNQ x $2/point = $517.50", and ALGO-051/052's target arithmetic at
+#: "$30/point" - so TP_GAP_REFERENCE_CONTRACTS = 15 and the $2 point value ARE grounded, and a
+#: $400 citation would have been found had one existed on those surfaces.
+#:
+#: For scale: the frozen stop at that same reference size is $517.50, so $400 is 0.77x risk -
+#: not a round R-multiple either, which makes an unrecorded derivation from the stop unlikely.
+#:
+#: ALGO-076 also measured that this floor is NOT what separates him from the machine: at HIS
+#: OWN entry every destination considered clears it in all four T/P/G sessions
+#: (81/81, 10/10, 122/122, 3/3). The refusals at 112.50 / 382.50 / 397.50 reported in ALGO-075
+#: were measured at the BOT's candidate prices and clocks, which are different instants.
+UNFROZEN_CHOICES = {
+    "TP_GAP_REFERENCE_USD": (
+        "400.0 USD minimum planned TP1 display at the frozen 15-MNQ reference size. "
+        "PROVENANCE: UNCITED - no spec, transcript, video-evidence doc, ruling on either "
+        "advisor branch, or commit body names it. Declared under ALGO-076 so it can never "
+        "again be quoted as frozen or as taught. NOT to be moved to recover a session."),
+}
+
 TP_GAP_REFERENCE_USD = 400.0
 TP_GAP_REFERENCE_CONTRACTS = 15
 TP_GAP_POINT_VALUE_USD = float(core.POINT_VALUE)

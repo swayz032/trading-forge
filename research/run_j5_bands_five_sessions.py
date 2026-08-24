@@ -96,6 +96,14 @@ def main() -> int:
             rows.append({"session": session, "ERROR": f"no {tf} bar at or before {marked}"})
             continue
         bar_ts = prior.index[-1]
+        # ALGO-076: COMPLETED or FORMING at marked_time. A bar at bucket T on timeframe D spans
+        # [T, T+D); it is COMPLETED only once marked_time reaches T+D. This is NOT cosmetic - a
+        # band derived from a bar's FULL OHLC while that bar was still forming uses highs, lows
+        # and a close that did not exist at the instant he marked the level. That is the
+        # H-CONFIRM case and it is labelled rather than hidden.
+        tf_minutes = 15 if tf == "15m" else 5
+        bar_close_ts = bar_ts + pd.Timedelta(minutes=tf_minutes)
+        completed = bool(ts >= bar_close_ts)
         r = frame.loc[bar_ts]
         o, h, l, c = float(r.open), float(r.high), float(r.low), float(r.close)
         rng = h - l
@@ -149,6 +157,9 @@ def main() -> int:
             "marked_time": marked,
             "marked_main_timeframe": tf,
             "rejection_candle_bucket": str(bar_ts),
+            "rejection_candle_state_at_marked_time": "COMPLETED" if completed else "FORMING",
+            "rejection_candle_closes_at": str(bar_close_ts),
+            "is_H_CONFIRM_case": (not completed),
             "rejection_candle_ohlc": [o, h, l, c],
             "rejection_wick_used": wick_name,
             "rejection_wick_points": round(wick_size, 2),
@@ -164,6 +175,7 @@ def main() -> int:
         })
 
     suspect = [r["session"] for r in rows if r.get("REJECTION_WICK_IS_THE_SMALLER_ONE")]
+    forming = [r["session"] for r in rows if r.get("is_H_CONFIRM_case")]
     widths = [r["band_width_points"] for r in rows if "band_width_points" in r]
 
     out = {
@@ -185,6 +197,11 @@ def main() -> int:
         "rows": rows,
         "width_range_points": [min(widths), max(widths)] if widths else None,
         "sessions_where_the_rejection_wick_is_smaller": suspect,
+        "H_CONFIRM_sessions_marked_candle_still_FORMING": forming,
+        "why_FORMING_matters": (
+            "A band taken from the full OHLC of a bar that had not closed at marked_time uses "
+            "extremes and a close that did not exist when he drew the level. Every such band is "
+            "labelled H-CONFIRM; none is silently treated as a completed-bar band."),
         "held_teaching_width_span_for_comparison": (
             "~4-75 points across the six screenshots (4/8/19/22/30/32) and the two zones "
             "measured off the 11 Apr '25 tape (~27 and ~74.5). ALGO-073 ruled width is not a "
@@ -208,6 +225,8 @@ def main() -> int:
               f"  covers_his_line={r['band_covers_his_line']}")
         print(f"      {r['rejection_wick_used']} wick={r['rejection_wick_points']} pts vs "
               f"opposite={r['opposite_wick_points']} pts{flag}")
+        print(f"      candle at marked_time: {r['rejection_candle_state_at_marked_time']} "
+              f"(closes {r['rejection_candle_closes_at'][11:16]})")
     print(f"\nwidth range: {out['width_range_points']} points")
     if suspect:
         print(f"NOTE (rejection wick smaller than the opposite): {suspect}")

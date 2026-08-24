@@ -81,3 +81,19 @@ def test_widths_are_reported_against_the_held_teaching_span_not_silently(art):
 
 def test_the_bands_were_published_before_the_0324_coverage_rerun(art):
     assert art["published_BEFORE_the_0324_coverage_rerun"] is True
+
+
+def test_every_band_states_COMPLETED_or_FORMING_at_marked_time(art):
+    """ALGO-076 requirement. A band from a bar that had not closed uses data that did not exist."""
+    for r in _ok(art):
+        assert r["rejection_candle_state_at_marked_time"] in ("COMPLETED", "FORMING"), r["session"]
+        assert r["is_H_CONFIRM_case"] is (
+            r["rejection_candle_state_at_marked_time"] == "FORMING"), r["session"]
+
+
+def test_the_H_CONFIRM_sessions_are_listed_not_buried_in_the_rows(art):
+    """ALL FOUR derived bands are FORMING - the ruling anticipated only 03-24. That has to be
+    visible at the top of the artifact, not reconstructable by reading every row."""
+    forming = art["H_CONFIRM_sessions_marked_candle_still_FORMING"]
+    assert sorted(forming) == ["2026-03-24", "2026-03-30", "2026-03-31", "2026-04-14"], forming
+    assert art["why_FORMING_matters"]

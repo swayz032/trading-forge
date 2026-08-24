@@ -18,6 +18,9 @@
       "marked_time": "2026-03-24T09:32:00-04:00",
       "marked_main_timeframe": "15m",
       "rejection_candle_bucket": "2026-03-24 09:30:00-04:00",
+      "rejection_candle_state_at_marked_time": "FORMING",
+      "rejection_candle_closes_at": "2026-03-24 09:45:00-04:00",
+      "is_H_CONFIRM_case": true,
       "rejection_candle_ohlc": [
         24255.5,
         24317.0,
@@ -44,6 +47,9 @@
       "marked_time": "2026-03-30T09:35:00-04:00",
       "marked_main_timeframe": "5m",
       "rejection_candle_bucket": "2026-03-30 09:35:00-04:00",
+      "rejection_candle_state_at_marked_time": "FORMING",
+      "rejection_candle_closes_at": "2026-03-30 09:40:00-04:00",
+      "is_H_CONFIRM_case": true,
       "rejection_candle_ohlc": [
         23463.75,
         23467.75,
@@ -70,6 +76,9 @@
       "marked_time": "2026-03-31T09:35:00-04:00",
       "marked_main_timeframe": "5m",
       "rejection_candle_bucket": "2026-03-31 09:35:00-04:00",
+      "rejection_candle_state_at_marked_time": "FORMING",
+      "rejection_candle_closes_at": "2026-03-31 09:40:00-04:00",
+      "is_H_CONFIRM_case": true,
       "rejection_candle_ohlc": [
         23458.0,
         23460.5,
@@ -113,6 +122,9 @@
       "marked_time": "2026-04-14T09:30:00-04:00",
       "marked_main_timeframe": "5m",
       "rejection_candle_bucket": "2026-04-14 09:30:00-04:00",
+      "rejection_candle_state_at_marked_time": "FORMING",
+      "rejection_candle_closes_at": "2026-04-14 09:35:00-04:00",
+      "is_H_CONFIRM_case": true,
       "rejection_candle_ohlc": [
         25656.25,
         25727.0,
@@ -138,7 +150,14 @@
     "2026-03-30",
     "2026-04-14"
   ],
+  "H_CONFIRM_sessions_marked_candle_still_FORMING": [
+    "2026-03-24",
+    "2026-03-30",
+    "2026-03-31",
+    "2026-04-14"
+  ],
+  "why_FORMING_matters": "A band taken from the full OHLC of a bar that had not closed at marked_time uses extremes and a close that did not exist when he drew the level. Every such band is labelled H-CONFIRM; none is silently treated as a completed-bar band.",
   "held_teaching_width_span_for_comparison": "~4-75 points across the six screenshots (4/8/19/22/30/32) and the two zones measured off the 11 Apr '25 tape (~27 and ~74.5). ALGO-073 ruled width is not a constant, and these bands are not expected to agree on one number.",
   "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
-  "runtime_seconds": 1.87
+  "runtime_seconds": 2.04
 }
