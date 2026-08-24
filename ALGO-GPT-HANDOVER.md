@@ -45,8 +45,10 @@ a report in the wrong place breaks the main campaign's control plane.
 **The defect of record, and its first measured movement.** The bot **used to take a trade in 14
 of 14 sessions and never once genuinely decline** — an entry decision that is a constant, and
 therefore carries no information. Everything built in this phase existed to kill that. After
-ALGO-047's wiring of the entry authority into the kernel, re-measured end-to-end: **13 of 14,
-with one genuine in-window decline.** The trader traded on 7 of the same 14. When the bot is
+ALGO-047's wiring of the entry authority into the kernel, and re-measured again at
+`acceptance_bars = 3` with ALGO-068 R1 landed: **12 of 14, with two genuine in-window
+declines.** (It read 13 of 14 with one decline at `acceptance_bars = 2` before R1 — a
+superseded brain, not a different reading of this one.) The trader traded on 7 of the same 14. When the bot is
 present in-window and he trades, it picks the same direction **1 of 1** — so the failure is
 **timing and selectivity, not direction**.
 

@@ -1,0 +1,172 @@
+{
+  "artifact": "R1_GUARD_MEMBERSHIP",
+  "status": "DIAGNOSTIC. Names the grant attempts R1 added and tests them against the ALGO-070 membership clauses. Repairs nothing.",
+  "authority": "ALGO-070 pre-registered membership disposition",
+  "produced": "2026-08-23",
+  "guard_that_failed": "ALGO-063 §4: forbidden-in-window may not rise. It rose 6 -> 8.",
+  "how_the_member_sessions_were_found": "per-session diff of `budget_faithful.in_window_entries_the_budget_forbids` between the committed 08:00 exam arm (BEFORE R1) and the canonical scorecard re-run AFTER R1: 2026-04-07 rose 0 -> 1 and 2026-04-08 rose 0 -> 1; every other session is unchanged. Totals 6 -> 8.",
+  "clauses": {
+    "i": "a grant by the MATCHING family for the J3 interaction at that zone",
+    "ii": "on a taught story, with its predicate cited",
+    "iii": "not a pre-window grant",
+    "iv": "not Route A on a BROKEN zone",
+    "v": "blocked by the one-bullet budget alone"
+  },
+  "rows": [
+    {
+      "session": "2026-04-07",
+      "trader_state": "WAIT",
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED",
+      "censored": true,
+      "replay_window": {
+        "start": "2026-04-07T09:36:00-04:00",
+        "end": "2026-04-07T09:56:00-04:00"
+      },
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-07T09:23:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 1,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      },
+      "clause_v_blocked_by_the_one_bullet_budget_alone": true,
+      "session_first_entry_time": "2026-04-07T09:23:00-04:00",
+      "in_window_grants_found": 2,
+      "in_window_grants_at_the_PRE_R1_pin": 0,
+      "grants_ADDED_by_R1": 2,
+      "grants_REMOVED_by_R1": [],
+      "forbidden_counter_delta_for_this_session": 1,
+      "note_on_the_two_numbers": "the number of GRANT ATTEMPTS R1 added and the rise in the forbidden COUNTER are different quantities and are both reported; the counter is what the guard was written against",
+      "members": [
+        {
+          "session": "2026-04-07",
+          "is_NEW_since_pre_R1": true,
+          "bucket": "2026-04-07T09:45:00-04:00",
+          "clock": "2026-04-07T09:48:00-04:00",
+          "direction": "S",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "location_band": [
+            24205.45357142857,
+            24209.54642857143
+          ],
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "B_NORMAL_BREAKOUT",
+          "family": "BREAK",
+          "form": "normal_breakout",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "routes_asked": [
+            "C_PREBREAK_DISPLACEMENT",
+            "D_PREBREAK_RETEST_BREAKOUT",
+            "B_NORMAL_BREAKOUT"
+          ],
+          "route_refusals": {
+            "C_PREBREAK_DISPLACEMENT": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "D_PREBREAK_RETEST_BREAKOUT": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST"
+          },
+          "authority_state": null,
+          "zone_state_recorded": null,
+          "clause_iv_not_route_A_on_a_broken_zone": true,
+          "clause_i_grant_by_a_break_family_route": true,
+          "clause_iii_not_a_pre_window_grant": true
+        },
+        {
+          "session": "2026-04-07",
+          "is_NEW_since_pre_R1": true,
+          "bucket": "2026-04-07T09:45:00-04:00",
+          "clock": "2026-04-07T09:49:00-04:00",
+          "direction": "S",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "location_band": [
+            24205.45357142857,
+            24209.54642857143
+          ],
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "B_NORMAL_BREAKOUT",
+          "family": "BREAK",
+          "form": "normal_breakout",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "routes_asked": [
+            "C_PREBREAK_DISPLACEMENT",
+            "D_PREBREAK_RETEST_BREAKOUT",
+            "B_NORMAL_BREAKOUT"
+          ],
+          "route_refusals": {
+            "C_PREBREAK_DISPLACEMENT": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "D_PREBREAK_RETEST_BREAKOUT": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST"
+          },
+          "authority_state": null,
+          "zone_state_recorded": null,
+          "clause_iv_not_route_A_on_a_broken_zone": true,
+          "clause_i_grant_by_a_break_family_route": true,
+          "clause_iii_not_a_pre_window_grant": true
+        }
+      ]
+    },
+    {
+      "session": "2026-04-08",
+      "trader_state": "WAIT",
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED",
+      "censored": true,
+      "replay_window": {
+        "start": "2026-04-08T10:41:00-04:00",
+        "end": "2026-04-08T11:01:00-04:00"
+      },
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-08T08:52:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 1,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      },
+      "clause_v_blocked_by_the_one_bullet_budget_alone": true,
+      "session_first_entry_time": "2026-04-08T08:52:00-04:00",
+      "in_window_grants_found": 1,
+      "in_window_grants_at_the_PRE_R1_pin": 0,
+      "grants_ADDED_by_R1": 1,
+      "grants_REMOVED_by_R1": [],
+      "forbidden_counter_delta_for_this_session": 1,
+      "note_on_the_two_numbers": "the number of GRANT ATTEMPTS R1 added and the rise in the forbidden COUNTER are different quantities and are both reported; the counter is what the guard was written against",
+      "members": [
+        {
+          "session": "2026-04-08",
+          "is_NEW_since_pre_R1": true,
+          "bucket": "2026-04-08T10:55:00-04:00",
+          "clock": "2026-04-08T10:57:00-04:00",
+          "direction": "S",
+          "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+          "location_band": [
+            25020.961607142857,
+            25039.988392857143
+          ],
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "family": "BREAK",
+          "form": "normal_breakout",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "routes_asked": [
+            "C_PREBREAK_DISPLACEMENT",
+            "D_PREBREAK_RETEST_BREAKOUT",
+            "B_NORMAL_BREAKOUT"
+          ],
+          "route_refusals": {
+            "C_PREBREAK_DISPLACEMENT": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "D_PREBREAK_RETEST_BREAKOUT": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET"
+          },
+          "authority_state": null,
+          "zone_state_recorded": null,
+          "clause_iv_not_route_A_on_a_broken_zone": true,
+          "clause_i_grant_by_a_break_family_route": true,
+          "clause_iii_not_a_pre_window_grant": true
+        }
+      ]
+    }
+  ],
+  "runtime_seconds": 55.13,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
+}

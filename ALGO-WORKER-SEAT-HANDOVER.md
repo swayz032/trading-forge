@@ -38,8 +38,12 @@ prop-survival → TopstepX` and it is still on the first rung.
 **The defect of record — AND ITS FIRST MEASURED MOVEMENT.** The bot used to take a trade in
 **14 of 14** sessions and never genuinely decline; the trader traded on **7**. After ALGO-047's
 wiring of the entry authority, re-measured end-to-end at the 08:00 window: it trades in
-**13 of 14** and genuinely declines in-window **once**. When the bot is present in-window and
+**12 of 14** and genuinely declines in-window **twice**. When the bot is present in-window and
 he trades, direction agrees **1 of 1**.
+
+> These figures are the CANONICAL 08:00 baseline re-measured at `acceptance_bars = 3` with
+> ALGO-068 R1 landed. The earlier "13 of 14 / declines once" was the same instrument at
+> `acceptance_bars = 2` before R1 — a superseded brain, not a different reading of this one.
 
 > **These numbers are measured at the 08:00 window**, which ALGO-049 made the standing
 > configuration — the ALGO-043 revert to 09:30 is WITHDRAWN and 08:00–12:00 is the
