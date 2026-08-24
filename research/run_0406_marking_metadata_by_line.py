@@ -54,6 +54,14 @@ METADATA_CLAIM = {"marked_time": "2026-04-06T09:52:00-04:00", "marked_main_timef
                   "bucket": "2026-04-06 09:45:00-04:00", "high": 24418.0,
                   "points_short_of_his_line": 3.625}
 
+#: HIS ENTRY CLOCK, from `labels.first_entry_time` - NOT the zone's `marked_time`.
+#: The first version of this module used marked_time (09:52) as "his entry" and therefore
+#: concluded the 10:00 rejection POSTDATED his trade and could only be had by look-ahead. His
+#: entry is 10:04. The rejection PRECEDES it by four minutes and there is no look-ahead at all.
+#: marked_time is when the ZONE was recorded; first_entry_time is when HE traded. Two different
+#: instants, and reading one as the other inverted the verdict.
+HIS_ENTRY_CLOCK = "2026-04-06T10:04:00-04:00"
+
 
 def main() -> int:
     t0 = time.perf_counter()
@@ -119,7 +127,7 @@ def main() -> int:
 
     mine = penetrators[SESSION] if SESSION in penetrators else penetrators["2026-04-06"]
     control = penetrators["POSITIVE_CONTROL_2026-03-31"]
-    his_entry = pd.Timestamp(METADATA_CLAIM["marked_time"])
+    his_entry = pd.Timestamp(HIS_ENTRY_CLOCK)
     before_entry = [x for x in mine if pd.Timestamp(x["bucket"]) <= his_entry]
 
     if not control:
@@ -142,6 +150,8 @@ def main() -> int:
         "tolerance_points": tol,
         "tolerance_fixed_before_the_search": True,
         "metadata_claim_under_test": METADATA_CLAIM,
+        "his_entry_clock": HIS_ENTRY_CLOCK,
+        "his_entry_clock_source": "labels.first_entry_time (NOT the zone's marked_time)",
         "bars_scanned": scanned,
         "REFUTED_TEST_wick_extreme_within_one_tick": {
             "prescribed_by": "ALGO-076 order (d)",
@@ -159,9 +169,9 @@ def main() -> int:
         "verdict": verdict,
         "disposition": (
             "coverage stays on the LINE for 04-06" if verdict == "BAND_UNDERIVABLE_FROM_HELD"
-            else "a band IS derivable, but only from a candle that POSTDATES his entry - so it "
-                 "cannot have been the rejection he was looking at when he marked the level, "
-                 "and deriving it would be look-ahead. ALGO-077 rules whether that counts."),
+            else "a band IS derivable from the bar found by PRICE; the marking metadata points "
+                 "at the wrong bar. The rejection at 10:00 PRECEDES his 10:04 entry, so no "
+                 "look-ahead is involved."),
         "no_pnl": ("No PnL, realized outcome, winner/loser label or clean-edge result "
                    "participated in any decision in this diagnostic."),
         "runtime_seconds": round(time.perf_counter() - t0, 2),

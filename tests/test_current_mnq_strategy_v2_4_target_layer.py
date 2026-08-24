@@ -108,8 +108,14 @@ def test_the_positive_control_actually_finds_rejections(m6):
         "the search found nothing even on the known-derivable control - it proves nothing")
 
 
-def test_0406_has_a_derivable_band_but_only_AFTER_his_entry(m6):
-    assert m6["verdict"] == "METADATA_WRONG_BAR_AND_THE_ONLY_REJECTION_POSTDATES_HIS_ENTRY"
+def test_0406_band_is_derivable_from_a_bar_that_PRECEDES_his_entry(m6):
+    """CORRECTED. The first version of this test asserted the rejection POSTDATED his entry,
+    because the module used the zone's `marked_time` (09:52) as his entry clock. His entry is
+    `labels.first_entry_time` = 10:04, and the rejection is at 10:00 - four minutes BEFORE.
+    There is no look-ahead; the marking metadata simply points at the wrong bar.
+    """
+    assert m6["verdict"] == "MARKING_METADATA_POINTS_AT_THE_WRONG_BAR"
+    assert m6["his_entry_clock"].endswith("10:04:00-04:00")
     assert len(m6["penetration_test_results"]["2026-04-06"]) > 0
-    assert m6["rejections_at_or_before_his_entry"] == [], (
-        "if a rejection exists at or before 09:52 the verdict is wrong")
+    assert len(m6["rejections_at_or_before_his_entry"]) == 2, (
+        "both 10:00 candles precede his 10:04 entry")

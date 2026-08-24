@@ -1,0 +1,1415 @@
+{
+  "artifact": "FULL_CHAIN_BLOCKER_CENSUS",
+  "status": "DIAGNOSTIC. Full-chain blocker census. Repairs nothing, moves no number.",
+  "authority": "ALGO-076 as amended (full chain, all eight decided days)",
+  "produced": "2026-08-24",
+  "arm": "taught_0800",
+  "chain": [
+    "S1_LOCATION_COVERAGE",
+    "S2_ENTRY_AUTHORITY",
+    "S3_ONE_MINUTE_ENTRY",
+    "S4_BUDGET_BULLET",
+    "S5_TARGET_POLICY",
+    "S6_BUILD_AND_CLASSIFY"
+  ],
+  "control_session": "2026-04-14",
+  "control_blocking_gate_count": 0,
+  "zone_selector_positive_control_vs_J16": [
+    {
+      "session": "2026-03-24",
+      "my_zone_mid": 24192.125,
+      "J16_J2_selected_line": 24192.125,
+      "agree": true
+    },
+    {
+      "session": "2026-03-30",
+      "my_zone_mid": 23436.625,
+      "J16_J2_selected_line": 23436.625,
+      "agree": true
+    },
+    {
+      "session": "2026-03-31",
+      "my_zone_mid": 23436.625,
+      "J16_J2_selected_line": 23436.625,
+      "agree": true
+    },
+    {
+      "session": "2026-04-06",
+      "my_zone_mid": 24421.625,
+      "J16_J2_selected_line": 24421.625,
+      "agree": true
+    },
+    {
+      "session": "2026-04-14",
+      "my_zone_mid": 25716.625,
+      "J16_J2_selected_line": 25716.625,
+      "agree": true
+    }
+  ],
+  "zone_selector_agrees_everywhere_J16_covers": true,
+  "rows": [
+    {
+      "session": "2026-03-23",
+      "is_control": false,
+      "is_decline_day": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_SHORT",
+      "his_entry_clock": "2026-03-23 11:21:00-04:00",
+      "his_entry_price": 24615.25,
+      "his_marked_tp": 24160.5,
+      "his_selected_zone": {
+        "lo": 24758.25,
+        "hi": 24765.5,
+        "role": "RESISTANCE",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-03-23T11:21:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "his_zone_midpoint": 24761.875,
+      "replay_window": [
+        "2026-03-23 11:16:00-04:00",
+        "2026-03-23 11:36:00-04:00"
+      ],
+      "blockers": [
+        {
+          "stage": "S1_LOCATION_COVERAGE",
+          "blocked": false,
+          "predicate": "his zone midpoint must fall inside a built entry location",
+          "detail": {
+            "covering": [
+              {
+                "id": "R:2026-03-16T01:00:00-04:00:99052",
+                "band": [
+                  24761.49732142857,
+                  24764.50267857143
+                ],
+                "source": "WICK_ZONE"
+              }
+            ],
+            "locations_built": 55,
+            "gap_to_nearest_location_points": null
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S2_ENTRY_AUTHORITY",
+          "blocked": true,
+          "predicate": "a matching-family candidate must survive to ranking at his bucket",
+          "detail": {
+            "candidates_at_his_bucket": 8,
+            "survived_to_ranking": 0,
+            "route_refusals": {}
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": "PREDICATE_MISSPECIFIED"
+        },
+        {
+          "stage": "S3_ONE_MINUTE_ENTRY",
+          "blocked": false,
+          "predicate": "one_minute_entry must return a fill",
+          "detail": {
+            "actionable_candidates": 11,
+            "fills": [
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-23 08:14:00-04:00",
+                "entry_price": 24429.0
+              },
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-23 08:23:00-04:00",
+                "entry_price": 24497.0
+              },
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-03-23 10:14:00-04:00",
+                "entry_price": 24620.25
+              },
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-03-23 10:18:00-04:00",
+                "entry_price": 24631.75
+              },
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-03-23 10:19:00-04:00",
+                "entry_price": 24637.25
+              },
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-03-23 10:24:00-04:00",
+                "entry_price": 24684.5
+              }
+            ]
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S4_BUDGET_BULLET",
+          "blocked": true,
+          "predicate": "only the session's FIRST fully-approved entry can execute",
+          "detail": {
+            "approved_entries": 7,
+            "first_approved": {
+              "entry_time": "2026-03-23 08:14:00-04:00",
+              "direction": "S"
+            },
+            "his_clock": "2026-03-23 11:21:00-04:00",
+            "first_approved_direction_matches_his": true
+          },
+          "magnitude": "one_trade_budget",
+          "magnitude_provenance": "TAUGHT",
+          "provenance_note": "one fully-approved executed entry per session",
+          "ALGO_067_class": "MACHINE_CORRECT_PER_TEACHING"
+        },
+        {
+          "stage": "S5_TARGET_POLICY",
+          "blocked": true,
+          "predicate": "the chosen destination should be his marked TP (the NEXT KEY ZONE)",
+          "detail": {
+            "destinations_considered": 24,
+            "passing_400": 24,
+            "his_tp": 24160.5,
+            "his_tp_inside_a_considered_destination": false,
+            "gap_from_his_tp_to_nearest_considered": 2.35,
+            "chosen": {
+              "target_executable": 24558.0,
+              "distance_points": 57.25,
+              "kind": "KEY_ZONE_15M",
+              "source_map": "STRONG_SWING_DISPLACEMENT"
+            }
+          },
+          "magnitude": "nearest_first",
+          "magnitude_provenance": "DERIVED",
+          "provenance_note": "targets.py eq.1 + 'no farther feature may leapfrog a nearer meaningful reaction area'. The TAUGHT target is the NEXT KEY ZONE (ALGO-051 verbatim, ALGO-052 measured) - a different rule.",
+          "ALGO_067_class": "TARGET_NOT_IN_MAP"
+        },
+        {
+          "stage": "S6_BUILD_AND_CLASSIFY",
+          "blocked": false,
+          "predicate": "build_and_classify must return a target",
+          "detail": {
+            "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        }
+      ],
+      "BLOCKING_GATES": [
+        "S2_ENTRY_AUTHORITY",
+        "S4_BUDGET_BULLET",
+        "S5_TARGET_POLICY"
+      ],
+      "blocking_gate_count": 3
+    },
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "is_decline_day": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-03-24 09:32:00-04:00",
+      "his_entry_price": 24312.25,
+      "his_marked_tp": 24641.5,
+      "his_selected_zone": {
+        "lo": 24192,
+        "hi": 24192.25,
+        "role": "SUPPORT",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-03-24T09:32:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "his_zone_midpoint": 24192.125,
+      "replay_window": [
+        "2026-03-24 09:30:00-04:00",
+        "2026-03-24 09:40:00-04:00"
+      ],
+      "blockers": [
+        {
+          "stage": "S1_LOCATION_COVERAGE",
+          "blocked": true,
+          "predicate": "his zone midpoint must fall inside a built entry location",
+          "detail": {
+            "covering": [],
+            "locations_built": 53,
+            "gap_to_nearest_location_points": 27.66
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": "LOCATION_NOT_IN_MAP"
+        },
+        {
+          "stage": "S2_ENTRY_AUTHORITY",
+          "blocked": true,
+          "predicate": "a matching-family candidate must survive to ranking at his bucket",
+          "detail": {
+            "candidates_at_his_bucket": 72,
+            "survived_to_ranking": 0,
+            "route_refusals": {
+              "C_PREBREAK_DISPLACEMENT": 63,
+              "D_PREBREAK_RETEST_BREAKOUT": 63,
+              "B_NORMAL_BREAKOUT": 63
+            }
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": "PREDICATE_MISSPECIFIED"
+        },
+        {
+          "stage": "S3_ONE_MINUTE_ENTRY",
+          "blocked": false,
+          "predicate": "one_minute_entry must return a fill",
+          "detail": {
+            "actionable_candidates": 6,
+            "fills": [
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-24 08:17:00-04:00",
+                "entry_price": 24333.25
+              },
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-24 08:18:00-04:00",
+                "entry_price": 24330.75
+              },
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-24 08:32:00-04:00",
+                "entry_price": 24333.5
+              },
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-24 08:33:00-04:00",
+                "entry_price": 24319.25
+              },
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-24 08:34:00-04:00",
+                "entry_price": 24296.0
+              },
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-24 08:38:00-04:00",
+                "entry_price": 24278.75
+              }
+            ]
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S4_BUDGET_BULLET",
+          "blocked": true,
+          "predicate": "only the session's FIRST fully-approved entry can execute",
+          "detail": {
+            "approved_entries": 5,
+            "first_approved": {
+              "entry_time": "2026-03-24 08:17:00-04:00",
+              "direction": "S"
+            },
+            "his_clock": "2026-03-24 09:32:00-04:00",
+            "first_approved_direction_matches_his": false
+          },
+          "magnitude": "one_trade_budget",
+          "magnitude_provenance": "TAUGHT",
+          "provenance_note": "one fully-approved executed entry per session",
+          "ALGO_067_class": "MACHINE_CORRECT_PER_TEACHING"
+        },
+        {
+          "stage": "S5_TARGET_POLICY",
+          "blocked": true,
+          "predicate": "the chosen destination should be his marked TP (the NEXT KEY ZONE)",
+          "detail": {
+            "destinations_considered": 81,
+            "passing_400": 81,
+            "his_tp": 24641.5,
+            "his_tp_inside_a_considered_destination": true,
+            "gap_from_his_tp_to_nearest_considered": null,
+            "chosen": {
+              "target_executable": 24358.0,
+              "distance_points": 45.75,
+              "kind": "KEY_ZONE_15M",
+              "source_map": "WICK_ZONE"
+            }
+          },
+          "magnitude": "nearest_first",
+          "magnitude_provenance": "DERIVED",
+          "provenance_note": "targets.py eq.1 + 'no farther feature may leapfrog a nearer meaningful reaction area'. The TAUGHT target is the NEXT KEY ZONE (ALGO-051 verbatim, ALGO-052 measured) - a different rule.",
+          "ALGO_067_class": "PREDICATE_MISSPECIFIED"
+        },
+        {
+          "stage": "S6_BUILD_AND_CLASSIFY",
+          "blocked": false,
+          "predicate": "build_and_classify must return a target",
+          "detail": {
+            "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        }
+      ],
+      "BLOCKING_GATES": [
+        "S1_LOCATION_COVERAGE",
+        "S2_ENTRY_AUTHORITY",
+        "S4_BUDGET_BULLET",
+        "S5_TARGET_POLICY"
+      ],
+      "blocking_gate_count": 4
+    },
+    {
+      "session": "2026-03-30",
+      "is_control": false,
+      "is_decline_day": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_SHORT",
+      "his_entry_clock": "2026-03-30 09:41:00-04:00",
+      "his_entry_price": 23388.25,
+      "his_marked_tp": 23355.25,
+      "his_selected_zone": {
+        "lo": 23436.5,
+        "hi": 23436.75,
+        "role": "SUPPORT",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-03-30T09:35:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "his_zone_midpoint": 23436.625,
+      "replay_window": [
+        "2026-03-30 09:35:00-04:00",
+        "2026-03-30 09:55:00-04:00"
+      ],
+      "blockers": [
+        {
+          "stage": "S1_LOCATION_COVERAGE",
+          "blocked": false,
+          "predicate": "his zone midpoint must fall inside a built entry location",
+          "detail": {
+            "covering": [
+              {
+                "id": "S:2026-03-30T08:45:00-04:00:93755",
+                "band": [
+                  23432.107589285715,
+                  23447.392410714285
+                ],
+                "source": "WICK_ZONE"
+              }
+            ],
+            "locations_built": 64,
+            "gap_to_nearest_location_points": null
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S2_ENTRY_AUTHORITY",
+          "blocked": false,
+          "predicate": "a matching-family candidate must survive to ranking at his bucket",
+          "detail": {
+            "candidates_at_his_bucket": 97,
+            "survived_to_ranking": 1,
+            "route_refusals": {
+              "C_PREBREAK_DISPLACEMENT": 10,
+              "D_PREBREAK_RETEST_BREAKOUT": 10,
+              "B_NORMAL_BREAKOUT": 9
+            }
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S3_ONE_MINUTE_ENTRY",
+          "blocked": false,
+          "predicate": "one_minute_entry must return a fill",
+          "detail": {
+            "actionable_candidates": 1,
+            "fills": [
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-03-30 09:42:00-04:00",
+                "entry_price": 23377.5
+              }
+            ]
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S4_BUDGET_BULLET",
+          "blocked": false,
+          "predicate": "only the session's FIRST fully-approved entry can execute",
+          "detail": {
+            "approved_entries": 0,
+            "first_approved": null,
+            "his_clock": "2026-03-30 09:41:00-04:00",
+            "first_approved_direction_matches_his": false
+          },
+          "magnitude": "one_trade_budget",
+          "magnitude_provenance": "TAUGHT",
+          "provenance_note": "one fully-approved executed entry per session",
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S5_TARGET_POLICY",
+          "blocked": true,
+          "predicate": "the chosen destination should be his marked TP (the NEXT KEY ZONE)",
+          "detail": {
+            "destinations_considered": 10,
+            "passing_400": 10,
+            "his_tp": 23355.25,
+            "his_tp_inside_a_considered_destination": false,
+            "gap_from_his_tp_to_nearest_considered": 4.34,
+            "chosen": {
+              "target_executable": 23373.75,
+              "distance_points": 14.5,
+              "kind": "LIQUIDITY_CLUSTER",
+              "source_map": "WICK_ZONE"
+            }
+          },
+          "magnitude": "nearest_first",
+          "magnitude_provenance": "DERIVED",
+          "provenance_note": "targets.py eq.1 + 'no farther feature may leapfrog a nearer meaningful reaction area'. The TAUGHT target is the NEXT KEY ZONE (ALGO-051 verbatim, ALGO-052 measured) - a different rule.",
+          "ALGO_067_class": "TARGET_NOT_IN_MAP"
+        },
+        {
+          "stage": "S6_BUILD_AND_CLASSIFY",
+          "blocked": false,
+          "predicate": "build_and_classify must return a target",
+          "detail": {
+            "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        }
+      ],
+      "BLOCKING_GATES": [
+        "S5_TARGET_POLICY"
+      ],
+      "blocking_gate_count": 1
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "is_decline_day": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-03-31 09:49:00-04:00",
+      "his_entry_price": 23483.5,
+      "his_marked_tp": 23540.75,
+      "his_selected_zone": {
+        "lo": 23436.5,
+        "hi": 23436.75,
+        "role": "RESISTANCE",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-03-31T09:35:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "his_zone_midpoint": 23436.625,
+      "replay_window": [
+        "2026-03-31 09:35:00-04:00",
+        "2026-03-31 09:55:00-04:00"
+      ],
+      "blockers": [
+        {
+          "stage": "S1_LOCATION_COVERAGE",
+          "blocked": false,
+          "predicate": "his zone midpoint must fall inside a built entry location",
+          "detail": {
+            "covering": [
+              {
+                "id": "R:2026-03-31T09:15:00-04:00:93745",
+                "band": [
+                  23430.708035714284,
+                  23441.291964285716
+                ],
+                "source": "WICK_ZONE"
+              },
+              {
+                "id": "S:2026-03-30T08:45:00-04:00:93755",
+                "band": [
+                  23432.107589285715,
+                  23447.392410714285
+                ],
+                "source": "WICK_ZONE"
+              }
+            ],
+            "locations_built": 68,
+            "gap_to_nearest_location_points": null
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S2_ENTRY_AUTHORITY",
+          "blocked": true,
+          "predicate": "a matching-family candidate must survive to ranking at his bucket",
+          "detail": {
+            "candidates_at_his_bucket": 269,
+            "survived_to_ranking": 0,
+            "route_refusals": {
+              "C_PREBREAK_DISPLACEMENT": 243,
+              "D_PREBREAK_RETEST_BREAKOUT": 243,
+              "B_NORMAL_BREAKOUT": 243
+            }
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": "PREDICATE_MISSPECIFIED"
+        },
+        {
+          "stage": "S3_ONE_MINUTE_ENTRY",
+          "blocked": false,
+          "predicate": "one_minute_entry must return a fill",
+          "detail": {
+            "actionable_candidates": 2,
+            "fills": [
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-03-31 09:03:00-04:00",
+                "entry_price": 23383.25
+              },
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-03-31 09:19:00-04:00",
+                "entry_price": 23399.25
+              }
+            ]
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S4_BUDGET_BULLET",
+          "blocked": true,
+          "predicate": "only the session's FIRST fully-approved entry can execute",
+          "detail": {
+            "approved_entries": 1,
+            "first_approved": {
+              "entry_time": "2026-03-31 09:03:00-04:00",
+              "direction": "L"
+            },
+            "his_clock": "2026-03-31 09:49:00-04:00",
+            "first_approved_direction_matches_his": true
+          },
+          "magnitude": "one_trade_budget",
+          "magnitude_provenance": "TAUGHT",
+          "provenance_note": "one fully-approved executed entry per session",
+          "ALGO_067_class": "MACHINE_CORRECT_PER_TEACHING"
+        },
+        {
+          "stage": "S5_TARGET_POLICY",
+          "blocked": true,
+          "predicate": "the chosen destination should be his marked TP (the NEXT KEY ZONE)",
+          "detail": {
+            "destinations_considered": 122,
+            "passing_400": 122,
+            "his_tp": 23540.75,
+            "his_tp_inside_a_considered_destination": false,
+            "gap_from_his_tp_to_nearest_considered": 10.83,
+            "chosen": {
+              "target_executable": 23525.75,
+              "distance_points": 42.25,
+              "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+              "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M"
+            }
+          },
+          "magnitude": "nearest_first",
+          "magnitude_provenance": "DERIVED",
+          "provenance_note": "targets.py eq.1 + 'no farther feature may leapfrog a nearer meaningful reaction area'. The TAUGHT target is the NEXT KEY ZONE (ALGO-051 verbatim, ALGO-052 measured) - a different rule.",
+          "ALGO_067_class": "TARGET_NOT_IN_MAP"
+        },
+        {
+          "stage": "S6_BUILD_AND_CLASSIFY",
+          "blocked": false,
+          "predicate": "build_and_classify must return a target",
+          "detail": {
+            "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        }
+      ],
+      "BLOCKING_GATES": [
+        "S2_ENTRY_AUTHORITY",
+        "S4_BUDGET_BULLET",
+        "S5_TARGET_POLICY"
+      ],
+      "blocking_gate_count": 3
+    },
+    {
+      "session": "2026-04-02",
+      "is_control": false,
+      "is_decline_day": true,
+      "arm": "taught_0800",
+      "his_action": "NO_TRADE",
+      "his_entry_clock": null,
+      "his_entry_price": null,
+      "his_marked_tp": null,
+      "his_selected_zone": null,
+      "his_zone_midpoint": null,
+      "replay_window": [
+        "2026-04-02 10:35:00-04:00",
+        "2026-04-02 10:55:00-04:00"
+      ],
+      "blockers": [
+        {
+          "stage": "S1_LOCATION_COVERAGE",
+          "blocked": null,
+          "predicate": "map lookup at his bucket",
+          "detail": "no zone or no entry clock (decline day)",
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S2_ENTRY_AUTHORITY",
+          "blocked": null,
+          "predicate": "route predicates",
+          "detail": "NOT_INDEPENDENTLY_EVALUABLE",
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S3_ONE_MINUTE_ENTRY",
+          "blocked": null,
+          "predicate": "1m fill must exist",
+          "detail": "NOT_INDEPENDENTLY_EVALUABLE: no actionable candidate to price",
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S4_BUDGET_BULLET",
+          "blocked": false,
+          "predicate": "only the session's FIRST fully-approved entry can execute",
+          "detail": {
+            "approved_entries": 0,
+            "first_approved": null,
+            "his_clock": null,
+            "first_approved_direction_matches_his": false
+          },
+          "magnitude": "one_trade_budget",
+          "magnitude_provenance": "TAUGHT",
+          "provenance_note": "one fully-approved executed entry per session",
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S5_TARGET_POLICY",
+          "blocked": null,
+          "predicate": "destinations at his entry",
+          "detail": "NOT_INDEPENDENTLY_EVALUABLE: decline day, no entry to anchor on",
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S6_BUILD_AND_CLASSIFY",
+          "blocked": null,
+          "predicate": "pick at his entry",
+          "detail": "NOT_INDEPENDENTLY_EVALUABLE: decline day",
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        }
+      ],
+      "BLOCKING_GATES": [],
+      "blocking_gate_count": 0
+    },
+    {
+      "session": "2026-04-06",
+      "is_control": false,
+      "is_decline_day": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_SHORT",
+      "his_entry_clock": "2026-04-06 10:04:00-04:00",
+      "his_entry_price": 24332.25,
+      "his_marked_tp": 24257.25,
+      "his_selected_zone": {
+        "lo": 24421.5,
+        "hi": 24421.75,
+        "role": "RESISTANCE",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-04-06T09:52:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "his_zone_midpoint": 24421.625,
+      "replay_window": [
+        "2026-04-06 09:52:00-04:00",
+        "2026-04-06 10:12:00-04:00"
+      ],
+      "blockers": [
+        {
+          "stage": "S1_LOCATION_COVERAGE",
+          "blocked": false,
+          "predicate": "his zone midpoint must fall inside a built entry location",
+          "detail": {
+            "covering": [
+              {
+                "id": "S:2026-03-25T06:30:00-04:00:97649",
+                "band": [
+                  24407.929017857143,
+                  24435.070982142857
+                ],
+                "source": "WICK_ZONE"
+              }
+            ],
+            "locations_built": 67,
+            "gap_to_nearest_location_points": null
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S2_ENTRY_AUTHORITY",
+          "blocked": true,
+          "predicate": "a matching-family candidate must survive to ranking at his bucket",
+          "detail": {
+            "candidates_at_his_bucket": 85,
+            "survived_to_ranking": 0,
+            "route_refusals": {
+              "C_PREBREAK_DISPLACEMENT": 34,
+              "D_PREBREAK_RETEST_BREAKOUT": 34,
+              "B_NORMAL_BREAKOUT": 34
+            }
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": "PREDICATE_MISSPECIFIED"
+        },
+        {
+          "stage": "S3_ONE_MINUTE_ENTRY",
+          "blocked": false,
+          "predicate": "one_minute_entry must return a fill",
+          "detail": {
+            "actionable_candidates": 1,
+            "fills": [
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-04-06 09:07:00-04:00",
+                "entry_price": 24278.5
+              }
+            ]
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S4_BUDGET_BULLET",
+          "blocked": true,
+          "predicate": "only the session's FIRST fully-approved entry can execute",
+          "detail": {
+            "approved_entries": 1,
+            "first_approved": {
+              "entry_time": "2026-04-06 09:07:00-04:00",
+              "direction": "S"
+            },
+            "his_clock": "2026-04-06 10:04:00-04:00",
+            "first_approved_direction_matches_his": true
+          },
+          "magnitude": "one_trade_budget",
+          "magnitude_provenance": "TAUGHT",
+          "provenance_note": "one fully-approved executed entry per session",
+          "ALGO_067_class": "MACHINE_CORRECT_PER_TEACHING"
+        },
+        {
+          "stage": "S5_TARGET_POLICY",
+          "blocked": true,
+          "predicate": "the chosen destination should be his marked TP (the NEXT KEY ZONE)",
+          "detail": {
+            "destinations_considered": 64,
+            "passing_400": 64,
+            "his_tp": 24257.25,
+            "his_tp_inside_a_considered_destination": true,
+            "gap_from_his_tp_to_nearest_considered": null,
+            "chosen": {
+              "target_executable": 24316.0,
+              "distance_points": 16.25,
+              "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+              "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M"
+            }
+          },
+          "magnitude": "nearest_first",
+          "magnitude_provenance": "DERIVED",
+          "provenance_note": "targets.py eq.1 + 'no farther feature may leapfrog a nearer meaningful reaction area'. The TAUGHT target is the NEXT KEY ZONE (ALGO-051 verbatim, ALGO-052 measured) - a different rule.",
+          "ALGO_067_class": "PREDICATE_MISSPECIFIED"
+        },
+        {
+          "stage": "S6_BUILD_AND_CLASSIFY",
+          "blocked": false,
+          "predicate": "build_and_classify must return a target",
+          "detail": {
+            "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        }
+      ],
+      "BLOCKING_GATES": [
+        "S2_ENTRY_AUTHORITY",
+        "S4_BUDGET_BULLET",
+        "S5_TARGET_POLICY"
+      ],
+      "blocking_gate_count": 3
+    },
+    {
+      "session": "2026-04-09",
+      "is_control": false,
+      "is_decline_day": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-04-09 11:35:00-04:00",
+      "his_entry_price": 25121.75,
+      "his_marked_tp": 25157.25,
+      "his_selected_zone": {
+        "lo": 25112,
+        "hi": 25112.25,
+        "role": "RESISTANCE",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-04-09T11:15:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "his_zone_midpoint": 25112.125,
+      "replay_window": [
+        "2026-04-09 11:15:00-04:00",
+        "2026-04-09 11:35:00-04:00"
+      ],
+      "blockers": [
+        {
+          "stage": "S1_LOCATION_COVERAGE",
+          "blocked": true,
+          "predicate": "his zone midpoint must fall inside a built entry location",
+          "detail": {
+            "covering": [],
+            "locations_built": 62,
+            "gap_to_nearest_location_points": 5.04
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": "LOCATION_NOT_IN_MAP"
+        },
+        {
+          "stage": "S2_ENTRY_AUTHORITY",
+          "blocked": true,
+          "predicate": "a matching-family candidate must survive to ranking at his bucket",
+          "detail": {
+            "candidates_at_his_bucket": 12,
+            "survived_to_ranking": 0,
+            "route_refusals": {}
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": "PREDICATE_MISSPECIFIED"
+        },
+        {
+          "stage": "S3_ONE_MINUTE_ENTRY",
+          "blocked": false,
+          "predicate": "one_minute_entry must return a fill",
+          "detail": {
+            "actionable_candidates": 8,
+            "fills": [
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-04-09 09:37:00-04:00",
+                "entry_price": 25056.25
+              },
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-04-09 09:39:00-04:00",
+                "entry_price": 25060.75
+              },
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-04-09 10:37:00-04:00",
+                "entry_price": 24961.5
+              },
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-04-09 10:53:00-04:00",
+                "entry_price": 25026.75
+              },
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-04-09 10:54:00-04:00",
+                "entry_price": 25037.75
+              },
+              {
+                "direction": "S",
+                "setup": "BRK5",
+                "entry_time": "2026-04-09 11:04:00-04:00",
+                "entry_price": 25028.0
+              }
+            ]
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S4_BUDGET_BULLET",
+          "blocked": true,
+          "predicate": "only the session's FIRST fully-approved entry can execute",
+          "detail": {
+            "approved_entries": 5,
+            "first_approved": {
+              "entry_time": "2026-04-09 09:37:00-04:00",
+              "direction": "L"
+            },
+            "his_clock": "2026-04-09 11:35:00-04:00",
+            "first_approved_direction_matches_his": true
+          },
+          "magnitude": "one_trade_budget",
+          "magnitude_provenance": "TAUGHT",
+          "provenance_note": "one fully-approved executed entry per session",
+          "ALGO_067_class": "MACHINE_CORRECT_PER_TEACHING"
+        },
+        {
+          "stage": "S5_TARGET_POLICY",
+          "blocked": true,
+          "predicate": "the chosen destination should be his marked TP (the NEXT KEY ZONE)",
+          "detail": {
+            "destinations_considered": 20,
+            "passing_400": 19,
+            "his_tp": 25157.25,
+            "his_tp_inside_a_considered_destination": true,
+            "gap_from_his_tp_to_nearest_considered": null,
+            "chosen": null
+          },
+          "magnitude": "nearest_first",
+          "magnitude_provenance": "DERIVED",
+          "provenance_note": "targets.py eq.1 + 'no farther feature may leapfrog a nearer meaningful reaction area'. The TAUGHT target is the NEXT KEY ZONE (ALGO-051 verbatim, ALGO-052 measured) - a different rule.",
+          "ALGO_067_class": "PREDICATE_MISSPECIFIED"
+        },
+        {
+          "stage": "S6_BUILD_AND_CLASSIFY",
+          "blocked": true,
+          "predicate": "build_and_classify must return a target",
+          "detail": {
+            "path_reason": "TP1_REFERENCE_REWARD_UNDER_400:382.50:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M"
+          },
+          "magnitude": "TP_GAP_REFERENCE_USD",
+          "magnitude_provenance": "UNCITED",
+          "provenance_note": "400.0; declared under ALGO-076 in target_policy.py",
+          "ALGO_067_class": null
+        }
+      ],
+      "BLOCKING_GATES": [
+        "S1_LOCATION_COVERAGE",
+        "S2_ENTRY_AUTHORITY",
+        "S4_BUDGET_BULLET",
+        "S5_TARGET_POLICY",
+        "S6_BUILD_AND_CLASSIFY"
+      ],
+      "blocking_gate_count": 5
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "is_decline_day": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-04-14 09:36:00-04:00",
+      "his_entry_price": 25743.0,
+      "his_marked_tp": null,
+      "his_selected_zone": {
+        "lo": 25716.5,
+        "hi": 25716.75,
+        "role": "RESISTANCE",
+        "source_method": "VISIBLE_REJECTION",
+        "marked_time": "2026-04-14T09:30:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "his_zone_midpoint": 25716.625,
+      "replay_window": [
+        "2026-04-14 09:30:00-04:00",
+        "2026-04-14 09:46:00-04:00"
+      ],
+      "blockers": [
+        {
+          "stage": "S1_LOCATION_COVERAGE",
+          "blocked": false,
+          "predicate": "his zone midpoint must fall inside a built entry location",
+          "detail": {
+            "covering": [
+              {
+                "id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+                "band": [
+                  25714.66964285714,
+                  25717.83035714286
+                ],
+                "source": "STRONG_SWING_DISPLACEMENT"
+              }
+            ],
+            "locations_built": 69,
+            "gap_to_nearest_location_points": null
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S2_ENTRY_AUTHORITY",
+          "blocked": false,
+          "predicate": "a matching-family candidate must survive to ranking at his bucket",
+          "detail": {
+            "candidates_at_his_bucket": 95,
+            "survived_to_ranking": 1,
+            "route_refusals": {
+              "C_PREBREAK_DISPLACEMENT": 4,
+              "D_PREBREAK_RETEST_BREAKOUT": 4,
+              "B_NORMAL_BREAKOUT": 3
+            }
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S3_ONE_MINUTE_ENTRY",
+          "blocked": false,
+          "predicate": "one_minute_entry must return a fill",
+          "detail": {
+            "actionable_candidates": 1,
+            "fills": [
+              {
+                "direction": "L",
+                "setup": "BRK5",
+                "entry_time": "2026-04-14 09:38:00-04:00",
+                "entry_price": 25746.0
+              }
+            ]
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S4_BUDGET_BULLET",
+          "blocked": false,
+          "predicate": "only the session's FIRST fully-approved entry can execute",
+          "detail": {
+            "approved_entries": 1,
+            "first_approved": {
+              "entry_time": "2026-04-14 09:38:00-04:00",
+              "direction": "L"
+            },
+            "his_clock": "2026-04-14 09:36:00-04:00",
+            "first_approved_direction_matches_his": true
+          },
+          "magnitude": "one_trade_budget",
+          "magnitude_provenance": "TAUGHT",
+          "provenance_note": "one fully-approved executed entry per session",
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S5_TARGET_POLICY",
+          "blocked": false,
+          "predicate": "the chosen destination should be his marked TP (the NEXT KEY ZONE)",
+          "detail": {
+            "destinations_considered": 3,
+            "passing_400": 3,
+            "his_tp": null,
+            "his_tp_inside_a_considered_destination": false,
+            "gap_from_his_tp_to_nearest_considered": null,
+            "chosen": {
+              "target_executable": 25869.0,
+              "distance_points": 126.0,
+              "kind": "FVG_15M",
+              "source_map": "FVG_15M_NATIVE_UNMITIGATED"
+            }
+          },
+          "magnitude": "nearest_first",
+          "magnitude_provenance": "DERIVED",
+          "provenance_note": "targets.py eq.1 + 'no farther feature may leapfrog a nearer meaningful reaction area'. The TAUGHT target is the NEXT KEY ZONE (ALGO-051 verbatim, ALGO-052 measured) - a different rule.",
+          "ALGO_067_class": null
+        },
+        {
+          "stage": "S6_BUILD_AND_CLASSIFY",
+          "blocked": false,
+          "predicate": "build_and_classify must return a target",
+          "detail": {
+            "path_reason": "FIRST_REACTION:FVG_15M"
+          },
+          "magnitude": null,
+          "magnitude_provenance": null,
+          "provenance_note": null,
+          "ALGO_067_class": null
+        }
+      ],
+      "BLOCKING_GATES": [],
+      "blocking_gate_count": 0
+    }
+  ],
+  "blocking_summary": {
+    "2026-03-23": [
+      "S2_ENTRY_AUTHORITY",
+      "S4_BUDGET_BULLET",
+      "S5_TARGET_POLICY"
+    ],
+    "2026-03-24": [
+      "S1_LOCATION_COVERAGE",
+      "S2_ENTRY_AUTHORITY",
+      "S4_BUDGET_BULLET",
+      "S5_TARGET_POLICY"
+    ],
+    "2026-03-30": [
+      "S5_TARGET_POLICY"
+    ],
+    "2026-03-31": [
+      "S2_ENTRY_AUTHORITY",
+      "S4_BUDGET_BULLET",
+      "S5_TARGET_POLICY"
+    ],
+    "2026-04-02": [],
+    "2026-04-06": [
+      "S2_ENTRY_AUTHORITY",
+      "S4_BUDGET_BULLET",
+      "S5_TARGET_POLICY"
+    ],
+    "2026-04-09": [
+      "S1_LOCATION_COVERAGE",
+      "S2_ENTRY_AUTHORITY",
+      "S4_BUDGET_BULLET",
+      "S5_TARGET_POLICY",
+      "S6_BUILD_AND_CLASSIFY"
+    ],
+    "2026-04-14": []
+  },
+  "why_one_gate_at_a_time_could_not_work": "Three rounds of ratified entry-authority repair moved the headline by zero because each day is blocked at MORE THAN ONE stage and only the first was ever visible. This census names every blocker per day so the complete repair set can be ruled at once.",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 429.58,
+  "gate_block_frequency": {
+    "S1_LOCATION_COVERAGE": 2,
+    "S2_ENTRY_AUTHORITY": 5,
+    "S3_ONE_MINUTE_ENTRY": 0,
+    "S4_BUDGET_BULLET": 5,
+    "S5_TARGET_POLICY": 6,
+    "S6_BUILD_AND_CLASSIFY": 1
+  },
+  "bot_is_early_not_wrong_directionally": {
+    "rows": [
+      {
+        "session": "2026-03-23",
+        "is_control": false,
+        "his_direction": "ENTER_SHORT",
+        "bot_first_approved_clock": "2026-03-23 08:14:00-04:00",
+        "bot_first_approved_direction": "S",
+        "direction_matches_his": true,
+        "bot_is_early_by_minutes": 187.0,
+        "s4_blocks": true
+      },
+      {
+        "session": "2026-03-24",
+        "is_control": false,
+        "his_direction": "ENTER_LONG",
+        "bot_first_approved_clock": "2026-03-24 08:17:00-04:00",
+        "bot_first_approved_direction": "S",
+        "direction_matches_his": false,
+        "bot_is_early_by_minutes": 75.0,
+        "s4_blocks": true
+      },
+      {
+        "session": "2026-03-31",
+        "is_control": false,
+        "his_direction": "ENTER_LONG",
+        "bot_first_approved_clock": "2026-03-31 09:03:00-04:00",
+        "bot_first_approved_direction": "L",
+        "direction_matches_his": true,
+        "bot_is_early_by_minutes": 46.0,
+        "s4_blocks": true
+      },
+      {
+        "session": "2026-04-06",
+        "is_control": false,
+        "his_direction": "ENTER_SHORT",
+        "bot_first_approved_clock": "2026-04-06 09:07:00-04:00",
+        "bot_first_approved_direction": "S",
+        "direction_matches_his": true,
+        "bot_is_early_by_minutes": 57.0,
+        "s4_blocks": true
+      },
+      {
+        "session": "2026-04-09",
+        "is_control": false,
+        "his_direction": "ENTER_LONG",
+        "bot_first_approved_clock": "2026-04-09 09:37:00-04:00",
+        "bot_first_approved_direction": "L",
+        "direction_matches_his": true,
+        "bot_is_early_by_minutes": 118.0,
+        "s4_blocks": true
+      },
+      {
+        "session": "2026-04-14",
+        "is_control": true,
+        "his_direction": "ENTER_LONG",
+        "bot_first_approved_clock": "2026-04-14 09:38:00-04:00",
+        "bot_first_approved_direction": "L",
+        "direction_matches_his": true,
+        "bot_is_early_by_minutes": -2.0,
+        "s4_blocks": false
+      }
+    ],
+    "reading": "S4 is a TAUGHT constraint, so it cannot be repaired - a repair set containing it is not a repair set. Its block reports that the bullet was spent earlier on a trade he did not take. On 4 of the 5 blocked days that earlier trade is in the SAME direction as his, 46 minutes to 3 hours early; on the CONTROL the bot fires 2 minutes AFTER him. The discriminator between agreement and failure is TIMING, not direction, and the taught mechanic it maps to is ALGO-051's late arrival - he WAITS for the reaction rather than taking the session's first legal setup."
+  },
+  "repair_set_coverage": {
+    "traded_days": [
+      "2026-03-23",
+      "2026-03-24",
+      "2026-03-30",
+      "2026-03-31",
+      "2026-04-06",
+      "2026-04-09"
+    ],
+    "smallest_set_achieving_each_count": [
+      {
+        "repair_set": [
+          "S5_TARGET_POLICY"
+        ],
+        "size": 1,
+        "days_unblocked": [
+          "2026-03-30"
+        ],
+        "count": 1
+      },
+      {
+        "repair_set": [
+          "S2_ENTRY_AUTHORITY",
+          "S4_BUDGET_BULLET",
+          "S5_TARGET_POLICY"
+        ],
+        "size": 3,
+        "days_unblocked": [
+          "2026-03-23",
+          "2026-03-30",
+          "2026-03-31",
+          "2026-04-06"
+        ],
+        "count": 4
+      },
+      {
+        "repair_set": [
+          "S1_LOCATION_COVERAGE",
+          "S2_ENTRY_AUTHORITY",
+          "S4_BUDGET_BULLET",
+          "S5_TARGET_POLICY"
+        ],
+        "size": 4,
+        "days_unblocked": [
+          "2026-03-23",
+          "2026-03-24",
+          "2026-03-30",
+          "2026-03-31",
+          "2026-04-06"
+        ],
+        "count": 5
+      },
+      {
+        "repair_set": [
+          "S1_LOCATION_COVERAGE",
+          "S2_ENTRY_AUTHORITY",
+          "S4_BUDGET_BULLET",
+          "S5_TARGET_POLICY",
+          "S6_BUILD_AND_CLASSIFY"
+        ],
+        "size": 5,
+        "days_unblocked": [
+          "2026-03-23",
+          "2026-03-24",
+          "2026-03-30",
+          "2026-03-31",
+          "2026-04-06",
+          "2026-04-09"
+        ],
+        "count": 6
+      }
+    ],
+    "minimal_set_to_unblock_ALL": {
+      "repair_set": [
+        "S1_LOCATION_COVERAGE",
+        "S2_ENTRY_AUTHORITY",
+        "S4_BUDGET_BULLET",
+        "S5_TARGET_POLICY",
+        "S6_BUILD_AND_CLASSIFY"
+      ],
+      "size": 5,
+      "days_unblocked": [
+        "2026-03-23",
+        "2026-03-24",
+        "2026-03-30",
+        "2026-03-31",
+        "2026-04-06",
+        "2026-04-09"
+      ],
+      "count": 6
+    }
+  }
+}
