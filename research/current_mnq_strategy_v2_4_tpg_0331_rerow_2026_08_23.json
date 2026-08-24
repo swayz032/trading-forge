@@ -1,0 +1,168 @@
+{
+  "artifact": "TPG_0331_RE_ROW",
+  "status": "DIAGNOSTIC. Writes the 03-31 T/P/G row under R1+R1b. Repairs nothing.",
+  "authority": "ALGO-074 (1)",
+  "produced": "2026-08-23",
+  "session": "2026-03-31",
+  "his_entry_clock": "09:49",
+  "reachability_now": "R1b: break family sees the origin-R level; REFUSED, 3 matching",
+  "band_used_by_the_matching_candidates": [
+    23430.708035714284,
+    23441.291964285716
+  ],
+  "matching_candidate_count": 3,
+  "G_bars": [
+    {
+      "open": 23399.0,
+      "high": 23399.0,
+      "low": 23374.0,
+      "close": 23382.5,
+      "range": 25.0,
+      "body_frac": 0.66,
+      "upper_wick_frac": 0.0,
+      "lower_wick_frac": 0.34,
+      "close_loc_from_high": 0.66,
+      "bucket": "2026-03-31 09:25:00-04:00",
+      "close_beyond_band_for_a_LONG": false,
+      "overlaps_band": false
+    },
+    {
+      "open": 23382.25,
+      "high": 23459.5,
+      "low": 23378.75,
+      "close": 23458.0,
+      "range": 80.75,
+      "body_frac": 0.9381,
+      "upper_wick_frac": 0.0186,
+      "lower_wick_frac": 0.0433,
+      "close_loc_from_high": 0.0186,
+      "bucket": "2026-03-31 09:30:00-04:00",
+      "close_beyond_band_for_a_LONG": true,
+      "overlaps_band": true
+    },
+    {
+      "open": 23458.0,
+      "high": 23460.5,
+      "low": 23402.75,
+      "close": 23444.5,
+      "range": 57.75,
+      "body_frac": 0.2338,
+      "upper_wick_frac": 0.0433,
+      "lower_wick_frac": 0.7229,
+      "close_loc_from_high": 0.2771,
+      "bucket": "2026-03-31 09:35:00-04:00",
+      "close_beyond_band_for_a_LONG": true,
+      "overlaps_band": true
+    },
+    {
+      "open": 23443.75,
+      "high": 23470.0,
+      "low": 23407.0,
+      "close": 23418.0,
+      "range": 63.0,
+      "body_frac": 0.4087,
+      "upper_wick_frac": 0.4167,
+      "lower_wick_frac": 0.1746,
+      "close_loc_from_high": 0.8254,
+      "bucket": "2026-03-31 09:40:00-04:00",
+      "close_beyond_band_for_a_LONG": false,
+      "overlaps_band": true
+    },
+    {
+      "open": 23416.75,
+      "high": 23531.5,
+      "low": 23416.75,
+      "close": 23531.25,
+      "range": 114.75,
+      "body_frac": 0.9978,
+      "upper_wick_frac": 0.0022,
+      "lower_wick_frac": 0.0,
+      "close_loc_from_high": 0.0022,
+      "bucket": "2026-03-31 09:45:00-04:00",
+      "close_beyond_band_for_a_LONG": true,
+      "overlaps_band": true
+    },
+    {
+      "open": 23530.25,
+      "high": 23561.25,
+      "low": 23499.25,
+      "close": 23556.25,
+      "range": 62.0,
+      "body_frac": 0.4194,
+      "upper_wick_frac": 0.0806,
+      "lower_wick_frac": 0.5,
+      "close_loc_from_high": 0.0806,
+      "bucket": "2026-03-31 09:50:00-04:00",
+      "close_beyond_band_for_a_LONG": true,
+      "overlaps_band": false
+    }
+  ],
+  "T_and_P_by_taught_form": [
+    {
+      "taught_form": "ROUTE_B_normal_breakout",
+      "valid": false,
+      "form_returned": null,
+      "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+      "predicate_encodes": "Route B (7.6/7.7): the trigger is the bar IMMEDIATELY following the print",
+      "refusal_rests_on": "bar ordering only - no magnitude",
+      "that_quantity_is_TAUGHT": true,
+      "provenance": "the transcript says 'the FOLLOWING forming 5m'. His 09:45 trigger is three bars after the 09:30 first print, so Route B refuses on a TAUGHT structure."
+    },
+    {
+      "taught_form": "ROUTE_D_break_retest",
+      "valid": false,
+      "form_returned": null,
+      "refusal": "BREAK_NOT_ACCEPTED_BEFORE_RETEST",
+      "predicate_encodes": "Route D: the break must be DURABLY ACCEPTED before a retest can count",
+      "refusal_rests_on": "acceptance_bars = 3 consecutive completed closes beyond",
+      "that_quantity_is_TAUGHT": false,
+      "provenance": "the spec refuses `break_retest_without_prior_durable_acceptance` and calls the property DURABLE, but names NO bar count anywhere. 3 is this repo's derivation of 'durable', recorded as UNFROZEN in breakout_derivation.UNFROZEN_CHOICES."
+    },
+    {
+      "taught_form": "ROUTE_D_exception2_repeat_test",
+      "valid": false,
+      "form_returned": null,
+      "refusal": "REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+      "predicate_encodes": "Exception 2 (7.10): a REAL prior test that was pushed back",
+      "refusal_rests_on": "a rejection-wick candle strictly BEFORE the last completed bar",
+      "that_quantity_is_TAUGHT": true,
+      "provenance": "STRUCTURAL, and it does not bind on a magnitude here: the one candle carrying a rejection wick is 09:40, the LAST completed bar, which 7.11 excludes because a test needs room for a reset after it. reject_wick never decides this row."
+    },
+    {
+      "taught_form": "ROUTE_C_prebreak_displacement",
+      "valid": false,
+      "form_returned": null,
+      "refusal": "DISPLACEMENT_THIRD_CANDLE_REVERSED_CONTROL",
+      "predicate_encodes": "Route C (7.9): a third candle that reverses control kills the sequence",
+      "refusal_rests_on": "control direction of the third candle - qualitative",
+      "that_quantity_is_TAUGHT": true,
+      "provenance": "7.9 is taught verbatim and is about direction, not size."
+    }
+  ],
+  "acceptance_bars_sensitivity_at_his_trigger": [
+    {
+      "acceptance_bars": 1,
+      "valid": true,
+      "form": "break_retest",
+      "refusal": null
+    },
+    {
+      "acceptance_bars": 2,
+      "valid": true,
+      "form": "break_retest",
+      "refusal": null
+    },
+    {
+      "acceptance_bars": 3,
+      "valid": false,
+      "form": null,
+      "refusal": "BREAK_NOT_ACCEPTED_BEFORE_RETEST"
+    }
+  ],
+  "verdict_under_the_LITERAL_ALGO_067_rule": "MACHINE_CORRECT_PER_TEACHING",
+  "verdict_PER_FORM": "PREDICATE_MISSPECIFIED",
+  "why_the_two_readings_differ": "The literal ALGO-067 rule asks whether ANY taught definition also refuses. Route B and Route C do - but they are DIFFERENT FORMS, not the one his entry matches, and that same coarseness already gave the WRONG answer on 03-30 (recorded in run_tpg_conformance_three_sessions.py). Per FORM, the accepted-break retest - one of the three ALGO-069 recovery forms - IS reached and refuses ONLY on the unfrozen `acceptance_bars`.",
+  "repair_is_NOT_landed_here": "acceptance_bars 3 -> 2 recovers this session, which is exactly why this module will not move it. R3 (silent => stricter) was PRE-REGISTERED and selected 3 from a measured sensitivity with no outcome input; re-selecting it now because 2 recovers an agreement case would be selecting an unfrozen magnitude by agreement. Reserved to the advisor.",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 31.54
+}
