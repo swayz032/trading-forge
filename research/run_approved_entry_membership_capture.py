@@ -28,14 +28,19 @@ LOCK = Path("research/current_mnq_strategy_v2_2_data_lock.json")
 MAN = Path("research/current_mnq_strategy_v2_4_frozen_replay_case_manifest_2026_08_20.json")
 
 out_path = sys.argv[1] if len(sys.argv) > 1 else "approved_all14.json"
+# ARM PIN, ALGO-096 §5: the capture is required "at BOTH pins". The arm time was hard-coded
+# to 08:00; it is now argv[2] and DEFAULTS to 08:00, so every existing invocation is
+# byte-for-byte behaviour-preserving and only an explicit second argument moves the pin.
+_arm = sys.argv[2] if len(sys.argv) > 2 else "08:00"
+ARM = _time(*(int(x) for x in _arm.split(":")))
 man = {c["session"]: c for c in json.load(io.open(MAN, encoding="utf-8"))["cases"]}
 
 observed = old.download_pinned(DATA, include_tick=False)
 old.verify_manifest(observed, json.loads(LOCK.read_text(encoding="utf-8")))
 
-out = {}
+out = {"__arm_pin__": _arm}
 total = 0
-with W.trading_window(_time(8, 0)):
+with W.trading_window(ARM):
     env = old.prepare(old.load_csv(DATA / Path(old.DATA_FILES["5m"]).name),
                       old.load_csv(DATA / Path(old.DATA_FILES["1m"]).name))
     p = eng.Params()
