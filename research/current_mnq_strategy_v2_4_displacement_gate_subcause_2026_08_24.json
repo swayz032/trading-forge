@@ -1,0 +1,599 @@
+{
+  "artifact": "DISPLACEMENT_GATE_SUBCAUSE",
+  "status": "DIAGNOSTIC. Displacement-gate sub-cause measurement. Lands nothing.",
+  "authority": "ALGO-094 order 3 (remaining half); ALGO-095 left this as a mapping claim",
+  "produced": "2026-08-24",
+  "frozen_magnitudes": {
+    "body_frac": 0.62,
+    "close_loc": 0.78,
+    "range_ratio": 1.25,
+    "reject_wick": 0.35,
+    "min_wick": 0.2
+  },
+  "decomposition_self_check": {
+    "total_failures": 0,
+    "unpinned_published_attributions": 0,
+    "verdict": "SOUND",
+    "coverage_note": "Every flag a row PUBLISHES is pinned exactly by a neutralised-threshold probe against the unmodified predicate. Flags that row does NOT publish may be unpinned in that state (e.g. the range term on a row whose momentum already failed); that is measured per row as published_attribution_pinned, not argued. Residual limit stated: both layers read brk._geom, so a defect INSIDE _geom would corrupt both identically and is out of this check's reach."
+  },
+  "displacement_rows": [
+    {
+      "session": "2026-03-23",
+      "is_control": false,
+      "his_clock": "2026-03-23 11:21:00-04:00",
+      "bucket": "2026-03-23 11:20:00-04:00",
+      "direction": "S",
+      "not_displacement_refusals_session_total": 2110,
+      "not_displacement_refusals_at_his_bucket": 0,
+      "decomposition_failures": 0,
+      "unpinned_published_attributions": 0,
+      "first_failing_requirement": {},
+      "distinct_displacement_evaluations_at_his_bucket": 0,
+      "distinct_first_failing": {},
+      "sample": []
+    },
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "his_clock": "2026-03-24 09:32:00-04:00",
+      "bucket": "2026-03-24 09:30:00-04:00",
+      "direction": "L",
+      "not_displacement_refusals_session_total": 1720,
+      "not_displacement_refusals_at_his_bucket": 63,
+      "decomposition_failures": 0,
+      "unpinned_published_attributions": 0,
+      "first_failing_requirement": {
+        "MOMENTUM_WRONG_DIRECTION (structural, no magnitude)": 63
+      },
+      "distinct_displacement_evaluations_at_his_bucket": 1,
+      "distinct_first_failing": {
+        "MOMENTUM_WRONG_DIRECTION (structural, no magnitude)": 1
+      },
+      "sample": [
+        {
+          "dir_ok": false,
+          "body_frac_ok": false,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": false,
+          "measured_body_frac": 0.3212,
+          "measured_close_loc": 0.2044,
+          "measured_range": 34.25,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-03-24 09:30:00-04:00",
+          "direction": "L",
+          "lo": 24304.450892857145,
+          "hi": 24321.149107142857,
+          "reference_range": 42.25,
+          "required_range": 52.8125,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        },
+        {
+          "dir_ok": false,
+          "body_frac_ok": false,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": false,
+          "measured_body_frac": 0.3212,
+          "measured_close_loc": 0.2044,
+          "measured_range": 34.25,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-03-24 09:30:00-04:00",
+          "direction": "L",
+          "lo": 24308.254464285714,
+          "hi": 24327.495535714286,
+          "reference_range": 42.25,
+          "required_range": 52.8125,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        },
+        {
+          "dir_ok": false,
+          "body_frac_ok": false,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": false,
+          "measured_body_frac": 0.3212,
+          "measured_close_loc": 0.2044,
+          "measured_range": 34.25,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-03-24 09:30:00-04:00",
+          "direction": "L",
+          "lo": 24408.29642857143,
+          "hi": 24412.70357142857,
+          "reference_range": 42.25,
+          "required_range": 52.8125,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        }
+      ]
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "his_clock": "2026-03-31 09:49:00-04:00",
+      "bucket": "2026-03-31 09:45:00-04:00",
+      "direction": "L",
+      "not_displacement_refusals_session_total": 3523,
+      "not_displacement_refusals_at_his_bucket": 0,
+      "decomposition_failures": 0,
+      "unpinned_published_attributions": 0,
+      "first_failing_requirement": {},
+      "distinct_displacement_evaluations_at_his_bucket": 0,
+      "distinct_first_failing": {},
+      "sample": []
+    },
+    {
+      "session": "2026-04-06",
+      "is_control": false,
+      "his_clock": "2026-04-06 10:04:00-04:00",
+      "bucket": "2026-04-06 10:00:00-04:00",
+      "direction": "S",
+      "not_displacement_refusals_session_total": 1163,
+      "not_displacement_refusals_at_his_bucket": 34,
+      "decomposition_failures": 0,
+      "unpinned_published_attributions": 0,
+      "first_failing_requirement": {
+        "MOMENTUM_WRONG_DIRECTION (structural, no magnitude)": 34
+      },
+      "distinct_displacement_evaluations_at_his_bucket": 1,
+      "distinct_first_failing": {
+        "MOMENTUM_WRONG_DIRECTION (structural, no magnitude)": 1
+      },
+      "sample": [
+        {
+          "dir_ok": false,
+          "body_frac_ok": false,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": false,
+          "measured_body_frac": 0.5696,
+          "measured_close_loc": 0.6174,
+          "measured_range": 57.5,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-04-06 10:00:00-04:00",
+          "direction": "S",
+          "lo": 23228.858035714286,
+          "hi": 23240.141964285714,
+          "reference_range": 106.0,
+          "required_range": 132.5,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        },
+        {
+          "dir_ok": false,
+          "body_frac_ok": false,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": false,
+          "measured_body_frac": 0.5696,
+          "measured_close_loc": 0.6174,
+          "measured_range": 57.5,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-04-06 10:00:00-04:00",
+          "direction": "S",
+          "lo": 23354.825,
+          "hi": 23362.175,
+          "reference_range": 106.0,
+          "required_range": 132.5,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        },
+        {
+          "dir_ok": false,
+          "body_frac_ok": false,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": false,
+          "measured_body_frac": 0.5696,
+          "measured_close_loc": 0.6174,
+          "measured_range": 57.5,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-04-06 10:00:00-04:00",
+          "direction": "S",
+          "lo": 23392.688392857144,
+          "hi": 23404.11160714286,
+          "reference_range": 106.0,
+          "required_range": 132.5,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        }
+      ]
+    },
+    {
+      "session": "2026-04-09",
+      "is_control": false,
+      "his_clock": "2026-04-09 11:35:00-04:00",
+      "bucket": "2026-04-09 11:35:00-04:00",
+      "direction": "L",
+      "not_displacement_refusals_session_total": 2522,
+      "not_displacement_refusals_at_his_bucket": 0,
+      "decomposition_failures": 0,
+      "unpinned_published_attributions": 0,
+      "first_failing_requirement": {},
+      "distinct_displacement_evaluations_at_his_bucket": 0,
+      "distinct_first_failing": {},
+      "sample": []
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "his_clock": "2026-04-14 09:36:00-04:00",
+      "bucket": "2026-04-14 09:35:00-04:00",
+      "direction": "L",
+      "not_displacement_refusals_session_total": 2572,
+      "not_displacement_refusals_at_his_bucket": 4,
+      "decomposition_failures": 0,
+      "unpinned_published_attributions": 0,
+      "first_failing_requirement": {
+        "MOMENTUM_WRONG_DIRECTION (structural, no magnitude)": 4
+      },
+      "distinct_displacement_evaluations_at_his_bucket": 1,
+      "distinct_first_failing": {
+        "MOMENTUM_WRONG_DIRECTION (structural, no magnitude)": 1
+      },
+      "sample": [
+        {
+          "dir_ok": false,
+          "body_frac_ok": true,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": true,
+          "measured_body_frac": 0.6897,
+          "measured_close_loc": 0.2759,
+          "measured_range": 14.5,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-04-14 09:35:00-04:00",
+          "direction": "L",
+          "lo": 25714.66964285714,
+          "hi": 25717.83035714286,
+          "reference_range": 11.0,
+          "required_range": 13.75,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        },
+        {
+          "dir_ok": false,
+          "body_frac_ok": true,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": true,
+          "measured_body_frac": 0.6897,
+          "measured_close_loc": 0.2759,
+          "measured_range": 14.5,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-04-14 09:35:00-04:00",
+          "direction": "L",
+          "lo": 25811.5,
+          "hi": 25926.75,
+          "reference_range": 11.0,
+          "required_range": 13.75,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        },
+        {
+          "dir_ok": false,
+          "body_frac_ok": true,
+          "close_loc_ok": false,
+          "reference_range_ok": true,
+          "range_expansion_ok": true,
+          "measured_body_frac": 0.6897,
+          "measured_close_loc": 0.2759,
+          "measured_range": 14.5,
+          "published_attribution_flag": "dir_ok",
+          "published_attribution_pinned": true,
+          "trigger_ts": "2026-04-14 09:35:00-04:00",
+          "direction": "L",
+          "lo": 25952.5,
+          "hi": 25953.25,
+          "reference_range": 11.0,
+          "required_range": 13.75,
+          "truth_momentum": false,
+          "truth_direction_only": false,
+          "truth_direction_and_body_frac": false,
+          "truth_direction_and_close_loc": false,
+          "truth_pass_without_range_expansion": false,
+          "truth_direction_and_reference_range": false,
+          "checks": {
+            "aggregate": true,
+            "momentum_group": true,
+            "dir_flag": true,
+            "body_frac_flag": true,
+            "close_loc_flag": true,
+            "reference_range_flag": true,
+            "range_flag": true
+          },
+          "decomposition_agrees": true
+        }
+      ]
+    }
+  ],
+  "route_d_provenance_recovered": [
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "reported_provenance_in_ALGO_095": "UNMAPPED",
+      "total_D_refusals_at_his_bucket": 63,
+      "graded": [
+        {
+          "count": 63,
+          "accepted_break": {
+            "literal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "provenance": "TAUGHT",
+            "site": "breakout_derivation.py `normal_breakout` / `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py:261 `prebreak_repeat_test`"
+          }
+        }
+      ],
+      "unparsed": []
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "reported_provenance_in_ALGO_095": "UNMAPPED",
+      "total_D_refusals_at_his_bucket": 243,
+      "graded": [
+        {
+          "count": 3,
+          "accepted_break": {
+            "literal": "NO_VALID_RETEST_OF_THE_BROKEN_LEVEL",
+            "provenance": "TAUGHT",
+            "site": "breakout_derivation.py `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py `prebreak_repeat_test`"
+          }
+        },
+        {
+          "count": 3,
+          "accepted_break": {
+            "literal": "BREAK_NOT_ACCEPTED_BEFORE_RETEST",
+            "provenance": "UNTAUGHT_MAGNITUDE",
+            "site": "breakout_derivation.py:195 `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py:261 `prebreak_repeat_test`"
+          }
+        },
+        {
+          "count": 237,
+          "accepted_break": {
+            "literal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "provenance": "TAUGHT",
+            "site": "breakout_derivation.py `normal_breakout` / `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py:261 `prebreak_repeat_test`"
+          }
+        }
+      ],
+      "unparsed": []
+    },
+    {
+      "session": "2026-04-06",
+      "is_control": false,
+      "reported_provenance_in_ALGO_095": "UNMAPPED",
+      "total_D_refusals_at_his_bucket": 34,
+      "graded": [
+        {
+          "count": 32,
+          "accepted_break": {
+            "literal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "provenance": "TAUGHT",
+            "site": "breakout_derivation.py `normal_breakout` / `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py:261 `prebreak_repeat_test`"
+          }
+        },
+        {
+          "count": 1,
+          "accepted_break": {
+            "literal": "BREAK_NOT_ACCEPTED_BEFORE_RETEST",
+            "provenance": "UNTAUGHT_MAGNITUDE",
+            "site": "breakout_derivation.py:195 `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py `prebreak_repeat_test`"
+          }
+        },
+        {
+          "count": 1,
+          "accepted_break": {
+            "literal": "NO_VALID_RETEST_OF_THE_BROKEN_LEVEL",
+            "provenance": "TAUGHT",
+            "site": "breakout_derivation.py `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py:261 `prebreak_repeat_test`"
+          }
+        }
+      ],
+      "unparsed": []
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "reported_provenance_in_ALGO_095": "UNMAPPED",
+      "total_D_refusals_at_his_bucket": 4,
+      "graded": [
+        {
+          "count": 1,
+          "accepted_break": {
+            "literal": "BREAK_NOT_ACCEPTED_BEFORE_RETEST",
+            "provenance": "UNTAUGHT_MAGNITUDE",
+            "site": "breakout_derivation.py:195 `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py:261 `prebreak_repeat_test`"
+          }
+        },
+        {
+          "count": 3,
+          "accepted_break": {
+            "literal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "provenance": "TAUGHT",
+            "site": "breakout_derivation.py `normal_breakout` / `break_retest`"
+          },
+          "repeat_test": {
+            "literal": "REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+            "site": "breakout_derivation.py:261 `prebreak_repeat_test`"
+          }
+        }
+      ],
+      "unparsed": []
+    }
+  ],
+  "untaught_recount": {
+    "ALGO_095_headline_untaught_count": 3,
+    "provenance_classes_present": {
+      "UNTAUGHT_MAGNITUDE": 3,
+      "TAUGHT_SHAPE_UNTAUGHT_GATE": 3,
+      "UNMAPPED": 4,
+      "TAUGHT": 8
+    },
+    "note": "ALGO-095 counted only provenance values matching startswith('UNTAUGHT'). TAUGHT_SHAPE_UNTAUGHT_GATE and TAUGHT_SHAPE_UNTAUGHT_GATES both contain an untaught gate and both sort OUTSIDE that anchor; UNMAPPED rows were never graded at all. The headline is an artifact of the anchor, not a census."
+  },
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 170.69
+}
