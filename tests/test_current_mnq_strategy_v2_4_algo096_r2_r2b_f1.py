@@ -263,3 +263,35 @@ def test_F1_the_mirror_gets_no_second_registry():
     from research import current_mnq_strategy_v2_4_independent_force as IF
     assert not hasattr(IF, "UNFROZEN_CHOICES"), (
         "the mirror must not carry its own UNFROZEN_CHOICES")
+
+
+def test_F1_a_non_directional_forming_candle_is_refused_BY_THE_GEOMETRY_CLAUSE():
+    """Closes the gap a mutation battery found: F1 alone was unguarded against loosening.
+
+    MEASURED during the batch: planting `geometry = True` in `force.py` was caught ONLY by
+    `test_the_two_derivations_agree_across_the_frozen_corpus`, i.e. by the mirror disagreeing.
+    Planting it in BOTH derivations identically turned the whole v2.4 suite green — a
+    same-layer defect that no assertion could see.
+
+    WHY, stated rather than papered over: after F1 the geometry clause is
+    `close beyond open in the direction`, which for a LONG is exactly `progress > 0` — and
+    `efficient` already requires `progress > 0`. The two clauses became logically equivalent,
+    so NO INPUT can separate them and no test comparing verdicts can go red.
+
+    What is still observable is WHICH CLAUSE REFUSES. `geometry` is checked BEFORE `efficient`
+    in the reason chain, so a candle with no net directional progress must be refused by name
+    as PARTIAL_MOMENTUM_GEOMETRY_NOT_PROVEN. Loosen geometry and that same candle comes back
+    as TUG_OF_WAR_PATH_TOO_INEFFICIENT instead — a different token, and this test goes RED.
+    """
+    # Two completed 1m bars whose aggregate close is BELOW its open: no directional body.
+    one = _one_minute([(101.0, 101.2, 99.0, 99.5), (99.5, 99.8, 98.0, 98.5)])
+    parent_start = pd.Timestamp("2026-04-09 10:00", tz=TZ)
+    p = eng.Params()
+    snap = F.force_snapshot(one, parent_start, 5, "L",
+                            parent_start + pd.Timedelta(minutes=2), p)
+
+    assert snap.confirmed is False
+    assert snap.partial_momentum_geometry is False, "the fixture must fail the geometry clause"
+    assert snap.reason == "PARTIAL_MOMENTUM_GEOMETRY_NOT_PROVEN", (
+        "a candle with no directional body must be refused BY THE GEOMETRY CLAUSE, not by a "
+        f"later one; got {snap.reason}")
