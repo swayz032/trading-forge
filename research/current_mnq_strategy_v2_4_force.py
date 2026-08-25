@@ -32,11 +32,27 @@ import numpy as np
 import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
-from research.current_mnq_strategy_v2_4_entries import momentum_bar
 
 core = prod.core
 EPS = 1e-12
 MIN_COMPLETED_1M_OBSERVATIONS = 2
+
+#: This module's UNTAUGHT choices, declared rather than buried in a default. ALGO-096A ruled
+#: `UNFROZEN_CHOICES` is a PER-MODULE convention (`breakout_derivation.py:73` owns
+#: `acceptance_bars`, `target_policy.py:77` owns the $400 floor; there is no aggregating
+#: registry), so the force site declares its own rather than reaching into a sealed module.
+UNFROZEN_CHOICES = {
+    "path_efficiency_threshold": (
+        "PATH_EFFICIENCY >= Params.body_frac (0.62). The spec teaches that temporary bursts "
+        "and tug-of-war are not sustained force, and names NO fraction; reusing the candle "
+        "body_frac here is this module's reading of 'sustained', not a frozen value. The "
+        "reuse is deliberate and documented above, but body_frac is a v2.2 Params default "
+        "shipped with the tuning search range (0.56, 0.68) - a parameter born with a search "
+        "range is a construction, not a teaching. MEASURED UNBINDING: "
+        "TUG_OF_WAR_PATH_TOO_INEFFICIENT fired 0 of 14 times across the operator's clocks "
+        "(ALGO-096 §3), so it refuses nothing we can observe and is left exactly as it is. "
+        "It has never been moved, and never selected by any outcome, PnL or score."),
+}
 
 
 @dataclass(frozen=True)
@@ -68,6 +84,30 @@ class ForceSnapshot:
             "close": float(self.close),
             "atr": float(atr) if atr is not None and np.isfinite(atr) else np.nan,
         })
+
+
+def _directional_body(row, direction: str) -> bool:
+    """The taught force SHAPE: a DIRECTIONAL BODY on the forming candle. F1, ALGO-096 §5.
+
+    The taught content is the shape — *"momentum = directional body/control geometry; range
+    expansion not required"* (`engineer_onboarding:98`, spec
+    `entry_trigger_semantics.momentum_candle`). The MAGNITUDES were never his: `body_frac 0.62`
+    and `close_loc 0.78` are v2.2 `Params` defaults shipped with tuning search ranges
+    (`v2_2_engine.py:95` `(0.56, 0.68)`, `:97` `(0.72, 0.84)`) — a parameter born with a search
+    range is a construction — and ALGO-071 §3 records the operator saying these two numbers
+    were never his definition.
+
+    "Control" is ALREADY carried at this site by `LATEST_CLOSE_AT_DIRECTIONAL_EXTREME`, so
+    demanding it a second time through an untaught close-location fraction is the construction,
+    not the teaching. Measured at his clocks (ALGO-096 §3): 04-09 11:37 had monotone progress,
+    path efficiency 1.00 and its close AT the extreme, and was refused by this clause alone.
+
+    DELIBERATELY LOCAL. `entries.momentum_bar` has other callers and ALGO-096 §5 forbids
+    editing it; this predicate is defined here so the change reaches the force site and
+    nowhere else. The efficiency clause below is NOT touched.
+    """
+    o, c = float(row.open), float(row.close)
+    return bool(c > o) if direction == "L" else bool(c < o)
 
 
 def _completed_subbars(one: pd.DataFrame, parent_start: pd.Timestamp,
@@ -117,7 +157,7 @@ def force_snapshot(one: pd.DataFrame, parent_start: pd.Timestamp,
         if direction == "L"
         else c <= float(np.min(closes)) + EPS
     )
-    geometry = bool(momentum_bar(row, direction, p))
+    geometry = bool(_directional_body(row, direction))
     before_parent_close = bool(known_at < parent_end)
     enough_observations = n >= MIN_COMPLETED_1M_OBSERVATIONS
     efficient = bool(progress > 0 and efficiency >= float(p.body_frac))

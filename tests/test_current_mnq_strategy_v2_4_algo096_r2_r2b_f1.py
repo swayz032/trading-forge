@@ -217,3 +217,49 @@ def test_F1_force_derivations_stay_identical_between_the_two_implementations():
     for token in ("PARTIAL_MOMENTUM_GEOMETRY", "latest_close_at_directional_extreme"):
         assert (token in src_f) == (token in src_i), (
             f"{token!r} present in only one force derivation — the mirror has drifted")
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# ALGO-096A — the efficiency clause is DECLARED at its own module, not buried in a default
+# ─────────────────────────────────────────────────────────────────────────────────────────
+
+def test_F1_the_untouched_efficiency_clause_is_declared_in_force_UNFROZEN_CHOICES():
+    """ALGO-096A. Same shape as `test_..._breakout_derivation.py:421-430`.
+
+    F1 leaves the path-efficiency clause exactly as it is. ALGO-096 §5 requires that an
+    untaught-but-unbinding number be DECLARED rather than left implicit, and ALGO-096A ruled
+    the declaration belongs in this module's own registry — `UNFROZEN_CHOICES` is a
+    per-module convention, not a shared table, and the seals on `breakout_derivation.py` and
+    `target_policy.py` stand.
+    """
+    import inspect
+    import re
+
+    assert "path_efficiency_threshold" in F.UNFROZEN_CHOICES
+    text = F.UNFROZEN_CHOICES["path_efficiency_threshold"]
+    assert "not a frozen value" in text
+
+    # DERIVED FROM THE DECLARATION, NOT TYPED — the same property the breakout-derivation
+    # test pins: the DECLARED number and the ACTUAL one must be the same number, whatever
+    # that number currently is. A hand-typed copy is what the declaration exists to prevent.
+    declared = re.search(r"Params\.body_frac \((\d+\.\d+)\)", text)
+    assert declared, "the declaration must state the value it is declaring"
+    assert float(declared.group(1)) == float(eng.Params().body_frac), (
+        f"declared {declared.group(1)} but Params.body_frac is {eng.Params().body_frac}")
+
+    # And the clause it describes must still be the one in the code, unmodified by F1.
+    src = inspect.getsource(F.force_snapshot)
+    assert "efficiency >= float(p.body_frac)" in src, (
+        "F1 must not touch the efficiency clause; the declaration would then describe "
+        "something that no longer exists")
+
+
+def test_F1_the_mirror_gets_no_second_registry():
+    """ALGO-096A: `independent_force.py` is documentation of the clause, not the clause.
+
+    A second dict with the same name in the witness module would be a shared-name registry
+    by the back door — exactly what the per-module ruling refused.
+    """
+    from research import current_mnq_strategy_v2_4_independent_force as IF
+    assert not hasattr(IF, "UNFROZEN_CHOICES"), (
+        "the mirror must not carry its own UNFROZEN_CHOICES")
