@@ -1,0 +1,236 @@
+{
+  "artifact": "ALGO096_CANDIDATE_TABLE_SIX_CLOCKS",
+  "status": "DIAGNOSTIC. Candidate table at his six clocks. Lands nothing.",
+  "authority": "ALGO-096 §5 guard (second artifact) + §6.2 instrument law",
+  "arm_pin": "08:00",
+  "gate_depth_declared": {
+    "FORCE_NOT_CONFIRMED": 0,
+    "NO_AUTHORIZED_LOCATION_ON_THIS_SIDE": 1,
+    "REJECTION_STORY_INCOMPLETE": 2,
+    "NO_LEGAL_ROUTE_MATCHED": 2,
+    "INTRA_15M_FORCE_NOT_CONFIRMED": 2,
+    "WEAK_BREAK_PENDING_WINDOW_EXPIRED": 2,
+    "DECISION_CLOCK_PAST_LAST_ENTRY": 2,
+    "STRUCTURAL_PRIOR_VETO": 3,
+    "LOST_RANKING_TO_ANOTHER_CANDIDATE": 4,
+    "BOTH_DIRECTIONS_PERMITTED_KERNEL_YIELDS_NOTHING": 4
+  },
+  "survived_depth": 5,
+  "rows": [
+    {
+      "session": "2026-03-23",
+      "is_control": false,
+      "his_clock": "2026-03-23 11:21:00-04:00",
+      "bucket": "2026-03-23 11:20:00-04:00",
+      "direction": "S",
+      "candidates_at_his_bucket": 8,
+      "survivors_to_ranking": 0,
+      "survivor_keys": [],
+      "deepest_gate_reached_BY_KEY": {
+        "depth": 0,
+        "gate": "FORCE_NOT_CONFIRMED",
+        "key": "A_NORMAL_REJECTION|S|-|2026-03-23T11:21:00-04:00",
+        "route": "A_NORMAL_REJECTION",
+        "location_id": null,
+        "location_band": [
+          null,
+          null
+        ],
+        "authority_state": null,
+        "authority_refusal": null,
+        "reason": null
+      },
+      "distinct_keys_at_his_bucket": 8,
+      "gate_histogram": {
+        "FORCE_NOT_CONFIRMED": 8
+      },
+      "unranked_kill_tokens": {}
+    },
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "his_clock": "2026-03-24 09:32:00-04:00",
+      "bucket": "2026-03-24 09:30:00-04:00",
+      "direction": "L",
+      "candidates_at_his_bucket": 72,
+      "survivors_to_ranking": 1,
+      "survivor_keys": [
+        {
+          "key": "A_NORMAL_REJECTION|L|S:2026-03-24T00:15:00-04:00:96923|2026-03-24T09:32:00-04:00",
+          "route": "A_NORMAL_REJECTION",
+          "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+          "location_band": [
+            24219.78348214286,
+            24235.96651785714
+          ],
+          "clock": "2026-03-24T09:32:00-04:00",
+          "reason": null
+        }
+      ],
+      "deepest_gate_reached_BY_KEY": {
+        "depth": 5,
+        "gate": "SURVIVED_TO_RANKING",
+        "key": "A_NORMAL_REJECTION|L|S:2026-03-24T00:15:00-04:00:96923|2026-03-24T09:32:00-04:00",
+        "route": "A_NORMAL_REJECTION",
+        "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+        "location_band": [
+          24219.78348214286,
+          24235.96651785714
+        ],
+        "authority_state": "GRANTED",
+        "authority_refusal": null,
+        "reason": null
+      },
+      "distinct_keys_at_his_bucket": 72,
+      "gate_histogram": {
+        "FORCE_NOT_CONFIRMED": 6,
+        "SURVIVED_TO_RANKING": 1,
+        "REJECTION_STORY_INCOMPLETE": 2,
+        "NO_LEGAL_ROUTE_MATCHED": 63
+      },
+      "unranked_kill_tokens": {}
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "his_clock": "2026-03-31 09:49:00-04:00",
+      "bucket": "2026-03-31 09:45:00-04:00",
+      "direction": "L",
+      "candidates_at_his_bucket": 269,
+      "survivors_to_ranking": 0,
+      "survivor_keys": [],
+      "deepest_gate_reached_BY_KEY": {
+        "depth": 2,
+        "gate": "REJECTION_STORY_INCOMPLETE",
+        "key": "A_NORMAL_REJECTION|L|S:2026-03-31T04:00:00-04:00:92936|2026-03-31T09:47:00-04:00",
+        "route": "A_NORMAL_REJECTION",
+        "location_id": "S:2026-03-31T04:00:00-04:00:92936",
+        "location_band": [
+          23228.858035714286,
+          23240.141964285714
+        ],
+        "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+        "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+        "reason": null
+      },
+      "distinct_keys_at_his_bucket": 269,
+      "gate_histogram": {
+        "FORCE_NOT_CONFIRMED": 2,
+        "REJECTION_STORY_INCOMPLETE": 24,
+        "NO_LEGAL_ROUTE_MATCHED": 243
+      },
+      "unranked_kill_tokens": {}
+    },
+    {
+      "session": "2026-04-06",
+      "is_control": false,
+      "his_clock": "2026-04-06 10:04:00-04:00",
+      "bucket": "2026-04-06 10:00:00-04:00",
+      "direction": "S",
+      "candidates_at_his_bucket": 239,
+      "survivors_to_ranking": 0,
+      "survivor_keys": [],
+      "deepest_gate_reached_BY_KEY": {
+        "depth": 2,
+        "gate": "REJECTION_STORY_INCOMPLETE",
+        "key": "A_NORMAL_REJECTION|S|S:2026-03-25T06:30:00-04:00:97649|2026-04-06T10:02:00-04:00",
+        "route": "A_NORMAL_REJECTION",
+        "location_id": "S:2026-03-25T06:30:00-04:00:97649",
+        "location_band": [
+          24407.929017857143,
+          24435.070982142857
+        ],
+        "authority_state": "WAIT_STORY_INCOMPLETE",
+        "authority_refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+        "reason": null
+      },
+      "distinct_keys_at_his_bucket": 239,
+      "gate_histogram": {
+        "FORCE_NOT_CONFIRMED": 2,
+        "REJECTION_STORY_INCOMPLETE": 135,
+        "NO_LEGAL_ROUTE_MATCHED": 102
+      },
+      "unranked_kill_tokens": {}
+    },
+    {
+      "session": "2026-04-09",
+      "is_control": false,
+      "his_clock": "2026-04-09 11:35:00-04:00",
+      "bucket": "2026-04-09 11:35:00-04:00",
+      "direction": "L",
+      "candidates_at_his_bucket": 89,
+      "survivors_to_ranking": 0,
+      "survivor_keys": [],
+      "deepest_gate_reached_BY_KEY": {
+        "depth": 2,
+        "gate": "INTRA_15M_FORCE_NOT_CONFIRMED",
+        "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-02T15:30:00-05:00:100400|2026-04-09T11:36:00-04:00",
+        "route": "B_NORMAL_BREAKOUT",
+        "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+        "location_band": [
+          null,
+          null
+        ],
+        "authority_state": null,
+        "authority_refusal": null,
+        "reason": null
+      },
+      "distinct_keys_at_his_bucket": 89,
+      "gate_histogram": {
+        "FORCE_NOT_CONFIRMED": 6,
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 4,
+        "REJECTION_STORY_INCOMPLETE": 62,
+        "NO_LEGAL_ROUTE_MATCHED": 17
+      },
+      "unranked_kill_tokens": {}
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "his_clock": "2026-04-14 09:36:00-04:00",
+      "bucket": "2026-04-14 09:35:00-04:00",
+      "direction": "L",
+      "candidates_at_his_bucket": 95,
+      "survivors_to_ranking": 1,
+      "survivor_keys": [
+        {
+          "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-04-14T09:15:00-04:00:102865|2026-04-14T09:38:00-04:00",
+          "route": "B_NORMAL_BREAKOUT",
+          "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+          "location_band": [
+            25714.66964285714,
+            25717.83035714286
+          ],
+          "clock": "2026-04-14T09:38:00-04:00",
+          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+        }
+      ],
+      "deepest_gate_reached_BY_KEY": {
+        "depth": 5,
+        "gate": "SURVIVED_TO_RANKING",
+        "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-04-14T09:15:00-04:00:102865|2026-04-14T09:38:00-04:00",
+        "route": "B_NORMAL_BREAKOUT",
+        "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+        "location_band": [
+          25714.66964285714,
+          25717.83035714286
+        ],
+        "authority_state": null,
+        "authority_refusal": null,
+        "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      },
+      "distinct_keys_at_his_bucket": 95,
+      "gate_histogram": {
+        "FORCE_NOT_CONFIRMED": 6,
+        "REJECTION_STORY_INCOMPLETE": 85,
+        "SURVIVED_TO_RANKING": 1,
+        "NO_LEGAL_ROUTE_MATCHED": 3
+      },
+      "unranked_kill_tokens": {}
+    }
+  ],
+  "unranked_kill_tokens_across_all_sessions": {},
+  "unranked_note": "Any killed_at token absent from the declared ranking is counted here and NOT bucketed into a neighbouring depth. A silently-bucketed token is how a whole route family came back UNMAPPED and was then dropped from a headline count (ALGO-097 §5/§6).",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 272.04
+}

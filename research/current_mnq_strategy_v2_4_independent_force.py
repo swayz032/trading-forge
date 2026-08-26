@@ -118,7 +118,11 @@ def independent_force(one: pd.DataFrame, parent_start: pd.Timestamp, parent_minu
     enough = n >= MIN_COMPLETED_1M
     before_close = bool(known_at < parent_end)
     efficient = bool(progress > 0 and efficiency >= body_frac)
-    confirmed = bool(enough and before_close and geometry and efficient and at_extreme)
+    # ENTAILED CLAUSE REMOVED FROM THE CONJUNCTION (ALGO-098), mirroring force.py exactly:
+    # `geometry` is `c > o`, which is `progress > 0`, which `efficient` already requires.
+    # It stays computed and reported so the reason chain and this witness keep their
+    # observation, and it is gone from the verdict because it can never change one.
+    confirmed = bool(enough and before_close and efficient and at_extreme)
 
     if confirmed:
         reason = "SUSTAINED_DIRECTIONAL_FORCE"

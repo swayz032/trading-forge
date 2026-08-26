@@ -157,6 +157,16 @@ def force_snapshot(one: pd.DataFrame, parent_start: pd.Timestamp,
         if direction == "L"
         else c <= float(np.min(closes)) + EPS
     )
+    # RECORDED, NOT GATING (ALGO-098). `_directional_body` is `close beyond open in the
+    # direction`, which for a LONG is exactly `progress > 0` - and `efficient` below ALREADY
+    # requires `progress > 0`. The clause is therefore ENTAILED: no input can satisfy
+    # `efficient` and fail `geometry`, so it can neither refuse anything nor be tested. It is
+    # kept as an observation on the snapshot and removed from the conjunction, because a gate
+    # that cannot refuse is not a gate - it is dead code wearing a citation.
+    #
+    # PRE-REGISTERED AND CHECKED: removing an entailed clause must move ZERO approvals. The
+    # 14-session capture is 143 before and after. If it had moved even one, the entailment
+    # argument would have been wrong and the clause would have gone back in.
     geometry = bool(_directional_body(row, direction))
     before_parent_close = bool(known_at < parent_end)
     enough_observations = n >= MIN_COMPLETED_1M_OBSERVATIONS
@@ -165,7 +175,6 @@ def force_snapshot(one: pd.DataFrame, parent_start: pd.Timestamp,
     confirmed = bool(
         enough_observations
         and before_parent_close
-        and geometry
         and efficient
         and at_extreme
     )
