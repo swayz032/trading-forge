@@ -40,13 +40,17 @@ because a wrong line can be corrected in one pass and a missing one costs anothe
 | **RATIFIED 2026-08-26** | this section was represented in the read-back you confirmed |
 | **NOT CONFIRMED** | this section was **not** part of that read-back. It is still sourced and still cited — it has simply never been in front of you |
 
-**Two limits on the stamp, stated so nobody later reads it as more than it is:**
+**Three limits on the stamp, stated so nobody later reads it as more than it is:**
 
 1. **What was read to you was a COMPRESSED rendering of the method, not this file.** So the stamp
    marks a **section** as represented — it does **not** mean every sentence inside it was read
    aloud. A detail inside a ratified section may still be wrong, and crossing it out is exactly as
    welcome as before.
-2. **Confirming section 9 is not answering it.** You confirmed that those seven things are
+2. **NOT REPRESENTED — THE CITATIONS. None of them, anywhere, were read to you.** You confirmed **the rules**.
+   You did **not** confirm that each one is sourced where this document says it is. **Every
+   `[source]` in this file is unverified by you**, and a rule you confirmed could still be
+   attributed to the wrong place.
+3. **Confirming section 9 is not answering it.** You confirmed that those seven things are
    genuinely unspecified — which is real information, because it means **they are gaps in what has
    been written down, not gaps in our reading of you.** **You answered none of the seven, and
    nothing here treats them as answered.**
@@ -234,6 +238,8 @@ that has never been tested · continuing when the third candle loses control.
 **Break-and-retest is a normal zone interaction** — broken resistance, accepted, retested as
 support, becomes a long location, and the mirror for support. `[video_evidence.md, principle 9]` ·
 `[source 7, adopted rule 6]`
+**NOT REPRESENTED** — this line was left out of the read-back entirely. It is sourced, and you have
+not confirmed it.
 
 ---
 
@@ -275,6 +281,9 @@ a structural support/resistance reaction · a 5m liquidity/reaction cluster · a
 > *"The liquidity cluster appeared before the FVG, price reacted there and did not need to trade
 > into the farther FVG. **Whichever meaningful reaction area appears first owns TP.**"*
 > `[gold fixture V24G06]`
+>
+> **NOT REPRESENTED — the rule above was read to you; THIS SENTENCE OF YOURS WAS NOT.** You
+> confirmed the rule in someone else's words. **Whether these are still your words is unchecked.**
 
 - **A farther target may not be chosen just because it pays more.**
   `[tp_ladder.farther_target_cannot_be_chosen_merely_for_more_profit]` ·
@@ -368,7 +377,7 @@ it.** No number below was chosen by you; each was chosen by somebody building th
 
 ## 10. The one thing the bot does that none of the above authorizes
 
-**NOT CONFIRMED** — this section was not part of the read-back. Everything in it is measured and cited, but it has never been in front of you.
+**SUBSTANCE REPRESENTED IN SECTION 3 — THIS SECTION WAS NOT READ.** There was no heading answering your question. But the mechanism below **was** read to you, inside section 3's DIVERGENT block, with `kernel.py:205` named: *"when a rejection and a break both qualify, it ranks them and the break always wins; your zone rejection is ranked last of three."* **So you have seen the finding. You have not seen it written out this way.**
 
 **When your zone rejection and a breakout both qualify at the same moment in the same direction,
 the breakout wins — every time — because of a three-line ranking nobody derived from anything you
