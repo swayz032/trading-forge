@@ -29,7 +29,38 @@ because a wrong line can be corrected in one pass and a missing one costs anothe
 
 ---
 
+## What you have confirmed — and what you have not
+
+**On 2026-08-26 the method below was read back to you and you said: _"thats correct."_**
+
+**That confirmation is recorded here at the scope it actually had, and no wider.**
+
+| | |
+|---|---|
+| **RATIFIED 2026-08-26** | this section was represented in the read-back you confirmed |
+| **NOT CONFIRMED** | this section was **not** part of that read-back. It is still sourced and still cited — it has simply never been in front of you |
+
+**Two limits on the stamp, stated so nobody later reads it as more than it is:**
+
+1. **What was read to you was a COMPRESSED rendering of the method, not this file.** So the stamp
+   marks a **section** as represented — it does **not** mean every sentence inside it was read
+   aloud. A detail inside a ratified section may still be wrong, and crossing it out is exactly as
+   welcome as before.
+2. **Confirming section 9 is not answering it.** You confirmed that those seven things are
+   genuinely unspecified — which is real information, because it means **they are gaps in what has
+   been written down, not gaps in our reading of you.** **You answered none of the seven, and
+   nothing here treats them as answered.**
+
+**All three DIVERGENT blocks were read to you with both sides printed.** So where your method and
+the running code disagree, **the code is now known to be the wrong one** — not because anyone
+argued it, but because you confirmed the method. **Nothing has been changed in the code on the
+strength of that**, and no repair has been authorized.
+
+---
+
 ## 1. The order of the decision
+
+**RATIFIED 2026-08-26** — represented in the read-back.
 
 This is the spine. Everything else hangs off it.
 
@@ -57,6 +88,8 @@ it is right** — so it is the first thing to check.
 ---
 
 ## 2. The map — which levels are on the chart
+
+**RATIFIED 2026-08-26** — represented in the read-back.
 
 **Support and resistance key level zones. That is the level family.**
 `[semantic_crosswalk.market_map: "Structural support/resistance only as the regular level
@@ -103,6 +136,8 @@ structure — but being an FVG is never by itself a trade, and not every FVG is 
 
 ## 3. Price reaches a zone — and the zone is classified
 
+**RATIFIED 2026-08-26** — represented in the read-back.
+
 **This is one question with one answer, not a menu.** When price arrives at a zone, what happened
 there is *identified*:
 
@@ -134,6 +169,8 @@ turn resistance into support. `[video_evidence.md, principle 6]` · `[source 7, 
 
 ## 4. Entry — a rejection at the zone
 
+**RATIFIED 2026-08-26** — represented in the read-back.
+
 > *"A key-level rejection entry can be two momentum candles, doji then momentum, pinbar then
 > momentum, inside bar then momentum, or shrinking candles heading into the key level, rejection,
 > then a reverse momentum candle. **Rejection by itself is not enough.**"* `[gold fixture V24G01]`
@@ -153,6 +190,8 @@ rejection entry. `[V24G01 must_not_do]`
 ---
 
 ## 5. Entry — a break of the zone
+
+**RATIFIED 2026-08-26** — represented in the read-back.
 
 **The first candle through the level is a setup, not an entry.**
 
@@ -200,6 +239,8 @@ support, becomes a long location, and the mirror for support. `[video_evidence.m
 
 ## 6. Pressing the button — force
 
+**RATIFIED 2026-08-26** — represented in the read-back.
+
 > *"I watch the forming momentum candle like a tug of war to see whether the force is real before
 > I enter. Price can push up/down while the candle is alive. **If I waited until the 5-minute
 > candle closed I would often enter too late.** My stop is 17.25 points, so late entry creates too
@@ -224,6 +265,8 @@ displacement. There are strong bullish and bearish momentum candles that are not
 ---
 
 ## 7. The target
+
+**RATIFIED 2026-08-26** — represented in the read-back.
 
 **The nearest meaningful reaction owns TP1** — whichever of these physically comes first:
 a structural support/resistance reaction · a 5m liquidity/reaction cluster · an active 15m FVG.
@@ -252,6 +295,8 @@ a structural support/resistance reaction · a 5m liquidity/reaction cluster · a
 ---
 
 ## 8. Risk and limits
+
+**RATIFIED 2026-08-26** — represented in the read-back.
 
 - **Stop: 17.25 points.** `[preserved_invariants: 17.25_point_stop]` · `[V24G08 risk_context]`
 - **One strategy trade per session, the first A+.**
@@ -285,6 +330,8 @@ a structural support/resistance reaction · a 5m liquidity/reaction cluster · a
 ---
 
 ## 9. What nobody wrote down — UNSPECIFIED
+
+**RATIFIED 2026-08-26 AS A LIST OF OPEN QUESTIONS.** You confirmed these are genuinely unspecified. **You have answered none of them, and none is treated as answered.**
 
 **These are the questions. The bot is doing something in each case and no line of yours decides
 it.** No number below was chosen by you; each was chosen by somebody building the bot.
@@ -320,6 +367,8 @@ it.** No number below was chosen by you; each was chosen by somebody building th
 ---
 
 ## 10. The one thing the bot does that none of the above authorizes
+
+**NOT CONFIRMED** — this section was not part of the read-back. Everything in it is measured and cited, but it has never been in front of you.
 
 **When your zone rejection and a breakout both qualify at the same moment in the same direction,
 the breakout wins — every time — because of a three-line ranking nobody derived from anything you
