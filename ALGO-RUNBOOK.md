@@ -16,8 +16,21 @@
 > 08:00 arm block the freeze outright, and that arm was already 1/8 before this batch existed.
 >
 > **Nothing here is deployable and nothing trades real money.** The bot's remaining known
-> defect at 08:00 is that it spends its one daily trade BEFORE the operator's own entry clock
-> on 13 of 14 sessions.
+> defect at 08:00 is that it spends its one daily trade TOO EARLY. Measured on the frozen
+> 14-case scorecard, stated only in numbers the scorecard supports:
+>
+> - it takes a trade at all in **12 of 14** sessions (he traded 7 of the same 14);
+> - the single daily trade is spent **before the audited window even opens in 10 of 14**,
+>   which makes every in-window entry in those sessions unreachable;
+> - and of the **5** sessions where the bot traded *and* he entered - the only sessions where
+>   the comparison is defined - the bot's first entry precedes his clock in **4**.
+>
+> **CORRECTED 2026-08-26.** These five documents all carried *"before the operator's own
+> entry clock on 13 of 14 sessions"*. **No measurement supports 13.** It exceeds the 12
+> sessions in which the bot trades at all, which is impossible - a bullet cannot be spent in
+> a session with no trade. `ALGO-WORKER-SEAT-HANDOVER.md:45` records the likely origin: a
+> superseded `13 of 14` from the brain at `acceptance_bars = 2`, before ALGO-068 R1 - already
+> retracted there, and it had survived here verbatim in five headers.
 
 
 **For: Tonio. Written for someone who does not read code.**
@@ -52,7 +65,7 @@ branch. Neither is a running program.
 - **There is no "start the bot" command.** The live-runtime pieces (`shadow_runtime`,
   `automation_runtime`, `broker`) are code libraries with no entry point. Nothing starts them.
 - **Nothing runs in the background.** No service, no scheduled task, no daemon. It cannot be
-  "secretly running" — see `KILL-AND-HEARTBEAT.md` §1–§3 for the inventory of what *is* running
+  "secretly running" — see `ALGO-KILL-AND-HEARTBEAT.md` §1–§3 for the inventory of what *is* running
   on this tower (that is the Trading Forge platform, a different product) and how to check.
 - **It is not connected to any broker, and must not be.**
 
@@ -85,27 +98,35 @@ In order. None can be skipped, none can be done out of order.
 | **CLEAN EDGE** | On data it was never tuned against, the thing makes money after costs, and survives having its best month and its five best trades removed. | Not started. Deliberately last — no result may pick a rule before FREEZE. |
 | **PROP-SURVIVAL** | Sizing and drawdown tools that keep a Topstep account alive. | Partly built (`current_mnq_strategy_v2_3_topstep_risk`), not exercised. |
 | **A start command** | Somebody writes the program that actually runs the brain live. | **Does not exist.** |
-| **A dead-man alarm** | Something tells you if it goes quiet. | **Does not exist.** See `KILL-AND-HEARTBEAT.md` §6. |
+| **A dead-man alarm** | Something tells you if it goes quiet. | **Does not exist.** See `ALGO-KILL-AND-HEARTBEAT.md` §6. |
 | **A flatten drill** | The emergency close-everything path proven against the real broker, not just offline. | Not done. Cannot be done before the gate opens. |
 
 ---
 
 ## 2. Commands — the daily/whenever set
 
-Open PowerShell. Every command assumes you first do:
+**Open PowerShell and run these TWO lines first, once per window.** Everything else in this book
+assumes you have:
 
 ```
 cd C:\Users\tonio\Projects\wt-mnq-v24
-```
-
-and every command starts with `PYTHONPATH=. python -m`. If PowerShell objects to `PYTHONPATH=.`
-at the front of a line, set it once per window instead:
-
-```
 $env:PYTHONPATH = "."
 ```
 
-and then just type `python -m ...`.
+**Then every command below is just `python -m ...` — type it exactly as printed.**
+
+> **Why this matters, and it is not optional.** The commands are written in this book as
+> `PYTHONPATH=. python -m ...`. **That form does NOT work in PowerShell** — it is Mac/Linux
+> syntax, and PowerShell answers:
+>
+> ```
+> PYTHONPATH=. : The term 'PYTHONPATH=.' is not recognized as the name of a cmdlet...
+> ```
+>
+> **This is not an edge case; it fails every time.** So: run the two lines above once when you
+> open the window, then **drop the `PYTHONPATH=.` prefix** from anything you copy out of this
+> book. If you ever see that "not recognized" error, it means the window is new and you have not
+> run the two lines yet. *(Verified on this machine, 2026-08-26 — both the failure and the fix.)*
 
 **Two kinds of command in this book.** Most only READ and print. A few also **REWRITE a result
 file** in the repository. Those are marked **WRITES**. That is not dangerous — it cannot touch
@@ -310,7 +331,7 @@ PYTHONPATH=. python -c "from research.current_mnq_strategy_v2_4_refusal_legibili
 ```
 
 VERIFIED (28 codes). This reads the real list out of the code, so it cannot go stale the way a
-hand-written table can. `SELF-EXPLANATION-AUDIT.md` translates the rest — every status word the
+hand-written table can. `ALGO-SELF-EXPLANATION-AUDIT.md` translates the rest — every status word the
 family can print, including the exam and trace words above.
 
 ### 2i. Run the whole test suite (~65 seconds)
@@ -375,14 +396,14 @@ wrong. But it does not protect you from these three, which have each bitten this
 ### "Nothing responds."
 
 Nothing here is a live service, so this is almost always the Trading Forge platform, not the
-bot. Follow **`KILL-AND-HEARTBEAT.md` §3** — it gives you the exact `Get-Service` and port-4000
+bot. Follow **`ALGO-KILL-AND-HEARTBEAT.md` §3** — it gives you the exact `Get-Service` and port-4000
 checks. If services show Running but pages are dead, restart the machine; everything on this
 tower auto-starts. **Nothing here can lose a market position today**, because nothing is attached
 to a market.
 
 ### "I want to stop everything."
 
-**`KILL-AND-HEARTBEAT.md` §4** is the procedure. Today it carries **zero market risk** — there
+**`ALGO-KILL-AND-HEARTBEAT.md` §4** is the procedure. Today it carries **zero market risk** — there
 is nothing to flatten. Do not go looking for a bot process to kill; there isn't one (§1a).
 
 If money is ever at risk in future, the order is: **close it in the TopstepX app or phone the
@@ -483,9 +504,9 @@ it explaining why it kept waiting. A refusal is the system working.
 | your trade ledger | `C:\Users\tonio\Downloads\backtesting-analytics.csv` — **not in the repo; do not delete** |
 | rulings and reports | branch `external-advisor/gpt-rulings-algo`, folder `algo-reports/`, numbered `ALGO-NNN` |
 | the handover to GPT | `ALGO-GPT-HANDOVER.md` at repo root |
-| stopping things / what is alive | `KILL-AND-HEARTBEAT.md` |
-| what every message means | `SELF-EXPLANATION-AUDIT.md` |
-| seating a future Claude, if you ever re-subscribe | `SEAT-HANDOFF-TEMPLATES.md` |
+| stopping things / what is alive | `ALGO-KILL-AND-HEARTBEAT.md` |
+| what every message means | `ALGO-SELF-EXPLANATION-AUDIT.md` |
+| seating a future Claude, if you ever re-subscribe | `ALGO-SEAT-HANDOFF-TEMPLATES.md` |
 
 **Three rules that do not bend:**
 
@@ -529,7 +550,7 @@ Listed because a runbook that hides its holes is worse than none.
 - **The kill path is proven offline only.** The code builds the right instructions; nobody has
   confirmed the broker accepts them, and nobody may until the gate opens.
 - **No heartbeat you would notice.** Nothing pages you if a future bot goes quiet. See
-  `KILL-AND-HEARTBEAT.md` §6 for the two candidate designs — neither is built.
+  `ALGO-KILL-AND-HEARTBEAT.md` §6 for the two candidate designs — neither is built.
 - **The bot still trades on 12 of 14 days.** That is the defect the current work is fixing (§5).
   It is not ready to run unattended and this book cannot make it so.
 - **Three commands in §2 are UNVERIFIED by the drafter** — the exam (§2c), the refusal trace

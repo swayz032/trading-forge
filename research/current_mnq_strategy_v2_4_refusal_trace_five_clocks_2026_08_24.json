@@ -35,8 +35,14 @@
       "bucket": "2026-03-24 09:30:00-04:00",
       "direction": "L",
       "candidates_at_his_bucket": 72,
-      "survived_to_ranking": 0,
-      "surviving_path": null,
+      "survived_to_ranking": 1,
+      "surviving_path": [
+        {
+          "route": "A_NORMAL_REJECTION",
+          "reason": null,
+          "location_id": "S:2026-03-24T00:15:00-04:00:96923"
+        }
+      ],
       "routes": {
         "A_NORMAL_REJECTION": {
           "first_refusing_predicate": "FORCE_NOT_CONFIRMED",
@@ -46,7 +52,7 @@
           "detail": "body_frac=0.62 gates PATH EFFICIENCY here, in the FORCE module. This is the SAME untaught number R2 retires from Route A's story gate - but at a DIFFERENT SITE that R2 does not touch. On 03-23 and 04-09 this is what kills every Route A candidate at his clock, before the story gate is ever reached.",
           "all_refusals": {
             "FORCE_NOT_CONFIRMED": 3,
-            "MIXED_OVERLAP_AND_TWO_SIDED_WICKS": 1,
+            "UNKNOWN": 1,
             "MERE_APPROACH_WITHOUT_TOUCH": 2
           }
         },
@@ -148,53 +154,53 @@
       "his_clock": "2026-04-06 10:04:00-04:00",
       "bucket": "2026-04-06 10:00:00-04:00",
       "direction": "S",
-      "candidates_at_his_bucket": 85,
+      "candidates_at_his_bucket": 239,
       "survived_to_ranking": 0,
       "surviving_path": null,
       "routes": {
         "A_NORMAL_REJECTION": {
           "first_refusing_predicate": "MERE_APPROACH_WITHOUT_TOUCH",
-          "count": 44,
+          "count": 132,
           "executable_site": "derivation.py `derive_approach` - the band was never reached",
           "provenance": "TAUGHT",
           "detail": "no touch, no interaction: structural, no magnitude decides it",
           "all_refusals": {
-            "FORCE_NOT_CONFIRMED": 3,
-            "TOUCH_WITHOUT_DIRECTIONAL_CONTROL": 1,
-            "MERE_APPROACH_WITHOUT_TOUCH": 44
+            "FORCE_NOT_CONFIRMED": 1,
+            "MIXED_OVERLAP_AND_TWO_SIDED_WICKS": 3,
+            "MERE_APPROACH_WITHOUT_TOUCH": 132
           }
         },
         "C_PREBREAK_DISPLACEMENT": {
           "first_refusing_predicate": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
-          "count": 34,
+          "count": 102,
           "executable_site": "breakout_derivation.py `is_true_displacement`",
           "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
           "detail": "ALGO-009 7.8 is taught, but the test calls range_ratio and body_frac",
           "all_refusals": {
-            "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT": 34
+            "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT": 102
           }
         },
         "D_PREBREAK_RETEST_BREAKOUT": {
           "first_refusing_predicate": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
-          "count": 32,
+          "count": 96,
           "executable_site": "(unmapped)",
           "provenance": "UNMAPPED",
           "detail": "refusal literal not in the table",
           "all_refusals": {
-            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 32,
-            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK": 1,
-            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_VALID_RETEST_OF_THE_BROKEN_LEVEL; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 1
+            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 96,
+            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK": 3,
+            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_VALID_RETEST_OF_THE_BROKEN_LEVEL; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 3
           }
         },
         "B_NORMAL_BREAKOUT": {
           "first_refusing_predicate": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
-          "count": 32,
+          "count": 96,
           "executable_site": "breakout_derivation.py `normal_breakout` / `break_retest`",
           "provenance": "TAUGHT",
           "detail": "no completed close beyond the band: structural, no magnitude",
           "all_refusals": {
-            "NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 32,
-            "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT": 2
+            "NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 96,
+            "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT": 6
           }
         }
       },
@@ -207,23 +213,65 @@
       "his_clock": "2026-04-09 11:35:00-04:00",
       "bucket": "2026-04-09 11:35:00-04:00",
       "direction": "L",
-      "candidates_at_his_bucket": 12,
-      "survived_to_ranking": 0,
-      "surviving_path": null,
+      "candidates_at_his_bucket": 89,
+      "survived_to_ranking": 1,
+      "surviving_path": [
+        {
+          "route": "A_NORMAL_REJECTION",
+          "reason": null,
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322"
+        }
+      ],
       "routes": {
         "A_NORMAL_REJECTION": {
-          "first_refusing_predicate": "FORCE_NOT_CONFIRMED",
-          "count": 4,
-          "executable_site": "force.py:123 `force_snapshot` - efficiency >= Params.body_frac",
-          "provenance": "UNTAUGHT_MAGNITUDE",
-          "detail": "body_frac=0.62 gates PATH EFFICIENCY here, in the FORCE module. This is the SAME untaught number R2 retires from Route A's story gate - but at a DIFFERENT SITE that R2 does not touch. On 03-23 and 04-09 this is what kills every Route A candidate at his clock, before the story gate is ever reached.",
+          "first_refusing_predicate": "MERE_APPROACH_WITHOUT_TOUCH",
+          "count": 61,
+          "executable_site": "derivation.py `derive_approach` - the band was never reached",
+          "provenance": "TAUGHT",
+          "detail": "no touch, no interaction: structural, no magnitude decides it",
           "all_refusals": {
-            "FORCE_NOT_CONFIRMED": 4
+            "FORCE_NOT_CONFIRMED": 3,
+            "MERE_APPROACH_WITHOUT_TOUCH": 61,
+            "UNKNOWN": 1
+          }
+        },
+        "C_PREBREAK_DISPLACEMENT": {
+          "first_refusing_predicate": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+          "count": 17,
+          "executable_site": "breakout_derivation.py `is_true_displacement`",
+          "provenance": "TAUGHT_SHAPE_UNTAUGHT_GATE",
+          "detail": "ALGO-009 7.8 is taught, but the test calls range_ratio and body_frac",
+          "all_refusals": {
+            "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT": 17
+          }
+        },
+        "D_PREBREAK_RETEST_BREAKOUT": {
+          "first_refusing_predicate": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+          "count": 15,
+          "executable_site": "(unmapped)",
+          "provenance": "UNMAPPED",
+          "detail": "refusal literal not in the table",
+          "all_refusals": {
+            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 15,
+            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_VALID_RETEST_OF_THE_BROKEN_LEVEL; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 1,
+            "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 1
+          }
+        },
+        "B_NORMAL_BREAKOUT": {
+          "first_refusing_predicate": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+          "count": 15,
+          "executable_site": "breakout_derivation.py `normal_breakout` / `break_retest`",
+          "provenance": "TAUGHT",
+          "detail": "no completed close beyond the band: structural, no magnitude",
+          "all_refusals": {
+            "NO_COMPLETED_PRINT_BEYOND_THE_ZONE": 15,
+            "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT": 1,
+            "SECOND_5M_DID_NOT_EXTEND_BEYOND_THE_FIRST_PRINT_EXTREME": 1
           }
         }
       },
       "rejection_family_asked": true,
-      "break_family_asked": false
+      "break_family_asked": true
     },
     {
       "session": "2026-04-14",
@@ -300,15 +348,9 @@
       "route": "A_NORMAL_REJECTION",
       "predicate": "FORCE_NOT_CONFIRMED",
       "detail": "body_frac=0.62 gates PATH EFFICIENCY here, in the FORCE module. This is the SAME untaught number R2 retires from Route A's story gate - but at a DIFFERENT SITE that R2 does not touch. On 03-23 and 04-09 this is what kills every Route A candidate at his clock, before the story gate is ever reached."
-    },
-    {
-      "session": "2026-04-09",
-      "route": "A_NORMAL_REJECTION",
-      "predicate": "FORCE_NOT_CONFIRMED",
-      "detail": "body_frac=0.62 gates PATH EFFICIENCY here, in the FORCE module. This is the SAME untaught number R2 retires from Route A's story gate - but at a DIFFERENT SITE that R2 does not touch. On 03-23 and 04-09 this is what kills every Route A candidate at his clock, before the story gate is ever reached."
     }
   ],
-  "untaught_count": 3,
+  "untaught_count": 2,
   "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
-  "runtime_seconds": 170.13
+  "runtime_seconds": 182.05
 }

@@ -161,3 +161,96 @@ def test_the_runbook_it_delegates_to_exists_and_is_not_empty():
 def test_the_hard_won_lessons_are_present(lesson):
     """These cost real retractions. Losing them at handover would waste that."""
     assert lesson.lower() in _text().lower(), lesson
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+# THE FIVE SUNSET DOCUMENTS SHARE ONE STANDING-STATE HEADER. It carried a number that no
+# measurement supported - "before the operator's own entry clock on 13 of 14 sessions" - in all
+# five at once, for as long as they existed. 13 EXCEEDS THE 12 SESSIONS IN WHICH THE BOT TRADES
+# AT ALL, which is impossible: a bullet cannot be spent in a session with no trade.
+#
+# Nothing checked it, because every guard pointed at the handover's *other* number ("12 of 14")
+# and that one was right. A cold read found it. This test is the cold read, made permanent.
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+
+SUNSET_DOCS = ("ALGO-GPT-HANDOVER.md", "ALGO-RUNBOOK.md", "ALGO-KILL-AND-HEARTBEAT.md",
+               "ALGO-SEAT-HANDOFF-TEMPLATES.md", "ALGO-SELF-EXPLANATION-AUDIT.md")
+
+ENTERED_STATES = {"ENTER_LONG", "ENTER_SHORT"}
+
+
+def _early_bullet_facts():
+    """Re-derive the standing-state numbers from the scorecard. Never typed."""
+    import datetime as dt
+    cases = json.load(io.open(
+        "research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json",
+        encoding="utf-8"))["cases"]
+    traded = pre_window = comparable = bot_first = 0
+    for c in cases:
+        bf = c.get("budget_faithful") or {}
+        bot_acted = bf.get("session_first_action") in ENTERED_STATES
+        traded += bot_acted
+        pre_window += bool(bf.get("bullet_spent_before_window"))
+        he_entered = c.get("trader_state") in ENTERED_STATES
+        bt, tt = bf.get("session_first_entry_time"), c.get("trader_decision_clock")
+        if bot_acted and he_entered and bt and tt:
+            comparable += 1
+            bot_first += dt.datetime.fromisoformat(bt) < dt.datetime.fromisoformat(tt)
+    return {"sessions": len(cases), "traded": traded, "pre_window": pre_window,
+            "comparable": comparable, "bot_first": bot_first}
+
+
+def test_no_sunset_doc_claims_more_early_bullets_than_sessions_with_a_trade():
+    """The arithmetic that convicts the old number, stated as a property.
+
+    A bullet cannot be spent in a session where the bot never traded, so any 'spends it early
+    in N of 14' claim is bounded above by 'trades at all in M of 14'. The retracted claim
+    violated this by one.
+    """
+    f = _early_bullet_facts()
+    assert f["pre_window"] <= f["traded"], (
+        f"pre-window bullets ({f['pre_window']}) exceed sessions with a trade ({f['traded']})")
+    assert f["bot_first"] <= f["comparable"] <= f["traded"], f
+
+
+def _standing_state_block(doc: str) -> str:
+    """The leading blockquote only - NOT the whole file.
+
+    Checking the whole file let a mutation delete the measured claim and stay green, because
+    `**12 of 14**` also occurs in an unrelated sentence further down the runbook. A claim that
+    can be satisfied by a coincidental match elsewhere is not being checked where it matters.
+    """
+    lines = io.open(doc, encoding="utf-8").read().splitlines()
+    block, started = [], False
+    for line in lines:
+        if line.startswith(">"):
+            started = True
+            block.append(line)
+        elif started and line.strip() == "":
+            continue                      # blank lines inside the quote are fine
+        elif started:
+            break                         # first non-quote prose ends the standing state
+    return "\n".join(block)
+
+
+@pytest.mark.parametrize("doc", SUNSET_DOCS)
+def test_every_sunset_doc_states_the_MEASURED_early_bullet_numbers(doc):
+    """All five carry the same header; all five must carry the same measured numbers."""
+    text = _standing_state_block(doc)
+    assert len(text) > 400, f"{doc}: standing-state block not found or truncated"
+    f = _early_bullet_facts()
+    for claim in (f"**{f['traded']} of {f['sessions']}**",
+                  f"**before the audited window even opens in {f['pre_window']} of {f['sessions']}**",
+                  f"**{f['comparable']}** sessions where the bot traded",
+                  f"precedes his clock in **{f['bot_first']}**"):
+        assert claim in text, f"{doc} does not state the measured claim {claim!r}"
+
+
+@pytest.mark.parametrize("doc", SUNSET_DOCS)
+def test_no_sunset_doc_reasserts_the_retracted_early_bullet_number(doc):
+    """`13 of 14` may appear ONLY inside the correction notice that retracts it."""
+    for line in io.open(doc, encoding="utf-8").read().splitlines():
+        if "13 of 14" in line:
+            assert ("CORRECTED" in line or "No measurement supports" in line
+                    or "superseded" in line or "entry clock on 13 of 14" in line), (
+                f"{doc} reasserts the retracted number outside its retraction: {line.strip()!r}")

@@ -16,8 +16,21 @@
 > 08:00 arm block the freeze outright, and that arm was already 1/8 before this batch existed.
 >
 > **Nothing here is deployable and nothing trades real money.** The bot's remaining known
-> defect at 08:00 is that it spends its one daily trade BEFORE the operator's own entry clock
-> on 13 of 14 sessions.
+> defect at 08:00 is that it spends its one daily trade TOO EARLY. Measured on the frozen
+> 14-case scorecard, stated only in numbers the scorecard supports:
+>
+> - it takes a trade at all in **12 of 14** sessions (he traded 7 of the same 14);
+> - the single daily trade is spent **before the audited window even opens in 10 of 14**,
+>   which makes every in-window entry in those sessions unreachable;
+> - and of the **5** sessions where the bot traded *and* he entered - the only sessions where
+>   the comparison is defined - the bot's first entry precedes his clock in **4**.
+>
+> **CORRECTED 2026-08-26.** These five documents all carried *"before the operator's own
+> entry clock on 13 of 14 sessions"*. **No measurement supports 13.** It exceeds the 12
+> sessions in which the bot trades at all, which is impossible - a bullet cannot be spent in
+> a session with no trade. `ALGO-WORKER-SEAT-HANDOVER.md:45` records the likely origin: a
+> superseded `13 of 14` from the brain at `acceptance_bars = 2`, before ALGO-068 R1 - already
+> retracted there, and it had survived here verbatim in five headers.
 
 **DO NOT RENAME OR MOVE THIS FILE.** Its accuracy guard,
 `tests/test_algo_handover_is_accurate.py`, reads `ALGO-GPT-HANDOVER.md` **by path** and will fail
@@ -447,10 +460,18 @@ key (`row.t`), the duplicate-index guard, and the **side mirror already correct*
 low, `R` takes the high, both against the close. It currently turns those two prices into a
 *fraction*; the band needs them as **the two band edges**. That is the whole change.
 
-**⚠ ONE TRAP IN THE FUNCTION YOU ARE COPYING.** It ends `except Exception: return 0.5` — a
-**silent default**. That is tolerable for a quality score and **unacceptable for a band edge**: a
-failed join would produce a plausible zone with no relation to the candle, and nothing would go
-red. **The band path must FAIL LOUD**, or explicitly refuse the location, never default.
+> ### ⚠ HARD REQUIREMENT — THE BAND EDGE MAY NOT INHERIT THE FALLBACK
+>
+> **ALGO-113, verbatim and binding.** `_pivot_close_away` ends `except Exception: return 0.5` —
+> **acceptable for a quality score, UNACCEPTABLE for a band edge**, because a failed join there
+> yields **a plausible zone unrelated to the candle that drew it** and **nothing goes red.**
+>
+> **The band build must FAIL LOUDLY — raise, or emit an explicit refusal literal. It may not
+> inherit the fallback, and it may not be silently absent.**
+>
+> This is not style. A `0.5` that reaches a quality score costs you a slightly wrong rank; a
+> defaulted band edge **admits a location the operator never drew**, at a price nothing in the
+> pipeline can distinguish from a real one — and the whole campaign is a fidelity argument.
 
 **MANDATORY, from ALGO-108 §1 — this change ADMITS, so it will DISPLACE.** Report membership
 **per route** and audit **every removal** for a same-bucket higher-ranked addition
