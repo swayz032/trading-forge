@@ -194,7 +194,10 @@ def _t3_control(row, direction: str) -> bool:
     fails. So this is a disjunction of the two named failure modes, each independently
     sufficient to refuse — never a weighted total, because neither may compensate for the other:
 
-        MIXED                  body < upper_wick AND body < lower_wick   (neither side won)
+        MIXED                  the rejection-side wick did not exceed the opposing wick
+                               AND the body did not exceed the larger wick
+                               (the retired predicate's own sentence, magnitudes
+                                replaced by comparisons)
         NO_DIRECTIONAL_CONTROL the close fails to finish beyond the bar's own midpoint
                                in the traded direction
 
@@ -218,7 +221,23 @@ def _t3_control(row, direction: str) -> bool:
     body = abs(c - o)
     upper_wick = h - max(o, c)
     lower_wick = min(o, c) - lo_px
-    mixed = bool(body < upper_wick and body < lower_wick)
+
+    # MIXED is the retired predicate's OWN SENTENCE, kept whole: "Both wicks substantial
+    # AND the body small: the bar argues with itself." It is a CONJUNCTION, and each half
+    # alone was refuted a priori on a required fixture:
+    #   body-half alone  refused his 03-24 bar, whose rejection wick won 1.67x
+    #   wick-half alone  refused the ALGO-071 §5.3 bar, whose body won 5x
+    # Each failed on the side it dropped. This keeps both, with the magnitudes replaced
+    # by COMPARISONS - the ALGO-071 §3 move applied to the candle instead of the band.
+    #
+    # The REJECTION-side wick is the one price had to reject THROUGH: below for a long at
+    # support, above for a short at resistance. Ties refuse on both conjuncts.
+    rejection_wick, opposing_wick = ((lower_wick, upper_wick) if direction == "L"
+                                     else (upper_wick, lower_wick))
+    not_won = bool(rejection_wick <= opposing_wick)
+    body_small = bool(body <= max(upper_wick, lower_wick))
+    mixed = bool(not_won and body_small)
+
     midpoint = (h + lo_px) / 2.0
     directional = bool(c > midpoint) if direction == "L" else bool(c < midpoint)
     return bool((not mixed) and directional)

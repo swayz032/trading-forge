@@ -61,7 +61,8 @@ def _t3_refuses(bar, direction="L") -> bool:
     body = abs(c - o)
     upper = h - max(o, c)
     lower = min(o, c) - l
-    mixed = bool(body < upper and body < lower)
+    rej, opp = (lower, upper) if direction == "L" else (upper, lower)
+    mixed = bool(rej <= opp and body <= max(upper, lower))   # T3'' - ties refuse
     mid = (h + l) / 2.0
     no_control = bool(c <= mid) if direction == "L" else bool(c >= mid)
     return bool(mixed or no_control)
@@ -80,16 +81,22 @@ def _t3_refuses(bar, direction="L") -> bool:
 #: A fixture that is decided by a different clause proves nothing about this one.
 
 #: DOJI control: closed out on the near side, but the body is dwarfed by BOTH wicks.
-DOJI = (102.6, 104.0, 99.0, 102.5)
+DOJI = (102.6, 106.0, 100.5, 102.5)
 
 #: MIXED control: closed out on the near side, both wicks enormous, body negligible - the
 #: taught `mixed_overlap_and_two_sided_wicks` picture.
-MIXED = (102.4, 112.0, 92.0, 102.6)
+MIXED = (102.4, 112.0, 101.0, 102.6)
 
 #: HAMMER / pin: long lower wick, SMALL upper wick, decisive close out on the near side.
 #: THE ARCHETYPAL REJECTION - it must PASS, and it is the fixture that refutes an over-strict
 #: T3 (this is why `C2 = body < max(wick)` was rejected on teaching grounds).
 HAMMER = (102.5, 103.0, 97.0, 102.8)
+
+#: CONTESTED rejection: dominant rejection-side wick AND a substantial opposing wick. PASSES.
+CONTESTED = (102.4, 108.0, 92.0, 102.6)
+
+#: Closes out of the band but BELOW its own midpoint. Refused by NO_DIRECTIONAL_CONTROL only.
+WRONG_SIDE = (107.0, 108.0, 97.0, 102.2)
 
 #: ALGO-071 §5.3 fixture 1 - the operator's own clean thin-wick rejection. Must PASS.
 CLEAN_REJECTION = (101.6, 103.5, 101.5, 103.2)
@@ -193,25 +200,30 @@ def test_T3_tie_convention_close_exactly_at_the_midpoint_REFUSES():
     # convention is never exercised. My first draft got this wrong the same way the DOJI
     # fixtures did - the bar was refused for a different reason and the test looked green
     # for the wrong clause. Each fixture asserts `not mixed` before asserting the verdict.
-    def _mixed(bar):
+    def _mixed(bar, direction):
+        """T3'' MIXED, DIRECTION-AWARE. The rejection side is BELOW for a long at
+        support and ABOVE for a short at resistance; a helper hard-coded to one
+        orientation silently mis-reads every short."""
         o, h, l, c = (float(x) for x in bar)
-        return abs(c - o) < (h - max(o, c)) and abs(c - o) < (min(o, c) - l)
+        upper, lower = (h - max(o, c)), (min(o, c) - l)
+        rej, opp = (lower, upper) if direction == "L" else (upper, lower)
+        return rej <= opp and abs(c - o) <= max(upper, lower)
 
     # midpoint of [104, 100] is 102.0; the close sits EXACTLY there.
-    exactly_mid_long = (100.5, 104.0, 100.0, 102.0)
+    exactly_mid_long = (103.5, 104.0, 100.0, 102.0)
     assert (exactly_mid_long[1] + exactly_mid_long[2]) / 2.0 == exactly_mid_long[3]
-    assert not _mixed(exactly_mid_long), "must not be MIXED, or MIXED decides it"
+    assert not _mixed(exactly_mid_long, "L"), "must not be MIXED, or MIXED decides it"
     assert _t3_refuses(exactly_mid_long, "L") is True, "a close ON the midpoint decides nothing"
 
-    exactly_mid_short = (103.5, 104.0, 100.0, 102.0)
-    assert not _mixed(exactly_mid_short)
+    exactly_mid_short = (100.5, 104.0, 100.0, 102.0)
+    assert not _mixed(exactly_mid_short, "S")
     assert _t3_refuses(exactly_mid_short, "S") is True, "mirrored for a short"
 
     # One tick the RIGHT side of the midpoint resolves it, so the convention is a
     # boundary rather than a blanket refusal.
-    just_above = (100.5, 104.0, 100.0, 102.25)
-    just_below = (103.5, 104.0, 100.0, 101.75)
-    assert not _mixed(just_above) and not _mixed(just_below)
+    just_above = (103.5, 104.0, 100.0, 102.25)
+    just_below = (100.5, 104.0, 100.0, 101.75)
+    assert not _mixed(just_above, "L") and not _mixed(just_below, "S")
     assert _t3_refuses(just_above, "L") is False
     assert _t3_refuses(just_below, "S") is False
 
@@ -267,13 +279,96 @@ def test_T3_refuses_a_bar_that_closed_out_but_took_NO_DIRECTIONAL_CONTROL():
 
 def test_T3_tie_convention_holds_in_the_PRODUCTION_clause():
     """The tie, asserted against `D._t3_control` rather than this file's local helper."""
-    exactly_mid_long = (100.5, 104.0, 100.0, 102.0)
-    exactly_mid_short = (103.5, 104.0, 100.0, 102.0)
-    just_above = (100.5, 104.0, 100.0, 102.25)
-    just_below = (103.5, 104.0, 100.0, 101.75)
+    exactly_mid_long = (103.5, 104.0, 100.0, 102.0)
+    exactly_mid_short = (100.5, 104.0, 100.0, 102.0)
+    just_above = (103.5, 104.0, 100.0, 102.25)
+    just_below = (100.5, 104.0, 100.0, 101.75)
 
     assert D._t3_control(bars([exactly_mid_long]).iloc[0], "L") is False, \
         "a close exactly ON the midpoint decided nothing — it must REFUSE"
     assert D._t3_control(bars([exactly_mid_short]).iloc[0], "S") is False
     assert D._t3_control(bars([just_above]).iloc[0], "L") is True
     assert D._t3_control(bars([just_below]).iloc[0], "S") is True
+
+
+#: The two fixtures that each REFUTED a one-sided reading, kept as permanent regression pins.
+#: They are why MIXED is a CONJUNCTION and not either half alone.
+BODY_WON = (101.6, 103.5, 101.5, 103.2)      # ALGO-071 §5.3: body 1.60 beats both wicks
+WICK_WON = (24249.25, 24270.5, 24223.75, 24255.25)   # his 03-24 bar: lower 25.50 > upper 15.25
+
+
+def test_T3_MIXED_is_a_CONJUNCTION_and_each_half_alone_is_refuted():
+    """The two a-priori refutations, pinned so no future seat re-tries a one-sided reading.
+
+    The retired predicate's own docstring is the sentence: "Both wicks substantial AND the body
+    small: the bar argues with itself." Each half alone convicts a bar the other half exonerates:
+
+      body-half alone (`body < both wicks`)  refused HIS 03-24 bar - rejection wick won 1.67x
+      wick-half alone (`rejection <= opposing`) refused the §5.3 bar - body won 5x
+
+    Both must PASS, and they pass for OPPOSITE reasons - which is the evidence that the
+    conjunction is load-bearing on both sides rather than one clause carrying it.
+    """
+    for name, bar in (("BODY_WON (§5.3)", BODY_WON), ("WICK_WON (his 03-24)", WICK_WON)):
+        o, h, l, c = (float(x) for x in bar)
+        body, upper, lower = abs(c - o), h - max(o, c), min(o, c) - l
+        assert _t3_refuses(bar, "L") is False, f"{name} must PASS T3''"
+        assert D._t3_control(bars([bar]).iloc[0], "L") is True, f"{name} must PASS in production"
+
+    # …and they are saved by DIFFERENT conjuncts. If both were saved by the same one, the other
+    # would be dead weight and a one-sided reading would still pass this test.
+    o, h, l, c = BODY_WON
+    assert (min(o, c) - l) <= (h - max(o, c)), "§5.3: the wick half alone WOULD convict it"
+    assert abs(c - o) > max(h - max(o, c), min(o, c) - l), "§5.3 is saved by the BODY conjunct"
+
+    o, h, l, c = WICK_WON
+    assert abs(c - o) <= max(h - max(o, c), min(o, c) - l), "03-24: the body half alone WOULD convict it"
+    assert (min(o, c) - l) > (h - max(o, c)), "03-24 is saved by the WICK conjunct"
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# ISOLATION FIXTURES, third pass. A mutation battery showed MIXED could be DELETED ENTIRELY
+# with 0 tests red: the doji and spinning-top bars close below their own midpoints, so
+# NO_DIRECTIONAL_CONTROL was refusing them and MIXED was never load-bearing in any test.
+# These three bars close ABOVE their midpoint (so the directional half PASSES them) and are
+# refused by MIXED alone — one per conjunct, plus one per tie.
+# ─────────────────────────────────────────────────────────────────────────────────────────
+
+#: MIXED, WITH directional control: rej 1.25 <= opp 1.50, body 1.25 <= max — MIXED only.
+#: All prices are tick-aligned quarters so the tie comparisons are EXACT in binary;
+#: a fixture asserting `==` on values like 102.6-102.0 fails on float representation,
+#: which is a fixture defect wearing the costume of a code defect.
+MIXED_BUT_DIRECTIONAL = (102.25, 105.0, 101.0, 103.5)
+
+#: The NOT_WON TIE: rejection wick EXACTLY equals the opposing wick (0.50 == 0.50).
+NOT_WON_TIE = (102.25, 103.0, 101.75, 102.5)
+
+#: The BODY_SMALL TIE: body EXACTLY equals the larger wick (0.50 == 0.50).
+BODY_SMALL_TIE = (102.0, 103.0, 101.75, 102.5)
+
+
+def test_T3_MIXED_alone_refuses_a_bar_that_HAS_directional_control():
+    """MIXED must be load-bearing on its own, or it can be deleted with nothing going red."""
+    o, h, l, c = MIXED_BUT_DIRECTIONAL
+    assert c > HI and l <= HI, "must close out of the band, and have entered it"
+    assert c > (h + l) / 2.0, "must PASS the directional half, so MIXED is the only refuser"
+    assert D._t3_control(bars([MIXED_BUT_DIRECTIONAL]).iloc[0], "L") is False
+    s = _story(MIXED_BUT_DIRECTIONAL)
+    assert s.complete is False, f"a mixed bar must refuse even with directional control: {s}"
+
+
+def test_T3_the_NOT_WON_tie_refuses():
+    """`rejection_wick <= opposing_wick` — the TIE refuses. `<` would let it pass."""
+    o, h, l, c = NOT_WON_TIE
+    assert (min(o, c) - l) == (h - max(o, c)), "the two wicks must be EXACTLY equal"
+    assert c > (h + l) / 2.0, "must pass the directional half"
+    assert D._t3_control(bars([NOT_WON_TIE]).iloc[0], "L") is False, "a tie is not a win"
+
+
+def test_T3_the_BODY_SMALL_tie_refuses():
+    """`body <= max(wick)` — the TIE refuses. `<` would let it pass."""
+    o, h, l, c = BODY_SMALL_TIE
+    assert abs(c - o) == max(h - max(o, c), min(o, c) - l), "body must EXACTLY equal the larger wick"
+    assert c > (h + l) / 2.0, "must pass the directional half"
+    assert (min(o, c) - l) <= (h - max(o, c)), "the wick conjunct must hold, so BODY_SMALL decides"
+    assert D._t3_control(bars([BODY_SMALL_TIE]).iloc[0], "L") is False, "a tie is not a commitment"
