@@ -71,6 +71,31 @@ editing the instrument. A typed list is satisfied by whatever the author remembe
 #8, #9, #10). They are carried inside strings. That alone is worth recording: the admission
 surface's magnitude count has been under-stated by half in every prior discussion of it.
 
+### 1.1 **TEN IS A FLOOR, NOT A TOTAL — a stated limitation of this instrument**
+
+The set is derived from **the declaring surface**. That is the right authority for *what the spec
+declares*, and it is **not** the same as *every magnitude that reaches admission*. A number
+hard-coded in engine code that never reached any declaring surface is invisible to it.
+
+**Found by inspection while pinning the executable site — the ESTABLISHED-zone path builds its
+band from three magnitudes declared NOWHERE:**
+
+| magnitude | value | site | in the spec? | in `PARAMETER_REGISTRY`? |
+|---|---|---|---|---|
+| band quantiles of the rejection prices | `0.20 / 0.80` | `engine.py:492` | **no** | **no** |
+| band pad, ATR fraction | `0.05` | `engine.py:495` | **no** | **no** |
+| compactness ATR fraction | `0.30` | `engine.py:490` | **no** | **no** |
+
+So there are **three band constructions in this codebase, not two**: the ruled `[wick extreme,
+close]` (§3, **unbuilt**), the exceptional-swing symmetric ATR pad (`levels.py:149`), and the
+established-zone **quantile spread** (`engine.py:492-496`). **The third is the one that carries
+the most untaught numbers and the least declaration.**
+
+**Whoever executes this must extend the instrument to an AST sweep of the admission call path for
+bare numeric literals**, and treat the table above as the first three hits rather than the set.
+This limitation is stated rather than quietly carried, because "the set is DERIVED" is exactly the
+kind of claim that reads as complete when it is only well-sourced.
+
 ---
 
 ## 2. STEP 1 — PROVENANCE. **Measured, and the first instrument was wrong.**
@@ -169,17 +194,36 @@ make a day overlap (the ALGO-064 contamination law).
 
 1. **Scope: 5m and 15m ONLY.** He never taught 30-minute wick-to-close zones; that was a
    cross-teacher error from the R-736 golden. Anything built here is a 5m/15m construction.
-2. **Two recorded descriptions, and they are not identical.** His quote describes a **single
-   rejection candle** (wick-top → close). ALGO-071's pinned screenshots describe *"the reaction
-   area between the wick extremes of the **rejection cluster**"* — measured at **~4, ~8, ~19,
-   ~22, ~30, ~32 pts**. Single candle vs cluster is a real difference. **Reconciling them from
-   the held artifacts is part of the work, and it is not resolved here.** Do not silently pick
-   one.
+2. ~~Two recorded descriptions, and they are not identical…~~ **WITHDRAWN — I raised this
+   without having read ALGO-073, which had already ruled it.** Corrected here rather than left
+   standing, because a "not resolved" flag on a settled rule would send the next seat to
+   re-derive it.
+
+   **RULED, ALGO-073 §2:** *"Zone = **[wick extreme, close] of the rejection candle** that
+   defines the key level"*, on the timeframe he marks it — **resistance:** top of the upper wick
+   down to that candle's close; **support:** the mirror. **It is the single rejection candle,
+   not the cluster.** The width is *"whatever that candle's wick-to-close IS"* — **no magnitude
+   is added by anyone**, which is why this is not a threshold question.
+   The `~4–32 pts` screenshot spans are **VERIFICATION of his stated rule, not its source**
+   (ALGO-073 §1: his words STATE the rule; the held artifacts corroborate it).
+
+   **AND IT IS CONFIRMED AGAINST HIS OWN DEMONSTRATION.** ALGO-089 §3 measured his volunteered
+   zone-marking demo against both candidate readings: **`[wick extreme, close]` matches to
+   0.59 / 0.60 pts on both edges**; the alternative "band above the wick" reading is **refuted
+   at 18.97 pts.** The rule is ruled, verified, and unambiguous.
 3. **Do not ask him.** The evidence baseline is CLOSED and he has said repeatedly not to bring
    replay markings back to him. The width is derived from held artifacts **once**, published
    with its citations, and only then applied.
 
 **These are different constructions, not different calibrations of one construction.**
+
+> **STATUS, corrected after ALGO-109: this is not an M1 candidate to derive. It is RULED AND
+> UNBUILT.** ALGO-073 §2 ruled the band, ALGO-089 §3 verified it against his own demonstration
+> to 0.59/0.60 pts, and **the builder still draws the symmetric ATR pad.** The work is to BUILD
+> a ruled clause, not to derive a new one — so `anti_overfit.no_threshold_search` does not block
+> it, and no fixture-table-before-guard derivation is owed for the *rule* (the guard discipline
+> in §5 still applies to the *change*). **This is GPT's first task**, and it is carried in the
+> handover's open queue rather than here.
 
 **And the coded floor sits below the entire observed teaching range.** `TICK = 0.25`, so
 `levels.py:149`'s `max(TICK * 4.0, key_level_pad_atr × atr)` has a floor of **1.0 pt half-width =

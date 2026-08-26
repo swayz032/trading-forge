@@ -345,6 +345,57 @@ feeling:
 **If item 2 still refuses when the work is otherwise complete**, ALGO-028 §3.2 governs: park
 code-complete, run-only, resumable. That is the fallback of record, not the plan.
 
+### GPT'S FIRST TASK — the zone band shape is **RULED AND UNBUILT**
+
+**This is not a proposal and it is not a threshold question. It was ruled, verified against the
+operator's own demonstration, and never reached the code.** ALGO-109 §"the item that outranks
+everything left".
+
+**THE RULE (ALGO-073 §2, from his own words in ALGO-073 §1):**
+
+> *"i take a key zone with a wick and i draw the zone from the top of the wick to where the
+> xandle closed"*
+>
+> **Zone = `[wick extreme, close]` of the rejection candle that defines the key level**, on the
+> timeframe he marks it (**5m or 15m only** — 30m was a cross-teacher error).
+> **Resistance:** top of the upper wick down to that candle's close. **Support:** the mirror.
+> The width is **whatever that candle's wick-to-close IS** — *no magnitude is added by anyone.*
+
+**VERIFIED (ALGO-089 §3)** against his volunteered zone-marking demo: `[wick extreme, close]`
+matches to **0.59 / 0.60 pts on both edges**; the rival "band above the wick" reading is
+**refuted at 18.97 pts**. The `~4–32 pt` pinned screenshot spans **corroborate** the stated rule;
+they are not its source (ALGO-073 §1).
+
+**WHAT THE CODE ACTUALLY DOES — three constructions, none of them his:**
+
+| # | construction | site | untaught magnitudes |
+|---|---|---|---|
+| 1 | **symmetric** `center ± max(4 ticks, 0.06 × ATR)` | **`levels.py:149`** (exceptional single-swing path) | `key_level_pad_atr 0.06`, `4 ticks` |
+| 2 | **quantile spread** `[Q20, Q80]` of rejection prices `± max(TICK, 0.05 × med_atr)` | **`engine.py:492-496`** (established multi-rejection path) | `0.20`, `0.80`, `0.05` — **declared in NEITHER the spec NOR `PARAMETER_REGISTRY`** |
+| 3 | symmetric pad around PDH/PDL/PWH/PWL | `engine.py:585` (`make_key_locations`) | same pad — **but those families have no entry authority**, so this is context only |
+
+`TICK = 0.25`, so #1's floor is **1.0 pt half-width / 2.0 pts full** — **narrower than the
+narrowest band anyone measured**, and the wrong *shape* regardless of width. **Symmetric-around-a-
+price and asymmetric-wick-to-close are different objects, not different calibrations.**
+
+**WHY IT OUTRANKS THE REST OF M1.** It is already ruled, so no derivation is owed. It introduces
+**no** number, so `anti_overfit.no_threshold_search` does not block it. And band geometry
+propagates into **the map, the touch test, the fill displacement and the destination ladder** —
+ALGO-102 measured the map admitting a **median 64 locations per session**.
+
+**THE REAL ENGINEERING CONTENT, named so it is not discovered late.** `levels.py:149` centres the
+band on `row.price` — a **pivot price**. The ruled band needs the **rejection candle's own wick
+extreme and close**, so the build must join each pivot back to its source bar on the marked
+timeframe. That join is the task; the arithmetic is trivial.
+
+**MANDATORY, from ALGO-108 §1 — this change ADMITS, so it will DISPLACE.** Report membership
+**per route** and audit **every removal** for a same-bucket higher-ranked addition
+(`kernel.py:205`). A band change that "reduced the flood" by displacing his own Route A entries is
+a **failure** that a count reports as a success. Control `04-14 09:38 L BRK5 → 25869.0` by key
+**and** target, both pins, plus zero sessions silenced.
+
+**Fifth time this ladder has found a ruled clause that never reached the code.** State it that way.
+
 ### Named open items
 
 - **`V24_TARGET_DISTANCE_LT_REACTION_CONTACT` — the engine CRASHES instead of declining.**
@@ -425,6 +476,35 @@ the measuring tool, not the bot. **Suspect the instrument first.**
     positive control **in the right surface**.
 15. **Closing one instance is not closing the condition.** Name the mechanism, ask what the
     enumeration over it is, and whether you ran it. No enumeration ⇒ say "one instance closed."
+16. **A proof about a PREDICATE does not transfer to the PIPELINE that contains it.** B1 was
+    proved — algebraically and over 400k random bars, zero counterexamples — to be incapable of
+    refusing anything the retired fractions accepted. It removed **eleven** approvals anyway,
+    **11 of 11** same-bucket rank displacements of a route it never evaluates. Anything that
+    **SELECTS** — a ranker, a `max`, a one-per-bucket budget — turns an addition into a removal
+    somewhere else. The scoped claim ("can only ADD") stayed *true* and silently licensed a
+    system claim. **Audit every removal for a same-bucket higher-ranked addition and label it
+    DISPLACEMENT, not refusal.** ALGO-108 §1; law minted at ALGO-109.
+17. **ONE DOOR PER ROUTE — a story refusal does not close a bucket.** T3′′ refused `03-24 08:12
+    S REV` at the story layer; the *same clock, same direction* returned as `08:12 S BRK5`
+    through the break family and outranked it. **Scoped form, because the absolute is false
+    (ALGO-109 ask 2):** *a story refusal is effective only at buckets where no higher-ranked
+    route also qualifies.* At 08:00 a break route qualified and the refusal was nullified; at
+    09:30 none did and the same clause recovered two sessions. Both measured.
+18. **REPORT MEMBERSHIP PER ROUTE, always.** Ordered at ALGO-109 ask 1. Because of #16, every
+    earlier Route A before/after silently carries break-family coupling — `40 → 143 → 91 → 107`
+    were never pure story-layer effects. Those deltas are **RE-LABELLED, not retracted**: every
+    load-bearing conclusion is a **per-key** statement, and per-key statements are immune to a
+    coupling that moves totals. A bare total is now an incomplete report.
+19. **The route precedence itself is UNTAUGHT.** `rank = {"BRK5": 3, "BRK15": 2, "REV": 1}` at
+    `kernel.py:205` has **no teaching citation in five named surfaces** (ALGO-109). It decides
+    which trade takes the one bullet whenever two routes qualify at one bucket, and it is the
+    `FIRST_A_PLUS` machinery ALGO-099 found unimplemented. **NAMED, NOT OPENED** — a rank change
+    without a guard would silently rewrite every bullet in the corpus.
+20. **Deriving from the declaring surface is not deriving from the code.** The M1 magnitude set
+    is walked out of the loaded spec and is **a floor, not a total**: the established-zone band
+    (`engine.py:492-496`) uses `0.20`, `0.80` and `0.05`, declared in **neither** the spec **nor**
+    `PARAMETER_REGISTRY`. "The set is DERIVED" reads as complete when it is only well-sourced.
+    An AST sweep of the call path for bare literals is the honest instrument.
 
 ---
 
