@@ -132,6 +132,40 @@ and a connection is authorized. It is written now so it is not improvised later.
 
 ## 7. Incidents, in your words
 
+
+### The bot stopped with a `RuntimeError` — a KNOWN, REPRODUCIBLE defect
+
+**What you would see:** the process is gone, and the last line is
+
+```
+RuntimeError: V24_TARGET_DISTANCE_LT_REACTION_CONTACT:23.5000<23.5640
+```
+
+**What it means, in one sentence:** a strict inequality between the computed target distance
+and the reaction-contact distance rejects a **sub-tick** difference (here 0.064 points) by
+**raising** instead of **declining the trade**.
+
+**Why it matters more than it looks:** the engine does not refuse the session, it **crashes**.
+An unattended bot that raises mid-session **halts** rather than declining and carrying on. It
+killed a running backtest worker outright, 64 sessions in.
+
+**Verified at the line:** `research/current_mnq_strategy_v2_4_target_policy.py:157-161`, inside
+`classify_first_reaction_destination`. Reproduced on session **2023-04-03** by the EDGE lane on
+out-of-sample data (1 occurrence in 317 days measured so far).
+
+**What to do:** nothing urgent — this path only runs when a backtest or a live session reaches
+that destination check. Restart the run. **Paste the literal above to GPT**; it is enough to
+locate the defect exactly.
+
+**A measurement warning for whoever runs a census next:** a crashed session is **NOT** a
+no-trade decision — the engine never reached one. Count such days as *run* and *excluded*, with
+the exception type and message journalled. Counting a crash as a decline silently inflates the
+no-trade bucket.
+
+**NOT FIXED, deliberately:** the strategy was frozen and the semantic lanes owned the work when
+this was found. It is recorded rather than patched so it is actionable post-sunset.
+
+
 **"Nothing responds."** Paste the §3 checks. If services show Running but the platform page is
 dead, restart the machine (everything auto-starts). If the machine itself is frozen, hold the
 power button — nothing here can lose a market position today (§1).

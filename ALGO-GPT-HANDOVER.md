@@ -336,6 +336,14 @@ code-complete, run-only, resumable. That is the fallback of record, not the plan
 
 ### Named open items
 
+- **`V24_TARGET_DISTANCE_LT_REACTION_CONTACT` — the engine CRASHES instead of declining.**
+  `target_policy.py:157-161`, `classify_first_reaction_destination`. A strict inequality
+  rejects a sub-tick difference (`23.5000 < 23.5640`, 0.064 pt) by RAISING. Reproduced on
+  session **2023-04-03**; 1 occurrence in 317 out-of-sample days. **Unattended-run hazard:** a
+  raise HALTS the process rather than declining the trade. **Measurement hazard:** a crashed
+  session is not a no-trade decision — any census must journal it as `engine_refused` and
+  exclude it from the no-trade bucket. NOT fixed: the strategy was frozen when it was found.
+
 - **ALGO-101** — rules the S3 batch (`9434e22d`) against its conjunctive pre-registration. The
   next thing that happens on this lane.
 - **F-1 reason chain** — after F1's removal, `PARTIAL_MOMENTUM_GEOMETRY_NOT_PROVEN` labels a
