@@ -32,23 +32,6 @@ GEOMETRY OF THE FIXTURES. The band is [100, 102]. For a LONG the zone is SUPPORT
 approaches from ABOVE, so the NEAR side is above `hi` and "beyond" is below `lo`.
 
 No PnL, realized outcome, winner/loser label or clean-edge result is read anywhere.
-
-REVERT NOTE (ALGO-100 §2, executed 2026-08-25). The §5 batch (R2 + R2b + F1) was REVERTED
-after failing its own conjunctive pre-registration, so the FOUR red-proofs in this file that
-asserted the reverted behaviour were removed BY NAME rather than left red or silently dropped:
-
-    test_R2_a_wick_into_the_band_that_closes_back_IS_a_rejection_even_with_a_thin_wick
-    test_R2_a_close_BEYOND_the_band_is_NOT_a_rejection_however_fat_the_wick
-    test_R2b_a_two_sided_bar_that_closed_back_OUT_on_the_near_side_is_a_rejection
-    test_F1_monotone_progress_closing_at_the_extreme_is_force_even_below_body_frac
-
-They are preserved verbatim in history at `46b21920` / `62722a2a` and on the R2c branch
-`7d42d121`; ALGO-100 §4's combined re-land restores them with the code they prove.
-
-WHAT REMAINS IS STILL LOAD-BEARING against the PRE-BATCH code: the taught negatives that hold
-either way (never entered the band; a two-sided bar closing INSIDE it; a giveback is not force),
-the mirror-parity check between the two force derivations, and ALGO-096A's UNFROZEN_CHOICES
-declaration tests - which is why that declaration was KEPT while the semantics went back.
 """
 from __future__ import annotations
 
@@ -94,6 +77,25 @@ REJECTION_THIN_WICK = (101.6, 103.5, 101.5, 103.2)
 BROKE_THE_LEVEL_FAT_WICK = (100.5, 101.0, 98.0, 99.5)
 
 
+def test_R2_a_wick_into_the_band_that_closes_back_IS_a_rejection_even_with_a_thin_wick():
+    """ALGO-071 §5.3 fixture 1. RED before R2: `reject_wick 0.35` refuses a 0.05 wick."""
+    it = _classify([AWAY, (109, 110, 103, 104), REJECTION_THIN_WICK])
+    g = D._geom(bars([REJECTION_THIN_WICK]).iloc[0])
+    assert g.lower_frac < WICK, (
+        f"fixture must DISAGREE with the frozen fraction, got lower_frac={g.lower_frac}")
+    assert D.TOUCH_AND_REJECT in it.all_kinds, (
+        f"a wick into the band with a close back out is a rejection; got {it.all_kinds}")
+
+
+def test_R2_a_close_BEYOND_the_band_is_NOT_a_rejection_however_fat_the_wick():
+    """ALGO-071 §5.3 fixture 2. RED before R2: a 0.50 lower wick currently qualifies."""
+    it = _classify([AWAY, (109, 110, 103, 104), BROKE_THE_LEVEL_FAT_WICK])
+    g = D._geom(bars([BROKE_THE_LEVEL_FAT_WICK]).iloc[0])
+    assert g.lower_frac >= WICK, (
+        f"fixture must DISAGREE with the frozen fraction, got lower_frac={g.lower_frac}")
+    assert float(BROKE_THE_LEVEL_FAT_WICK[3]) < LO, "fixture must close BEYOND the band"
+    assert D.TOUCH_AND_REJECT not in it.all_kinds, (
+        f"a close beyond the band broke the level; it is not a rejection: {it.all_kinds}")
 
 
 def test_R2_a_candle_that_never_entered_the_band_is_NOT_a_rejection():
@@ -121,6 +123,19 @@ TWO_SIDED_CLOSED_BACK_OUT = (102.5, 104.0, 101.0, 102.8)
 TWO_SIDED_CLOSED_INSIDE = (102.5, 104.0, 99.0, 101.0)
 
 
+def test_R2b_a_two_sided_bar_that_closed_back_OUT_on_the_near_side_is_a_rejection():
+    """ALGO-096 §5 R2b. RED before the change: TWO_SIDED_CONFLICT refuses the whole story."""
+    row = bars([TWO_SIDED_CLOSED_BACK_OUT]).iloc[0]
+    g = D._geom(row)
+    assert g.upper_frac >= 0.30 and g.lower_frac >= 0.30 and g.body_frac <= 0.40, (
+        f"fixture must trip the FROZEN conflict test or it proves nothing: {g}")
+    assert float(TWO_SIDED_CLOSED_BACK_OUT[3]) > HI, "must close out on the near side"
+    b = bars([AWAY, (109, 110, 103, 104), TWO_SIDED_CLOSED_BACK_OUT, (103, 104, 102.5, 103.5)])
+    s = D.derive_story(b, "L", LO, HI, BODY, CLOSE_LOC, WICK)
+    assert s.refusal != D.TWO_SIDED_CONFLICT, (
+        "a bar that traded into the band and closed back out on the near side is a "
+        f"rejection, not indecision; got {s.refusal}")
+
 
 def test_R2b_a_two_sided_bar_that_closed_INSIDE_the_band_is_still_refused():
     """ALGO-096 §5 R2b, the other half.
@@ -143,6 +158,36 @@ def _one_minute(rows, start="2026-04-09 10:00"):
         {"open": [r[0] for r in rows], "high": [r[1] for r in rows],
          "low": [r[2] for r in rows], "close": [r[3] for r in rows]}, index=idx)
 
+
+def test_F1_monotone_progress_closing_at_the_extreme_is_force_even_below_body_frac():
+    """ALGO-096 §5 F1. RED before the change: `momentum_bar` refuses on body_frac 0.40.
+
+    Two completed 1m bars, closes strictly rising, aggregate close AT the running extreme,
+    path efficiency 1.0 — every taught clause holds. The ONLY thing refusing it is the
+    untaught `body_frac 0.62` on the aggregate geometry.
+    """
+    one = _one_minute([(100.0, 101.0, 99.0, 100.5), (100.5, 101.5, 100.2, 101.0)])
+    parent_start = pd.Timestamp("2026-04-09 10:00", tz=TZ)
+    known_at = parent_start + pd.Timedelta(minutes=2)
+    p = eng.Params()
+
+    snap = F.force_snapshot(one, parent_start, 5, "L", known_at, p)
+
+    # The fixture must be one the FROZEN magnitude refuses, or it proves nothing.
+    agg = pd.Series({"open": 100.0, "high": 101.5, "low": 99.0, "close": 101.0})
+    g = D._geom(agg)
+    assert g.body_frac < float(p.body_frac), f"fixture must fail body_frac: {g.body_frac}"
+    assert g.close_loc >= float(p.close_loc), (
+        f"only body_frac may be the blocker, close_loc={g.close_loc}")
+
+    assert snap.latest_close_at_directional_extreme is True, (
+        "taught clause: close at the directional extreme")
+    assert snap.path_efficiency >= float(p.body_frac), (
+        "the efficiency clause is untouched and must already pass: "
+        f"{snap.path_efficiency}")
+    assert snap.confirmed is True, (
+        f"monotone progress, close at the extreme, efficiency {snap.path_efficiency} - this is "
+        f"sustained directional force; got reason={snap.reason}")
 
 
 def test_F1_a_candle_that_gave_the_move_back_is_still_refused():

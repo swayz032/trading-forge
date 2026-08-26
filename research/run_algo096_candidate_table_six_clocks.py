@@ -111,7 +111,7 @@ def main() -> int:
 
             # DEEPEST GATE **BY KEY** — §6.2. Every candidate carries its own key so a single
             # deep refusal cannot be hidden behind a crowd of shallow ones.
-            deepest = None
+            deepest = None  # -> (depth, [records at that depth])
             unranked = Counter()
             per_key_depth: dict[str, int] = {}
             for r in at:
@@ -126,23 +126,42 @@ def main() -> int:
                     d = GATE_DEPTH[tok]
                 k = _key(r)
                 per_key_depth[k] = max(per_key_depth.get(k, -1), d)
+                # F-4 (ALGO-100A): collect EVERY record at the max depth, never one.
+                # `d > deepest[0]` kept an arbitrary tie-pick - whichever record the
+                # loop happened to reach first - which is the majority-literal error in
+                # a third costume: it reports ONE key and silently drops the others that
+                # got just as far. If two zones both reach the story gate, the reader
+                # must see both.
                 if deepest is None or d > deepest[0]:
-                    deepest = (d, r)
+                    deepest = (d, [r])
+                elif d == deepest[0]:
+                    deepest[1].append(r)
 
             deepest_row = None
             if deepest is not None:
-                d, r = deepest
+                d, rs = deepest[0], deepest[1]
+                # ALL of them, deduplicated BY KEY. A tie is not a reason to pick one.
+                seen_k, members = set(), []
+                for rr in rs:
+                    kk = _key(rr)
+                    if kk in seen_k:
+                        continue
+                    seen_k.add(kk)
+                    members.append({
+                        "key": kk,
+                        "route": rr.get("route"),
+                        "location_id": rr.get("location_id"),
+                        "location_band": [rr.get("location_lo"), rr.get("location_hi")],
+                        "authority_state": rr.get("authority_state"),
+                        "authority_refusal": rr.get("authority_refusal"),
+                        "reason": rr.get("reason"),
+                    })
                 deepest_row = {
                     "depth": d,
                     "gate": ("SURVIVED_TO_RANKING" if d == SURVIVED_DEPTH
-                             else str(r.get("killed_at"))),
-                    "key": _key(r),
-                    "route": r.get("route"),
-                    "location_id": r.get("location_id"),
-                    "location_band": [r.get("location_lo"), r.get("location_hi")],
-                    "authority_state": r.get("authority_state"),
-                    "authority_refusal": r.get("authority_refusal"),
-                    "reason": r.get("reason"),
+                             else str(rs[0].get("killed_at"))),
+                    "keys_at_this_depth": len(members),
+                    "members": members,
                 }
 
             # FULL histogram beside it, so the table never replaces the population with a
@@ -203,9 +222,11 @@ def main() -> int:
         d = r["deepest_gate_reached_BY_KEY"]
         if d:
             print("    deepest BY KEY: depth " + str(d["depth"]) + "  " + str(d["gate"])
-                  + "  @ " + str(d["key"]))
-            if d.get("authority_refusal"):
-                print("        authority_refusal: " + str(d["authority_refusal"]))
+                  + "  (" + str(d["keys_at_this_depth"]) + " key(s) at this depth)")
+            for m in d["members"]:
+                print("        @ " + str(m["key"]))
+                if m.get("authority_refusal"):
+                    print("           authority_refusal: " + str(m["authority_refusal"]))
         if r["unranked_kill_tokens"]:
             print("    UNRANKED tokens: " + json.dumps(r["unranked_kill_tokens"]))
     if unranked_global:

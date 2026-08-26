@@ -19,7 +19,13 @@ HIS_CLOCK = {
 
 def load(p):
     d = json.load(io.open(p, encoding="utf-8"))
-    d.pop("__arm_pin__", None)
+    # F-3 (ALGO-100A): strip EVERY __dunder__ metadata key, not just the one that
+    # existed when this was written. `__run_stamp__` was added later, and a reader
+    # that popped only `__arm_pin__` would have counted it as a 15th SESSION and
+    # reported one extra row with a silent zero. Enumerate by CONVENTION, never by
+    # the list of keys that happened to exist the day the reader was written.
+    for k in [k for k in d if k.startswith("__") and k.endswith("__")]:
+        d.pop(k)
     return d
 
 

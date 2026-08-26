@@ -97,21 +97,32 @@ def independent_force(one: pd.DataFrame, parent_start: pd.Timestamp, parent_minu
     efficiency = float(progress / max(distance, EPS))
 
     # Composite-bar geometry, written out rather than delegated to `momentum_bar`.
+    #
+    # F1 (ALGO-096 s5), MIRRORED IDENTICALLY from `force._directional_body`: the taught force
+    # shape is a DIRECTIONAL BODY; the untaught `body_frac`/`close_loc` fractions are retired
+    # from this clause. "Control" is already carried by `at_extreme` below. This module must
+    # change in step with `force.py` or it stops being a witness - it would then agree with
+    # the kernel everywhere except where the bug is. `body_frac` still reaches the mutation
+    # arm through `efficient` below, which F1 does NOT touch, so the arm keeps a live channel.
     rng = max(h - lo, EPS)
     body = abs(c - o)
     bf = body / rng
     cl = (c - lo) / rng
     if direction == "L":
-        geometry = bool(c > o and bf >= body_frac and cl >= close_loc)
+        geometry = bool(c > o)
         at_extreme = bool(c >= float(np.max(closes)) - EPS)
     else:
-        geometry = bool(c < o and bf >= body_frac and cl <= 1.0 - close_loc)
+        geometry = bool(c < o)
         at_extreme = bool(c <= float(np.min(closes)) + EPS)
 
     enough = n >= MIN_COMPLETED_1M
     before_close = bool(known_at < parent_end)
     efficient = bool(progress > 0 and efficiency >= body_frac)
-    confirmed = bool(enough and before_close and geometry and efficient and at_extreme)
+    # ENTAILED CLAUSE REMOVED FROM THE CONJUNCTION (ALGO-098), mirroring force.py exactly:
+    # `geometry` is `c > o`, which is `progress > 0`, which `efficient` already requires.
+    # It stays computed and reported so the reason chain and this witness keep their
+    # observation, and it is gone from the verdict because it can never change one.
+    confirmed = bool(enough and before_close and efficient and at_extreme)
 
     if confirmed:
         reason = "SUSTAINED_DIRECTIONAL_FORCE"

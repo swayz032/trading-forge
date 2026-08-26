@@ -9,10 +9,12 @@ Keyed for membership on (session, entry_time, direction, setup) with the chosen 
 beside it, so an approval that survives with a DIFFERENT target is visible as a change rather
 than as an identity.
 """
+import hashlib
 import io
 import json
+import os
 import sys
-from datetime import date, time as _time
+from datetime import date, datetime, time as _time
 from pathlib import Path
 
 import pandas as pd
@@ -39,7 +41,25 @@ man = {c["session"]: c for c in json.load(io.open(MAN, encoding="utf-8"))["cases
 observed = old.download_pinned(DATA, include_tick=False)
 old.verify_manifest(observed, json.loads(LOCK.read_text(encoding="utf-8")))
 
-out = {"__arm_pin__": _arm}
+# F-3 (ALGO-100A): a RUN STAMP on the artifact itself. Two errors this campaign already
+# made would have been caught by it - an artifact produced by an OLDER build of this
+# instrument was described as "the same script at two commits" (ALGO-100A claim 8), and
+# two arms were told apart only by their filenames. The stamp records WHICH build wrote
+# the file, not just which pin it used.
+out = {
+    "__arm_pin__": _arm,
+    "__run_stamp__": {
+        "written_at": datetime.now().astimezone().isoformat(),
+        "instrument": os.path.basename(__file__),
+        "instrument_sha256": hashlib.sha256(
+            io.open(__file__, "rb").read()).hexdigest(),
+        "field_schema_version": 2,
+        "reader_note": (
+            "keys wrapped in double underscores are METADATA, not sessions - strip "
+            "every __dunder__ key before iterating sessions, or the count silently "
+            "gains a row"),
+    },
+}
 total = 0
 with W.trading_window(ARM):
     env = old.prepare(old.load_csv(DATA / Path(old.DATA_FILES["5m"]).name),
