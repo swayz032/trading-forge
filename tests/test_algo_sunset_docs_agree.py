@@ -22,6 +22,14 @@ worse than one that names its blind spot:
     measurement. It does NOT check that unshared numbers are right; a wrong number appearing in
     exactly one document is invisible here.
   * `N of 14` is a SHAPE. A claim phrased another way ("twelve of fourteen", "86%") is not seen.
+  * THE PATH CHECK COVERS `MNQ-STRATEGY-SPECIFICATION.md`; THE AGREEMENT JOIN DOES NOT, and that
+    is deliberate rather than an oversight - see `PATH_CHECKED_DOCS`.
+  * AND IN THAT DOCUMENT IT SEES LESS THAN IT LOOKS LIKE IT DOES. Its citations are written for
+    a human as `[video_evidence.md:108]`, and the extractor only matches a path in BACKTICKS, so
+    a bracketed citation is invisible to it. What is actually guarded there is the enumerated
+    source list at the foot of the document. THE CITATIONS THEMSELVES ARE NOT PATH-CHECKED, and
+    they were left readable on purpose: an artifact written for the operator is not reformatted
+    to suit an instrument.
 """
 from __future__ import annotations
 
@@ -34,6 +42,17 @@ import pytest
 
 SUNSET_DOCS = ("ALGO-GPT-HANDOVER.md", "ALGO-RUNBOOK.md", "ALGO-KILL-AND-HEARTBEAT.md",
                "ALGO-SEAT-HANDOFF-TEMPLATES.md", "ALGO-SELF-EXPLANATION-AUDIT.md")
+
+#: The path check covers ONE MORE DOCUMENT than the agreement join, and the difference is
+#: deliberate (ALGO-133 §4). `MNQ-STRATEGY-SPECIFICATION.md` is the strategy written out for the
+#: OPERATOR to read and correct. Its whole value is that every line points at something real, so
+#: the path guard protects exactly what it is for. It is NOT joined for agreement: that join
+#: needs a leading standing-state blockquote, and giving this document an ops header so an
+#: instrument can parse it would corrupt an artifact written for him.
+#:
+#: ADD A DOCUMENT TO THE GUARD THAT PROTECTS WHAT IT IS FOR - NOT TO EVERY GUARD THAT HAPPENS
+#: TO TAKE A LIST OF DOCUMENTS.
+PATH_CHECKED_DOCS = SUNSET_DOCS + ("MNQ-STRATEGY-SPECIFICATION.md",)
 
 ENTERED_STATES = {"ENTER_LONG", "ENTER_SHORT"}
 SCORECARD = "research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json"
@@ -174,7 +193,7 @@ def test_every_repo_path_named_in_ANY_sunset_doc_resolves():
     stopped agreeing.
     """
     seen: dict[str, set] = {}
-    for doc in SUNSET_DOCS:
+    for doc in PATH_CHECKED_DOCS:
         for tok in _path_claims(doc):
             seen.setdefault(tok, set()).add(doc)
 

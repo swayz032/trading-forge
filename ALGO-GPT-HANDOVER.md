@@ -622,6 +622,21 @@ git grep -l -i -e '<CONTROL-CERTAIN-TO-EXIST>' "$REF" -- algo-reports/   # POSIT
 through the same filter.** Without one, *"there is no prior art"* and *"my search was broken"* are
 the same observation.
 
+**AND A NEGATIVE CONTROL IS NOT ENOUGH — IT TESTS THE FILTER, NEVER THE TERM.**
+
+> **A NEGATIVE CONTROL PROVES YOUR FILTER WORKS. IT PROVES NOTHING ABOUT YOUR SEARCH TERM.**
+> A concept search must run **at least two of the concept's names**, plus a positive control on a
+> synonym you did NOT search. A zero from one name means only *"not under that name."*
+
+A ruling published *"lives in no document"* about a rule that sits in **two**, at three lines. The
+search used the shape of the code's identifier; the corpus used the trader's phrasing, and the two
+share no substring. **The negative control passed** — a nonsense token returned zero, exactly as it
+should — **and it certified nothing, because the failure was in the term.**
+
+**The counter-example was found by having read the file an hour earlier and remembering a
+sentence. That is not a method and it does not transfer.** A recollection cannot be handed to a
+successor, re-run, or red-proofed. **Two names and a synonym control can.**
+
 > **A CORRECT RESULT FROM AN UNSOUND METHOD IS A DEBT, NOT A VINDICATION.** The searches audited
 > after this rule was written all held — but only because their author happened to fetch
 > immediately before each one. Luck does not transfer to a successor; a recipe does.
@@ -686,6 +701,14 @@ the measuring tool, not the bot. **Suspect the instrument first.**
    are **location-multiplied** — 63/34/4 were ONE distinct evaluation each. And the fix has its
    own trap: **deepest-gate-BY-KEY breaks ties arbitrarily** and hid the changed key at 04-09
    (F-4). Report **all** keys at maximum depth.
+   **AND THERE IS A SECOND MULTIPLIER, measured 2026-08-26.** The pipeline emits **the same route,
+   at the same zone, at the same bucket, two and three times over** — of 74 same-bucket candidate
+   groups, **67 were duplicates of one setup at one zone** (`REV,REV` ×22 · `BRK5,BRK5` ×21 ·
+   `REV,REV,REV` ×17 · `BRK5,BRK5,BRK5` ×7). It is inert for selection, because identical setup and
+   zone means identical sort keys. **It is not inert for counting.** ⇒ **any figure of the form
+   `N candidates` or `N approvals` in this campaign carries BOTH multipliers — location AND
+   duplicate — unless it was de-duplicated by key.** Named, **not audited**; no past figure has
+   been re-derived against it.
 4. **Text-vs-instant timestamp joins.** Two timestamps that print identically can be different
    objects; a re-pasted read carries no timestamp of its own. Join on two verbatim strings, and
    remember `SIGNAL_ASOF_MUST_BE_TZ_AWARE` exists because naive datetimes reached production once.
