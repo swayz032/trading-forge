@@ -1,0 +1,717 @@
+{
+ "roots": [
+  "build_entry_locations_v24"
+ ],
+ "modules": [
+  "current_mnq_strategy_v2_2_engine.py",
+  "current_mnq_strategy_v2_4_levels.py"
+ ],
+ "functions_reached": [
+  "current_mnq_strategy_v2_4_levels.py::build_entry_locations_v24",
+  "current_mnq_strategy_v2_2_engine.py::enrich_confluence",
+  "current_mnq_strategy_v2_2_engine.py::overlap",
+  "current_mnq_strategy_v2_4_levels.py::exceptional_single_swing_zones",
+  "current_mnq_strategy_v2_4_levels.py::_candidate_prior_reference_set",
+  "current_mnq_strategy_v2_4_levels.py::_pivot_close_away",
+  "current_mnq_strategy_v2_4_levels.py::_reference_threshold",
+  "current_mnq_strategy_v2_4_levels.py::load_key_level_spec",
+  "current_mnq_strategy_v2_4_levels.py::_quality",
+  "current_mnq_strategy_v2_4_levels.py::_empirical_rank",
+  "current_mnq_strategy_v2_2_engine.py::valid_location",
+  "current_mnq_strategy_v2_4_levels.py::_range_room_authorization",
+  "current_mnq_strategy_v2_2_engine.py::zone_locations",
+  "current_mnq_strategy_v2_2_engine.py::build_zones",
+  "current_mnq_strategy_v2_2_engine.py::find",
+  "current_mnq_strategy_v2_2_engine.py::_event_close_away",
+  "current_mnq_strategy_v2_2_engine.py::union",
+  "current_mnq_strategy_v2_2_engine.py::_weighted_median"
+ ],
+ "positive_control": {
+  "required": [
+   [
+    "current_mnq_strategy_v2_2_engine.py",
+    0.05
+   ],
+   [
+    "current_mnq_strategy_v2_2_engine.py",
+    0.2
+   ],
+   [
+    "current_mnq_strategy_v2_2_engine.py",
+    0.8
+   ],
+   [
+    "current_mnq_strategy_v2_4_levels.py",
+    4.0
+   ]
+  ],
+  "all_found": true
+ },
+ "literals": [
+  {
+   "function": "build_entry_locations_v24",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 20.0,
+   "line": 232,
+   "source": "atr15 = float(a15) if np.isfinite(a15) else 20.0"
+  },
+  {
+   "function": "build_entry_locations_v24",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 40,
+   "line": 229,
+   "source": "established_zones = core.build_zones(piv15, h15, open_ts, p, look_days=40)"
+  },
+  {
+   "function": "build_entry_locations_v24",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 20,
+   "line": 231,
+   "source": "a15 = h15[h15.index + pd.Timedelta(minutes=15) <= open_ts].atr.tail(20).median()"
+  },
+  {
+   "function": "build_entry_locations_v24",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 15,
+   "line": 231,
+   "source": "a15 = h15[h15.index + pd.Timedelta(minutes=15) <= open_ts].atr.tail(20).median()"
+  },
+  {
+   "function": "enrich_confluence",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 4,
+   "line": 567,
+   "source": "tol = max(TICK * 4, p.fvg_overlap_atr * max(atr15, TICK))"
+  },
+  {
+   "function": "overlap",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.0,
+   "line": 562,
+   "source": "def overlap(a_lo, a_hi, b_lo, b_hi, tol=0.0):"
+  },
+  {
+   "function": "exceptional_single_swing_zones",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 4.0,
+   "line": 149,
+   "source": "half = max(core.TICK * 4.0, float(p.key_level_pad_atr) * atr)"
+  },
+  {
+   "function": "exceptional_single_swing_zones",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1,
+   "line": 166,
+   "source": "touches=1, wick_quality=wick_q, close_away=close_away,"
+  },
+  {
+   "function": "exceptional_single_swing_zones",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1.0,
+   "line": 167,
+   "source": "displacement=float(row.disp), compactness=1.0,"
+  },
+  {
+   "function": "exceptional_single_swing_zones",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 168,
+   "source": "independence=0.0, recency=recency, quality=quality,"
+  },
+  {
+   "function": "exceptional_single_swing_zones",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 152,
+   "source": "if any(core.overlap(lo, hi, float(x.lo), float(x.hi), 0.0) for x in established):"
+  },
+  {
+   "function": "exceptional_single_swing_zones",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 183,
+   "source": "if any(x.side == loc.side and core.overlap(x.lo, x.hi, loc.lo, loc.hi, 0.0) for x in chosen):"
+  },
+  {
+   "function": "exceptional_single_swing_zones",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 159,
+   "source": "confluence = int(any(core.overlap(lo, hi, float(f.lo), float(f.hi), 0.0)"
+  },
+  {
+   "function": "_pivot_close_away",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.5,
+   "line": 86,
+   "source": "return 0.5"
+  },
+  {
+   "function": "_pivot_close_away",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0,
+   "line": 80,
+   "source": "bar = bar.iloc[0]"
+  },
+  {
+   "function": "_pivot_close_away",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 84,
+   "source": "return float(np.clip((float(bar.high) - float(bar.close)) / rg, 0.0, 1.0))"
+  },
+  {
+   "function": "_pivot_close_away",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1.0,
+   "line": 84,
+   "source": "return float(np.clip((float(bar.high) - float(bar.close)) / rg, 0.0, 1.0))"
+  },
+  {
+   "function": "_pivot_close_away",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 83,
+   "source": "return float(np.clip((float(bar.close) - float(bar.low)) / rg, 0.0, 1.0))"
+  },
+  {
+   "function": "_pivot_close_away",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1.0,
+   "line": 83,
+   "source": "return float(np.clip((float(bar.close) - float(bar.low)) / rg, 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 95,
+   "source": "days = max(0.0, (asof - row.confirm).total_seconds() / 86400.0)"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 92,
+   "source": "max(1.0 - float(p.min_wick), 1e-9), 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1.0,
+   "line": 92,
+   "source": "max(1.0 - float(p.min_wick), 1e-9), 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 94,
+   "source": "disp_strength = float(np.clip(float(row.disp) / max(float(threshold) * 1.5, 1e-9), 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1.0,
+   "line": 94,
+   "source": "disp_strength = float(np.clip(float(row.disp) / max(float(threshold) * 1.5, 1e-9), 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 86400.0,
+   "line": 95,
+   "source": "days = max(0.0, (asof - row.confirm).total_seconds() / 86400.0)"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.0,
+   "line": 100,
+   "source": "0.0, 1.0,"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1.0,
+   "line": 100,
+   "source": "0.0, 1.0,"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1e-09,
+   "line": 92,
+   "source": "max(1.0 - float(p.min_wick), 1e-9), 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1e-09,
+   "line": 94,
+   "source": "disp_strength = float(np.clip(float(row.disp) / max(float(threshold) * 1.5, 1e-9), 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1e-09,
+   "line": 96,
+   "source": "recency = float(math.exp(-math.log(2.0) * days / max(float(p.recency_half_life_days), 1e-9)))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.1,
+   "line": 99,
+   "source": "0.15 * wick_q + 0.15 * recency + 0.10 * float(close_away),"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1.0,
+   "line": 92,
+   "source": "max(1.0 - float(p.min_wick), 1e-9), 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 1.5,
+   "line": 94,
+   "source": "disp_strength = float(np.clip(float(row.disp) / max(float(threshold) * 1.5, 1e-9), 0.0, 1.0))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.15,
+   "line": 99,
+   "source": "0.15 * wick_q + 0.15 * recency + 0.10 * float(close_away),"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 2.0,
+   "line": 96,
+   "source": "recency = float(math.exp(-math.log(2.0) * days / max(float(p.recency_half_life_days), 1e-9)))"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.15,
+   "line": 99,
+   "source": "0.15 * wick_q + 0.15 * recency + 0.10 * float(close_away),"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.35,
+   "line": 98,
+   "source": "0.35 * disp_rank + 0.25 * disp_strength +"
+  },
+  {
+   "function": "_quality",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.25,
+   "line": 98,
+   "source": "0.35 * disp_rank + 0.25 * disp_strength +"
+  },
+  {
+   "function": "_empirical_rank",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0,
+   "line": 71,
+   "source": "if len(values) == 0:"
+  },
+  {
+   "function": "_empirical_rank",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 0.5,
+   "line": 72,
+   "source": "return 0.5"
+  },
+  {
+   "function": "valid_location",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1,
+   "line": 581,
+   "source": "return bool(z.confluence >= 1 or z.quality >= p.high_zone_quality)"
+  },
+  {
+   "function": "_range_room_authorization",
+   "module": "current_mnq_strategy_v2_4_levels.py",
+   "value": 12,
+   "line": 207,
+   "source": "if len(pm) < 12:"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 40,
+   "line": 442,
+   "source": "def build_zones(piv: pd.DataFrame, bars: pd.DataFrame, asof: pd.Timestamp, p: Params, look_days: int = 40) -> "
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 2,
+   "line": 450,
+   "source": "if len(s) < 2:"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 2,
+   "line": 479,
+   "source": "if len(independent) < 2:"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 5,
+   "line": 491,
+   "source": "if len(prices) >= 5:"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 3600000000000.0,
+   "line": 511,
+   "source": "gaps = np.diff(sorted([r.t.value for r in independent])) / 3.6e12"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.0,
+   "line": 512,
+   "source": "independence = float(np.clip(np.median(gaps) / 6.0, 0, 1)) if len(gaps) else 0.0"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1,
+   "line": 465,
+   "source": "for j in range(i + 1, n):"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1e-06,
+   "line": 487,
+   "source": "center = _weighted_median(prices, np.maximum(rec_w, 1e-6))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0,
+   "line": 490,
+   "source": "compactness = float(np.clip(1.0 - (mad / max(med_atr * 0.30, TICK)), 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1,
+   "line": 490,
+   "source": "compactness = float(np.clip(1.0 - (mad / max(med_atr * 0.30, TICK)), 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.05,
+   "line": 495,
+   "source": "pad = max(TICK, 0.05 * med_atr)"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0,
+   "line": 507,
+   "source": "wick_q = float(np.clip((np.mean(wicks) - p.min_wick) / 0.40, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1,
+   "line": 507,
+   "source": "wick_q = float(np.clip((np.mean(wicks) - p.min_wick) / 0.40, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0,
+   "line": 508,
+   "source": "disp_q = float(np.clip((np.median(disps) - p.min_disp_atr) / 1.00, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1,
+   "line": 508,
+   "source": "disp_q = float(np.clip((np.median(disps) - p.min_disp_atr) / 1.00, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0,
+   "line": 509,
+   "source": "close_q = float(np.clip((close_away - 0.50) / 0.45, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1,
+   "line": 509,
+   "source": "close_q = float(np.clip((close_away - 0.50) / 0.45, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1.0,
+   "line": 513,
+   "source": "touch_sat = float(min(1.0, math.log1p(len(independent)) / math.log(5)))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.05,
+   "line": 515,
+   "source": "0.16 * compactness + 0.10 * independence + 0.07 * recency + 0.05 * touch_sat)"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0,
+   "line": 522,
+   "source": "created, last_event, \"WICK_ZONE\", 0, state))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 86400,
+   "line": 485,
+   "source": "rec_days = np.array([(asof - r.confirm).total_seconds() / 86400 for r in independent])"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1.0,
+   "line": 490,
+   "source": "compactness = float(np.clip(1.0 - (mad / max(med_atr * 0.30, TICK)), 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.2,
+   "line": 492,
+   "source": "lo0, hi0 = np.quantile(prices, [0.20, 0.80])"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.8,
+   "line": 492,
+   "source": "lo0, hi0 = np.quantile(prices, [0.20, 0.80])"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.4,
+   "line": 507,
+   "source": "wick_q = float(np.clip((np.mean(wicks) - p.min_wick) / 0.40, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1.0,
+   "line": 508,
+   "source": "disp_q = float(np.clip((np.median(disps) - p.min_disp_atr) / 1.00, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.45,
+   "line": 509,
+   "source": "close_q = float(np.clip((close_away - 0.50) / 0.45, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0,
+   "line": 512,
+   "source": "independence = float(np.clip(np.median(gaps) / 6.0, 0, 1)) if len(gaps) else 0.0"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1,
+   "line": 512,
+   "source": "independence = float(np.clip(np.median(gaps) / 6.0, 0, 1)) if len(gaps) else 0.0"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.07,
+   "line": 515,
+   "source": "0.16 * compactness + 0.10 * independence + 0.07 * recency + 0.05 * touch_sat)"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 4,
+   "line": 467,
+   "source": "if abs(rows[i].price - rows[j].price) <= max(TICK * 4, tol):"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0,
+   "line": 502,
+   "source": "bar = bar.iloc[0]"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.5,
+   "line": 505,
+   "source": "close_away_vals.append(0.5)"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.5,
+   "line": 509,
+   "source": "close_q = float(np.clip((close_away - 0.50) / 0.45, 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 6.0,
+   "line": 512,
+   "source": "independence = float(np.clip(np.median(gaps) / 6.0, 0, 1)) if len(gaps) else 0.0"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 5,
+   "line": 513,
+   "source": "touch_sat = float(min(1.0, math.log1p(len(independent)) / math.log(5)))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.1,
+   "line": 515,
+   "source": "0.16 * compactness + 0.10 * independence + 0.07 * recency + 0.05 * touch_sat)"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 8,
+   "line": 469,
+   "source": "elif rows[j].price - rows[i].price > max(TICK * 8, tol * 2):"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 2,
+   "line": 469,
+   "source": "elif rows[j].price - rows[i].price > max(TICK * 8, tol * 2):"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 30,
+   "line": 477,
+   "source": "if not independent or r.t - independent[-1].t >= pd.Timedelta(minutes=30):"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 2,
+   "line": 486,
+   "source": "rec_w = np.exp(-math.log(2) * rec_days / p.recency_half_life_days)"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.16,
+   "line": 515,
+   "source": "0.16 * compactness + 0.10 * independence + 0.07 * recency + 0.05 * touch_sat)"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.3,
+   "line": 490,
+   "source": "compactness = float(np.clip(1.0 - (mad / max(med_atr * 0.30, TICK)), 0, 1))"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.16,
+   "line": 514,
+   "source": "quality = (0.22 * wick_q + 0.24 * disp_q + 0.16 * close_q +"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 1,
+   "line": 477,
+   "source": "if not independent or r.t - independent[-1].t >= pd.Timedelta(minutes=30):"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.22,
+   "line": 514,
+   "source": "quality = (0.22 * wick_q + 0.24 * disp_q + 0.16 * close_q +"
+  },
+  {
+   "function": "build_zones",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.24,
+   "line": 514,
+   "source": "quality = (0.22 * wick_q + 0.24 * disp_q + 0.16 * close_q +"
+  },
+  {
+   "function": "_weighted_median",
+   "module": "current_mnq_strategy_v2_2_engine.py",
+   "value": 0.5,
+   "line": 432,
+   "source": "return float(v[np.searchsorted(c, 0.5)])"
+  }
+ ],
+ "distinct_values": [
+  0.0,
+  1e-09,
+  1e-06,
+  0.05,
+  0.07,
+  0.1,
+  0.15,
+  0.16,
+  0.2,
+  0.22,
+  0.24,
+  0.25,
+  0.3,
+  0.35,
+  0.4,
+  0.45,
+  0.5,
+  0.8,
+  1.0,
+  1.5,
+  2.0,
+  4.0,
+  5.0,
+  6.0,
+  8.0,
+  12.0,
+  15.0,
+  20.0,
+  30.0,
+  40.0,
+  86400.0,
+  3600000000000.0
+ ],
+ "reader_note": "LOWER BOUND. Name-resolved call graph, no type inference. Rules on nothing: a midpoint divisor and a threshold look identical here."
+}

@@ -509,7 +509,78 @@ a **failure** that a count reports as a success. Control `04-14 09:38 L BRK5 →
 
 ---
 
-## 7. The instrument traps a future seat WILL hit
+## 7. METHOD — the two techniques that found almost everything. Read before any strategy content.
+
+**ALGO-115 put this ahead of the trap list and ahead of the strategy sections, and this is the
+campaign's closing position on method:**
+
+> ### THE STRATEGY IS BETTER MEASURED THAN THE THINGS MEASURING IT.
+
+**Five of the last six defects found on this lane were in INSTRUMENTS, not in the bot.** Every
+semantic finding survived adversarial grading; the measuring tools did not. The stale F2 anchor
+pin · the typed-list path guard · a filter written from the fixed spelling · a claim searched
+file-wide instead of where it lives · and a number that five documents asserted and no guard ever
+examined. **Suspect the instrument first — it is where the remaining risk lives.**
+
+**Exactly two techniques found that class. Nothing else did.**
+
+### 7.1 A MUTATION BATTERY THAT PLANTS THE *ORIGINAL* DEFECT
+
+Every guard that closes a finding gets a battery — **no exceptions** (ALGO-115). Plant defects,
+confirm each goes **RED**, restore **byte-exact** and verify by `sha256`. Compare failure sets by
+**MEMBERSHIP**, never by count.
+
+**And plant the ORIGINAL defect, never one of your choosing.** Repairing three pointers that had
+lost their `ALGO-` prefix — the sunset docs named the kill/heartbeat, self-explanation and
+seat-handoff files without it — I wrote the new guard's filter as `tok.startswith("ALGO-")`.
+**The bug IS the missing prefix**, so the filter excluded the exact case the guard existed for and
+the planted original went **green**.
+
+*(The broken spellings are described here rather than quoted in backticks: the path guard reads
+backticked tokens as claims, so quoting a dead pointer to illustrate it would make this document
+fail its own check. It caught exactly that when this section was first written — which is the
+cheapest possible demonstration that the guard works.)*
+
+> **A GUARD WHOSE FILTER IS WRITTEN FROM THE FIXED SPELLING CANNOT SEE THE BROKEN ONE.**
+> A detector written while looking at corrected text inherits the correction.
+
+Two more from the same battery, both green-while-testing-nothing:
+
+- **A claim satisfiable by a coincidental match elsewhere in the file is not being checked where
+  it matters.** A guard asserting `**12 of 14**` appears in a document survived deletion of the
+  entire claim, because that string also occurs in an unrelated sentence further down. Scope the
+  assertion to the block that must carry it.
+- **A join defined over "what still agrees" cannot see the thing that stopped agreeing.** The
+  first path join checked only paths appearing in ≥2 documents; breaking one in a single document
+  removed it from the shared set and went green. **Divergence hid itself from the guard.**
+
+Ask not *"did it pass"* but **"what edit makes this red, and have I made it?"**
+
+### 7.2 A COLD READ BY SOMEONE WHO HAS NOT SEEN THE WORK
+
+**Read the document as if you had never seen this campaign, and fix whatever you cannot follow.**
+Automated checks agree with each other; only an outside reading disagrees with all of them.
+
+It is the only thing that found: three dead pointers in the map section (one inside the
+**stop-everything** procedure); commands printed in a syntax that **fails in PowerShell every
+time**, documented as a conditional (*"if PowerShell objects"*) when it always objects; and a
+headline number that was **arithmetically impossible** — 13 sessions of a thing that can happen in
+at most 12 — asserted identically in five documents and already retracted in a sixth.
+
+> **A FAILURE THAT HAPPENS EVERY TIME MAY NOT BE DOCUMENTED AS A CONDITION. If it always fires,
+> it IS the instruction.** (ALGO-115)
+
+**Two cheap habits from that read, worth more than their cost:**
+
+1. **Check published numbers for the inequality they must satisfy.** `spent_early ≤ traded_at_all`
+   killed the wrong number with one subtraction and **no ground truth at all**.
+2. **Duplicated prose has no owner.** If text must appear in N places, **a test must assert the N
+   copies agree** — `tests/test_algo_sunset_docs_agree.py` is that test for these five documents,
+   and it names its own blind spots.
+
+---
+
+## 8. The instrument traps a future seat WILL hit
 
 Every one of these cost a retraction on this lane. **Instrument defects have outnumbered strategy
 defects roughly four to one** — four published numbers were wrong in two days and *every one* was
@@ -593,7 +664,7 @@ the measuring tool, not the bot. **Suspect the instrument first.**
 
 ---
 
-## 8. If you take one thing from this document
+## 9. If you take one thing from this document
 
 The method is **outcome-blind fidelity**: the bot is fit to the trader's *decision process*,
 proven against his recorded decisions, every measurement red-proofed and independently graded,
