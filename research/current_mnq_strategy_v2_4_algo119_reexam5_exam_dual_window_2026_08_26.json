@@ -1,0 +1,149 @@
+{
+  "artifact": "EXAM_DUAL_WINDOW",
+  "authority": "ALGO-047 §2 as amended by ALGO-049",
+  "produced": "2026-08-23",
+  "pre_registered": {
+    "authority": "ALGO-047 §2, as amended by ALGO-049",
+    "A1_no_lost_agreement": "the 08:00 arm may not lose any DECIDED agreement the 09:30 arm had, compared by MEMBERSHIP of the agreeing sessions and never by count",
+    "A2_window_is_never_the_fix": "a degradation at 08:00 is an early-entry defect IN THE BRAIN; this module may not recommend moving, narrowing or reverting the window",
+    "A3_unconditional_deployment_window": "08:00-12:00 is unconditional, so a failing 08:00 arm BLOCKS FREEZE; there is no 09:30-deployed fallback. A pass is a precondition for FREEZE, not a grant of it",
+    "A4_censoring": "right-censored trader labels are excluded from both numerator and denominator on both arms; classes are reported beside the verdict, never folded into it",
+    "A5_never_by_score": "no PnL, realized outcome, winner/loser label or clean-edge result participates; the verdict is a function of the pre-registered predicates only"
+  },
+  "teaching_evidence_rationale_only": {
+    "ALGO-050_0821_0850_zone_rejection_290pt": "0b71c0c12f291c8774a313629d5749308c862ce1ccd41c4b4de1823568a1dcaa",
+    "ALGO-051_late_arrival_react_then_momentum_a": "5ac1a02346b7ce007b860964a1ac0b12b78565010718ce62cea0e8fd00cebc6e",
+    "ALGO-051_late_arrival_react_then_momentum_b": "b69a1b9dfbf64c7a39206dbdbd9389f4cad7a5871610a8c40b8d15f1a19ccd14",
+    "ALGO-051_late_arrival_react_then_momentum_c": "f48f460e251f862d0ba39d2cbb91571ab85bc21eac394b8bc4d157505060f969",
+    "ALGO-052_zone_rejection_momentum_entry_5m": "f33d039a7227f2e0193e7ce5391ee3a171f0105f3368ce77120b9e4c4cf04d81",
+    "ALGO-052_zone_rejection_momentum_entry_1m": "4e0ec9d3bab75b201dba161037143a5f6f99e5344c6ff5a0bdd1c6d9fe88a8e9"
+  },
+  "teaching_evidence_note": "rationale for the 08:00 window and the taught mechanics. NO exam-set change, no label, no new route, no code derived from a screenshot: if the brain cannot produce the taught behaviour, this exam convicts it.",
+  "arms": {
+    "baseline_0930": {
+      "arm": "baseline_0930",
+      "window_start": "09:30:00",
+      "agreement": "3/8",
+      "agreeing_sessions": [
+        "2026-03-24",
+        "2026-03-30",
+        "2026-04-14"
+      ],
+      "decided_sessions": [
+        "2026-03-23",
+        "2026-03-24",
+        "2026-03-30",
+        "2026-03-31",
+        "2026-04-02",
+        "2026-04-06",
+        "2026-04-09",
+        "2026-04-14"
+      ],
+      "censored_excluded": 6,
+      "class_census": {
+        "AGREE": 3,
+        "CENSORED_BOT_BUDGET_CONSUMED": 4,
+        "CENSORED_BOT_ENTERED": 2,
+        "MISSED_TRADER_ENTRY": 4,
+        "TRADER_DECLINED_BOT_TRADED_PRE_WINDOW": 1
+      },
+      "bot_entered_in_window": 5,
+      "bot_genuinely_declined_in_window": 1,
+      "bot_unavailable_in_window": 8,
+      "bot_traded_at_all_in_the_session": 13,
+      "total_decisions_through_window_end": 62,
+      "asymmetric_censoring_diagnostic": {
+        "STATUS": "DIAGNOSTIC_ONLY_NOT_THE_HEADLINE",
+        "question": "trader-side non-decision is excluded from both numerator and denominator; bot-side non-decision is counted as a disagreement. Should it also be excluded, or is an unavailable bot a real failure that must count?",
+        "sessions_where_the_bot_had_no_in_window_decision": [
+          "2026-03-23",
+          "2026-04-02",
+          "2026-04-06",
+          "2026-04-09"
+        ],
+        "headline_as_published_stricter_reading": "3/8",
+        "if_bot_side_were_censored_symmetrically": "3/4",
+        "why_it_is_not_adopted": "it raises the fidelity number, and a party may not adopt the reading that flatters it. This is an ALGO question, not a worker decision."
+      }
+    },
+    "taught_0800": {
+      "arm": "taught_0800",
+      "window_start": "08:00:00",
+      "agreement": "0/8",
+      "agreeing_sessions": [],
+      "decided_sessions": [
+        "2026-03-23",
+        "2026-03-24",
+        "2026-03-30",
+        "2026-03-31",
+        "2026-04-02",
+        "2026-04-06",
+        "2026-04-09",
+        "2026-04-14"
+      ],
+      "censored_excluded": 6,
+      "class_census": {
+        "CENSORED_BOT_BUDGET_CONSUMED": 6,
+        "MISSED_TRADER_ENTRY": 7,
+        "TRADER_DECLINED_BOT_TRADED_PRE_WINDOW": 1
+      },
+      "bot_entered_in_window": 0,
+      "bot_genuinely_declined_in_window": 0,
+      "bot_unavailable_in_window": 14,
+      "bot_traded_at_all_in_the_session": 14,
+      "total_decisions_through_window_end": 113,
+      "asymmetric_censoring_diagnostic": {
+        "STATUS": "DIAGNOSTIC_ONLY_NOT_THE_HEADLINE",
+        "question": "trader-side non-decision is excluded from both numerator and denominator; bot-side non-decision is counted as a disagreement. Should it also be excluded, or is an unavailable bot a real failure that must count?",
+        "sessions_where_the_bot_had_no_in_window_decision": [
+          "2026-03-23",
+          "2026-03-24",
+          "2026-03-30",
+          "2026-03-31",
+          "2026-04-02",
+          "2026-04-06",
+          "2026-04-09",
+          "2026-04-14"
+        ],
+        "headline_as_published_stricter_reading": "0/8",
+        "if_bot_side_were_censored_symmetrically": "0/0",
+        "why_it_is_not_adopted": "it raises the fidelity number, and a party may not adopt the reading that flatters it. This is an ALGO question, not a worker decision."
+      }
+    }
+  },
+  "verdict": {
+    "rule_applied": "A1_NO_LOST_AGREEMENT_BY_MEMBERSHIP + F2_NO_LOST_AGREEMENT_VS_ANCHOR",
+    "A1_verdict": "FAIL",
+    "F2_verdict": "FAIL",
+    "F2_anchor_sha256": "508123125cf389d67d3964aaa95c641b9d1e61f6059210bbc5b86a7edba310d9",
+    "F2_anchor_headline": "5/8",
+    "F2_lost_vs_anchor_baseline_0930": [
+      "2026-03-31",
+      "2026-04-06"
+    ],
+    "F2_lost_vs_anchor_taught_0800": [
+      "2026-03-24",
+      "2026-03-30",
+      "2026-03-31",
+      "2026-04-06",
+      "2026-04-14"
+    ],
+    "why_A1_alone_is_insufficient": "A1 compares the two arms to each other; a brain that regressed against the frozen baseline on BOTH arms loses nothing BETWEEN them and would pass A1",
+    "verdict": "FAIL",
+    "lost_agreements": [
+      "2026-03-24",
+      "2026-03-30",
+      "2026-04-14"
+    ],
+    "gained_agreements": [],
+    "offsetting_is_forbidden": "a gained session may never offset a lost one; A1 is a membership test precisely so a regression cannot be laundered by an unrelated improvement",
+    "baseline_agreement": "3/8",
+    "taught_agreement": "0/8",
+    "frozen_comparator": "5/8",
+    "what_a_failure_means": "an EARLY-ENTRY DEFECT IN THE BRAIN on the sessions named in lost_agreements (ALGO-043). The window is never the fix and never the casualty; repairs are ruled from this evidence, not chosen here.",
+    "freeze": "BLOCKED. 08:00-12:00 is unconditional and there is no 09:30-deployed fallback (ALGO-049 §3).",
+    "no_score_participated": "no PnL, realized outcome, winner/loser label or clean-edge result participates; the verdict is a function of the pre-registered predicates only"
+  },
+  "runtime_seconds": 663.2,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this exam."
+}
