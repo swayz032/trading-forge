@@ -446,8 +446,30 @@ def derive_story(bars: pd.DataFrame, direction: str, lo: float, hi: float,
     # DECISION = the TRIGGER carries the direction forward past the last completed bar. This
     # is the trigger's whole contribution to the story - ALGO-033: "the trigger carries force
     # and follow-through ONLY".
-    follow = (float(trigger.close) > float(last.close)) if direction == "L" \
-        else (float(trigger.close) < float(last.close))
+    #
+    # R2c - THE TAUGHT MOMENTUM-AFTER STAGE, magnitude-free.
+    #
+    # ALGO-009 Route A is a THREE-stage sequence: REJECTION/CONTROL STORY -> DIRECTIONAL 5M
+    # MOMENTUM -> SUSTAINED CAUSAL FORCE. ALGO-052 states it in the teaching's own words:
+    # "rejection, then momentum candles formed". ALGO-071 §3 retired the rejection MAGNITUDES
+    # and explicitly left this clause standing: the momentum-after clause "remains the next
+    # stage of Route A exactly as taught".
+    #
+    # A close merely past the prior CLOSE is not that stage - it is the weakest possible
+    # reading of "momentum", and it is what left the retired fractions carrying the narrowing
+    # this stage was supposed to carry (ALGO-099 §3: additions 103, removals 0).
+    #
+    # ALGO-068 §3 authorized the taught form and named its geometry: "a momentum candle that
+    # takes out the prior candle's EXTREME - the same extreme test Route B already uses at
+    # `normal_breakout`". That is `breakout_derivation.normal_breakout`'s §7.7 clause:
+    #     extended = trigger.high > first.high   (L)   /   trigger.low < first.low   (S)
+    # It carries NO fraction, so strengthening this stage introduces nothing untaught.
+    #
+    # Causality: the running high/low of the FORMING bar is what price has ALREADY done, not
+    # the bar's final geometry. Route B reads exactly this field on exactly this bar, so R2c
+    # adds no new lookahead surface (ALGO-033's rail).
+    follow = (float(trigger.high) > float(last.high)) if direction == "L" \
+        else (float(trigger.low) < float(last.low))
     if not follow:
         return DerivedStory(True, fight, False, it.kind, False, NO_CONTROL_TRANSFER,
                             it.all_kinds)
