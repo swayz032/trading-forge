@@ -353,6 +353,7 @@ None of these bend, and no deadline has authority over any of them.
 | 8 | **Every claim carries an evidence grade** — MEASURED (you ran it, at a named SHA), ARTIFACT-SOURCED, or RELAYED. Re-measure red paths every round; prove a fix with the **unchanged** convicting instrument. | standing |
 | 9 | **The entry layer is closed as a repair surface.** New entry semantics require a NEW TEACHING, never a new predicate. | ALGO-100 §3 |
 | 10 | **PR #38 is DRAFT / DO NOT MERGE.** | standing since ALGO-001 |
+| 11 | 🛑 **NO TIME FILTER. No clock, cutoff, session-phase gate or "wait until N" may be proposed on the 03-24 arm-split evidence by any seat, without an independent taught citation.** On 03-24 the 09:30 arm's first entry is a `REV` LONG at 09:32 that AGREES with him and the 08:00 arm's is a `BRK5` SHORT at 08:17 that does not — same session, same code, opposite trades, and the only difference is where the window starts. **That receipt tells you what to ASK ABOUT. It does not tell you what to BUILD.** The 09:30 boundary is an artifact of the frozen replay window and is taught nowhere; 08:00–12:00 is unconditional. **This is the most dangerous result of the campaign precisely BECAUSE IT WORKS: a wrong rule that reproduces the answer is indistinguishable from a right one on the data that suggested it.** | ALGO-128 §2 |
 
 ---
 
@@ -509,7 +510,8 @@ a **failure** that a count reports as a success. Control `04-14 09:38 L BRK5 →
 
 ---
 
-## 7. METHOD — the two techniques that found almost everything. Read before any strategy content.
+## 7. METHOD — the two techniques that found almost everything, and the three ways the checking
+itself failed. Read before any strategy content.
 
 **ALGO-115 put this ahead of the trap list and ahead of the strategy sections, and this is the
 campaign's closing position on method:**
@@ -522,7 +524,10 @@ pin · the typed-list path guard · a filter written from the fixed spelling · 
 file-wide instead of where it lives · and a number that five documents asserted and no guard ever
 examined. **Suspect the instrument first — it is where the remaining risk lives.**
 
-**Exactly two techniques found that class. Nothing else did.**
+**Exactly two techniques found that class. Nothing else did — §7.1 and §7.2.** §7.3–§7.5 are
+the other half of the lesson: **the checking itself failed too**, and it failed silently, so
+they carry the recipe for the prior-art search, the rule for ordering work, and the one trap in
+this codebase that mirrors 41% of any zone analysis written over it.
 
 ### 7.1 A MUTATION BATTERY THAT PLANTS THE *ORIGINAL* DEFECT
 
@@ -577,6 +582,90 @@ at most 12 — asserted identically in five documents and already retracted in a
 2. **Duplicated prose has no owner.** If text must appear in N places, **a test must assert the N
    copies agree** — `tests/test_algo_sunset_docs_agree.py` is that test for these five documents,
    and it names its own blind spots.
+
+### 7.3 THE PRIOR-ART CHECK IS AN INSTRUMENT, AND IT FAILS SILENTLY IN THREE DIMENSIONS
+
+**A prior-art search returning zero is an accusation against the SEARCH first.** Three separate
+false-zeros were measured on this lane in a single evening, and **every one wore the costume of the
+honest answer, `no citation found in the surfaces named`.**
+
+> ## WHICH STRINGS · WHICH FILES · WHICH TREE.
+> **A SEARCH POINTED AT THE WRONG TREE RETURNS THE SAME ZERO AS A TRUE ABSENCE.**
+
+1. **WHICH TREE — and this is the one nobody expects.** A blob search run against `FETCH_HEAD`
+   returned zero for terms that are demonstrably on the ladder, because an intervening fetch had
+   repointed `FETCH_HEAD` at the **strategy branch** — a tree with no `algo-reports/` directory at
+   all. **`FETCH_HEAD` IS A MOVING REF.** The positive control convicted it: a term certain to be
+   on the ladder returned **0** there and **12** against the correct ref.
+2. **WHICH STRINGS — a compound search returning zero accuses the search.** One `grep` with several
+   `-e` terms returned zero; the same terms **singly** returned 1 and 2. It has now happened twice,
+   the other time over a teaching file where ten terms returned zero and a single term returned
+   eight. **Run every term singly.**
+3. **WHICH FILES — a guard's blind spot is not only which strings it checks but which files are
+   inside its universe at all.** An unreproducible suite figure was hunted through the five sunset
+   documents and is not in any of them: it lives on the **ladder**, which this pack's join guard
+   does not cover, and the one apparent hit in the documents was the interior of a longer number.
+   **Both belong in a guard's docstring — what it checks, and what it can even see.**
+
+**THE RECIPE. Use it verbatim.**
+
+```bash
+REF=origin/external-advisor/gpt-rulings-algo          # NEVER FETCH_HEAD - it moves
+git fetch -q origin external-advisor/gpt-rulings-algo
+git grep -l -i -e '<concept>' "$REF" -- algo-reports/                    # blobs
+git log --format='%h %s' "$REF" | grep -i -e '<concept>'                 # SUBJECTS - blobs miss these
+git grep -l -i -e '<CONTROL-CERTAIN-TO-EXIST>' "$REF" -- algo-reports/   # POSITIVE CONTROL, same filter
+# To ask "was it there WHEN I searched", pin the historical commit, not the tip.
+```
+
+**Every absence claim states its TREE, its REF and its SURFACE, and carries a positive control run
+through the same filter.** Without one, *"there is no prior art"* and *"my search was broken"* are
+the same observation.
+
+> **A CORRECT RESULT FROM AN UNSOUND METHOD IS A DEBT, NOT A VINDICATION.** The searches audited
+> after this rule was written all held — but only because their author happened to fetch
+> immediately before each one. Luck does not transfer to a successor; a recipe does.
+
+### 7.4 RUN THE PRIOR-ART CHECK OVER THE **ORDER**, NOT ONLY OVER THE FINDING
+
+> **AN ORDER IS A CLAIM, AND IT IS THE ONLY ARTIFACT HERE THAT SPENDS ANOTHER SEAT'S HOURS AND CAN
+> WALK STRAIGHT THROUGH A STANDING PROHIBITION.**
+
+A ruling on this ladder searched the concepts of its **finding** and never the concepts of its
+**order** — and the order sent a worker to re-derive a table another ruling had already published
+and ratified, on a comparison a third ruling had **voided**, inside a surface **the operator had
+closed**. Every safeguard in that order was about *how* the work would be done: it named the
+artifact, scoped the fields, said *report only, derive nothing*. **None of them asked whether the
+work should exist at all.**
+
+**Before issuing any order, run the same three checks a finding gets, against the ORDER's concepts:
+has this been done · is its surface closed · what would make it worthless.** A finding that
+duplicates prior art wastes a paragraph; an order that duplicates prior art wastes an evening.
+
+### 7.5 A STANDING TRAP IN THIS CODEBASE: `side` IS THE LIVE ROLE, NOT THE CREATION POLARITY
+
+**Read this before writing any analysis, guard or census over zones.**
+
+`research/current_mnq_strategy_v2_4_zone_lifecycle.py` reassigns `side` to the zone's **current
+role** on a break or flip. The **creation polarity** survives only inside the zone id, and
+`origin_side()` in that module exists precisely to recover it.
+
+**MEASURED: 355 of 865 zones — 41% — carry a live role different from their id's side.**
+
+⇒ **Anything that joins on `side` is silently MIRRORED for 41% of its population**, drawing or
+comparing the opposite band while every count still looks plausible. It cost one guard a wrong
+bucket attribution on roughly a quarter of its keys, and the counts looked reasonable throughout.
+
+- Reconstructing what a zone was **created** as → `origin_side`.
+- Mirroring the code's own dedup and selection, which compare the **live** role → `side`.
+- **They are different questions and the production code uses both.**
+
+**The control that catches it** — and the general form is worth more than the instance:
+
+> **A GUARD THAT RECONSTRUCTS AN OBJECT MUST ASSERT THE RECONSTRUCTION, NOT ONLY THE COMPARISON.**
+
+Asserting that every rebuilt zone band has its own pivot level as an exact edge caught the
+mirroring immediately; nothing in the bucket counts did.
 
 ---
 
