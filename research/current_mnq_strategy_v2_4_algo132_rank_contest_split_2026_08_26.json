@@ -1,0 +1,3007 @@
+{
+  "artifact": "ALGO132_RANK_CONTEST_SPLIT",
+  "authority": "ALGO-132 \u00a72",
+  "contests": [
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-23T09:05:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-23T09:07:00-04:00",
+          "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-23T09:08:00-04:00",
+          "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-20T00:15:00-04:00:98518"
+      ],
+      "session": "2026-03-23",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-20T00:15:00-04:00:98518",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-23T09:25:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-23T09:27:00-04:00",
+          "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-23T09:29:00-04:00",
+          "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-20T00:15:00-04:00:98518"
+      ],
+      "session": "2026-03-23",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-20T00:15:00-04:00:98518",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-23T10:15:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-23T10:18:00-04:00",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-23T10:19:00-04:00",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-20T02:45:00-04:00:98429"
+      ],
+      "session": "2026-03-23",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "R:2026-03-20T02:45:00-04:00:98429",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-23T11:00:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-23T11:02:00-04:00",
+          "location_id": "R:2026-03-19T23:30:00-04:00:98591",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-23T11:03:00-04:00",
+          "location_id": "R:2026-03-19T23:30:00-04:00:98591",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-19T23:30:00-04:00:98591"
+      ],
+      "session": "2026-03-23",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "R:2026-03-19T23:30:00-04:00:98591",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-23T11:15:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-23T11:17:00-04:00",
+          "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-23T11:18:00-04:00",
+          "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-23T11:19:00-04:00",
+          "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-06T17:30:00-05:00:98728"
+      ],
+      "session": "2026-03-23",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-23T11:25:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-23T11:27:00-04:00",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-23T11:28:00-04:00",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-23T11:29:00-04:00",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-20T02:45:00-04:00:98429"
+      ],
+      "session": "2026-03-23",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "R:2026-03-20T02:45:00-04:00:98429",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-23T11:35:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-23T11:37:00-04:00",
+          "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-23T11:38:00-04:00",
+          "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-23T11:39:00-04:00",
+          "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-20T00:15:00-04:00:98518"
+      ],
+      "session": "2026-03-23",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-20T00:15:00-04:00:98518",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-23T11:55:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-23T11:57:00-04:00",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-23T11:58:00-04:00",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-23T11:59:00-04:00",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-20T03:45:00-04:00:97931"
+      ],
+      "session": "2026-03-23",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-24T08:15:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-24T08:17:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-24T08:18:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-23T14:00:00-04:00:97276"
+      ],
+      "session": "2026-03-24",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-24T08:25:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-24T08:27:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-24T08:28:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-23T14:00:00-04:00:97276"
+      ],
+      "session": "2026-03-24",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-24T08:30:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-24T08:32:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-24T08:33:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-24T08:34:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-23T14:00:00-04:00:97276"
+      ],
+      "session": "2026-03-24",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-24T09:05:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-24T09:07:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-24T09:08:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-24T09:09:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-23T14:00:00-04:00:97276"
+      ],
+      "session": "2026-03-24",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-24T10:10:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-24T10:13:00-04:00",
+          "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-24T10:14:00-04:00",
+          "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-24T00:15:00-04:00:96923"
+      ],
+      "session": "2026-03-24",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-24T11:55:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-24T11:57:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-24T11:58:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-23T14:00:00-04:00:97276"
+      ],
+      "session": "2026-03-24",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-14T10:05:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-14T10:07:00-04:00",
+          "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-14T10:08:00-04:00",
+          "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-14T10:09:00-04:00",
+          "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-04-14T09:15:00-04:00:102865"
+      ],
+      "session": "2026-04-14",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-25T08:35:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-25T08:37:00-04:00",
+          "location_id": "SWING:S:2026-03-25T09:15:00-04:00:97492",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-25T08:38:00-04:00",
+          "location_id": "SWING:S:2026-03-25T09:15:00-04:00:97492",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-25T08:39:00-04:00",
+          "location_id": "SWING:S:2026-03-25T09:15:00-04:00:97492",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-25T09:15:00-04:00:97492"
+      ],
+      "session": "2026-03-25",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-03-25T09:15:00-04:00:97492",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-25T08:50:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-25T08:52:00-04:00",
+          "location_id": "SWING:S:2026-03-25T09:15:00-04:00:97492",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-25T08:53:00-04:00",
+          "location_id": "SWING:S:2026-03-25T09:15:00-04:00:97492",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-25T09:15:00-04:00:97492"
+      ],
+      "session": "2026-03-25",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-03-25T09:15:00-04:00:97492",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-25T09:35:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-25T09:37:00-04:00",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-25T09:38:00-04:00",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-20T03:45:00-04:00:97931"
+      ],
+      "session": "2026-03-25",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-25T11:10:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-25T11:12:00-04:00",
+          "location_id": "R:2026-03-25T08:45:00-04:00:98148",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-25T11:13:00-04:00",
+          "location_id": "R:2026-03-25T08:45:00-04:00:98148",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-25T08:45:00-04:00:98148"
+      ],
+      "session": "2026-03-25",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-25T08:45:00-04:00:98148",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-25T11:15:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-25T11:17:00-04:00",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-25T11:18:00-04:00",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-25T06:30:00-04:00:97689"
+      ],
+      "session": "2026-03-25",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "S:2026-03-25T06:30:00-04:00:97689",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-25T11:35:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-25T11:38:00-04:00",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-25T11:39:00-04:00",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-25T06:30:00-04:00:97689"
+      ],
+      "session": "2026-03-25",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "S:2026-03-25T06:30:00-04:00:97689",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": true,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-25T11:40:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-25T11:42:00-04:00",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-25T11:43:00-04:00",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-25T11:44:00-04:00",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": true,
+      "same_zone_location_ids": [
+        "S:2026-03-25T06:30:00-04:00:97689"
+      ],
+      "session": "2026-03-25",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-03-25T06:30:00-04:00:97689",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-26T08:05:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-26T08:07:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-26T08:08:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-26T08:09:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-09T01:45:00-04:00:96344"
+      ],
+      "session": "2026-03-26",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-26T08:10:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-26T08:12:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-26T08:14:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-09T01:45:00-04:00:96344"
+      ],
+      "session": "2026-03-26",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-26T09:30:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-26T09:33:00-04:00",
+          "location_id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-26T09:34:00-04:00",
+          "location_id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "FVG15:bullish:2026-03-26T09:30:00-04:00:96494"
+      ],
+      "session": "2026-03-26",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-26T11:00:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-26T11:02:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-26T11:03:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-09T01:45:00-04:00:96344"
+      ],
+      "session": "2026-03-26",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-26T11:15:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-26T11:18:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-26T11:19:00-04:00",
+          "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-09T01:45:00-04:00:96344"
+      ],
+      "session": "2026-03-26",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-30T09:35:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-30T09:37:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-30T09:39:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-30T09:15:00-04:00:94096"
+      ],
+      "session": "2026-03-30",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-31T08:00:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-31T08:02:00-04:00",
+          "location_id": "FVG15:bullish:2026-03-31T07:30:00-04:00:93234",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T08:04:00-04:00",
+          "location_id": "FVG15:bullish:2026-03-31T07:30:00-04:00:93234",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "FVG15:bullish:2026-03-31T07:30:00-04:00:93234"
+      ],
+      "session": "2026-03-31",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "FVG15:bullish:2026-03-31T07:30:00-04:00:93234",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-03-31T10:35:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-31T10:37:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-31T10:38:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-03-31T10:39:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-30T09:15:00-04:00:94096"
+      ],
+      "session": "2026-03-31",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-31T10:40:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-31T10:42:00-04:00",
+          "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T10:43:00-04:00",
+          "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T10:44:00-04:00",
+          "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-30T08:00:00-04:00:94320"
+      ],
+      "session": "2026-03-31",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-31T10:50:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-31T10:52:00-04:00",
+          "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T10:53:00-04:00",
+          "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T10:54:00-04:00",
+          "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-30T08:00:00-04:00:94320"
+      ],
+      "session": "2026-03-31",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-31T11:00:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-31T11:02:00-04:00",
+          "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T11:03:00-04:00",
+          "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-31T07:45:00-04:00:93590"
+      ],
+      "session": "2026-03-31",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-31T11:40:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-31T11:43:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T11:44:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-30T09:15:00-04:00:94096"
+      ],
+      "session": "2026-03-31",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-31T11:45:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-31T11:47:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T11:48:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-30T09:15:00-04:00:94096"
+      ],
+      "session": "2026-03-31",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-03-31T11:55:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-03-31T11:57:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-03-31T11:59:00-04:00",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-30T09:15:00-04:00:94096"
+      ],
+      "session": "2026-03-31",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-02T08:20:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-02T08:22:00-04:00",
+          "location_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-02T08:23:00-04:00",
+          "location_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-02T08:24:00-04:00",
+          "location_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-04-02T08:45:00-04:00:94666"
+      ],
+      "session": "2026-04-02",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-02T09:35:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-02T09:37:00-04:00",
+          "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-02T09:39:00-04:00",
+          "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-23T07:30:00-04:00:95263"
+      ],
+      "session": "2026-04-02",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-02T09:55:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-02T09:58:00-04:00",
+          "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-02T09:59:00-04:00",
+          "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-23T07:30:00-04:00:95263"
+      ],
+      "session": "2026-04-02",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-02T10:35:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-02T10:37:00-04:00",
+          "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-02T10:38:00-04:00",
+          "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-31T22:15:00-04:00:95868"
+      ],
+      "session": "2026-04-02",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-03-31T22:15:00-04:00:95868",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-02T11:40:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-02T11:42:00-04:00",
+          "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-02T11:43:00-04:00",
+          "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-26T04:00:00-04:00:96809"
+      ],
+      "session": "2026-04-02",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-08T08:30:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-08T08:32:00-04:00",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-08T08:34:00-04:00",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-11T10:45:00-04:00:100720"
+      ],
+      "session": "2026-04-08",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-08T08:45:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-08T08:47:00-04:00",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-08T08:48:00-04:00",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-11T10:45:00-04:00:100720"
+      ],
+      "session": "2026-04-08",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": true,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-08T09:40:00-04:00",
+      "direction": "S",
+      "distinct_locations": 2,
+      "kind": "CROSS_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-08T09:42:00-04:00",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-08T09:43:00-04:00",
+          "location_id": "S:2026-04-08T04:45:00-04:00:100537",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": true,
+      "same_zone_location_ids": [],
+      "session": "2026-04-08",
+      "setups": [
+        "BRK5",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-04-08T04:45:00-04:00:100537",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-08T09:45:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-08T09:47:00-04:00",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-08T09:48:00-04:00",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-11T10:45:00-04:00:100720"
+      ],
+      "session": "2026-04-08",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": true,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-08T11:00:00-04:00",
+      "direction": "L",
+      "distinct_locations": 2,
+      "kind": "MIXED",
+      "members": [
+        {
+          "clock": "2026-04-08T11:02:00-04:00",
+          "location_id": "R:2026-03-18T14:45:00-04:00:99707",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-08T11:03:00-04:00",
+          "location_id": "R:2026-03-18T14:45:00-04:00:99707",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-08T11:04:00-04:00",
+          "location_id": "FVG15:bearish:2026-04-08T11:00:00-04:00:100176",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": true,
+      "same_zone_location_ids": [
+        "R:2026-03-18T14:45:00-04:00:99707"
+      ],
+      "session": "2026-04-08",
+      "setups": [
+        "BRK5",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "FVG15:bearish:2026-04-08T11:00:00-04:00:100176",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-09T09:35:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-09T09:37:00-04:00",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-09T09:39:00-04:00",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-16T15:45:00-04:00:100131"
+      ],
+      "session": "2026-04-09",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-09T09:50:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-09T09:52:00-04:00",
+          "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-09T09:53:00-04:00",
+          "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-09T09:54:00-04:00",
+          "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-02T15:30:00-05:00:100400"
+      ],
+      "session": "2026-04-09",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-09T10:15:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-09T10:17:00-04:00",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-09T10:18:00-04:00",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-09T10:19:00-04:00",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-16T15:45:00-04:00:100131"
+      ],
+      "session": "2026-04-09",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-09T10:50:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-09T10:53:00-04:00",
+          "location_id": "FVG15:bearish:2026-04-09T10:45:00-04:00:99997",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-09T10:54:00-04:00",
+          "location_id": "FVG15:bearish:2026-04-09T10:45:00-04:00:99997",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "FVG15:bearish:2026-04-09T10:45:00-04:00:99997"
+      ],
+      "session": "2026-04-09",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "FVG15:bearish:2026-04-09T10:45:00-04:00:99997",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-09T11:25:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-09T11:27:00-04:00",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-09T11:28:00-04:00",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-17T22:30:00-04:00:100322"
+      ],
+      "session": "2026-04-09",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-13T08:45:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-13T08:47:00-04:00",
+          "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-13T08:48:00-04:00",
+          "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-13T08:49:00-04:00",
+          "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-04-09T15:15:00-04:00:100537"
+      ],
+      "session": "2026-04-13",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "S:2026-04-09T15:15:00-04:00:100537",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": true,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-13T10:55:00-04:00",
+      "direction": "L",
+      "distinct_locations": 2,
+      "kind": "CROSS_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-13T10:58:00-04:00",
+          "location_id": "SWING:R:2026-04-10T06:00:00-04:00:101100",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-13T10:59:00-04:00",
+          "location_id": "R:2026-04-10T16:00:00-04:00:101210",
+          "location_source": "WICK_ZONE",
+          "route": "C_PREBREAK_DISPLACEMENT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": true,
+      "same_zone_location_ids": [],
+      "session": "2026-04-13",
+      "setups": [
+        "BRK5",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-04-10T16:00:00-04:00:101210",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-13T11:35:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-13T11:37:00-04:00",
+          "location_id": "R:2026-04-10T16:00:00-04:00:101210",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-13T11:38:00-04:00",
+          "location_id": "R:2026-04-10T16:00:00-04:00:101210",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-13T11:39:00-04:00",
+          "location_id": "R:2026-04-10T16:00:00-04:00:101210",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-04-10T16:00:00-04:00:101210"
+      ],
+      "session": "2026-04-13",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-04-10T16:00:00-04:00:101210",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-01T08:10:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-01T08:12:00-04:00",
+          "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-01T08:13:00-04:00",
+          "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-01T08:14:00-04:00",
+          "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "FVG15:bullish:2026-04-01T08:00:00-04:00:96672"
+      ],
+      "session": "2026-04-01",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-01T09:10:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-01T09:12:00-04:00",
+          "location_id": "FVG15:bullish:2026-04-01T06:00:00-04:00:96184",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-01T09:13:00-04:00",
+          "location_id": "FVG15:bullish:2026-04-01T06:00:00-04:00:96184",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-01T09:14:00-04:00",
+          "location_id": "FVG15:bullish:2026-04-01T06:00:00-04:00:96184",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "FVG15:bullish:2026-04-01T06:00:00-04:00:96184"
+      ],
+      "session": "2026-04-01",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "FVG15:bullish:2026-04-01T06:00:00-04:00:96184",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-01T09:35:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-01T09:37:00-04:00",
+          "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-01T09:38:00-04:00",
+          "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-01T09:39:00-04:00",
+          "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-26T10:15:00-04:00:96264"
+      ],
+      "session": "2026-04-01",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-03-26T10:15:00-04:00:96264",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-01T09:50:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-01T09:52:00-04:00",
+          "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-01T09:53:00-04:00",
+          "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-04-01T06:30:00-04:00:96362"
+      ],
+      "session": "2026-04-01",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "R:2026-04-01T06:30:00-04:00:96362",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": true,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-01T10:00:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-01T10:02:00-04:00",
+          "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-01T10:03:00-04:00",
+          "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+          "location_source": "WICK_ZONE",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": true,
+      "same_zone_location_ids": [
+        "R:2026-04-01T06:30:00-04:00:96362"
+      ],
+      "session": "2026-04-01",
+      "setups": [
+        "BRK5",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-04-01T06:30:00-04:00:96362",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-01T11:00:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-01T11:02:00-04:00",
+          "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-01T11:03:00-04:00",
+          "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-03-26T03:00:00-04:00:96926"
+      ],
+      "session": "2026-04-01",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-03-26T03:00:00-04:00:96926",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": true,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-01T11:55:00-04:00",
+      "direction": "L",
+      "distinct_locations": 2,
+      "kind": "MIXED",
+      "members": [
+        {
+          "clock": "2026-04-01T11:57:00-04:00",
+          "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-01T11:58:00-04:00",
+          "location_id": "S:2026-03-25T20:30:00-04:00:97149",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-01T11:59:00-04:00",
+          "location_id": "S:2026-03-25T20:30:00-04:00:97149",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": true,
+      "same_zone_location_ids": [
+        "S:2026-03-25T20:30:00-04:00:97149"
+      ],
+      "session": "2026-04-01",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "REV"
+      ],
+      "winner_location_id": "S:2026-03-25T20:30:00-04:00:97149",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-06T10:35:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-06T10:37:00-04:00",
+          "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-06T10:38:00-04:00",
+          "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-06T10:39:00-04:00",
+          "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-13T05:00:00-04:00:97590"
+      ],
+      "session": "2026-04-06",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-06T10:45:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-06T10:47:00-04:00",
+          "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-06T10:48:00-04:00",
+          "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-06T10:49:00-04:00",
+          "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-13T05:00:00-04:00:97590"
+      ],
+      "session": "2026-04-06",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-06T10:55:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-06T10:57:00-04:00",
+          "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-06T10:58:00-04:00",
+          "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-06T10:59:00-04:00",
+          "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-04-06T03:30:00-04:00:97165"
+      ],
+      "session": "2026-04-06",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-07T08:20:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T08:22:00-04:00",
+          "location_id": "R:2026-03-26T12:30:00-04:00:96509",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-07T08:23:00-04:00",
+          "location_id": "R:2026-03-26T12:30:00-04:00:96509",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-26T12:30:00-04:00:96509"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-26T12:30:00-04:00:96509",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-07T08:30:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T08:33:00-04:00",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-07T08:34:00-04:00",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-04-06T03:45:00-04:00:96830"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-07T08:45:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T08:47:00-04:00",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-07T08:48:00-04:00",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-07T08:49:00-04:00",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-04-03T09:15:00-04:00:96961"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "REV",
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-07T09:20:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T09:23:00-04:00",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-07T09:24:00-04:00",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-04-03T09:15:00-04:00:96961"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": true,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-07T09:45:00-04:00",
+      "direction": "S",
+      "distinct_locations": 2,
+      "kind": "MIXED",
+      "members": [
+        {
+          "clock": "2026-04-07T09:47:00-04:00",
+          "location_id": "SWING:R:2026-03-24T02:00:00-04:00:97222",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-07T09:48:00-04:00",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-07T09:49:00-04:00",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 3,
+      "rank_was_the_tiebreaker": true,
+      "same_zone_location_ids": [
+        "SWING:S:2026-04-06T03:45:00-04:00:96830"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "BRK5",
+        "BRK5",
+        "REV"
+      ],
+      "winner_location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-07T10:00:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T10:02:00-04:00",
+          "location_id": "R:2026-03-26T12:30:00-04:00:96509",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-07T10:04:00-04:00",
+          "location_id": "R:2026-03-26T12:30:00-04:00:96509",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-26T12:30:00-04:00:96509"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "R:2026-03-26T12:30:00-04:00:96509",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-07T10:05:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T10:07:00-04:00",
+          "location_id": "S:2026-04-03T07:45:00-04:00:96455",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-07T10:09:00-04:00",
+          "location_id": "S:2026-04-03T07:45:00-04:00:96455",
+          "location_source": "WICK_ZONE",
+          "route": "B_NORMAL_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "S:2026-04-03T07:45:00-04:00:96455"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "S:2026-04-03T07:45:00-04:00:96455",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-07T10:20:00-04:00",
+      "direction": "L",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T10:22:00-04:00",
+          "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-07T10:24:00-04:00",
+          "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:R:2026-03-26T16:45:00-04:00:96098"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
+      "winner_setup": "REV"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": false,
+      "bucket": "2026-04-07T10:25:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T10:28:00-04:00",
+          "location_id": "SWING:S:2026-03-26T10:15:00-04:00:96264",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        },
+        {
+          "clock": "2026-04-07T10:29:00-04:00",
+          "location_id": "SWING:S:2026-03-26T10:15:00-04:00:96264",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
+          "setup": "BRK5"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "SWING:S:2026-03-26T10:15:00-04:00:96264"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "BRK5",
+        "BRK5"
+      ],
+      "winner_location_id": "SWING:S:2026-03-26T10:15:00-04:00:96264",
+      "winner_setup": "BRK5"
+    },
+    {
+      "a_rejection_lost_to_a_break": false,
+      "a_rejection_was_present": true,
+      "bucket": "2026-04-07T10:40:00-04:00",
+      "direction": "S",
+      "distinct_locations": 1,
+      "kind": "SAME_ZONE",
+      "members": [
+        {
+          "clock": "2026-04-07T10:43:00-04:00",
+          "location_id": "R:2026-03-26T12:30:00-04:00:96509",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        },
+        {
+          "clock": "2026-04-07T10:44:00-04:00",
+          "location_id": "R:2026-03-26T12:30:00-04:00:96509",
+          "location_source": "WICK_ZONE",
+          "route": "A_NORMAL_REJECTION",
+          "setup": "REV"
+        }
+      ],
+      "n_candidates": 2,
+      "rank_was_the_tiebreaker": false,
+      "same_zone_location_ids": [
+        "R:2026-03-26T12:30:00-04:00:96509"
+      ],
+      "session": "2026-04-07",
+      "setups": [
+        "REV",
+        "REV"
+      ],
+      "winner_location_id": "R:2026-03-26T12:30:00-04:00:96509",
+      "winner_setup": "REV"
+    }
+  ],
+  "elapsed_s": 419.43,
+  "evidence_grade": "ARTIFACT-SOURCED from the X-ray's SURVIVED_TO_RANKING records - NOT measured at kernel.py:205. See the module docstring: ALGO-096 established an evaluation-order difference between the two.",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result is read anywhere in this artifact.",
+  "per_session": {
+    "2026-03-23": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 8,
+      "buckets_with_a_survivor": 16,
+      "contests": 8
+    },
+    "2026-03-24": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 6,
+      "buckets_with_a_survivor": 13,
+      "contests": 6
+    },
+    "2026-03-25": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 7,
+      "buckets_with_a_survivor": 16,
+      "contests": 7
+    },
+    "2026-03-26": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 5,
+      "buckets_with_a_survivor": 12,
+      "contests": 5
+    },
+    "2026-03-30": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 1,
+      "buckets_with_a_survivor": 9,
+      "contests": 1
+    },
+    "2026-03-31": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 8,
+      "buckets_with_a_survivor": 15,
+      "contests": 8
+    },
+    "2026-04-01": {
+      "CROSS_ZONE": 0,
+      "MIXED": 1,
+      "SAME_ZONE": 6,
+      "buckets_with_a_survivor": 17,
+      "contests": 7
+    },
+    "2026-04-02": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 5,
+      "buckets_with_a_survivor": 12,
+      "contests": 5
+    },
+    "2026-04-06": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 3,
+      "buckets_with_a_survivor": 14,
+      "contests": 3
+    },
+    "2026-04-07": {
+      "CROSS_ZONE": 0,
+      "MIXED": 1,
+      "SAME_ZONE": 9,
+      "buckets_with_a_survivor": 18,
+      "contests": 10
+    },
+    "2026-04-08": {
+      "CROSS_ZONE": 1,
+      "MIXED": 1,
+      "SAME_ZONE": 3,
+      "buckets_with_a_survivor": 11,
+      "contests": 5
+    },
+    "2026-04-09": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 5,
+      "buckets_with_a_survivor": 9,
+      "contests": 5
+    },
+    "2026-04-13": {
+      "CROSS_ZONE": 1,
+      "MIXED": 0,
+      "SAME_ZONE": 2,
+      "buckets_with_a_survivor": 12,
+      "contests": 3
+    },
+    "2026-04-14": {
+      "CROSS_ZONE": 0,
+      "MIXED": 0,
+      "SAME_ZONE": 1,
+      "buckets_with_a_survivor": 3,
+      "contests": 1
+    }
+  },
+  "pre_registered_branches": {
+    "CROSS_ZONE": "a real choice the teaching answers with no setup preference; `no citation found in the surfaces named` is the honest close",
+    "SAME_ZONE": "the teaching forbids two classifications of one interaction, so the CLASSIFIER is the defect and the rank is a symptom"
+  },
+  "status": "DIAGNOSTIC ONLY. Reports what the rank decides, by key. Derives nothing, proposes nothing, scores nothing.",
+  "the_rank_verbatim": "kernel.py:205  rank = {'BRK5': 3, 'BRK15': 2, 'REV': 1}",
+  "totals": {
+    "CROSS_ZONE": 2,
+    "MIXED": 3,
+    "SAME_ZONE": 69,
+    "contests": 74,
+    "contests_where_a_rejection_lost_to_a_break": 7,
+    "contests_where_the_rank_was_the_tiebreaker": 7
+  }
+}
