@@ -1,25 +1,36 @@
 # ALGO — Handover to GPT
 
-**To: GPT, incoming sole engineering advisor for the MNQ v2.4 lane.**
-**From: Claude (worker seat), 2026-08-23.**
-**Effective: 2026-08-27, when all Claude seats end. Written to be read cold.**
+> **Standing state corrected on commit (2026-08-26).** Drafted at ladder head ALGO-100C
+> `602318c5`; committed at ladder head **ALGO-100E `a553b59f`** (ALGO-100D landed the
+> operator's volunteered target teaching and RE-OPENED the target layer; ALGO-100E published
+> this handover to the channel). Strategy branch head at commit: **`abce4155`**
+> (`6888112d` is the revert commit, no longer the head). The T3 batch referenced below
+> closed **HONEST-PARTIAL** on its own pre-registration - it refused the operator's own
+> 03-24 entry - and **nothing from it is landed**.
 
-You already advise the main Trading Forge campaign. This is a **different, smaller lane** and it
-is nearly standalone. Everything you need is below or reachable from it.
+test `tests/test_algo_handover_is_accurate.py` reads `ALGO-GPT-HANDOVER.md` by path.
+
+**To: GPT, sole engineering advisor for the MNQ v2.4 lane from 2026-08-27.**
+**From: the Claude worker seat, 2026-08-26.**
+**Ladder head at writing: ALGO-100C at `602318c5`. Strategy branch:
+`research/current-mnq-strategy-v2-4-zone-first-candles`. Written to be read cold.**
+
+You already advise the main Trading Forge campaign. This is a **different, smaller, nearly
+standalone lane**. Everything you need is below or reachable from it.
 
 ---
 
 ## 1. What this is, in one paragraph
 
 `current_mnq_strategy_v2_4_*` is a **standalone MNQ bot** built to copy one trader's
-discretionary method. It does **not** need the Trading Forge DSL or extraction engine
-(ALGO-025 §2). It is not finished. It is not connected to any broker. The campaign's whole
+discretionary method. It does not need the Trading Forge DSL or extraction engine (ALGO-025 §2).
+It is not finished, it is not connected to any broker, and it must not be. The campaign's whole
 subject is **fidelity** — does the machine decide like the man — measured against 14 replay
-sessions where his own decisions were recorded.
+sessions in which his own decisions were recorded. **No realized outcome is ever allowed to pick
+a rule.** That is what separates this from a curve-fit retail bot, and it is the part worth
+defending when a deadline pushes.
 
----
-
-## 2. Where everything lives
+### Where everything lives
 
 | what | where |
 |---|---|
@@ -27,134 +38,389 @@ sessions where his own decisions were recorded.
 | strategy branch | `research/current-mnq-strategy-v2-4-zone-first-candles` (PR #38, **DRAFT / DO NOT MERGE**) |
 | this lane's reports + rulings | branch `external-advisor/gpt-rulings-algo`, folder `algo-reports/`, numbered `ALGO-NNN` |
 | the operator's runbook | `ALGO-RUNBOOK.md` at repo root |
-| the frozen textbook | `research/current_mnq_strategy_v2_4_spec.json` |
-| the ground truth | `research/current_mnq_strategy_v2_4_replay_v3_labels_FROZEN.json` (**committed; never edit**) |
-| the exam result | `research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json` |
+| the frozen textbook of the method | `research/current_mnq_strategy_v2_4_spec.json` |
+| **the ground truth** | `research/current_mnq_strategy_v2_4_replay_v3_labels_FROZEN.json` — committed; **never edit the frozen labels** |
+| the exam result (rewritten by every run) | `research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json` |
+| the never-rewritten comparator | `research/current_mnq_strategy_v2_4_F2_ANCHOR_frozen_5of8_ea6f0940_IMMUTABLE.json`, hash-checked by `research/current_mnq_strategy_v2_4_f2_anchor.py` |
+| publish tool | `scripts/publish_algo_report.sh` |
+| stopping things / what is alive | `KILL-AND-HEARTBEAT.md` |
+| every status word translated | `SELF-EXPLANATION-AUDIT.md` |
+| cold-starting a future Claude seat | `SEAT-HANDOFF-TEMPLATES.md` |
 
-**Read ALGO-001 through the newest in order.** They are the whole history. Rulings and worker
-reports interleave on the same branch, and the numbering is strictly increasing.
-
-**Channel rule that matters:** this lane publishes to `gpt-rulings-algo`, never to
-`gpt-rulings`. `scripts/publish_algo_report.sh` enforces it and *refuses* rather than warns —
-a report in the wrong place breaks the main campaign's control plane.
-
----
-
-## 3. State of the work, honestly
-
-**The defect of record, and its first measured movement.** The bot **used to take a trade in 14
-of 14 sessions and never once genuinely decline** — an entry decision that is a constant, and
-therefore carries no information. Everything built in this phase existed to kill that. After
-ALGO-047's wiring of the entry authority into the kernel, and re-measured again at
-`acceptance_bars = 3` with ALGO-068 R1 landed: **12 of 14, with two genuine in-window
-declines.** (It read 13 of 14 with one decline at `acceptance_bars = 2` before R1 — a
-superseded brain, not a different reading of this one.) The trader traded on 7 of the same 14. When the bot is
-present in-window and he trades, it picks the same direction **1 of 1** — so the failure is
-**timing and selectivity, not direction**.
-
-**The headline number is 1/8, unchanged by the wiring** (it was 1/8 before).
-
-> **These numbers are measured at the 08:00 window**, which ALGO-049 made the standing
-> configuration: the ALGO-043 revert to 09:30 is WITHDRAWN and 08:00–12:00 is the unconditional
-> deployment window. The 09:30 arm — where the frozen **5/8** lives — now runs as a
-> RUN-CONFIGURATION of the dual-window exam rather than as a committed constant.
-
-That 1/8 is on the 8 sessions where he actually decided (6 of 14 are right-censored — the replay
-ran out while he was still watching, and those can never be scored). **Read the two together:
-the constant is gone but the score did not improve, and one case moved to
-`BOT_ONLY_ENTRY_UNCENSORED_DECLINE` — the bot taking an in-window trade the trader declined,
-which is the unflattering direction.** Whether the brain refuses on the RIGHT sessions is the
-dual-window exam's question under its own pre-registration, not a claim this packet makes.
-
-**Where it sits on the ladder:** `FIDELITY → FREEZE → CLEAN EDGE → prop-survival → TopstepX`.
-Still on the first rung.
-
-**Built and BUILD-ONLY** (not imported by kernel/entries/engine/signal, enforced by test):
-the derivation layer (approach + the spec's six interactions), the story layer
-(APPROACH/FIGHT/DECISION, none of them a literal), and entry authority as a WAIT-by-default
-state machine. First checkpoint: it refuses 60 of the kernel's 128 Route A grants.
-
-**Not done:** the window amendment, the §7 mutation campaign, the exam on the finished brain,
-FREEZE, and most of the deployment documentation.
+**Read ALGO-001 forward.** Rulings and worker reports interleave on one branch and the numbering
+is strictly increasing. The subject lines are deliberately self-contained: `git log --format='%h %s'`
+on that branch is a readable campaign history on its own.
 
 ---
 
-## 4. The one thing that is genuinely blocking
+## 2. Standing state as of ALGO-100C at `602318c5`
 
-**An independent grade of the repaired evaluator was dispatched and has not rendered.**
-The previous grade returned **band 5, REFUTED**, and its findings were repaired in full
-(ALGO-024). Semantics may be **built** but no candidate may be **accepted** against the 14 cases
-until a fresh grade passes.
+### 2.1 The revert executed, and the baseline reproduces
 
-**If it never renders:** the evaluator's repair is described completely in ALGO-024 and the
-prior grade in ALGO-019. You can grade it yourself from the repository — you have done exactly
-that on this lane before. Three files: the regrade, the runner, the scorecard.
+`6888112d` is the revert commit ordered by ALGO-100 §2: R2 + R2b + F1 out, `derivation.py` /
+`force.py` / `independent_force.py` and the eight rewritten tests restored to `6d22524c` state,
+the `(A,C)` overlap pin restored. **Acceptance met: the 40-approval baseline reproduces exactly
+by key.** Kept across the revert: N0's capture fields, ALGO-096A's `UNFROZEN_CHOICES`, and every
+artifact. Nothing was thrown away — only the semantic diff was.
 
-**A hard-won lesson: a silent grader may have finished and failed to render.** Say *"no output
-received"*, never *"failed"*. I called it failure once and was wrong; the report arrived intact
-hours later and overturned my headline.
+### 2.2 The entry layer is CLOSED as a repair surface
+
+ALGO-100 §3, and this is the most consequential structural finding of the campaign. On **both**
+sides of R2c, everything the bot admits is **a taught rejection form on a live zone** — the 103
+additions and the 26 survivors alike (26 = 10/3/4/3/6; `touch_and_reject` 21 + `prior_momentum`
+5; zone states 15/5/4/2; **none broken**). Re-derived from rows at the advisor desk, independently
+of the worker.
+
+**There is nothing malformed left to refuse.** So a future entry-layer change requires **a NEW
+TEACHING from the operator — never a new predicate over the same teachings.** If a future round
+proposes another refusal predicate invented from the existing corpus, that is the thing this
+clause exists to stop. Refusal-only predicates were formally retired as a repair class at
+ALGO-094 after E1 turned five wrong-time trades into nine no-trades.
+
+### 2.3 `FIRST_A_PLUS` is FAITHFUL — the selector idea is DEAD
+
+ALGO-100 §4 opened a lane on the theory that `FIRST_A_PLUS` was a conjunct of the master equation
+with no implementing predicate — the bullet being spent by `kernel.py:201-208` on rank
+(BRK5 > BRK15 > REV) then quality/confluence, then clock order. **S1 refuted that at ALGO-100B
+and the advisor desk ratified the refutation against itself.**
+
+**There is no taught ranking. "First A+ only" IS the teaching**, confirmed in `video_evidence`
+and re-read at the line. `kernel.py:201-208` is **faithful**. The A+ selector order is WITHDRAWN
+and the selector concept is **DEAD** — it was an invented comparative the teachings do not
+contain. ALGO-100 §6c's "A+ implemented as first = defect" framing was retracted by its own
+author. Do not reopen it without a new teaching.
+
+The unbuilt piece was never a ranking. It was **one taught gate the code had lost**.
+
+### 2.4 The live lane: T3
+
+**T3 = "touch with mixed/doji control → WAIT_OR_NO_TRADE."** It comes from `video_evidence`
+Explicit refusals, verbatim, and from the onboarding line *"a doji reclaim alone is not A+"*.
+Until this round it was implemented **only** by the untaught fractions `0.62` / `0.78` and
+`0.30` / `0.40` — which R2/R2b rightly retired and **wrongly replaced with nothing**. That hole
+is the whole 40 → 143 over-admission. Form was never where T3 lived; **control QUALITY was** —
+which is why ALGO-099 §2c stands.
+
+**Formalized at `abce4155`, magnitude-free, and RATIFIED EXACTLY AS COMMITTED by ALGO-100C:**
+
+> **MIXED** = body < upper wick **AND** body < lower wick
+> **∨ NO_DIRECTIONAL_CONTROL** = close fails past the bar's own midpoint
+> — completed story bar only, **OHLC vs OHLC, no constant.**
+
+Two rulings from ALGO-100C worth carrying:
+
+- **The desk's own `C1 ∨ C2` suggestion was REFUTED by the worker on teaching grounds before any
+  measurement**: C1 implies C2 so the disjunction collapses, and C2 refuses the **HAMMER** — the
+  archetypal rejection candle `_rejection_wick` exists to accept. ALGO-100B §3.1's "C1vC2
+  arguable" was withdrawn as advisor error. *The pre-commit sequencing is what made that error
+  cheap.*
+- **The midpoint is RULED NOT A MAGNITUDE**: it is the bar's own geometric centre — no free
+  parameter, no search range, unlike the retired `close_loc` 0.78 over the range (0.72, 0.84).
+  The packet owes a provenance line and the tie convention: **close exactly at midpoint REFUSES.**
+
+**Red-proof baseline AMENDED, and the reason is the round's best evidence:** RED at the reverted
+head `6888112d` is **unachievable**, because the retired magnitudes are still doing T3's job
+there. The baseline is the **BATCH head**, with `6888112d` kept as a third column where two rows
+fail correctly. Red-proofs are at `b7227259`, whose own subject states it: *"THE RED-PROOF HEAD
+IS THE BATCH STATE, not the reverted head."* The four-row table (DOJI/MIXED complete at the batch
+head = the hole; HAMMER and CLEAN thin-wick pass) re-derives S1's conclusion from **fixtures
+instead of citations** — a third independent path.
+
+**Landing as ONE batch:** R2 + R2b + F1 byte-identical from history + T3 at the story control
+step + the four ALGO-100A instrument fixes F-1…F-4. **R2c is NOT in the batch.** The batch commit
+is `9434e22d`.
+
+**Pre-registration, conjunctive** (ALGO-100B §4, amended by ALGO-100C §3.4):
+the bullet lands on his 03-24 09:32 key `…96923`, with the eight earlier same-day approvals'
+T3 verdicts published; 04-09 `…100322@11:37` is a **SURVIVES-TO-RANKING** test (approval
+reported, never required) — because T3 refuses and can never *create* an approval; control key
+kept; no AGREEing anchor day lost; membership against both 40 and 143 at both pins; sessions
+silenced ZERO; no uncited number; suite + mutation green. **If the teaching-committed T3 kills
+either hit, the lane closes HONEST-PARTIAL** and the one reserved-class ask goes to the operator
+— a live demonstration, never a fraction re-fit.
+
+**ALGO-101 rules the packet.** Then re-exam #3, then the FREEZE path per ALGO-029.
+
+### 2.5 The census that corroborates it, independently
+
+S2's selection census at `62722a2a` (143 by-key control PASS): on **six of seven** entry days the
+bot's first approval precedes his clock by **80–187 minutes**, with 4–26 approvals per session.
+On **04-14 — the one day it agrees — the session has exactly ONE approval and it is his.**
+
+**This is over-admission, not mis-selection.** S1 (from teachings) and S2 (from rows) converge on
+that independently, which is why the T3 lane is the right one.
+
+Two instrument rulings inside it: S2's 04-09 section is a **TRUNCATED INSTRUMENT** and not
+comparable — it ran the X-ray at `as_of = replay_end = his 11:35 clock` and saw zero, where
+`ct_after_0800` measures 89 candidates and the 11:37 survivor. **The canonical surface is the
+full-session run**: `replay_end` is a property of the labelling session, not of the market.
+
+### 2.6 The numbers, as they stand
+
+Measured at the current head, from the committed scorecard and
+`research/current_mnq_strategy_v2_4_bot_entry_rate.py`:
+
+| | |
+|---|---|
+| agreement on decided cases | **1/8** — the headline fidelity number |
+| right-censored, excluded from both halves | 6 of 14 (the replay ran out before he decided) |
+| bot traded at all in the session | **12 of 14**; he traded 7 of the same 14 |
+| bot entered in-window / genuinely declined / unavailable | 2 / 2 / 10 |
+| direction agreement when both entered | **1 of 1**; opposite direction at a decision: **0** |
+| sessions whose bullet was spent before the window | 10 of 14, hiding 8 unreachable in-window entries |
+
+**Read those together.** The bot used to enter in 14 of 14 and decline in 0 — an entry decision
+that was a constant and therefore carried no information at all. ALGO-047's wiring killed the
+constant: it now genuinely stands aside. **But the score did not improve**, and one case moved to
+`BOT_ONLY_ENTRY_UNCENSORED_DECLINE` — the bot taking an in-window trade he declined, which is
+the unflattering direction and is published as such. The failure is **timing and over-eagerness,
+not direction.**
+
+One diagnostic sits in the scorecard, unadopted, and it is yours to rule on: censoring is
+asymmetric — trader-side non-decision is excluded from both numerator and denominator, bot-side
+non-decision counts as a disagreement. Symmetric censoring would read **1/4**. It was not adopted
+because *it raises the fidelity number, and a party may not adopt the reading that flatters it.*
+That is an ALGO question, not a worker decision.
+
+### 2.7 The EDGE lane
+
+Advisor-owned, **firewalled from fidelity**, multi-year backtest in flight. It may not touch any
+fidelity decision, and nothing it produces may enter the entry layer. It exists so that when
+FREEZE completes there is already an out-of-sample read waiting — not so that it can inform the
+brain. If an edge result ever appears in a fidelity argument, that argument is void by §4 rail 1.
+
+### 2.8 The independent grade
+
+ALGO-100A: **BAND 7, VERIFIED**, scoped to the 14-session corpus at both arm pins plus the guard
+artifacts at `62722a2a` and `7d42d121`. 13 claims, 11 confirmed. The headline is **Path B**: the
+grader re-ran the capture instrument itself and reproduced the entire 111-row R2c result
+**identical by key and target** across 14/14 sessions, and independently closed the packet's open
+sub-table with the same numbers *before* seeing the worker's closure — two independent
+productions, one of them the grader's own.
+
+Two literal refutations, neither moving a number (claim 8's "same script at two commits" is false
+for the R2c arm — 5-field vs 13-field instrument versions; claim 10's D5-pin attribution is
+wrong). Four instrument findings F-1…F-4, all routed into the S3 re-land, **none reopening the
+revert or ALGO-100's decisions**. Band 7 is the ceiling claimed: suite, mutation battery and
+grant matrix were not re-run, and the 09:30 R2c arm is unmeasured.
 
 ---
 
-## 5. How to work with the operator after the 27th
+## 3. How the channel works
 
-**He is the hands; you read.** He is not a coder and does not need to be.
+### 3.1 Publish first, then message
+
+Publish the artifact, **then** tell the peer the filename and SHA. Monitors and ears are retired
+on this lane; the ladder is the durable record. A message describing an unpublished file is a
+request for trust, not a report.
+
+### 3.2 The three separations — and why a subfolder is not one
+
+| | ALGO lane | main Trading Forge |
+|---|---|---|
+| **branch** | `external-advisor/gpt-rulings-algo` | `external-advisor/gpt-rulings` |
+| **directory** | `algo-reports/` | `advisor-reports/` |
+| **numbering** | `ALGO-NNN` | `AR-NNNN` |
+
+This lane publishes to `gpt-rulings-algo`, **never to** `gpt-rulings`. The reason is measured:
+the main control plane takes the newest `advisor-reports/*.md` on its branch as the authorizing
+ruling, and `bootstrap.mjs` filters with `startsWith('advisor-reports/')` — **which matches
+subdirectories.** An algo file under `advisor-reports/algo/` would become the head commit's only
+ruling and break the main campaign's control-plane seat with `stale_authority`. The obvious
+separation was a subfolder, and the subfolder was the bug.
+
+`scripts/publish_algo_report.sh` enforces all three layers and **refuses** rather than warns.
+
+### 3.3 The publish script's three traps
+
+1. **It takes the published name from the LOCAL file's basename.** Name the local file fully —
+   `ALGO-NNN-WHAT-IT-DECIDES-YYYY-MM-DD.md` — before publishing. `ALGO-097.md` was published as
+   exactly that and needed a rename commit (`ae717ae8`) to fix.
+2. **There is NO number-collision guard.** Fetch and `git ls-tree --name-only
+   origin/external-advisor/gpt-rulings-algo:algo-reports/` first. ALGO-026, ALGO-039 and
+   ALGO-043 all carry collision scars.
+3. **Publish from a SHORT directory.** From a deep scratchpad path, `git hash-object` dies on
+   Windows with `Filename too long`.
+
+### 3.4 What a ruling owes
+
+Pin the head SHA it rules on. Separate MEASURED / ARTIFACT-SOURCED / RELAYED. **Pre-register
+acceptance criteria before results exist** — criteria before candidates, and pre-commit to NONE
+being acceptable. Decide **land-or-close** in the same ruling the report lands; drifting lanes
+are the pace failure this desk was convicted of (ALGO-094). Never "N of M" unless every M can be
+named from a committed doc. End with the no-PnL line.
+
+---
+
+## 4. How to instruct the operator
+
+**He is the hands; you read.** He is not a coder and does not need to become one.
 
 1. He describes what happened in his own words.
-2. **You prescribe an exact command.** He pastes it.
-3. He pastes back the *whole* output. You interpret.
+2. **You prescribe an exact command**, copy-pasteable, no placeholders he has to fill in.
+3. He pastes back the whole output. **You** interpret it.
 
-`ALGO-RUNBOOK.md` already gives him the commands, what each output means, and what to do in
-each incident. Point him at it rather than re-deriving.
+`ALGO-RUNBOOK.md` already holds the commands, what each output means, and the incident actions in
+his own words. Point him at a section number rather than re-deriving. Its §4 gives him five
+checks to apply to any command you send; commands that pass those five will not stall.
 
-**Three rails that do not bend:**
-- **Never** edit the frozen labels file. It is the record of what he actually did.
-- **Nothing connects to TopstepX** — not funded, not eval, not broker-paper — until the ladder
-  finishes. A subscription date exerts zero authority over that.
-- **No PnL, realized outcome or winner/loser label may pick a rule.** The ledger's `rPnL` column
-  is off limits for all semantic work. Dates, prices and clocks only.
+### Two things you must never ask him
 
----
+- **Never ask about replay markings** — any line, marked time, timestamp, or the 2025 tape.
+  Operator order **ALGO-083**: he cannot remember them, has said so repeatedly, and the whole
+  collection is CLOSED. The labels are **day-level scoring references, not precision ground
+  truth**. Tick and minute-level label forensics are DONE and void. If a band is underivable,
+  use the line, record that you did, and move on. *Rough data is a worse parameter source, not a
+  licence to fit.*
+- **Never ask for historical decision evidence** — why he passed on some day, what he was
+  thinking months ago. **ALGO-022**: *"you have all my data."* Everything knowable is in the
+  repository. Also: `WAIT` ≠ `NO_TRADE` — six of the seven sessions he "passed" carry no decision
+  at all, so asking why he passed asks about a decision he never made.
 
-## 6. Things that will bite you, learned the expensive way
+### What IS reserved to him
 
-**Instrument defects outnumbered strategy defects roughly four to one.** Four published numbers
-were wrong in two days and *every one* was the measuring tool, not the bot. Suspect the
-instrument first.
+Only three classes: **a fact about his own intent that no artifact records**; **real capital,
+spend, and irreversibly destructive decisions**; and **a NEW TEACHING demonstration** — the one
+ask §2.4 authorizes if T3 kills a required hit. Everything else is yours to decide. He retired
+the question channel: *"you have an advisor for the rest of your questions."*
 
-**A guard that reads prose convicts the sentence written to make the promise.** Five separate
-substring guards fired on their own module's docstring explaining the property being guarded.
-**Check the AST, never the text.**
+### His vocabulary — use it
 
-**A green check with no path to red is worthless.** The force receipt "verified" the kernel by
-calling the same pure function with identical arguments — it could never disagree. Every guard
-needs a mutation that turns it red, *and* a positive witness that it is green for the right
-reason.
-
-**A hand-maintained list certifies only itself.** The X-ray's correspondence test compared
-against a typed tuple of gate names; the ranker was simply never added, so the test passed for
-as long as the divergence existed. Derive populations; never type them.
-
-**A unit test on the inner object does not prove the outer path carries the value.** A field was
-added to one dataclass and not threaded to the next; the unit test passed and the real run
-printed an empty census.
-
-**A comparison is not an exoneration.** "Same failure count as before" hid five tests that had
-never once run to completion on this machine — they died on a Windows encoding default before
-reaching their assertion.
-
-**Ask the advisor, never the operator.** Historical-evidence questions are closed
-(*"you have all my data"*). And `WAIT` ≠ `NO_TRADE`: six of the seven sessions he "passed" on
-carry no decision at all, so asking why he passed was asking about a decision he never made.
+He trades **key level zones / support and resistance**. Never say "supply and demand." A zone is
+a **band**, from the top of the rejection wick to that candle's close. A **rejection** is a
+rejection wick — a candle that does **not** break the level. `body_frac` and `close_loc` were
+never his (ALGO-071/073). And when a construction cannot be reproduced the way he draws it:
+*"if it can't draw things like me it can do it in a computer way"* — the equivalence that matters
+is **of TRADES, not of drawings**. A cited machine-checkable predicate is a legitimate stand-in
+for his eye; never stall a repair on "cannot reproduce his construction."
 
 ---
 
-## 7. If you take one thing from this document
+## 5. The standing rails, each with its ruling
 
-The campaign's method is **outcome-blind fidelity**: the bot is fit to the trader's *decision
-process*, proven against his recorded decisions, with every measurement red-proofed and
-independently graded — and **no result is ever allowed to pick a rule**. That is what makes it
-different from a curve-fit retail bot, and it is the part worth defending when the deadline
-pushes.
+None of these bend, and no deadline has authority over any of them.
 
-Good luck. He is a careful operator and the record is complete.
+| # | rail | ruling |
+|---|---|---|
+| 1 | **No PnL, realized outcome, winner/loser label or clean-edge result may participate in ANY fidelity decision.** The ledger's `rPnL` column is **off limits** for all semantic work. Dates, prices and clocks only. | standing; restated in every ruling's closing line |
+| 2 | **No number without a teaching citation.** A magnitude with no taught sentence behind it is a number somebody chose. When you remove an untaught magnitude, ask what taught sentence it was accidentally carrying, and re-supply that sentence before the diff lands. | ALGO-100B (minted as the round's LAW) |
+| 3 | **Nothing from the 2026 labels sets a parameter.** They are day-level scoring references only. No band, no threshold, no clock is derived from them. | ALGO-083 |
+| 4 | **NOTHING connects to TopstepX — not funded, not eval, not broker-paper — before FIDELITY → FREEZE → CLEAN EDGE → prop-survival.** In code at `research/current_mnq_strategy_v2_4_topstepx_prior_art.py:87-91`: *"A subscription expiry date exerts ZERO authority over this ladder."* | ALGO-025 §2, ALGO-026 §3 |
+| 5 | **The frozen labels are never edited.** `research/current_mnq_strategy_v2_4_replay_v3_labels_FROZEN.json` is the record of what he actually did. | standing, ALGO-007 |
+| 6 | **17.25-point stop; one bullet per day; 08:00–12:00 window.** Hard limits in code, not suggestions. 08:00–12:00 is the unconditional deployment window; the 09:30 revert is WITHDRAWN and 09:30 now runs only as a run-configuration of the dual-window exam. | ALGO-049; ALGO-043's pre-registered rule (the 08:00 arm degrading IS the early-entry defect — the window does not move) |
+| 7 | **Doer ≠ grader.** Completed instrument work gets an independent adversarial grade with the brief DISPROVE. The worker self-dispatches it; rule from the receipt. | standing; ALGO-100A is the current example |
+| 8 | **Every claim carries an evidence grade** — MEASURED (you ran it, at a named SHA), ARTIFACT-SOURCED, or RELAYED. Re-measure red paths every round; prove a fix with the **unchanged** convicting instrument. | standing |
+| 9 | **The entry layer is closed as a repair surface.** New entry semantics require a NEW TEACHING, never a new predicate. | ALGO-100 §3 |
+| 10 | **PR #38 is DRAFT / DO NOT MERGE.** | standing since ALGO-001 |
+
+---
+
+## 6. The open queue, with contracts
+
+### What "DONE" means — the ALGO-029 §1 checklist
+
+The operator's order was *"the bot has to be done already."* DONE is this checklist, not a
+feeling:
+
+| # | item | contract | state 2026-08-26 |
+|---|---|---|---|
+| 1 | **Strategy brain code-complete** | the ALGO-009 §3/§6 four-route entry-authority state machine with the derivation layer computed from price (nothing self-attested), the 08:00–12:00 window amendment folded in (ROLE-1 + deliberate ROLE-3; the ROLE-2 anchor untouched), full §7 mutation campaign green | **in flight** — the S3 batch is the current attempt; ALGO-101 rules it |
+| 2 | **Fidelity exam run on the finished brain**, honest published numbers; **if it passes → FREEZE executed**, hash-pinned, on the record | re-exam #3 only after a ratified landing | **not reached.** Its PASS is an empirical outcome, the one item effort cannot force |
+| 3 | **Safety core proven offline** | FakeSession flatten / cancel / position tests green | **done** — 7 of 7 safety-critical broker methods covered, up from 0 |
+| 4 | **Deployment path finished to the offline line** | ProjectX adapter verified at request-shaping; the credentialed shakedown and connection procedure written as **RUN-ONLY** steps, executed post-sunset by operator + GPT after FREEZE and clean edge — never now | **partial**; the run-only write-up is the gap |
+| 5 | **Validation arsenal runnable by single command** | assess in-family prior art, deliver run-only invocations + plain-English readouts. **No new arsenal is authored — reuse and document** | **answered honestly and NOT met**: `current_mnq_strategy_v2_4_validation_arsenal` reports 5 tools, 2 runnable, 1 with an entry point. The family is libraries, not commands; the entry points do not exist. Same shape as the no-start-command finding |
+| 6 | **The self-sufficiency pack complete** (ALGO-026 P1) | runbook, self-explanation audit, kill+heartbeat, this handover, seat handovers | **this pack** — all five drafted |
+
+**If item 2 still refuses when the work is otherwise complete**, ALGO-028 §3.2 governs: park
+code-complete, run-only, resumable. That is the fallback of record, not the plan.
+
+### Named open items
+
+- **ALGO-101** — rules the S3 batch (`9434e22d`) against its conjunctive pre-registration. The
+  next thing that happens on this lane.
+- **F-1 reason chain** — after F1's removal, `PARTIAL_MOMENTUM_GEOMETRY_NOT_PROVEN` labels a
+  clause that cannot refuse. MOOT at `6888112d`, **BINDS the re-land**. The printed reason must
+  always be the clause that actually refused.
+- **F-2 AST no-fraction scan** — R2c's guard scans only the LONG branch's physical line. Binds
+  `7d42d121` if R2c ever returns.
+- **The 04-09 named finding** — which layer refuses that LONG after ranking, with its executable
+  line, TP1 and dollar display at 15 contracts, plus why the SHORT on the same zone at 11:27/11:28
+  approved. Does **not** gate the batch.
+- **`TAUGHT_SHAPE_UNTAUGHT_GATE` inventory** — 2 remained at the 08-24 verified run. Whether each
+  survives the re-land is campaign work.
+- **The wider status-literal sweep** — `SELF-EXPLANATION-AUDIT.md` §11 names it.
+- **The heartbeat build decision** — `KILL-AND-HEARTBEAT.md` §6 offers two honest minimal designs.
+  Nothing is built; nothing needs to be until a runtime exists.
+
+---
+
+## 7. The instrument traps a future seat WILL hit
+
+Every one of these cost a retraction on this lane. **Instrument defects have outnumbered strategy
+defects roughly four to one** — four published numbers were wrong in two days and *every one* was
+the measuring tool, not the bot. **Suspect the instrument first.**
+
+1. **A gate label is not a sub-reason.** `FORCE_NOT_CONFIRMED` is a family name; the sub-reason
+   lives beside it. X-ray records carry `force_reason` — read that. ALGO-095 attributed a whole
+   round to `force.py:123` on the label alone and was refuted at ALGO-096.
+2. **An evaluation order is not a causal order.** "Route A never reaches `_control`" was the
+   X-ray asking force first (`candidate_xray.py:190-228`), not the strategy refusing there. With
+   force forced true, the story gate binds. This one misdirected an entire round.
+3. **Report by KEY, never the majority literal, and never a raw count.** On 04-06 a single
+   `_control` refusal sat behind 44 no-touch records and the modal literal hid it. Trace counts
+   are **location-multiplied** — 63/34/4 were ONE distinct evaluation each. And the fix has its
+   own trap: **deepest-gate-BY-KEY breaks ties arbitrarily** and hid the changed key at 04-09
+   (F-4). Report **all** keys at maximum depth.
+4. **Text-vs-instant timestamp joins.** Two timestamps that print identically can be different
+   objects; a re-pasted read carries no timestamp of its own. Join on two verbatim strings, and
+   remember `SIGNAL_ASOF_MUST_BE_TZ_AWARE` exists because naive datetimes reached production once.
+5. **CRLF phantom diffs on Windows.** A diff that looks enormous and semantically empty is a line
+   ending. Check before believing a landed change is larger than the reviewed one.
+6. **`git stash list` reads EMPTY while a pre-commit hook is stashing.** Only the commit's own
+   stdout tells the truth. The grader is a writer too — fix at source, in an isolated checkout.
+7. **A completion signal is not a result.** Check the artifact, not the exit code. This appeared
+   twice inside a single grade (F-5). Related and equally expensive: **a silent grader may have
+   finished and not rendered** — say **"no output received"**, never **"failed"**. That call was
+   made wrongly once here; the report arrived intact hours later and overturned the headline.
+8. **Check the AST, never the text.** Five substring guards fired on their own module's docstring
+   explaining the property being guarded. A guard that reads prose convicts the sentence written
+   to make the promise.
+9. **A green check with no path to red is worthless.** The force receipt "verified" the kernel by
+   calling the same pure function with identical arguments — it could never disagree. Every guard
+   needs a mutation that turns it red **and** a positive witness that it is green for the right
+   reason.
+10. **A hand-maintained list certifies only itself.** The X-ray's correspondence test compared
+    against a typed tuple of gate names; the ranker was never added, so it passed for as long as
+    the divergence existed. **Derive populations; never type them.**
+11. **A comparison is not an exoneration.** "Same failure count as before" hid five tests that had
+    never once run to completion on this machine — they died on a Windows encoding default before
+    reaching their assertion.
+12. **A unit test on the inner object does not prove the outer path carries the value.** A field
+    added to one dataclass and not threaded to the next: unit test green, real run printed an
+    empty census.
+13. **A CLI is only proven by running the CLI.** `evidence_eras` was documented in the runbook and
+    crashed with `KeyError`; every unit test passed because they all called `measure()` and none
+    called `main()`. `tests/test_algo_runbook_commands_actually_run.py` exists because of this.
+14. **A truncated instrument is not a null result.** Running the X-ray at `as_of = replay_end`
+    showed zero candidates where the full-session surface has 89. An absence claim needs a
+    positive control **in the right surface**.
+15. **Closing one instance is not closing the condition.** Name the mechanism, ask what the
+    enumeration over it is, and whether you ran it. No enumeration ⇒ say "one instance closed."
+
+---
+
+## 8. If you take one thing from this document
+
+The method is **outcome-blind fidelity**: the bot is fit to the trader's *decision process*,
+proven against his recorded decisions, every measurement red-proofed and independently graded,
+and **no result is ever allowed to pick a rule.**
+
+The single best procedural lesson of the final rounds, in ALGO-100C's own words: *sequencing a
+decision ahead of its data does not slow the work down — it is what made an advisor's error
+cheap.* Commit the formalization by teaching-fit argument **before** any census or guard number
+is read, and a wrong idea costs one paragraph instead of a round.
+
+He is a careful operator and the record is complete. Good luck.
+
+**No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision
+recorded in this handover.**
