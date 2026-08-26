@@ -32,6 +32,7 @@ import numpy as np
 import pandas as pd
 
 from research import current_mnq_strategy_v2_3_engine as prod
+from research.current_mnq_strategy_v2_4_entries import momentum_bar
 
 core = prod.core
 EPS = 1e-12
@@ -86,30 +87,6 @@ class ForceSnapshot:
         })
 
 
-def _directional_body(row, direction: str) -> bool:
-    """The taught force SHAPE: a DIRECTIONAL BODY on the forming candle. F1, ALGO-096 §5.
-
-    The taught content is the shape — *"momentum = directional body/control geometry; range
-    expansion not required"* (`engineer_onboarding:98`, spec
-    `entry_trigger_semantics.momentum_candle`). The MAGNITUDES were never his: `body_frac 0.62`
-    and `close_loc 0.78` are v2.2 `Params` defaults shipped with tuning search ranges
-    (`v2_2_engine.py:95` `(0.56, 0.68)`, `:97` `(0.72, 0.84)`) — a parameter born with a search
-    range is a construction — and ALGO-071 §3 records the operator saying these two numbers
-    were never his definition.
-
-    "Control" is ALREADY carried at this site by `LATEST_CLOSE_AT_DIRECTIONAL_EXTREME`, so
-    demanding it a second time through an untaught close-location fraction is the construction,
-    not the teaching. Measured at his clocks (ALGO-096 §3): 04-09 11:37 had monotone progress,
-    path efficiency 1.00 and its close AT the extreme, and was refused by this clause alone.
-
-    DELIBERATELY LOCAL. `entries.momentum_bar` has other callers and ALGO-096 §5 forbids
-    editing it; this predicate is defined here so the change reaches the force site and
-    nowhere else. The efficiency clause below is NOT touched.
-    """
-    o, c = float(row.open), float(row.close)
-    return bool(c > o) if direction == "L" else bool(c < o)
-
-
 def _completed_subbars(one: pd.DataFrame, parent_start: pd.Timestamp,
                        parent_minutes: int, known_at: pd.Timestamp) -> pd.DataFrame:
     parent_end = parent_start + pd.Timedelta(minutes=int(parent_minutes))
@@ -157,17 +134,7 @@ def force_snapshot(one: pd.DataFrame, parent_start: pd.Timestamp,
         if direction == "L"
         else c <= float(np.min(closes)) + EPS
     )
-    # RECORDED, NOT GATING (ALGO-098). `_directional_body` is `close beyond open in the
-    # direction`, which for a LONG is exactly `progress > 0` - and `efficient` below ALREADY
-    # requires `progress > 0`. The clause is therefore ENTAILED: no input can satisfy
-    # `efficient` and fail `geometry`, so it can neither refuse anything nor be tested. It is
-    # kept as an observation on the snapshot and removed from the conjunction, because a gate
-    # that cannot refuse is not a gate - it is dead code wearing a citation.
-    #
-    # PRE-REGISTERED AND CHECKED: removing an entailed clause must move ZERO approvals. The
-    # 14-session capture is 143 before and after. If it had moved even one, the entailment
-    # argument would have been wrong and the clause would have gone back in.
-    geometry = bool(_directional_body(row, direction))
+    geometry = bool(momentum_bar(row, direction, p))
     before_parent_close = bool(known_at < parent_end)
     enough_observations = n >= MIN_COMPLETED_1M_OBSERVATIONS
     efficient = bool(progress > 0 and efficiency >= float(p.body_frac))
@@ -175,6 +142,7 @@ def force_snapshot(one: pd.DataFrame, parent_start: pd.Timestamp,
     confirmed = bool(
         enough_observations
         and before_parent_close
+        and geometry
         and efficient
         and at_extreme
     )

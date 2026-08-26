@@ -95,11 +95,8 @@ def _classify(rows, direction="L"):
 def test_a_touch_with_no_directional_control_is_refused():
     """`touch_without_directional_control -> WAIT_OR_NO_TRADE`."""
     # comes from above, touches, but the last bar is a limp doji - no control
-    # ALGO-096B: moved to a bar HIS definition also refuses. The old bar entered the band
-    # and closed back out ABOVE hi=102 - a REJECTION under ALGO-071 s3, refused only by the
-    # retired body_frac. This one closes at 99.5, BELOW lo=100: the level BROKE.
     r = _classify([(110, 111, 109, 110), (109, 110, 103, 104),
-                   (102, 102.4, 99.0, 99.5), (102, 102.2, 101.8, 102.02)])
+                   (102, 102.4, 100.1, 102.1), (102, 102.2, 101.8, 102.02)])
     assert r.valid is False
     assert r.reason == D.NO_CONTROL
 
@@ -224,7 +221,7 @@ def test_fixture_mixed_overlap_and_two_sided_wicks():
     The conflict now has to be planted on the COMPLETED rejection bar, because that is where
     the story is read - the trigger's wicks are still forming (ALGO-033).
     """
-    rows = CLEAN_LONG[:2] + [(101.2, 110.0, 92.0, 101.0)] + CLEAN_LONG[-1:]
+    rows = CLEAN_LONG[:2] + [(105, 110.0, 100.0, 105.2)] + CLEAN_LONG[-1:]
     s = _story(rows)
     assert s.two_sided_conflict is True
     assert s.refusal == D.TWO_SIDED_CONFLICT
@@ -254,18 +251,16 @@ def test_fixture_counter_bias_reversal_without_completed_control_transfer():
 
 def test_two_sided_wick_conflict_discriminates():
     """POSITIVE AND NEGATIVE. It must fire on a conflicted bar and stay silent on a clean one."""
-    # ALGO-096B: the taught negative is kept; only its EXPRESSION changes. Indecision is now
-    # "the completed bar closed INSIDE the band", not a pair of wick fractions.
-    conflicted = bars([(101.2, 110.0, 92.0, 101.0)]).iloc[0]   # close 101.0 INSIDE [100,102]
-    clean = bars([(103.5, 110.0, 100.0, 109.7)]).iloc[0]       # close 109.7 OUT on near side
-    assert D.two_sided_wick_conflict(conflicted, LO, HI) is True
-    assert D.two_sided_wick_conflict(clean, LO, HI) is False
+    conflicted = bars([(105, 110.0, 100.0, 105.2)]).iloc[0]
+    clean = bars([(103.5, 110.0, 100.0, 109.7)]).iloc[0]
+    assert D.two_sided_wick_conflict(conflicted) is True
+    assert D.two_sided_wick_conflict(clean) is False
 
 
 def test_a_refusal_always_names_itself():
     """A story that refuses without saying why teaches nobody anything."""
     for rows in ([(120, 121, 119, 120)] * 4,
-                 CLEAN_LONG[:2] + [(101.2, 110.0, 92.0, 101.0)] + CLEAN_LONG[-1:],
+                 CLEAN_LONG[:2] + [(105, 110.0, 100.0, 105.2)] + CLEAN_LONG[-1:],
                  CLEAN_LONG[:2] + [(101.0, 102.3, 100.2, 101.05)] + CLEAN_LONG[-1:]):
         s = _story(rows)
         assert s.complete is False

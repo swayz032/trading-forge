@@ -39,10 +39,7 @@ CLEAN_LONG = [(112, 113, 111, 112), (111, 112, 103, 104),
 NEVER_TOUCHED = [(120, 121, 119, 120), (119, 120, 118, 119),
                  (118, 119, 117, 118), (117, 118, 116, 117)]
 # The conflict is planted on the COMPLETED rejection bar, where the story is read.
-# ALGO-096B: the old bar closed at 105.2, ABOVE hi=102 - a REJECTION under ALGO-071 s3,
-# caught only by the retired 0.30/0.40 fractions. This one closes at 101.0, INSIDE
-# [100,102]: it decided nothing, which is the indecision the spec fixture names.
-CONFLICTED = CLEAN_LONG[:2] + [(101.2, 110.0, 92.0, 101.0)] + CLEAN_LONG[-1:]
+CONFLICTED = CLEAN_LONG[:2] + [(105, 110.0, 100.0, 105.2)] + CLEAN_LONG[-1:]
 
 
 def _decide(rows, *, location=True, force=True, direction="L"):
@@ -197,33 +194,15 @@ def test_each_route_GRANTS_on_its_own_evidence(route):
     assert "ENTER via" in a.explain()
 
 
-#: EMPTY since R2/R2b landed. PENDING ALGO-098 — re-pinned under ALGO-096B, not on this
-#: desk's reading.
-#:
-#: The pinned pair was (A_NORMAL_REJECTION, C_PREBREAK_DISPLACEMENT): the Route C fixture
-#: displaced up into the zone, closed back INSIDE it, then reclaimed, and Route A also granted
-#: on it. MEASURED at the bar, before and after, on the last COMPLETED bar of `ROUTE_C_BARS`
-#: (`O=99.00 H=101.80 L=98.90 C=101.60`, band `[100.0, 102.0]`):
-#:
-#:   close 101.60 is INSIDE the band — neither out on the near side nor beyond it
-#:   body_frac 0.8966, upper_frac 0.0690, lower_frac 0.0345
-#:   the retired fraction rule (upper>=.30 and lower>=.30 and body<=.40) did NOT fire
-#:   => the old code read a bar that DECIDED NOTHING as a completed rejection, and A granted
-#:   => under ALGO-071 §3 a close inside the band is indecision, so A now refuses with
-#:      MIXED_OVERLAP_AND_TWO_SIDED_WICKS
-#:
-#: That is ALGO-096B's pre-registered ACCEPTABLE mechanism ("the old fraction accepted as a
-#: rejection a bar his definition classes as indecision"). The two disqualifying mechanisms did
-#: NOT occur: no taught form was lost — `all_kinds` still carries
-#: `failed_breakout_back_inside_with_control` and `sweep_and_reclaim_with_control` — and the
-#: fixture is not a rejection under his definition, so no genuine rejection stopped granting A.
-#: The diagonal is unchanged: every route still grants on its own evidence.
-#:
-#: NOTE THE VACUITY, rather than banking it as a guard: with this set empty,
-#: `test_every_pinned_overlap_is_REAL_and_none_has_gone_stale` cannot fail. The teeth move to
-#: `test_the_route_by_evidence_matrix_is_the_diagonal_plus_named_overlaps`, which is now
-#: STRICTER than before — it demands a pure diagonal, so any off-diagonal grant fails it.
-KNOWN_OVERLAPS = frozenset()
+#: The ONE off-diagonal grant in the matrix below, and it is not a defect. The Route C fixture
+#: displaces up into the zone, closes back INSIDE it, then reclaims - which is a genuine
+#: `failed_breakout_back_inside_with_control` rejection as well as a displacement sequence.
+#: Real price action can satisfy two routes at once; which one the kernel would rank is a
+#: separate question from whether each read is correct. It is pinned so that a SECOND overlap
+#: appearing later fails this test instead of passing quietly.
+KNOWN_OVERLAPS = frozenset({
+    (EA.ROUTE_A_REJECTION, EA.ROUTE_C_PREBREAK_DISPLACEMENT),
+})
 
 
 def _grant_matrix():

@@ -157,47 +157,18 @@ class Interaction:
         return bool(self.kind is not None and self.approach.real and self.control)
 
 
-def _control(row, direction: str, lo: float, hi: float) -> bool:
-    """THE LEVEL HELD: the completed bar did not close BEYOND the band. R2, ALGO-071 §3.
-
-    The operator's answer, ruled: a rejection is *"price trades into the key zone and the
-    candle closes back without breaking it"*. So `body_frac >= 0.62` and `close_loc >= 0.78`
-    — v2.2 `Params` defaults born with tuning search ranges (`v2_2_engine.py:95/:97`), never
-    his definition — are RETIRED from the rejection path, and **no replacement magnitude is
-    invented**: *"'does not break the level' is decided by the close relative to the zone band
-    (the same geometry `_breaks` already uses, without an ATR clearance that he did not
-    teach)"*.
-
-    `zone_lifecycle._breaks` with `clear = 0`: a SUPPORT breaks on `close < lo`, a RESISTANCE
-    on `close > hi`. For a LONG the zone is support, for a SHORT resistance — the same mapping
-    `classify_interaction.beyond()` already uses. This is that predicate, negated.
-    """
-    close = float(row.close)
-    return bool(close >= float(lo)) if direction == "L" else bool(close <= float(hi))
+def _control(row, direction: str, body_frac: float, close_loc: float) -> bool:
+    """Directional control geometry. The spec's `touch_without_directional_control` line."""
+    g = _geom(row)
+    if direction == "L":
+        return bool(g.bullish and g.body_frac >= body_frac and g.close_loc >= close_loc)
+    return bool(g.bearish and g.body_frac >= body_frac and g.close_loc <= 1.0 - close_loc)
 
 
-def _rejection_wick(row, direction: str, lo: float, hi: float, pad: float = 0.0) -> bool:
-    """A REJECTION: traded INTO the band and closed back OUT on the near side. ALGO-071 §3.
-
-    His definition, verbatim: *"the candle having traded into the band and closed out of it on
-    the near side — OHLC against the band, no fraction"*. The frozen `reject_wick 0.35` is
-    retired here and nothing replaces it.
-
-    For a LONG the zone is SUPPORT and price approaches from ABOVE, so the NEAR side is above
-    `hi` and "beyond" (the level broken) is below `lo`. Mirrored for a SHORT.
-
-    This one predicate decides all three ALGO-071 §5.3 fixtures. A wick into the band with a
-    close back out qualifies whatever the wick measures. A close BEYOND the band fails, because
-    a close beyond is not "out on the near side" — the level broke. A candle that never entered
-    the band fails on `entered`. A close INSIDE the band is also refused: it decided nothing,
-    which is the indecision R2b keeps refusing by name.
-    """
-    entered = bool(float(row.low) <= float(hi) + pad
-                   and float(row.high) >= float(lo) - pad)
-    if not entered:
-        return False
-    close = float(row.close)
-    return bool(close > float(hi)) if direction == "L" else bool(close < float(lo))
+def _rejection_wick(row, direction: str, reject_wick: float) -> bool:
+    g = _geom(row)
+    return bool(g.lower_frac >= reject_wick if direction == "L"
+                else g.upper_frac >= reject_wick)
 
 
 def classify_interaction(bars: pd.DataFrame, direction: str, lo: float, hi: float,
@@ -216,7 +187,7 @@ def classify_interaction(bars: pd.DataFrame, direction: str, lo: float, hi: floa
     q = bars.tail(lookback)
     rows = [q.iloc[i] for i in range(len(q))]
     last = rows[-1]
-    control = _control(last, direction, lo, hi)
+    control = _control(last, direction, body_frac, close_loc)
 
     # For a long the zone is support: "beyond" means BELOW it. Mirror for a short.
     def beyond(row) -> bool:
@@ -237,7 +208,7 @@ def classify_interaction(bars: pd.DataFrame, direction: str, lo: float, hi: floa
     # reporting priority only - `all_kinds` carries the rest so nothing is silently shadowed.
     matched: list[str] = []
     # 1. this bar touched the level and was pushed away from it
-    if _touches(last, lo, hi, pad) and _rejection_wick(last, direction, lo, hi, pad):
+    if _touches(last, lo, hi, pad) and _rejection_wick(last, direction, reject_wick):
         matched.append(TOUCH_AND_REJECT)
     # 4. a COMPLETED close beyond, then a close back inside -> failed breakout
     if any(beyond(r) for r in rows[:-1]) and (back_inside(last) or origin_side(last)):
@@ -251,7 +222,7 @@ def classify_interaction(bars: pd.DataFrame, direction: str, lo: float, hi: floa
     # 6. an EARLIER bar rejected AT THE LEVEL, then momentum followed. The wick must belong to
     #    a bar that actually TOUCHED the zone - a wick ten points away is not a rejection OF
     #    THE LEVEL, and scanning every bar let a distant pin outrank the real touch.
-    if any(_touches(r, lo, hi, pad) and _rejection_wick(r, direction, lo, hi, pad)
+    if any(_touches(r, lo, hi, pad) and _rejection_wick(r, direction, reject_wick)
            for r in rows[:-1]) and control:
         matched.append(PRIOR_MOMENTUM_AFTER_REJECTION)
     # 5. the approach itself is the story: doji / pin / inside / shrinking
@@ -339,28 +310,15 @@ class DerivedStory:
         return bool(self.approach and self.fight and self.decision and self.refusal is None)
 
 
-def two_sided_wick_conflict(row, lo: float, hi: float) -> bool:
-    """INDECISION AT THE BAND, in the operator's terms: the bar closed INSIDE it. R2b.
+def two_sided_wick_conflict(row, min_each: float = 0.30, max_body: float = 0.40) -> bool:
+    """Both wicks substantial and the body small: the bar argues with itself.
 
-    `spec.control_features` lists `two_sided_wick_conflict` and `negative_semantic_fixtures`
-    refuses `mixed_overlap_and_two_sided_wicks` outright — the FIXTURE is taught. The
-    `min_each 0.30` / `max_body 0.40` fractions that used to express it were not: they are
-    constructions of the taught fixture, with no citation in the spec, the video evidence, the
-    addendum or the ALGO ladder. ALGO-096 §5 R2b retires them and no magnitude replaces them.
-
-    His definition of the same fixture: **a completed bar that closed INSIDE the band decided
-    nothing** — it neither held the level nor broke it, so it is indecision and is still
-    refused by name. And the other half, which the fractions got wrong: **a bar that traded
-    into the band and closed back OUT on the near side is a rejection whatever its opposite
-    wick measures**, so it is no longer caught here. That is the same predicate
-    `_rejection_wick` now applies, read from the other side.
-
-    Note the two are exclusive by construction: `_rejection_wick` requires a close strictly
-    outside the band on the near side, and this requires a close within it. No bar can be both
-    a rejection and indecision, which is what made the old fraction rule able to refuse a
-    rejection.
+    `spec.control_features` lists `two_sided_wick_conflict`, and
+    `negative_semantic_fixtures` refuses `mixed_overlap_and_two_sided_wicks` outright.
     """
-    return bool(float(lo) <= float(row.close) <= float(hi))
+    g = _geom(row)
+    return bool(g.upper_frac >= min_each and g.lower_frac >= min_each
+                and g.body_frac <= max_body)
 
 
 def _defended(rows: list, direction: str, lo: float, hi: float) -> bool:
@@ -420,7 +378,7 @@ def derive_story(bars: pd.DataFrame, direction: str, lo: float, hi: float,
 
     # The conflict test is part of the REJECTION story, so it reads the last COMPLETED bar -
     # not the trigger, whose wicks are still forming.
-    conflict = two_sided_wick_conflict(last, lo, hi)
+    conflict = two_sided_wick_conflict(last)
     if conflict:
         return DerivedStory(True, False, False, it.kind, True, TWO_SIDED_CONFLICT,
                             it.all_kinds)
