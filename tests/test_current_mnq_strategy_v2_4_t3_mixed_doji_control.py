@@ -236,3 +236,44 @@ def test_F1_the_geometry_token_fires_exactly_when_progress_is_absent():
     assert snap.partial_momentum_geometry is False
     assert snap.reason == "PARTIAL_MOMENTUM_GEOMETRY_NOT_PROVEN", (
         f"the token must name the absent-progress clause, got {snap.reason}")
+
+
+#: NOT mixed (body 3.5 >= lower wick 0.5), closes OUT of the band at 103 > hi, but BELOW its
+#: own midpoint 104.5. So R2 calls it a rejection, R2b passes it, MIXED does not fire, and the
+#: ONLY thing that can refuse it is the DIRECTIONAL half of T3.
+NO_CONTROL_OUT = (99.5, 110.0, 99.0, 103.0)
+
+
+def test_T3_refuses_a_bar_that_closed_out_but_took_NO_DIRECTIONAL_CONTROL():
+    """The DIRECTIONAL half, isolated at the STORY level — against the production clause.
+
+    A mutation battery found D4 (`directional = True`) and D5 (the tie flipped to `>=`) going
+    0 RED: the tie test was asserting this file's own `_t3_refuses` reimplementation, so
+    mutating the production predicate could not move it. A test that checks a copy of the code
+    pins the copy. These assertions call `D._t3_control` and `D.derive_story` directly.
+    """
+    o, h, l, c = NO_CONTROL_OUT
+    assert c > HI, "must close OUT of the band, else R2b decides it"
+    assert not (abs(c - o) < (h - max(o, c)) and abs(c - o) < (min(o, c) - l)), \
+        "must NOT be MIXED, else MIXED decides it and DIRECTIONAL is never exercised"
+    assert c <= (h + l) / 2.0, "must close below its own midpoint"
+
+    row = bars([NO_CONTROL_OUT]).iloc[0]
+    assert D._t3_control(row, "L") is False, "production clause must refuse: no control taken"
+
+    s = _story(NO_CONTROL_OUT)
+    assert s.complete is False, f"a bar that took no directional control must refuse: {s}"
+
+
+def test_T3_tie_convention_holds_in_the_PRODUCTION_clause():
+    """The tie, asserted against `D._t3_control` rather than this file's local helper."""
+    exactly_mid_long = (100.5, 104.0, 100.0, 102.0)
+    exactly_mid_short = (103.5, 104.0, 100.0, 102.0)
+    just_above = (100.5, 104.0, 100.0, 102.25)
+    just_below = (103.5, 104.0, 100.0, 101.75)
+
+    assert D._t3_control(bars([exactly_mid_long]).iloc[0], "L") is False, \
+        "a close exactly ON the midpoint decided nothing — it must REFUSE"
+    assert D._t3_control(bars([exactly_mid_short]).iloc[0], "S") is False
+    assert D._t3_control(bars([just_above]).iloc[0], "L") is True
+    assert D._t3_control(bars([just_below]).iloc[0], "S") is True
