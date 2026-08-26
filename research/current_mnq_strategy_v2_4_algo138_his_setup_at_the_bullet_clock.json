@@ -1,0 +1,1296 @@
+{
+  "artifact": "ALGO138_HIS_SETUP_AT_THE_BULLET_CLOCK",
+  "authority": "ALGO-137",
+  "branch_counts": {
+    "A_REFUSED": 5
+  },
+  "elapsed_s": 85.75,
+  "evidence_grade": "ARTIFACT-SOURCED from the X-ray, NOT measured at the kernel (ALGO-096 evaluation-order difference bounds it)",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result is read.",
+  "pre_registered_branches": {
+    "A_NOT_AVAILABLE": "arrival order is the whole answer; no clause repairs it",
+    "A_REFUSED": "the refusal is the finding and it has a name",
+    "RESIDUAL": "required; fits neither"
+  },
+  "rows": [
+    {
+      "BRANCH": "A_REFUSED",
+      "bullet_clock": "2026-03-23T08:14:00-04:00",
+      "bullet_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "bullet_setup": "BRK5",
+      "first_route_A_survivor_clock": "2026-03-23T08:53:00-04:00",
+      "his_setup_EVER_survived_this_session": true,
+      "records_at_that_clock_any_route": 34,
+      "route_A_attempts_at_the_bullet_clock": 28,
+      "route_A_by_key": [
+        {
+          "authority_refusal": null,
+          "authority_state": null,
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "location_id": null,
+          "location_source": null,
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-16T01:00:00-04:00:99052",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-02-25T03:15:00-05:00:100070",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-17T22:30:00-04:00:100322",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-18T01:15:00-04:00:100522",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-04T14:00:00-05:00:100562",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-13T09:30:00-04:00:98941",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-02-17T23:00:00-05:00:98945",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-03T20:00:00-05:00:99217",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-12T06:00:00-04:00:99253",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-18T14:45:00-04:00:99667",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-02-27T02:00:00-05:00:99967",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-02-24T16:30:00-05:00:100287",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-02-11T21:00:00-05:00:100970",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T15:00:00-04:00:99292",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T08:45:00-04:00:100118",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T08:30:00-04:00:100324",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-26T10:00:00-05:00:101211",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-26T09:45:00-05:00:101418",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T11:45:00-05:00:102138",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T10:15:00-05:00:102738",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T10:00:00-05:00:103476",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T09:45:00-05:00:103812",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T09:30:00-05:00:103838",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        }
+      ],
+      "route_A_killed_at_counts": {
+        "FORCE_NOT_CONFIRMED": 1,
+        "REJECTION_STORY_INCOMPLETE": 27
+      },
+      "routes_present_at_that_clock": {
+        "A_NORMAL_REJECTION": 28,
+        "B_C_D_BREAKOUT_FAMILY": 5,
+        "D_PREBREAK_RETEST_BREAKOUT": 1
+      },
+      "session": "2026-03-23",
+      "that_survivor_is_AFTER_the_bullet": true,
+      "why": "his setup was attempted at that clock and something killed it"
+    },
+    {
+      "BRANCH": "A_REFUSED",
+      "bullet_clock": "2026-03-24T08:17:00-04:00",
+      "bullet_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "bullet_setup": "BRK5",
+      "first_route_A_survivor_clock": "2026-03-24T08:27:00-04:00",
+      "his_setup_EVER_survived_this_session": true,
+      "records_at_that_clock_any_route": 38,
+      "route_A_attempts_at_the_bullet_clock": 32,
+      "route_A_by_key": [
+        {
+          "authority_refusal": null,
+          "authority_state": null,
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "location_id": null,
+          "location_source": null,
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-20T08:30:00-04:00:97642",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-23T10:15:00-04:00:97730",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-13T06:15:00-04:00:98068",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-23T15:15:00-04:00:98109",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-23T11:45:00-04:00:98760",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-16T01:00:00-04:00:99052",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-17T22:30:00-04:00:100322",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-18T01:15:00-04:00:100522",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-02-17T01:15:00-05:00:98232",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-16T04:15:00-04:00:98863",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-02-17T23:00:00-05:00:98945",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-03T20:00:00-05:00:99217",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-12T06:00:00-04:00:99253",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-18T14:45:00-04:00:99667",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-23T12:00:00-04:00:98272",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T15:00:00-04:00:99292",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T08:45:00-04:00:100118",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T08:30:00-04:00:100324",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-26T10:00:00-05:00:101211",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-26T09:45:00-05:00:101418",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T11:45:00-05:00:102138",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T10:15:00-05:00:102738",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T10:00:00-05:00:103476",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T09:45:00-05:00:103812",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T09:30:00-05:00:103838",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        }
+      ],
+      "route_A_killed_at_counts": {
+        "FORCE_NOT_CONFIRMED": 1,
+        "REJECTION_STORY_INCOMPLETE": 31
+      },
+      "routes_present_at_that_clock": {
+        "A_NORMAL_REJECTION": 32,
+        "B_C_D_BREAKOUT_FAMILY": 4,
+        "D_PREBREAK_RETEST_BREAKOUT": 2
+      },
+      "session": "2026-03-24",
+      "that_survivor_is_AFTER_the_bullet": true,
+      "why": "his setup was attempted at that clock and something killed it"
+    },
+    {
+      "BRANCH": "A_REFUSED",
+      "bullet_clock": "2026-03-31T09:03:00-04:00",
+      "bullet_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "bullet_setup": "BRK5",
+      "first_route_A_survivor_clock": "2026-03-31T08:02:00-04:00",
+      "his_setup_EVER_survived_this_session": true,
+      "records_at_that_clock_any_route": 62,
+      "route_A_attempts_at_the_bullet_clock": 6,
+      "route_A_by_key": [
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-31T04:00:00-04:00:92936",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-03-30T21:00:00-04:00:92358",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-02-25T17:00:00-05:00:101710",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": null,
+          "authority_state": null,
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "location_id": null,
+          "location_source": null,
+          "outcome": "REJECTED"
+        }
+      ],
+      "route_A_killed_at_counts": {
+        "FORCE_NOT_CONFIRMED": 1,
+        "REJECTION_STORY_INCOMPLETE": 5
+      },
+      "routes_present_at_that_clock": {
+        "A_NORMAL_REJECTION": 6,
+        "B_C_D_BREAKOUT_FAMILY": 55,
+        "D_PREBREAK_RETEST_BREAKOUT": 1
+      },
+      "session": "2026-03-31",
+      "that_survivor_is_AFTER_the_bullet": false,
+      "why": "his setup was attempted at that clock and something killed it"
+    },
+    {
+      "BRANCH": "A_REFUSED",
+      "bullet_clock": "2026-04-06T09:07:00-04:00",
+      "bullet_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "bullet_setup": "BRK5",
+      "first_route_A_survivor_clock": "2026-04-06T08:29:00-04:00",
+      "his_setup_EVER_survived_this_session": true,
+      "records_at_that_clock_any_route": 63,
+      "route_A_attempts_at_the_bullet_clock": 37,
+      "route_A_by_key": [
+        {
+          "authority_refusal": null,
+          "authority_state": null,
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "location_id": null,
+          "location_source": null,
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-04-06T06:45:00-04:00:97378",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97649",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-25T11:30:00-04:00:98139",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-23T11:45:00-04:00:98757",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-17T02:45:00-04:00:98916",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-17T05:15:00-04:00:98959",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-16T03:45:00-04:00:99220",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-17T04:15:00-04:00:99265",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-16T19:30:00-04:00:99336",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-16T09:30:00-04:00:99605",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-16T12:15:00-04:00:99841",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-18T10:30:00-04:00:99997",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-17T20:00:00-04:00:100149",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-18T01:15:00-04:00:100522",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-16T04:15:00-04:00:98863",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-17T02:00:00-04:00:99412",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-12T08:15:00-04:00:99716",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-02-27T05:45:00-05:00:99864",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-02-27T05:00:00-05:00:100395",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-04-06T06:15:00-04:00:97458",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T15:00:00-04:00:99292",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T08:45:00-04:00:100118",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-03-18T08:30:00-04:00:100324",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-26T10:00:00-05:00:101211",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-26T09:45:00-05:00:101418",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T11:45:00-05:00:102138",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T10:15:00-05:00:102738",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T10:00:00-05:00:103476",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T09:45:00-05:00:103812",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bearish:2026-02-03T09:30:00-05:00:103838",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        }
+      ],
+      "route_A_killed_at_counts": {
+        "FORCE_NOT_CONFIRMED": 1,
+        "REJECTION_STORY_INCOMPLETE": 36
+      },
+      "routes_present_at_that_clock": {
+        "A_NORMAL_REJECTION": 37,
+        "B_C_D_BREAKOUT_FAMILY": 26
+      },
+      "session": "2026-04-06",
+      "that_survivor_is_AFTER_the_bullet": false,
+      "why": "his setup was attempted at that clock and something killed it"
+    },
+    {
+      "BRANCH": "A_REFUSED",
+      "bullet_clock": "2026-04-09T09:37:00-04:00",
+      "bullet_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "bullet_setup": "BRK5",
+      "first_route_A_survivor_clock": "2026-04-09T09:44:00-04:00",
+      "his_setup_EVER_survived_this_session": true,
+      "records_at_that_clock_any_route": 57,
+      "route_A_attempts_at_the_bullet_clock": 42,
+      "route_A_by_key": [
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-31T04:00:00-04:00:92936",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-31T09:45:00-04:00:93429",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-31T09:15:00-04:00:93745",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-30T08:45:00-04:00:93755",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-04-07T11:45:00-04:00:95766",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-31T19:00:00-04:00:95893",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-26T16:45:00-04:00:96098",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-04-01T09:45:00-04:00:96133",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-04-03T04:45:00-04:00:96736",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-04-07T14:00:00-04:00:96736",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-04-01T12:15:00-04:00:96923",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-04-07T19:15:00-04:00:97378",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97649",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-25T11:30:00-04:00:98139",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "S:2026-03-16T19:30:00-04:00:99336",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-18T14:45:00-04:00:99707",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "R:2026-03-16T12:15:00-04:00:99846",
+          "location_source": "WICK_ZONE",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-04-02T10:15:00-04:00:94712",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-26T10:15:00-04:00:96264",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-20T02:45:00-04:00:98418",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:R:2026-03-13T10:30:00-04:00:99220",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-05T04:15:00-05:00:99892",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+          "authority_state": "WAIT_STORY_INCOMPLETE",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "SWING:S:2026-03-11T03:00:00-04:00:100033",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-03-30T21:00:00-04:00:92358",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-03-31T12:30:00-04:00:94054",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-04-02T10:15:00-04:00:95355",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-04-02T10:30:00-04:00:95674",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-04-07T11:45:00-04:00:96124",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-04-07T15:45:00-04:00:96656",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-04-07T16:15:00-04:00:97210",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-04-07T19:00:00-04:00:98790",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-04-07T19:15:00-04:00:99511",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "killed_at": "REJECTION_STORY_INCOMPLETE",
+          "location_id": "FVG15:bullish:2026-02-25T17:00:00-05:00:101710",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "outcome": "REJECTED"
+        },
+        {
+          "authority_refusal": null,
+          "authority_state": null,
+          "killed_at": "FORCE_NOT_CONFIRMED",
+          "location_id": null,
+          "location_source": null,
+          "outcome": "REJECTED"
+        }
+      ],
+      "route_A_killed_at_counts": {
+        "FORCE_NOT_CONFIRMED": 1,
+        "REJECTION_STORY_INCOMPLETE": 41
+      },
+      "routes_present_at_that_clock": {
+        "A_NORMAL_REJECTION": 42,
+        "B_C_D_BREAKOUT_FAMILY": 15
+      },
+      "session": "2026-04-09",
+      "that_survivor_is_AFTER_the_bullet": true,
+      "why": "his setup was attempted at that clock and something killed it"
+    }
+  ],
+  "status": "DIAGNOSTIC ONLY. Reports by key. Derives nothing, proposes nothing."
+}

@@ -1,0 +1,147 @@
+{
+  "artifact": "ALGO138_LIVE_FIRST_SURVIVOR",
+  "evidence_grade": "ARTIFACT-SOURCED from the X-ray",
+  "per_session": {
+    "2026-03-23": {
+      "direction": "S",
+      "first_survivor_clock": "2026-03-23T08:14:00-04:00",
+      "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+      "location_source": "WICK_ZONE",
+      "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "route": "D_PREBREAK_RETEST_BREAKOUT",
+      "setup": "BRK5",
+      "total_survivors": 28
+    },
+    "2026-03-24": {
+      "direction": "S",
+      "first_survivor_clock": "2026-03-24T08:17:00-04:00",
+      "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "location_source": "WICK_ZONE",
+      "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "route": "D_PREBREAK_RETEST_BREAKOUT",
+      "setup": "BRK5",
+      "total_survivors": 21
+    },
+    "2026-03-25": {
+      "direction": "L",
+      "first_survivor_clock": "2026-03-25T08:12:00-04:00",
+      "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+      "location_source": "WICK_ZONE",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 25
+    },
+    "2026-03-26": {
+      "direction": "L",
+      "first_survivor_clock": "2026-03-26T08:07:00-04:00",
+      "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 18
+    },
+    "2026-03-30": {
+      "direction": "L",
+      "first_survivor_clock": "2026-03-30T08:07:00-04:00",
+      "location_id": "S:2026-03-30T08:45:00-04:00:93755",
+      "location_source": "WICK_ZONE",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 10
+    },
+    "2026-03-31": {
+      "direction": "L",
+      "first_survivor_clock": "2026-03-31T08:02:00-04:00",
+      "location_id": "FVG15:bullish:2026-03-31T07:30:00-04:00:93234",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 26
+    },
+    "2026-04-01": {
+      "direction": "S",
+      "first_survivor_clock": "2026-04-01T08:04:00-04:00",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 28
+    },
+    "2026-04-02": {
+      "direction": "L",
+      "first_survivor_clock": "2026-04-02T08:19:00-04:00",
+      "location_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 18
+    },
+    "2026-04-06": {
+      "direction": "L",
+      "first_survivor_clock": "2026-04-06T08:17:00-04:00",
+      "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 20
+    },
+    "2026-04-07": {
+      "direction": "S",
+      "first_survivor_clock": "2026-04-07T08:17:00-04:00",
+      "location_id": "S:2026-04-01T12:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 30
+    },
+    "2026-04-08": {
+      "direction": "S",
+      "first_survivor_clock": "2026-04-08T08:22:00-04:00",
+      "location_id": "SWING:R:2026-04-08T08:45:00-04:00:101029",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 17
+    },
+    "2026-04-09": {
+      "direction": "L",
+      "first_survivor_clock": "2026-04-09T09:37:00-04:00",
+      "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "route": "D_PREBREAK_RETEST_BREAKOUT",
+      "setup": "BRK5",
+      "total_survivors": 16
+    },
+    "2026-04-13": {
+      "direction": "L",
+      "first_survivor_clock": "2026-04-13T08:12:00-04:00",
+      "location_id": "SWING:S:2026-04-13T08:45:00-04:00:100293",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "reason": null,
+      "route": "A_NORMAL_REJECTION",
+      "setup": "REV",
+      "total_survivors": 17
+    },
+    "2026-04-14": {
+      "direction": "L",
+      "first_survivor_clock": "2026-04-14T09:38:00-04:00",
+      "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "route": "B_NORMAL_BREAKOUT",
+      "setup": "BRK5",
+      "total_survivors": 5
+    }
+  },
+  "status": "DIAGNOSTIC. Live at the current pin, no pinned baseline read."
+}
