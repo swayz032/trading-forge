@@ -92,11 +92,32 @@ def test_lost_against_anchor_is_MEMBERSHIP_not_count():
     assert A.lost_against_anchor(A.agreeing_sessions()) == []
 
 
-def test_the_wired_arms_lose_the_same_four_against_the_anchor():
-    """The exam's F2 result, re-derived through the ANCHOR rather than through an argument."""
+def test_each_wired_arm_loses_EXACTLY_its_own_sessions_against_the_anchor():
+    """The exam's F2 result, re-derived through the ANCHOR rather than through an argument.
+
+    PINNED PER ARM, and it did not always need to be. Until T3'' landed (`da7f9d3d`) both arms
+    lost the SAME four and this test asserted one shared list. Re-exam #3 (`99901945`)
+    regenerated the arm artifacts against the landed head and the 09:30 arm CAME BACK to
+    `2026-03-24` and `2026-03-30`, so it now loses two, not four.
+
+    The stale shared pin then failed on the head - correctly. **The ANCHOR did not move**
+    (`test_the_anchor_really_is_the_frozen_5_of_8` still pins the same five sessions and the
+    same sha256); what moved is one ARM, in the direction F2 measures, and that is a result
+    already published as re-exam #3 rather than something discovered here.
+
+    Each arm is pinned SEPARATELY and EXACTLY so any drift in either one goes red - a single
+    shared list could be satisfied by the two arms swapping which sessions they lose.
+    """
     import io as _io
     import pathlib
 
+    #: MEMBERSHIP per arm, not a shared list and never a count.
+    LOST = {
+        # T3'' restored 03-24 and 03-30 to this arm; it loses the other two.
+        "baseline_0930": ["2026-03-31", "2026-04-06"],
+        # unchanged by T3'' - nothing left this arm, and nothing returned to it.
+        "taught_0800": ["2026-03-24", "2026-03-30", "2026-03-31", "2026-04-06"],
+    }
     for arm in ("baseline_0930", "taught_0800"):
         p = pathlib.Path(
             f"research/current_mnq_strategy_v2_4_exam_arm_{arm}_2026_08_23.json")
@@ -105,5 +126,9 @@ def test_the_wired_arms_lose_the_same_four_against_the_anchor():
         doc = json.load(_io.open(p, encoding="utf-8"))
         agreeing = {c["session"] for c in doc["cases"]
                     if c["mismatch_class"] in A.AGREEMENT_CLASSES}
-        assert A.lost_against_anchor(agreeing) == [
-            "2026-03-24", "2026-03-30", "2026-03-31", "2026-04-06"], arm
+        # 04-14 - the F2 control - is the one session BOTH arms hold, so it appears in
+        # NEITHER list below. It needs no separate assert: these are EXACT equalities, so a
+        # lost control changes the list and this line is already red. (I wrote that separate
+        # assert, measured it RED, then found the equality had fired first - it could never
+        # be the failing line. A guard that cannot fire alone is decoration; deleted.)
+        assert A.lost_against_anchor(agreeing) == LOST[arm], arm
