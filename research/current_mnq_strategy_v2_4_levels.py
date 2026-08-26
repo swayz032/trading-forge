@@ -73,17 +73,58 @@ def _empirical_rank(values: np.ndarray, x: float) -> float:
     return float(np.mean(values <= float(x)))
 
 
-def _pivot_close_away(h15: pd.DataFrame, row) -> float:
+def _pivot_source_bar(h15: pd.DataFrame, row):
+    """THE join: a pivot back to the candle that made it. One lookup, in one place.
+
+    It used to end `except Exception: return 0.5`, which fabricated a quality term whenever
+    the candle could not be found. The band is now drawn FROM this bar, so a silent fallback
+    would draw a plausible zone unrelated to its candle and nothing would go red. It raises
+    instead (ALGO-119 §3).
+    """
     try:
         bar = h15.loc[row.t]
-        if isinstance(bar, pd.DataFrame):
-            bar = bar.iloc[0]
-        rg = max(float(bar.high - bar.low), core.TICK)
-        if row.side == "S":
-            return float(np.clip((float(bar.close) - float(bar.low)) / rg, 0.0, 1.0))
-        return float(np.clip((float(bar.high) - float(bar.close)) / rg, 0.0, 1.0))
-    except Exception:
-        return 0.5
+    except Exception as exc:
+        raise RuntimeError(
+            f"V24_PIVOT_SOURCE_BAR_JOIN_FAILED:{row.side}:{row.t}") from exc
+    if isinstance(bar, pd.DataFrame):
+        if bar.empty:
+            raise RuntimeError(f"V24_PIVOT_SOURCE_BAR_JOIN_FAILED:{row.side}:{row.t}")
+        bar = bar.iloc[0]
+    return bar
+
+
+def _rejection_band(bar, side: str) -> tuple[float, float]:
+    """His zone, in his words (ALGO-073 §1, ruled §2):
+
+        "i take a key zone with a wick and i draw the zone from the top of the wick to
+         where the xandle closed"
+
+    RESISTANCE: the top of the upper wick DOWN TO that candle's close.
+    SUPPORT:    the mirror, the bottom of the lower wick UP TO that candle's close.
+
+    The width is whatever that candle's wick-to-close IS. No pad, no ATR term, no tick floor
+    and no rounding is added here, and none is needed: every pivot that reaches this point has
+    already passed `wick >= p.min_wick` in this module's history filter, and `wick` is measured
+    from the BODY EDGE, so `close - low >= min_wick * range > 0` on the support side and
+    `high - close >= min_wick * range > 0` on the resistance side. A degenerate band is
+    therefore unreachable — and it still raises rather than passing, so a later change to that
+    filter fails loudly instead of drawing a zero-width zone.
+    """
+    if side == "S":
+        lo, hi = float(bar.low), float(bar.close)
+    else:
+        lo, hi = float(bar.close), float(bar.high)
+    if not (np.isfinite(lo) and np.isfinite(hi)) or hi <= lo:
+        raise RuntimeError(f"V24_REJECTION_BAND_DEGENERATE:{side}:{lo}:{hi}")
+    return lo, hi
+
+
+def _pivot_close_away(bar, side: str) -> float:
+    """Where the candle closed, as a fraction of its own range, away from the extreme."""
+    rg = max(float(bar.high) - float(bar.low), core.TICK)
+    if side == "S":
+        return float(np.clip((float(bar.close) - float(bar.low)) / rg, 0.0, 1.0))
+    return float(np.clip((float(bar.high) - float(bar.close)) / rg, 0.0, 1.0))
 
 
 def _quality(row, threshold: float, prior_same_side_disp: np.ndarray,
@@ -145,24 +186,37 @@ def exceptional_single_swing_zones(piv15: pd.DataFrame, h15: pd.DataFrame,
             prior_disp = pd.to_numeric(prior.disp, errors="coerce").dropna().to_numpy(float)
             if not np.isfinite(float(row.disp)) or float(row.disp) < threshold:
                 continue
-            atr = max(float(row.atr), core.TICK)
-            half = max(core.TICK * 4.0, float(p.key_level_pad_atr) * atr)
-            center = float(row.price)
-            lo, hi = center - half, center + half
+            # THE RULED BAND (ALGO-073 §2, built ALGO-119). The band comes from the source
+            # rejection candle and from nothing else. The symmetric
+            # `max(TICK * 4.0, key_level_pad_atr * atr)` construction that stood here drew a
+            # ~2.4-point band centred ON the extreme; his is one-sided FROM it and is whatever
+            # the candle's wick-to-close is. The join was already here — it is used, not
+            # duplicated.
+            bar = _pivot_source_bar(h15, row)
+            lo, hi = _rejection_band(bar, side)
+            level = float(row.price)
             if any(core.overlap(lo, hi, float(x.lo), float(x.hi), 0.0) for x in established):
                 continue
 
-            close_away = _pivot_close_away(h15, row)
+            close_away = _pivot_close_away(bar, side)
             quality, wick_q, recency = _quality(row, threshold, prior_disp, asof, p, close_away)
             # Direct trader scope: only active FVG overlap may add confluence to
             # an S/R zone. No daily/weekly reference level vote exists in v2.4.
             confluence = int(any(core.overlap(lo, hi, float(f.lo), float(f.hi), 0.0)
                                  for f in native_fvgs))
             created = row.confirm
-            zid = f"SWING:{side}:{created.isoformat()}:{round(center/core.TICK)}"
+            # The identity stays anchored on the pivot's own LEVEL price: it is the same zone
+            # — same pivot, same level, same side, same confirmation — and only its band SHAPE
+            # changed. That is what keeps a before/after comparison joinable BY KEY.
+            zid = f"SWING:{side}:{created.isoformat()}:{round(level/core.TICK)}"
+            # `mid` is consumed as a band-INTERIOR reclaim/away threshold
+            # (`zone_lifecycle.py:91`), and every other zone family already sets it to the
+            # middle of its own band. On the ruled band the level price is an EDGE, so leaving
+            # `mid` there would silently redefine what "reclaimed" means.
+            mid = (lo + hi) / 2.0
             state = core.ZoneState.ACTIVE_SUPPORT if side == "S" else core.ZoneState.ACTIVE_RESISTANCE
             zone = core.Zone(
-                id=zid, side=side, lo=float(lo), hi=float(hi), mid=center,
+                id=zid, side=side, lo=float(lo), hi=float(hi), mid=float(mid),
                 touches=1, wick_quality=wick_q, close_away=close_away,
                 displacement=float(row.disp), compactness=1.0,
                 independence=0.0, recency=recency, quality=quality,

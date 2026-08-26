@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A-PRIORI FIXTURE TABLE for the ruled zone-band shape - ALGO-119 section 4.
+"""A-PRIORI FIXTURE TABLE for the ruled zone-band shape - ALGO-119 section 3.3 (the fixture table is ordered there).
 
 COMMITTED BEFORE THE GUARD RAN, AND BEFORE ANY MEASUREMENT.  Every expected value below
 was written from HIS SENTENCE and from nothing else.  It was not chosen from what it does
@@ -24,7 +24,7 @@ That is the wrong SHAPE (symmetric about the extreme, where his is one-sided fro
 at key_level_pad_atr = 0.06 on a 20-point ATR, a 2.4-point full width against a band his
 own demonstration measured in the 4-32 point range.
 
-SCOPE: the EXCEPTIONAL SINGLE-SWING path only (ALGO-111 section 4).  The established
+SCOPE: the EXCEPTIONAL SINGLE-SWING path only (ALGO-111 section 4, carried by ALGO-119 section 3.1).  The established
 multi-rejection path keeps its construction until its four undeclared magnitudes have had
 their own provenance pass.
 
@@ -98,7 +98,7 @@ TABLE: tuple[Fixture, ...] = (
                   "max(open,close), so high - close >= high - max(open,close) >= 0.20 x range "
                   "> 0.  A zero-width or inverted band is therefore UNREACHABLE for any "
                   "admitted pivot, SO NO MINIMUM-WIDTH FLOOR IS REQUIRED - and adding one would "
-                  "be exactly the new magnitude ALGO-119 section 7 says to stop for.  The "
+                  "be exactly the new magnitude ALGO-119 section 3.6 says to stop for.  The "
                   "degenerate branch still RAISES rather than passing, so a later change to the "
                   "filter fails loudly instead of drawing a zero-width zone."),
     ),
