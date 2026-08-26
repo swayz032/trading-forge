@@ -184,6 +184,13 @@ def force_snapshot(one: pd.DataFrame, parent_start: pd.Timestamp,
         reason = "INSUFFICIENT_1M_OBSERVATIONS"
     elif not before_parent_close:
         reason = "PARENT_CANDLE_ALREADY_CLOSED"
+    # F-1 (ALGO-100A): after F1 removed `geometry` from the conjunction, this token risked
+    # labelling a clause that no longer gates anything. It is kept, and it is HONEST,
+    # because geometry is `c > o` which is exactly `progress > 0` - the FIRST CONJUNCT of
+    # `efficient`, which DOES gate. So the branch fires precisely when directional
+    # progress is absent, and it names the real sub-clause that refused rather than
+    # attributing the refusal to the path-efficiency ratio, which is a different failure.
+    # Pinned by test_F1_the_geometry_token_fires_exactly_when_progress_is_absent.
     elif not geometry:
         reason = "PARTIAL_MOMENTUM_GEOMETRY_NOT_PROVEN"
     elif not efficient:

@@ -176,6 +176,54 @@ def _control(row, direction: str, lo: float, hi: float) -> bool:
     return bool(close >= float(lo)) if direction == "L" else bool(close <= float(hi))
 
 
+def _t3_control(row, direction: str) -> bool:
+    """DID ANYBODY TAKE CONTROL OF THIS BAR? T3, the taught refusal R2 left unimplemented.
+
+    The teaching, verbatim (`video_evidence.md:113`, Explicit refusals):
+
+        "touch with mixed/doji control -> WAIT_OR_NO_TRADE"
+
+    restated at `video_evidence.md:82` / `engineer_onboarding.md:61`: *"Directional
+    control/defense/hold must confirm; a doji reclaim alone is not an A+ trade."*
+
+    ALGO-071 §3 correctly retired `body_frac 0.62` and `close_loc 0.78` as untaught
+    constructions — but they were the ONLY implementation of this TAUGHT clause, and retiring
+    them without re-expressing it is what the guard measured as 40 -> 143 (ALGO-099).
+
+    The operative noun in both citations is CONTROL, and the teaching names exactly two ways it
+    fails. So this is a disjunction of the two named failure modes, each independently
+    sufficient to refuse — never a weighted total, because neither may compensate for the other:
+
+        MIXED                  body < upper_wick AND body < lower_wick   (neither side won)
+        NO_DIRECTIONAL_CONTROL the close fails to finish beyond the bar's own midpoint
+                               in the traded direction
+
+    OHLC AGAINST OHLC. No constant, no fraction, no threshold — ALGO-071 §3's standard
+    ("OHLC against the band, no fraction") applied to the candle instead of the band.
+
+    The midpoint is not a smuggled magnitude: it is the bar's own geometric centre, with no
+    free parameter and no search range. `close_loc 0.78` was a POSITION ON that range and could
+    have been 0.72 or 0.84 — which is why the spec shipped it with a search range.
+
+    `C2 = body < max(wick)` was REJECTED on teaching grounds, not on guard numbers: a rejection
+    wick is by definition large relative to the body, so C2 fires on exactly the hammer/pin
+    shape `_rejection_wick` and the reclaim teaching exist to ACCEPT.
+
+    Returns True when control WAS taken, so the caller reads as `held AND control`.
+    """
+    o = float(row.open)
+    h = float(row.high)
+    lo_px = float(row.low)
+    c = float(row.close)
+    body = abs(c - o)
+    upper_wick = h - max(o, c)
+    lower_wick = min(o, c) - lo_px
+    mixed = bool(body < upper_wick and body < lower_wick)
+    midpoint = (h + lo_px) / 2.0
+    directional = bool(c > midpoint) if direction == "L" else bool(c < midpoint)
+    return bool((not mixed) and directional)
+
+
 def _rejection_wick(row, direction: str, lo: float, hi: float, pad: float = 0.0) -> bool:
     """A REJECTION: traded INTO the band and closed back OUT on the near side. ALGO-071 §3.
 
@@ -216,7 +264,11 @@ def classify_interaction(bars: pd.DataFrame, direction: str, lo: float, hi: floa
     q = bars.tail(lookback)
     rows = [q.iloc[i] for i in range(len(q))]
     last = rows[-1]
-    control = _control(last, direction, lo, hi)
+    # R2 asks whether THE LEVEL HELD; T3 asks whether ANYBODY TOOK CONTROL of the bar.
+    # Both are taught and they are different questions - ALGO-071 §3 supplied the first,
+    # `video_evidence.md:113` the second. A bar can hold the level and still decide
+    # nothing, which is precisely the population R2 admitted and the guard counted.
+    control = _control(last, direction, lo, hi) and _t3_control(last, direction)
 
     # For a long the zone is support: "beyond" means BELOW it. Mirror for a short.
     def beyond(row) -> bool:

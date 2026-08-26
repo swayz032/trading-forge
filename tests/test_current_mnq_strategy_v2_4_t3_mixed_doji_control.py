@@ -142,15 +142,97 @@ def test_T3_does_NOT_refuse_the_ALGO_071_clean_rejection():
 
 def test_T3_introduces_no_magnitude():
     """The clause must be OHLC against OHLC. A constant here is the whole failure again."""
+    import ast
     import inspect
-    src = inspect.getsource(D)
-    if "def _t3_control" not in src:
-        return  # not landed yet; the red-proofs above carry the burden
-    body = src.split("def _t3_control", 1)[1].split("\ndef ", 1)[0]
-    code = "\n".join(ln for ln in body.splitlines() if not ln.strip().startswith("#"))
-    for token in ("body_frac", "close_loc", "reject_wick", "min_each", "max_body"):
-        assert token not in code, f"T3 must introduce no magnitude; found {token!r}"
-    import re
-    # `2.0` in the midpoint is a DIVISOR, not a threshold; every other literal is forbidden.
-    lits = [m for m in re.findall(r"\b\d+\.\d+\b", code) if m != "2.0"]
-    assert not lits, f"T3 must contain no numeric threshold; found {lits}"
+
+    # F-2 (ALGO-100A): scan the AST, not text. A LINE scan reads only one physical line and
+    # misses a fraction planted in the other branch; a TEXT scan reads comments and
+    # docstrings, which is how this very test first failed - it found `body_frac` inside a
+    # docstring CITING the retired magnitude and called it a new one. The distinction that
+    # matters is executable code vs prose, and only a parser can draw it.
+    tree = ast.parse(inspect.getsource(D))
+    fn = next((n for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name == "_t3_control"), None)
+    if fn is None:
+        return  # not landed yet; the behavioural red-proofs above carry the burden
+
+    body = list(fn.body)
+    if (body and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)):
+        body = body[1:]          # drop the docstring: prose is not code
+
+    names, numbers = set(), []
+    for stmt in body:
+        for node in ast.walk(stmt):
+            if isinstance(node, ast.Name):
+                names.add(node.id)
+            elif isinstance(node, ast.Attribute):
+                names.add(node.attr)
+            elif isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+                if not isinstance(node.value, bool):
+                    numbers.append(node.value)
+
+    for token in ("body_frac", "close_loc", "reject_wick", "min_each", "max_body",
+                  "range_ratio", "min_wick"):
+        assert token not in names, f"T3 must introduce no magnitude; found {token!r} in code"
+
+    # The ONLY numeric literal T3 may contain is the midpoint divisor. It is not a threshold:
+    # it has no free parameter and no search range - `(high+low)/2` is the bar's own centre.
+    assert set(numbers) <= {2, 2.0}, f"T3 must contain no numeric threshold; found {numbers}"
+
+
+def test_T3_tie_convention_close_exactly_at_the_midpoint_REFUSES():
+    """ALGO-100C: the tie must be STATED and TESTED, not left to the operator `<` vs `<=`.
+
+    A close sitting exactly on the bar's own centre has resolved nothing - that is the
+    definition of indecision, so it REFUSES. `_t3_control` uses a strict `>` for a long
+    (mirrored `<` for a short), which is the same convention read from the other side.
+    """
+    # ISOLATION, again: every bar here must NOT be MIXED, or MIXED decides it and the tie
+    # convention is never exercised. My first draft got this wrong the same way the DOJI
+    # fixtures did - the bar was refused for a different reason and the test looked green
+    # for the wrong clause. Each fixture asserts `not mixed` before asserting the verdict.
+    def _mixed(bar):
+        o, h, l, c = (float(x) for x in bar)
+        return abs(c - o) < (h - max(o, c)) and abs(c - o) < (min(o, c) - l)
+
+    # midpoint of [104, 100] is 102.0; the close sits EXACTLY there.
+    exactly_mid_long = (100.5, 104.0, 100.0, 102.0)
+    assert (exactly_mid_long[1] + exactly_mid_long[2]) / 2.0 == exactly_mid_long[3]
+    assert not _mixed(exactly_mid_long), "must not be MIXED, or MIXED decides it"
+    assert _t3_refuses(exactly_mid_long, "L") is True, "a close ON the midpoint decides nothing"
+
+    exactly_mid_short = (103.5, 104.0, 100.0, 102.0)
+    assert not _mixed(exactly_mid_short)
+    assert _t3_refuses(exactly_mid_short, "S") is True, "mirrored for a short"
+
+    # One tick the RIGHT side of the midpoint resolves it, so the convention is a
+    # boundary rather than a blanket refusal.
+    just_above = (100.5, 104.0, 100.0, 102.25)
+    just_below = (103.5, 104.0, 100.0, 101.75)
+    assert not _mixed(just_above) and not _mixed(just_below)
+    assert _t3_refuses(just_above, "L") is False
+    assert _t3_refuses(just_below, "S") is False
+
+
+def test_F1_the_geometry_token_fires_exactly_when_progress_is_absent():
+    """F-1 (ALGO-100A): the token must name a clause that can actually fire.
+
+    After F1's removal `geometry` is out of the `confirmed` conjunction, so the risk is a
+    refusal reason that labels nothing. It stays honest because `geometry` is `c > o`, which
+    is `progress > 0` — the FIRST CONJUNCT of `efficient`, which does gate. This pins that
+    equivalence at the executable level rather than asserting it in a comment.
+    """
+    from research import current_mnq_strategy_v2_4_force as F
+    one = pd.DataFrame(
+        {"open": [101.0, 99.5], "high": [101.2, 99.8],
+         "low": [99.0, 98.0], "close": [99.5, 98.5]},
+        index=pd.date_range("2026-04-09 10:00", periods=2, freq="1min", tz=TZ))
+    start = pd.Timestamp("2026-04-09 10:00", tz=TZ)
+    from research import current_mnq_strategy_v2_4_engine as eng
+    snap = F.force_snapshot(one, start, 5, "L", start + pd.Timedelta(minutes=2), eng.Params())
+    assert snap.directional_progress <= 0, "fixture must have NO directional progress"
+    assert snap.partial_momentum_geometry is False
+    assert snap.reason == "PARTIAL_MOMENTUM_GEOMETRY_NOT_PROVEN", (
+        f"the token must name the absent-progress clause, got {snap.reason}")
