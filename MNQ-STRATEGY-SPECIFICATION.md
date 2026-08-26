@@ -45,6 +45,15 @@ The same order appears twice more in your evidence, in the same shape —
 `[video_evidence.md:100 "first A+ only, and one trade maximum"]` ·
 `[trader_fidelity_addendum … preserved_invariants: maximum_one_strategy_trade_per_session]`
 
+**And your setup itself is already frozen, in one line, as three things that must all be there:**
+
+> **location + candle story + sustained force**
+> `[trader_fidelity_addendum … preserved_invariants:165
+> "location_plus_candle_story_plus_sustained_force_required"]`
+
+Everything in sections 4 to 6 is those three, spelled out. **If that line is wrong, nothing below
+it is right** — so it is the first thing to check.
+
 ---
 
 ## 2. The map — which levels are on the chart
@@ -252,17 +261,26 @@ a structural support/resistance reaction · a 5m liquidity/reaction cluster · a
 - **No zone is ever redrawn using candles that had not printed yet.**
   `[video_evidence.md, principle 13]` · `[source 7, adopted rule 8]`
 
-> ### ⚠️ DIVERGENT — the trading window
+> ### ⚠️ DIVERGENT — the trading window, and it is stale in TWO places
 >
-> **Frozen in your evidence:** `09_30_to_12_00_America_New_York_execution_window`
-> `[preserved_invariants]` · *"9:30–12:00 ET window"* `[video_evidence.md:100]`
+> **Your 2026-08-20 evidence says 9:30, in two separate documents:**
+> `09_30_to_12_00_America_New_York_execution_window`
+> `[trader_fidelity_addendum … preserved_invariants:164]` · *"9:30–12:00 ET window"*
+> `[video_evidence.md:100]`
 >
-> **Ruled later and running now:** **08:00–12:00**, unconditional, after you taught that setups
-> form before 09:30 and showed a zone rejection at 08:50 that a 09:30 start would erase.
+> **You then changed it yourself.** On 2026-08-23 you reasserted **08:00–12:00** and showed why —
+> a zone rejection firing at 08:50 that a 9:30 start erases entirely. **That is what runs today:**
+> `TRADE_START = 08:00`, `LAST_ENTRY = 12:00` `[v2_2_engine.py:43-44]`.
 >
-> Both are printed because they disagree. **The later one is what the bot runs.** Nobody has gone
-> back and corrected the frozen line, and this document does not correct it either — your evidence
-> files are kept exactly as you said them.
+> **So the two 08-20 lines are superseded, not contradicted — by you.** They are printed here
+> because they are still sitting in your files saying 9:30, and anyone reading those files cold
+> would believe them. **Neither file has been edited and neither will be.** Your evidence is kept
+> exactly as you said it; the correction is recorded beside it, not over it.
+>
+> **One thing that is NOT stale, so nobody "fixes" it later:** 9:30 is still in the code, doing a
+> different job — it is the moment the day's zone map is drawn. That was left alone on purpose,
+> because moving it would change **which zones exist at all** `[v2_2_engine.py:40-42]`. **The
+> trading window moved. The map anchor did not.** Two different uses of the same clock time.
 
 ---
 
