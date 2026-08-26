@@ -5,8 +5,19 @@
 > operator's volunteered target teaching and RE-OPENED the target layer; ALGO-100E published
 > this handover to the channel). Strategy branch head at commit: **`abce4155`**
 > (`6888112d` is the revert commit, no longer the head). The T3 batch referenced below
-> closed **HONEST-PARTIAL** on its own pre-registration - it refused the operator's own
-> 03-24 entry - and **nothing from it is landed**.
+> is now **LANDED and its status is exactly `UNRATIFIED-FOR-FREEZE`** (ALGO-105). It may NOT
+> be described anywhere as ratified, passing, or frozen.
+>
+> What that means in plain words: the batch (R2 + R2b + F1 + T3'') is on the branch at
+> `da7f9d3d` and the suite is green, but **re-exam #3 returned FAIL and the freeze is BLOCKED**.
+> It was NOT reverted, because nothing degraded - the deployed 08:00 arm is character-identical
+> to before, the 09:30 arm GAINED two sessions against the frozen anchor, and the 04-14 control
+> is identical by key and target. It was NOT frozen, because the exam's A3 makes a failing
+> 08:00 arm block the freeze outright, and that arm was already 1/8 before this batch existed.
+>
+> **Nothing here is deployable and nothing trades real money.** The bot's remaining known
+> defect at 08:00 is that it spends its one daily trade BEFORE the operator's own entry clock
+> on 13 of 14 sessions.
 
 test `tests/test_algo_handover_is_accurate.py` reads `ALGO-GPT-HANDOVER.md` by path.
 
