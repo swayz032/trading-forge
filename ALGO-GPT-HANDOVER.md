@@ -19,12 +19,29 @@
 > defect at 08:00 is that it spends its one daily trade BEFORE the operator's own entry clock
 > on 13 of 14 sessions.
 
-test `tests/test_algo_handover_is_accurate.py` reads `ALGO-GPT-HANDOVER.md` by path.
+**DO NOT RENAME OR MOVE THIS FILE.** Its accuracy guard,
+`tests/test_algo_handover_is_accurate.py`, reads `ALGO-GPT-HANDOVER.md` **by path** and will fail
+if it moves. That guard re-derives this document's load-bearing numbers from the measurement code
+on every run — so **if a claim here goes stale, the suite goes red rather than the document going
+quietly wrong.** Keep it that way: put numbers where the guard can check them.
 
 **To: GPT, sole engineering advisor for the MNQ v2.4 lane from 2026-08-27.**
 **From: the Claude worker seat, 2026-08-26.**
-**Ladder head at writing: ALGO-100C at `602318c5`. Strategy branch:
-`research/current-mnq-strategy-v2-4-zone-first-candles`. Written to be read cold.**
+**Strategy branch: `research/current-mnq-strategy-v2-4-zone-first-candles`. Written to be read
+cold.**
+
+> **HOW TO GET THE CURRENT STATE — do not trust any commit SHA typed in this document.**
+> Several are quoted below as the state *at the moment a section was written*, and they age the
+> instant anything lands. **The live answer is always:**
+>
+> - **strategy head** → `git rev-parse --short HEAD` on the branch above;
+> - **ladder head + the latest ruling** → `git fetch origin external-advisor/gpt-rulings-algo && git ls-tree --name-only -r FETCH_HEAD -- algo-reports/ | sort | tail -5`
+>   (the `fetch` is load-bearing — without it you read whatever your clone last saw, which is a
+>   stale answer that looks exactly like a current one);
+> - **is this document's state still true?** → `pytest tests/test_algo_handover_is_accurate.py`.
+>
+> A SHA in prose is a timestamp, not a fact about now. **The ladder is the durable record**;
+> this file is a map to it.
 
 You already advise the main Trading Forge campaign. This is a **different, smaller, nearly
 standalone lane**. Everything you need is below or reachable from it.
@@ -54,9 +71,9 @@ defending when a deadline pushes.
 | the exam result (rewritten by every run) | `research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json` |
 | the never-rewritten comparator | `research/current_mnq_strategy_v2_4_F2_ANCHOR_frozen_5of8_ea6f0940_IMMUTABLE.json`, hash-checked by `research/current_mnq_strategy_v2_4_f2_anchor.py` |
 | publish tool | `scripts/publish_algo_report.sh` |
-| stopping things / what is alive | `KILL-AND-HEARTBEAT.md` |
-| every status word translated | `SELF-EXPLANATION-AUDIT.md` |
-| cold-starting a future Claude seat | `SEAT-HANDOFF-TEMPLATES.md` |
+| stopping things / what is alive | `ALGO-KILL-AND-HEARTBEAT.md` |
+| every status word translated | `ALGO-SELF-EXPLANATION-AUDIT.md` |
+| cold-starting a future Claude seat | `ALGO-SEAT-HANDOFF-TEMPLATES.md` |
 
 **Read ALGO-001 forward.** Rulings and worker reports interleave on one branch and the numbering
 is strictly increasing. The subject lines are deliberately self-contained: `git log --format='%h %s'`
@@ -351,6 +368,29 @@ code-complete, run-only, resumable. That is the fallback of record, not the plan
 operator's own demonstration, and never reached the code.** ALGO-109 §"the item that outranks
 everything left".
 
+> ### THE WHOLE TASK, IN ONE SENTENCE
+>
+> **`levels.py:149` centres the band on a PIVOT PRICE; the ruled band needs the REJECTION
+> CANDLE'S OWN wick extreme and close — so the work is to JOIN each pivot back to its source bar
+> on the marked timeframe. THE JOIN IS THE TASK; THE ARITHMETIC IS TRIVIAL.**
+>
+> Read that before the rest of this section. Everything below is the citation trail, the scope,
+> and the measurement obligations — but if you only take one line, take that one. Placed here by
+> ALGO-111's order.
+
+**DO THIS ONE FIRST, AND ALONE — the order is ruled (ALGO-111 ask 1).** The exceptional-swing
+path (`levels.py:149`) comes **before** the established path (`engine.py:492-496`), for two
+reasons: doing both at once makes the displacement delta **unattributable** between them, which
+ALGO-109 forbids; and the exceptional path's magnitudes are at least **declared**, so a change
+there is auditable against a written surface today, while the established path carries four
+magnitudes declared **nowhere**. *You do not rebuild on the foundation you have not surveyed.*
+
+**AND THE ESTABLISHED PATH HAS A PRECONDITION, NOT A PARALLEL TASK (ALGO-111 ask 2).** Before
+anything is built on `engine.py:492-496`, its `0.20 / 0.80 / 0.05 / 0.30` get **their own
+provenance pass** — the AST sweep, M1's citation-status discipline, and a **mandatory positive
+control** (a bare-number corpus search without one reported *6 of 10 cited* when the truth was
+*0 of 10*; see trap 20 and ALGO-110 §3).
+
 **THE RULE (ALGO-073 §2, from his own words in ALGO-073 §1):**
 
 > *"i take a key zone with a wick and i draw the zone from the top of the wick to where the
@@ -383,10 +423,34 @@ price and asymmetric-wick-to-close are different objects, not different calibrat
 propagates into **the map, the touch test, the fill displacement and the destination ladder** —
 ALGO-102 measured the map admitting a **median 64 locations per session**.
 
-**THE REAL ENGINEERING CONTENT, named so it is not discovered late.** `levels.py:149` centres the
-band on `row.price` — a **pivot price**. The ruled band needs the **rejection candle's own wick
-extreme and close**, so the build must join each pivot back to its source bar on the marked
-timeframe. That join is the task; the arithmetic is trivial.
+**THE JOIN, in detail — and it ALREADY EXISTS in this file.** (The one-sentence version is at the
+top of this section.)
+
+`levels.py:149` builds `lo, hi = center ± half` from `center = float(row.price)`. `row` comes from
+the pivot frame, whose columns are asserted at **`levels.py:116`**:
+`{"t", "confirm", "side", "price", "wick", "disp", "atr"}` — **no OHLC**. So the rejection
+candle's wick extreme and close are not in the frame and must be fetched.
+
+**`_pivot_close_away` (`levels.py:76-86`) already performs exactly that fetch**, and it already
+reads **exactly the two prices the ruled band needs**:
+
+```python
+bar = h15.loc[row.t]
+if isinstance(bar, pd.DataFrame):
+    bar = bar.iloc[0]                    # a duplicated index would silently pick one
+if row.side == "S":  ... bar.close, bar.low     # support: low wick extreme -> close
+else:                ... bar.high, bar.close    # resistance: high wick extreme -> close
+```
+
+**Follow this function; do not invent a second join.** It has the timeframe (`h15`), the lookup
+key (`row.t`), the duplicate-index guard, and the **side mirror already correct** — `S` takes the
+low, `R` takes the high, both against the close. It currently turns those two prices into a
+*fraction*; the band needs them as **the two band edges**. That is the whole change.
+
+**⚠ ONE TRAP IN THE FUNCTION YOU ARE COPYING.** It ends `except Exception: return 0.5` — a
+**silent default**. That is tolerable for a quality score and **unacceptable for a band edge**: a
+failed join would produce a plausible zone with no relation to the candle, and nothing would go
+red. **The band path must FAIL LOUD**, or explicitly refuse the location, never default.
 
 **MANDATORY, from ALGO-108 §1 — this change ADMITS, so it will DISPLACE.** Report membership
 **per route** and audit **every removal** for a same-bucket higher-ranked addition
@@ -418,8 +482,8 @@ a **failure** that a count reports as a success. Control `04-14 09:38 L BRK5 →
   approved. Does **not** gate the batch.
 - **`TAUGHT_SHAPE_UNTAUGHT_GATE` inventory** — 2 remained at the 08-24 verified run. Whether each
   survives the re-land is campaign work.
-- **The wider status-literal sweep** — `SELF-EXPLANATION-AUDIT.md` §11 names it.
-- **The heartbeat build decision** — `KILL-AND-HEARTBEAT.md` §6 offers two honest minimal designs.
+- **The wider status-literal sweep** — `ALGO-SELF-EXPLANATION-AUDIT.md` §11 names it.
+- **The heartbeat build decision** — `ALGO-KILL-AND-HEARTBEAT.md` §6 offers two honest minimal designs.
   Nothing is built; nothing needs to be until a runtime exists.
 
 ---

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -30,15 +31,64 @@ received". The document was fine; the check was brittle.
 
 
 def test_every_path_it_names_actually_exists():
-    """A handover that points at files that are not there is worse than none."""
+    """A handover that points at files that are not there is worse than none.
+
+    THE PATH SET IS DERIVED FROM THE DOCUMENT, not typed here. The typed version of this test
+    listed FIVE paths and passed for as long as the handover pointed at three files that do not
+    exist - `KILL-AND-HEARTBEAT.md`, `SELF-EXPLANATION-AUDIT.md` and `SEAT-HANDOFF-TEMPLATES.md`,
+    all of which are named with an `ALGO-` prefix on disk. A cold reader following the map hit
+    three dead ends and the suite stayed green.
+
+    This is trap 10 in the very document under test - A HAND-MAINTAINED LIST CERTIFIES ONLY
+    ITSELF; DERIVE POPULATIONS, NEVER TYPE THEM - and the guard was guilty of it.
+    """
     text = _text()
+
+    # These five must be MENTIONED - the floor stays, because a handover that stopped naming
+    # the ground truth would otherwise pass this test by naming nothing at all.
     for rel in ("research/current_mnq_strategy_v2_4_spec.json",
                 "research/current_mnq_strategy_v2_4_replay_v3_labels_FROZEN.json",
                 "research/current_mnq_strategy_v2_4_frozen_14_case_scorecard_2026_08_21.json",
                 "scripts/publish_algo_report.sh",
                 "ALGO-RUNBOOK.md"):
         assert rel in text, f"the handover should name {rel}"
-        assert Path(rel).exists(), f"the handover names {rel} but it does not exist"
+
+    # ...and EVERY repo-path-looking token it names must resolve.
+    named = set(re.findall(r"`([A-Za-z0-9_./-]+\.(?:md|json|py|sh))`", text))
+
+    def is_a_real_path_claim(tok: str) -> bool:
+        """Prose names a lot of things that are not paths. Check only what claims to be one."""
+        if "*" in tok:
+            return False                      # a glob, e.g. current_mnq_strategy_v2_4_*
+        if "NNN" in tok or "YYYY" in tok:
+            return False                      # a NAMING TEMPLATE, not a file
+        if re.fullmatch(r"ALGO-\d+\.md", tok):
+            return False                      # prose shorthand for a ruling; the real files
+            # live in algo-reports/ under full descriptive names
+        if "/" in tok:
+            return True                       # an explicit repo path - always checked
+        # A BARE BASENAME. Only `.md` is checked: prose legitimately says `force.py` and
+        # `derivation.py` as shorthand for research/current_mnq_strategy_v2_4_*.py, but a bare
+        # `.md` in this document is always a real root-level doc.
+        #
+        # THIS LINE READ `tok.startswith("ALGO-")` FOR ONE REVISION AND THE BATTERY CAUGHT IT:
+        # the bug being fixed was `KILL-AND-HEARTBEAT.md` (no prefix - the prefix is what was
+        # MISSING), so the filter excluded the exact case the guard exists for and D1 went
+        # GREEN. A guard whose filter is written from the FIXED spelling cannot see the broken
+        # one.
+        return tok.endswith(".md")
+
+    missing = sorted(t for t in named
+                     if is_a_real_path_claim(t) and not Path(t).exists()
+                     and not (Path("research") / t).exists())
+    assert not missing, (
+        f"the handover names {len(missing)} path(s) that do not exist: {missing}")
+
+    # A derived population needs its own floor: if the extractor silently stopped matching,
+    # `named` would be empty and this test would pass while checking nothing.
+    assert len(named) >= 15, (
+        f"only {len(named)} paths derived - the extractor probably broke, "
+        "and a guard that checks nothing passes silently")
 
 
 def test_the_headline_number_matches_the_scorecard():
