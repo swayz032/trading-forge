@@ -274,6 +274,20 @@ displacement. There are strong bullish and bearish momentum candles that are not
 
 **RATIFIED 2026-08-26** — represented in the read-back.
 
+**THERE IS A LADDER. You take more than one target.**
+`[trader_fidelity_addendum … direct_trader_rules.tp_ladder.labels = ["TP1", "TP2",
+"TP3_OR_NEXT_MEANINGFUL_REACTION"]]` · `[tp_ladder.multiple_directional_tps_allowed: true]` ·
+`[three hash-bound multi-target screenshots]`
+
+**NOT REPRESENTED** — this was **not** read to you. Everything below it about TP1 was, and every
+line of it was correct, **but the ladder itself was missing from the page, so there was nothing
+for you to confirm or correct.** It is written here now so you can.
+
+**How many contracts come off at each rung, and in what proportion, is NOT written down anywhere**
+— see section 9. Nothing above says it, and nothing here invents it.
+
+---
+
 **The nearest meaningful reaction owns TP1** — whichever of these physically comes first:
 a structural support/resistance reaction · a 5m liquidity/reaction cluster · an active 15m FVG.
 `[semantic_crosswalk.target_hierarchy]` · `[direct_trader_rules.tp_ladder.allowed_destination_families]`
@@ -300,6 +314,20 @@ a structural support/resistance reaction · a 5m liquidity/reaction cluster · a
 - **Don't trade into a strong nearby opposing level.** The next meaningful reaction area is the
   natural destination, not a fixed reward multiple. `[video_evidence.md, principle 12]` ·
   `[source 7, adopted rule 7]`
+
+> ### ⚠️ DIVERGENT — the ladder is in your evidence and NOT in the file the bot loads
+>
+> **Your files say it:** `tp_ladder.labels`, `multiple_directional_tps_allowed: true`, three
+> screenshots.
+>
+> **`current_mnq_strategy_v2_4_spec.json` — the file the code actually reads — says nothing.**
+> Measured: `tp_ladder` 0 · `TP2` 0 · `TP3` 0 · `multi_target` 0 · `ladder` 0, against a positive
+> control of `target` = 7 in the same file, so the search works.
+>
+> **This is a different kind of gap from the others in this document.** Elsewhere the code
+> disagrees with you. Here **there was never anything for the code to disagree with** — the rule
+> never reached the specification the loader reads, so no loader and no test could have missed
+> it. **Nothing is proposed. It is recorded so it stops being invisible.**
 
 ---
 
@@ -368,7 +396,11 @@ it.** No number below was chosen by you; each was chosen by somebody building th
    reason, so **62 is what runs today.**
 6. **What "meaningful" means for a destination.** It is defined for one kind of target and simply
    assumed true for the other two.
-7. **Where the 17.25-point stop is measured from.** The distance is yours and is confirmed. Its
+7. **How the ladder is split.** Your files say there are three rungs and that more than one
+   directional target is allowed. **They do not say how much comes off at each, or in what order
+   the size is reduced.** The bot currently plans one target. **Nobody has written the rest down,
+   and nobody should invent it.**
+8. **Where the 17.25-point stop is measured from.** The distance is yours and is confirmed. Its
    *placement* relative to the zone is in no artifact — and on several entries a stop that far from
    the fill lands **inside the zone the trade was taken at**, so the zone's own width can take the
    trade out without the read being wrong.
