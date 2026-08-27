@@ -109,14 +109,20 @@ def xray_session(env: dict, dte: date, p: prod.Params,
         meta["aborted"] = "NO_BUCKET_STARTS"
         return {"meta": meta, "records": records}
 
-    open_ts = pd.Timestamp(f"{dte} 09:30", tz=core.TZ)
-    if full5.empty or open_ts - full5.index.min() < pd.Timedelta(days=core.MIN_WARMUP_DAYS):
+    #: WARM-UP CHECK ONLY, matching kernel.py's `warmup_ref`. It asks whether enough HISTORY
+    #: exists to X-ray the day at all and never reaches a builder.
+    warmup_ref = pd.Timestamp(f"{dte} 09:30", tz=core.TZ)
+    if full5.empty or warmup_ref - full5.index.min() < pd.Timedelta(days=core.MIN_WARMUP_DAYS):
         meta["aborted"] = "INSUFFICIENT_WARMUP"
         return {"meta": meta, "records": records}
 
-    plan = build_premarket_plan_v24(full5, dte, open_ts)
-    locations, _ = build_entry_locations_v24(env, dte, open_ts, p)
-    authorized = [x for x in locations if x.entry_authorized]
+    # ── ALGO-183: THE X-RAY'S ANCHOR IS REPAIRED TO MIRROR THE REPAIRED KERNEL. ──
+    # This module's whole purpose is to explain what the kernel did. Its provenance line claimed it
+    # mirrored `kernel.py` - TRUE WHEN WRITTEN, and made false not by any edit here but because
+    # kernel.py moved beneath it (ALGO-174/181). A diagnostic that explains a DIFFERENT ENGINE than
+    # the one that runs is worse than none, because its output still reads like evidence.
+    # The plan and the location set are now built PER DECISION at `ts`, inside the loop, exactly as
+    # `iter_actionable_candidates` does. The mirror claim is the property being restored.
     # BRK15 pending state, mirroring `iter_actionable_candidates` exactly. Without it the
     # X-ray produced NO BRK15 candidate at all, so a rank-2 continuation never competed
     # against a rank-1 reversal and never triggered the direction-conflict veto.
@@ -126,9 +132,13 @@ def xray_session(env: dict, dte: date, p: prod.Params,
     last_side: dict = {}
     flipped_at: dict = {}
     completed_session = r5[r5.index.date == dte]
-    meta["premarket_primary"] = str(getattr(plan, "primary", "NEUTRAL"))
-    meta["premarket_structure"] = str(getattr(plan, "pm_structure", ""))
-    meta["authorized_locations"] = len(authorized)
+    #: These were session-level facts when the map was session-level. They are now PER DECISION, so
+    #: they are recorded at the FIRST decision bucket rather than asserted for the whole day - a
+    #: single value here would be a session-level claim about a per-decision object.
+    meta["premarket_primary"] = None
+    meta["premarket_structure"] = None
+    meta["authorized_locations"] = None
+    meta["anchor"] = "PER_DECISION_ts (ALGO-183); was a 09:30 session literal"
 
     def rec(**kw):
         records.append(kw)
@@ -142,6 +152,16 @@ def xray_session(env: dict, dte: date, p: prod.Params,
         if atr_ref is None or not np.isfinite(atr_ref):
             continue
         pad = max(core.TICK * 2, p.touch_pad_atr * float(atr_ref))
+
+        #: ALGO-183: per-decision, at this bucket's own clock. Mirrors kernel.py:270/279.
+        plan = build_premarket_plan_v24(full5, dte, ts)
+        locations, _ = build_entry_locations_v24(env, dte, ts, p)
+        authorized = [x for x in locations if x.entry_authorized]
+        if meta.get("premarket_primary") is None:
+            meta["premarket_primary"] = str(getattr(plan, "primary", "NEUTRAL"))
+            meta["premarket_structure"] = str(getattr(plan, "pm_structure", ""))
+            meta["authorized_locations"] = len(authorized)
+            meta["first_decision_bucket"] = str(ts)
 
         # MIRRORS THE KERNEL'S TWO LISTS (ALGO-068 R1). Route A sees ACTIVE zones only; the
         # break family also sees a zone that turned BROKEN inside the family's own lookback

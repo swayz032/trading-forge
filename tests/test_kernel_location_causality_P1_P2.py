@@ -180,3 +180,38 @@ def test_P2_no_builder_on_the_decision_path_is_hoisted_out_of_the_loop():
             assert ln in body_lines, (
                 f"{fn} is called at line {ln}, OUTSIDE the per-decision loop - it would be built "
                 f"once per session again")
+
+
+def test_the_XRAY_mirrors_the_kernel_anchor():
+    """ALGO-183. The X-ray's mirror claim is now a GUARD, not a sentence in a provenance field.
+
+    Its `map_anchor` line said it mirrored `kernel.py`. That was TRUE WHEN WRITTEN and became false
+    without anyone editing the X-ray - `kernel.py` moved beneath it. A prose claim about another
+    file's behaviour has no way to notice when that file changes, which is exactly how the campaign
+    spent a day reading a diagnostic that explained a different engine than the one that runs.
+
+    Asserted structurally against the KERNEL rather than against a literal, so the two cannot drift
+    apart again: whatever the kernel anchors on, the X-ray must anchor on the same NAME.
+    """
+    from research import current_mnq_strategy_v2_4_candidate_xray as xray
+
+    def anchors(fn):
+        tree = ast.parse(inspect.getsource(fn).lstrip())
+        out = {}
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Call):
+                name = getattr(n.func, "id", None) or getattr(n.func, "attr", None)
+                if name in ("build_entry_locations_v24", "build_premarket_plan_v24"):
+                    args = [ast.unparse(a) for a in n.args]
+                    out.setdefault(name, []).append(args[2] if len(args) > 2 else None)
+        return out
+
+    k = anchors(kernel.iter_actionable_candidates)
+    x = anchors(xray.xray_session)
+    assert k, "no anchored builders found in the kernel - this test is vacuous"
+    assert x, "no anchored builders found in the X-ray - this test is vacuous"
+    for fn_name, kernel_anchors in k.items():
+        assert fn_name in x, f"the X-ray does not call {fn_name} at all - it no longer mirrors"
+        assert set(x[fn_name]) == set(kernel_anchors), (
+            f"{fn_name}: the kernel anchors on {sorted(set(kernel_anchors))} and the X-ray on "
+            f"{sorted(set(x[fn_name]))} - the diagnostic explains a different engine")
