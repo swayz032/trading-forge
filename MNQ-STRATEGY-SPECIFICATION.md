@@ -283,8 +283,39 @@ displacement. There are strong bullish and bearish momentum candles that are not
 line of it was correct, **but the ladder itself was missing from the page, so there was nothing
 for you to confirm or correct.** It is written here now so you can.
 
-**How many contracts come off at each rung, and in what proportion, is NOT written down anywhere**
-— see section 9. Nothing above says it, and nothing here invents it.
+**The shape of it, taken from your own files and nothing else:**
+
+- **TP1 is the nearest meaningful reaction** — whichever of the three kinds physically comes
+  first. `[semantic_crosswalk.target_hierarchy]` · `[gold fixture V24G06]`
+- **Each rung after it is simply the NEXT meaningful reaction**, from the same three kinds.
+  `[tp_ladder.allowed_destination_families]`
+- **There is no fixed number of rungs.** Your third label is literally
+  `TP3_OR_NEXT_MEANINGFUL_REACTION` — *"or next"* — **so the ladder keeps going as long as there
+  are meaningful reactions, rather than stopping at three.** `[tp_ladder.labels]`
+- **A nearer rung is never skipped for a farther one.** `[tp_ladder.no_blind_rollover]` ·
+  *"Do not blindly leapfrog untouched TP1 merely because TP2 is farther away."*
+  `[direct_trader_tp_gap_clarification.under_400_tp2_behavior]`
+- **A farther rung may never be chosen just because it pays more.**
+  `[tp_ladder.farther_target_cannot_be_chosen_merely_for_more_profit]`
+- **There is exactly one way a nearer rung stops owning the trade, and it is INTERACTION — never
+  distance and never profit.** *After* that area has actually been traded into, a later test of
+  **that same physical area**, with an already-approved continuation story and sustained force,
+  may earn a new entry whose destination is the next meaningful reaction.
+  `[tp_ladder.processed_rollover_rule]` · `[direct_trader_tp_gap_clarification.processed_reaction_continuation]`
+
+> ### ⚠️ AND IT IS NOT SOMETHING THE BOT CAN DO YET — for one missing sentence, which is yours.
+>
+> **Nowhere in any of your files does it say how much comes off at each rung.** Not the labels,
+> not the three screenshots, not the settings file. We searched it under every name we could think
+> of and found nothing, with a control to prove the search works. **We have not guessed, and we
+> will not.**
+>
+> **Why that one sentence matters more than it sounds:** a target that never causes an exit
+> changes nothing. **Without a split, TP2 and TP3 are marks on a chart — a bot with a ladder and
+> no split trades exactly like a bot with one target.** So the ladder above is **written down but
+> not running**, and it will stay that way until you say how you scale out.
+
+**See section 9.** Nothing above invents it.
 
 ---
 
