@@ -95,7 +95,13 @@ def sessions() -> list[str]:
 
 def main() -> None:
     import os
-    workers = max(1, (os.cpu_count() or 4) - 2)
+    #: 8, NOT `cpu_count()-2` (which is 14 here). MEASURED before choosing: 16 cores, 13.9 GB free,
+    #: 0.14 GB of frames per worker - so memory is not the binding constraint and 14 would fit. The
+    #: cap is deliberate anyway: this machine has a recorded history of freezing under real
+    #: workload, the operator uses it while this runs, and a run that wedges the tower at hour
+    #: three costs more than the hour it saves. 4 workers measured 2.63x, so 8 should land near
+    #: 4 hours against 20.2 h sequential.
+    workers = min(8, max(1, (os.cpu_count() or 4) - 2))
     days = sessions()
     print(f"window {START}..{END}  sessions={len(days)}  workers={workers}", flush=True)
     t0 = time.time()
