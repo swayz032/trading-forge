@@ -219,15 +219,30 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
     bucket_starts = _bucket_starts(r5, one, dte, as_of)
     if not bucket_starts:
         return
-    open_ts = pd.Timestamp(f"{dte} 09:30", tz=core.TZ)
-    if full5.empty or open_ts - full5.index.min() < pd.Timedelta(days=core.MIN_WARMUP_DAYS):
+    #: WARM-UP CHECK ONLY. This 09:30 stamp asks whether enough HISTORY exists to score the day
+    #: at all; it does not reach the location set and never did. It is deliberately left alone —
+    #: moving it would change WHICH SESSIONS ARE SCOREABLE, a different behaviour change that is
+    #: not authorized here.
+    warmup_ref = pd.Timestamp(f"{dte} 09:30", tz=core.TZ)
+    if full5.empty or warmup_ref - full5.index.min() < pd.Timedelta(days=core.MIN_WARMUP_DAYS):
         return
 
     # v2.4 direct trader fidelity: the strategy does not use PDH/PDL/PWH/PWL.
     # Build only the causal premarket price-action structure/control prior.
     plan = build_premarket_plan_v24(full5, dte)
-    locations, _ = build_entry_locations_v24(env, dte, open_ts, p)
-    authorized = [x for x in locations if x.entry_authorized]
+    # ── ALGO-174: THE LOCATION SET IS NOW REBUILT PER DECISION, INSIDE THE LOOP. ──
+    # It used to be built ONCE here, anchored at 09:30, and reused by every decision from 08:00
+    # onward. ALGO-173 enumerated the consequence: 5 of 19 in-window decisions - and 5 of 12
+    # in-window BULLETS - traded a level that is ABSENT from the map derivable at their own
+    # timestamp. Two of them entered at 08:05 on levels whose identifiers contain 08:45.
+    #
+    # THE PROPERTY THIS NOW SATISFIES: the location set available to a decision at time T is
+    # derivable from bars at or before T, and from nothing else.
+    #
+    # NO FIXED ANCHOR REPLACES THE OLD ONE. Substituting 08:00 for 09:30 would be the same defect
+    # with a friendlier number, and it would blind the bot to structure forming during the
+    # session, which the trader's own method plainly uses. There is no constant here to choose,
+    # so there is nothing to fit — this repair adds no degree of freedom, it removes one.
     pending: dict[tuple[str, str], core.PendingBreakout] = {}
     pending_locs: dict[tuple[str, str], core.Location] = {}
     #: ALGO-068 R1: the last bucket at which each zone was ACTIVE, so a recently-broken zone can
@@ -248,6 +263,12 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         if atr_ref is None or not np.isfinite(atr_ref):
             continue
         pad = max(core.TICK * 2, p.touch_pad_atr * float(atr_ref))
+
+        #: ALGO-174. Anchored at THIS decision's own bucket start, so the set contains only what
+        #: bars completed by `ts` can produce. `ts` and not `bar_close`: the forming candle has
+        #: not closed when the decision is taken, so it may not contribute a level.
+        locations, _ = build_entry_locations_v24(env, dte, ts, p)
+        authorized = [x for x in locations if x.entry_authorized]
 
         # Structural key-zone state is frozen at the start of the forming 5m
         # candle. A role change caused by this candle cannot authorize itself.

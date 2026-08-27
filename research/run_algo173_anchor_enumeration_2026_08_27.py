@@ -23,8 +23,14 @@ stands untouched - `zone_state_at` really is re-evaluated per bucket at `ts`.
 """
 from __future__ import annotations
 
+# ACCEPTANCE NOTE (ALGO-174): this file is the CONVICTING INSTRUMENT and is re-run to prove the
+# repair, per [red-path-decay] - never a fresh instrument built after the fact. The ONLY thing
+# parameterized below is the INPUT WALK PATH, so the same script can read the pre-repair baseline
+# and the post-repair walk. The predicate, the per-session positive control and the two counts are
+# byte-identical to the run that convicted the kernel.
 import io
 import json
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -37,7 +43,10 @@ from research import current_mnq_strategy_v2_4_kernel as K
 core = prod.core
 R = Path("research")
 DATA = R / "_mnq_v24_replay_lab_v3/data"
-WALK = R / "current_mnq_strategy_v2_4_algo141_what_drops_his_setup.json"
+#: Default is the PRE-REPAIR baseline, unchanged. `argv[1]` points the SAME predicate at the
+#: post-repair walk for the ALGO-174 acceptance. Nothing else about this script varies.
+WALK = Path(sys.argv[1]) if len(sys.argv) > 1 else \
+    R / "current_mnq_strategy_v2_4_algo141_what_drops_his_setup.json"
 WIN_LO, WIN_HI = "08:00", "09:30"
 
 
@@ -47,7 +56,7 @@ def main() -> None:
     p = prod.Params()
     walk = json.load(io.open(WALK, encoding="utf-8"))["per_session"]
 
-    rows, control_failures = [], []
+    rows, control_failures, by_own_ts = [], [], []
     n_dec = n_bullet = 0
 
     for day in sorted(walk):
@@ -76,6 +85,22 @@ def main() -> None:
             is_bullet = bool(r.get("became_the_trade"))
             n_bullet += is_bullet
             zid = str(r.get("location_id"))
+
+            #: ── PREDICATE B, ADDED BEFORE THE POST-REPAIR RUN, NOT AFTER SEEING IT ──
+            #: PREDICATE A below ("absent from the 08:00 build") was correct while the kernel had
+            #: ONE anchor. It is WRONG AS AN ACCEPTANCE for the repaired kernel, and this is
+            #: knowable without running anything: after the repair there is no single anchor, so a
+            #: decision at 09:15 may LEGITIMATELY use a level that formed at 08:45. Predicate A
+            #: would score that as affected and fail a correct repair.
+            #: Predicate B is the PROPERTY the ruling actually states: is the chosen location
+            #: present in the build at THIS DECISION'S OWN `ts`?
+            own, _ = K.build_entry_locations_v24(env, dte, ts, p)
+            own_ids = {str(x.id) for x in own if x.entry_authorized}
+            non_causal_at_own_ts = bool(own_ids) and zid not in own_ids
+            if non_causal_at_own_ts:
+                by_own_ts.append({"session": day, "decision_ts": str(ts)[:19], "zone_id": zid,
+                                  "became_the_trade": is_bullet, "n_locs_own_ts": len(own_ids)})
+
             affected = zid in late_ids and zid not in causal_ids
             if affected:
                 rows.append({
@@ -97,6 +122,16 @@ def main() -> None:
     print(f"AFFECTED DECISIONS: {aff_dec} of {n_dec}")
     print(f"AFFECTED BULLETS  : {aff_bul} of {n_bullet}")
 
+    ob_dec = len(by_own_ts)
+    ob_bul = sum(1 for r in by_own_ts if r["became_the_trade"])
+    print("\n--- PREDICATE B: the PROPERTY the ruling states ---")
+    print(f"  chosen location ABSENT from the build at the decision's OWN ts")
+    print(f"  NON-CAUSAL DECISIONS: {ob_dec} of {n_dec}")
+    print(f"  NON-CAUSAL BULLETS  : {ob_bul} of {n_bullet}")
+    for r in sorted(by_own_ts, key=lambda x: x["decision_ts"]):
+        print(f"    {r['decision_ts']}  {r['zone_id'][:44]:<44} "
+              f"{'TRADE' if r['became_the_trade'] else '-':<6} ({r['n_locs_own_ts']} locs at own ts)")
+
     if rows:
         print("\nBY KEY")
         print(f"  {'decision ts':<20} {'zone id':<46} {'09:30':<8} {'08:00':<7} trade")
@@ -104,12 +139,15 @@ def main() -> None:
             print(f"  {r['decision_ts']:<20} {r['zone_id'][:46]:<46} {r['at_0930']:<8} "
                   f"{r['at_0800']:<7} {'YES' if r['became_the_trade'] else '-'}")
 
-    out = R / "current_mnq_strategy_v2_4_algo173_anchor_enumeration.json"
+    out = R / f"current_mnq_strategy_v2_4_algo173_anchor_enumeration_{WALK.stem[-12:]}.json"
     out.write_text(json.dumps({
         "window": [WIN_LO, WIN_HI], "sessions": len(walk),
         "control_failures": control_failures,
         "decisions_in_window": n_dec, "bullets_in_window": n_bullet,
         "affected_decisions": aff_dec, "affected_bullets": aff_bul,
+        "predicate_b_non_causal_decisions": ob_dec,
+        "predicate_b_non_causal_bullets": ob_bul,
+        "predicate_b_rows": by_own_ts,
         "rows": rows}, indent=1), encoding="utf-8")
     print(f"\nwritten to {out}")
 

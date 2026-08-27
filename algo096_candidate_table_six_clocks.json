@@ -141,7 +141,7 @@
       "his_clock": "2026-03-24 09:32:00-04:00",
       "bucket": "2026-03-24 09:30:00-04:00",
       "direction": "L",
-      "candidates_at_his_bucket": 72,
+      "candidates_at_his_bucket": 43,
       "survivors_to_ranking": 1,
       "survivor_keys": [
         {
@@ -175,12 +175,12 @@
           }
         ]
       },
-      "distinct_keys_at_his_bucket": 72,
+      "distinct_keys_at_his_bucket": 43,
       "gate_histogram": {
         "FORCE_NOT_CONFIRMED": 6,
         "SURVIVED_TO_RANKING": 1,
         "REJECTION_STORY_INCOMPLETE": 2,
-        "NO_LEGAL_ROUTE_MATCHED": 63
+        "NO_LEGAL_ROUTE_MATCHED": 34
       },
       "unranked_kill_tokens": {}
     },
@@ -190,13 +190,13 @@
       "his_clock": "2026-03-31 09:49:00-04:00",
       "bucket": "2026-03-31 09:45:00-04:00",
       "direction": "L",
-      "candidates_at_his_bucket": 269,
+      "candidates_at_his_bucket": 182,
       "survivors_to_ranking": 0,
       "survivor_keys": [],
       "deepest_gate_reached_BY_KEY": {
         "depth": 2,
         "gate": "REJECTION_STORY_INCOMPLETE",
-        "keys_at_this_depth": 267,
+        "keys_at_this_depth": 180,
         "members": [
           {
             "key": "A_NORMAL_REJECTION|L|S:2026-03-31T04:00:00-04:00:92936|2026-03-31T09:47:00-04:00",
@@ -227,44 +227,20 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
             "location_band": [
-              22958.343214285713,
-              22962.656785714287
+              22960.5,
+              23013.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-30T16:00:00-04:00:92097|2026-03-31T09:47:00-04:00",
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-29T18:45:00-04:00:92536|2026-03-31T09:47:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-30T16:00:00-04:00:92097",
+            "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
             "location_band": [
-              23020.834285714285,
-              23027.665714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|L|SWING:R:2026-03-29T21:00:00-04:00:93052|2026-03-31T09:47:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-29T21:00:00-04:00:93052",
-            "location_band": [
-              23259.299285714285,
-              23266.700714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-31T09:00:00-04:00:93246|2026-03-31T09:47:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
-            "location_band": [
-              23307.855,
-              23315.145
+              23134.0,
+              23196.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -535,48 +511,12 @@
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-30T08:00:00-04:00:94320|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
-            "location_band": [
-              23577.522857142856,
-              23582.477142857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-23T07:30:00-04:00:95263|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
-            "location_band": [
-              23812.095357142858,
-              23819.404642857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-27T04:45:00-04:00:95599|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-27T04:45:00-04:00:95599",
-            "location_band": [
-              23897.7025,
-              23901.7975
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
             "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-27T03:00:00-04:00:95820|2026-03-31T09:47:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-27T03:00:00-04:00:95820",
             "location_band": [
-              23953.40892857143,
-              23956.59107142857
+              23945.5,
+              23955.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -587,56 +527,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-20T16:15:00-04:00:95883",
             "location_band": [
-              23967.168214285713,
-              23974.331785714287
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-26T16:45:00-04:00:96098|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
-            "location_band": [
-              24020.66642857143,
-              24028.33357142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-09T01:45:00-04:00:96344|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
-            "location_band": [
-              24083.297857142858,
-              24088.702142857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-24T16:30:00-04:00:96757|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-24T16:30:00-04:00:96757",
-            "location_band": [
-              24185.14857142857,
-              24193.35142857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-26T10:45:00-04:00:96965|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T10:45:00-04:00:96965",
-            "location_band": [
-              24238.345357142858,
-              24244.154642857142
+              23970.75,
+              24051.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -647,68 +539,32 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
             "location_band": [
-              24481.303571428572,
-              24484.196428571428
+              24482.75,
+              24521.5
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-12T20:45:00-04:00:97966|2026-03-31T09:47:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-13T09:00:00-04:00:98521|2026-03-31T09:47:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+            "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
             "location_band": [
-              24489.17392857143,
-              24493.82607142857
+              24630.25,
+              24653.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-18T17:30:00-04:00:98521|2026-03-31T09:47:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-06T17:30:00-05:00:98728|2026-03-31T09:47:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-18T17:30:00-04:00:98521",
+            "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
             "location_band": [
-              24626.84392857143,
-              24633.65607142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-09T15:45:00-04:00:98563|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T15:45:00-04:00:98563",
-            "location_band": [
-              24637.246428571427,
-              24644.253571428573
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-03T10:15:00-05:00:98644|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-03T10:15:00-05:00:98644",
-            "location_band": [
-              24656.79142857143,
-              24665.20857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-03T19:45:00-05:00:98708|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-03T19:45:00-05:00:98708",
-            "location_band": [
-              24673.960357142856,
-              24680.039642857144
+              24660.75,
+              24682.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -719,32 +575,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-16T04:15:00-04:00:98863",
             "location_band": [
-              24714.28107142857,
-              24717.21892857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-17T03:45:00-04:00:98948|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-17T03:45:00-04:00:98948",
-            "location_band": [
-              24735.436785714286,
-              24738.563214285714
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-19T10:15:00-05:00:99050|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-19T10:15:00-05:00:99050",
-            "location_band": [
-              24759.601785714287,
-              24765.398214285713
+              24715.75,
+              24727.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -755,20 +587,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-16T03:45:00-04:00:99192",
             "location_band": [
-              24796.625357142857,
-              24799.374642857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-13T10:30:00-04:00:99220|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-13T10:30:00-04:00:99220",
-            "location_band": [
-              24801.779285714285,
-              24808.220714285715
+              24758.25,
+              24798.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -779,44 +599,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-12T06:00:00-04:00:99253",
             "location_band": [
-              24811.26892857143,
-              24815.23107142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-16T10:15:00-04:00:99345|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-16T10:15:00-04:00:99345",
-            "location_band": [
-              24833.71392857143,
-              24838.78607142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-17T02:00:00-04:00:99412|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-17T02:00:00-04:00:99412",
-            "location_band": [
-              24851.85785714286,
-              24854.14214285714
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-26T11:15:00-05:00:99448|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-26T11:15:00-05:00:99448",
-            "location_band": [
-              24858.095714285715,
-              24865.904285714285
+              24813.25,
+              24852.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -827,68 +611,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-24T09:30:00-05:00:99565",
             "location_band": [
-              24889.3525,
-              24893.1475
+              24877.5,
+              24891.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-24T07:45:00-05:00:99605|2026-03-31T09:47:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-12T08:15:00-04:00:99716|2026-03-31T09:47:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-24T07:45:00-05:00:99605",
+            "location_id": "SWING:R:2026-03-12T08:15:00-04:00:99716",
             "location_band": [
-              24899.47142857143,
-              24903.02857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-11T09:30:00-04:00:99634|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-11T09:30:00-04:00:99634",
-            "location_band": [
-              24905.385357142855,
-              24911.614642857145
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-18T14:45:00-04:00:99667|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-18T14:45:00-04:00:99667",
-            "location_band": [
-              24913.805714285714,
-              24919.694285714286
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-05T04:15:00-05:00:99892|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-05T04:15:00-05:00:99892",
-            "location_band": [
-              24970.222857142857,
-              24975.777142857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-16T11:00:00-04:00:99920|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
-            "location_band": [
-              24977.346071428572,
-              24982.653928571428
+              24911.25,
+              24929.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -899,92 +635,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-23T07:00:00-05:00:99953",
             "location_band": [
-              24986.380357142858,
-              24990.119642857142
+              24968.25,
+              24988.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-27T02:00:00-05:00:99967|2026-03-31T09:47:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-11T05:15:00-04:00:100151|2026-03-31T09:47:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-27T02:00:00-05:00:99967",
+            "location_id": "SWING:R:2026-03-11T05:15:00-04:00:100151",
             "location_band": [
-              24990.589642857143,
-              24992.910357142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-24T23:15:00-05:00:99980|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-24T23:15:00-05:00:99980",
-            "location_band": [
-              24993.100357142856,
-              24996.899642857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-25T03:15:00-05:00:100070|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-25T03:15:00-05:00:100070",
-            "location_band": [
-              25016.437142857143,
-              25018.562857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-16T15:45:00-04:00:100131|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
-            "location_band": [
-              25029.72,
-              25035.78
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-27T01:30:00-05:00:100242|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-27T01:30:00-05:00:100242",
-            "location_band": [
-              25059.371785714287,
-              25061.628214285713
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-05T12:45:00-05:00:100492|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-05T12:45:00-05:00:100492",
-            "location_band": [
-              25117.162857142856,
-              25128.837142857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-11T10:45:00-04:00:100720|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
-            "location_band": [
-              25176.050714285713,
-              25183.949285714287
+              24990.75,
+              25037.75
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -995,20 +659,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
             "location_band": [
-              25204.099285714285,
-              25212.400714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-26T04:00:00-05:00:101569|2026-03-31T09:47:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-26T04:00:00-05:00:101569",
-            "location_band": [
-              25390.949285714287,
-              25393.550714285713
+              25175.75,
+              25208.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1019,8 +671,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
             "location_band": [
-              25414.137142857144,
-              25416.862857142856
+              25383.75,
+              25415.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1031,8 +683,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
             "location_band": [
-              25493.366071428572,
-              25496.633928571428
+              25459.25,
+              25495.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1295,44 +947,20 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
             "location_band": [
-              22958.343214285713,
-              22962.656785714287
+              22960.5,
+              23013.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-30T16:00:00-04:00:92097|2026-03-31T09:48:00-04:00",
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-29T18:45:00-04:00:92536|2026-03-31T09:48:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-30T16:00:00-04:00:92097",
+            "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
             "location_band": [
-              23020.834285714285,
-              23027.665714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|L|SWING:R:2026-03-29T21:00:00-04:00:93052|2026-03-31T09:48:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-29T21:00:00-04:00:93052",
-            "location_band": [
-              23259.299285714285,
-              23266.700714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-31T09:00:00-04:00:93246|2026-03-31T09:48:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
-            "location_band": [
-              23307.855,
-              23315.145
+              23134.0,
+              23196.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -1603,48 +1231,12 @@
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-30T08:00:00-04:00:94320|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
-            "location_band": [
-              23577.522857142856,
-              23582.477142857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-23T07:30:00-04:00:95263|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
-            "location_band": [
-              23812.095357142858,
-              23819.404642857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-27T04:45:00-04:00:95599|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-27T04:45:00-04:00:95599",
-            "location_band": [
-              23897.7025,
-              23901.7975
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
             "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-27T03:00:00-04:00:95820|2026-03-31T09:48:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-27T03:00:00-04:00:95820",
             "location_band": [
-              23953.40892857143,
-              23956.59107142857
+              23945.5,
+              23955.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1655,56 +1247,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-20T16:15:00-04:00:95883",
             "location_band": [
-              23967.168214285713,
-              23974.331785714287
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-26T16:45:00-04:00:96098|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
-            "location_band": [
-              24020.66642857143,
-              24028.33357142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-09T01:45:00-04:00:96344|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
-            "location_band": [
-              24083.297857142858,
-              24088.702142857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-24T16:30:00-04:00:96757|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-24T16:30:00-04:00:96757",
-            "location_band": [
-              24185.14857142857,
-              24193.35142857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-26T10:45:00-04:00:96965|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T10:45:00-04:00:96965",
-            "location_band": [
-              24238.345357142858,
-              24244.154642857142
+              23970.75,
+              24051.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1715,68 +1259,32 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
             "location_band": [
-              24481.303571428572,
-              24484.196428571428
+              24482.75,
+              24521.5
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-12T20:45:00-04:00:97966|2026-03-31T09:48:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-13T09:00:00-04:00:98521|2026-03-31T09:48:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+            "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
             "location_band": [
-              24489.17392857143,
-              24493.82607142857
+              24630.25,
+              24653.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-18T17:30:00-04:00:98521|2026-03-31T09:48:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-06T17:30:00-05:00:98728|2026-03-31T09:48:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-18T17:30:00-04:00:98521",
+            "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
             "location_band": [
-              24626.84392857143,
-              24633.65607142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-09T15:45:00-04:00:98563|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T15:45:00-04:00:98563",
-            "location_band": [
-              24637.246428571427,
-              24644.253571428573
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-03T10:15:00-05:00:98644|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-03T10:15:00-05:00:98644",
-            "location_band": [
-              24656.79142857143,
-              24665.20857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-03T19:45:00-05:00:98708|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-03T19:45:00-05:00:98708",
-            "location_band": [
-              24673.960357142856,
-              24680.039642857144
+              24660.75,
+              24682.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1787,32 +1295,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-16T04:15:00-04:00:98863",
             "location_band": [
-              24714.28107142857,
-              24717.21892857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-17T03:45:00-04:00:98948|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-17T03:45:00-04:00:98948",
-            "location_band": [
-              24735.436785714286,
-              24738.563214285714
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-19T10:15:00-05:00:99050|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-19T10:15:00-05:00:99050",
-            "location_band": [
-              24759.601785714287,
-              24765.398214285713
+              24715.75,
+              24727.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1823,20 +1307,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-16T03:45:00-04:00:99192",
             "location_band": [
-              24796.625357142857,
-              24799.374642857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-13T10:30:00-04:00:99220|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-13T10:30:00-04:00:99220",
-            "location_band": [
-              24801.779285714285,
-              24808.220714285715
+              24758.25,
+              24798.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1847,44 +1319,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-12T06:00:00-04:00:99253",
             "location_band": [
-              24811.26892857143,
-              24815.23107142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-16T10:15:00-04:00:99345|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-16T10:15:00-04:00:99345",
-            "location_band": [
-              24833.71392857143,
-              24838.78607142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-17T02:00:00-04:00:99412|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-17T02:00:00-04:00:99412",
-            "location_band": [
-              24851.85785714286,
-              24854.14214285714
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-26T11:15:00-05:00:99448|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-26T11:15:00-05:00:99448",
-            "location_band": [
-              24858.095714285715,
-              24865.904285714285
+              24813.25,
+              24852.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1895,68 +1331,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-24T09:30:00-05:00:99565",
             "location_band": [
-              24889.3525,
-              24893.1475
+              24877.5,
+              24891.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-24T07:45:00-05:00:99605|2026-03-31T09:48:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-12T08:15:00-04:00:99716|2026-03-31T09:48:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-24T07:45:00-05:00:99605",
+            "location_id": "SWING:R:2026-03-12T08:15:00-04:00:99716",
             "location_band": [
-              24899.47142857143,
-              24903.02857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-11T09:30:00-04:00:99634|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-11T09:30:00-04:00:99634",
-            "location_band": [
-              24905.385357142855,
-              24911.614642857145
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-18T14:45:00-04:00:99667|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-18T14:45:00-04:00:99667",
-            "location_band": [
-              24913.805714285714,
-              24919.694285714286
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-05T04:15:00-05:00:99892|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-05T04:15:00-05:00:99892",
-            "location_band": [
-              24970.222857142857,
-              24975.777142857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-16T11:00:00-04:00:99920|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
-            "location_band": [
-              24977.346071428572,
-              24982.653928571428
+              24911.25,
+              24929.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -1967,92 +1355,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-23T07:00:00-05:00:99953",
             "location_band": [
-              24986.380357142858,
-              24990.119642857142
+              24968.25,
+              24988.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-27T02:00:00-05:00:99967|2026-03-31T09:48:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-11T05:15:00-04:00:100151|2026-03-31T09:48:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-27T02:00:00-05:00:99967",
+            "location_id": "SWING:R:2026-03-11T05:15:00-04:00:100151",
             "location_band": [
-              24990.589642857143,
-              24992.910357142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-24T23:15:00-05:00:99980|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-24T23:15:00-05:00:99980",
-            "location_band": [
-              24993.100357142856,
-              24996.899642857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-25T03:15:00-05:00:100070|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-25T03:15:00-05:00:100070",
-            "location_band": [
-              25016.437142857143,
-              25018.562857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-16T15:45:00-04:00:100131|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
-            "location_band": [
-              25029.72,
-              25035.78
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-27T01:30:00-05:00:100242|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-27T01:30:00-05:00:100242",
-            "location_band": [
-              25059.371785714287,
-              25061.628214285713
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-05T12:45:00-05:00:100492|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-05T12:45:00-05:00:100492",
-            "location_band": [
-              25117.162857142856,
-              25128.837142857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-11T10:45:00-04:00:100720|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
-            "location_band": [
-              25176.050714285713,
-              25183.949285714287
+              24990.75,
+              25037.75
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2063,20 +1379,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
             "location_band": [
-              25204.099285714285,
-              25212.400714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-26T04:00:00-05:00:101569|2026-03-31T09:48:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-26T04:00:00-05:00:101569",
-            "location_band": [
-              25390.949285714287,
-              25393.550714285713
+              25175.75,
+              25208.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2087,8 +1391,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
             "location_band": [
-              25414.137142857144,
-              25416.862857142856
+              25383.75,
+              25415.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2099,8 +1403,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
             "location_band": [
-              25493.366071428572,
-              25496.633928571428
+              25459.25,
+              25495.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2363,44 +1667,20 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
             "location_band": [
-              22958.343214285713,
-              22962.656785714287
+              22960.5,
+              23013.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-30T16:00:00-04:00:92097|2026-03-31T09:49:00-04:00",
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-29T18:45:00-04:00:92536|2026-03-31T09:49:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-30T16:00:00-04:00:92097",
+            "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
             "location_band": [
-              23020.834285714285,
-              23027.665714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|L|SWING:R:2026-03-29T21:00:00-04:00:93052|2026-03-31T09:49:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-29T21:00:00-04:00:93052",
-            "location_band": [
-              23259.299285714285,
-              23266.700714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-31T09:00:00-04:00:93246|2026-03-31T09:49:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
-            "location_band": [
-              23307.855,
-              23315.145
+              23134.0,
+              23196.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -2671,48 +1951,12 @@
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-30T08:00:00-04:00:94320|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
-            "location_band": [
-              23577.522857142856,
-              23582.477142857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-23T07:30:00-04:00:95263|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
-            "location_band": [
-              23812.095357142858,
-              23819.404642857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-27T04:45:00-04:00:95599|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-27T04:45:00-04:00:95599",
-            "location_band": [
-              23897.7025,
-              23901.7975
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
             "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-27T03:00:00-04:00:95820|2026-03-31T09:49:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-27T03:00:00-04:00:95820",
             "location_band": [
-              23953.40892857143,
-              23956.59107142857
+              23945.5,
+              23955.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2723,56 +1967,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-20T16:15:00-04:00:95883",
             "location_band": [
-              23967.168214285713,
-              23974.331785714287
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-26T16:45:00-04:00:96098|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
-            "location_band": [
-              24020.66642857143,
-              24028.33357142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-09T01:45:00-04:00:96344|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
-            "location_band": [
-              24083.297857142858,
-              24088.702142857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-24T16:30:00-04:00:96757|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-24T16:30:00-04:00:96757",
-            "location_band": [
-              24185.14857142857,
-              24193.35142857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-26T10:45:00-04:00:96965|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T10:45:00-04:00:96965",
-            "location_band": [
-              24238.345357142858,
-              24244.154642857142
+              23970.75,
+              24051.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2783,68 +1979,32 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
             "location_band": [
-              24481.303571428572,
-              24484.196428571428
+              24482.75,
+              24521.5
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-12T20:45:00-04:00:97966|2026-03-31T09:49:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-13T09:00:00-04:00:98521|2026-03-31T09:49:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+            "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
             "location_band": [
-              24489.17392857143,
-              24493.82607142857
+              24630.25,
+              24653.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-18T17:30:00-04:00:98521|2026-03-31T09:49:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-06T17:30:00-05:00:98728|2026-03-31T09:49:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-18T17:30:00-04:00:98521",
+            "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
             "location_band": [
-              24626.84392857143,
-              24633.65607142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-09T15:45:00-04:00:98563|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T15:45:00-04:00:98563",
-            "location_band": [
-              24637.246428571427,
-              24644.253571428573
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-03T10:15:00-05:00:98644|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-03T10:15:00-05:00:98644",
-            "location_band": [
-              24656.79142857143,
-              24665.20857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-03T19:45:00-05:00:98708|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-03T19:45:00-05:00:98708",
-            "location_band": [
-              24673.960357142856,
-              24680.039642857144
+              24660.75,
+              24682.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2855,32 +2015,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-16T04:15:00-04:00:98863",
             "location_band": [
-              24714.28107142857,
-              24717.21892857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-17T03:45:00-04:00:98948|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-17T03:45:00-04:00:98948",
-            "location_band": [
-              24735.436785714286,
-              24738.563214285714
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-19T10:15:00-05:00:99050|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-19T10:15:00-05:00:99050",
-            "location_band": [
-              24759.601785714287,
-              24765.398214285713
+              24715.75,
+              24727.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2891,20 +2027,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-16T03:45:00-04:00:99192",
             "location_band": [
-              24796.625357142857,
-              24799.374642857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-13T10:30:00-04:00:99220|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-13T10:30:00-04:00:99220",
-            "location_band": [
-              24801.779285714285,
-              24808.220714285715
+              24758.25,
+              24798.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2915,44 +2039,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-12T06:00:00-04:00:99253",
             "location_band": [
-              24811.26892857143,
-              24815.23107142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-16T10:15:00-04:00:99345|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-16T10:15:00-04:00:99345",
-            "location_band": [
-              24833.71392857143,
-              24838.78607142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-17T02:00:00-04:00:99412|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-17T02:00:00-04:00:99412",
-            "location_band": [
-              24851.85785714286,
-              24854.14214285714
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-26T11:15:00-05:00:99448|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-26T11:15:00-05:00:99448",
-            "location_band": [
-              24858.095714285715,
-              24865.904285714285
+              24813.25,
+              24852.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -2963,68 +2051,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-24T09:30:00-05:00:99565",
             "location_band": [
-              24889.3525,
-              24893.1475
+              24877.5,
+              24891.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-24T07:45:00-05:00:99605|2026-03-31T09:49:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-12T08:15:00-04:00:99716|2026-03-31T09:49:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-24T07:45:00-05:00:99605",
+            "location_id": "SWING:R:2026-03-12T08:15:00-04:00:99716",
             "location_band": [
-              24899.47142857143,
-              24903.02857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-11T09:30:00-04:00:99634|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-11T09:30:00-04:00:99634",
-            "location_band": [
-              24905.385357142855,
-              24911.614642857145
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-18T14:45:00-04:00:99667|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-18T14:45:00-04:00:99667",
-            "location_band": [
-              24913.805714285714,
-              24919.694285714286
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-03-05T04:15:00-05:00:99892|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-05T04:15:00-05:00:99892",
-            "location_band": [
-              24970.222857142857,
-              24975.777142857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-16T11:00:00-04:00:99920|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
-            "location_band": [
-              24977.346071428572,
-              24982.653928571428
+              24911.25,
+              24929.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -3035,92 +2075,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-23T07:00:00-05:00:99953",
             "location_band": [
-              24986.380357142858,
-              24990.119642857142
+              24968.25,
+              24988.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-27T02:00:00-05:00:99967|2026-03-31T09:49:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-11T05:15:00-04:00:100151|2026-03-31T09:49:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-27T02:00:00-05:00:99967",
+            "location_id": "SWING:R:2026-03-11T05:15:00-04:00:100151",
             "location_band": [
-              24990.589642857143,
-              24992.910357142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-24T23:15:00-05:00:99980|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-24T23:15:00-05:00:99980",
-            "location_band": [
-              24993.100357142856,
-              24996.899642857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-02-25T03:15:00-05:00:100070|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-02-25T03:15:00-05:00:100070",
-            "location_band": [
-              25016.437142857143,
-              25018.562857142857
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-16T15:45:00-04:00:100131|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
-            "location_band": [
-              25029.72,
-              25035.78
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-27T01:30:00-05:00:100242|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-27T01:30:00-05:00:100242",
-            "location_band": [
-              25059.371785714287,
-              25061.628214285713
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-05T12:45:00-05:00:100492|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-05T12:45:00-05:00:100492",
-            "location_band": [
-              25117.162857142856,
-              25128.837142857144
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-11T10:45:00-04:00:100720|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
-            "location_band": [
-              25176.050714285713,
-              25183.949285714287
+              24990.75,
+              25037.75
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -3131,20 +2099,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
             "location_band": [
-              25204.099285714285,
-              25212.400714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-02-26T04:00:00-05:00:101569|2026-03-31T09:49:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-02-26T04:00:00-05:00:101569",
-            "location_band": [
-              25390.949285714287,
-              25393.550714285713
+              25175.75,
+              25208.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -3155,8 +2111,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
             "location_band": [
-              25414.137142857144,
-              25416.862857142856
+              25383.75,
+              25415.5
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -3167,8 +2123,8 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
             "location_band": [
-              25493.366071428572,
-              25496.633928571428
+              25459.25,
+              25495.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -3404,11 +2360,11 @@
           }
         ]
       },
-      "distinct_keys_at_his_bucket": 269,
+      "distinct_keys_at_his_bucket": 182,
       "gate_histogram": {
         "FORCE_NOT_CONFIRMED": 2,
-        "REJECTION_STORY_INCOMPLETE": 24,
-        "NO_LEGAL_ROUTE_MATCHED": 243
+        "REJECTION_STORY_INCOMPLETE": 18,
+        "NO_LEGAL_ROUTE_MATCHED": 162
       },
       "unranked_kill_tokens": {}
     },
@@ -3418,13 +2374,13 @@
       "his_clock": "2026-04-06 10:04:00-04:00",
       "bucket": "2026-04-06 10:00:00-04:00",
       "direction": "S",
-      "candidates_at_his_bucket": 239,
+      "candidates_at_his_bucket": 182,
       "survivors_to_ranking": 0,
       "survivor_keys": [],
       "deepest_gate_reached_BY_KEY": {
         "depth": 2,
         "gate": "REJECTION_STORY_INCOMPLETE",
-        "keys_at_this_depth": 237,
+        "keys_at_this_depth": 180,
         "members": [
           {
             "key": "A_NORMAL_REJECTION|S|S:2026-03-25T06:30:00-04:00:97649|2026-04-06T10:02:00-04:00",
@@ -3587,68 +2543,32 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
             "location_band": [
-              24481.303571428572,
-              24484.196428571428
+              24482.75,
+              24521.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-12T20:45:00-04:00:97966|2026-04-06T10:02:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-13T09:00:00-04:00:98521|2026-04-06T10:02:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+            "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
             "location_band": [
-              24489.17392857143,
-              24493.82607142857
+              24630.25,
+              24653.75
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-18T17:30:00-04:00:98521|2026-04-06T10:02:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-06T17:30:00-05:00:98728|2026-04-06T10:02:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-18T17:30:00-04:00:98521",
+            "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
             "location_band": [
-              24626.84392857143,
-              24633.65607142857
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-09T15:45:00-04:00:98563|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-09T15:45:00-04:00:98563",
-            "location_band": [
-              24637.246428571427,
-              24644.253571428573
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-03T10:15:00-05:00:98644|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-03T10:15:00-05:00:98644",
-            "location_band": [
-              24656.79142857143,
-              24665.20857142857
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-03T19:45:00-05:00:98708|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-03T19:45:00-05:00:98708",
-            "location_band": [
-              24673.960357142856,
-              24680.039642857144
+              24660.75,
+              24682.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -3659,8 +2579,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-16T04:15:00-04:00:98863",
             "location_band": [
-              24714.28107142857,
-              24717.21892857143
+              24715.75,
+              24727.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -3671,128 +2591,44 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-03-17T02:00:00-04:00:99412",
             "location_band": [
-              24851.85785714286,
-              24854.14214285714
+              24841.0,
+              24853.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-02-26T11:15:00-05:00:99448|2026-04-06T10:02:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-12T08:15:00-04:00:99716|2026-04-06T10:02:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-02-26T11:15:00-05:00:99448",
+            "location_id": "SWING:R:2026-03-12T08:15:00-04:00:99716",
             "location_band": [
-              24858.095714285715,
-              24865.904285714285
+              24911.25,
+              24929.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-10T09:15:00-04:00:99570|2026-04-06T10:02:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-02-27T05:45:00-05:00:99864|2026-04-06T10:02:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-10T09:15:00-04:00:99570",
+            "location_id": "SWING:S:2026-02-27T05:45:00-05:00:99864",
             "location_band": [
-              24889.5675,
-              24895.4325
+              24966.0,
+              24988.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-11T09:30:00-04:00:99634|2026-04-06T10:02:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-27T05:00:00-05:00:100395|2026-04-06T10:02:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-11T09:30:00-04:00:99634",
+            "location_id": "SWING:R:2026-02-27T05:00:00-05:00:100395",
             "location_band": [
-              24905.385357142855,
-              24911.614642857145
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-18T14:45:00-04:00:99667|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-18T14:45:00-04:00:99667",
-            "location_band": [
-              24913.805714285714,
-              24919.694285714286
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-05T04:15:00-05:00:99892|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-05T04:15:00-05:00:99892",
-            "location_band": [
-              24970.222857142857,
-              24975.777142857143
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-16T11:00:00-04:00:99920|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
-            "location_band": [
-              24977.346071428572,
-              24982.653928571428
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-27T01:30:00-05:00:100242|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-02-27T01:30:00-05:00:100242",
-            "location_band": [
-              25059.371785714287,
-              25061.628214285713
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-17T22:30:00-04:00:100322|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
-            "location_band": [
-              25079.274285714284,
-              25081.725714285716
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-05T12:45:00-05:00:100492|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-05T12:45:00-05:00:100492",
-            "location_band": [
-              25117.162857142856,
-              25128.837142857144
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-11T10:45:00-04:00:100720|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
-            "location_band": [
-              25176.050714285713,
-              25183.949285714287
+              25078.0,
+              25098.75
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -3803,20 +2639,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
             "location_band": [
-              25204.099285714285,
-              25212.400714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-26T04:00:00-05:00:101569|2026-04-06T10:02:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-02-26T04:00:00-05:00:101569",
-            "location_band": [
-              25390.949285714287,
-              25393.550714285713
+              25175.75,
+              25208.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -3827,8 +2651,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
             "location_band": [
-              25414.137142857144,
-              25416.862857142856
+              25383.75,
+              25415.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -3839,8 +2663,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
             "location_band": [
-              25493.366071428572,
-              25496.633928571428
+              25459.25,
+              25495.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -4115,68 +2939,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
             "location_band": [
-              22958.343214285713,
-              22962.656785714287
+              22960.5,
+              23013.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-30T16:00:00-04:00:92097|2026-04-06T10:02:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-29T18:45:00-04:00:92536|2026-04-06T10:02:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-30T16:00:00-04:00:92097",
+            "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
             "location_band": [
-              23020.834285714285,
-              23027.665714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-03-29T21:00:00-04:00:93052|2026-04-06T10:02:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-29T21:00:00-04:00:93052",
-            "location_band": [
-              23259.299285714285,
-              23266.700714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-31T09:00:00-04:00:93246|2026-04-06T10:02:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
-            "location_band": [
-              23307.855,
-              23315.145
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-31T11:30:00-04:00:93510|2026-04-06T10:02:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-31T11:30:00-04:00:93510",
-            "location_band": [
-              23372.663571428573,
-              23382.336428571427
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-02T08:45:00-04:00:94666|2026-04-06T10:02:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
-            "location_band": [
-              23664.282142857144,
-              23668.717857142856
+              23134.0,
+              23196.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -4187,32 +2963,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-04-02T10:15:00-04:00:94712",
             "location_band": [
-              23675.086785714284,
-              23680.913214285716
+              23678.0,
+              23710.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-27T05:45:00-04:00:94839|2026-04-06T10:02:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-23T07:30:00-04:00:95263|2026-04-06T10:02:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-27T05:45:00-04:00:94839",
+            "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
             "location_band": [
-              23707.40357142857,
-              23712.09642857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-04-02T02:15:00-04:00:95312|2026-04-06T10:02:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-04-02T02:15:00-04:00:95312",
-            "location_band": [
-              23826.0125,
-              23829.9875
+              23815.75,
+              23881.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -4223,68 +2987,32 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-04-05T18:45:00-04:00:95924",
             "location_band": [
-              23978.557142857142,
-              23983.442857142858
+              23981.0,
+              24024.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-03-26T16:45:00-04:00:96098|2026-04-06T10:02:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-05T22:30:00-04:00:96736|2026-04-06T10:02:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
+            "location_id": "SWING:S:2026-04-05T22:30:00-04:00:96736",
             "location_band": [
-              24020.66642857143,
-              24028.33357142857
+              24184.0,
+              24193.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-26T10:15:00-04:00:96264|2026-04-06T10:02:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-04-06T03:30:00-04:00:97165|2026-04-06T10:02:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-26T10:15:00-04:00:96264",
+            "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
             "location_band": [
-              24063.443571428572,
-              24068.556428571428
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-09T01:45:00-04:00:96344|2026-04-06T10:02:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
-            "location_band": [
-              24083.297857142858,
-              24088.702142857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-03T03:45:00-04:00:96481|2026-04-06T10:02:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-04-03T03:45:00-04:00:96481",
-            "location_band": [
-              24119.060714285715,
-              24121.439285714285
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-24T16:30:00-04:00:96757|2026-04-06T10:02:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-24T16:30:00-04:00:96757",
-            "location_band": [
-              24185.14857142857,
-              24193.35142857143
+              24256.5,
+              24291.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -4535,68 +3263,32 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
             "location_band": [
-              24481.303571428572,
-              24484.196428571428
+              24482.75,
+              24521.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-12T20:45:00-04:00:97966|2026-04-06T10:03:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-13T09:00:00-04:00:98521|2026-04-06T10:03:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+            "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
             "location_band": [
-              24489.17392857143,
-              24493.82607142857
+              24630.25,
+              24653.75
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-18T17:30:00-04:00:98521|2026-04-06T10:03:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-06T17:30:00-05:00:98728|2026-04-06T10:03:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-18T17:30:00-04:00:98521",
+            "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
             "location_band": [
-              24626.84392857143,
-              24633.65607142857
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-09T15:45:00-04:00:98563|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-09T15:45:00-04:00:98563",
-            "location_band": [
-              24637.246428571427,
-              24644.253571428573
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-03T10:15:00-05:00:98644|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-03T10:15:00-05:00:98644",
-            "location_band": [
-              24656.79142857143,
-              24665.20857142857
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-03T19:45:00-05:00:98708|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-03T19:45:00-05:00:98708",
-            "location_band": [
-              24673.960357142856,
-              24680.039642857144
+              24660.75,
+              24682.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -4607,8 +3299,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-16T04:15:00-04:00:98863",
             "location_band": [
-              24714.28107142857,
-              24717.21892857143
+              24715.75,
+              24727.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -4619,128 +3311,44 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-03-17T02:00:00-04:00:99412",
             "location_band": [
-              24851.85785714286,
-              24854.14214285714
+              24841.0,
+              24853.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-02-26T11:15:00-05:00:99448|2026-04-06T10:03:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-12T08:15:00-04:00:99716|2026-04-06T10:03:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-02-26T11:15:00-05:00:99448",
+            "location_id": "SWING:R:2026-03-12T08:15:00-04:00:99716",
             "location_band": [
-              24858.095714285715,
-              24865.904285714285
+              24911.25,
+              24929.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-10T09:15:00-04:00:99570|2026-04-06T10:03:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-02-27T05:45:00-05:00:99864|2026-04-06T10:03:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-10T09:15:00-04:00:99570",
+            "location_id": "SWING:S:2026-02-27T05:45:00-05:00:99864",
             "location_band": [
-              24889.5675,
-              24895.4325
+              24966.0,
+              24988.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-11T09:30:00-04:00:99634|2026-04-06T10:03:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-27T05:00:00-05:00:100395|2026-04-06T10:03:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-11T09:30:00-04:00:99634",
+            "location_id": "SWING:R:2026-02-27T05:00:00-05:00:100395",
             "location_band": [
-              24905.385357142855,
-              24911.614642857145
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-18T14:45:00-04:00:99667|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-18T14:45:00-04:00:99667",
-            "location_band": [
-              24913.805714285714,
-              24919.694285714286
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-05T04:15:00-05:00:99892|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-05T04:15:00-05:00:99892",
-            "location_band": [
-              24970.222857142857,
-              24975.777142857143
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-16T11:00:00-04:00:99920|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
-            "location_band": [
-              24977.346071428572,
-              24982.653928571428
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-27T01:30:00-05:00:100242|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-02-27T01:30:00-05:00:100242",
-            "location_band": [
-              25059.371785714287,
-              25061.628214285713
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-17T22:30:00-04:00:100322|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
-            "location_band": [
-              25079.274285714284,
-              25081.725714285716
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-05T12:45:00-05:00:100492|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-05T12:45:00-05:00:100492",
-            "location_band": [
-              25117.162857142856,
-              25128.837142857144
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-11T10:45:00-04:00:100720|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
-            "location_band": [
-              25176.050714285713,
-              25183.949285714287
+              25078.0,
+              25098.75
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -4751,20 +3359,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
             "location_band": [
-              25204.099285714285,
-              25212.400714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-26T04:00:00-05:00:101569|2026-04-06T10:03:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-02-26T04:00:00-05:00:101569",
-            "location_band": [
-              25390.949285714287,
-              25393.550714285713
+              25175.75,
+              25208.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -4775,8 +3371,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
             "location_band": [
-              25414.137142857144,
-              25416.862857142856
+              25383.75,
+              25415.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -4787,8 +3383,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
             "location_band": [
-              25493.366071428572,
-              25496.633928571428
+              25459.25,
+              25495.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -5063,68 +3659,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
             "location_band": [
-              22958.343214285713,
-              22962.656785714287
+              22960.5,
+              23013.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-30T16:00:00-04:00:92097|2026-04-06T10:03:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-29T18:45:00-04:00:92536|2026-04-06T10:03:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-30T16:00:00-04:00:92097",
+            "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
             "location_band": [
-              23020.834285714285,
-              23027.665714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-03-29T21:00:00-04:00:93052|2026-04-06T10:03:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-29T21:00:00-04:00:93052",
-            "location_band": [
-              23259.299285714285,
-              23266.700714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-31T09:00:00-04:00:93246|2026-04-06T10:03:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
-            "location_band": [
-              23307.855,
-              23315.145
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-31T11:30:00-04:00:93510|2026-04-06T10:03:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-31T11:30:00-04:00:93510",
-            "location_band": [
-              23372.663571428573,
-              23382.336428571427
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-02T08:45:00-04:00:94666|2026-04-06T10:03:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
-            "location_band": [
-              23664.282142857144,
-              23668.717857142856
+              23134.0,
+              23196.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -5135,32 +3683,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-04-02T10:15:00-04:00:94712",
             "location_band": [
-              23675.086785714284,
-              23680.913214285716
+              23678.0,
+              23710.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-27T05:45:00-04:00:94839|2026-04-06T10:03:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-23T07:30:00-04:00:95263|2026-04-06T10:03:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-27T05:45:00-04:00:94839",
+            "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
             "location_band": [
-              23707.40357142857,
-              23712.09642857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-04-02T02:15:00-04:00:95312|2026-04-06T10:03:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-04-02T02:15:00-04:00:95312",
-            "location_band": [
-              23826.0125,
-              23829.9875
+              23815.75,
+              23881.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -5171,68 +3707,32 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-04-05T18:45:00-04:00:95924",
             "location_band": [
-              23978.557142857142,
-              23983.442857142858
+              23981.0,
+              24024.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-03-26T16:45:00-04:00:96098|2026-04-06T10:03:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-05T22:30:00-04:00:96736|2026-04-06T10:03:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
+            "location_id": "SWING:S:2026-04-05T22:30:00-04:00:96736",
             "location_band": [
-              24020.66642857143,
-              24028.33357142857
+              24184.0,
+              24193.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-26T10:15:00-04:00:96264|2026-04-06T10:03:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-04-06T03:30:00-04:00:97165|2026-04-06T10:03:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-26T10:15:00-04:00:96264",
+            "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
             "location_band": [
-              24063.443571428572,
-              24068.556428571428
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-09T01:45:00-04:00:96344|2026-04-06T10:03:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
-            "location_band": [
-              24083.297857142858,
-              24088.702142857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-03T03:45:00-04:00:96481|2026-04-06T10:03:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-04-03T03:45:00-04:00:96481",
-            "location_band": [
-              24119.060714285715,
-              24121.439285714285
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-24T16:30:00-04:00:96757|2026-04-06T10:03:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-24T16:30:00-04:00:96757",
-            "location_band": [
-              24185.14857142857,
-              24193.35142857143
+              24256.5,
+              24291.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -5483,68 +3983,32 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
             "location_band": [
-              24481.303571428572,
-              24484.196428571428
+              24482.75,
+              24521.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-12T20:45:00-04:00:97966|2026-04-06T10:04:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-13T09:00:00-04:00:98521|2026-04-06T10:04:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+            "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
             "location_band": [
-              24489.17392857143,
-              24493.82607142857
+              24630.25,
+              24653.75
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-18T17:30:00-04:00:98521|2026-04-06T10:04:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-06T17:30:00-05:00:98728|2026-04-06T10:04:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-18T17:30:00-04:00:98521",
+            "location_id": "SWING:R:2026-03-06T17:30:00-05:00:98728",
             "location_band": [
-              24626.84392857143,
-              24633.65607142857
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-09T15:45:00-04:00:98563|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-09T15:45:00-04:00:98563",
-            "location_band": [
-              24637.246428571427,
-              24644.253571428573
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-03T10:15:00-05:00:98644|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-03T10:15:00-05:00:98644",
-            "location_band": [
-              24656.79142857143,
-              24665.20857142857
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-03T19:45:00-05:00:98708|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-03T19:45:00-05:00:98708",
-            "location_band": [
-              24673.960357142856,
-              24680.039642857144
+              24660.75,
+              24682.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -5555,8 +4019,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:S:2026-03-16T04:15:00-04:00:98863",
             "location_band": [
-              24714.28107142857,
-              24717.21892857143
+              24715.75,
+              24727.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -5567,128 +4031,44 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-03-17T02:00:00-04:00:99412",
             "location_band": [
-              24851.85785714286,
-              24854.14214285714
+              24841.0,
+              24853.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-02-26T11:15:00-05:00:99448|2026-04-06T10:04:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-12T08:15:00-04:00:99716|2026-04-06T10:04:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-02-26T11:15:00-05:00:99448",
+            "location_id": "SWING:R:2026-03-12T08:15:00-04:00:99716",
             "location_band": [
-              24858.095714285715,
-              24865.904285714285
+              24911.25,
+              24929.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-10T09:15:00-04:00:99570|2026-04-06T10:04:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-02-27T05:45:00-05:00:99864|2026-04-06T10:04:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-10T09:15:00-04:00:99570",
+            "location_id": "SWING:S:2026-02-27T05:45:00-05:00:99864",
             "location_band": [
-              24889.5675,
-              24895.4325
+              24966.0,
+              24988.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
             "reason": null
           },
           {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-11T09:30:00-04:00:99634|2026-04-06T10:04:00-04:00",
+            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-27T05:00:00-05:00:100395|2026-04-06T10:04:00-04:00",
             "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-11T09:30:00-04:00:99634",
+            "location_id": "SWING:R:2026-02-27T05:00:00-05:00:100395",
             "location_band": [
-              24905.385357142855,
-              24911.614642857145
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-18T14:45:00-04:00:99667|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-18T14:45:00-04:00:99667",
-            "location_band": [
-              24913.805714285714,
-              24919.694285714286
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-05T04:15:00-05:00:99892|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-05T04:15:00-05:00:99892",
-            "location_band": [
-              24970.222857142857,
-              24975.777142857143
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-16T11:00:00-04:00:99920|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
-            "location_band": [
-              24977.346071428572,
-              24982.653928571428
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-27T01:30:00-05:00:100242|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-02-27T01:30:00-05:00:100242",
-            "location_band": [
-              25059.371785714287,
-              25061.628214285713
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:S:2026-03-17T22:30:00-04:00:100322|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
-            "location_band": [
-              25079.274285714284,
-              25081.725714285716
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-05T12:45:00-05:00:100492|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-05T12:45:00-05:00:100492",
-            "location_band": [
-              25117.162857142856,
-              25128.837142857144
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-03-11T10:45:00-04:00:100720|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
-            "location_band": [
-              25176.050714285713,
-              25183.949285714287
+              25078.0,
+              25098.75
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -5699,20 +4079,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
             "location_band": [
-              25204.099285714285,
-              25212.400714285715
-            ],
-            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
-            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
-            "reason": null
-          },
-          {
-            "key": "A_NORMAL_REJECTION|S|SWING:R:2026-02-26T04:00:00-05:00:101569|2026-04-06T10:04:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:R:2026-02-26T04:00:00-05:00:101569",
-            "location_band": [
-              25390.949285714287,
-              25393.550714285713
+              25175.75,
+              25208.25
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -5723,8 +4091,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-02-26T09:30:00-05:00:101662",
             "location_band": [
-              25414.137142857144,
-              25416.862857142856
+              25383.75,
+              25415.5
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -5735,8 +4103,8 @@
             "route": "A_NORMAL_REJECTION",
             "location_id": "SWING:R:2026-02-25T17:15:00-05:00:101980",
             "location_band": [
-              25493.366071428572,
-              25496.633928571428
+              25459.25,
+              25495.0
             ],
             "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
             "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
@@ -6011,68 +4379,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
             "location_band": [
-              22958.343214285713,
-              22962.656785714287
+              22960.5,
+              23013.25
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-30T16:00:00-04:00:92097|2026-04-06T10:04:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-29T18:45:00-04:00:92536|2026-04-06T10:04:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-30T16:00:00-04:00:92097",
+            "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
             "location_band": [
-              23020.834285714285,
-              23027.665714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-03-29T21:00:00-04:00:93052|2026-04-06T10:04:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-29T21:00:00-04:00:93052",
-            "location_band": [
-              23259.299285714285,
-              23266.700714285715
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-31T09:00:00-04:00:93246|2026-04-06T10:04:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-31T09:00:00-04:00:93246",
-            "location_band": [
-              23307.855,
-              23315.145
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-31T11:30:00-04:00:93510|2026-04-06T10:04:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-31T11:30:00-04:00:93510",
-            "location_band": [
-              23372.663571428573,
-              23382.336428571427
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-02T08:45:00-04:00:94666|2026-04-06T10:04:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
-            "location_band": [
-              23664.282142857144,
-              23668.717857142856
+              23134.0,
+              23196.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -6083,32 +4403,20 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-04-02T10:15:00-04:00:94712",
             "location_band": [
-              23675.086785714284,
-              23680.913214285716
+              23678.0,
+              23710.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-27T05:45:00-04:00:94839|2026-04-06T10:04:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-23T07:30:00-04:00:95263|2026-04-06T10:04:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-27T05:45:00-04:00:94839",
+            "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
             "location_band": [
-              23707.40357142857,
-              23712.09642857143
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-04-02T02:15:00-04:00:95312|2026-04-06T10:04:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-04-02T02:15:00-04:00:95312",
-            "location_band": [
-              23826.0125,
-              23829.9875
+              23815.75,
+              23881.0
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -6119,68 +4427,32 @@
             "route": "B_C_D_BREAKOUT_FAMILY",
             "location_id": "SWING:S:2026-04-05T18:45:00-04:00:95924",
             "location_band": [
-              23978.557142857142,
-              23983.442857142858
+              23981.0,
+              24024.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-03-26T16:45:00-04:00:96098|2026-04-06T10:04:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-05T22:30:00-04:00:96736|2026-04-06T10:04:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
+            "location_id": "SWING:S:2026-04-05T22:30:00-04:00:96736",
             "location_band": [
-              24020.66642857143,
-              24028.33357142857
+              24184.0,
+              24193.75
             ],
             "authority_state": null,
             "authority_refusal": null,
             "reason": null
           },
           {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-26T10:15:00-04:00:96264|2026-04-06T10:04:00-04:00",
+            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:R:2026-04-06T03:30:00-04:00:97165|2026-04-06T10:04:00-04:00",
             "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-26T10:15:00-04:00:96264",
+            "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
             "location_band": [
-              24063.443571428572,
-              24068.556428571428
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-09T01:45:00-04:00:96344|2026-04-06T10:04:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
-            "location_band": [
-              24083.297857142858,
-              24088.702142857142
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-04-03T03:45:00-04:00:96481|2026-04-06T10:04:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-04-03T03:45:00-04:00:96481",
-            "location_band": [
-              24119.060714285715,
-              24121.439285714285
-            ],
-            "authority_state": null,
-            "authority_refusal": null,
-            "reason": null
-          },
-          {
-            "key": "B_C_D_BREAKOUT_FAMILY|S|SWING:S:2026-03-24T16:30:00-04:00:96757|2026-04-06T10:04:00-04:00",
-            "route": "B_C_D_BREAKOUT_FAMILY",
-            "location_id": "SWING:S:2026-03-24T16:30:00-04:00:96757",
-            "location_band": [
-              24185.14857142857,
-              24193.35142857143
+              24256.5,
+              24291.25
             ],
             "authority_state": null,
             "authority_refusal": null,
@@ -6272,11 +4544,11 @@
           }
         ]
       },
-      "distinct_keys_at_his_bucket": 239,
+      "distinct_keys_at_his_bucket": 182,
       "gate_histogram": {
         "FORCE_NOT_CONFIRMED": 2,
-        "REJECTION_STORY_INCOMPLETE": 135,
-        "NO_LEGAL_ROUTE_MATCHED": 102
+        "REJECTION_STORY_INCOMPLETE": 102,
+        "NO_LEGAL_ROUTE_MATCHED": 78
       },
       "unranked_kill_tokens": {}
     },
@@ -6286,47 +4558,802 @@
       "his_clock": "2026-04-09 11:35:00-04:00",
       "bucket": "2026-04-09 11:35:00-04:00",
       "direction": "L",
-      "candidates_at_his_bucket": 89,
-      "survivors_to_ranking": 1,
-      "survivor_keys": [
-        {
-          "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-17T22:30:00-04:00:100322|2026-04-09T11:37:00-04:00",
-          "route": "A_NORMAL_REJECTION",
-          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
-          "location_band": [
-            25079.274285714284,
-            25081.725714285716
-          ],
-          "clock": "2026-04-09T11:37:00-04:00",
-          "reason": null
-        }
-      ],
+      "candidates_at_his_bucket": 71,
+      "survivors_to_ranking": 0,
+      "survivor_keys": [],
       "deepest_gate_reached_BY_KEY": {
-        "depth": 5,
-        "gate": "SURVIVED_TO_RANKING",
-        "keys_at_this_depth": 1,
+        "depth": 2,
+        "gate": "INTRA_15M_FORCE_NOT_CONFIRMED",
+        "keys_at_this_depth": 65,
         "members": [
           {
-            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-17T22:30:00-04:00:100322|2026-04-09T11:37:00-04:00",
-            "route": "A_NORMAL_REJECTION",
-            "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-10T10:15:00-04:00:100324|2026-04-09T11:36:00-04:00",
+            "route": "B_NORMAL_BREAKOUT",
+            "location_id": "SWING:R:2026-03-10T10:15:00-04:00:100324",
             "location_band": [
-              25079.274285714284,
-              25081.725714285716
+              null,
+              null
             ],
-            "authority_state": "GRANTED",
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-02T15:30:00-05:00:100400|2026-04-09T11:36:00-04:00",
+            "route": "B_NORMAL_BREAKOUT",
+            "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+            "location_band": [
+              null,
+              null
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-03-31T04:00:00-04:00:92936|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-03-31T04:00:00-04:00:92936",
+            "location_band": [
+              23228.858035714286,
+              23240.141964285714
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-03-31T09:45:00-04:00:93429|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-03-31T09:45:00-04:00:93429",
+            "location_band": [
+              23354.825,
+              23362.175
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+            "location_band": [
+              23392.688392857144,
+              23404.11160714286
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-03-31T09:15:00-04:00:93745|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-03-31T09:15:00-04:00:93745",
+            "location_band": [
+              23430.708035714284,
+              23441.291964285716
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-03-30T08:45:00-04:00:93755|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-03-30T08:45:00-04:00:93755",
+            "location_band": [
+              23432.107589285715,
+              23447.392410714285
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-03-30T09:15:00-04:00:94096|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+            "location_band": [
+              23520.930803571428,
+              23531.319196428572
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-04-07T11:45:00-04:00:95766|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-04-07T11:45:00-04:00:95766",
+            "location_band": [
+              23938.289732142857,
+              23948.960267857143
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-03-31T19:00:00-04:00:95893|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-03-31T19:00:00-04:00:95893",
+            "location_band": [
+              23968.199107142857,
+              23977.050892857143
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-03-26T16:45:00-04:00:96098|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-03-26T16:45:00-04:00:96098",
+            "location_band": [
+              24015.305357142857,
+              24027.694642857143
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-04-01T09:45:00-04:00:96133|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-04-01T09:45:00-04:00:96133",
+            "location_band": [
+              24029.913392857143,
+              24039.086607142857
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-04-03T04:45:00-04:00:96736|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-04-03T04:45:00-04:00:96736",
+            "location_band": [
+              24178.415178571428,
+              24198.68482142857
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-04-07T14:00:00-04:00:96736|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-04-07T14:00:00-04:00:96736",
+            "location_band": [
+              24175.522321428572,
+              24191.227678571428
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-04-01T12:15:00-04:00:96923|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-04-01T12:15:00-04:00:96923",
+            "location_band": [
+              24227.03348214286,
+              24235.21651785714
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-04-07T19:15:00-04:00:97378|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-04-07T19:15:00-04:00:97378",
+            "location_band": [
+              24321.44955357143,
+              24380.20044642857
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-03-25T06:30:00-04:00:97649|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-03-25T06:30:00-04:00:97649",
+            "location_band": [
+              24407.929017857143,
+              24435.070982142857
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-03-25T11:30:00-04:00:98139|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-03-25T11:30:00-04:00:98139",
+            "location_band": [
+              24522.229910714283,
+              24544.570089285717
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|S:2026-03-16T19:30:00-04:00:99336|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "S:2026-03-16T19:30:00-04:00:99336",
+            "location_band": [
+              24831.00089285714,
+              24838.849107142858
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-03-18T14:45:00-04:00:99707|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-03-18T14:45:00-04:00:99707",
+            "location_band": [
+              24914.9875,
+              24934.0125
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|R:2026-03-16T12:15:00-04:00:99846|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "R:2026-03-16T12:15:00-04:00:99846",
+            "location_band": [
+              24953.676785714288,
+              24964.423214285714
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-30T21:00:00-04:00:91842|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-03-30T21:00:00-04:00:91842",
+            "location_band": [
+              22960.5,
+              23013.25
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-29T18:45:00-04:00:92536|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-03-29T18:45:00-04:00:92536",
+            "location_band": [
+              23134.0,
+              23196.25
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-04-02T10:15:00-04:00:94712|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-04-02T10:15:00-04:00:94712",
+            "location_band": [
+              23678.0,
+              23710.75
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-23T07:30:00-04:00:95263|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+            "location_band": [
+              23815.75,
+              23881.0
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-26T10:15:00-04:00:96264|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-03-26T10:15:00-04:00:96264",
+            "location_band": [
+              24066.0,
+              24156.5
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-04-06T03:45:00-04:00:96830|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+            "location_band": [
+              24207.5,
+              24225.75
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-20T03:45:00-04:00:97931|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+            "location_band": [
+              24482.75,
+              24521.5
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:R:2026-03-20T02:45:00-04:00:98418|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:R:2026-03-20T02:45:00-04:00:98418",
+            "location_band": [
+              24588.5,
+              24604.5
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-13T09:00:00-04:00:98521|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-03-13T09:00:00-04:00:98521",
+            "location_band": [
+              24630.25,
+              24653.75
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:R:2026-03-13T10:30:00-04:00:99220|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:R:2026-03-13T10:30:00-04:00:99220",
+            "location_band": [
+              24727.75,
+              24805.0
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-05T04:15:00-05:00:99892|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-03-05T04:15:00-05:00:99892",
+            "location_band": [
+              24973.0,
+              25007.0
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:S:2026-03-11T03:00:00-04:00:100033|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:S:2026-03-11T03:00:00-04:00:100033",
+            "location_band": [
+              25008.25,
+              25020.25
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|SWING:R:2026-03-10T10:15:00-04:00:100324|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "SWING:R:2026-03-10T10:15:00-04:00:100324",
+            "location_band": [
+              25030.5,
+              25081.0
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-03-30T21:00:00-04:00:92358|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-03-30T21:00:00-04:00:92358",
+            "location_band": [
+              23027.5,
+              23151.25
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-03-31T12:30:00-04:00:94054|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-03-31T12:30:00-04:00:94054",
+            "location_band": [
+              23511.25,
+              23515.5
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-02T10:15:00-04:00:95355|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-04-02T10:15:00-04:00:95355",
+            "location_band": [
+              23819.0,
+              23858.5
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-02T10:30:00-04:00:95674|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-04-02T10:30:00-04:00:95674",
+            "location_band": [
+              23907.75,
+              23929.25
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-07T11:45:00-04:00:96124|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-04-07T11:45:00-04:00:96124",
+            "location_band": [
+              24020.0,
+              24042.0
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-07T15:45:00-04:00:96656|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-04-07T15:45:00-04:00:96656",
+            "location_band": [
+              24136.0,
+              24191.75
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-07T16:15:00-04:00:97210|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-04-07T16:15:00-04:00:97210",
+            "location_band": [
+              24259.25,
+              24345.75
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-07T19:00:00-04:00:98790|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-04-07T19:00:00-04:00:98790",
+            "location_band": [
+              24628.5,
+              24766.25
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-07T19:15:00-04:00:99511|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-04-07T19:15:00-04:00:99511",
+            "location_band": [
+              24842.0,
+              24913.5
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-09T11:15:00-04:00:100022|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-04-09T11:15:00-04:00:100022",
+            "location_band": [
+              24997.75,
+              25013.5
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-02-25T17:00:00-05:00:101710|2026-04-09T11:37:00-04:00",
+            "route": "A_NORMAL_REJECTION",
+            "location_id": "FVG15:bullish:2026-02-25T17:00:00-05:00:101710",
+            "location_band": [
+              25420.0,
+              25435.0
+            ],
+            "authority_state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "authority_refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|S:2026-04-08T04:45:00-04:00:100537|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "S:2026-04-08T04:45:00-04:00:100537",
+            "location_band": [
+              25128.9875,
+              25142.0125
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|R:2026-04-08T04:00:00-04:00:100744|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "R:2026-04-08T04:00:00-04:00:100744",
+            "location_band": [
+              25177.594642857144,
+              25192.405357142856
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-10T10:15:00-04:00:100324|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "SWING:R:2026-03-10T10:15:00-04:00:100324",
+            "location_band": [
+              25030.5,
+              25081.0
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-03-02T15:30:00-05:00:100400|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+            "location_band": [
+              25082.75,
+              25100.0
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:S:2026-04-08T01:45:00-04:00:100472|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "SWING:S:2026-04-08T01:45:00-04:00:100472",
+            "location_band": [
+              25118.0,
+              25127.0
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|SWING:R:2026-04-08T08:45:00-04:00:101029|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "SWING:R:2026-04-08T08:45:00-04:00:101029",
+            "location_band": [
+              25243.75,
+              25257.25
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|FVG15:bearish:2026-04-08T10:00:00-04:00:100696|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "FVG15:bearish:2026-04-08T10:00:00-04:00:100696",
+            "location_band": [
+              25161.25,
+              25186.5
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|FVG15:bearish:2026-02-26T10:00:00-05:00:101211|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "FVG15:bearish:2026-02-26T10:00:00-05:00:101211",
+            "location_band": [
+              25265.5,
+              25340.0
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|FVG15:bearish:2026-02-26T09:45:00-05:00:101418|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "FVG15:bearish:2026-02-26T09:45:00-05:00:101418",
+            "location_band": [
+              25342.0,
+              25366.75
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|FVG15:bearish:2026-02-03T11:45:00-05:00:102138|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "FVG15:bearish:2026-02-03T11:45:00-05:00:102138",
+            "location_band": [
+              25534.25,
+              25535.0
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|FVG15:bearish:2026-02-03T10:15:00-05:00:102738|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "FVG15:bearish:2026-02-03T10:15:00-05:00:102738",
+            "location_band": [
+              25647.25,
+              25721.75
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|FVG15:bearish:2026-02-03T10:00:00-05:00:103476|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "FVG15:bearish:2026-02-03T10:00:00-05:00:103476",
+            "location_band": [
+              25811.5,
+              25926.75
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|FVG15:bearish:2026-02-03T09:45:00-05:00:103812|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "FVG15:bearish:2026-02-03T09:45:00-05:00:103812",
+            "location_band": [
+              25952.5,
+              25953.25
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_C_D_BREAKOUT_FAMILY|L|FVG15:bearish:2026-02-03T09:30:00-05:00:103838|2026-04-09T11:37:00-04:00",
+            "route": "B_C_D_BREAKOUT_FAMILY",
+            "location_id": "FVG15:bearish:2026-02-03T09:30:00-05:00:103838",
+            "location_band": [
+              25957.25,
+              25961.5
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-10T10:15:00-04:00:100324|2026-04-09T11:37:00-04:00",
+            "route": "B_NORMAL_BREAKOUT",
+            "location_id": "SWING:R:2026-03-10T10:15:00-04:00:100324",
+            "location_band": [
+              null,
+              null
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-02T15:30:00-05:00:100400|2026-04-09T11:37:00-04:00",
+            "route": "B_NORMAL_BREAKOUT",
+            "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+            "location_band": [
+              null,
+              null
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-10T10:15:00-04:00:100324|2026-04-09T11:38:00-04:00",
+            "route": "B_NORMAL_BREAKOUT",
+            "location_id": "SWING:R:2026-03-10T10:15:00-04:00:100324",
+            "location_band": [
+              null,
+              null
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-02T15:30:00-05:00:100400|2026-04-09T11:38:00-04:00",
+            "route": "B_NORMAL_BREAKOUT",
+            "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+            "location_band": [
+              null,
+              null
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-10T10:15:00-04:00:100324|2026-04-09T11:39:00-04:00",
+            "route": "B_NORMAL_BREAKOUT",
+            "location_id": "SWING:R:2026-03-10T10:15:00-04:00:100324",
+            "location_band": [
+              null,
+              null
+            ],
+            "authority_state": null,
+            "authority_refusal": null,
+            "reason": null
+          },
+          {
+            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-03-02T15:30:00-05:00:100400|2026-04-09T11:39:00-04:00",
+            "route": "B_NORMAL_BREAKOUT",
+            "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+            "location_band": [
+              null,
+              null
+            ],
+            "authority_state": null,
             "authority_refusal": null,
             "reason": null
           }
         ]
       },
-      "distinct_keys_at_his_bucket": 89,
+      "distinct_keys_at_his_bucket": 71,
       "gate_histogram": {
         "FORCE_NOT_CONFIRMED": 6,
-        "INTRA_15M_FORCE_NOT_CONFIRMED": 4,
-        "REJECTION_STORY_INCOMPLETE": 61,
-        "SURVIVED_TO_RANKING": 1,
-        "NO_LEGAL_ROUTE_MATCHED": 17
+        "INTRA_15M_FORCE_NOT_CONFIRMED": 8,
+        "REJECTION_STORY_INCOMPLETE": 43,
+        "NO_LEGAL_ROUTE_MATCHED": 14
       },
       "unranked_kill_tokens": {}
     },
@@ -6336,19 +5363,19 @@
       "his_clock": "2026-04-14 09:36:00-04:00",
       "bucket": "2026-04-14 09:35:00-04:00",
       "direction": "L",
-      "candidates_at_his_bucket": 95,
+      "candidates_at_his_bucket": 72,
       "survivors_to_ranking": 1,
       "survivor_keys": [
         {
-          "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-04-14T09:15:00-04:00:102865|2026-04-14T09:38:00-04:00",
-          "route": "B_NORMAL_BREAKOUT",
+          "key": "D_PREBREAK_RETEST_BREAKOUT|L|SWING:R:2026-04-14T09:15:00-04:00:102865|2026-04-14T09:38:00-04:00",
+          "route": "D_PREBREAK_RETEST_BREAKOUT",
           "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
           "location_band": [
-            25714.66964285714,
-            25717.83035714286
+            25678.0,
+            25716.25
           ],
           "clock": "2026-04-14T09:38:00-04:00",
-          "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE"
         }
       ],
       "deepest_gate_reached_BY_KEY": {
@@ -6357,23 +5384,24 @@
         "keys_at_this_depth": 1,
         "members": [
           {
-            "key": "B_NORMAL_BREAKOUT|L|SWING:R:2026-04-14T09:15:00-04:00:102865|2026-04-14T09:38:00-04:00",
-            "route": "B_NORMAL_BREAKOUT",
+            "key": "D_PREBREAK_RETEST_BREAKOUT|L|SWING:R:2026-04-14T09:15:00-04:00:102865|2026-04-14T09:38:00-04:00",
+            "route": "D_PREBREAK_RETEST_BREAKOUT",
             "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
             "location_band": [
-              25714.66964285714,
-              25717.83035714286
+              25678.0,
+              25716.25
             ],
             "authority_state": null,
             "authority_refusal": null,
-            "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+            "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE"
           }
         ]
       },
-      "distinct_keys_at_his_bucket": 95,
+      "distinct_keys_at_his_bucket": 72,
       "gate_histogram": {
         "FORCE_NOT_CONFIRMED": 6,
-        "REJECTION_STORY_INCOMPLETE": 85,
+        "REJECTION_STORY_INCOMPLETE": 61,
+        "LOST_RANKING_TO_ANOTHER_CANDIDATE": 1,
         "SURVIVED_TO_RANKING": 1,
         "NO_LEGAL_ROUTE_MATCHED": 3
       },
@@ -6383,5 +5411,5 @@
   "unranked_kill_tokens_across_all_sessions": {},
   "unranked_note": "Any killed_at token absent from the declared ranking is counted here and NOT bucketed into a neighbouring depth. A silently-bucketed token is how a whole route family came back UNMAPPED and was then dropped from a headline count (ALGO-097 §5/§6).",
   "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
-  "runtime_seconds": 180.86
+  "runtime_seconds": 106.28
 }
