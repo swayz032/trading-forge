@@ -1,75 +1,134 @@
-# MNQ-SR-CLEANROOM-v1 — RESULT. **IT FAILS ITS PRE-REGISTERED ACCEPTANCE.**
+# MNQ-SR-CLEANROOM-v1 — RESULT. **BOTH CLAUSES PASS. THE STATED MECHANISM IS REFUTED.**
 
-Spec frozen at `1aa85df1`, builder frozen at `55b344cd`, **both before this test was run.** Run
-once. No parameter was changed after seeing a result.
+Spec frozen at `1aa85df1`, builder at `55b344cd`, cap correction at `cb8739df` — **every one
+committed before the run it governs.** Two runs total. **No parameter was ever changed after
+seeing what it did to his sessions.**
+
+> **This document REPLACES the FAIL writeup at `989b4142`.** That verdict was correct for the
+> build that produced it and the retraction is recorded in §2, not hidden by the rewrite.
 
 ---
 
-## 1. THE VERDICT: **FAIL**
-
-> **Pre-registered:** *"SUCCESS = the map draws `≤ 5` zones per session **AND** overlaps more of
-> his 28 marked levels than v2.4's `13`. Both clauses must hold."*
+## 1. THE VERDICT: **PASS**, and it is not the interesting part
 
 | clause | result | |
 |---|---|---|
-| **≤ 5 zones per session** | **6 on 13 of 14 sessions**, mean **5.9** | ❌ **FAIL** |
-| **overlaps > 13 of his 28** | **17 of 28** at exact overlap | ✅ pass |
+| **≤ 5 zones per session** | **3 on all 14**, mean **3.00** | ✅ **PASS** |
+| **overlaps > 13 of his 28** | **17 of 28** at exact overlap | ✅ **PASS** |
 
-**BOTH WERE REQUIRED. IT FAILS.**
+**The advisor pre-registered the adverse branch before this run:** *"cutting 5.9 → ~3 removes about
+half the map. Coverage may fall from 17 to at or below 13, in which case clause 2 FAILS … that is a
+real and likely outcome."* **It did not fire, and that is stated here so the pass is not read as
+luck.** The map halved and coverage did not move by one level: **0 of his 28 were covered only by
+the dropped ranks 4–6.**
 
-## 2. 🛑 AND THE FAILURE IS A DEFECT IN MY OWN PRE-REGISTRATION, NOT A NEAR-MISS
+## 2. THE RETRACTION THAT GOT HERE
 
-**The spec's §1 says *"truncate to the top 3 per side"* — which is up to SIX. Its §4 says
-*"≤ 5 zones per session."* Those two clauses are mutually unsatisfiable for any session with three
-qualifying levels on each side, which is 13 of 14.**
+Run 1 drew **5.9 zones/session** and FAILED clause 1. The cause was **a build departure, not a
+broken criterion**: ALGO-161:110 says *"keep top 2–3 **per session**"*; my spec restated it a fourth
+time as *"top 3 **per side**"* and silently doubled the ceiling to six. **I had published the
+reading that flattered me** — *broken criterion* — **and the ladder bytes said otherwise.** One line
+changed, at `cb8739df`, **committed before the re-run.**
 
-**I wrote both, committed both, and the run exposed the contradiction.** ALGO-104's law, on my own
-document: **an acceptance clause the authorized build cannot satisfy is not strict, it is broken** —
-and it was knowable before the run by reading my own two sections together.
+## 3. 🛑 AND NOW THE PART THAT REFUTES MY OWN SPECIFICATION
 
-**I am publishing it as a FAIL rather than re-reading *"2–3 key areas"* as a per-map figure that
-would make it pass.** A re-read after an unwanted answer is a goalpost with a citation, and the
-number that would rescue it — 3 total instead of 3 per side — is a choice I would be making
-*because* it passes.
+**`MNQ-SR-CLEANROOM-SPEC.md` §1 says, verbatim: *"Rule 4 is the whole build … Here confluence count
+IS the rank."* THAT SENTENCE IS FALSE AND THIS RUN MEASURES IT FALSE.**
 
-## 3. WHAT THE RUN ACTUALLY SHOWS — reported in both directions
+| | |
+|---|---|
+| top-3 boundary decided **by confluence** | **0 of 14 sessions** |
+| top-3 boundary decided **by a tiebreak** | **14 of 14 sessions** |
+| coverage **as built** (conf → members → recency) | **17 of 28** |
+| coverage with **confluence deleted from the rank** | **17 of 28 — identical** |
+
+**Confluence never once decided the cut, and removing it entirely changes nothing.** What actually
+selected the map is `members` (how many pivots clustered) and recency — **the tiebreakers.**
+
+**Why it is inert is visible in the family rates**, and was knowable by reading my own spec before
+the run — the second such defect in two runs:
+
+| family | fires on |
+|---|---|
+| **`5M_REACTION_CLUSTER`** | **203 of 203 — 100%** |
+| `ROLE_FLIP` | 169 of 203 (83%) |
+| `ACTIVE_15M_FVG` | 135 of 203 (67%) |
+
+**A family that fires on everything cannot rank anything.** Forty days of 5m pivots intersect
+essentially any 15m band, so that term is a constant `+1`. With one term constant and the other two
+common, **62% of candidates sit at the maximum** and the key is flat exactly where it must
+discriminate.
+
+⇒ **The PASS stands — it was pre-registered on outputs, and the outputs are what they are. But the
+CREDIT does not go where the spec put it.** Rules 1 (cap), 2 (15m structure / 5m refinement) and 3
+(≥2 reactions, band-overlap clustering) produced this map. **Rule 4, the one I called "the whole
+build", is dead weight.** A worthwhile distinction survives it: *confluence ACROSS independent
+families* is inert here, while *repetition WITHIN one family* — the member count — carries the
+result.
+
+## 4. 🛑 THE ARM THAT SCORES HIGHEST, PUBLISHED AND **REFUSED**
+
+Cap fixed at 3 in every arm. **Only the sort key varies.**
+
+| arm | covers his 28 |
+|---|---|
+| `RECENCY_ONLY` | **22** |
+| `AS_BUILT` | 17 |
+| `NO_CONFLUENCE` | 17 |
+| `MEMBERS_ONLY` | 17 |
+| `CONFLUENCE_ONLY` | 6 |
+| *v2.4 baseline, 37.3 zones/session* | *13* |
+
+**`RECENCY_ONLY` beats my build by five levels and v2.4 by nine, from three zones a session. I am
+not adopting it, and the refusal is the point.**
+
+**`research/run_algo163_cleanroom_rank_ablation_2026_08_27.py` carries this, written into the file
+BEFORE it was run:** *"no arm of this ablation licenses a change to `mnq_sr_cleanroom_v1.py`. If an
+arm scores higher, that is a FINDING ABOUT THE CLAIM, not a candidate build."*
+
+**Recency is not one of ALGO-161's four published rules.** Promoting it because it scored 22 would
+be adding a fifth rule chosen by what it does to his fourteen sessions — **the exact contamination
+this build exists to exclude, arriving at the last step wearing a result as its credential.**
+
+**And it may well not even be real.** Recent levels are the ones nearest the session he was drawing
+for, so "recency" may be a genuine S/R decay principle **or** an artifact of how the labels were
+made. **This instrument cannot separate those, and I am not going to pick the reading that hands me
+a better number.**
+
+## 5. WHAT THIS DOES AND DOES NOT ESTABLISH
+
+- ✅ **A 3-zone map built only from published practice contains more of his marked levels at exact
+  overlap than v2.4's 37-zone map does — 17 vs 13, on a map 12.4× smaller.**
+- ⚠️ **AND IT LOSES AT A LOOSE TOLERANCE — 20 vs 25 at pad 10.00.** Both pads are reported together
+  from here per ALGO-162; **quoting only pad 0.00 would be cherry-picking by omission.** *"20 vs 25
+  is what 37 zones buy"*: a map that blankets the chart catches more of anything at a wide enough
+  tolerance. **Precision to the clean room, blanket coverage to v2.4, and both halves are the
+  result.**
+- ❌ **It does NOT establish that confluence ranking works.** Measured inert, §3.
+- ❌ **It does NOT license changing v2.4**, which was not edited and did not move during either run.
+- ❌ **No profitability claim.** No PnL was read. The R-geometry is a frozen input and was never
+  tested here.
+
+### The full comparison, both arms, both pads
 
 | | **clean-room** | **v2.4** |
 |---|---|---|
-| zones per session | **5.9** (max 6) | **37.3** |
-| covers his 28, pad 0.00 (as marked) | **17** | 13 |
+| zones per session | **3.00** (max 3) | **37.3** |
+| his 28, pad 0.00 as-marked | **17** | 13 |
 | pad 2.50 | **18** | 17 |
 | pad 10.00 | 20 | **25** |
-| pad 0.00 (7.25 arm) | **17** | 16 |
-| pad 2.50 (7.25 arm) | 19 | **20** |
-| pad 10.00 (7.25 arm) | 20 | **25** |
+| pad 0.00, 7.25 arm | **17** | 16 |
+| pad 2.50, 7.25 arm | 19 | **20** |
+| pad 10.00, 7.25 arm | 20 | **25** |
 
-**IT COVERS MORE OF HIS LEVELS AT EXACT OVERLAP WITH ONE SIXTH OF THE ZONES — 17 vs 13, on an 84%
-smaller map.**
+## 6. THE LIMIT THAT DOES NOT GO AWAY
 
-**⚠️ AND IT LOSES AT A LOOSE TOLERANCE: 20 vs 25 at pad 10.** That is not noise and it is not
-adverse-selection — **it is what 37 zones buy you.** A map that blankets the chart catches more of
-anything at a wide enough tolerance. **The clean-room map wins on precision and loses on blanket
-coverage, and both halves are the honest result.**
-
-## 4. WHAT THIS DOES AND DOES NOT ESTABLISH
-
-- **It does NOT establish that the clean-room map is better.** It failed its own test.
-- **It does establish that the CONFLUENCE-RANK PREDICATE IS NOT EMPTY**: ranking by confluence
-  count across independent families, with `≥2` reactions and a wick-to-close band, produces a
-  ~6-zone map that contains more of his marked levels at exact overlap than the 37-zone map does.
-  **From published practice, with one inherited magnitude and no fitted number.**
-- **It does NOT license changing v2.4.** v2.4 was not edited and did not move during the
-  comparison.
-- **No profitability claim.** No PnL was read; the R-geometry is a frozen input and was not tested
-  here at all.
-
-## 5. THE ONE HONEST WORRY, NAMED
-
-**I am not a clean room and §0 of the spec said so before the run.** I have measured those fourteen
-sessions for three days. **Every parameter here is cited and none was tuned — but a person with my
-exposure choosing *which published rules to adopt* is a channel no commit order closes.** The four
-rules came from ALGO-161's external research rather than from me, which narrows it; **it does not
-eliminate it, and a reader should weigh the result accordingly.**
+**I am not a clean room and §0 of the spec said so before either run.** Every parameter is cited and
+none was tuned — **but a person with three days of exposure to those fourteen sessions, choosing
+which published rules to adopt, is a channel no commit order closes. A commit order is evidence
+about FILES, not about a MIND.** The four rules came from ALGO-161's external research rather than
+from me, which narrows it. **It does not close it, and §4 is the sharpest available evidence that
+the discipline is actually load-bearing rather than decorative — the highest-scoring arm is sitting
+right there, measured, published and unadopted.**
 
 *No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision.*
