@@ -274,48 +274,36 @@ displacement. There are strong bullish and bearish momentum candles that are not
 
 **RATIFIED 2026-08-26** — represented in the read-back.
 
-**THERE IS A LADDER. You take more than one target.**
-`[trader_fidelity_addendum … direct_trader_rules.tp_ladder.labels = ["TP1", "TP2",
-"TP3_OR_NEXT_MEANINGFUL_REACTION"]]` · `[tp_ladder.multiple_directional_tps_allowed: true]` ·
-`[three hash-bound multi-target screenshots]`
+**TP1, TP2 and TP3 ARE MARKED ZONES ON YOUR CHART — NOT A SCALE-OUT.** Your words:
+*"i dont have tp1 and tp1 them are zones not trades."* You mark the destination areas; **one trade
+goes to one of them.** `[trader_fidelity_addendum … direct_trader_rules.tp_ladder.labels =
+["TP1", "TP2", "TP3_OR_NEXT_MEANINGFUL_REACTION"]]` ·
+`[tp_ladder.multiple_directional_tps_allowed: true]` · `[three hash-bound screenshots carrying
+TAKE PROFIT ZONE 1 / ZONE 2, and one carrying TP1, TP2 and TP3]`
 
-**NOT REPRESENTED** — this was **not** read to you. Everything below it about TP1 was, and every
-line of it was correct, **but the ladder itself was missing from the page, so there was nothing
-for you to confirm or correct.** It is written here now so you can.
+**NOT REPRESENTED** — none of this was read to you. It is here so you can correct it.
 
-**The shape of it, taken from your own files and nothing else:**
+**What the marked zones are, from your own files:**
 
-- **TP1 is the nearest meaningful reaction** — whichever of the three kinds physically comes
-  first. `[semantic_crosswalk.target_hierarchy]` · `[gold fixture V24G06]`
-- **Each rung after it is simply the NEXT meaningful reaction**, from the same three kinds.
+- **The nearest meaningful reaction is the one the trade goes to** — whichever of the three kinds
+  physically comes first. `[semantic_crosswalk.target_hierarchy]` · `[gold fixture V24G06]`
+- **The next zone is simply the next meaningful reaction**, from the same three kinds.
   `[tp_ladder.allowed_destination_families]`
-- **There is no fixed number of rungs.** Your third label is literally
-  `TP3_OR_NEXT_MEANINGFUL_REACTION` — *"or next"* — **so the ladder keeps going as long as there
-  are meaningful reactions, rather than stopping at three.** `[tp_ladder.labels]`
-- **A nearer rung is never skipped for a farther one.** `[tp_ladder.no_blind_rollover]` ·
-  *"Do not blindly leapfrog untouched TP1 merely because TP2 is farther away."*
-  `[direct_trader_tp_gap_clarification.under_400_tp2_behavior]`
-- **A farther rung may never be chosen just because it pays more.**
+- **There is no fixed number of zones.** Your third label is literally
+  `TP3_OR_NEXT_MEANINGFUL_REACTION` — *"or next"* — so the marks continue as long as there are
+  meaningful reactions. `[tp_ladder.labels]`
+- **A nearer zone is not skipped for a farther one**, and a farther zone is never chosen because
+  it pays more. `[tp_ladder.no_blind_rollover]` ·
   `[tp_ladder.farther_target_cannot_be_chosen_merely_for_more_profit]`
-- **There is exactly one way a nearer rung stops owning the trade, and it is INTERACTION — never
-  distance and never profit.** *After* that area has actually been traded into, a later test of
-  **that same physical area**, with an already-approved continuation story and sustained force,
-  may earn a new entry whose destination is the next meaningful reaction.
-  `[tp_ladder.processed_rollover_rule]` · `[direct_trader_tp_gap_clarification.processed_reaction_continuation]`
 
-> ### ⚠️ AND IT IS NOT SOMETHING THE BOT CAN DO YET — for one missing sentence, which is yours.
->
-> **Nowhere in any of your files does it say how much comes off at each rung.** Not the labels,
-> not the three screenshots, not the settings file. We searched it under every name we could think
-> of and found nothing, with a control to prove the search works. **We have not guessed, and we
-> will not.**
->
-> **Why that one sentence matters more than it sounds:** a target that never causes an exit
-> changes nothing. **Without a split, TP2 and TP3 are marks on a chart — a bot with a ladder and
-> no split trades exactly like a bot with one target.** So the ladder above is **written down but
-> not running**, and it will stay that way until you say how you scale out.
+**NOTHING COMES OFF AT A ZONE.** There is no split, no partial and no scale-out anywhere in your
+files, **and you have said there is none.** **The bot holding one target price for one trade
+matches this** — that part was never wrong.
 
-**See section 9.** Nothing above invents it.
+**CORRECTION, ON THE RECORD.** An earlier version of this section described TP1/TP2/TP3 as **rungs
+of a scale-out** and said the bot could not do it without knowing how much came off at each. **That
+was wrong.** You corrected it in one sentence. **It is recorded here rather than quietly rewritten,
+because a document you are asked to trust has to show where it was wrong.**
 
 ---
 
@@ -427,10 +415,10 @@ it.** No number below was chosen by you; each was chosen by somebody building th
    reason, so **62 is what runs today.**
 6. **What "meaningful" means for a destination.** It is defined for one kind of target and simply
    assumed true for the other two.
-7. **How the ladder is split.** Your files say there are three rungs and that more than one
-   directional target is allowed. **They do not say how much comes off at each, or in what order
-   the size is reduced.** The bot currently plans one target. **Nobody has written the rest down,
-   and nobody should invent it.**
+7. **What the bot should do when the nearest zone is too close.** Your files say the entry is
+   **not safe** and block it; you have said the bot should **go to the next zone**. Those point
+   different ways and **only you can settle which one is the rule.** Nothing has been changed on
+   either reading.
 8. **Where the 17.25-point stop is measured from.** The distance is yours and is confirmed. Its
    *placement* relative to the zone is in no artifact — and on several entries a stop that far from
    the fill lands **inside the zone the trade was taken at**, so the zone's own width can take the
