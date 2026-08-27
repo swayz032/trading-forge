@@ -114,7 +114,7 @@ def xray_session(env: dict, dte: date, p: prod.Params,
         meta["aborted"] = "INSUFFICIENT_WARMUP"
         return {"meta": meta, "records": records}
 
-    plan = build_premarket_plan_v24(full5, dte)
+    plan = build_premarket_plan_v24(full5, dte, open_ts)
     locations, _ = build_entry_locations_v24(env, dte, open_ts, p)
     authorized = [x for x in locations if x.entry_authorized]
     # BRK15 pending state, mirroring `iter_actionable_candidates` exactly. Without it the

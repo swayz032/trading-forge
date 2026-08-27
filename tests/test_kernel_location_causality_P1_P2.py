@@ -9,6 +9,18 @@ entire zone family and still return a clean number.
 
 P1 and P2 together entail the property for EVERY decision, including ones never run.
 
+🛑 P1's REACH, AND IT MUST BE READ BEFORE P1 IS CITED FOR ANYTHING.
+P1 EXERCISES `build_entry_locations_v24` ONLY. IT IS NOT EVIDENCE ABOUT THE DECISION PATH.
+The larger of the two premarket leaks lived at `kernel.py:232`, which is not inside that call, so
+P1 returned green on every question asked of it while a defect five times the size sat outside its
+call graph. P1 is correct, its controls fire and its mutations go RED - and its REACH is narrower
+than the decision path. That is a sixth way a guard goes green for the wrong reason, alongside the
+population, the scope, the filter, the unit and the mutator: AN INSTRUMENT LOOKING AT EXACTLY THE
+RIGHT THING, AND NOT FAR ENOUGH. It is the hardest to catch, because every question you ask it
+comes back correct.
+⇒ P1 may be cited ONLY as evidence about the location builder. Decision-path causality needs P2
+(structural, covers every decision including ones never run) and P3 (the premarket plan).
+
   P1  THE BUILDER IS CAUSAL GIVEN ITS ANCHOR.
       build_entry_locations_v24(env, dte, T, p)
         ==  build_entry_locations_v24(env truncated to bars completed by T, dte, T, p),  BY KEY.
@@ -118,3 +130,53 @@ def test_P2_the_loop_variable_is_the_bucket_start():
     src = inspect.getsource(kernel.iter_actionable_candidates)
     assert "for ts in bucket_starts:" in src, (
         "`ts` is not bound by the bucket loop - P2's meaning depends on that binding")
+
+
+def test_P2_covers_the_PREMARKET_PLAN_builder_too():
+    """ALGO-181. P2 originally guarded ONE call. That is how the bigger leak survived.
+
+    `build_premarket_plan_v24` is the other once-built, per-decision-consumed object on this path,
+    and it gates DIRECTION for every setup family. Guarding only the location builder is what left
+    it free to sit outside the loop for as long as it did — so the structural assertion is widened
+    to every anchored builder on the decision path, not just the one that was convicted.
+    """
+    tree = ast.parse(inspect.getsource(kernel.iter_actionable_candidates).lstrip())
+    calls = [n for n in ast.walk(tree)
+             if isinstance(n, ast.Call)
+             and (getattr(n.func, "id", None) or getattr(n.func, "attr", None))
+             == "build_premarket_plan_v24"]
+    assert calls, "build_premarket_plan_v24 is not called in the kernel - this test is vacuous"
+    for c in calls:
+        args = [ast.unparse(a) for a in c.args]
+        assert len(args) >= 3, (
+            f"the premarket plan is built WITHOUT an as_of - the original defect: {args}")
+        assert args[2] == "ts", (
+            f"the premarket plan is not anchored on the decision clock `ts`: {args}")
+
+
+def test_P2_no_builder_on_the_decision_path_is_hoisted_out_of_the_loop():
+    """Both anchored builders must sit INSIDE `for ts in bucket_starts:`.
+
+    A call anchored on `ts` but hoisted above the loop would not compile; a call left below it but
+    outside the body would silently revert to once-per-session. Checked positionally on the AST.
+    """
+    tree = ast.parse(inspect.getsource(kernel.iter_actionable_candidates).lstrip())
+    loops = [n for n in ast.walk(tree)
+             if isinstance(n, ast.For) and getattr(n.target, "id", None) == "ts"]
+    assert len(loops) == 1, f"expected exactly one `for ts in ...` loop, found {len(loops)}"
+    # `getattr(..., None)`: not every AST node carries a lineno, and a bare `n.lineno` raises
+    # AttributeError - which made this test RED for a reason that had nothing to do with hoisting.
+    # A guard that is red for the wrong reason is as useless as one that is green for the wrong
+    # reason, and its red-proof looked correct.
+    body_lines = {ln for ln in (getattr(n, "lineno", None) for n in ast.walk(loops[0]))
+                  if ln is not None}
+    assert body_lines, "could not read line numbers from the loop body - this test is vacuous"
+    for fn in ("build_entry_locations_v24", "build_premarket_plan_v24"):
+        sites = [n.lineno for n in ast.walk(tree)
+                 if isinstance(n, ast.Call)
+                 and (getattr(n.func, "id", None) or getattr(n.func, "attr", None)) == fn]
+        assert sites, f"{fn} is not called - this test is vacuous"
+        for ln in sites:
+            assert ln in body_lines, (
+                f"{fn} is called at line {ln}, OUTSIDE the per-decision loop - it would be built "
+                f"once per session again")

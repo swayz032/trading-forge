@@ -54,11 +54,14 @@ diff_primary=0; diff_struct=0; n=0
 rows=[]
 for day in sess:
     dte=date.fromisoformat(day)
-    full=build_premarket_plan_v24(f5,dte)
+    # ALGO-181: `as_of` is now a REQUIRED parameter, so both arms must pass it. THE
+    # PREDICATE IS UNCHANGED - this is a forced signature change, not a criterion change.
+    # Both arms pass the SAME T; only the INPUT differs, which is the whole comparison.
     for a in ANCH:
         T=pd.Timestamp(f"{day} {a}",tz=core.TZ)
         tr=f5[f5.index+pd.Timedelta(minutes=5)<=T]
-        p2=build_premarket_plan_v24(tr,dte)
+        full=build_premarket_plan_v24(f5,dte,T)
+        p2=build_premarket_plan_v24(tr,dte,T)
         n+=1
         pa,pb=str(getattr(full,'primary','?')),str(getattr(p2,'primary','?'))
         sa,sb=str(getattr(full,'pm_structure','?')),str(getattr(p2,'pm_structure','?'))

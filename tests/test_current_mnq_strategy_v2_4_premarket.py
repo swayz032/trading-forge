@@ -30,7 +30,9 @@ def test_structure_only_premarket_builder_passes_no_daily_weekly_or_prev_close_m
     monkeypatch.setattr(pm.core, "premarket_plan", fake)
     bars = object()
     dte = object()
-    assert pm.build_premarket_plan_v24(bars, dte) is sentinel
+    # ALGO-181: `as_of` is required; None means the whole premarket session, not for
+    # decision use. Passing it explicitly is the point - a non-causal use is greppable.
+    assert pm.build_premarket_plan_v24(bars, dte, None) is sentinel
     assert seen["pdm"] == {}
     assert seen["pwm"] == {}
     assert seen["pcm"] == {}
@@ -41,7 +43,7 @@ def test_structure_only_premarket_builder_passes_no_daily_weekly_or_prev_close_m
 def test_structure_only_premarket_builder_relabels_inherited_prior_range_audit_field(monkeypatch):
     inherited = SimpleNamespace(primary="NEUTRAL", location_state="INSIDE_PRIOR_RANGE")
     monkeypatch.setattr(pm.core, "premarket_plan", lambda *a, **k: inherited)
-    got = pm.build_premarket_plan_v24(object(), object())
+    got = pm.build_premarket_plan_v24(object(), object(), None)
     assert got is inherited
     assert got.location_state == "STRUCTURE_ONLY_NO_NAMED_REFERENCE"
 

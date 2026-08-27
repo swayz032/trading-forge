@@ -18,6 +18,8 @@ from __future__ import annotations
 from pathlib import Path
 import json
 
+import pandas as pd
+
 from research import current_mnq_strategy_v2_3_engine as prod
 
 core = prod.core
@@ -28,14 +30,43 @@ def load_premarket_spec(path: str | Path = SPEC_PATH) -> dict:
     return json.loads(Path(path).read_text())
 
 
-def build_premarket_plan_v24(full5, dte):
+def build_premarket_plan_v24(full5, dte, as_of):
     """Build the v2.4 structural prior with legacy D/W references disabled.
 
     Passing empty maps is deliberate and fail-closed: PDH/PDL/PWH/PWL and prior
     close/gap fields cannot contribute to score or location state in this strategy.
     The inherited routine still computes premarket net movement, candle control,
     and higher/lower premarket structure causally from bars already known.
+
+    ── ALGO-181: `as_of` IS REQUIRED AND HAS NO DEFAULT, ON PURPOSE. ──
+    This function used to take no anchor at all, which meant THERE WAS NOWHERE FOR A CALLER TO BE
+    CAUSAL EVEN IF IT WANTED TO BE — the absence of the parameter WAS the defect. It was built once
+    per session and consumed per decision, so a decision at 09:00 read a plan computed from bars up
+    to `PRE_END = 09:29`: six bars that had not printed.
+
+    MEASURED before the repair, 14 sessions x 4 anchors all before PRE_END:
+      `plan.primary`      differed at 10 of 56  — gates DIRECTION on every setup family via
+                                                  `plan_allows_v24` (kernel:355/392/406)
+      `plan.pm_structure` differed at  2 of 56  — gates `_range_room_authorization`
+
+    A DEFAULT OF `None` WOULD HAVE SILENTLY RESTORED THE DEFECT for the next caller who forgot, and
+    this campaign has already watched a `09:30` literal survive its own deletion by moving to
+    another file. So the parameter is positional and required: a caller must WRITE something, and a
+    non-causal use is greppable rather than invisible.
+
+    `as_of=None` is still permitted and means "the whole premarket session, NOT FOR DECISION USE" —
+    for diagnostics and for tests that pass sentinels. Decision-path callers pass the decision clock.
+
+    `PRE_END = 09:29` is untouched. It is the DEFINITION of the premarket session, not a parameter
+    being retuned, and no constant is chosen here. Truncation is BY COMPLETION (`index + 5m <= as_of`)
+    because a 5m bar stamped 09:25 has not printed at 09:29. The inherited routine then applies its
+    own `PRE_END` window on top, so the effective bound is exactly `min(as_of, PRE_END)` — and the
+    same-day half of the OVERNIGHT range at `v2_2_engine.py:651` is bounded by the same truncation,
+    which a call-site patch would have left for the next enumeration.
     """
+    if as_of is not None:
+        cutoff = pd.Timestamp(as_of)
+        full5 = full5[full5.index + pd.Timedelta(minutes=5) <= cutoff]
     plan = core.premarket_plan(full5, dte, {}, {}, {})
     # The inherited object defaults to the audit label INSIDE_PRIOR_RANGE when no
     # daily map is supplied. That label would falsely imply prior-day-range use.

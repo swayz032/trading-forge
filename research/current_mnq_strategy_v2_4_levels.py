@@ -249,7 +249,8 @@ def _range_room_authorization(locations: list[core.Location], env: dict, dte,
     range label or prior-day/week reference is used.
     """
     full5 = env["full5"]
-    plan = build_premarket_plan_v24(full5, dte)
+    # ALGO-181: anchored at the decision clock; see build_premarket_plan_v24's docstring.
+    plan = build_premarket_plan_v24(full5, dte, open_ts)
     if str(plan.pm_structure) != "MIXED":
         return locations
     pm = full5[

@@ -291,7 +291,7 @@ def test_range_room_premarket_prior_stays_structure_only_and_never_rebuilds_prio
         _, _, pcm = core.prev_maps(full5)
         plan = core.premarket_plan(full5, dte, env["pdm"], env["pwm"], pcm)
     with
-        plan = build_premarket_plan_v24(full5, dte)
+        plan = build_premarket_plan_v24(full5, dte, None)
 
     inside `_range_room_authorization`. The correction was a four-commit wave inside eight
     minutes (36e60654 -> 1fe4c893 -> eedebc75 -> 6a30e77e). Citing the wrong SHA mattered: a

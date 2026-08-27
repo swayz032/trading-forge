@@ -229,7 +229,12 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
 
     # v2.4 direct trader fidelity: the strategy does not use PDH/PDL/PWH/PWL.
     # Build only the causal premarket price-action structure/control prior.
-    plan = build_premarket_plan_v24(full5, dte)
+    # ── ALGO-181: THE PLAN IS NOW BUILT PER DECISION TOO, INSIDE THE LOOP. ──
+    # It used to be built ONCE here, unanchored, and consumed inside the loop at the
+    # `plan_allows_v24` gates below - which decide DIRECTION for every setup family. Measured
+    # before the repair: `plan.primary` differed at 10 of 56 anchor-pairs, five times the rate of
+    # the `pm_structure` leak that P1 caught. P1 could never have found this one: it exercises
+    # `build_entry_locations_v24` and this call is not inside it.
     # ── ALGO-174: THE LOCATION SET IS NOW REBUILT PER DECISION, INSIDE THE LOOP. ──
     # It used to be built ONCE here, anchored at 09:30, and reused by every decision from 08:00
     # onward. ALGO-173 enumerated the consequence: 5 of 19 in-window decisions - and 5 of 12
@@ -269,6 +274,9 @@ def iter_actionable_candidates(env: dict, dte: date, p: prod.Params,
         #: not closed when the decision is taken, so it may not contribute a level.
         locations, _ = build_entry_locations_v24(env, dte, ts, p)
         authorized = [x for x in locations if x.entry_authorized]
+        #: ALGO-181. Same anchor, same reason: the direction gate may not read bars the decision
+        #: could not have seen. `min(ts, PRE_END)` is applied inside the builder.
+        plan = build_premarket_plan_v24(full5, dte, ts)
 
         # Structural key-zone state is frozen at the start of the forming 5m
         # candle. A role change caused by this candle cannot authorize itself.
