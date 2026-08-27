@@ -43,25 +43,48 @@ def test_the_amendment_targets_the_trading_window_and_nothing_else():
     assert W.ROLE_THE_AMENDMENT_TARGETS == W.ROLE_TRADING_WINDOW
 
 
-def test_the_kernel_location_anchor_is_a_LITERAL_not_a_reference_to_trade_start():
-    """This is the hazard in one assertion.
+def test_the_kernel_location_anchor_is_NOT_a_literal_it_is_the_decision_clock():
+    """UPDATED DELIBERATELY 2026-08-27 under ALGO-176 §4. NOT deleted.
 
-    `open_ts` feeds `build_entry_locations_v24`, so it decides WHICH ZONES EXIST. If it read
-    `core.TRADE_START` then amending the window would move the location map too, silently. It
-    does not — it is an independent literal — and that is what makes a find-and-replace
-    dangerous rather than merely untidy.
+    The previous version of this test asserted the anchor WAS a hardcoded `09:30` literal, and its
+    own failure message said *"update this test deliberately, do not delete it."* The author
+    anticipated exactly this case and left instructions.
+
+    WHAT CHANGED, AND WHY THE OLD ASSERTION WAS GUARDING A DEFECT. The single `09:30` anchor built
+    the location map ONCE and handed it to every decision from 08:00 onward. ALGO-173 enumerated
+    the consequence and ALGO-171 confirmed it at source: decisions traded levels absent from the
+    map derivable at their own timestamp — two of them entering at `08:05` on levels whose
+    identifiers contain `08:45`.
+
+    THE HAZARD THE ORIGINAL GUARDED IS STILL REAL AND IS STILL GUARDED, just inverted: the anchor
+    must not silently follow the trading-window constant either. It is now neither a literal nor
+    `TRADE_START` — it is the decision's own bucket clock, which is the only value that cannot be
+    wrong by construction.
     """
     src = inspect.getsource(kernel.iter_actionable_candidates)
-    anchor = [ln for ln in src.splitlines() if "open_ts =" in ln]
-    assert len(anchor) == 1, anchor
-    assert "09:30" in anchor[0], anchor[0]
-    assert "TRADE_START" not in anchor[0], (
-        "if the anchor ever starts reading TRADE_START, amending the window would move the "
-        "location map with it - update this test deliberately, do not delete it")
+    tree = ast.parse(src.lstrip())
+    anchors = []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Call):
+            fn = getattr(n.func, "id", None) or getattr(n.func, "attr", None)
+            if fn == "build_entry_locations_v24":
+                anchors.append([ast.unparse(a) for a in n.args])
+    assert anchors, "build_entry_locations_v24 is not called - this test is vacuous"
+    for args in anchors:
+        assert "ts" in args, f"the location anchor is not the decision clock `ts`: {args}"
+        assert not any("09:30" in a for a in args), (
+            f"a 09:30 literal is back in the location anchor: {args}")
+        assert not any("TRADE_START" in a for a in args), (
+            f"the anchor now follows TRADE_START; amending the window would move the location "
+            f"map with it - the original hazard, in its other direction: {args}")
 
 
 def test_the_location_anchor_actually_feeds_the_location_builder():
-    """Otherwise ROLE 2 would be a scary label on a harmless line."""
+    """Otherwise ROLE 2 would be a scary label on a harmless line.
+
+    UPDATED 2026-08-27 (ALGO-176 §4): the PROPERTY is unchanged — the anchor must genuinely reach
+    the builder — and only the expected VALUE moved from `open_ts` to the loop variable `ts`.
+    """
     src = inspect.getsource(kernel.iter_actionable_candidates)
     tree = ast.parse(src.lstrip())
     fed = False
@@ -69,8 +92,8 @@ def test_the_location_anchor_actually_feeds_the_location_builder():
         if isinstance(n, ast.Call):
             fn = getattr(n.func, "id", None) or getattr(n.func, "attr", None)
             if fn == "build_entry_locations_v24":
-                fed = any(getattr(a, "id", None) == "open_ts" for a in n.args)
-    assert fed, "open_ts is not passed to build_entry_locations_v24 - re-derive ROLE 2"
+                fed = any(getattr(a, "id", None) == "ts" for a in n.args)
+    assert fed, "ts is not passed to build_entry_locations_v24 - re-derive ROLE 2"
 
 
 def test_the_trading_window_gate_reads_the_constant():
