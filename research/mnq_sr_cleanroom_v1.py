@@ -13,7 +13,7 @@ The complete import list is seven lines and is the real evidence: `dataclasses`,
 NONE of them can reach a replay artifact.
 
 THE PREDICATE, from published practice (ALGO-161 §3), none of it a fitted magnitude:
-  1. mark only 2-3 key areas — quality over quantity      -> truncate to the top 3 per side
+  1. mark only 2-3 key areas — quality over quantity      -> top 3 PER SESSION, sides pooled
   2. structure on the HIGHER timeframe, refined on the
      execution timeframe                                  -> 15m candidates, 5m refinement
   3. a level needs >= 2 prior independent reactions        -> >= 2 member pivots
@@ -47,8 +47,12 @@ core = prod.core
 
 #: The only magnitude in this module. Inherited, not chosen. See the docstring.
 MIN_WICK = 0.20
-#: Published practice: "mark 2-3 key areas". Taken as the SPEC WROTE IT — top 3 per side.
-TOP_PER_SIDE = 3
+#: THE CONTRACT'S OWN UNIT. ALGO-161:110 — "keep top `2-3` per session" — stated three times
+#: (:64 "mark 2-3 key confluence areas", :76 "the map keeps the top 2-3", :110 "per session"),
+#: never once as a named constant with a unit. MNQ-SR-CLEANROOM-SPEC.md restated it a FOURTH time
+#: as "top 3 per side" and doubled the ceiling to six. That was a BUILD DEPARTURE, not a broken
+#: criterion, and it is corrected here to the authorized unit. The value 3 is unchanged.
+TOP_PER_SESSION = 3
 
 
 @dataclass
@@ -150,10 +154,6 @@ def build_map(h15: pd.DataFrame, full5: pd.DataFrame, asof: pd.Timestamp,
         z.families = fam
         z.confluence = len(fam)
 
-    # ── rule 1: quality over quantity — top 3 per side, confluence first ──
-    out: list[CleanZone] = []
-    for side in ("S", "R"):
-        s = [z for z in zones if z.side == side]
-        s.sort(key=lambda z: (-z.confluence, -z.members, -z.last_t.value))
-        out.extend(s[:TOP_PER_SIDE])
-    return sorted(out, key=lambda z: z.mid)
+    # ── rule 1: quality over quantity — top 3 PER SESSION, both sides pooled, confluence first ──
+    zones.sort(key=lambda z: (-z.confluence, -z.members, -z.last_t.value))
+    return sorted(zones[:TOP_PER_SESSION], key=lambda z: z.mid)
