@@ -1,4 +1,63 @@
-# MNQ-SR-CLEANROOM-v1 — RESULT. **BOTH CLAUSES PASS. THE STATED MECHANISM IS REFUTED.**
+# MNQ-SR-CLEANROOM-v1 — RESULT
+
+> # 🛑 RETRACTED IN FULL, 2026-08-27, BY ME, BEFORE ANYONE ASKED.
+>
+> **THE PASS BELOW IS AN ARTIFACT OF BAND WIDTH AND MEASURES NOTHING.**
+>
+> | | this map | v2.4 |
+> |---|---|---|
+> | median band WIDTH | **912.6 pts** | **17.75 pts** |
+> | share of each session's price range covered | **78%** | **29%** |
+> | covers his 28 | 17 | 13 |
+> | **its OWN null** (random one-tick levels, 4,000 draws) | **mean 17.5** | mean 9.5 |
+> | **distance from chance** | **−0.27 sd** | **+1.43 sd** |
+> | `P(null ≥ observed)` | **0.718** | 0.112 |
+>
+> **A 912-point band on a chart whose whole session spans a few hundred points contains his
+> one-tick level by construction.** The map covers **78% of the session's own range**; a random
+> price lands inside it **17.5 times out of 28**, which is MORE than the 17 of his it actually
+> caught. **This map is very slightly WORSE than chance at finding his levels.**
+>
+> **AND THE RANKING REVERSES ONCE EACH MAP IS SCORED AGAINST ITS OWN NULL.** `17 vs 13` was never
+> like-for-like: v2.4 draws real zones (median `17.75` pts) and sits `+1.43 sd` above chance;
+> this build drew bands `51×` wider and sits AT chance. **v2.4 wins the only comparison that
+> controls for width. The clean room did not beat it — it out-blanketed it.**
+>
+> **ROOT CAUSE — AND IT IS THE THING I CALLED THE BUILD'S ELEGANCE.** §"HOW THIS AVOIDS INVENTING
+> NUMBERS" boasts *"CLUSTERING NEEDS NO TOLERANCE … the grouping distance is supplied by the
+> candles themselves."* That clustering is a **transitive closure over band overlap**, i.e.
+> single-linkage — so A–B overlapping and B–C overlapping merges A with C **even when A and C are
+> 900 points apart.** It chains. Median members per "level": **230.** A key level with 230
+> independent reactions is not a level, it is the whole market. **Removing a tolerance constant
+> did not remove the need for one; it hid it.**
+>
+> **WHY NO GUARD CAUGHT IT: the pre-registered acceptance measured COUNT and COVERAGE, and neither
+> constrains WIDTH.** `≤5 zones` is satisfied by three bands that swallow the chart. Both clauses
+> were green **at the assertion** and blind to **what they asserted over** — and `[guard-green-for-
+> the-wrong-reason]` was already in my own memory index, naming this exact shape, before I wrote
+> the spec.
+>
+> **A NULL CONTROL WOULD HAVE KILLED THIS ON DAY ONE AND I NEVER RAN ONE.** Every coverage figure
+> in ALGO-163 was reported without asking what a random map would score. **The number that makes
+> `17 of 28` interpretable is `17.5`, and it cost ninety seconds to compute.**
+>
+> **WHAT SURVIVES:** the ablation in §3/§4 is unaffected — confluence really did decide 0 of 14
+> cuts, and `RECENCY_ONLY 22` really did beat it. **Those were always statements about this map's
+> internal ranking, and they remain true of a map that should not be used.**
+>
+> **WHAT DOES NOT SURVIVE:** clause 2's PASS as evidence of anything · "more of his levels on a
+> map 12.4× smaller" · every "clean room vs v2.4" coverage comparison in ALGO-163 · and the
+> premise under CLEANROOM-v2, which builds on this map.
+>
+> *Limit on the instrument, stated: the null draws uniformly over each session's range. His levels
+> are not uniform, so a pivot-drawn null would be a stronger test. It is not needed to carry this —
+> the width and range-coverage facts stand alone and require no null at all.*
+
+---
+
+## (ORIGINAL DOCUMENT BELOW, UNEDITED — retained as the record of what I claimed)
+
+## MNQ-SR-CLEANROOM-v1 — RESULT. **BOTH CLAUSES PASS. THE STATED MECHANISM IS REFUTED.**
 
 Spec frozen at `1aa85df1`, builder at `55b344cd`, cap correction at `cb8739df` — **every one
 committed before the run it governs.** Two runs total. **No parameter was ever changed after
