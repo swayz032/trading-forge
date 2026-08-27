@@ -1,0 +1,64 @@
+{
+ "window": [
+  "08:00",
+  "09:30"
+ ],
+ "sessions": 14,
+ "control_failures": [],
+ "decisions_in_window": 19,
+ "bullets_in_window": 12,
+ "affected_decisions": 5,
+ "affected_bullets": 5,
+ "rows": [
+  {
+   "session": "2026-03-23",
+   "decision_ts": "2026-03-23 08:10:00",
+   "zone_id": "S:2026-03-03T09:30:00-05:00:97791",
+   "at_0930": "PRESENT",
+   "at_0800": "ABSENT",
+   "became_the_trade": true,
+   "n_locs_0930": 26,
+   "n_locs_0800": 21
+  },
+  {
+   "session": "2026-03-30",
+   "decision_ts": "2026-03-30 08:05:00",
+   "zone_id": "S:2026-03-30T08:45:00-04:00:93755",
+   "at_0930": "PRESENT",
+   "at_0800": "ABSENT",
+   "became_the_trade": true,
+   "n_locs_0930": 37,
+   "n_locs_0800": 37
+  },
+  {
+   "session": "2026-04-02",
+   "decision_ts": "2026-04-02 08:05:00",
+   "zone_id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
+   "at_0930": "PRESENT",
+   "at_0800": "ABSENT",
+   "became_the_trade": true,
+   "n_locs_0930": 47,
+   "n_locs_0800": 45
+  },
+  {
+   "session": "2026-04-06",
+   "decision_ts": "2026-04-06 08:25:00",
+   "zone_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+   "at_0930": "PRESENT",
+   "at_0800": "ABSENT",
+   "became_the_trade": true,
+   "n_locs_0930": 44,
+   "n_locs_0800": 44
+  },
+  {
+   "session": "2026-04-14",
+   "decision_ts": "2026-04-14 09:15:00",
+   "zone_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+   "at_0930": "PRESENT",
+   "at_0800": "ABSENT",
+   "became_the_trade": true,
+   "n_locs_0930": 46,
+   "n_locs_0800": 44
+  }
+ ]
+}
