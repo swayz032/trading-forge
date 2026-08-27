@@ -40,9 +40,22 @@ from research.current_mnq_strategy_v2_4_levels import build_entry_locations_v24
 
 core = prod.core
 DATA = Path("research/_mnq_v24_replay_lab_v3/data")
-#: Three sessions with three different in-window anchors. Not a sample of convenience: these are
-#: the sessions ALGO-173 flagged, i.e. the ones where a difference is most likely to show.
-CASES = [("2026-03-30", "08:05"), ("2026-04-02", "08:05"), ("2026-04-06", "08:25")]
+MANIFEST = Path("research/current_mnq_strategy_v2_4_frozen_replay_case_manifest_2026_08_20.json")
+
+#: WIDENED (ALGO-177 §ORDER-1) FROM 3 SESSIONS TO ALL 14, at four anchors each spanning the window.
+#: The original three were the ALGO-173-flagged sessions - where a difference was most likely to
+#: show, which is the right place to start and the wrong place to stop. A property that holds only
+#: where you looked for trouble is a property about your search, not about the builder.
+#: The anchors are fixed clocks, not sampled from any result.
+_ANCHORS = ("08:05", "09:00", "09:25", "11:30")
+
+
+def _sessions() -> list[str]:
+    import json
+    return [c["session"] for c in json.loads(MANIFEST.read_text(encoding="utf-8"))["cases"]]
+
+
+CASES = [(s, a) for s in _sessions() for a in _ANCHORS]
 
 
 @pytest.fixture(scope="module")
