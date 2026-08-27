@@ -61,18 +61,50 @@ def test_a_documented_command_runs_without_error(module):
     assert r.stdout.strip(), f"`{module}` printed nothing - he would have nothing to paste"
 
 
-def test_the_pytest_command_in_the_runbook_names_the_right_failure_count():
-    """The runbook says "expect 7 failures". If that drifts he cannot tell normal from broken."""
+def test_the_pytest_command_in_the_runbook_names_the_right_failures():
+    """The runbook tells him which failures are normal. Assert the SET, never the count.
+
+    CONVERTED FROM A COUNT TO A MEMBERSHIP ASSERTION, 2026-08-27 (ALGO-177 §ORDER-3).
+    A COUNT SURVIVES A SWAP: if one expected failure starts passing while one new failure appears,
+    the total is unchanged and a count-based guard stays green through a real regression. The same
+    law had already been applied to the memory index and to the regression comparison on the same
+    day; this was the third surface carrying it.
+
+    The runbook ALREADY listed the seven names - the guard simply was not reading them. The data
+    was there and the assertion was weaker than the documentation it checked.
+    """
     text = io.open(RUNBOOK, encoding="utf-8").read()
     claimed = re.search(r"Expect \*\*(\d+) failures\*\*", text)
-    assert claimed, "the runbook must state the expected failure count"
+    assert claimed, "the runbook must state the expected failures"
+    listed = {ln.strip() for ln in re.findall(r"^tests/\S+::\S+$", text, re.M)}
+    assert listed, "the runbook must LIST the expected failures by node id, not only count them"
+    assert len(listed) == int(claimed.group(1)), (
+        f"the runbook's own count ({claimed.group(1)}) disagrees with its own list ({len(listed)}) "
+        f"- fix the runbook before trusting either")
+
     r = subprocess.run([sys.executable, "-m", "pytest", "tests/", "-q", "--no-header",
                         "-p", "no:cacheprovider", "--ignore", str(Path(__file__))],
                        capture_output=True, text=True, timeout=1800)
-    actual = len(re.findall(r"^FAILED", r.stdout, re.M))
-    assert actual == int(claimed.group(1)), (
-        f"the runbook promises {claimed.group(1)} failures, the suite produces {actual}. "
-        f"He uses that number to tell normal from broken - update the runbook.")
+    # `removeprefix` BEFORE `split`, not after: splitting first yields the literal "FAILED" and the
+    # prefix strip then does nothing, so every row parses to the same token.
+    actual = {ln.removeprefix("FAILED ").split(" ", 1)[0].strip()
+              for ln in re.findall(r"^FAILED .*$", r.stdout, re.M)}
+    # VACUITY GUARD: an empty parse would make `unexpected` empty and the new-failure assertion
+    # green while saying nothing at all about the run.
+    assert actual, (
+        "parsed NO failing node ids from the subprocess output - the assertions below would be "
+        "vacuous. First 500 chars:\n" + r.stdout[:500])
+    assert all(t.startswith("tests/") or t.startswith("tests\\") for t in actual), (
+        f"parsed tokens do not look like node ids: {sorted(actual)[:5]}")
+
+    unexpected = actual - listed
+    fixed = listed - actual
+    assert not unexpected, (
+        f"NEW failures the runbook does not list - these are the ones that matter:\n  "
+        + "\n  ".join(sorted(unexpected)))
+    assert not fixed, (
+        f"the runbook lists failures that now PASS. Not a crisis, but the list is stale and he "
+        f"would be looking for a failure that no longer happens:\n  " + "\n  ".join(sorted(fixed)))
 
 
 def test_the_runbook_states_what_does_not_exist():
