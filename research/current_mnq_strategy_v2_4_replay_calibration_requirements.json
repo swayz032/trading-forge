@@ -1,0 +1,83 @@
+{
+  "status": "LOCKED_TRADER_FIDELITY_CALIBRATION_REQUIREMENTS",
+  "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
+  "evidence_role": "AUTOMATED_FIDELITY_REGRESSION_ONLY_NOT_EDGE_EVIDENCE",
+  "manual_trader_replay_requested": false,
+  "direct_trader_corrections": [
+    {
+      "id": "CAL01_BILATERAL_TP_CONTEXT",
+      "rule": "Automated regression cases used to inspect TP context should contain meaningful higher and lower structure when available so both bullish and bearish destination construction is exercised.",
+      "implementation": "Use materially deeper 15m/5m causal history and prefer cases with at least one meaningful reaction destination above and one below the decision price. Do not fabricate a level when one side truly has no meaningful reaction."
+    },
+    {
+      "id": "CAL02_15M_FVG_MID_TP",
+      "rule": "A TP may legitimately be placed at the middle of an active 15m FVG when that FVG is the first meaningful reaction used as the target.",
+      "implementation": "Regression must preserve 15m FVG midpoint semantics. FVG may also act as support/resistance when it is the first causal interaction band, but FVG alone never creates a trade."
+    },
+    {
+      "id": "CAL03_MOMENTUM_HEAVY_SAMPLE",
+      "rule": "Automated regression should exercise substantially more real 5-minute momentum/force opportunities than quiet controls.",
+      "implementation": "Prioritize distinct-session authoritative entries first, then genuine candle-story + force candidates rejected only by later room/TP gates, before generic no-entry controls. No new trader labeling is requested."
+    },
+    {
+      "id": "CAL04_WAIT_DISTINCT_FROM_NO_TRADE",
+      "rule": "WAIT remains a distinct frozen trader state and must never be silently converted to NO_TRADE.",
+      "implementation": "Preserve the already-frozen WAIT labels exactly in same-window automated fidelity comparison."
+    },
+    {
+      "id": "CAL05_5M_PRIMARY_ENTRY_1M_INTERNAL_ONLY",
+      "rule": "The trader enters from the 5-minute chart. The 1-minute stream exists only because the bot uses completed 1-minute observations to reconstruct intrabar behavior causally.",
+      "implementation": "5m is the primary entry/decision pattern timeframe. 15m is higher-timeframe context and the separate weak-break three-bar continuation family. The bot may use completed 1m bars internally to rebuild the still-forming 5m candle at exact decision clocks without hindsight."
+    },
+    {
+      "id": "CAL06_SR_FVG_ONLY_MARKET_MAP",
+      "rule": "Current strategy location/target evidence is limited to structural support/resistance, liquidity/reaction clusters and active 15m FVGs. PDH/PDL/PWH/PWL are not strategy inputs.",
+      "implementation": "Automated regression must pass empty legacy daily/weekly maps into reaction construction and must never create or score named daily/weekly levels."
+    },
+    {
+      "id": "CAL07_SECOND_5M_EXTENSION",
+      "rule": "After the first completed 5m prints beyond support/resistance or an FVG interaction band, the immediately following forming 5m must push beyond that first candle's directional extreme and prove sustained force before normal breakout entry.",
+      "implementation": "Long requires trade above the first breakout candle high; short requires trade below its low. Do not delay an already-valid 5m continuation for a 15m close."
+    }
+  ],
+  "chart_context": {
+    "primary_trader_entry_timeframe": "5m",
+    "higher_timeframe_context": "15m",
+    "one_minute_role": "BOT_CAUSAL_INTRABAR_DIAGNOSTIC_ONLY",
+    "context_15m_lookback_calendar_days": 40,
+    "context_5m_lookback_calendar_days": 10,
+    "context_1m_lookback_minutes": 60,
+    "initial_view": "RECENT_5M_DECISION_AREA_WITH_NATIVE_PAN_ZOOM",
+    "fit_all_must_include_full_context": true,
+    "bilateral_reaction_context_preferred": true,
+    "bilateral_reaction_definition": "AT_LEAST_ONE_CAUSAL_MEANINGFUL_REACTION_DESTINATION_ABOVE_AND_BELOW_REFERENCE_PRICE"
+  },
+  "tp_semantics": {
+    "canonical": "FIRST_MEANINGFUL_PHYSICAL_REACTION",
+    "valid_precision_examples": [
+      "STRUCTURAL_SUPPORT_RESISTANCE_REACTION_ZONE",
+      "5M_LIQUIDITY_REACTION_CLUSTER",
+      "ACTIVE_15M_FVG_MIDPOINT_WHEN_IT_OWNS_FIRST_REACTION"
+    ],
+    "forbidden_named_levels": ["PDH", "PDL", "PWH", "PWL"],
+    "fvg_is_entry_requirement": false,
+    "fvg_can_be_sr_interaction_band_when_first": true,
+    "do_not_force_both_tps_when_context_truly_lacks_one_side": true,
+    "tp_reference_safe_floor_usd_at_15_mnq": 400.0,
+    "untouched_under_400_tp1_blind_rollover_allowed": false
+  },
+  "sampling": {
+    "target_cases": 16,
+    "one_case_per_session": true,
+    "priority_order": [
+      "AUTHORITATIVE_FULL_ENGINE_ENTRY_REPLAY",
+      "MOMENTUM_FORCE_CANDIDATE_REJECTED_BY_ROOM_OR_TP",
+      "STRUCTURAL_CONTROL_ONLY_IF_NEEDED"
+    ],
+    "reuse_seen_development_sessions_allowed": true,
+    "reason": "Automated fidelity regression only, not blind or clean edge evidence.",
+    "pnl_or_exit_outcome_used_for_selection": false,
+    "never_repeat_a_session_only_to_fill_count": true,
+    "new_manual_trader_labels_required": false
+  }
+}

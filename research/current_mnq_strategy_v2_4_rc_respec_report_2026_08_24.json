@@ -1,0 +1,736 @@
+{
+  "artifact": "RC_RESPEC_REPORT",
+  "status": "DIAGNOSTIC. R-C re-spec report. Lands nothing, changes no production file.",
+  "authority": "ALGO-090 order 1",
+  "produced": "2026-08-24",
+  "predicate": "FRESH := no completed bar tested the band between the zone's DEFINING REJECTION (his [wick extreme, close] rule) and the decision clock",
+  "draw_rule": {
+    "timeframes": [
+      "5m",
+      "15m"
+    ],
+    "tolerance_points": 1.5
+  },
+  "approved_baseline": 40,
+  "approved_with_respec": 36,
+  "entries_REMOVED": [
+    [
+      "2026-04-02",
+      "2026-04-02 10:38:00-04:00",
+      "L",
+      "REV"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 09:49:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-08",
+      "2026-04-08 10:57:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-09",
+      "2026-04-09 10:37:00-04:00",
+      "S",
+      "BRK5"
+    ]
+  ],
+  "rows": [
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 08:14:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-23",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:18:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-03-23",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:19:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-03-23",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:02:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-03-23",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:27:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-23",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:28:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-23",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:29:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-23",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:17:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-24",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:18:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-24",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:32:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-24",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:33:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-24",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:34:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-24",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:23:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-25",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:37:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-03-25",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:38:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-03-25",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:33:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-26",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:34:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-26",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:23:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-03-26",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:39:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-03-26",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 09:03:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-03-31",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:12:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-01",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:13:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-01",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:14:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-01",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:17:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-01",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:44:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-01",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 10:38:00-04:00",
+        "L",
+        "REV"
+      ],
+      "session": "2026-04-02",
+      "story": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "band": [
+        23964.55,
+        23973.2
+      ],
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-04-01 21:25:00-04:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          23963.5,
+          23974.0
+        ],
+        "ohlc": [
+          23996.0,
+          24006.25,
+          23963.5,
+          23974.0
+        ],
+        "edge_errors": [
+          1.05,
+          0.8
+        ]
+      },
+      "completed_tests_after_definer": 8,
+      "evidence": [
+        {
+          "bucket": "2026-04-01 21:35:00-04:00",
+          "ohlc": [
+            23941.25,
+            23975.0,
+            23937.25,
+            23968.75
+          ]
+        },
+        {
+          "bucket": "2026-04-01 21:40:00-04:00",
+          "ohlc": [
+            23968.75,
+            23976.75,
+            23945.75,
+            23949.5
+          ]
+        },
+        {
+          "bucket": "2026-04-01 22:05:00-04:00",
+          "ohlc": [
+            23943.75,
+            23967.0,
+            23913.75,
+            23922.75
+          ]
+        }
+      ],
+      "disposition": "REFUSED_NOT_FRESH"
+    },
+    {
+      "key": [
+        "2026-04-06",
+        "2026-04-06 09:07:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-06",
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "band": [
+        24289.33,
+        24293.17
+      ],
+      "disposition": "UNDEFINED_NO_DEFINING_REJECTION",
+      "note": "his [wick extreme, close] rule draws no 5m/15m candle reproducing this band, so the corrected predicate has no anchor - it is neither strict nor lenient here"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:23:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-07",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:24:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-07",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:49:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-07",
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "band": [
+        24205.45,
+        24209.55
+      ],
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-04-07 07:55:00-04:00",
+        "which_wick": "lower",
+        "band_drawn": [
+          24204.0,
+          24210.5
+        ],
+        "ohlc": [
+          24209.25,
+          24220.75,
+          24204.0,
+          24210.5
+        ],
+        "edge_errors": [
+          1.45,
+          0.95
+        ]
+      },
+      "completed_tests_after_definer": 14,
+      "evidence": [
+        {
+          "bucket": "2026-04-07 08:05:00-04:00",
+          "ohlc": [
+            24196.5,
+            24230.75,
+            24133.75,
+            24178.5
+          ]
+        },
+        {
+          "bucket": "2026-04-07 08:15:00-04:00",
+          "ohlc": [
+            24166.5,
+            24216.5,
+            24140.75,
+            24203.75
+          ]
+        },
+        {
+          "bucket": "2026-04-07 08:20:00-04:00",
+          "ohlc": [
+            24202.5,
+            24240.75,
+            24195.5,
+            24218.25
+          ]
+        }
+      ],
+      "disposition": "REFUSED_NOT_FRESH"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 08:52:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-08",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 09:48:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-08",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 10:57:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-08",
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "band": [
+        25020.96,
+        25039.99
+      ],
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-04-07 19:40:00-04:00",
+        "which_wick": "upper",
+        "band_drawn": [
+          25020.5,
+          25038.75
+        ],
+        "ohlc": [
+          25030.5,
+          25038.75,
+          25017.0,
+          25020.5
+        ],
+        "edge_errors": [
+          0.46,
+          1.24
+        ]
+      },
+      "completed_tests_after_definer": 14,
+      "evidence": [
+        {
+          "bucket": "2026-04-07 19:50:00-04:00",
+          "ohlc": [
+            25048.0,
+            25050.75,
+            25036.5,
+            25041.5
+          ]
+        },
+        {
+          "bucket": "2026-04-07 19:55:00-04:00",
+          "ohlc": [
+            25042.5,
+            25062.0,
+            25029.5,
+            25050.75
+          ]
+        },
+        {
+          "bucket": "2026-04-07 20:05:00-04:00",
+          "ohlc": [
+            25053.5,
+            25062.75,
+            25027.25,
+            25041.0
+          ]
+        }
+      ],
+      "disposition": "REFUSED_NOT_FRESH"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:37:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-09",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:39:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-09",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 10:37:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-09",
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "band": [
+        24977.35,
+        24982.65
+      ],
+      "defining_rejection": {
+        "timeframe": "5m",
+        "bucket": "2026-04-09 04:30:00-04:00",
+        "which_wick": "upper",
+        "band_drawn": [
+          24978.0,
+          24982.75
+        ],
+        "ohlc": [
+          24961.25,
+          24982.75,
+          24961.25,
+          24978.0
+        ],
+        "edge_errors": [
+          0.65,
+          0.1
+        ]
+      },
+      "completed_tests_after_definer": 12,
+      "evidence": [
+        {
+          "bucket": "2026-04-09 04:40:00-04:00",
+          "ohlc": [
+            24983.0,
+            24999.75,
+            24977.75,
+            24999.25
+          ]
+        },
+        {
+          "bucket": "2026-04-09 04:50:00-04:00",
+          "ohlc": [
+            24986.0,
+            24986.75,
+            24973.0,
+            24976.75
+          ]
+        },
+        {
+          "bucket": "2026-04-09 04:55:00-04:00",
+          "ohlc": [
+            24977.0,
+            24982.0,
+            24968.75,
+            24972.75
+          ]
+        }
+      ],
+      "disposition": "REFUSED_NOT_FRESH"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 11:27:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-09",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 11:28:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-09",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 09:37:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-13",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "disposition": "EXEMPT_TAUGHT_STORY"
+    },
+    {
+      "key": [
+        "2026-04-14",
+        "2026-04-14 09:38:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-14",
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "band": [
+        25714.67,
+        25717.83
+      ],
+      "disposition": "UNDEFINED_NO_DEFINING_REJECTION",
+      "note": "his [wick extreme, close] rule draws no 5m/15m candle reproducing this band, so the corrected predicate has no anchor - it is neither strict nor lenient here"
+    }
+  ],
+  "counts": {
+    "undefined_no_definer": 2,
+    "refused_not_fresh": 4,
+    "exempt_taught": 34
+  },
+  "control_rows": [
+    {
+      "key": [
+        "2026-04-14",
+        "2026-04-14 09:38:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-14",
+      "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "band": [
+        25714.67,
+        25717.83
+      ],
+      "disposition": "UNDEFINED_NO_DEFINING_REJECTION",
+      "note": "his [wick extreme, close] rule draws no 5m/15m candle reproducing this band, so the corrected predicate has no anchor - it is neither strict nor lenient here"
+    }
+  ],
+  "control_has_no_definer": true,
+  "control_survives": true,
+  "LANE_VERDICT": "CLOSED_AS_UNEXPRESSIBLE",
+  "why": "The corrected predicate needs a defining rejection to anchor on. Where the machine's entry band is not reproducible by any completed 5m/15m [wick extreme, close] candle, the predicate is UNDEFINED - and that includes the control. A rule that cannot be evaluated on the one day the machine agrees cannot be the rule that separates the days it does not.",
+  "no_target_layer_change": true,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 445.87
+}

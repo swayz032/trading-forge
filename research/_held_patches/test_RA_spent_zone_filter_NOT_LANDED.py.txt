@@ -1,0 +1,127 @@
+"""R-A: a SPENT zone is not a destination. ALGO-082.
+
+THE PREDICATE'S OWN HISTORY IS THE REASON FOR THE FIRST TEST. Its first implementation
+(ALGO-079 L2) filtered on the bar's START rather than its COMPLETION, so a 5m bar opening 09:40
+counted as evidence at a 09:41 decision although it does not print its high, low or close until
+09:45. Two sessions were published SPENT on bars that were still forming - a "3/3 separates"
+that was really 1/3. ALGO-082 requires that exact defect to be planted and to go RED.
+
+Nearest-first is NOT under test here and is not modified: R-A corrects the UNIVERSE that
+nearest-first ranks.
+"""
+from __future__ import annotations
+
+import pandas as pd
+import pytest
+
+from research import current_mnq_strategy_v2_4_target_policy as pol
+
+TZ = "America/New_York"
+DTE = "2026-03-24"
+
+
+def _bars(rows):
+    idx = pd.DatetimeIndex([pd.Timestamp(f"{DTE} {t}", tz=TZ) for t, *_ in rows])
+    return pd.DataFrame(
+        {"open": [r[1] for r in rows], "high": [r[2] for r in rows],
+         "low": [r[3] for r in rows], "close": [r[4] for r in rows]}, index=idx)
+
+
+def test_a_bar_that_completes_before_the_clock_makes_a_zone_spent():
+    f = _bars([("08:00", 100, 110, 90, 105)])
+    assert pol.zone_is_spent(f, 95.0, 115.0, pd.Timestamp(f"{DTE} 09:00", tz=TZ), DTE) is True
+
+
+def test_a_bar_STILL_FORMING_at_the_clock_is_NOT_evidence():
+    """THE PLANTED DEFECT. The 09:40 bar completes 09:45; at a 09:41 clock it has not printed.
+
+    Filtering on the bar's START instead of its completion makes this True - which is exactly
+    the ALGO-079 L2 defect, and this assertion is what goes RED if it ever returns.
+    """
+    f = _bars([("09:40", 100, 110, 90, 105)])
+    assert pol.zone_is_spent(f, 95.0, 115.0, pd.Timestamp(f"{DTE} 09:41", tz=TZ), DTE) is False
+
+
+def test_a_bar_completing_exactly_AT_the_clock_counts():
+    f = _bars([("09:40", 100, 110, 90, 105)])
+    assert pol.zone_is_spent(f, 95.0, 115.0, pd.Timestamp(f"{DTE} 09:45", tz=TZ), DTE) is True
+
+
+def test_a_zone_price_never_reached_is_fresh():
+    f = _bars([("08:00", 100, 110, 90, 105), ("08:05", 105, 112, 99, 108)])
+    assert pol.zone_is_spent(f, 200.0, 210.0, pd.Timestamp(f"{DTE} 09:00", tz=TZ), DTE) is False
+
+
+def test_bars_before_the_session_anchor_do_not_count():
+    """Freshness is a within-session question; a level touched days ago is not 'spent' here."""
+    f = _bars([("07:00", 100, 110, 90, 105)])
+    assert pol.zone_is_spent(f, 95.0, 115.0, pd.Timestamp(f"{DTE} 09:00", tz=TZ), DTE) is False
+
+
+class _Loc:
+    def __init__(self, lo, hi):
+        self.lo, self.hi = lo, hi
+
+
+class _Dest:
+    def __init__(self, lo, hi):
+        self.location = _Loc(lo, hi)
+
+
+def test_spent_destinations_are_dropped_and_fresh_ones_kept():
+    f = _bars([("08:00", 100, 110, 90, 105)])
+    dests = [_Dest(95.0, 115.0), _Dest(200.0, 210.0)]
+    out = pol.drop_spent_destinations(dests, f, pd.Timestamp(f"{DTE} 09:00", tz=TZ), DTE)
+    assert len(out) == 1 and out[0].location.lo == 200.0
+
+
+def test_when_EVERY_destination_is_spent_the_list_is_returned_UNCHANGED():
+    """Starving the target layer would turn a selection repair into a silent refusal.
+
+    A repair that can make the bot stop trading is not the repair that was authorised, so the
+    filter must degrade to a no-op rather than empty the universe.
+    """
+    f = _bars([("08:00", 100, 300, 90, 105)])
+    dests = [_Dest(95.0, 115.0), _Dest(200.0, 210.0)]
+    out = pol.drop_spent_destinations(dests, f, pd.Timestamp(f"{DTE} 09:00", tz=TZ), DTE)
+    assert len(out) == 2, "the filter emptied the universe instead of degrading to a no-op"
+
+
+def test_the_filter_reads_no_reward_or_distance():
+    """Structural only - ALGO-078 forbade a reward-shaped skip criterion."""
+    import ast
+    import io
+    src = io.open(pol.__file__, encoding="utf-8").read()
+    tree = ast.parse(src)
+    for fn in ("zone_is_spent", "drop_spent_destinations"):
+        node = next(n for n in ast.walk(tree)
+                    if isinstance(n, ast.FunctionDef) and n.name == fn)
+        # STRIP THE DOCSTRING BEFORE READING THE BODY. The first version of this guard did not,
+        # and the docstring's own sentence - "reads no distance, no reward" - tripped it. That
+        # is the read-the-prose-not-the-code failure this lane has converted five other guards
+        # away from; committing it inside the guard that polices it would be the sixth.
+        stmts = list(node.body)
+        if (stmts and isinstance(stmts[0], ast.Expr)
+                and isinstance(stmts[0].value, ast.Constant)
+                and isinstance(stmts[0].value.value, str)):
+            stmts = stmts[1:]
+        body = "\n".join(ast.unparse(s) for s in stmts).lower()
+        for banned in ("reward", "target_raw", "distance", "quality", "tp_gap"):
+            assert banned not in body, f"{fn} reads {banned} - the criterion is not structural"
+
+
+def test_the_filter_is_wired_into_build_and_classify():
+    """Existence is not wiring."""
+    import ast
+    import io
+    src = io.open(pol.__file__, encoding="utf-8").read()
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "build_and_classify")
+    assert "drop_spent_destinations" in ast.unparse(fn)
+
+
+def test_nearest_first_is_not_repealed():
+    """R-A corrects the universe; the ordering rule and its rationale must still be there."""
+    import io
+    src = io.open("research/current_mnq_strategy_v2_4_targets.py", encoding="utf-8").read()
+    assert "No farther feature may leapfrog a nearer meaningful reaction area" in src

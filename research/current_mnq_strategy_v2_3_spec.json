@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "strategy_id": "CURRENT_MNQ_DISCRETIONARY_TRANSLATION",
+  "release_id": "MNQ-V2.3-PC1",
+  "frozen_at": "2026-08-17",
+  "instrument": "MNQ",
+  "session": {
+    "timezone": "America/New_York",
+    "execution_window": "09:30-12:00",
+    "rth_context": "09:30-16:00",
+    "max_trades_per_session": 1
+  },
+  "risk_intent": {
+    "desired_contracts": 15,
+    "stop_points": 17.25,
+    "tick_size": 0.25,
+    "point_value_usd": 2.0,
+    "execution_risk_overlay_may_reduce_size": true,
+    "signal_semantics_must_not_change_when_size_is_reduced": true
+  },
+  "entry_semantics": {
+    "where": [
+      "causal_15m_repeated_rejection_wick_zone",
+      "PDH_PDL_PWH_PWL_as_context_or_authorized_location_when_quality_gate_passes",
+      "active_15m_FVG_as_context_or_authorized_location_when_quality_gate_passes"
+    ],
+    "reversal_long": "support_rejection_then_buyer_control_transfer",
+    "reversal_short": "resistance_rejection_then_seller_control_transfer",
+    "breakout_long": "resistance_failure_and_acceptance",
+    "breakout_short": "support_failure_and_acceptance",
+    "strong_breakout_confirmation": "completed_5m_displacement_acceptance",
+    "weak_breakout_confirmation": "new_completed_15m_close_after_specific_attempt",
+    "candle_story": ["APPROACH", "FIGHT", "DECISION"],
+    "mixed_two_sided_control": "NO_TRADE",
+    "chronology": "first_setup_that_reaches_frozen_A_plus_gate",
+    "hindsight_best_of_day_selection": false
+  },
+  "zone_lifecycle": {
+    "breach_is_not_automatically_permanent_break": true,
+    "quick_reclaim_restores_original_polarity": true,
+    "durable_acceptance_can_flip_role": true,
+    "future_bars_forbidden": true
+  },
+  "target_semantics": {
+    "destination": "next_meaningful_reaction_or_liquidity_cluster",
+    "tiny_weak_shelves_may_be_skipped": true,
+    "nearby_strong_blocker_may_not_be_silently_skipped": true,
+    "safe_middle_not_exact_fifty_percent": true,
+    "active_15m_FVG_may_be_destination": true,
+    "fixed_R_target": false
+  },
+  "negative_semantic_fixtures": [
+    "mixed_overlap_and_two_sided_wicks",
+    "weak_breakout_without_new_completed_15m_acceptance",
+    "counter_bias_reversal_without_completed_control_transfer",
+    "nearby_strong_blocker_before_destination",
+    "retired_or_invalidated_FVG_used_as_confluence",
+    "off_tick_entry_stop_or_target",
+    "second_trade_same_session",
+    "stale_or_ambiguous_contract_identity",
+    "stale_market_data",
+    "failed_breakout_that_reclaims_original_zone_must_not_be_treated_as_durable_role_flip"
+  ],
+  "evidence_policy": {
+    "real_user_positive_gold_min": 5,
+    "semantic_negative_fixture_min": 10,
+    "real_user_tempting_no_trade_gold_min": 1,
+    "sealed_validation_min_calendar_years": 3,
+    "sealed_validation_min_sessions": 500,
+    "sealed_validation_min_trades": 100,
+    "chronological_folds": 4,
+    "min_positive_folds": 3,
+    "block_bootstrap_mean_expectancy_lower_95_must_be_positive": true,
+    "slippage_stress_points": [0.5, 1.0, 2.0],
+    "all_slippage_stress_net_must_be_positive": true,
+    "shadow_min_full_sessions": 10,
+    "shadow_min_executed_or_would_execute_trades": 5,
+    "shadow_rule_changes_allowed": 0,
+    "shadow_duplicate_order_events_allowed": 0,
+    "shadow_unreconciled_state_events_allowed": 0
+  },
+  "anti_overfit": {
+    "no_parameter_search_on_sealed_validation": true,
+    "no_variant_promotion_from_sealed_validation": true,
+    "rule_change_after_sealed_result_invalidates_that_result": true,
+    "contaminated_score_ranges": [
+      {
+        "start": "2026-01-20",
+        "end": "2026-04-15",
+        "reason": "Previously inspected/development-tested public MNQ sample; may exist as causal context but may not count as sealed OOS score evidence."
+      }
+    ]
+  },
+  "topstep_compliance": {
+    "projectx_automation_requires_personal_device": true,
+    "vpn_vps_remote_server_refused": true,
+    "projectx_api_on_live_funded_account_refused": true,
+    "realtime_account_must_report_simulated_true": true,
+    "orders_are_final_and_system_must_fail_closed": true
+  },
+  "deployment": {
+    "default_mode": "SHADOW",
+    "automation_requires_signed_promotion_receipt": true,
+    "automation_requires_personal_device": true,
+    "remote_server_automation_refused": true,
+    "broker_state_must_reconcile_before_each_submission": true,
+    "promotion_stage_name": "TOPSTEPX_API_AUTOMATION_ELIGIBLE",
+    "live_funded_account_stage": "MANUAL_OR_OTHER_TOPSTEP_PERMITTED_EXECUTION_ONLY"
+  }
+}

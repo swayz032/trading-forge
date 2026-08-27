@@ -1,0 +1,306 @@
+{
+  "schema_version": 7,
+  "strategy_id": "CURRENT_MNQ_DISCRETIONARY_TRANSLATION",
+  "release_id": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
+  "supersedes_semantics": "MNQ-V2.4-ZONE-CANDLE-PC2-ENTRY1",
+  "frozen_at": "2026-08-20",
+  "instrument": "MNQ",
+  "semantic_correction_reason": "Direct trader fidelity clarification: the strategy's regular market map is structural support/resistance only. PDH/PDL/PWH/PWL are not used. Liquidity/reaction clusters and active 15m FVGs are TP destinations; when an FVG owns the first meaningful destination its midpoint is TP. An active 15m FVG may also act as support/resistance when it appears before the regular structural S/R. Separately, the first completed 5m breakout candle is setup only and the following forming 5m must push beyond that first candle's directional extreme with sustained causal force; waiting for a 15m close is not required for that valid 5m continuation. These rules came from direct trader evidence before any clean performance result was observed.",
+  "source_model": {
+    "candlestick_video_pack_is_joint_candle_and_support_resistance_evidence": true,
+    "live_force_video_pair_is_entry_clock_evidence": true,
+    "location_and_pattern_must_be_interpreted_together": true,
+    "creator_specific_rules_not_adopted_without_trader_confirmation": true,
+    "entry_fidelity_contract": "research/current_mnq_strategy_v2_4_entry_semantics.json",
+    "location_scope_contract": "research/current_mnq_strategy_v2_4_key_level_semantics.json",
+    "current_user_fidelity_gold": "research/current_mnq_strategy_v2_4_user_fidelity_gold.json"
+  },
+  "session": {
+    "timezone": "America/New_York",
+    "execution_window": "09:30-12:00",
+    "rth_context": "09:30-16:00",
+    "max_trades_per_session": 1
+  },
+  "risk_intent": {
+    "desired_contracts": 15,
+    "stop_points": 17.25,
+    "tick_size": 0.25,
+    "point_value_usd": 2.0,
+    "late_entry_drawdown_sensitive": true,
+    "execution_risk_overlay_may_reduce_size": true,
+    "signal_semantics_must_not_change_when_size_is_reduced": true
+  },
+  "hard_entry_order": [
+    "STRUCTURE_ONLY_PREMARKET_CONTEXT",
+    "BUILD_CAUSAL_SUPPORT_RESISTANCE_AND_ACTIVE_FVG_INTERACTION_MAP",
+    "PRICE_REACHES_AUTHORIZED_SR_OR_FVG_OR_MATCHES_ONE_OF_TWO_FROZEN_PREBREAK_EXCEPTIONS",
+    "CLASSIFY_REJECTION_RECLAIM_BREAK_RETEST_OR_CONTINUATION_STORY",
+    "READ_5M_CANDLESTICK_GEOMETRY_AND_MULTI_CANDLE_CONTROL_STORY",
+    "REQUIRE_SUSTAINED_INTRA_CANDLE_DIRECTIONAL_FORCE_FROM_CAUSAL_1M_RECONSTRUCTION",
+    "REQUIRE_ROOM_TO_NEXT_MEANINGFUL_REACTION_CLUSTER_OR_FVG_MIDPOINT",
+    "FIRST_A_PLUS_ONLY"
+  ],
+  "key_level_semantics": {
+    "role": "SUPPORT_RESISTANCE_LOCATION_FILTER_AND_INFLECTION_MAP_NOT_STANDALONE_SIGNAL",
+    "level_is_zone_not_magic_tick": true,
+    "allowed_regular_level_family": "STRUCTURAL_SUPPORT_RESISTANCE_ONLY",
+    "forbidden_named_reference_levels": ["PDH", "PDL", "PWH", "PWL"],
+    "primary_quality_evidence": [
+      "multiple_independent_rejections_or_wick_reactions",
+      "repeated_support_or_resistance_behavior",
+      "clear_reaction_cluster"
+    ],
+    "secondary_quality_evidence": [
+      "strong_displacement_away_from_swing_high_or_low",
+      "recent_respected_pivot",
+      "prior_support_resistance_role_history",
+      "active_15m_FVG_context"
+    ],
+    "fvg_as_location": {
+      "active_15m_FVG_may_be_support_or_resistance_interaction_band": true,
+      "when_FVG_appears_before_regular_SR_it_is_not_ignored": true,
+      "FVG_alone_never_creates_trade": true,
+      "rejection_or_breakout_story_plus_force_still_required": true
+    },
+    "active_map_policy": {
+      "prioritize_relevant_nearby_levels": true,
+      "avoid_chart_clutter": true,
+      "do_not_delete_farther_meaningful_destination": true,
+      "recent_levels_receive_more_relevance_but_recency_alone_is_not_sufficient": true,
+      "range_day_fresh_entry_zone_rule": "When causal pre-open structure is MIXED/ranging, preserve nearby S/R and FVG structure as reaction/TP context but remove fresh-entry authorization from S/R zones that do not leave the already-frozen minimum room from the active range edge.",
+      "range_room_uses_existing_parameter": "Params.min_room_r * Params.stop",
+      "no_hindsight_full_day_range_label": true
+    },
+    "inflection_rule": "A valid S/R or FVG interaction band may reject, reclaim, break, accept, retest or later flip role; touching it does not predict direction.",
+    "role_flip": {
+      "transient_wick_breach_is_not_role_flip": true,
+      "durable_acceptance_required": true,
+      "valid_retest_can_confirm_flip": true,
+      "resistance_to_support": true,
+      "support_to_resistance": true
+    },
+    "reclaim": {
+      "breach_and_close_back_is_initial_evidence_only": true,
+      "hold_or_defense_required": true,
+      "directional_control_required": true,
+      "doji_reclaim_alone_is_not_A_plus": true
+    },
+    "break_retest": {
+      "valid_zone_interaction": true,
+      "prior_resistance_accepted_then_retested_as_support_can_authorize_long_location": true,
+      "prior_support_accepted_then_retested_as_resistance_can_authorize_short_location": true,
+      "candle_control_still_required": true
+    },
+    "causal_maintenance": {
+      "future_bars_forbidden": true,
+      "zone_updates_use_completed_bars_only": true,
+      "historical_zone_state_must_be_reproducible_at_that_timestamp": true
+    }
+  },
+  "zone_gate": {
+    "mandatory": true,
+    "pattern_without_zone_interaction": "NO_TRADE",
+    "authorized_locations": [
+      "causal_15m_repeated_rejection_wick_support_resistance",
+      "causal_15m_strong_displacement_swing_support_resistance_when_quality_gate_passes",
+      "accepted_and_retested_support_resistance_role_flip_zone",
+      "active_15m_FVG_as_support_or_resistance_interaction_band"
+    ],
+    "explicitly_not_authorized": ["PDH", "PDL", "PWH", "PWL"],
+    "valid_rejection_interactions": [
+      "touch_and_reject_then_live_force",
+      "penetrate_and_reclaim_with_defense_then_live_force",
+      "sweep_and_reclaim_with_control_then_live_force",
+      "failed_breakout_back_inside_with_control_then_live_force",
+      "doji_pin_inside_or_shrinking_approach_story_then_live_force",
+      "prior_momentum_after_rejection_then_live_force"
+    ],
+    "valid_breakout_interactions": [
+      "first_completed_5m_print_beyond_zone_then_following_forming_5m_extends_beyond_first_print_extreme_with_live_force",
+      "weak_break_pullback_then_15m_bar3_live_force",
+      "accepted_break_followed_by_valid_retest_and_live_force",
+      "prebreak_repeat_test_live_force_exception",
+      "prebreak_true_displacement_sequence_with_third_candle_live_force_exception"
+    ],
+    "mere_approach_without_touch": "NO_TRADE_EXCEPT_TWO_FROZEN_PREBREAK_FAMILIES",
+    "mid_range_pattern": "NO_TRADE",
+    "touch_without_directional_control": "WAIT_OR_NO_TRADE"
+  },
+  "candlestick_semantics": {
+    "role": "CONFIRMATION_AND_BUYER_SELLER_CONTROL_AT_SR_OR_FVG_NOT_STANDALONE_SIGNAL",
+    "timeframe": "5m_primary_execution_story_with_causal_1m_intra5_force_plus_15m_context_and_intra15_bar3_force",
+    "single_candle_families": [
+      "doji", "long_legged_doji", "dragonfly_doji", "gravestone_doji",
+      "spinning_top", "hammer_geometry", "inverted_hammer_geometry",
+      "shooting_star_geometry", "hanging_man_geometry", "bullish_marubozu",
+      "bearish_marubozu", "bullish_long_body_displacement",
+      "bearish_long_body_displacement", "bullish_pin_rejection", "bearish_pin_rejection"
+    ],
+    "legacy_pattern_label_note": "The recognizer's historical BULLISH/BEARISH_LONG_BODY_DISPLACEMENT label is a pattern-taxonomy name only. Executable true displacement is separately defined by the entry-fidelity contract as momentum plus range expansion; not every strong red/green momentum candle is displacement.",
+    "two_candle_families": [
+      "bullish_engulfing", "bearish_engulfing", "bullish_harami", "bearish_harami",
+      "harami_cross", "piercing_line", "dark_cloud_cover", "tweezer_bottom",
+      "tweezer_top", "bullish_kicker", "bearish_kicker", "inside_bar",
+      "outside_bar", "failed_push_reclaim"
+    ],
+    "three_plus_candle_families": [
+      "morning_star", "evening_star", "morning_doji_star", "evening_doji_star",
+      "three_white_soldiers", "three_black_crows", "three_inside_up", "three_inside_down",
+      "three_outside_up", "three_outside_down", "bullish_abandoned_baby",
+      "bearish_abandoned_baby", "rising_three_methods", "falling_three_methods",
+      "compression_then_expansion", "repeated_rejection_then_momentum",
+      "15m_three_bar_break_pullback_continuation"
+    ],
+    "priority_rule": "GEOMETRY_AND_SEQUENCE_MEANING_OVERRIDES_PATTERN_NAME",
+    "story": ["APPROACH", "FIGHT", "DECISION"],
+    "control_features": [
+      "body_to_range_ratio", "upper_wick_fraction", "lower_wick_fraction",
+      "close_location", "range_expansion_or_contraction", "engulfing_or_inside_relationship",
+      "failed_push", "reclaim", "hold_or_defense", "follow_through", "momentum",
+      "true_displacement_as_separate_stronger_condition", "two_sided_wick_conflict",
+      "completed_1m_path_efficiency_inside_forming_parent_candle",
+      "latest_completed_1m_close_at_directional_extreme"
+    ],
+    "mixed_or_indecisive_control": "WAIT_OR_NO_TRADE",
+    "one_minute_role": "reconstruct forming 5m force path only; 1m candlestick pattern names do not replace 5m A+ pattern identity"
+  },
+  "entry_trigger_semantics": {
+    "momentum_candle": "Directional control geometry using frozen body/close thresholds; range expansion is not required.",
+    "true_displacement": "Momentum plus frozen range-expansion requirement.",
+    "live_force": "forming parent candle must satisfy partial momentum geometry, path efficiency >= Params.body_frac, latest completed 1m close at the directional extreme, at least two completed 1m observations, and parent candle still open",
+    "historical_force_resolution": "completed 1m sub-bars only; no tick-order inference and no final parent OHLC backdating",
+    "rejection_entry": "authorized S/R or FVG interaction -> valid completed rejection/control story -> sustained intra5 directional force -> entry before close when proven",
+    "normal_breakout": "first completed 5m print beyond S/R or FVG is setup only -> following forming 5m must push beyond the first breakout candle high for long / low for short and prove sustained intra5 directional force; do not wait for 15m close",
+    "second_5m_momentum_without_first_candle_extreme_extension": "WAIT_NO_ENTRY",
+    "weak_breakout": "weak first break -> controlled completed pullback -> forming 15m bar3 may trigger when sustained intra15 directional force is proven",
+    "prebreak_early_entry_exceptions_only": [
+      "repeat_test_momentum_attack",
+      "true_displacement_sequence_into_level_with_third_candle_momentum"
+    ],
+    "prebreak_exception_trigger_clock": "forming attack/third candle requires sustained intra5 force and may enter before close",
+    "all_other_prebreak_entries": "NO_TRADE"
+  },
+  "directional_examples": {
+    "support_rejection_long": "price reaches support or a bullish-support FVG band; completed rejection story shows sellers failing; forming bullish trigger candle must prove sustained intra5 force and may enter before its close",
+    "resistance_rejection_short": "price reaches resistance or a bearish-resistance FVG band; completed rejection story shows buyers failing; forming bearish trigger candle must prove sustained intra5 force and may enter before its close",
+    "resistance_breakout_long": "first completed 5m prints above resistance; the following forming 5m must trade above the first candle high with sustained bullish force before entry; waiting for 15m close is not required",
+    "support_breakout_short": "first completed 5m prints below support; the following forming 5m must trade below the first candle low with sustained bearish force before entry; waiting for 15m close is not required",
+    "resistance_break_retest_long": "resistance is genuinely broken and accepted, retests as support, then sustained bullish live force confirms",
+    "support_break_retest_short": "support is genuinely broken and accepted, retests as resistance, then sustained bearish live force confirms",
+    "prebreak_long_exception": "repeat-test attack or genuine displacement sequence may trigger before a completed print above resistance only after sustained live force",
+    "prebreak_short_exception": "repeat-test attack or genuine displacement sequence may trigger before a completed print below support only after sustained live force"
+  },
+  "zone_lifecycle": {
+    "breach_is_not_automatically_permanent_break": true,
+    "quick_reclaim_restores_original_polarity": true,
+    "durable_acceptance_can_flip_role": true,
+    "retest_can_confirm_role_flip": true,
+    "future_bars_forbidden": true
+  },
+  "target_semantics": {
+    "allowed_destination_families": [
+      "structural_support_resistance_reaction_zone",
+      "5m_liquidity_or_reaction_cluster",
+      "active_15m_FVG"
+    ],
+    "forbidden_destination_families": ["PDH", "PDL", "PWH", "PWL"],
+    "destination": "next_meaningful_SR_reaction_or_liquidity_cluster_or_FVG",
+    "first_reaction_priority": "Whichever valid meaningful reaction area has the nearest physical first-contact edge in the trade direction owns the TP decision. A nearer 5m liquidity/reaction cluster outranks a farther 15m FVG or S/R zone; a nearer active 15m FVG outranks a farther cluster or S/R zone; a nearer S/R reaction zone outranks farther features. No farther feature may leapfrog the first meaningful reaction.",
+    "fvg_target_rule": "When the FVG owns the destination, TP is the midpoint of that FVG.",
+    "long_scan_direction": "from_entry_upward",
+    "short_scan_direction": "from_entry_downward",
+    "overlap_policy": "When a 5m cluster or FVG is internal to the already-winning broad S/R reaction area, it may refine TP only inside that area; it may not move the target beyond the first-reaction owner.",
+    "real_user_example_2026_08_18": "Trader supplied real screenshots where the liquidity cluster sat in front of the FVG in the trade direction; price reacted at the cluster and did not need to enter the farther FVG, so the cluster owned TP.",
+    "tiny_weak_shelves_may_be_skipped": true,
+    "nearby_strong_blocker_may_not_be_silently_skipped": true,
+    "safe_middle_for_reaction_cluster_or_broad_SR": true,
+    "FVG_midpoint_is_exact_target_semantic": true,
+    "active_15m_FVG_may_be_destination": true,
+    "fixed_R_target": false
+  },
+  "negative_semantic_fixtures": [
+    "PDH_PDL_PWH_PWL_used_as_entry_context_confluence_or_target",
+    "candlestick_pattern_away_from_authorized_SR_or_FVG",
+    "mere_approach_that_never_reaches_zone_and_matches_no_prebreak_exception",
+    "doji_or_spinning_top_at_zone_without_directional_takeover",
+    "mixed_overlap_and_two_sided_wicks",
+    "first_break_candle_without_subsequent_momentum_confirmation",
+    "second_5m_momentum_candle_that_does_not_take_out_first_breakout_candle_directional_extreme",
+    "weak_breakout_without_valid_15m_three_bar_continuation",
+    "ordinary_strong_candle_misclassified_as_true_displacement",
+    "prebreak_entry_outside_repeat_test_or_displacement_exception",
+    "displacement_sequence_whose_third_candle_reverses_control",
+    "counter_bias_reversal_without_completed_control_transfer",
+    "nearby_strong_blocker_before_destination",
+    "retired_or_invalidated_FVG_used_as_confluence",
+    "off_tick_entry_stop_or_target",
+    "second_trade_same_session",
+    "stale_or_ambiguous_contract_identity",
+    "stale_market_data",
+    "failed_breakout_that_reclaims_original_zone_must_not_be_treated_as_durable_role_flip",
+    "sweep_reclaim_without_hold_or_directional_defense",
+    "role_flip_from_single_transient_wick_breach",
+    "break_retest_without_prior_durable_acceptance",
+    "low_quality_chart_clutter_level_used_as_A_plus_location",
+    "range_day_fresh_entry_zone_crowded_against_active_range",
+    "farther_FVG_leapfrogs_nearer_meaningful_liquidity_cluster",
+    "farther_liquidity_cluster_leapfrogs_nearer_active_FVG",
+    "forming_directional_burst_without_sustained_force",
+    "tug_of_war_parent_candle_with_excessive_giveback",
+    "final_parent_candle_ohlc_used_to_backdate_an_earlier_entry",
+    "force_only_visible_at_parent_close_treated_as_intra_candle_entry"
+  ],
+  "evidence_policy": {
+    "real_user_positive_gold_min": 5,
+    "semantic_negative_fixture_min": 10,
+    "real_user_tempting_no_trade_gold_min": 1,
+    "sealed_validation_min_calendar_years": 3,
+    "sealed_validation_min_sessions": 500,
+    "sealed_validation_min_trades": 100,
+    "chronological_folds": 4,
+    "min_positive_folds": 3,
+    "block_bootstrap_mean_expectancy_lower_95_must_be_positive": true,
+    "slippage_stress_points": [0.5, 1.0, 2.0],
+    "all_slippage_stress_net_must_be_positive": true,
+    "shadow_min_full_sessions": 10,
+    "shadow_min_executed_or_would_execute_trades": 5,
+    "shadow_rule_changes_allowed": 0,
+    "shadow_duplicate_order_events_allowed": 0,
+    "shadow_unreconciled_state_events_allowed": 0
+  },
+  "anti_overfit": {
+    "no_PnL_parameter_tuning_for_this_semantic_correction": true,
+    "no_parameter_search_on_sealed_validation": true,
+    "no_variant_promotion_from_sealed_validation": true,
+    "rule_change_after_sealed_result_invalidates_that_result": true,
+    "v2_3_sealed_result_not_valid_as_final_evidence_for_v2_4": true,
+    "new_PnL_selected_force_threshold_added": false,
+    "structural_force_min_completed_1m_observations": 2,
+    "prior_clean_attempt_status": "ABORTED_PRE_RESULT_ARRAY_MEMORY_ERROR_NO_LEDGER_OR_EDGE_RESULT_OBSERVED",
+    "clean_performance_observed_before_force_correction": false,
+    "scope_correction_from_direct_trader_evidence": true,
+    "reason": "Entry-fidelity, live-force timing, S/R+FVG location scope, breakout second-candle extension, range-room, zone-first candle semantics, TP hierarchy and the $400 TP-gap rule were corrected from direct trader evidence before any clean performance result was observed. No threshold was selected from PnL.",
+    "contaminated_score_ranges": [
+      {"start": "2020-02-27", "end": "2020-04-08", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-02-27 and 2020-02-28 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
+      {"start": "2020-06-30", "end": "2020-08-10", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2020-06-30 and 2020-07-01 degraded. Exclude both source dates plus the maximum 40-calendar-day causal context window."},
+      {"start": "2021-12-05", "end": "2022-01-14", "reason": "PRE_PNL_VENDOR_DATA_QUALITY_QUARANTINE: Databento GLBX.MDP3 marked 2021-12-05 degraded. Exclude the source date plus the maximum 40-calendar-day causal context window; the clean dataset itself ends 2021-12-31."},
+      {"start": "2026-01-20", "end": "2026-04-15", "reason": "Previously inspected/development-tested sample."}
+    ]
+  },
+  "topstep_compliance": {
+    "projectx_automation_requires_personal_device": true,
+    "vpn_vps_remote_server_refused": true,
+    "projectx_api_on_live_funded_account_refused": true,
+    "realtime_account_must_report_simulated_true": true,
+    "orders_are_final_and_system_must_fail_closed": true
+  },
+  "deployment": {
+    "default_mode": "SHADOW",
+    "automation_requires_signed_promotion_receipt": true,
+    "automation_requires_personal_device": true,
+    "remote_server_automation_refused": true,
+    "broker_state_must_reconcile_before_each_submission": true,
+    "promotion_stage_name": "TOPSTEPX_API_AUTOMATION_ELIGIBLE",
+    "live_funded_account_stage": "MANUAL_OR_OTHER_TOPSTEP_PERMITTED_EXECUTION_ONLY"
+  }
+}

@@ -1,0 +1,3253 @@
+{
+  "artifact": "DERIVATION_CHECKPOINT",
+  "status": "DIAGNOSTIC CHECKPOINT. Steers no rule, selects no threshold, tunes no parameter. Its output may not be cited as evidence that any rule is correct. ALGO-029 section 2.",
+  "authority": "ALGO-029 section 2",
+  "produced": "2026-08-23",
+  "question": "of the Route A entries the CURRENT kernel grants, how many would the NEW derivation + story + state machine refuse, and at which step?",
+  "kernel_route_a_grants": 128,
+  "new_machine_grants": 8,
+  "new_machine_refuses": 120,
+  "refusal_rate": 93.8,
+  "state_census": {
+    "WAIT_STORY_INCOMPLETE": 77,
+    "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL": 43,
+    "GRANTED": 8
+  },
+  "refusal_census": {
+    "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER": 54,
+    "MERE_APPROACH_WITHOUT_TOUCH": 43,
+    "MIXED_OVERLAP_AND_TWO_SIDED_WICKS": 15,
+    "TOUCH_WITHOUT_DIRECTIONAL_CONTROL": 7,
+    "TOUCHED_BUT_NO_RECOGNISED_INTERACTION": 1
+  },
+  "interaction_census_primary_label": {
+    "touch_and_reject": 37,
+    "failed_breakout_back_inside_with_control": 16,
+    "sweep_and_reclaim_with_control": 14,
+    "doji_pin_inside_or_shrinking_approach_story": 5,
+    "penetrate_and_reclaim_with_defense": 3,
+    "prior_momentum_after_rejection": 1
+  },
+  "interaction_census_ALL_MATCHES": {
+    "doji_pin_inside_or_shrinking_approach_story": 55,
+    "sweep_and_reclaim_with_control": 47,
+    "touch_and_reject": 37,
+    "failed_breakout_back_inside_with_control": 30,
+    "penetrate_and_reclaim_with_defense": 20,
+    "prior_momentum_after_rejection": 6
+  },
+  "shadowed_by_label_order": [],
+  "breakout_family": {
+    "question": "of the B/C/D entries the kernel grants, how many does the new breakout derivation grant, and does it agree about WHICH route?",
+    "kernel_grants": 39,
+    "new_machine_grants_any_route": 23,
+    "agrees_with_kernel_on_route": 23,
+    "kernel_route_census": {
+      "D_PREBREAK_RETEST_BREAKOUT": 28,
+      "B_NORMAL_BREAKOUT": 11
+    },
+    "derived_route_census": {
+      "D_PREBREAK_RETEST_BREAKOUT": 14,
+      "B_NORMAL_BREAKOUT": 11
+    },
+    "state_on_the_kernels_own_route": {
+      "GRANTED": 23,
+      "WAIT_STORY_INCOMPLETE": 16
+    },
+    "refusal_on_the_kernels_own_route": {
+      "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 6,
+      "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST": 6,
+      "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK": 3,
+      "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET": 1
+    },
+    "reading": "the derivation grants 23 of the kernel's 39 and agrees on the route in 23. A disagreement is not automatically the derivation's error - the kernel's route choice is an elif chain, and which of the two is right is a semantics question, not a checkpoint question.",
+    "rows": [
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:02:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:27:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:28:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:29:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:57:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:58:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-23",
+        "clock": "2026-03-23T11:59:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-24",
+        "clock": "2026-03-24T11:34:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "break_retest",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-25",
+        "clock": "2026-03-25T11:39:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-25",
+        "clock": "2026-03-25T11:43:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-25",
+        "clock": "2026-03-25T11:44:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-03-26",
+        "clock": "2026-03-26T10:23:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-26",
+        "clock": "2026-03-26T10:39:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-03-31",
+        "clock": "2026-03-31T10:37:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-01",
+        "clock": "2026-04-01T09:44:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-01",
+        "clock": "2026-04-01T11:37:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-01",
+        "clock": "2026-04-01T11:58:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-01",
+        "clock": "2026-04-01T11:59:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T09:53:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T10:58:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T10:59:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T11:13:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-02",
+        "clock": "2026-04-02T11:37:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-06",
+        "clock": "2026-04-06T10:39:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-07",
+        "clock": "2026-04-07T10:07:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-07",
+        "clock": "2026-04-07T10:09:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-07",
+        "clock": "2026-04-07T10:24:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-07",
+        "clock": "2026-04-07T11:27:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-08",
+        "clock": "2026-04-08T11:04:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T09:52:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T09:53:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:27:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:28:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:37:00-04:00",
+        "direction": "S",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_MEANINGFUL_RESET",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:53:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT",
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-09",
+        "clock": "2026-04-09T10:54:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT",
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-13",
+        "clock": "2026-04-13T09:37:00-04:00",
+        "direction": "S",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [
+          "D_PREBREAK_RETEST_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+            "blocking_step": 2
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "repeat_test_momentum_attack",
+            "refusal": null,
+            "blocking_step": 4
+          }
+        }
+      },
+      {
+        "session": "2026-04-13",
+        "clock": "2026-04-13T10:43:00-04:00",
+        "direction": "L",
+        "kernel_route": "D_PREBREAK_RETEST_BREAKOUT",
+        "derived_routes_granting": [],
+        "agrees_with_kernel": false,
+        "granted_any": false,
+        "kernel_route_state": "WAIT_STORY_INCOMPLETE",
+        "kernel_route_refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "NO_COMPLETED_PRINT_BEYOND_THE_ZONE",
+            "blocking_step": 1
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=NO_COMPLETED_PRINT_BEYOND_THE_ZONE; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      },
+      {
+        "session": "2026-04-14",
+        "clock": "2026-04-14T09:38:00-04:00",
+        "direction": "L",
+        "kernel_route": "B_NORMAL_BREAKOUT",
+        "derived_routes_granting": [
+          "B_NORMAL_BREAKOUT"
+        ],
+        "agrees_with_kernel": true,
+        "granted_any": true,
+        "kernel_route_state": "GRANTED",
+        "kernel_route_refusal": null,
+        "per_route": {
+          "B_NORMAL_BREAKOUT": {
+            "state": "GRANTED",
+            "granted": true,
+            "form": "normal_breakout",
+            "refusal": null,
+            "blocking_step": 4
+          },
+          "C_PREBREAK_DISPLACEMENT": {
+            "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+            "granted": false,
+            "form": null,
+            "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+            "blocking_step": 1
+          },
+          "D_PREBREAK_RETEST_BREAKOUT": {
+            "state": "WAIT_STORY_INCOMPLETE",
+            "granted": false,
+            "form": null,
+            "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=BREAK_NOT_ACCEPTED_BEFORE_RETEST; repeat_test=REPEAT_TEST_WITHOUT_A_REAL_PRIOR_TEST",
+            "blocking_step": 2
+          }
+        }
+      }
+    ]
+  },
+  "drift_reading": "discriminates: keeps 8 of 128. Whether it keeps the RIGHT ones is a fidelity question the exam answers AFTER the grade passes - not here.",
+  "may_not_be_used_to": "select a threshold, tune a parameter, or argue any rule is correct. The teachings steer; this only says whether the build is drifting.",
+  "runtime_seconds": 340.64,
+  "rows": [
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T09:47:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T10:14:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T10:18:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T10:19:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T10:24:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:03:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:37:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:38:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:39:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-23",
+      "clock": "2026-03-23T11:47:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T09:32:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T09:42:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCHED_BUT_NO_RECOGNISED_INTERACTION",
+      "explain": "WAIT — TOUCHED_BUT_NO_RECOGNISED_INTERACTION"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T10:17:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T10:23:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T10:37:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T10:38:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:02:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:04:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:17:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:37:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:38:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:39:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "2026-03-24T11:52:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T09:37:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T09:38:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T09:52:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T10:22:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T10:23:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:07:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:08:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:17:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:18:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:38:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-03-25",
+      "clock": "2026-03-25T11:52:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-26",
+      "clock": "2026-03-26T09:52:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-26",
+      "clock": "2026-03-26T09:54:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-26",
+      "clock": "2026-03-26T10:54:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T09:37:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T09:39:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T09:42:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T09:47:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T11:17:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+      "explain": "WAIT — TOUCH_WITHOUT_DIRECTIONAL_CONTROL"
+    },
+    {
+      "session": "2026-03-30",
+      "clock": "2026-03-30T11:57:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T09:47:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T09:48:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T09:49:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:08:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+      "explain": "WAIT — TOUCH_WITHOUT_DIRECTIONAL_CONTROL"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:09:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+      "explain": "WAIT — TOUCH_WITHOUT_DIRECTIONAL_CONTROL"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:32:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "doji_pin_inside_or_shrinking_approach_story",
+      "all_interactions": [
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:38:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T10:39:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:02:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:03:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:07:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: sweep_and_reclaim_with_control, force proven"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:13:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:14:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:44:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "2026-03-31T11:48:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-01",
+      "clock": "2026-04-01T10:03:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-01",
+      "clock": "2026-04-01T11:08:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T09:37:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T09:39:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:27:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:37:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:38:00-04:00",
+      "direction": "L",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:47:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T10:49:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:02:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:03:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:08:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "penetrate_and_reclaim_with_defense",
+      "all_interactions": [
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:23:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:43:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:49:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "doji_pin_inside_or_shrinking_approach_story",
+      "all_interactions": [
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-02",
+      "clock": "2026-04-02T11:52:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "prior_momentum_after_rejection",
+      "all_interactions": [
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: prior_momentum_after_rejection, force proven"
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "2026-04-06T10:04:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+      "explain": "WAIT — TOUCH_WITHOUT_DIRECTIONAL_CONTROL"
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "2026-04-06T10:49:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "2026-04-06T11:02:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "2026-04-06T11:33:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:48:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:49:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:57:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:58:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T09:59:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:02:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:04:00-04:00",
+      "direction": "S",
+      "state": "GRANTED",
+      "blocking_step": 4,
+      "granted": true,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "prior_momentum_after_rejection"
+      ],
+      "refusal": null,
+      "explain": "ENTER via A_NORMAL_REJECTION: failed_breakout_back_inside_with_control, force proven"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:44:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:52:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T10:59:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-07",
+      "clock": "2026-04-07T11:37:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:23:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:47:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:52:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:53:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:54:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T10:57:00-04:00",
+      "direction": "S",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:02:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:03:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:13:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "doji_pin_inside_or_shrinking_approach_story",
+      "all_interactions": [
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:38:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:47:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-08",
+      "clock": "2026-04-08T11:48:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T09:54:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T10:18:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T10:19:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:27:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:28:00-04:00",
+      "direction": "S",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "sweep_and_reclaim_with_control",
+      "all_interactions": [
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:42:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:44:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:49:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "penetrate_and_reclaim_with_defense",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:53:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "2026-04-09T11:54:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:22:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:52:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+      "explain": "WAIT — TOUCH_WITHOUT_DIRECTIONAL_CONTROL"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:53:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+      "explain": "WAIT — TOUCH_WITHOUT_DIRECTIONAL_CONTROL"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:54:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+      "explain": "WAIT — TOUCH_WITHOUT_DIRECTIONAL_CONTROL"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T10:59:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-13",
+      "clock": "2026-04-13T11:38:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:07:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:08:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:09:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "failed_breakout_back_inside_with_control",
+        "sweep_and_reclaim_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:22:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "doji_pin_inside_or_shrinking_approach_story",
+      "all_interactions": [
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:23:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "doji_pin_inside_or_shrinking_approach_story",
+      "all_interactions": [
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:48:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T10:49:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "failed_breakout_back_inside_with_control",
+      "all_interactions": [
+        "failed_breakout_back_inside_with_control",
+        "doji_pin_inside_or_shrinking_approach_story"
+      ],
+      "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+      "explain": "WAIT — MIXED_OVERLAP_AND_TWO_SIDED_WICKS"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T11:12:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T11:14:00-04:00",
+      "direction": "L",
+      "state": "WAIT_STORY_INCOMPLETE",
+      "blocking_step": 2,
+      "granted": false,
+      "interaction": "touch_and_reject",
+      "all_interactions": [
+        "touch_and_reject",
+        "sweep_and_reclaim_with_control"
+      ],
+      "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+      "explain": "WAIT — INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T11:47:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    },
+    {
+      "session": "2026-04-14",
+      "clock": "2026-04-14T11:49:00-04:00",
+      "direction": "L",
+      "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+      "blocking_step": 1,
+      "granted": false,
+      "interaction": null,
+      "all_interactions": [],
+      "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+      "explain": "WAIT — MERE_APPROACH_WITHOUT_TOUCH"
+    }
+  ]
+}

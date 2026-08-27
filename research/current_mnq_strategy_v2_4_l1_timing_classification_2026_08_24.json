@@ -1,0 +1,1207 @@
+{
+  "artifact": "L1_TIMING_CLASSIFICATION",
+  "status": "DIAGNOSTIC. Classifies the 5 early trades H-A / H-B / NEITHER. Repairs nothing.",
+  "authority": "ALGO-078 lane 1",
+  "produced": "2026-08-24",
+  "arm": "taught_0800",
+  "hypotheses_pre_registered": {
+    "H_A_ZONE_SIGNIFICANCE": "the early trade fires at a level he never marked that day",
+    "H_B_SEQUENCE": "it fires at HIS level, but before react-then-momentum completes",
+    "NEITHER": "his level and the sequence looks complete - the wait mechanic is elsewhere"
+  },
+  "disposition_rule_pre_registered": "3 or more of the 5 in one class NAMES the repair lane; otherwise WAIT_MECHANIC_UNDERSPECIFIED and the answer is outside-teachings research under HIS vocabulary - no predicate invented here",
+  "rows": [
+    {
+      "session": "2026-03-23",
+      "is_control": false,
+      "bot_is_early_by_minutes": 187.0,
+      "his_entry_clock": "2026-03-23 11:21:00-04:00",
+      "his_marked_zones": [
+        {
+          "band": [
+            24340.0,
+            24347.25
+          ],
+          "role": "SUPPORT",
+          "tf": "15m"
+        },
+        {
+          "band": [
+            24758.25,
+            24765.5
+          ],
+          "role": "RESISTANCE",
+          "tf": "5m"
+        }
+      ],
+      "fired_trade": {
+        "entry_time": "2026-03-23 08:14:00-04:00",
+        "entry_price": 24429.0,
+        "direction": "S",
+        "setup": "BRK5",
+        "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "signal_time": "2026-03-23 08:10:00-04:00",
+        "confirmed_time": "2026-03-23 08:14:00-04:00",
+        "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+        "location_band": [
+          24443.761607142857,
+          24453.238392857143
+        ],
+        "location_source": "WICK_ZONE"
+      },
+      "fired_level_matches_a_marked_zone": false,
+      "locations_the_machine_built": 55,
+      "locations_overlapping_a_marked_zone": 1,
+      "base_rate_pct": 1.82,
+      "matched_marked_zones": [],
+      "bar_sequence_at_the_grant": [
+        {
+          "bucket": "2026-03-23 07:50:00-04:00",
+          "ohlc": [
+            24495.25,
+            24497.25,
+            24409.5,
+            24487.0
+          ],
+          "body_frac": 0.094,
+          "upper_wick_frac": 0.0228,
+          "lower_wick_frac": 0.8832
+        },
+        {
+          "bucket": "2026-03-23 07:55:00-04:00",
+          "ohlc": [
+            24486.0,
+            24489.25,
+            24369.75,
+            24392.5
+          ],
+          "body_frac": 0.7824,
+          "upper_wick_frac": 0.0272,
+          "lower_wick_frac": 0.1904
+        },
+        {
+          "bucket": "2026-03-23 08:00:00-04:00",
+          "ohlc": [
+            24391.75,
+            24442.0,
+            24344.5,
+            24432.5
+          ],
+          "body_frac": 0.4179,
+          "upper_wick_frac": 0.0974,
+          "lower_wick_frac": 0.4846
+        },
+        {
+          "bucket": "2026-03-23 08:05:00-04:00",
+          "ohlc": [
+            24432.5,
+            24479.75,
+            24390.75,
+            24477.75
+          ],
+          "body_frac": 0.5084,
+          "upper_wick_frac": 0.0225,
+          "lower_wick_frac": 0.4691
+        },
+        {
+          "bucket": "2026-03-23 08:10:00-04:00",
+          "ohlc": [
+            24475.25,
+            24481.75,
+            24398.25,
+            24399.75
+          ],
+          "body_frac": 0.9042,
+          "upper_wick_frac": 0.0778,
+          "lower_wick_frac": 0.018
+        },
+        {
+          "bucket": "2026-03-23 08:15:00-04:00",
+          "ohlc": [
+            24398.5,
+            24521.75,
+            24395.5,
+            24521.5
+          ],
+          "body_frac": 0.9743,
+          "upper_wick_frac": 0.002,
+          "lower_wick_frac": 0.0238
+        }
+      ],
+      "bar_sequence_at_his_entry": [
+        {
+          "bucket": "2026-03-23 11:00:00-04:00",
+          "ohlc": [
+            24611.0,
+            24681.25,
+            24600.75,
+            24673.25
+          ],
+          "body_frac": 0.7733,
+          "upper_wick_frac": 0.0994,
+          "lower_wick_frac": 0.1273
+        },
+        {
+          "bucket": "2026-03-23 11:05:00-04:00",
+          "ohlc": [
+            24673.5,
+            24683.5,
+            24648.5,
+            24675.5
+          ],
+          "body_frac": 0.0571,
+          "upper_wick_frac": 0.2286,
+          "lower_wick_frac": 0.7143
+        },
+        {
+          "bucket": "2026-03-23 11:10:00-04:00",
+          "ohlc": [
+            24675.5,
+            24689.0,
+            24651.0,
+            24663.5
+          ],
+          "body_frac": 0.3158,
+          "upper_wick_frac": 0.3553,
+          "lower_wick_frac": 0.3289
+        },
+        {
+          "bucket": "2026-03-23 11:15:00-04:00",
+          "ohlc": [
+            24663.0,
+            24669.5,
+            24632.5,
+            24636.75
+          ],
+          "body_frac": 0.7095,
+          "upper_wick_frac": 0.1757,
+          "lower_wick_frac": 0.1149
+        },
+        {
+          "bucket": "2026-03-23 11:20:00-04:00",
+          "ohlc": [
+            24637.25,
+            24658.75,
+            24605.5,
+            24651.0
+          ],
+          "body_frac": 0.2582,
+          "upper_wick_frac": 0.1455,
+          "lower_wick_frac": 0.5962
+        },
+        {
+          "bucket": "2026-03-23 11:25:00-04:00",
+          "ohlc": [
+            24651.25,
+            24651.25,
+            24597.25,
+            24612.0
+          ],
+          "body_frac": 0.7269,
+          "upper_wick_frac": 0.0,
+          "lower_wick_frac": 0.2731
+        }
+      ],
+      "CLASS": "H_A_ZONE_SIGNIFICANCE",
+      "class_reason": "the level it fired at overlaps NONE of the zones he marked that day (2 marked)"
+    },
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "bot_is_early_by_minutes": 75.0,
+      "his_entry_clock": "2026-03-24 09:32:00-04:00",
+      "his_marked_zones": [
+        {
+          "band": [
+            24192.0,
+            24192.25
+          ],
+          "role": "SUPPORT",
+          "tf": "15m"
+        },
+        {
+          "band": [
+            24510.25,
+            24510.5
+          ],
+          "role": "RESISTANCE",
+          "tf": "15m"
+        }
+      ],
+      "fired_trade": {
+        "entry_time": "2026-03-24 08:17:00-04:00",
+        "entry_price": 24333.25,
+        "direction": "S",
+        "setup": "BRK5",
+        "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "signal_time": "2026-03-24 08:15:00-04:00",
+        "confirmed_time": "2026-03-24 08:17:00-04:00",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "location_band": [
+          24308.254464285714,
+          24327.495535714286
+        ],
+        "location_source": "WICK_ZONE"
+      },
+      "fired_level_matches_a_marked_zone": false,
+      "locations_the_machine_built": 53,
+      "locations_overlapping_a_marked_zone": 1,
+      "base_rate_pct": 1.89,
+      "matched_marked_zones": [],
+      "bar_sequence_at_the_grant": [
+        {
+          "bucket": "2026-03-24 07:55:00-04:00",
+          "ohlc": [
+            24337.0,
+            24388.5,
+            24332.75,
+            24383.25
+          ],
+          "body_frac": 0.8296,
+          "upper_wick_frac": 0.0942,
+          "lower_wick_frac": 0.0762
+        },
+        {
+          "bucket": "2026-03-24 08:00:00-04:00",
+          "ohlc": [
+            24383.25,
+            24398.0,
+            24353.25,
+            24354.0
+          ],
+          "body_frac": 0.6536,
+          "upper_wick_frac": 0.3296,
+          "lower_wick_frac": 0.0168
+        },
+        {
+          "bucket": "2026-03-24 08:05:00-04:00",
+          "ohlc": [
+            24353.75,
+            24356.5,
+            24329.0,
+            24341.5
+          ],
+          "body_frac": 0.4455,
+          "upper_wick_frac": 0.1,
+          "lower_wick_frac": 0.4545
+        },
+        {
+          "bucket": "2026-03-24 08:10:00-04:00",
+          "ohlc": [
+            24342.0,
+            24356.25,
+            24320.0,
+            24344.25
+          ],
+          "body_frac": 0.0621,
+          "upper_wick_frac": 0.331,
+          "lower_wick_frac": 0.6069
+        },
+        {
+          "bucket": "2026-03-24 08:15:00-04:00",
+          "ohlc": [
+            24344.0,
+            24346.0,
+            24328.25,
+            24337.25
+          ],
+          "body_frac": 0.3803,
+          "upper_wick_frac": 0.1127,
+          "lower_wick_frac": 0.507
+        },
+        {
+          "bucket": "2026-03-24 08:20:00-04:00",
+          "ohlc": [
+            24336.75,
+            24351.5,
+            24328.25,
+            24345.5
+          ],
+          "body_frac": 0.3763,
+          "upper_wick_frac": 0.2581,
+          "lower_wick_frac": 0.3656
+        }
+      ],
+      "bar_sequence_at_his_entry": [
+        {
+          "bucket": "2026-03-24 09:10:00-04:00",
+          "ohlc": [
+            24231.25,
+            24266.5,
+            24224.25,
+            24254.25
+          ],
+          "body_frac": 0.5444,
+          "upper_wick_frac": 0.2899,
+          "lower_wick_frac": 0.1657
+        },
+        {
+          "bucket": "2026-03-24 09:15:00-04:00",
+          "ohlc": [
+            24254.75,
+            24271.0,
+            24236.75,
+            24243.75
+          ],
+          "body_frac": 0.3212,
+          "upper_wick_frac": 0.4745,
+          "lower_wick_frac": 0.2044
+        },
+        {
+          "bucket": "2026-03-24 09:20:00-04:00",
+          "ohlc": [
+            24243.75,
+            24262.0,
+            24233.0,
+            24248.5
+          ],
+          "body_frac": 0.1638,
+          "upper_wick_frac": 0.4655,
+          "lower_wick_frac": 0.3707
+        },
+        {
+          "bucket": "2026-03-24 09:25:00-04:00",
+          "ohlc": [
+            24249.25,
+            24270.5,
+            24223.75,
+            24255.25
+          ],
+          "body_frac": 0.1283,
+          "upper_wick_frac": 0.3262,
+          "lower_wick_frac": 0.5455
+        },
+        {
+          "bucket": "2026-03-24 09:30:00-04:00",
+          "ohlc": [
+            24255.5,
+            24317.0,
+            24225.75,
+            24304.25
+          ],
+          "body_frac": 0.5342,
+          "upper_wick_frac": 0.1397,
+          "lower_wick_frac": 0.326
+        },
+        {
+          "bucket": "2026-03-24 09:35:00-04:00",
+          "ohlc": [
+            24304.25,
+            24314.0,
+            24203.25,
+            24208.75
+          ],
+          "body_frac": 0.8623,
+          "upper_wick_frac": 0.088,
+          "lower_wick_frac": 0.0497
+        }
+      ],
+      "CLASS": "H_A_ZONE_SIGNIFICANCE",
+      "class_reason": "the level it fired at overlaps NONE of the zones he marked that day (2 marked)"
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "bot_is_early_by_minutes": 46.0,
+      "his_entry_clock": "2026-03-31 09:49:00-04:00",
+      "his_marked_zones": [
+        {
+          "band": [
+            23311.75,
+            23312.0
+          ],
+          "role": "SUPPORT",
+          "tf": "5m"
+        },
+        {
+          "band": [
+            23436.5,
+            23436.75
+          ],
+          "role": "RESISTANCE",
+          "tf": "5m"
+        }
+      ],
+      "fired_trade": {
+        "entry_time": "2026-03-31 09:03:00-04:00",
+        "entry_price": 23383.25,
+        "direction": "L",
+        "setup": "BRK5",
+        "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "signal_time": "2026-03-31 09:00:00-04:00",
+        "confirmed_time": "2026-03-31 09:03:00-04:00",
+        "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+        "location_band": [
+          23392.688392857144,
+          23404.11160714286
+        ],
+        "location_source": "WICK_ZONE"
+      },
+      "fired_level_matches_a_marked_zone": false,
+      "locations_the_machine_built": 68,
+      "locations_overlapping_a_marked_zone": 3,
+      "base_rate_pct": 4.41,
+      "matched_marked_zones": [],
+      "bar_sequence_at_the_grant": [
+        {
+          "bucket": "2026-03-31 08:40:00-04:00",
+          "ohlc": [
+            23404.75,
+            23424.0,
+            23399.0,
+            23422.5
+          ],
+          "body_frac": 0.71,
+          "upper_wick_frac": 0.06,
+          "lower_wick_frac": 0.23
+        },
+        {
+          "bucket": "2026-03-31 08:45:00-04:00",
+          "ohlc": [
+            23422.25,
+            23426.5,
+            23393.75,
+            23402.5
+          ],
+          "body_frac": 0.6031,
+          "upper_wick_frac": 0.1298,
+          "lower_wick_frac": 0.2672
+        },
+        {
+          "bucket": "2026-03-31 08:50:00-04:00",
+          "ohlc": [
+            23402.5,
+            23427.25,
+            23391.5,
+            23409.5
+          ],
+          "body_frac": 0.1958,
+          "upper_wick_frac": 0.4965,
+          "lower_wick_frac": 0.3077
+        },
+        {
+          "bucket": "2026-03-31 08:55:00-04:00",
+          "ohlc": [
+            23408.75,
+            23410.25,
+            23368.5,
+            23369.75
+          ],
+          "body_frac": 0.9341,
+          "upper_wick_frac": 0.0359,
+          "lower_wick_frac": 0.0299
+        },
+        {
+          "bucket": "2026-03-31 09:00:00-04:00",
+          "ohlc": [
+            23370.25,
+            23386.75,
+            23357.25,
+            23366.0
+          ],
+          "body_frac": 0.1441,
+          "upper_wick_frac": 0.5593,
+          "lower_wick_frac": 0.2966
+        },
+        {
+          "bucket": "2026-03-31 09:05:00-04:00",
+          "ohlc": [
+            23365.5,
+            23388.5,
+            23364.75,
+            23386.5
+          ],
+          "body_frac": 0.8842,
+          "upper_wick_frac": 0.0842,
+          "lower_wick_frac": 0.0316
+        }
+      ],
+      "bar_sequence_at_his_entry": [
+        {
+          "bucket": "2026-03-31 09:25:00-04:00",
+          "ohlc": [
+            23399.0,
+            23399.0,
+            23374.0,
+            23382.5
+          ],
+          "body_frac": 0.66,
+          "upper_wick_frac": 0.0,
+          "lower_wick_frac": 0.34
+        },
+        {
+          "bucket": "2026-03-31 09:30:00-04:00",
+          "ohlc": [
+            23382.25,
+            23459.5,
+            23378.75,
+            23458.0
+          ],
+          "body_frac": 0.9381,
+          "upper_wick_frac": 0.0186,
+          "lower_wick_frac": 0.0433
+        },
+        {
+          "bucket": "2026-03-31 09:35:00-04:00",
+          "ohlc": [
+            23458.0,
+            23460.5,
+            23402.75,
+            23444.5
+          ],
+          "body_frac": 0.2338,
+          "upper_wick_frac": 0.0433,
+          "lower_wick_frac": 0.7229
+        },
+        {
+          "bucket": "2026-03-31 09:40:00-04:00",
+          "ohlc": [
+            23443.75,
+            23470.0,
+            23407.0,
+            23418.0
+          ],
+          "body_frac": 0.4087,
+          "upper_wick_frac": 0.4167,
+          "lower_wick_frac": 0.1746
+        },
+        {
+          "bucket": "2026-03-31 09:45:00-04:00",
+          "ohlc": [
+            23416.75,
+            23531.5,
+            23416.75,
+            23531.25
+          ],
+          "body_frac": 0.9978,
+          "upper_wick_frac": 0.0022,
+          "lower_wick_frac": 0.0
+        },
+        {
+          "bucket": "2026-03-31 09:50:00-04:00",
+          "ohlc": [
+            23530.25,
+            23561.25,
+            23499.25,
+            23556.25
+          ],
+          "body_frac": 0.4194,
+          "upper_wick_frac": 0.0806,
+          "lower_wick_frac": 0.5
+        }
+      ],
+      "CLASS": "H_A_ZONE_SIGNIFICANCE",
+      "class_reason": "the level it fired at overlaps NONE of the zones he marked that day (2 marked)"
+    },
+    {
+      "session": "2026-04-06",
+      "is_control": false,
+      "bot_is_early_by_minutes": 57.0,
+      "his_entry_clock": "2026-04-06 10:04:00-04:00",
+      "his_marked_zones": [
+        {
+          "band": [
+            24421.5,
+            24421.75
+          ],
+          "role": "RESISTANCE",
+          "tf": "15m"
+        },
+        {
+          "band": [
+            24248.0,
+            24248.25
+          ],
+          "role": "SUPPORT",
+          "tf": "15m"
+        }
+      ],
+      "fired_trade": {
+        "entry_time": "2026-04-06 09:07:00-04:00",
+        "entry_price": 24278.5,
+        "direction": "S",
+        "setup": "BRK5",
+        "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+        "signal_time": "2026-04-06 09:05:00-04:00",
+        "confirmed_time": "2026-04-06 09:07:00-04:00",
+        "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+        "location_band": [
+          24289.334285714285,
+          24293.165714285715
+        ],
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "fired_level_matches_a_marked_zone": false,
+      "locations_the_machine_built": 67,
+      "locations_overlapping_a_marked_zone": 1,
+      "base_rate_pct": 1.49,
+      "matched_marked_zones": [],
+      "bar_sequence_at_the_grant": [
+        {
+          "bucket": "2026-04-06 08:45:00-04:00",
+          "ohlc": [
+            24316.75,
+            24338.25,
+            24315.75,
+            24317.0
+          ],
+          "body_frac": 0.0111,
+          "upper_wick_frac": 0.9444,
+          "lower_wick_frac": 0.0444
+        },
+        {
+          "bucket": "2026-04-06 08:50:00-04:00",
+          "ohlc": [
+            24317.5,
+            24325.75,
+            24308.0,
+            24310.0
+          ],
+          "body_frac": 0.4225,
+          "upper_wick_frac": 0.4648,
+          "lower_wick_frac": 0.1127
+        },
+        {
+          "bucket": "2026-04-06 08:55:00-04:00",
+          "ohlc": [
+            24310.0,
+            24313.0,
+            24300.25,
+            24306.5
+          ],
+          "body_frac": 0.2745,
+          "upper_wick_frac": 0.2353,
+          "lower_wick_frac": 0.4902
+        },
+        {
+          "bucket": "2026-04-06 09:00:00-04:00",
+          "ohlc": [
+            24306.5,
+            24313.75,
+            24285.75,
+            24287.0
+          ],
+          "body_frac": 0.6964,
+          "upper_wick_frac": 0.2589,
+          "lower_wick_frac": 0.0446
+        },
+        {
+          "bucket": "2026-04-06 09:05:00-04:00",
+          "ohlc": [
+            24287.25,
+            24303.75,
+            24272.0,
+            24301.25
+          ],
+          "body_frac": 0.4409,
+          "upper_wick_frac": 0.0787,
+          "lower_wick_frac": 0.4803
+        },
+        {
+          "bucket": "2026-04-06 09:10:00-04:00",
+          "ohlc": [
+            24301.25,
+            24313.5,
+            24293.75,
+            24308.0
+          ],
+          "body_frac": 0.3418,
+          "upper_wick_frac": 0.2785,
+          "lower_wick_frac": 0.3797
+        }
+      ],
+      "bar_sequence_at_his_entry": [
+        {
+          "bucket": "2026-04-06 09:40:00-04:00",
+          "ohlc": [
+            24294.5,
+            24347.5,
+            24264.0,
+            24328.75
+          ],
+          "body_frac": 0.4102,
+          "upper_wick_frac": 0.2246,
+          "lower_wick_frac": 0.3653
+        },
+        {
+          "bucket": "2026-04-06 09:45:00-04:00",
+          "ohlc": [
+            24329.25,
+            24384.0,
+            24326.5,
+            24362.0
+          ],
+          "body_frac": 0.5696,
+          "upper_wick_frac": 0.3826,
+          "lower_wick_frac": 0.0478
+        },
+        {
+          "bucket": "2026-04-06 09:50:00-04:00",
+          "ohlc": [
+            24362.0,
+            24410.25,
+            24355.75,
+            24380.75
+          ],
+          "body_frac": 0.344,
+          "upper_wick_frac": 0.5413,
+          "lower_wick_frac": 0.1147
+        },
+        {
+          "bucket": "2026-04-06 09:55:00-04:00",
+          "ohlc": [
+            24381.0,
+            24418.0,
+            24360.75,
+            24418.0
+          ],
+          "body_frac": 0.6463,
+          "upper_wick_frac": 0.0,
+          "lower_wick_frac": 0.3537
+        },
+        {
+          "bucket": "2026-04-06 10:00:00-04:00",
+          "ohlc": [
+            24417.75,
+            24453.0,
+            24285.0,
+            24292.25
+          ],
+          "body_frac": 0.747,
+          "upper_wick_frac": 0.2098,
+          "lower_wick_frac": 0.0432
+        },
+        {
+          "bucket": "2026-04-06 10:05:00-04:00",
+          "ohlc": [
+            24292.25,
+            24319.75,
+            24270.5,
+            24317.5
+          ],
+          "body_frac": 0.5127,
+          "upper_wick_frac": 0.0457,
+          "lower_wick_frac": 0.4416
+        }
+      ],
+      "CLASS": "H_A_ZONE_SIGNIFICANCE",
+      "class_reason": "the level it fired at overlaps NONE of the zones he marked that day (2 marked)"
+    },
+    {
+      "session": "2026-04-09",
+      "is_control": false,
+      "bot_is_early_by_minutes": 118.0,
+      "his_entry_clock": "2026-04-09 11:35:00-04:00",
+      "his_marked_zones": [
+        {
+          "band": [
+            24960.5,
+            24960.75
+          ],
+          "role": "SUPPORT",
+          "tf": "5m"
+        },
+        {
+          "band": [
+            25112.0,
+            25112.25
+          ],
+          "role": "RESISTANCE",
+          "tf": "15m"
+        }
+      ],
+      "fired_trade": {
+        "entry_time": "2026-04-09 09:37:00-04:00",
+        "entry_price": 25056.25,
+        "direction": "L",
+        "setup": "BRK5",
+        "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "signal_time": "2026-04-09 09:35:00-04:00",
+        "confirmed_time": "2026-04-09 09:37:00-04:00",
+        "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+        "location_band": [
+          25029.72,
+          25035.78
+        ],
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "fired_level_matches_a_marked_zone": false,
+      "locations_the_machine_built": 62,
+      "locations_overlapping_a_marked_zone": 1,
+      "base_rate_pct": 1.61,
+      "matched_marked_zones": [],
+      "bar_sequence_at_the_grant": [
+        {
+          "bucket": "2026-04-09 09:15:00-04:00",
+          "ohlc": [
+            25044.5,
+            25049.75,
+            25038.0,
+            25042.0
+          ],
+          "body_frac": 0.2128,
+          "upper_wick_frac": 0.4468,
+          "lower_wick_frac": 0.3404
+        },
+        {
+          "bucket": "2026-04-09 09:20:00-04:00",
+          "ohlc": [
+            25041.25,
+            25049.0,
+            25037.0,
+            25044.0
+          ],
+          "body_frac": 0.2292,
+          "upper_wick_frac": 0.4167,
+          "lower_wick_frac": 0.3542
+        },
+        {
+          "bucket": "2026-04-09 09:25:00-04:00",
+          "ohlc": [
+            25044.5,
+            25084.25,
+            25041.0,
+            25080.5
+          ],
+          "body_frac": 0.8324,
+          "upper_wick_frac": 0.0867,
+          "lower_wick_frac": 0.0809
+        },
+        {
+          "bucket": "2026-04-09 09:30:00-04:00",
+          "ohlc": [
+            25081.0,
+            25107.0,
+            25019.0,
+            25027.75
+          ],
+          "body_frac": 0.6051,
+          "upper_wick_frac": 0.2955,
+          "lower_wick_frac": 0.0994
+        },
+        {
+          "bucket": "2026-04-09 09:35:00-04:00",
+          "ohlc": [
+            25027.5,
+            25073.5,
+            25021.25,
+            25062.5
+          ],
+          "body_frac": 0.6699,
+          "upper_wick_frac": 0.2105,
+          "lower_wick_frac": 0.1196
+        },
+        {
+          "bucket": "2026-04-09 09:40:00-04:00",
+          "ohlc": [
+            25061.75,
+            25112.75,
+            25042.5,
+            25100.25
+          ],
+          "body_frac": 0.548,
+          "upper_wick_frac": 0.1779,
+          "lower_wick_frac": 0.274
+        }
+      ],
+      "bar_sequence_at_his_entry": [
+        {
+          "bucket": "2026-04-09 11:15:00-04:00",
+          "ohlc": [
+            25072.5,
+            25102.25,
+            25072.0,
+            25098.5
+          ],
+          "body_frac": 0.8595,
+          "upper_wick_frac": 0.124,
+          "lower_wick_frac": 0.0165
+        },
+        {
+          "bucket": "2026-04-09 11:20:00-04:00",
+          "ohlc": [
+            25099.0,
+            25107.75,
+            25078.0,
+            25089.0
+          ],
+          "body_frac": 0.3361,
+          "upper_wick_frac": 0.2941,
+          "lower_wick_frac": 0.3697
+        },
+        {
+          "bucket": "2026-04-09 11:25:00-04:00",
+          "ohlc": [
+            25089.5,
+            25089.75,
+            25052.75,
+            25058.25
+          ],
+          "body_frac": 0.8446,
+          "upper_wick_frac": 0.0068,
+          "lower_wick_frac": 0.1486
+        },
+        {
+          "bucket": "2026-04-09 11:30:00-04:00",
+          "ohlc": [
+            25058.25,
+            25154.75,
+            25048.5,
+            25122.25
+          ],
+          "body_frac": 0.6024,
+          "upper_wick_frac": 0.3059,
+          "lower_wick_frac": 0.0918
+        },
+        {
+          "bucket": "2026-04-09 11:35:00-04:00",
+          "ohlc": [
+            25121.75,
+            25143.75,
+            25089.5,
+            25109.5
+          ],
+          "body_frac": 0.2258,
+          "upper_wick_frac": 0.4055,
+          "lower_wick_frac": 0.3687
+        },
+        {
+          "bucket": "2026-04-09 11:40:00-04:00",
+          "ohlc": [
+            25109.75,
+            25143.0,
+            25108.5,
+            25125.5
+          ],
+          "body_frac": 0.4565,
+          "upper_wick_frac": 0.5072,
+          "lower_wick_frac": 0.0362
+        }
+      ],
+      "CLASS": "H_A_ZONE_SIGNIFICANCE",
+      "class_reason": "the level it fired at overlaps NONE of the zones he marked that day (2 marked)"
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "bot_is_early_by_minutes": -2.0,
+      "his_entry_clock": "2026-04-14 09:36:00-04:00",
+      "his_marked_zones": [
+        {
+          "band": [
+            25716.5,
+            25716.75
+          ],
+          "role": "RESISTANCE",
+          "tf": "5m"
+        },
+        {
+          "band": [
+            25620.5,
+            25620.75
+          ],
+          "role": "SUPPORT",
+          "tf": "5m"
+        }
+      ],
+      "fired_trade": {
+        "entry_time": "2026-04-14 09:38:00-04:00",
+        "entry_price": 25746.0,
+        "direction": "L",
+        "setup": "BRK5",
+        "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+        "signal_time": "2026-04-14 09:35:00-04:00",
+        "confirmed_time": "2026-04-14 09:38:00-04:00",
+        "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+        "location_band": [
+          25714.66964285714,
+          25717.83035714286
+        ],
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "fired_level_matches_a_marked_zone": true,
+      "locations_the_machine_built": 69,
+      "locations_overlapping_a_marked_zone": 2,
+      "base_rate_pct": 2.9,
+      "matched_marked_zones": [
+        {
+          "band": [
+            25716.5,
+            25716.75
+          ],
+          "role": "RESISTANCE",
+          "tf": "5m"
+        }
+      ],
+      "bar_sequence_at_the_grant": [
+        {
+          "bucket": "2026-04-14 09:15:00-04:00",
+          "ohlc": [
+            25672.25,
+            25682.75,
+            25671.75,
+            25680.0
+          ],
+          "body_frac": 0.7045,
+          "upper_wick_frac": 0.25,
+          "lower_wick_frac": 0.0455
+        },
+        {
+          "bucket": "2026-04-14 09:20:00-04:00",
+          "ohlc": [
+            25679.75,
+            25680.25,
+            25665.75,
+            25669.75
+          ],
+          "body_frac": 0.6897,
+          "upper_wick_frac": 0.0345,
+          "lower_wick_frac": 0.2759
+        },
+        {
+          "bucket": "2026-04-14 09:25:00-04:00",
+          "ohlc": [
+            25670.0,
+            25672.5,
+            25639.5,
+            25655.75
+          ],
+          "body_frac": 0.4318,
+          "upper_wick_frac": 0.0758,
+          "lower_wick_frac": 0.4924
+        },
+        {
+          "bucket": "2026-04-14 09:30:00-04:00",
+          "ohlc": [
+            25656.25,
+            25727.0,
+            25655.75,
+            25718.25
+          ],
+          "body_frac": 0.8702,
+          "upper_wick_frac": 0.1228,
+          "lower_wick_frac": 0.007
+        },
+        {
+          "bucket": "2026-04-14 09:35:00-04:00",
+          "ohlc": [
+            25718.25,
+            25748.5,
+            25703.5,
+            25708.5
+          ],
+          "body_frac": 0.2167,
+          "upper_wick_frac": 0.6722,
+          "lower_wick_frac": 0.1111
+        },
+        {
+          "bucket": "2026-04-14 09:40:00-04:00",
+          "ohlc": [
+            25708.25,
+            25756.25,
+            25706.0,
+            25748.75
+          ],
+          "body_frac": 0.806,
+          "upper_wick_frac": 0.1493,
+          "lower_wick_frac": 0.0448
+        }
+      ],
+      "bar_sequence_at_his_entry": [
+        {
+          "bucket": "2026-04-14 09:15:00-04:00",
+          "ohlc": [
+            25672.25,
+            25682.75,
+            25671.75,
+            25680.0
+          ],
+          "body_frac": 0.7045,
+          "upper_wick_frac": 0.25,
+          "lower_wick_frac": 0.0455
+        },
+        {
+          "bucket": "2026-04-14 09:20:00-04:00",
+          "ohlc": [
+            25679.75,
+            25680.25,
+            25665.75,
+            25669.75
+          ],
+          "body_frac": 0.6897,
+          "upper_wick_frac": 0.0345,
+          "lower_wick_frac": 0.2759
+        },
+        {
+          "bucket": "2026-04-14 09:25:00-04:00",
+          "ohlc": [
+            25670.0,
+            25672.5,
+            25639.5,
+            25655.75
+          ],
+          "body_frac": 0.4318,
+          "upper_wick_frac": 0.0758,
+          "lower_wick_frac": 0.4924
+        },
+        {
+          "bucket": "2026-04-14 09:30:00-04:00",
+          "ohlc": [
+            25656.25,
+            25727.0,
+            25655.75,
+            25718.25
+          ],
+          "body_frac": 0.8702,
+          "upper_wick_frac": 0.1228,
+          "lower_wick_frac": 0.007
+        },
+        {
+          "bucket": "2026-04-14 09:35:00-04:00",
+          "ohlc": [
+            25718.25,
+            25748.5,
+            25703.5,
+            25708.5
+          ],
+          "body_frac": 0.2167,
+          "upper_wick_frac": 0.6722,
+          "lower_wick_frac": 0.1111
+        },
+        {
+          "bucket": "2026-04-14 09:40:00-04:00",
+          "ohlc": [
+            25708.25,
+            25756.25,
+            25706.0,
+            25748.75
+          ],
+          "body_frac": 0.806,
+          "upper_wick_frac": 0.1493,
+          "lower_wick_frac": 0.0448
+        }
+      ],
+      "CLASS": "H_B_SEQUENCE",
+      "class_reason": "it fired at a level that overlaps one he marked, so the level is not the discriminator - the timing within the sequence is"
+    }
+  ],
+  "tally_over_the_five_early_trades": {
+    "H_A_ZONE_SIGNIFICANCE": 5
+  },
+  "VERDICT": "H_A_ZONE_SIGNIFICANCE",
+  "BASE_RATE_CAVEAT": {
+    "base_rate_pct_range": [
+      1.49,
+      4.41
+    ],
+    "probability_all_five_miss_by_chance_pct": 89.2,
+    "reading": "The machine builds 50-70 entry locations per session and he marks TWO, so only a small percentage of its locations overlap one of his zones on any day. Under that base rate, all five early trades missing his zones is the OVERWHELMINGLY LIKELY outcome and the 5/5 tally is close to guaranteed by construction - it carries almost no information. THE INFORMATIVE OBSERVATION IS THE CONTROL: the one agreeing day is the day the bot fired AT a zone he marked, which is a low-probability event per trade. The repair lane H-A names is plausibly right, but THIS is the argument for it, not the tally.",
+    "tally_is_evidence": false
+  },
+  "control_session": "2026-04-14",
+  "control_class": "H_B_SEQUENCE",
+  "control_fires_after_him_minutes": -2.0,
+  "no_predicate_minted_from_2026_labels": true,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 43.24
+}

@@ -1,0 +1,1366 @@
+{
+  "__arm_pin__": "08:00",
+  "2026-03-23": [
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 08:14:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24404.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24394.417857142857,
+        24414.432142857146
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 08:29:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24558.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24555.95357142857,
+        24560.04642857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 08:44:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24593.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24561.75,
+        24625.45
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 09:13:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24531.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24526.194642857143,
+        24536.055357142857
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 09:14:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24531.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24526.194642857143,
+        24536.055357142857
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:18:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24651.25,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24639.819642857143,
+        24662.680357142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:19:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24651.25,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24639.819642857143,
+        24662.680357142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:02:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24675.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24672.897321428572,
+        24678.852678571428
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:27:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24558.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24555.95357142857,
+        24560.04642857143
+      ],
+      "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:WICK_ZONE->NEXT:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:28:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24558.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24555.95357142857,
+        24560.04642857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:29:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24558.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24555.95357142857,
+        24560.04642857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    }
+  ],
+  "2026-03-24": [
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:17:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24299.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24294.858482142856,
+        24303.391517857144
+      ],
+      "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M,KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:18:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24299.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24294.858482142856,
+        24303.391517857144
+      ],
+      "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M,KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:27:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24399.5,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24398.504464285714,
+        24400.507142857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:28:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24399.5,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24398.504464285714,
+        24400.507142857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:32:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24299.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24294.858482142856,
+        24303.391517857144
+      ],
+      "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:WICK_ZONE,KEY_ZONE_15M:WICK_ZONE->NEXT:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:33:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24299.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24294.858482142856,
+        24303.391517857144
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:34:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24278.75,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        24270.0,
+        24287.5
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 09:32:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24358.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24343.953571428574,
+        24372.09642857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 09:37:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24228.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24219.78348214286,
+        24235.96651785714
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    }
+  ],
+  "2026-03-25": [
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 08:07:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24558.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24555.95357142857,
+        24560.04642857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 08:08:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24558.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24555.95357142857,
+        24560.04642857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 08:37:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24473.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24462.300892857143,
+        24484.29910714286
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 08:38:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24473.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24462.300892857143,
+        24484.29910714286
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 08:39:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24473.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24462.300892857143,
+        24484.29910714286
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:23:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24402.0,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24398.710714285713,
+        24405.289285714287
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:37:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24530.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24525.354464285716,
+        24536.145535714284
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:38:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24530.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24525.354464285716,
+        24536.145535714284
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 11:07:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24423.5,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24414.69017857143,
+        24432.05982142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 11:08:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24402.0,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24398.710714285713,
+        24405.289285714287
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    }
+  ],
+  "2026-03-26": [
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:33:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24086.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24083.297857142858,
+        24088.702142857142
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:34:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24086.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24083.297857142858,
+        24088.702142857142
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:52:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24234.0,
+      "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+      "target_band": [
+        24233.0,
+        24235.23035714286
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:58:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24173.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24162.995535714286,
+        24184.004464285714
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:23:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24240.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24237.16919642857,
+        24243.33080357143
+      ],
+      "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:WICK_ZONE->NEXT:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:39:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24132.25,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24126.570535714287,
+        24137.929464285713
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:54:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23824.75,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        23821.31205357143,
+        23828.18794642857
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    }
+  ],
+  "2026-03-30": [
+    {
+      "key": [
+        "2026-03-30",
+        "2026-03-30 08:42:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23439.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        23433.34375,
+        23446.15625
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-30",
+        "2026-03-30 08:47:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23483.5,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        23472.75,
+        23494.25
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    },
+    {
+      "key": [
+        "2026-03-30",
+        "2026-03-30 08:57:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 23526.0,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        23522.31205357143,
+        23529.93794642857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-30",
+        "2026-03-30 09:28:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23439.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        23433.34375,
+        23446.15625
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-30",
+        "2026-03-30 09:47:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23324.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        23320.907142857144,
+        23328.342857142856
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    }
+  ],
+  "2026-03-31": [
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 08:13:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23324.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        23320.886607142857,
+        23328.26339285714
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 08:22:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23340.0,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        23333.820982142857,
+        23345.929017857143
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 08:24:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23324.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        23320.886607142857,
+        23328.26339285714
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 08:49:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23373.75,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        23372.725892857143,
+        23374.774107142857
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 08:58:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23351.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        23349.792410714286,
+        23352.957589285714
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 09:03:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 23398.25,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        23392.688392857144,
+        23404.11160714286
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    }
+  ],
+  "2026-04-01": [
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:12:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24141.0,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        24139.5,
+        24142.25
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:13:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24141.0,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        24139.5,
+        24142.25
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:14:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24141.0,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        24139.5,
+        24142.25
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:48:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24088.25,
+      "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+      "target_band": [
+        24087.129017857143,
+        24089.0
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:49:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24072.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24064.93660714286,
+        24079.663392857143
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:07:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24024.5,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24020.66642857143,
+        24028.33357142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:13:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24091.0,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24088.592857142856,
+        24093.620982142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:17:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24172.75,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24162.966964285715,
+        24182.533035714285
+      ],
+      "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:42:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24098.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24088.592857142856,
+        24108.157142857144
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:43:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24090.5,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24087.129017857143,
+        24093.620982142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:44:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24053.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24049.05669642857,
+        24057.69330357143
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    }
+  ],
+  "2026-04-02": [
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 08:22:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 23754.0,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        23750.75,
+        23757.5
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 08:23:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 23754.0,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        23750.75,
+        23757.5
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 08:24:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 23754.0,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        23750.75,
+        23757.5
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 09:37:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 23709.75,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        23707.40357142857,
+        23712.09642857143
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 10:38:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24243.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24239.16919642857,
+        24247.83080357143
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 10:42:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24117.75,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24115.042410714286,
+        24120.457589285714
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 10:47:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24117.75,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24115.042410714286,
+        24120.457589285714
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 10:49:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24117.75,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24115.042410714286,
+        24120.457589285714
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    }
+  ],
+  "2026-04-06": [
+    {
+      "key": [
+        "2026-04-06",
+        "2026-04-06 08:47:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 24388.25,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24376.13125,
+        24400.61875
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-06",
+        "2026-04-06 09:07:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24254.75,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24251.871428571427,
+        24257.378571428573
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-06",
+        "2026-04-06 09:37:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 24227.25,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24227.03348214286,
+        24227.45625
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    }
+  ],
+  "2026-04-07": [
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:23:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24253.75,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24242.14017857143,
+        24265.45982142857
+      ],
+      "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:STRONG_SWING_DISPLACEMENT->NEXT:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:24:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 24253.75,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24242.14017857143,
+        24265.45982142857
+      ],
+      "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:STRONG_SWING_DISPLACEMENT->NEXT:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:49:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24132.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        24124.99017857143,
+        24139.75982142857
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    }
+  ],
+  "2026-04-08": [
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 08:28:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 25233.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        25231.04732142857,
+        25235.95267857143
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 08:52:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 25233.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        25231.04732142857,
+        25235.95267857143
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 09:48:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 25180.75,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        25175.28348214286,
+        25186.21651785714
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 10:23:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 25108.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        25105.116785714286,
+        25110.883214285714
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 10:57:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24916.75,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        24914.9875,
+        24918.139285714286
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    }
+  ],
+  "2026-04-09": [
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:29:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 25085.25,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        25083.92767857143,
+        25086.82232142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:37:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 25085.25,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        25083.92767857143,
+        25086.82232142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:39:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 25085.25,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        25083.92767857143,
+        25086.82232142857
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:53:00-04:00",
+        "S",
+        "REV"
+      ],
+      "target": 25016.5,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        25014.099107142858,
+        25018.450892857145
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 10:37:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 24938.0,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        24926.308035714286,
+        24949.59196428571
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 11:27:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 25032.75,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        25029.72,
+        25035.78
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 11:28:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 25032.75,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        25029.72,
+        25035.78
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    }
+  ],
+  "2026-04-13": [
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 08:08:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 25114.5,
+      "target_kind": "KEY_ZONE_15M",
+      "target_band": [
+        25111.766785714284,
+        25117.233214285716
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 09:37:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target": 25159.25,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+      "target_band": [
+        25155.035714285714,
+        25163.014285714286
+      ],
+      "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 10:43:00-04:00",
+        "L",
+        "REV"
+      ],
+      "target": 25335.0,
+      "target_kind": "LIQUIDITY_CLUSTER",
+      "target_band": [
+        25331.648214285713,
+        25338.601785714287
+      ],
+      "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+    }
+  ],
+  "2026-04-14": [
+    {
+      "key": [
+        "2026-04-14",
+        "2026-04-14 09:38:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target": 25869.0,
+      "target_kind": "FVG_15M",
+      "target_band": [
+        25811.5,
+        25926.75
+      ],
+      "path_reason": "FIRST_REACTION:FVG_15M"
+    }
+  ]
+}

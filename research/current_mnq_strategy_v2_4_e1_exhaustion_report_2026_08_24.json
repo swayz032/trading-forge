@@ -1,0 +1,2941 @@
+{
+  "artifact": "E1_EXHAUSTION_REPORT",
+  "status": "DIAGNOSTIC. E1 exhaustion report. Lands nothing.",
+  "authority": "ALGO-092 order 1",
+  "produced": "2026-08-24",
+  "predicate": "no entry bullet at a zone whose completed-test count since birth at the decision clock is >= N. Structural, integer, no distance/reward/outcome.",
+  "primary_N": 3,
+  "sensitivity_N": [
+    5,
+    7
+  ],
+  "N_provenance": {
+    "direction_pre_registered": "ALGO-082 section 4, committed 13:42 2026-08-24, BEFORE the census: each touch consumes resting orders; first touch is the highest-probability reaction",
+    "counts_from": "ALGO-092's second outside-research pass, which POSTDATES the census - stated openly rather than claimed as pre-registered",
+    "what_actually_protects_N": "the census separates at every N in 2..10 (control 1 test; convicted 10/10/18/129/142), so no N in that range is distinguishable on these sessions and none can have been tuned to them",
+    "control_separating_N_values": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "rule": "R3 silent => stricter wins => N=3 primary"
+  },
+  "no_blanket_exemption_for_second_visit_stories": true,
+  "approved_baseline": 40,
+  "arms": {
+    "3": {
+      "N": 3,
+      "day_grain_trade_delta": [
+        {
+          "session": "2026-03-23",
+          "before_clock": "08:14",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-24",
+          "before_clock": "08:17",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-25",
+          "before_clock": "09:23",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-26",
+          "before_clock": "09:33",
+          "before_dir": "S",
+          "after_clock": "09:33",
+          "after_dir": "S",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-03-31",
+          "before_clock": "09:03",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-01",
+          "before_clock": "08:12",
+          "before_dir": "S",
+          "after_clock": "08:12",
+          "after_dir": "S",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-04-02",
+          "before_clock": "10:38",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-06",
+          "before_clock": "09:07",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-07",
+          "before_clock": "09:23",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-08",
+          "before_clock": "08:52",
+          "before_dir": "L",
+          "after_clock": "08:52",
+          "after_dir": "L",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-04-09",
+          "before_clock": "09:37",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-13",
+          "before_clock": "09:37",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-14",
+          "before_clock": "09:38",
+          "before_dir": "L",
+          "after_clock": "09:38",
+          "after_dir": "L",
+          "changed": false,
+          "session_stops_trading": false
+        }
+      ],
+      "sessions_whose_executed_trade_changed": 9,
+      "sessions_that_stop_trading": 9,
+      "approved_after": 8,
+      "removed_count": 32,
+      "removed_by_key": [
+        [
+          "2026-03-23",
+          "2026-03-23 08:14:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 10:18:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 10:19:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:02:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:29:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:17:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:18:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:32:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:33:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:34:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:23:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:38:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-26",
+          "2026-03-26 10:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-31",
+          "2026-03-31 09:03:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-01",
+          "2026-04-01 09:17:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-01",
+          "2026-04-01 09:44:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-02",
+          "2026-04-02 10:38:00-04:00",
+          "L",
+          "REV"
+        ],
+        [
+          "2026-04-06",
+          "2026-04-06 09:07:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:24:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:49:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-08",
+          "2026-04-08 09:48:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-08",
+          "2026-04-08 10:57:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 09:39:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 10:37:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-13",
+          "2026-04-13 09:37:00-04:00",
+          "S",
+          "BRK5"
+        ]
+      ],
+      "removed_detail": [
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 08:14:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "08:14",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+          "band": [
+            24443.76,
+            24453.24
+          ],
+          "completed_tests_since_birth": 129,
+          "target": 24404.5,
+          "tests": 129
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 10:18:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "10:18",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 23,
+          "target": 24651.25,
+          "tests": 23
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 10:19:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "10:19",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 23,
+          "target": 24651.25,
+          "tests": 23
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:02:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:02",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-19T23:30:00-04:00:98591",
+          "band": [
+            24639.82,
+            24662.68
+          ],
+          "completed_tests_since_birth": 13,
+          "target": 24675.75,
+          "tests": 13
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:27:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:27",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:28:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:28",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:29:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:29",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:17:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:17",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:18:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:18",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:32:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:32",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:33:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:33",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:34:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:34",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24278.75,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:23:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "band": [
+            24408.22,
+            24447.33
+          ],
+          "completed_tests_since_birth": 19,
+          "target": 24402.0,
+          "tests": 19
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:37:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:37",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "band": [
+            24481.3,
+            24484.2
+          ],
+          "completed_tests_since_birth": 73,
+          "target": 24530.75,
+          "tests": 73
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:38:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:38",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "band": [
+            24481.3,
+            24484.2
+          ],
+          "completed_tests_since_birth": 73,
+          "target": 24530.75,
+          "tests": 73
+        },
+        {
+          "key": [
+            "2026-03-26",
+            "2026-03-26 10:23:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-26",
+          "clock": "10:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+          "band": [
+            24226.32,
+            24235.23
+          ],
+          "completed_tests_since_birth": 8,
+          "target": 24240.25,
+          "tests": 8
+        },
+        {
+          "key": [
+            "2026-03-31",
+            "2026-03-31 09:03:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-31",
+          "clock": "09:03",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+          "band": [
+            23392.69,
+            23404.11
+          ],
+          "completed_tests_since_birth": 10,
+          "target": 23398.25,
+          "tests": 10
+        },
+        {
+          "key": [
+            "2026-04-01",
+            "2026-04-01 09:17:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-01",
+          "clock": "09:17",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+          "band": [
+            24087.13,
+            24093.62
+          ],
+          "completed_tests_since_birth": 4,
+          "target": 24172.75,
+          "tests": 4
+        },
+        {
+          "key": [
+            "2026-04-01",
+            "2026-04-01 09:44:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-01",
+          "clock": "09:44",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+          "band": [
+            24063.9,
+            24075.1
+          ],
+          "completed_tests_since_birth": 47,
+          "target": 24053.5,
+          "tests": 47
+        },
+        {
+          "key": [
+            "2026-04-02",
+            "2026-04-02 10:38:00-04:00",
+            "L",
+            "REV"
+          ],
+          "session": "2026-04-02",
+          "clock": "10:38",
+          "story": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+          "band": [
+            23964.55,
+            23973.2
+          ],
+          "completed_tests_since_birth": 22,
+          "target": 24243.5,
+          "tests": 22
+        },
+        {
+          "key": [
+            "2026-04-06",
+            "2026-04-06 09:07:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-06",
+          "clock": "09:07",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+          "band": [
+            24289.33,
+            24293.17
+          ],
+          "completed_tests_since_birth": 10,
+          "target": 24254.75,
+          "tests": 10
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:23:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "band": [
+            24238.7,
+            24241.8
+          ],
+          "completed_tests_since_birth": 62,
+          "target": 24253.75,
+          "tests": 62
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:24:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:24",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "band": [
+            24238.7,
+            24241.8
+          ],
+          "completed_tests_since_birth": 62,
+          "target": 24253.75,
+          "tests": 62
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:49:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:49",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "band": [
+            24205.45,
+            24209.55
+          ],
+          "completed_tests_since_birth": 49,
+          "target": 24132.5,
+          "tests": 49
+        },
+        {
+          "key": [
+            "2026-04-08",
+            "2026-04-08 09:48:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-08",
+          "clock": "09:48",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "band": [
+            25176.05,
+            25183.95
+          ],
+          "completed_tests_since_birth": 77,
+          "target": 25180.75,
+          "tests": 77
+        },
+        {
+          "key": [
+            "2026-04-08",
+            "2026-04-08 10:57:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-08",
+          "clock": "10:57",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+          "band": [
+            25020.96,
+            25039.99
+          ],
+          "completed_tests_since_birth": 29,
+          "target": 24916.75,
+          "tests": 29
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 09:37:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "09:37",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "band": [
+            25029.72,
+            25035.78
+          ],
+          "completed_tests_since_birth": 142,
+          "target": 25085.25,
+          "tests": 142
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 09:39:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "09:39",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "band": [
+            25029.72,
+            25035.78
+          ],
+          "completed_tests_since_birth": 142,
+          "target": 25085.25,
+          "tests": 142
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 10:37:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "10:37",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
+          "band": [
+            24977.35,
+            24982.65
+          ],
+          "completed_tests_since_birth": 54,
+          "target": 24938.0,
+          "tests": 54
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 11:27:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "11:27",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "band": [
+            25079.27,
+            25081.73
+          ],
+          "completed_tests_since_birth": 43,
+          "target": 25032.75,
+          "tests": 43
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 11:28:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "11:28",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "band": [
+            25079.27,
+            25081.73
+          ],
+          "completed_tests_since_birth": 43,
+          "target": 25032.75,
+          "tests": 43
+        },
+        {
+          "key": [
+            "2026-04-13",
+            "2026-04-13 09:37:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-13",
+          "clock": "09:37",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "S:2026-04-10T05:00:00-04:00:100813",
+          "band": [
+            25202.18,
+            25206.32
+          ],
+          "completed_tests_since_birth": 4,
+          "target": 25159.25,
+          "tests": 4
+        }
+      ],
+      "control_rows": 1,
+      "control_kept": 1,
+      "control_survives": true,
+      "convicted": [
+        {
+          "session": "2026-03-23",
+          "clock": "08:14",
+          "direction": "S",
+          "found": true,
+          "tests": 129,
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-03-24",
+          "clock": "08:17",
+          "direction": "S",
+          "found": true,
+          "tests": 18,
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-03-31",
+          "clock": "09:03",
+          "direction": "L",
+          "found": true,
+          "tests": 10,
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-04-06",
+          "clock": "09:07",
+          "direction": "S",
+          "found": true,
+          "tests": 10,
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-04-09",
+          "clock": "09:37",
+          "direction": "L",
+          "found": true,
+          "tests": 142,
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        }
+      ],
+      "convicted_refused": 5
+    },
+    "5": {
+      "N": 5,
+      "day_grain_trade_delta": [
+        {
+          "session": "2026-03-23",
+          "before_clock": "08:14",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-24",
+          "before_clock": "08:17",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-25",
+          "before_clock": "09:23",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-26",
+          "before_clock": "09:33",
+          "before_dir": "S",
+          "after_clock": "09:33",
+          "after_dir": "S",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-03-31",
+          "before_clock": "09:03",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-01",
+          "before_clock": "08:12",
+          "before_dir": "S",
+          "after_clock": "08:12",
+          "after_dir": "S",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-04-02",
+          "before_clock": "10:38",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-06",
+          "before_clock": "09:07",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-07",
+          "before_clock": "09:23",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-08",
+          "before_clock": "08:52",
+          "before_dir": "L",
+          "after_clock": "08:52",
+          "after_dir": "L",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-04-09",
+          "before_clock": "09:37",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-13",
+          "before_clock": "09:37",
+          "before_dir": "S",
+          "after_clock": "09:37",
+          "after_dir": "S",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-04-14",
+          "before_clock": "09:38",
+          "before_dir": "L",
+          "after_clock": "09:38",
+          "after_dir": "L",
+          "changed": false,
+          "session_stops_trading": false
+        }
+      ],
+      "sessions_whose_executed_trade_changed": 8,
+      "sessions_that_stop_trading": 8,
+      "approved_after": 10,
+      "removed_count": 30,
+      "removed_by_key": [
+        [
+          "2026-03-23",
+          "2026-03-23 08:14:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 10:18:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 10:19:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:02:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:29:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:17:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:18:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:32:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:33:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:34:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:23:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:38:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-26",
+          "2026-03-26 10:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-31",
+          "2026-03-31 09:03:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-01",
+          "2026-04-01 09:44:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-02",
+          "2026-04-02 10:38:00-04:00",
+          "L",
+          "REV"
+        ],
+        [
+          "2026-04-06",
+          "2026-04-06 09:07:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:24:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:49:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-08",
+          "2026-04-08 09:48:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-08",
+          "2026-04-08 10:57:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 09:39:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 10:37:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ]
+      ],
+      "removed_detail": [
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 08:14:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "08:14",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+          "band": [
+            24443.76,
+            24453.24
+          ],
+          "completed_tests_since_birth": 129,
+          "target": 24404.5,
+          "tests": 129
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 10:18:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "10:18",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 23,
+          "target": 24651.25,
+          "tests": 23
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 10:19:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "10:19",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 23,
+          "target": 24651.25,
+          "tests": 23
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:02:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:02",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-19T23:30:00-04:00:98591",
+          "band": [
+            24639.82,
+            24662.68
+          ],
+          "completed_tests_since_birth": 13,
+          "target": 24675.75,
+          "tests": 13
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:27:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:27",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:28:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:28",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:29:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:29",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:17:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:17",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:18:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:18",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:32:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:32",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:33:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:33",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:34:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:34",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24278.75,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:23:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "band": [
+            24408.22,
+            24447.33
+          ],
+          "completed_tests_since_birth": 19,
+          "target": 24402.0,
+          "tests": 19
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:37:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:37",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "band": [
+            24481.3,
+            24484.2
+          ],
+          "completed_tests_since_birth": 73,
+          "target": 24530.75,
+          "tests": 73
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:38:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:38",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "band": [
+            24481.3,
+            24484.2
+          ],
+          "completed_tests_since_birth": 73,
+          "target": 24530.75,
+          "tests": 73
+        },
+        {
+          "key": [
+            "2026-03-26",
+            "2026-03-26 10:23:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-26",
+          "clock": "10:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+          "band": [
+            24226.32,
+            24235.23
+          ],
+          "completed_tests_since_birth": 8,
+          "target": 24240.25,
+          "tests": 8
+        },
+        {
+          "key": [
+            "2026-03-31",
+            "2026-03-31 09:03:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-31",
+          "clock": "09:03",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+          "band": [
+            23392.69,
+            23404.11
+          ],
+          "completed_tests_since_birth": 10,
+          "target": 23398.25,
+          "tests": 10
+        },
+        {
+          "key": [
+            "2026-04-01",
+            "2026-04-01 09:44:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-01",
+          "clock": "09:44",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+          "band": [
+            24063.9,
+            24075.1
+          ],
+          "completed_tests_since_birth": 47,
+          "target": 24053.5,
+          "tests": 47
+        },
+        {
+          "key": [
+            "2026-04-02",
+            "2026-04-02 10:38:00-04:00",
+            "L",
+            "REV"
+          ],
+          "session": "2026-04-02",
+          "clock": "10:38",
+          "story": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+          "band": [
+            23964.55,
+            23973.2
+          ],
+          "completed_tests_since_birth": 22,
+          "target": 24243.5,
+          "tests": 22
+        },
+        {
+          "key": [
+            "2026-04-06",
+            "2026-04-06 09:07:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-06",
+          "clock": "09:07",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+          "band": [
+            24289.33,
+            24293.17
+          ],
+          "completed_tests_since_birth": 10,
+          "target": 24254.75,
+          "tests": 10
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:23:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "band": [
+            24238.7,
+            24241.8
+          ],
+          "completed_tests_since_birth": 62,
+          "target": 24253.75,
+          "tests": 62
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:24:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:24",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "band": [
+            24238.7,
+            24241.8
+          ],
+          "completed_tests_since_birth": 62,
+          "target": 24253.75,
+          "tests": 62
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:49:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:49",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "band": [
+            24205.45,
+            24209.55
+          ],
+          "completed_tests_since_birth": 49,
+          "target": 24132.5,
+          "tests": 49
+        },
+        {
+          "key": [
+            "2026-04-08",
+            "2026-04-08 09:48:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-08",
+          "clock": "09:48",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "band": [
+            25176.05,
+            25183.95
+          ],
+          "completed_tests_since_birth": 77,
+          "target": 25180.75,
+          "tests": 77
+        },
+        {
+          "key": [
+            "2026-04-08",
+            "2026-04-08 10:57:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-08",
+          "clock": "10:57",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+          "band": [
+            25020.96,
+            25039.99
+          ],
+          "completed_tests_since_birth": 29,
+          "target": 24916.75,
+          "tests": 29
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 09:37:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "09:37",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "band": [
+            25029.72,
+            25035.78
+          ],
+          "completed_tests_since_birth": 142,
+          "target": 25085.25,
+          "tests": 142
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 09:39:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "09:39",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "band": [
+            25029.72,
+            25035.78
+          ],
+          "completed_tests_since_birth": 142,
+          "target": 25085.25,
+          "tests": 142
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 10:37:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "10:37",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
+          "band": [
+            24977.35,
+            24982.65
+          ],
+          "completed_tests_since_birth": 54,
+          "target": 24938.0,
+          "tests": 54
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 11:27:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "11:27",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "band": [
+            25079.27,
+            25081.73
+          ],
+          "completed_tests_since_birth": 43,
+          "target": 25032.75,
+          "tests": 43
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 11:28:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "11:28",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "band": [
+            25079.27,
+            25081.73
+          ],
+          "completed_tests_since_birth": 43,
+          "target": 25032.75,
+          "tests": 43
+        }
+      ],
+      "control_rows": 1,
+      "control_kept": 1,
+      "control_survives": true,
+      "convicted": [
+        {
+          "session": "2026-03-23",
+          "clock": "08:14",
+          "direction": "S",
+          "found": true,
+          "tests": 129,
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-03-24",
+          "clock": "08:17",
+          "direction": "S",
+          "found": true,
+          "tests": 18,
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-03-31",
+          "clock": "09:03",
+          "direction": "L",
+          "found": true,
+          "tests": 10,
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-04-06",
+          "clock": "09:07",
+          "direction": "S",
+          "found": true,
+          "tests": 10,
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-04-09",
+          "clock": "09:37",
+          "direction": "L",
+          "found": true,
+          "tests": 142,
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        }
+      ],
+      "convicted_refused": 5
+    },
+    "7": {
+      "N": 7,
+      "day_grain_trade_delta": [
+        {
+          "session": "2026-03-23",
+          "before_clock": "08:14",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-24",
+          "before_clock": "08:17",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-25",
+          "before_clock": "09:23",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-03-26",
+          "before_clock": "09:33",
+          "before_dir": "S",
+          "after_clock": "09:33",
+          "after_dir": "S",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-03-31",
+          "before_clock": "09:03",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-01",
+          "before_clock": "08:12",
+          "before_dir": "S",
+          "after_clock": "08:12",
+          "after_dir": "S",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-04-02",
+          "before_clock": "10:38",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-06",
+          "before_clock": "09:07",
+          "before_dir": "S",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-07",
+          "before_clock": "09:23",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-08",
+          "before_clock": "08:52",
+          "before_dir": "L",
+          "after_clock": "08:52",
+          "after_dir": "L",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-04-09",
+          "before_clock": "09:37",
+          "before_dir": "L",
+          "after_clock": null,
+          "after_dir": null,
+          "changed": true,
+          "session_stops_trading": true
+        },
+        {
+          "session": "2026-04-13",
+          "before_clock": "09:37",
+          "before_dir": "S",
+          "after_clock": "09:37",
+          "after_dir": "S",
+          "changed": false,
+          "session_stops_trading": false
+        },
+        {
+          "session": "2026-04-14",
+          "before_clock": "09:38",
+          "before_dir": "L",
+          "after_clock": "09:38",
+          "after_dir": "L",
+          "changed": false,
+          "session_stops_trading": false
+        }
+      ],
+      "sessions_whose_executed_trade_changed": 8,
+      "sessions_that_stop_trading": 8,
+      "approved_after": 10,
+      "removed_count": 30,
+      "removed_by_key": [
+        [
+          "2026-03-23",
+          "2026-03-23 08:14:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 10:18:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 10:19:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:02:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-23",
+          "2026-03-23 11:29:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:17:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:18:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:32:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:33:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-24",
+          "2026-03-24 08:34:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:23:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-25",
+          "2026-03-25 09:38:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-26",
+          "2026-03-26 10:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-03-31",
+          "2026-03-31 09:03:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-01",
+          "2026-04-01 09:44:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-02",
+          "2026-04-02 10:38:00-04:00",
+          "L",
+          "REV"
+        ],
+        [
+          "2026-04-06",
+          "2026-04-06 09:07:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:24:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-07",
+          "2026-04-07 09:49:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-08",
+          "2026-04-08 09:48:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-08",
+          "2026-04-08 10:57:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 09:39:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 10:37:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        [
+          "2026-04-09",
+          "2026-04-09 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ]
+      ],
+      "removed_detail": [
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 08:14:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "08:14",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+          "band": [
+            24443.76,
+            24453.24
+          ],
+          "completed_tests_since_birth": 129,
+          "target": 24404.5,
+          "tests": 129
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 10:18:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "10:18",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 23,
+          "target": 24651.25,
+          "tests": 23
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 10:19:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "10:19",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 23,
+          "target": 24651.25,
+          "tests": 23
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:02:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:02",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-19T23:30:00-04:00:98591",
+          "band": [
+            24639.82,
+            24662.68
+          ],
+          "completed_tests_since_birth": 13,
+          "target": 24675.75,
+          "tests": 13
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:27:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:27",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:28:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:28",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-23",
+            "2026-03-23 11:29:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-23",
+          "clock": "11:29",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+          "band": [
+            24602.25,
+            24616.25
+          ],
+          "completed_tests_since_birth": 33,
+          "target": 24558.0,
+          "tests": 33
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:17:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:17",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:18:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:18",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:32:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:32",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:33:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:33",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24299.25,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-24",
+            "2026-03-24 08:34:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-24",
+          "clock": "08:34",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "band": [
+            24308.25,
+            24327.5
+          ],
+          "completed_tests_since_birth": 18,
+          "target": 24278.75,
+          "tests": 18
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:23:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "band": [
+            24408.22,
+            24447.33
+          ],
+          "completed_tests_since_birth": 19,
+          "target": 24402.0,
+          "tests": 19
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:37:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:37",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "band": [
+            24481.3,
+            24484.2
+          ],
+          "completed_tests_since_birth": 73,
+          "target": 24530.75,
+          "tests": 73
+        },
+        {
+          "key": [
+            "2026-03-25",
+            "2026-03-25 09:38:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-25",
+          "clock": "09:38",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+          "band": [
+            24481.3,
+            24484.2
+          ],
+          "completed_tests_since_birth": 73,
+          "target": 24530.75,
+          "tests": 73
+        },
+        {
+          "key": [
+            "2026-03-26",
+            "2026-03-26 10:23:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-26",
+          "clock": "10:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+          "band": [
+            24226.32,
+            24235.23
+          ],
+          "completed_tests_since_birth": 8,
+          "target": 24240.25,
+          "tests": 8
+        },
+        {
+          "key": [
+            "2026-03-31",
+            "2026-03-31 09:03:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-03-31",
+          "clock": "09:03",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+          "band": [
+            23392.69,
+            23404.11
+          ],
+          "completed_tests_since_birth": 10,
+          "target": 23398.25,
+          "tests": 10
+        },
+        {
+          "key": [
+            "2026-04-01",
+            "2026-04-01 09:44:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-01",
+          "clock": "09:44",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+          "band": [
+            24063.9,
+            24075.1
+          ],
+          "completed_tests_since_birth": 47,
+          "target": 24053.5,
+          "tests": 47
+        },
+        {
+          "key": [
+            "2026-04-02",
+            "2026-04-02 10:38:00-04:00",
+            "L",
+            "REV"
+          ],
+          "session": "2026-04-02",
+          "clock": "10:38",
+          "story": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+          "band": [
+            23964.55,
+            23973.2
+          ],
+          "completed_tests_since_birth": 22,
+          "target": 24243.5,
+          "tests": 22
+        },
+        {
+          "key": [
+            "2026-04-06",
+            "2026-04-06 09:07:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-06",
+          "clock": "09:07",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+          "band": [
+            24289.33,
+            24293.17
+          ],
+          "completed_tests_since_birth": 10,
+          "target": 24254.75,
+          "tests": 10
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:23:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:23",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "band": [
+            24238.7,
+            24241.8
+          ],
+          "completed_tests_since_birth": 62,
+          "target": 24253.75,
+          "tests": 62
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:24:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:24",
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+          "band": [
+            24238.7,
+            24241.8
+          ],
+          "completed_tests_since_birth": 62,
+          "target": 24253.75,
+          "tests": 62
+        },
+        {
+          "key": [
+            "2026-04-07",
+            "2026-04-07 09:49:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-07",
+          "clock": "09:49",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+          "band": [
+            24205.45,
+            24209.55
+          ],
+          "completed_tests_since_birth": 49,
+          "target": 24132.5,
+          "tests": 49
+        },
+        {
+          "key": [
+            "2026-04-08",
+            "2026-04-08 09:48:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-08",
+          "clock": "09:48",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+          "band": [
+            25176.05,
+            25183.95
+          ],
+          "completed_tests_since_birth": 77,
+          "target": 25180.75,
+          "tests": 77
+        },
+        {
+          "key": [
+            "2026-04-08",
+            "2026-04-08 10:57:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-08",
+          "clock": "10:57",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+          "band": [
+            25020.96,
+            25039.99
+          ],
+          "completed_tests_since_birth": 29,
+          "target": 24916.75,
+          "tests": 29
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 09:37:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "09:37",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "band": [
+            25029.72,
+            25035.78
+          ],
+          "completed_tests_since_birth": 142,
+          "target": 25085.25,
+          "tests": 142
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 09:39:00-04:00",
+            "L",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "09:39",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+          "band": [
+            25029.72,
+            25035.78
+          ],
+          "completed_tests_since_birth": 142,
+          "target": 25085.25,
+          "tests": 142
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 10:37:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "10:37",
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
+          "band": [
+            24977.35,
+            24982.65
+          ],
+          "completed_tests_since_birth": 54,
+          "target": 24938.0,
+          "tests": 54
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 11:27:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "11:27",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "band": [
+            25079.27,
+            25081.73
+          ],
+          "completed_tests_since_birth": 43,
+          "target": 25032.75,
+          "tests": 43
+        },
+        {
+          "key": [
+            "2026-04-09",
+            "2026-04-09 11:28:00-04:00",
+            "S",
+            "BRK5"
+          ],
+          "session": "2026-04-09",
+          "clock": "11:28",
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "band": [
+            25079.27,
+            25081.73
+          ],
+          "completed_tests_since_birth": 43,
+          "target": 25032.75,
+          "tests": 43
+        }
+      ],
+      "control_rows": 1,
+      "control_kept": 1,
+      "control_survives": true,
+      "convicted": [
+        {
+          "session": "2026-03-23",
+          "clock": "08:14",
+          "direction": "S",
+          "found": true,
+          "tests": 129,
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-03-24",
+          "clock": "08:17",
+          "direction": "S",
+          "found": true,
+          "tests": 18,
+          "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-03-31",
+          "clock": "09:03",
+          "direction": "L",
+          "found": true,
+          "tests": 10,
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-04-06",
+          "clock": "09:07",
+          "direction": "S",
+          "found": true,
+          "tests": 10,
+          "story": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        },
+        {
+          "session": "2026-04-09",
+          "clock": "09:37",
+          "direction": "L",
+          "found": true,
+          "tests": 142,
+          "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "REFUSED": true
+        }
+      ],
+      "convicted_refused": 5
+    }
+  },
+  "sensitivity_band_3_or_4_tests_removed_at_N3": [
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:17:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "session": "2026-04-01",
+      "clock": "09:17",
+      "story": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+      "band": [
+        24087.13,
+        24093.62
+      ],
+      "completed_tests_since_birth": 4,
+      "target": 24172.75,
+      "tests": 4
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 09:37:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "session": "2026-04-13",
+      "clock": "09:37",
+      "story": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "location_id": "S:2026-04-10T05:00:00-04:00:100813",
+      "band": [
+        25202.18,
+        25206.32
+      ],
+      "completed_tests_since_birth": 4,
+      "target": 25159.25,
+      "tests": 4
+    }
+  ],
+  "pre_registered": {
+    "a_control_survives_at_all_N": true,
+    "b_five_convicted_refused_at_all_N": true,
+    "c_no_target_layer_change": true
+  },
+  "BLAST_RADIUS_WARNING": {
+    "headline": "E1 PASSES every pre-registered check and is STILL not a repair. At N=3 NINE of thirteen trading sessions STOP TRADING ENTIRELY; only 03-26, 04-01, 04-08 and the control still trade.",
+    "why_the_pre_registration_does_not_catch_it": "(a) asks whether the control survives and (b) whether the convicted are refused. Both pass. Neither asks what happens to the other eleven sessions, and 80% of approvals (32 of 40) are removed.",
+    "why_it_is_not_equivalence": "On all five convicted days he DID trade. Refusing the early entry does NOT free the bullet for his later setup - at N=3 there is no surviving approval on those sessions at all. E1 converts five wrong-TIME trades into nine NO-trades, and against a day+direction exam a no-trade where he entered is still a miss. So E1 cannot raise agreement; it can only change the reason for the miss.",
+    "operator_directive_reading": "He asked for equivalence of TRADES at day grain. Silence is not equivalence.",
+    "sessions_that_stop_trading": [
+      "2026-03-23",
+      "2026-03-24",
+      "2026-03-25",
+      "2026-03-31",
+      "2026-04-02",
+      "2026-04-06",
+      "2026-04-07",
+      "2026-04-09",
+      "2026-04-13"
+    ]
+  },
+  "LANE_VERDICT": "RATIFIABLE_AT_N3",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 444.01
+}

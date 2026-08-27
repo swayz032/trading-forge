@@ -1,0 +1,247 @@
+{
+  "artifact": "ZONE_LIFECYCLE_0331_VS_0414",
+  "status": "DIAGNOSTIC. Enumerates zone-lifecycle transitions. Repairs nothing, changes no rule. ALGO-067 section 3.",
+  "authority": "ALGO-067 section 3",
+  "produced": "2026-08-23",
+  "question": "why does 2026-03-31 produce ZERO break candidates at a level covered by TWO authorized locations, when 2026-04-14 - the same shape - grants?",
+  "executable_lines": {
+    "break_test": "research/current_mnq_strategy_v2_4_zone_lifecycle.py:43-46  _breaks(): role 'S' -> close < lo - clear ; role 'R' -> close > hi + clear",
+    "clearance": "research/current_mnq_strategy_v2_4_zone_lifecycle.py:77  clear = p.breakout_clear_atr * atr",
+    "sets_broken": "research/current_mnq_strategy_v2_4_zone_lifecycle.py:81-83  if _breaks(...): state = ZoneState.BROKEN",
+    "active_excludes_broken": "research/current_mnq_strategy_v2_2_engine.py:135-141  Zone.active = state in {ACTIVE_SUPPORT, ACTIVE_RESISTANCE, TESTED, FLIPPED_RETEST} - BROKEN is absent",
+    "kernel_drops_inactive": "research/current_mnq_strategy_v2_4_kernel.py:210  if before.active: pre_locs.append(...)"
+  },
+  "hypothesis_under_test": "the break RETIRES the zone the break entry needs: a decisive close beyond the band sets BROKEN, BROKEN is not `active`, and the kernel drops inactive locations",
+  "sessions": {
+    "2026-03-31": {
+      "lane": "SUBJECT (zero break candidates despite coverage)",
+      "his_line": 23436.625,
+      "his_role": "RESISTANCE",
+      "entry_clock": "09:49",
+      "locations_covering_his_line_at_0930": 2,
+      "zones": [
+        {
+          "location_id": "R:2026-03-31T09:15:00-04:00:93745",
+          "band": [
+            23430.71,
+            23441.29
+          ],
+          "source": "WICK_ZONE",
+          "zone_created": "2026-03-31 09:15:00-04:00",
+          "first_clock_it_became_INACTIVE": "2026-03-31 09:35:00-04:00",
+          "state_when_it_went_inactive": "BROKEN",
+          "his_entry_bucket": "2026-03-31 09:45:00-04:00",
+          "state_at_his_entry_bucket": "BROKEN",
+          "still_active_at_his_entry": false,
+          "bar_by_bar": [
+            {
+              "clock": "2026-03-31 09:30:00-04:00",
+              "bar_close": 23458.0,
+              "atr": 34.12,
+              "clearance_points": 1.71,
+              "role_now": "R",
+              "state_now": "ACTIVE_RESISTANCE",
+              "active_now": true,
+              "this_bar_would_break_it": true,
+              "margin_past_the_clearance": 15.0,
+              "TRANSITION": "None -> ACTIVE_RESISTANCE"
+            },
+            {
+              "clock": "2026-03-31 09:35:00-04:00",
+              "bar_close": 23444.5,
+              "atr": 33.41,
+              "clearance_points": 1.67,
+              "role_now": "R",
+              "state_now": "BROKEN",
+              "active_now": false,
+              "this_bar_would_break_it": true,
+              "margin_past_the_clearance": 1.54,
+              "TRANSITION": "ACTIVE_RESISTANCE -> BROKEN"
+            },
+            {
+              "clock": "2026-03-31 09:40:00-04:00",
+              "bar_close": 23418.0,
+              "atr": 36.21,
+              "clearance_points": 1.81,
+              "role_now": "S",
+              "state_now": "FLIPPED_RETEST",
+              "active_now": true,
+              "this_bar_would_break_it": true,
+              "margin_past_the_clearance": 10.9,
+              "TRANSITION": "BROKEN -> FLIPPED_RETEST"
+            },
+            {
+              "clock": "2026-03-31 09:45:00-04:00",
+              "bar_close": 23531.25,
+              "atr": 42.0,
+              "clearance_points": 2.1,
+              "role_now": "S",
+              "state_now": "BROKEN",
+              "active_now": false,
+              "this_bar_would_break_it": false,
+              "margin_past_the_clearance": -102.64,
+              "TRANSITION": "FLIPPED_RETEST -> BROKEN"
+            },
+            {
+              "clock": "2026-03-31 09:50:00-04:00",
+              "bar_close": 23556.25,
+              "atr": 44.64,
+              "clearance_points": 2.23,
+              "role_now": "S",
+              "state_now": "TESTED",
+              "active_now": true,
+              "this_bar_would_break_it": false,
+              "margin_past_the_clearance": -127.77,
+              "TRANSITION": "BROKEN -> TESTED"
+            }
+          ]
+        },
+        {
+          "location_id": "S:2026-03-30T08:45:00-04:00:93755",
+          "band": [
+            23432.11,
+            23447.39
+          ],
+          "source": "WICK_ZONE",
+          "zone_created": "2026-03-30 08:45:00-04:00",
+          "first_clock_it_became_INACTIVE": "2026-03-31 09:35:00-04:00",
+          "state_when_it_went_inactive": "BROKEN",
+          "his_entry_bucket": "2026-03-31 09:45:00-04:00",
+          "state_at_his_entry_bucket": "BROKEN",
+          "still_active_at_his_entry": false,
+          "bar_by_bar": [
+            {
+              "clock": "2026-03-31 09:30:00-04:00",
+              "bar_close": 23458.0,
+              "atr": 34.12,
+              "clearance_points": 1.71,
+              "role_now": "R",
+              "state_now": "TESTED",
+              "active_now": true,
+              "this_bar_would_break_it": true,
+              "margin_past_the_clearance": 8.9,
+              "TRANSITION": "None -> TESTED"
+            },
+            {
+              "clock": "2026-03-31 09:35:00-04:00",
+              "bar_close": 23444.5,
+              "atr": 33.41,
+              "clearance_points": 1.67,
+              "role_now": "R",
+              "state_now": "BROKEN",
+              "active_now": false,
+              "this_bar_would_break_it": false,
+              "margin_past_the_clearance": -4.56,
+              "TRANSITION": "TESTED -> BROKEN"
+            },
+            {
+              "clock": "2026-03-31 09:40:00-04:00",
+              "bar_close": 23418.0,
+              "atr": 36.21,
+              "clearance_points": 1.81,
+              "role_now": "S",
+              "state_now": "FLIPPED_RETEST",
+              "active_now": true,
+              "this_bar_would_break_it": true,
+              "margin_past_the_clearance": 12.3,
+              "TRANSITION": "BROKEN -> FLIPPED_RETEST"
+            },
+            {
+              "clock": "2026-03-31 09:45:00-04:00",
+              "bar_close": 23531.25,
+              "atr": 42.0,
+              "clearance_points": 2.1,
+              "role_now": "S",
+              "state_now": "BROKEN",
+              "active_now": false,
+              "this_bar_would_break_it": false,
+              "margin_past_the_clearance": -101.24,
+              "TRANSITION": "FLIPPED_RETEST -> BROKEN"
+            },
+            {
+              "clock": "2026-03-31 09:50:00-04:00",
+              "bar_close": 23556.25,
+              "atr": 44.64,
+              "clearance_points": 2.23,
+              "role_now": "S",
+              "state_now": "TESTED",
+              "active_now": true,
+              "this_bar_would_break_it": false,
+              "margin_past_the_clearance": -126.37,
+              "TRANSITION": "BROKEN -> TESTED"
+            }
+          ]
+        }
+      ]
+    },
+    "2026-04-14": {
+      "lane": "POSITIVE CONTROL (same shape, machine GRANTS it)",
+      "his_line": 25716.625,
+      "his_role": "RESISTANCE",
+      "entry_clock": "09:36",
+      "locations_covering_his_line_at_0930": 1,
+      "zones": [
+        {
+          "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+          "band": [
+            25714.67,
+            25717.83
+          ],
+          "source": "STRONG_SWING_DISPLACEMENT",
+          "zone_created": "2026-04-14 09:15:00-04:00",
+          "first_clock_it_became_INACTIVE": null,
+          "state_when_it_went_inactive": null,
+          "his_entry_bucket": "2026-04-14 09:35:00-04:00",
+          "state_at_his_entry_bucket": "TESTED",
+          "still_active_at_his_entry": true,
+          "bar_by_bar": [
+            {
+              "clock": "2026-04-14 09:30:00-04:00",
+              "bar_close": 25718.25,
+              "atr": 24.14,
+              "clearance_points": 1.21,
+              "role_now": "R",
+              "state_now": "ACTIVE_RESISTANCE",
+              "active_now": true,
+              "this_bar_would_break_it": false,
+              "margin_past_the_clearance": -0.79,
+              "TRANSITION": "None -> ACTIVE_RESISTANCE"
+            },
+            {
+              "clock": "2026-04-14 09:35:00-04:00",
+              "bar_close": 25708.5,
+              "atr": 23.61,
+              "clearance_points": 1.18,
+              "role_now": "R",
+              "state_now": "TESTED",
+              "active_now": true,
+              "this_bar_would_break_it": false,
+              "margin_past_the_clearance": -10.51,
+              "TRANSITION": "ACTIVE_RESISTANCE -> TESTED"
+            },
+            {
+              "clock": "2026-04-14 09:40:00-04:00",
+              "bar_close": 25748.75,
+              "atr": 23.64,
+              "clearance_points": 1.18,
+              "role_now": "R",
+              "state_now": "TESTED",
+              "active_now": true,
+              "this_bar_would_break_it": true,
+              "margin_past_the_clearance": 29.74
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "finding": {
+    "subject_zones_alive_at_his_entry": [],
+    "control_zones_alive_at_his_entry": [
+      "SWING:R:2026-04-14T09:15:00-04:00:102865"
+    ],
+    "first_divergent_stage": "ZONE LIFECYCLE: every covering zone on 2026-03-31 is INACTIVE by his entry clock, while the control's covering zone is still ACTIVE. The kernel drops inactive locations (kernel.py:210), so no candidate of any route can form at a retired zone - which is why the break family produced ZERO candidates rather than a refusal."
+  },
+  "runtime_seconds": 3.92,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
+}

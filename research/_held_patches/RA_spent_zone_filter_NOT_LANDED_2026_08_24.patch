@@ -1,0 +1,78 @@
+diff --git a/research/current_mnq_strategy_v2_4_target_policy.py b/research/current_mnq_strategy_v2_4_target_policy.py
+index 419ccca3..9623404e 100644
+--- a/research/current_mnq_strategy_v2_4_target_policy.py
++++ b/research/current_mnq_strategy_v2_4_target_policy.py
+@@ -30,6 +30,8 @@ historical and live/shadow paths remain on one target implementation.
+ """
+ from __future__ import annotations
+ 
++import pandas as pd
++
+ from research import current_mnq_strategy_v2_4_targets as base
+ 
+ core = base.core
+@@ -78,6 +80,50 @@ def reference_tp_reward_usd(target_distance_points: float) -> float:
+     return float(target_distance_points) * TP_GAP_POINT_VALUE_USD * TP_GAP_REFERENCE_CONTRACTS
+ 
+ 
++#: R-A (ALGO-082). The session anchor for "already traded into". Freshness is asked within the
++#: session, not across the whole history: a level touched days ago and left alone since is not
++#: what the re-anchor mechanic is about.
++SPENT_SESSION_START = "08:00"
++
++
++def zone_is_spent(full5, lo: float, hi: float, asof, dte) -> bool:
++    """Has a bar COMPLETING AT OR BEFORE `asof` already traded into [lo, hi] this session?
++
++    COMPLETION, NOT THE OPENING STAMP, IS THE TEST. A 5m bar bucketed at 09:40 has not printed
++    its high, low or close until 09:45 and cannot be evidence at a 09:41 decision. The first
++    version of this predicate (ALGO-079 L2) filtered on the bar's START and thereby reported
++    two sessions SPENT on bars that were still forming - a published 3/3 that was really 1/3.
++    That defect is planted and required to go RED in this repair's red-proof.
++    """
++    if full5 is None or len(full5) == 0:
++        return False
++    tz = full5.index.tz
++    session_open = pd.Timestamp(f"{dte} {SPENT_SESSION_START}", tz=tz)
++    asof = pd.Timestamp(asof)
++    win = full5[(full5.index >= session_open) & (full5.index < asof)]
++    for t, r in win.iterrows():
++        if t + pd.Timedelta(minutes=5) > asof:
++            continue                       # still forming at the decision clock
++        if float(r.low) <= hi and float(r.high) >= lo:
++            return True
++    return False
++
++
++def drop_spent_destinations(destinations, full5, asof, dte):
++    """Remove destinations whose band price has already visited this session.
++
++    Structural only - reads no distance, no reward, no outcome, and nothing about which answer
++    it produces. If every destination is spent the list is returned UNCHANGED rather than
++    emptied: starving the target layer would convert a selection repair into a silent refusal,
++    and a repair that can make the bot stop trading is not the repair that was authorised.
++    """
++    if not destinations:
++        return destinations
++    fresh = [d for d in destinations
++             if not zone_is_spent(full5, float(d.location.lo), float(d.location.hi), asof, dte)]
++    return fresh if fresh else destinations
++
++
+ def _overlap(a, b) -> bool:
+     if a is None or b is None:
+         return False
+@@ -187,6 +233,13 @@ def build_and_classify(
+     destinations = base.build_reaction_destinations(
+         piv5, full5, h15, asof, p, {}, {}, dte, entry, direction, piv15=piv15,
+     )
++    # ---- R-A (ALGO-082): a SPENT zone is not a destination -------------------------------
++    # A destination is a claim about a reaction that has NOT happened yet. Once price has
++    # already traded into the band, the reaction that destination represents is behind us and
++    # the target re-anchors to the next zone - ALGO-051 verbatim, "targeted the NEXT key zone",
++    # measured again in ALGO-052. Nearest-first is untouched: this only corrects the UNIVERSE
++    # it ranks.
++    destinations = drop_spent_destinations(destinations, full5, asof, dte)
+     return classify_first_reaction_destination(
+         destinations, entry, direction, setup, p, strong_momentum,
+         entry_location=entry_location,

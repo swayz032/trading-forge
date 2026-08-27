@@ -1,0 +1,282 @@
+{
+  "artifact": "MARKING_METADATA_BY_LINE_0406",
+  "status": "DIAGNOSTIC. Searches for 04-06's rejection candle by line price.",
+  "authority": "ALGO-076 order (d)",
+  "produced": "2026-08-23",
+  "session": "2026-04-06",
+  "his_line": 24421.625,
+  "tick": 0.25,
+  "tolerance_points": 0.25,
+  "tolerance_fixed_before_the_search": true,
+  "metadata_claim_under_test": {
+    "marked_time": "2026-04-06T09:52:00-04:00",
+    "marked_main_timeframe": "15m",
+    "bucket": "2026-04-06 09:45:00-04:00",
+    "high": 24418.0,
+    "points_short_of_his_line": 3.625
+  },
+  "his_entry_clock": "2026-04-06T10:04:00-04:00",
+  "his_entry_clock_source": "labels.first_entry_time (NOT the zone's marked_time)",
+  "bars_scanned": 368,
+  "REFUTED_TEST_wick_extreme_within_one_tick": {
+    "prescribed_by": "ALGO-076 order (d)",
+    "refuted_because": "it returns ZERO on 2026-03-31, whose band the J5 module DOES derive - so it fails identically on derivable and underivable cases and separates nothing",
+    "hits_on_0406": 0
+  },
+  "penetration_test_results": {
+    "2026-04-06": [
+      {
+        "timeframe": "5m",
+        "bucket": "2026-04-06 10:00:00-04:00",
+        "acting_role": "RESISTANCE",
+        "ohlc": [
+          24417.75,
+          24453.0,
+          24285.0,
+          24292.25
+        ],
+        "band_from_the_J5_rule": [
+          24292.25,
+          24453.0
+        ]
+      },
+      {
+        "timeframe": "15m",
+        "bucket": "2026-04-06 10:00:00-04:00",
+        "acting_role": "RESISTANCE",
+        "ohlc": [
+          24417.75,
+          24453.0,
+          24270.5,
+          24355.0
+        ],
+        "band_from_the_J5_rule": [
+          24355.0,
+          24453.0
+        ]
+      }
+    ],
+    "POSITIVE_CONTROL_2026-03-31": [
+      {
+        "timeframe": "5m",
+        "bucket": "2026-03-31 09:30:00-04:00",
+        "acting_role": "SUPPORT",
+        "ohlc": [
+          23382.25,
+          23459.5,
+          23378.75,
+          23458.0
+        ],
+        "band_from_the_J5_rule": [
+          23378.75,
+          23458.0
+        ]
+      },
+      {
+        "timeframe": "5m",
+        "bucket": "2026-03-31 09:35:00-04:00",
+        "acting_role": "SUPPORT",
+        "ohlc": [
+          23458.0,
+          23460.5,
+          23402.75,
+          23444.5
+        ],
+        "band_from_the_J5_rule": [
+          23402.75,
+          23444.5
+        ]
+      },
+      {
+        "timeframe": "5m",
+        "bucket": "2026-03-31 09:40:00-04:00",
+        "acting_role": "RESISTANCE",
+        "ohlc": [
+          23443.75,
+          23470.0,
+          23407.0,
+          23418.0
+        ],
+        "band_from_the_J5_rule": [
+          23418.0,
+          23470.0
+        ]
+      },
+      {
+        "timeframe": "5m",
+        "bucket": "2026-03-31 09:45:00-04:00",
+        "acting_role": "SUPPORT",
+        "ohlc": [
+          23416.75,
+          23531.5,
+          23416.75,
+          23531.25
+        ],
+        "band_from_the_J5_rule": [
+          23416.75,
+          23531.25
+        ]
+      },
+      {
+        "timeframe": "5m",
+        "bucket": "2026-03-31 10:50:00-04:00",
+        "acting_role": "RESISTANCE",
+        "ohlc": [
+          23448.5,
+          23453.75,
+          23400.0,
+          23407.25
+        ],
+        "band_from_the_J5_rule": [
+          23407.25,
+          23453.75
+        ]
+      },
+      {
+        "timeframe": "5m",
+        "bucket": "2026-03-31 11:00:00-04:00",
+        "acting_role": "SUPPORT",
+        "ohlc": [
+          23409.25,
+          23470.0,
+          23407.75,
+          23462.5
+        ],
+        "band_from_the_J5_rule": [
+          23407.75,
+          23462.5
+        ]
+      },
+      {
+        "timeframe": "5m",
+        "bucket": "2026-03-31 12:00:00-04:00",
+        "acting_role": "SUPPORT",
+        "ohlc": [
+          23446.25,
+          23508.0,
+          23436.0,
+          23480.75
+        ],
+        "band_from_the_J5_rule": [
+          23436.0,
+          23480.75
+        ]
+      },
+      {
+        "timeframe": "15m",
+        "bucket": "2026-03-31 09:30:00-04:00",
+        "acting_role": "RESISTANCE",
+        "ohlc": [
+          23382.25,
+          23470.0,
+          23378.75,
+          23418.0
+        ],
+        "band_from_the_J5_rule": [
+          23418.0,
+          23470.0
+        ]
+      },
+      {
+        "timeframe": "15m",
+        "bucket": "2026-03-31 09:45:00-04:00",
+        "acting_role": "SUPPORT",
+        "ohlc": [
+          23416.75,
+          23577.5,
+          23416.75,
+          23577.5
+        ],
+        "band_from_the_J5_rule": [
+          23416.75,
+          23577.5
+        ]
+      },
+      {
+        "timeframe": "15m",
+        "bucket": "2026-03-31 10:45:00-04:00",
+        "acting_role": "RESISTANCE",
+        "ohlc": [
+          23491.0,
+          23504.75,
+          23377.5,
+          23409.25
+        ],
+        "band_from_the_J5_rule": [
+          23409.25,
+          23504.75
+        ]
+      },
+      {
+        "timeframe": "15m",
+        "bucket": "2026-03-31 11:00:00-04:00",
+        "acting_role": "SUPPORT",
+        "ohlc": [
+          23409.25,
+          23550.0,
+          23407.75,
+          23545.0
+        ],
+        "band_from_the_J5_rule": [
+          23407.75,
+          23545.0
+        ]
+      },
+      {
+        "timeframe": "15m",
+        "bucket": "2026-03-31 12:00:00-04:00",
+        "acting_role": "SUPPORT",
+        "ohlc": [
+          23446.25,
+          23533.25,
+          23436.0,
+          23514.75
+        ],
+        "band_from_the_J5_rule": [
+          23436.0,
+          23514.75
+        ]
+      }
+    ]
+  },
+  "positive_control_found_rejections": 12,
+  "rejections_at_or_before_his_entry": [
+    {
+      "timeframe": "5m",
+      "bucket": "2026-04-06 10:00:00-04:00",
+      "acting_role": "RESISTANCE",
+      "ohlc": [
+        24417.75,
+        24453.0,
+        24285.0,
+        24292.25
+      ],
+      "band_from_the_J5_rule": [
+        24292.25,
+        24453.0
+      ]
+    },
+    {
+      "timeframe": "15m",
+      "bucket": "2026-04-06 10:00:00-04:00",
+      "acting_role": "RESISTANCE",
+      "ohlc": [
+        24417.75,
+        24453.0,
+        24270.5,
+        24355.0
+      ],
+      "band_from_the_J5_rule": [
+        24355.0,
+        24453.0
+      ]
+    }
+  ],
+  "hits_within_tolerance": [],
+  "hits_that_also_close_on_the_other_side": [],
+  "near_misses_within_8_ticks": [],
+  "verdict": "MARKING_METADATA_POINTS_AT_THE_WRONG_BAR",
+  "disposition": "a band IS derivable from the bar found by PRICE; the marking metadata points at the wrong bar. The rejection at 10:00 PRECEDES his 10:04 entry, so no look-ahead is involved.",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 1.88
+}

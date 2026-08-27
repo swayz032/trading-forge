@@ -1,0 +1,68 @@
+{
+  "artifact": "WIRING_RED_PROOF",
+  "authority": "ALGO-047 - wire the derivation layer and the state machine as the kernel's entry authority",
+  "produced": "2026-08-23",
+  "question": "does the KERNEL obey the machine's verdict, or does it merely import it?",
+  "why_the_section_7_campaign_does_not_answer_it": "section 7 plants defects in the derivation layer and proves the MACHINE's guards bite. Every fake mutated here leaves that campaign at 19 of 19.",
+  "mutated_file": "research/current_mnq_strategy_v2_4_kernel.py",
+  "arms_run": 9,
+  "killed": 9,
+  "results": [
+    {
+      "arm": "W1",
+      "description": "Route A ignores the authority's verdict and grants on the plan gate alone",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority_is_wired.py::test_route_A_follows_the_authority",
+      "outcome": "KILLED"
+    },
+    {
+      "arm": "W2",
+      "description": "the breakout family takes the first route asked, granted or not",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority_is_wired.py::test_the_breakout_family_refuses_when_every_route_refuses",
+      "outcome": "KILLED"
+    },
+    {
+      "arm": "W3",
+      "description": "the BRK15 variant ignores the verdict, as its hand-rolled predecessor did",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority_is_wired.py::test_the_BRK15_variant_follows_the_authority",
+      "outcome": "KILLED"
+    },
+    {
+      "arm": "W4",
+      "description": "the variant is asked as a plain Route B, losing the weak-break requirement",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority_is_wired.py::test_the_BRK15_variant_is_asked_as_a_variant_of_route_B",
+      "outcome": "KILLED"
+    },
+    {
+      "arm": "W5",
+      "description": "Route D's two forms collapse onto one label, mislabelling a real entry",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority_is_wired.py::test_each_breakout_route_reaches_the_kernel_with_its_OWN_reason",
+      "outcome": "KILLED"
+    },
+    {
+      "arm": "W6",
+      "description": "route precedence reverses, so the same inputs produce a different route's trade",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority_is_wired.py::test_the_kernel_asks_the_routes_in_its_own_precedence",
+      "outcome": "KILLED"
+    },
+    {
+      "arm": "W7",
+      "description": "the candidate carries a story the authority did not produce",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority_is_wired.py::test_route_A_carries_the_DERIVED_story_as_its_evidence",
+      "outcome": "KILLED"
+    },
+    {
+      "arm": "W8",
+      "description": "the forming bar is no longer last, so every route reads the wrong trigger",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority_is_wired.py::test_the_authority_reads_completed_history_with_the_forming_bar_last",
+      "outcome": "KILLED"
+    },
+    {
+      "arm": "W9",
+      "description": "the machine is asked for a verdict the kernel then overrides with force alone",
+      "test": "tests/test_current_mnq_strategy_v2_4_integration.py::test_the_entry_authority_can_veto_even_when_live_force_is_present",
+      "outcome": "KILLED"
+    }
+  ],
+  "restore": "byte-exact, SHA256 against this run's own starting bytes",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this harness."
+}

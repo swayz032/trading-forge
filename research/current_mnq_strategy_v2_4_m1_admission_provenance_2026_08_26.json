@@ -1,0 +1,473 @@
+{
+ "declaring_surface": "current_mnq_strategy_v2_4_key_level_semantics.json",
+ "release_id": "MNQ-V2.4-SR-LOCATION-EQUATION-5",
+ "corpus": [
+  "current_mnq_strategy_v2_4_engineer_onboarding.md",
+  "current_mnq_strategy_v2_4_teaching_source_policy.json",
+  "current_mnq_strategy_v2_4_timeframe_pattern_fidelity_2026_08_20.json",
+  "current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json",
+  "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json",
+  "current_mnq_strategy_v2_4_user_fidelity_gold.json"
+ ],
+ "positive_control": {
+  "needle": "400",
+  "hits": [
+   {
+    "where": "current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json:101",
+    "context": "ap from the platform TP display: $400 or more is safe; under $400 is"
+   },
+   {
+    "where": "current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json:101",
+    "context": "lay: $400 or more is safe; under $400 is not safe.\", \"reference_"
+   },
+   {
+    "where": "current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json:141",
+    "context": "1 when the planned TP display is $400 or more at the frozen 15-MNQ r"
+   },
+   {
+    "where": "current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json:142",
+    "context": "the planned TP1 display is under $400 at the frozen 15-MNQ reference"
+   },
+   {
+    "where": "current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json:143",
+    "context": "d_rollover\": \"An untouched under-$400 TP1 may not be automatically s"
+   },
+   {
+    "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:250",
+    "context": "; 99.9% of spectral energy in 100-400 Hz; 0.0% in 1-4 kHz and 0.0% i"
+   }
+  ],
+  "note": "must survive the same boundary filter as every magnitude"
+ },
+ "magnitudes": [
+  {
+   "key": "established_zone_path.minimum_independent_rejections",
+   "value": 2,
+   "carrier": "literal in the loaded spec",
+   "needle": "2",
+   "literal_hits": [
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:82",
+     "context": "acceptance beyond the zone. - Bar 2: completed controlled pullback w"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_teaching_source_policy.json:15",
+     "context": "ffer.\" }, { \"rank\": 2, \"class\": \"TRADER_LEARNING"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_teaching_source_policy.json:26",
+     "context": "e\": \"Must be traceable to ranks 1-2 and may not silently invent stra"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json:74",
+     "context": "ROFIT ZONE 1 and TAKE PROFIT ZONE 2 below a short-entry zone.\" }"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json:79",
+     "context": "ROFIT ZONE 1 and TAKE PROFIT ZONE 2 as separate physical destination"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:2",
+     "context": "{ \"schema_version\": 2, \"status\": \"LOCKED_UNIFIED_TRADER_FIDELITY"
+    }
+   ],
+   "concept_hits": [
+    {
+     "term": "independent",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:56",
+     "context": "rimary evidence includes repeated independent rejection/wick events"
+    },
+    {
+     "term": "minimum",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:253",
+     "context": "A useful handoff should state, at minimum: - exact PR/branch head S"
+    },
+    {
+     "term": "zone",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:12",
+     "context": "esearch/current-mnq-strategy-v2-4-zone-first-candles` - Pull request"
+    },
+    {
+     "term": "zone",
+     "where": "current_mnq_strategy_v2_4_teaching_source_policy.json:19",
+     "context": "l concepts such as meaningful key zones, repeated reaction/rejection"
+    }
+   ]
+  },
+  {
+   "key": "exceptional_single_swing_path.lookback_calendar_days",
+   "value": 40,
+   "carrier": "literal in the loaded spec",
+   "needle": "40",
+   "literal_hits": [
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:209",
+     "context": "mode, real session 2026-08-21 10:40:33-10:46:59 ET. CORRECTED - an"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:209",
+     "context": "version published this span as 10:40:38-10:46:53, which is the span"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:405",
+     "context": "lished session wall-clock span 10:40:38-10:46:53 was the span of the"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:405",
+     "context": "e 385.7s recording, which runs 10:40:33-10:46:59. Minted inside the"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:539",
+     "context": "{ \"wall_clock_start\": \"10:40:33\", \"wall_clock_end\":"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:544",
+     "context": "y\", \"retracted_span\": \"10:40:38-10:46:53 (375s) - the span o"
+    }
+   ],
+   "concept_hits": [
+    {
+     "term": "exceptional",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "away from a swing can support the exceptional single-swing path when"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:55",
+     "context": "- Key levels are zones, not magic single prices. - Primary evidence"
+    },
+    {
+     "term": "swing",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "- Strong displacement away from a swing can support the exceptional"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_timeframe_pattern_fidelity_2026_08_20.json:42",
+     "context": "be_a_momentum_candle\", \"let_a_single_1m_burst_override_a_non_A_p"
+    }
+   ]
+  },
+  {
+   "key": "exceptional_single_swing_path.minimum_wick_fraction_uses_frozen_strategy_parameter -> Params.min_wick",
+   "value": 0.2,
+   "carrier": "NAMED by the spec at exceptional_single_swing_path.minimum_wick_fraction_uses_frozen_strategy_parameter - default 0.20 in current_mnq_strategy_v2_2_engine.py",
+   "param": "min_wick",
+   "needle": "0.2",
+   "literal_hits": [],
+   "concept_hits": [
+    {
+     "term": "exceptional",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "away from a swing can support the exceptional single-swing path when"
+    },
+    {
+     "term": "minimum",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:253",
+     "context": "A useful handoff should state, at minimum: - exact PR/branch head S"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:55",
+     "context": "- Key levels are zones, not magic single prices. - Primary evidence"
+    },
+    {
+     "term": "swing",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "- Strong displacement away from a swing can support the exceptional"
+    }
+   ]
+  },
+  {
+   "key": "exceptional_single_swing_path.absolute_displacement_floor_atr",
+   "value": 1.0,
+   "carrier": "literal in the loaded spec",
+   "needle": "1",
+   "literal_hits": [
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:18",
+     "context": "w_York - Maximum strategy trades: 1 per session - Frozen stop: 17.25"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:81",
+     "context": "15m three-bar continuation - Bar 1: completed weak break establishe"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:111",
+     "context": "Historical parity uses completed 1-minute sub-bars only. The system"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:115",
+     "context": "eal; - invent tick order inside a 1-minute OHLC bar; - grant intra-c"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_teaching_source_policy.json:2",
+     "context": "{ \"schema_version\": 1, \"status\": \"TRADER_CONFIRMED_STRATEGY_SOUR"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_teaching_source_policy.json:8",
+     "context": "hierarchy\": [ { \"rank\": 1, \"class\": \"TRADER_IMPLEMEN"
+    }
+   ],
+   "concept_hits": [
+    {
+     "term": "displacement",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "ort/resistance behavior. - Strong displacement away from a swing can"
+    },
+    {
+     "term": "exceptional",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "away from a swing can support the exceptional single-swing path when"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:55",
+     "context": "- Key levels are zones, not magic single prices. - Primary evidence"
+    },
+    {
+     "term": "swing",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "- Strong displacement away from a swing can support the exceptional"
+    }
+   ]
+  },
+  {
+   "key": "exceptional_single_swing_path.recent_displacement_percentile",
+   "value": 0.75,
+   "carrier": "literal in the loaded spec",
+   "needle": "0.75",
+   "literal_hits": [],
+   "concept_hits": [
+    {
+     "term": "displacement",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "ort/resistance behavior. - Strong displacement away from a swing can"
+    },
+    {
+     "term": "exceptional",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "away from a swing can support the exceptional single-swing path when"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:55",
+     "context": "- Key levels are zones, not magic single prices. - Primary evidence"
+    },
+    {
+     "term": "swing",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "- Strong displacement away from a swing can support the exceptional"
+    }
+   ]
+  },
+  {
+   "key": "exceptional_single_swing_path.minimum_reference_pivots_for_percentile",
+   "value": 4,
+   "carrier": "literal in the loaded spec",
+   "needle": "4",
+   "literal_hits": [
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:12",
+     "context": "`research/current-mnq-strategy-v2-4-zone-first-candles` - Pull reque"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:85",
+     "context": "rigger before the 15m close. ### 4\u20135. The only two pre-break early-"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:206",
+     "context": "ssions; - >=100 trades; - exactly 4 chronological folds; - >=3 posit"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_teaching_source_policy.json:29",
+     "context": "tics.\" }, { \"rank\": 4, \"class\": \"VALIDATION_EVID"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:22",
+     "context": "hive_note\": \"Trading screenshots (4).zip was an earlier subset/sourc"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:193",
+     "context": "numeration_method\": \"25 frames at 4-second spacing across 98.3s, plu"
+    }
+   ],
+   "concept_hits": [
+    {
+     "term": "exceptional",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "away from a swing can support the exceptional single-swing path when"
+    },
+    {
+     "term": "minimum",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:253",
+     "context": "A useful handoff should state, at minimum: - exact PR/branch head S"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:55",
+     "context": "- Key levels are zones, not magic single prices. - Primary evidence"
+    },
+    {
+     "term": "swing",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "- Strong displacement away from a swing can support the exceptional"
+    }
+   ]
+  },
+  {
+   "key": "exceptional_single_swing_path.equation -> Params.min_wick",
+   "value": 0.2,
+   "carrier": "NAMED by the spec at exceptional_single_swing_path.equation - default 0.20 in current_mnq_strategy_v2_2_engine.py",
+   "param": "min_wick",
+   "needle": "0.2",
+   "literal_hits": [],
+   "concept_hits": [
+    {
+     "term": "exceptional",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "away from a swing can support the exceptional single-swing path when"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:55",
+     "context": "- Key levels are zones, not magic single prices. - Primary evidence"
+    },
+    {
+     "term": "swing",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "- Strong displacement away from a swing can support the exceptional"
+    },
+    {
+     "term": "wick",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:56",
+     "context": "es repeated independent rejection/wick events and repeated support/r"
+    }
+   ]
+  },
+  {
+   "key": "exceptional_single_swing_path.zone_half_width -> Params.key_level_pad_atr",
+   "value": 0.06,
+   "carrier": "NAMED by the spec at exceptional_single_swing_path.zone_half_width - default 0.06 in current_mnq_strategy_v2_2_engine.py",
+   "param": "key_level_pad_atr",
+   "needle": "0.06",
+   "literal_hits": [],
+   "concept_hits": [
+    {
+     "term": "exceptional",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "away from a swing can support the exceptional single-swing path when"
+    },
+    {
+     "term": "level",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:29",
+     "context": "rch/current_mnq_strategy_v2_4_key_level_semantics.json` \u2014 key-zone q"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:55",
+     "context": "- Key levels are zones, not magic single prices. - Primary evidence"
+    },
+    {
+     "term": "swing",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "- Strong displacement away from a swing can support the exceptional"
+    }
+   ]
+  },
+  {
+   "key": "exceptional_single_swing_path.zone_half_width -> 4_ticks",
+   "value": 4,
+   "carrier": "literal inside the expression at exceptional_single_swing_path.zone_half_width",
+   "needle": "4",
+   "literal_hits": [
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:12",
+     "context": "`research/current-mnq-strategy-v2-4-zone-first-candles` - Pull reque"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:85",
+     "context": "rigger before the 15m close. ### 4\u20135. The only two pre-break early-"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:206",
+     "context": "ssions; - >=100 trades; - exactly 4 chronological folds; - >=3 posit"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_teaching_source_policy.json:29",
+     "context": "tics.\" }, { \"rank\": 4, \"class\": \"VALIDATION_EVID"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:22",
+     "context": "hive_note\": \"Trading screenshots (4).zip was an earlier subset/sourc"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:193",
+     "context": "numeration_method\": \"25 frames at 4-second spacing across 98.3s, plu"
+    }
+   ],
+   "concept_hits": [
+    {
+     "term": "exceptional",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "away from a swing can support the exceptional single-swing path when"
+    },
+    {
+     "term": "single",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:55",
+     "context": "- Key levels are zones, not magic single prices. - Primary evidence"
+    },
+    {
+     "term": "swing",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:57",
+     "context": "- Strong displacement away from a swing can support the exceptional"
+    },
+    {
+     "term": "width",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:144",
+     "context": "enter/edge distance in MNQ ticks, width, missed zones, extra zones a"
+    }
+   ]
+  },
+  {
+   "key": "range_day_zone_room.minimum_room -> Params.min_room_r",
+   "value": 1.5,
+   "carrier": "NAMED by the spec at range_day_zone_room.minimum_room - default 1.50 in current_mnq_strategy_v2_2_engine.py",
+   "param": "min_room_r",
+   "needle": "1.5",
+   "literal_hits": [
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:218",
+     "context": "VALUE\", \"duration_seconds\": 1.5, \"notes\": \"1.5-second fr"
+    },
+    {
+     "where": "current_mnq_strategy_v2_4_unified_fidelity_evidence_registry_2026_08_20.json:219",
+     "context": "on_seconds\": 1.5, \"notes\": \"1.5-second fragment of the FX Repl"
+    }
+   ],
+   "concept_hits": [
+    {
+     "term": "minimum",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:253",
+     "context": "A useful handoff should state, at minimum: - exact PR/branch head S"
+    },
+    {
+     "term": "range",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:29",
+     "context": "son` \u2014 key-zone quality/lifecycle/range-room contract. 6. `research/"
+    },
+    {
+     "term": "room",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:29",
+     "context": "key-zone quality/lifecycle/range-room contract. 6. `research/curren"
+    },
+    {
+     "term": "zone",
+     "where": "current_mnq_strategy_v2_4_engineer_onboarding.md:12",
+     "context": "esearch/current-mnq-strategy-v2-4-zone-first-candles` - Pull request"
+    }
+   ]
+  }
+ ],
+ "reader_note": "A literal corpus hit BOUNDS the provenance search; it does not establish that the number was taught. See the M1 derivation document."
+}

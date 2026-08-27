@@ -1,0 +1,308 @@
+{
+  "artifact": "Z1_HIS_RULE_UNIVERSE_FEASIBILITY",
+  "status": "DIAGNOSTIC. Z1 feasibility. No predicate, no landing.",
+  "authority": "ALGO-092 order 2",
+  "produced": "2026-08-24",
+  "operator_directive": "Equivalence of TRADES at day grain, not equivalence of drawings. A negative result here is context, NOT a blocker, and not a reason to force the universe his way.",
+  "supports_definition": "fill price inside the band, or within one stop-width (17.25 pts) of it, with a role consistent with the direction. DELIBERATELY GENEROUS so a negative result is strong.",
+  "control": {
+    "row": "CONTROL",
+    "session": "2026-04-14",
+    "clock": "09:38",
+    "direction": "L",
+    "fill_price": 25745.75,
+    "his_rule_zones_available": 303,
+    "supporting_zone_exists": false,
+    "supporting_zone_count": 0,
+    "best_supporting_zone": null,
+    "best_zone_completed_tests_since_birth": null,
+    "note": "test count PRINTED, not scored"
+  },
+  "control_supported": false,
+  "Z1_status": "CLOSED_AS_A_REPLACEMENT_CONTROL_UNSUPPORTED",
+  "convicted": [
+    {
+      "row": "convicted_early",
+      "session": "2026-03-23",
+      "clock": "08:14",
+      "direction": "S",
+      "fill_price": 24429.25,
+      "his_rule_zones_available": 259,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 3,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-03-23 07:55:00-04:00",
+        "role": "RESISTANCE",
+        "band": [
+          24392.5,
+          24489.25
+        ],
+        "width": 96.75,
+        "born": "2026-03-23 08:00:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 1,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "convicted_early",
+      "session": "2026-03-24",
+      "clock": "08:17",
+      "direction": "S",
+      "fill_price": 24333.5,
+      "his_rule_zones_available": 264,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 14,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-03-24 02:25:00-04:00",
+        "role": "RESISTANCE",
+        "band": [
+          24323.25,
+          24345.0
+        ],
+        "width": 21.75,
+        "born": "2026-03-24 02:30:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 13,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "convicted_early",
+      "session": "2026-03-31",
+      "clock": "09:03",
+      "direction": "L",
+      "fill_price": 23383.0,
+      "his_rule_zones_available": 284,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 18,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-03-31 08:00:00-04:00",
+        "role": "SUPPORT",
+        "band": [
+          23359.25,
+          23386.75
+        ],
+        "width": 27.5,
+        "born": "2026-03-31 08:05:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 5,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "convicted_early",
+      "session": "2026-04-06",
+      "clock": "09:07",
+      "direction": "S",
+      "fill_price": 24278.75,
+      "his_rule_zones_available": 290,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 25,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-04-06 03:40:00-04:00",
+        "role": "RESISTANCE",
+        "band": [
+          24275.25,
+          24282.75
+        ],
+        "width": 7.5,
+        "born": "2026-04-06 03:45:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 2,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "convicted_early",
+      "session": "2026-04-09",
+      "clock": "09:37",
+      "direction": "L",
+      "fill_price": 25056.0,
+      "his_rule_zones_available": 303,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 17,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-04-09 09:25:00-04:00",
+        "role": "SUPPORT",
+        "band": [
+          25041.0,
+          25080.5
+        ],
+        "width": 39.5,
+        "born": "2026-04-09 09:30:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 0,
+      "note": "test count PRINTED, not scored"
+    }
+  ],
+  "convicted_supported": 5,
+  "his_entries_day_grain": [
+    {
+      "row": "his_entry_day_grain",
+      "session": "2026-03-23",
+      "clock": "11:21",
+      "direction": "S",
+      "fill_price": 24615.25,
+      "his_rule_zones_available": 361,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 24,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-03-23 08:55:00-04:00",
+        "role": "RESISTANCE",
+        "band": [
+          24609.0,
+          24615.5
+        ],
+        "width": 6.5,
+        "born": "2026-03-23 09:00:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 10,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "his_entry_day_grain",
+      "session": "2026-03-24",
+      "clock": "09:32",
+      "direction": "L",
+      "fill_price": 24312.25,
+      "his_rule_zones_available": 304,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 25,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-03-24 02:20:00-04:00",
+        "role": "SUPPORT",
+        "band": [
+          24294.5,
+          24317.75
+        ],
+        "width": 23.25,
+        "born": "2026-03-24 02:25:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 10,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "his_entry_day_grain",
+      "session": "2026-03-30",
+      "clock": "09:41",
+      "direction": "S",
+      "fill_price": 23388.25,
+      "his_rule_zones_available": 306,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 49,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-03-30 03:40:00-04:00",
+        "role": "RESISTANCE",
+        "band": [
+          23380.5,
+          23389.0
+        ],
+        "width": 8.5,
+        "born": "2026-03-30 03:45:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 6,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "his_entry_day_grain",
+      "session": "2026-03-31",
+      "clock": "09:49",
+      "direction": "L",
+      "fill_price": 23483.5,
+      "his_rule_zones_available": 308,
+      "supporting_zone_exists": false,
+      "supporting_zone_count": 0,
+      "best_supporting_zone": null,
+      "best_zone_completed_tests_since_birth": null,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "his_entry_day_grain",
+      "session": "2026-04-06",
+      "clock": "10:04",
+      "direction": "S",
+      "fill_price": 24332.25,
+      "his_rule_zones_available": 318,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 45,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-04-06 04:10:00-04:00",
+        "role": "RESISTANCE",
+        "band": [
+          24328.75,
+          24334.25
+        ],
+        "width": 5.5,
+        "born": "2026-04-06 04:15:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 13,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "his_entry_day_grain",
+      "session": "2026-04-09",
+      "clock": "11:35",
+      "direction": "L",
+      "fill_price": 25121.75,
+      "his_rule_zones_available": 367,
+      "supporting_zone_exists": true,
+      "supporting_zone_count": 1,
+      "best_supporting_zone": {
+        "timeframe": "5m",
+        "bucket": "2026-04-09 11:30:00-04:00",
+        "role": "SUPPORT",
+        "band": [
+          25048.5,
+          25122.25
+        ],
+        "width": 73.75,
+        "born": "2026-04-09 11:35:00-04:00",
+        "inside": true,
+        "distance": 0.0
+      },
+      "best_zone_completed_tests_since_birth": 0,
+      "note": "test count PRINTED, not scored"
+    },
+    {
+      "row": "his_entry_day_grain",
+      "session": "2026-04-14",
+      "clock": "09:36",
+      "direction": "L",
+      "fill_price": 25743.0,
+      "his_rule_zones_available": 303,
+      "supporting_zone_exists": false,
+      "supporting_zone_count": 0,
+      "best_supporting_zone": null,
+      "best_zone_completed_tests_since_birth": null,
+      "note": "test count PRINTED, not scored"
+    }
+  ],
+  "his_entries_supported": 5,
+  "no_predicate_proposed": true,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 2.04
+}

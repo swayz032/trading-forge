@@ -1,0 +1,647 @@
+{
+  "artifact": "O2_ENTRY_LINE_PROVENANCE",
+  "status": "DIAGNOSTIC. Tests whether his entry lines pre-exist in held structure.",
+  "authority": "ALGO-080 order 2",
+  "produced": "2026-08-24",
+  "capability_control": {
+    "session": "2026-03-24",
+    "price": 24641.5,
+    "known": "L3 located it inside a 60m rejection band [24612, 24689]",
+    "re_found": true,
+    "bands": [
+      {
+        "kind": "60m_rejection_band_upper_wick_to_close",
+        "timeframe_minutes": 60,
+        "provenance": "PROVISIONAL_UNCITED",
+        "bucket": "2026-03-23 10:30:00-04:00",
+        "closes_at": "2026-03-23 11:30:00-04:00",
+        "band": [
+          24612.0,
+          24689.0
+        ],
+        "width_points": 77.0,
+        "contains_it": true
+      }
+    ]
+  },
+  "capability_control_passed": true,
+  "tolerances_fixed_before_the_search": true,
+  "exact_tolerance_points": 0.25,
+  "band_tolerance_points": 2.0,
+  "sixty_minute_is_provisional": "60m bands are marked PROVISIONAL_UNCITED per ALGO-080 and never carry a verdict alone; 30m sits inside the taught 5/15/30 family.",
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "is_focus": true,
+      "his_entry_clock": "2026-03-24 09:32:00-04:00",
+      "his_entry_line": 24192.125,
+      "exact_level_matches": [],
+      "nearest_structural_levels": [
+        {
+          "kind": "session_low_to_entry",
+          "level": 24193.5,
+          "distance": 1.375
+        },
+        {
+          "kind": "prior_day_1_close",
+          "level": 24276.0,
+          "distance": 83.875
+        },
+        {
+          "kind": "prior_day_2_high",
+          "level": 24095.75,
+          "distance": 96.375
+        },
+        {
+          "kind": "prior_day_2_close",
+          "level": 23953.25,
+          "distance": 238.875
+        },
+        {
+          "kind": "prior_day_2_low",
+          "level": 23888.0,
+          "distance": 304.125
+        },
+        {
+          "kind": "session_high_to_entry",
+          "level": 24507.0,
+          "distance": 314.875
+        }
+      ],
+      "htf_bands_containing_it": [
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-24 01:00:00-04:00",
+          "closes_at": "2026-03-24 01:30:00-04:00",
+          "band": [
+            24193.5,
+            24197.75
+          ],
+          "width_points": 4.25,
+          "contains_it": false
+        },
+        {
+          "kind": "60m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-03-24 00:30:00-04:00",
+          "closes_at": "2026-03-24 01:30:00-04:00",
+          "band": [
+            24193.5,
+            24197.75
+          ],
+          "width_points": 4.25,
+          "contains_it": false
+        }
+      ],
+      "taught_family_bands": [
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-24 01:00:00-04:00",
+          "closes_at": "2026-03-24 01:30:00-04:00",
+          "band": [
+            24193.5,
+            24197.75
+          ],
+          "width_points": 4.25,
+          "contains_it": false
+        }
+      ],
+      "bands_that_CONTAIN_the_line": [],
+      "nearest_tolerance_gaps_points": [
+        1.375
+      ],
+      "VERDICT": "ENTRY_LINE_ONLY_WITHIN_TOLERANCE_NOT_CONTAINED",
+      "matched_by": "30m_rejection_band_lower_wick_to_close"
+    },
+    {
+      "session": "2026-03-30",
+      "is_focus": false,
+      "his_entry_clock": "2026-03-30 09:41:00-04:00",
+      "his_entry_line": 23436.625,
+      "exact_level_matches": [],
+      "nearest_structural_levels": [
+        {
+          "kind": "prior_day_1_high",
+          "level": 23306.25,
+          "distance": 130.375
+        },
+        {
+          "kind": "prior_day_1_close",
+          "level": 23295.25,
+          "distance": 141.375
+        },
+        {
+          "kind": "session_high_to_entry",
+          "level": 23580.0,
+          "distance": 143.375
+        },
+        {
+          "kind": "session_low_to_entry",
+          "level": 23288.5,
+          "distance": 148.125
+        },
+        {
+          "kind": "prior_day_2_close",
+          "level": 23255.0,
+          "distance": 181.625
+        },
+        {
+          "kind": "prior_day_2_low",
+          "level": 23231.0,
+          "distance": 205.625
+        }
+      ],
+      "htf_bands_containing_it": [
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 04:30:00-04:00",
+          "closes_at": "2026-03-30 05:00:00-04:00",
+          "band": [
+            23417.75,
+            23443.25
+          ],
+          "width_points": 25.5,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 05:00:00-04:00",
+          "closes_at": "2026-03-30 05:30:00-04:00",
+          "band": [
+            23409.25,
+            23451.5
+          ],
+          "width_points": 42.25,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 07:00:00-04:00",
+          "closes_at": "2026-03-30 07:30:00-04:00",
+          "band": [
+            23406.25,
+            23487.75
+          ],
+          "width_points": 81.5,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 08:00:00-04:00",
+          "closes_at": "2026-03-30 08:30:00-04:00",
+          "band": [
+            23435.5,
+            23500.75
+          ],
+          "width_points": 65.25,
+          "contains_it": true
+        },
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-03-27 12:30:00-04:00",
+          "closes_at": "2026-03-27 13:30:00-04:00",
+          "band": [
+            23380.0,
+            23528.25
+          ],
+          "width_points": 148.25,
+          "contains_it": true
+        },
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-03-30 04:30:00-04:00",
+          "closes_at": "2026-03-30 05:30:00-04:00",
+          "band": [
+            23409.25,
+            23451.5
+          ],
+          "width_points": 42.25,
+          "contains_it": true
+        },
+        {
+          "kind": "60m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-03-30 06:30:00-04:00",
+          "closes_at": "2026-03-30 07:30:00-04:00",
+          "band": [
+            23373.75,
+            23487.75
+          ],
+          "width_points": 114.0,
+          "contains_it": true
+        },
+        {
+          "kind": "60m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-03-30 07:30:00-04:00",
+          "closes_at": "2026-03-30 08:30:00-04:00",
+          "band": [
+            23435.5,
+            23500.75
+          ],
+          "width_points": 65.25,
+          "contains_it": true
+        }
+      ],
+      "taught_family_bands": [
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 04:30:00-04:00",
+          "closes_at": "2026-03-30 05:00:00-04:00",
+          "band": [
+            23417.75,
+            23443.25
+          ],
+          "width_points": 25.5,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 05:00:00-04:00",
+          "closes_at": "2026-03-30 05:30:00-04:00",
+          "band": [
+            23409.25,
+            23451.5
+          ],
+          "width_points": 42.25,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 07:00:00-04:00",
+          "closes_at": "2026-03-30 07:30:00-04:00",
+          "band": [
+            23406.25,
+            23487.75
+          ],
+          "width_points": 81.5,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 08:00:00-04:00",
+          "closes_at": "2026-03-30 08:30:00-04:00",
+          "band": [
+            23435.5,
+            23500.75
+          ],
+          "width_points": 65.25,
+          "contains_it": true
+        }
+      ],
+      "bands_that_CONTAIN_the_line": [
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 04:30:00-04:00",
+          "closes_at": "2026-03-30 05:00:00-04:00",
+          "band": [
+            23417.75,
+            23443.25
+          ],
+          "width_points": 25.5,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 05:00:00-04:00",
+          "closes_at": "2026-03-30 05:30:00-04:00",
+          "band": [
+            23409.25,
+            23451.5
+          ],
+          "width_points": 42.25,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 07:00:00-04:00",
+          "closes_at": "2026-03-30 07:30:00-04:00",
+          "band": [
+            23406.25,
+            23487.75
+          ],
+          "width_points": 81.5,
+          "contains_it": true
+        },
+        {
+          "kind": "30m_rejection_band_lower_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-30 08:00:00-04:00",
+          "closes_at": "2026-03-30 08:30:00-04:00",
+          "band": [
+            23435.5,
+            23500.75
+          ],
+          "width_points": 65.25,
+          "contains_it": true
+        }
+      ],
+      "nearest_tolerance_gaps_points": [],
+      "VERDICT": "ENTRY_LINE_INSIDE_A_TAUGHT_HTF_BAND",
+      "matched_by": "30m_rejection_band_lower_wick_to_close"
+    },
+    {
+      "session": "2026-03-31",
+      "is_focus": false,
+      "his_entry_clock": "2026-03-31 09:49:00-04:00",
+      "his_entry_line": 23436.625,
+      "exact_level_matches": [],
+      "nearest_structural_levels": [
+        {
+          "kind": "session_high_to_entry",
+          "level": 23531.5,
+          "distance": 94.875
+        },
+        {
+          "kind": "prior_day_1_close",
+          "level": 23318.5,
+          "distance": 118.125
+        },
+        {
+          "kind": "prior_day_2_high",
+          "level": 23306.25,
+          "distance": 130.375
+        },
+        {
+          "kind": "prior_day_2_close",
+          "level": 23295.25,
+          "distance": 141.375
+        },
+        {
+          "kind": "prior_day_1_high",
+          "level": 23580.0,
+          "distance": 143.375
+        },
+        {
+          "kind": "session_low_to_entry",
+          "level": 23234.0,
+          "distance": 202.625
+        }
+      ],
+      "htf_bands_containing_it": [
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-31 08:30:00-04:00",
+          "closes_at": "2026-03-31 09:00:00-04:00",
+          "band": [
+            23369.75,
+            23436.25
+          ],
+          "width_points": 66.5,
+          "contains_it": false
+        },
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-03-30 10:30:00-04:00",
+          "closes_at": "2026-03-30 11:30:00-04:00",
+          "band": [
+            23330.0,
+            23437.75
+          ],
+          "width_points": 107.75,
+          "contains_it": true
+        },
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-03-31 08:30:00-04:00",
+          "closes_at": "2026-03-31 09:30:00-04:00",
+          "band": [
+            23382.5,
+            23436.25
+          ],
+          "width_points": 53.75,
+          "contains_it": false
+        }
+      ],
+      "taught_family_bands": [
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-03-31 08:30:00-04:00",
+          "closes_at": "2026-03-31 09:00:00-04:00",
+          "band": [
+            23369.75,
+            23436.25
+          ],
+          "width_points": 66.5,
+          "contains_it": false
+        }
+      ],
+      "bands_that_CONTAIN_the_line": [
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-03-30 10:30:00-04:00",
+          "closes_at": "2026-03-30 11:30:00-04:00",
+          "band": [
+            23330.0,
+            23437.75
+          ],
+          "width_points": 107.75,
+          "contains_it": true
+        }
+      ],
+      "nearest_tolerance_gaps_points": [
+        0.375
+      ],
+      "VERDICT": "ENTRY_LINE_INSIDE_A_PROVISIONAL_HTF_BAND_ONLY",
+      "matched_by": "60m_rejection_band_upper_wick_to_close"
+    },
+    {
+      "session": "2026-04-06",
+      "is_focus": true,
+      "his_entry_clock": "2026-04-06 10:04:00-04:00",
+      "his_entry_line": 24421.625,
+      "exact_level_matches": [],
+      "nearest_structural_levels": [
+        {
+          "kind": "session_high_to_entry",
+          "level": 24453.0,
+          "distance": 31.375
+        },
+        {
+          "kind": "prior_day_1_high",
+          "level": 24326.5,
+          "distance": 95.125
+        },
+        {
+          "kind": "prior_day_2_high",
+          "level": 24240.25,
+          "distance": 181.375
+        },
+        {
+          "kind": "prior_day_1_close",
+          "level": 24212.0,
+          "distance": 209.625
+        },
+        {
+          "kind": "session_low_to_entry",
+          "level": 24207.5,
+          "distance": 214.125
+        },
+        {
+          "kind": "prior_day_2_close",
+          "level": 24132.25,
+          "distance": 289.375
+        }
+      ],
+      "htf_bands_containing_it": [],
+      "taught_family_bands": [],
+      "bands_that_CONTAIN_the_line": [],
+      "nearest_tolerance_gaps_points": [],
+      "VERDICT": "ENTRY_LINE_PROVENANCE_UNKNOWN_FROM_HELD",
+      "matched_by": null
+    },
+    {
+      "session": "2026-04-14",
+      "is_focus": false,
+      "his_entry_clock": "2026-04-14 09:36:00-04:00",
+      "his_entry_line": 25716.625,
+      "exact_level_matches": [],
+      "nearest_structural_levels": [
+        {
+          "kind": "session_high_to_entry",
+          "level": 25748.5,
+          "distance": 31.875
+        },
+        {
+          "kind": "prior_day_1_high",
+          "level": 25618.75,
+          "distance": 97.875
+        },
+        {
+          "kind": "prior_day_1_close",
+          "level": 25583.25,
+          "distance": 133.375
+        },
+        {
+          "kind": "session_low_to_entry",
+          "level": 25564.5,
+          "distance": 152.125
+        },
+        {
+          "kind": "prior_day_2_high",
+          "level": 25091.75,
+          "distance": 624.875
+        },
+        {
+          "kind": "prior_day_2_close",
+          "level": 25060.0,
+          "distance": 656.625
+        }
+      ],
+      "htf_bands_containing_it": [
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-04-14 08:30:00-04:00",
+          "closes_at": "2026-04-14 09:00:00-04:00",
+          "band": [
+            25675.75,
+            25716.25
+          ],
+          "width_points": 40.5,
+          "contains_it": false
+        },
+        {
+          "kind": "60m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 60,
+          "provenance": "PROVISIONAL_UNCITED",
+          "bucket": "2026-04-14 08:30:00-04:00",
+          "closes_at": "2026-04-14 09:30:00-04:00",
+          "band": [
+            25655.75,
+            25716.25
+          ],
+          "width_points": 60.5,
+          "contains_it": false
+        }
+      ],
+      "taught_family_bands": [
+        {
+          "kind": "30m_rejection_band_upper_wick_to_close",
+          "timeframe_minutes": 30,
+          "provenance": "TAUGHT_FAMILY_5_15_30",
+          "bucket": "2026-04-14 08:30:00-04:00",
+          "closes_at": "2026-04-14 09:00:00-04:00",
+          "band": [
+            25675.75,
+            25716.25
+          ],
+          "width_points": 40.5,
+          "contains_it": false
+        }
+      ],
+      "bands_that_CONTAIN_the_line": [],
+      "nearest_tolerance_gaps_points": [
+        0.375
+      ],
+      "VERDICT": "ENTRY_LINE_ONLY_WITHIN_TOLERANCE_NOT_CONTAINED",
+      "matched_by": "30m_rejection_band_upper_wick_to_close"
+    }
+  ],
+  "verdicts": {
+    "2026-03-24": "ENTRY_LINE_ONLY_WITHIN_TOLERANCE_NOT_CONTAINED",
+    "2026-03-30": "ENTRY_LINE_INSIDE_A_TAUGHT_HTF_BAND",
+    "2026-03-31": "ENTRY_LINE_INSIDE_A_PROVISIONAL_HTF_BAND_ONLY",
+    "2026-04-06": "ENTRY_LINE_PROVENANCE_UNKNOWN_FROM_HELD",
+    "2026-04-14": "ENTRY_LINE_ONLY_WITHIN_TOLERANCE_NOT_CONTAINED"
+  },
+  "focus_sessions": [
+    "2026-03-24",
+    "2026-04-06"
+  ],
+  "PROSPECTIVE_MARKING_DEMONSTRATED_ON": [],
+  "containment_vs_tolerance": "Only genuine CONTAINMENT demonstrates prospective marking. A band ending short of his line is reported as ENTRY_LINE_ONLY_WITHIN_TOLERANCE_NOT_CONTAINED.",
+  "recurring_gap_note": "A 0.375 gap recurs on 03-31 and 04-14. His lines are midpoints of 0.25-wide zones (all ending .625) while band edges fall on .25/.75, so that offset looks like a QUANTISATION ARTEFACT of the zone encoding rather than structure. It is flagged rather than counted as a near-miss worth widening a tolerance for.",
+  "all_tolerance_gaps_points": [
+    0.375,
+    1.375
+  ],
+  "verdict_summary": "NOT demonstrated on either focus session - the question goes to the operator",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 1.96
+}

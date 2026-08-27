@@ -1,0 +1,108 @@
+{
+  "schema_version": 3,
+  "status": "LOCKED_DESKTOP_INTERACTIVE_FIDELITY_LAB_V3",
+  "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1",
+  "purpose": "Capture the trader's real discretionary 5-minute entry timing, key-zone selection, live force/tug-of-war judgment, and first meaningful reaction-cluster TP selection with a desktop replay experience. Fidelity only; never edge certification or PnL-driven tuning.",
+  "chart_engine": {
+    "name": "TradingView Lightweight Charts",
+    "version": "5.2.0",
+    "standalone_file": "lightweight-charts.standalone.production.js",
+    "license_attribution_required": true
+  },
+  "gold_reference": {
+    "source": "research/current_mnq_strategy_v2_4_user_fidelity_gold.json",
+    "momentum_visual_correction_source": "research/current_mnq_strategy_v2_4_user_momentum_visual_gold.json",
+    "media_bytes_committed": false,
+    "rule": "User screenshots/videos are private hashed gold references for scenario coverage and post-freeze interpretation; they are never shown as answers inside the blind replay UI.",
+    "required_fixture_ids": [
+      "V24G01_REJECTION_STORY_THEN_MOMENTUM",
+      "V24G03_PREBREAK_DISPLACEMENT_THIRD_CANDLE",
+      "V24G04_REPEAT_TEST_PREBREAK_MOMENTUM",
+      "V24G05_FIRST_PRINT_THEN_MOMENTUM_OR_15M_THREE_BAR",
+      "V24G06_FIRST_REACTION_LIQUIDITY_BEFORE_FVG",
+      "V24G07_RANGE_DAY_KEY_ZONE_ROOM",
+      "V24G08_LIVE_MOMENTUM_FORCE_BEFORE_CANDLE_CLOSE"
+    ]
+  },
+  "desktop_ui": {
+    "primary_trader_entry_chart": "5m",
+    "main_5m_chart": true,
+    "15m_context_chart": true,
+    "1m_diagnostic_chart": true,
+    "1m_diagnostic_role": "BOT_CAUSAL_INTRABAR_RECONSTRUCTION_ONLY_NOT_TRADER_ENTRY_TIMEFRAME",
+    "native_zoom_pan_crosshair": true,
+    "fullscreen_each_chart": true,
+    "keyboard_play_pause_space": true,
+    "keyboard_step_1m_right_arrow": true,
+    "keyboard_step_5m_shift_right_arrow": true,
+    "keyboard_rewind_1m_left_arrow": true,
+    "keyboard_rewind_5m_shift_left_arrow": true,
+    "play_speeds": [1, 2, 5],
+    "key_zone_and_tp_share_main_chart": true,
+    "bottom_1m_chart_is_entry_force_only": false,
+    "bottom_1m_chart_is_bot_diagnostic_only": true,
+    "autosave": true,
+    "draft_export": true,
+    "freeze_export": true
+  },
+  "entry_timeframe_semantics": {
+    "trader_primary_timeframe": "5m",
+    "trader_decides_entry_from": "FORMING_OR_COMPLETED_5M_SETUP_TRIGGER_CONTEXT_AS_DEFINED_BY_STRATEGY",
+    "one_minute_data_role": "CAUSAL_SUBBAR_RECONSTRUCTION_FOR_THE_BOT",
+    "one_minute_is_not": "A_SEPARATE_TRADER_ENTRY_STRATEGY",
+    "historical_parity_rule": "Completed 1m observations may reconstruct the state of a still-forming 5m candle at an exact minute without using the final future 5m OHLC or next-candle outcome. This does not change the trader's 5m decision timeframe."
+  },
+  "tp_semantics": {
+    "canonical_label": "FIRST_MEANINGFUL_REACTION_CLUSTER",
+    "not_a_rule": "SIDE_BY_SIDE_CANDLES",
+    "instruction": "Mark the first meaningful reaction cluster the trader would actually use as TP. Do not redefine reaction cluster as merely adjacent or side-by-side candles.",
+    "pre_entry_directional_planning": "The trader may mark bullish and bearish TP plans before direction is confirmed, but the opposite-direction TP is optional.",
+    "active_15m_fvg_midpoint_valid_when_first_reaction": true,
+    "presented_context_gap_status": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT",
+    "presented_context_gap_rule": "If the replay chart has open space and does not present a meaningful reaction/key level in a direction, record the explicit context-gap status instead of inventing a numeric TP. This is a fidelity/context limitation and does not prove ROOM_TO_FIRST_REACTION passed."
+  },
+  "scenario_selection": {
+    "one_case_per_session": true,
+    "prefer_authoritative_full_engine_entry_cases": true,
+    "target_entry_cases": 11,
+    "target_total_cases": 16,
+    "setup_family_diversity_first": true,
+    "prefer_momentum_heavy_calibration_when_trader_is_teaching_entry_style": true,
+    "no_pnl_or_exit_outcome_selection": true,
+    "controls_only_from_non_selected_sessions": true,
+    "decision_relevant_zone_grading_only": true,
+    "max_nearest_zones_per_side_for_grading": 3
+  },
+  "replay_clock": {
+    "historical_resolution": "completed_1m_internal_clock_reconstructing_5m_trader_state",
+    "forming_5m_and_15m_rebuilt_from_revealed_1m": true,
+    "tick_order_inference_forbidden": true,
+    "wait_does_not_end_case": true,
+    "first_entry_minute_recorded": true,
+    "rewind_is_trader_correction_not_new_market_information": true,
+    "future_visibility": "UI_PROGRESSIVE_DISCLOSURE_ONLY_NOT_CRYPTOGRAPHICALLY_WITHHELD",
+    "formal_blind_evidence_warning": "Because a static local artifact contains later replay bars for interactive stepping, V3 is style/fidelity capture and must not be represented as cryptographically sealed no-future evidence. A server-streamed version would be required for that stronger claim."
+  },
+  "grading": {
+    "authoritative_bot_entry_requires_full_room_and_tp_gate": true,
+    "raw_candidate_before_tp_gate_is_not_an_entry": true,
+    "compare_first_entry_action": true,
+    "compare_first_entry_minute": true,
+    "compare_force_at_entry": true,
+    "trader_entry_timeframe_for_interpretation": "5m",
+    "one_minute_force_features_are_internal_bot_evidence_not_trader_timeframe": true,
+    "compare_reaction_cluster_geometry_when_trader_marked_numeric_tp": true,
+    "explicit_no_visible_reaction_is_context_gap_not_numeric_match": true,
+    "compare_decision_relevant_key_zone_geometry": true,
+    "pnl_thresholds_forbidden": true
+  },
+  "non_goals": [
+    "clean_oos_edge_certification",
+    "profitability_claims",
+    "tick_reconstruction_from_1m_ohlc",
+    "showing bot answers before trader labels freeze",
+    "parameter tuning from replay outcomes",
+    "inventing a TP when the presented chart does not contain a meaningful reaction",
+    "redefining_the_trader_strategy_as_a_1m_entry_strategy"
+  ]
+}

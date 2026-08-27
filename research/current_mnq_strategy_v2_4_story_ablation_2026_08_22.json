@@ -1,0 +1,2462 @@
+{
+  "artifact": "V24_REJECTION_STORY_CONJUNCT_ABLATION",
+  "authority": "ALGO-011 section 5B and section 10",
+  "status": "DIAGNOSTIC_ONLY. Restores v2.2 requirements hypothetically to size each v2.4 loosening. Changes no production behaviour and asserts no requirement is correct. ALGO-011 §10.",
+  "produced": "2026-08-22",
+  "what_a_number_means": "`grants_killed` counts Route A candidates THE CURRENT KERNEL GRANTS that restoring that ONE v2.2 requirement would have killed. It sizes the loosening; it does not argue the requirement is correct.",
+  "not_a_claim_about_the_teacher": "v2.2 is the PRIOR IMPLEMENTATION, not the trader. Nothing here shows any restored requirement matches what the trader means. Only the source evidence can say that.",
+  "positive_control": {
+    "what": "the runner does not re-walk the kernel loop; it hooks xray_session and evaluates only records the kernel's own _rank_and_yield left as grants. Every grant must carry a captured input set and a non-None verdict.",
+    "per_session": [
+      {
+        "session": "2026-03-23",
+        "route_a_grants": 10,
+        "verdicts_computed": 10,
+        "candidates_captured_by_hook": 43,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-03-24",
+        "route_a_grants": 13,
+        "verdicts_computed": 13,
+        "candidates_captured_by_hook": 30,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-03-25",
+        "route_a_grants": 11,
+        "verdicts_computed": 11,
+        "candidates_captured_by_hook": 46,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-03-26",
+        "route_a_grants": 3,
+        "verdicts_computed": 3,
+        "candidates_captured_by_hook": 15,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-03-30",
+        "route_a_grants": 6,
+        "verdicts_computed": 6,
+        "candidates_captured_by_hook": 13,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-03-31",
+        "route_a_grants": 15,
+        "verdicts_computed": 15,
+        "candidates_captured_by_hook": 49,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-04-01",
+        "route_a_grants": 2,
+        "verdicts_computed": 2,
+        "candidates_captured_by_hook": 22,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-04-02",
+        "route_a_grants": 14,
+        "verdicts_computed": 14,
+        "candidates_captured_by_hook": 23,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-04-06",
+        "route_a_grants": 4,
+        "verdicts_computed": 4,
+        "candidates_captured_by_hook": 21,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-04-07",
+        "route_a_grants": 11,
+        "verdicts_computed": 11,
+        "candidates_captured_by_hook": 62,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-04-08",
+        "route_a_grants": 12,
+        "verdicts_computed": 12,
+        "candidates_captured_by_hook": 24,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-04-09",
+        "route_a_grants": 10,
+        "verdicts_computed": 10,
+        "candidates_captured_by_hook": 53,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-04-13",
+        "route_a_grants": 6,
+        "verdicts_computed": 6,
+        "candidates_captured_by_hook": 16,
+        "every_grant_has_a_verdict": true
+      },
+      {
+        "session": "2026-04-14",
+        "route_a_grants": 11,
+        "verdicts_computed": 11,
+        "candidates_captured_by_hook": 16,
+        "every_grant_has_a_verdict": true
+      }
+    ]
+  },
+  "totals": {
+    "route_a_grants_all_14": 128,
+    "route_a_grants_uncensored": 83,
+    "grants_surviving_all_six_restored": 4,
+    "grants_killed_by_all_six_restored": 124,
+    "runtime_seconds": 360.54
+  },
+  "per_requirement": {
+    "R1_APPROACH_TRAVEL": {
+      "requirement": "v2.2 `approach` = over the 5 prior 5m bars price NET TRAVELLED INTO the level (close[-1] < open[0] for a long). v2.4 returns the literal True — entries.py:168.",
+      "grants_killed_all_14": 82,
+      "grants_killed_uncensored": 48,
+      "pct_of_grants_killed_all_14": 64.1
+    },
+    "R2_RECLAIM_AT_ZONE_MID": {
+      "requirement": "v2.2 `reclaim` required close beyond the zone MIDPOINT. v2.4 `reclaimed` requires only close beyond the zone EDGE (loc.lo / loc.hi), so the whole near half of the zone became acceptable.",
+      "grants_killed_all_14": 7,
+      "grants_killed_uncensored": 6,
+      "pct_of_grants_killed_all_14": 5.5
+    },
+    "R3_RECLAIM_IS_A_TURN": {
+      "requirement": "v2.2 `reclaim` also required `close > prev.close` (a long) — an actual turn against the prior bar. v2.4 dropped it.",
+      "grants_killed_all_14": 53,
+      "grants_killed_uncensored": 40,
+      "pct_of_grants_killed_all_14": 41.4
+    },
+    "R4_WICK_REJECTION_REQUIRED": {
+      "requirement": "v2.2 `fight` REQUIRED a rejection wick. v2.4 demoted it to one of four alternatives (wick OR pattern_story OR shrink OR first_momentum), so a momentum bar alone suffices.",
+      "grants_killed_all_14": 49,
+      "grants_killed_uncensored": 36,
+      "pct_of_grants_killed_all_14": 38.3
+    },
+    "R5_FOLLOW_ANCHORED_AT_MID": {
+      "requirement": "v2.2 `follow` required close beyond the zone MIDPOINT. v2.4 anchors it to the EVENT BAR's close instead, which can sit far from the level.",
+      "grants_killed_all_14": 0,
+      "grants_killed_uncensored": 0,
+      "pct_of_grants_killed_all_14": 0.0
+    },
+    "R6_DISPLACEMENT_REQUIRED": {
+      "requirement": "v2.2 `decision` = takeover AND displacement AND follow. v2.4 `decision` = follow alone; `displacement` is computed and then not required, and `takeover` is the literal True and is read by nothing — entries.py:174.",
+      "grants_killed_all_14": 108,
+      "grants_killed_uncensored": 72,
+      "pct_of_grants_killed_all_14": 84.4
+    }
+  },
+  "grants": [
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T09:45:00-04:00",
+      "clock": "2026-03-23T09:47:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-03T09:30:00-05:00:97791",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T10:10:00-04:00",
+      "clock": "2026-03-23T10:14:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-02-17T01:15:00-05:00:98232",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-02-17T01:15:00-05:00:98232",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T10:15:00-04:00",
+      "clock": "2026-03-23T10:18:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-02-17T01:15:00-05:00:98232",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-02-17T01:15:00-05:00:98232",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T10:15:00-04:00",
+      "clock": "2026-03-23T10:19:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-02-17T01:15:00-05:00:98232",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-02-17T01:15:00-05:00:98232",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T10:20:00-04:00",
+      "clock": "2026-03-23T10:24:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-02-17T01:15:00-05:00:98232",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-02-17T01:15:00-05:00:98232",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T11:00:00-04:00",
+      "clock": "2026-03-23T11:03:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-20T02:45:00-04:00:98429",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": true
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T11:35:00-04:00",
+      "clock": "2026-03-23T11:37:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-20T00:15:00-04:00:98518",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T11:35:00-04:00",
+      "clock": "2026-03-23T11:38:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-20T00:15:00-04:00:98518",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T11:35:00-04:00",
+      "clock": "2026-03-23T11:39:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-20T00:15:00-04:00:98518",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-23",
+      "bucket": "2026-03-23T11:45:00-04:00",
+      "clock": "2026-03-23T11:47:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-20T00:15:00-04:00:98518",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T09:30:00-04:00",
+      "clock": "2026-03-24T09:32:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-24T00:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": true
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T09:40:00-04:00",
+      "clock": "2026-03-24T09:42:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-23T14:00:00-04:00:97276",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T10:15:00-04:00",
+      "clock": "2026-03-24T10:17:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-24T00:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T10:20:00-04:00",
+      "clock": "2026-03-24T10:23:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-24T00:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T10:35:00-04:00",
+      "clock": "2026-03-24T10:37:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-24T00:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": false,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T10:35:00-04:00",
+      "clock": "2026-03-24T10:38:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-24T00:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": false,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T11:00:00-04:00",
+      "clock": "2026-03-24T11:02:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-24T00:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T11:00:00-04:00",
+      "clock": "2026-03-24T11:04:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-24T00:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T11:15:00-04:00",
+      "clock": "2026-03-24T11:17:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-24T00:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T11:35:00-04:00",
+      "clock": "2026-03-24T11:37:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-23T14:00:00-04:00:97276",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T11:35:00-04:00",
+      "clock": "2026-03-24T11:38:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-23T14:00:00-04:00:97276",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T11:35:00-04:00",
+      "clock": "2026-03-24T11:39:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-23T14:00:00-04:00:97276",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "bucket": "2026-03-24T11:50:00-04:00",
+      "clock": "2026-03-24T11:52:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-23T14:00:00-04:00:97276",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T09:35:00-04:00",
+      "clock": "2026-03-25T09:37:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-25T06:30:00-04:00:97689",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T09:35:00-04:00",
+      "clock": "2026-03-25T09:38:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-25T06:30:00-04:00:97689",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T09:50:00-04:00",
+      "clock": "2026-03-25T09:52:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:S:2026-03-20T03:45:00-04:00:97931",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T10:20:00-04:00",
+      "clock": "2026-03-25T10:22:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-03-13T05:00:00-04:00:97590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T10:20:00-04:00",
+      "clock": "2026-03-25T10:23:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-03-13T05:00:00-04:00:97590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T11:05:00-04:00",
+      "clock": "2026-03-25T11:07:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:S:2026-03-12T20:45:00-04:00:97966",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T11:05:00-04:00",
+      "clock": "2026-03-25T11:08:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:S:2026-03-12T20:45:00-04:00:97966",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": true
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T11:15:00-04:00",
+      "clock": "2026-03-25T11:17:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:S:2026-03-12T20:45:00-04:00:97966",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T11:15:00-04:00",
+      "clock": "2026-03-25T11:18:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:S:2026-03-12T20:45:00-04:00:97966",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:S:2026-03-12T20:45:00-04:00:97966",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T11:35:00-04:00",
+      "clock": "2026-03-25T11:38:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-25T06:30:00-04:00:97689",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": false,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-25",
+      "bucket": "2026-03-25T11:50:00-04:00",
+      "clock": "2026-03-25T11:52:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-24T15:15:00-04:00:97396",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-24T15:15:00-04:00:97396",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-26",
+      "bucket": "2026-03-26T09:50:00-04:00",
+      "clock": "2026-03-26T09:52:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-26",
+      "bucket": "2026-03-26T09:50:00-04:00",
+      "clock": "2026-03-26T09:54:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-26",
+      "bucket": "2026-03-26T10:50:00-04:00",
+      "clock": "2026-03-26T10:54:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:S:2026-03-24T16:30:00-04:00:96757",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:S:2026-03-24T16:30:00-04:00:96757",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-30",
+      "bucket": "2026-03-30T09:35:00-04:00",
+      "clock": "2026-03-30T09:37:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-30T09:15:00-04:00:94096",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-30",
+      "bucket": "2026-03-30T09:35:00-04:00",
+      "clock": "2026-03-30T09:39:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-30T09:15:00-04:00:94096",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-30",
+      "bucket": "2026-03-30T09:40:00-04:00",
+      "clock": "2026-03-30T09:42:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-30T09:15:00-04:00:94096",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-30",
+      "bucket": "2026-03-30T09:45:00-04:00",
+      "clock": "2026-03-30T09:47:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-30T09:15:00-04:00:94096",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-30",
+      "bucket": "2026-03-30T11:15:00-04:00",
+      "clock": "2026-03-30T11:17:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-30T08:45:00-04:00:93755",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-30T08:45:00-04:00:93755",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-30",
+      "bucket": "2026-03-30T11:55:00-04:00",
+      "clock": "2026-03-30T11:57:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-30T08:45:00-04:00:93755",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-30T08:45:00-04:00:93755",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T09:45:00-04:00",
+      "clock": "2026-03-31T09:47:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T09:45:00-04:00",
+      "clock": "2026-03-31T09:48:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T09:45:00-04:00",
+      "clock": "2026-03-31T09:49:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T10:05:00-04:00",
+      "clock": "2026-03-31T10:08:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T10:05:00-04:00",
+      "clock": "2026-03-31T10:09:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T10:30:00-04:00",
+      "clock": "2026-03-31T10:32:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T10:35:00-04:00",
+      "clock": "2026-03-31T10:38:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T10:35:00-04:00",
+      "clock": "2026-03-31T10:39:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-30T08:00:00-04:00:94320",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": true
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T11:00:00-04:00",
+      "clock": "2026-03-31T11:02:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T11:00:00-04:00",
+      "clock": "2026-03-31T11:03:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T11:05:00-04:00",
+      "clock": "2026-03-31T11:07:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T11:10:00-04:00",
+      "clock": "2026-03-31T11:13:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T11:10:00-04:00",
+      "clock": "2026-03-31T11:14:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-31T07:45:00-04:00:93590",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T11:40:00-04:00",
+      "clock": "2026-03-31T11:44:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-30T09:15:00-04:00:94096",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "bucket": "2026-03-31T11:45:00-04:00",
+      "clock": "2026-03-31T11:48:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-30T09:15:00-04:00:94096",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-01",
+      "bucket": "2026-04-01T10:00:00-04:00",
+      "clock": "2026-04-01T10:03:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-04-01T06:30:00-04:00:96362",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-01",
+      "bucket": "2026-04-01T11:05:00-04:00",
+      "clock": "2026-04-01T11:08:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-26T03:00:00-04:00:96926",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T09:35:00-04:00",
+      "clock": "2026-04-02T09:37:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:S:2026-03-23T07:30:00-04:00:95263",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T09:35:00-04:00",
+      "clock": "2026-04-02T09:39:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:S:2026-03-23T07:30:00-04:00:95263",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T10:25:00-04:00",
+      "clock": "2026-04-02T10:27:00-04:00",
+      "direction": "S",
+      "location_id": "FVG15:bearish:2026-04-01T21:45:00-04:00:96128",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|S|FVG15:bearish:2026-04-01T21:45:00-04:00:96128",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T10:35:00-04:00",
+      "clock": "2026-04-02T10:37:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-31T22:15:00-04:00:95868",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T10:35:00-04:00",
+      "clock": "2026-04-02T10:38:00-04:00",
+      "direction": "L",
+      "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|S:2026-03-31T22:15:00-04:00:95868",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T10:45:00-04:00",
+      "clock": "2026-04-02T10:47:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": false,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T10:45:00-04:00",
+      "clock": "2026-04-02T10:49:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": false,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T11:00:00-04:00",
+      "clock": "2026-04-02T11:02:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T11:00:00-04:00",
+      "clock": "2026-04-02T11:03:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T11:05:00-04:00",
+      "clock": "2026-04-02T11:08:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T11:20:00-04:00",
+      "clock": "2026-04-02T11:23:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T11:40:00-04:00",
+      "clock": "2026-04-02T11:43:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T11:45:00-04:00",
+      "clock": "2026-04-02T11:49:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-02",
+      "bucket": "2026-04-02T11:50:00-04:00",
+      "clock": "2026-04-02T11:52:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-26T04:00:00-04:00:96809",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-06",
+      "bucket": "2026-04-06T10:00:00-04:00",
+      "clock": "2026-04-06T10:04:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-03-25T06:30:00-04:00:97649",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-03-25T06:30:00-04:00:97649",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": false,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-06",
+      "bucket": "2026-04-06T10:45:00-04:00",
+      "clock": "2026-04-06T10:49:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-24T10:15:00-04:00:97268",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-24T10:15:00-04:00:97268",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": false,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-06",
+      "bucket": "2026-04-06T11:00:00-04:00",
+      "clock": "2026-04-06T11:02:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-06T03:30:00-04:00:97165",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-06",
+      "bucket": "2026-04-06T11:30:00-04:00",
+      "clock": "2026-04-06T11:33:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-04-06T06:45:00-04:00:97378",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-04-06T06:45:00-04:00:97378",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T09:45:00-04:00",
+      "clock": "2026-04-07T09:48:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-04-03T09:15:00-04:00:96961",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T09:45:00-04:00",
+      "clock": "2026-04-07T09:49:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-04-03T09:15:00-04:00:96961",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T09:55:00-04:00",
+      "clock": "2026-04-07T09:57:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-04-01T12:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-04-01T12:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T09:55:00-04:00",
+      "clock": "2026-04-07T09:58:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-04-01T12:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-04-01T12:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T09:55:00-04:00",
+      "clock": "2026-04-07T09:59:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-04-01T12:15:00-04:00:96923",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-04-01T12:15:00-04:00:96923",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T10:00:00-04:00",
+      "clock": "2026-04-07T10:02:00-04:00",
+      "direction": "S",
+      "location_id": "FVG15:bearish:2026-04-07T10:00:00-04:00:96846",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|S|FVG15:bearish:2026-04-07T10:00:00-04:00:96846",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T10:00:00-04:00",
+      "clock": "2026-04-07T10:04:00-04:00",
+      "direction": "S",
+      "location_id": "FVG15:bearish:2026-04-07T10:00:00-04:00:96846",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|S|FVG15:bearish:2026-04-07T10:00:00-04:00:96846",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T10:40:00-04:00",
+      "clock": "2026-04-07T10:44:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-26T12:30:00-04:00:96509",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-26T12:30:00-04:00:96509",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T10:50:00-04:00",
+      "clock": "2026-04-07T10:52:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-04-03T07:45:00-04:00:96455",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-04-03T07:45:00-04:00:96455",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T10:55:00-04:00",
+      "clock": "2026-04-07T10:59:00-04:00",
+      "direction": "S",
+      "location_id": "S:2026-04-03T07:45:00-04:00:96455",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|S:2026-04-03T07:45:00-04:00:96455",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-07",
+      "bucket": "2026-04-07T11:35:00-04:00",
+      "clock": "2026-04-07T11:37:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-03-26T16:45:00-04:00:96098",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-03-26T16:45:00-04:00:96098",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T10:20:00-04:00",
+      "clock": "2026-04-08T10:23:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-17T20:00:00-04:00:100140",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T10:45:00-04:00",
+      "clock": "2026-04-08T10:47:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-17T14:45:00-04:00:100233",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-17T14:45:00-04:00:100233",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T10:50:00-04:00",
+      "clock": "2026-04-08T10:52:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-17T14:45:00-04:00:100233",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-17T14:45:00-04:00:100233",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T10:50:00-04:00",
+      "clock": "2026-04-08T10:53:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-17T14:45:00-04:00:100233",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-17T14:45:00-04:00:100233",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T10:50:00-04:00",
+      "clock": "2026-04-08T10:54:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-17T14:45:00-04:00:100233",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-17T14:45:00-04:00:100233",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T10:55:00-04:00",
+      "clock": "2026-04-08T10:57:00-04:00",
+      "direction": "S",
+      "location_id": "R:2026-03-17T14:45:00-04:00:100233",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|S|R:2026-03-17T14:45:00-04:00:100233",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T11:00:00-04:00",
+      "clock": "2026-04-08T11:02:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-18T14:45:00-04:00:99707",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-18T14:45:00-04:00:99707",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T11:00:00-04:00",
+      "clock": "2026-04-08T11:03:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-18T14:45:00-04:00:99707",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-18T14:45:00-04:00:99707",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T11:10:00-04:00",
+      "clock": "2026-04-08T11:13:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-18T14:45:00-04:00:99707",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-18T14:45:00-04:00:99707",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T11:35:00-04:00",
+      "clock": "2026-04-08T11:38:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:S:2026-03-11T03:00:00-04:00:100033",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:S:2026-03-11T03:00:00-04:00:100033",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T11:45:00-04:00",
+      "clock": "2026-04-08T11:47:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-17T20:00:00-04:00:100140",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-08",
+      "bucket": "2026-04-08T11:45:00-04:00",
+      "clock": "2026-04-08T11:48:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-03-17T20:00:00-04:00:100140",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T09:50:00-04:00",
+      "clock": "2026-04-09T09:54:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T10:15:00-04:00",
+      "clock": "2026-04-09T10:18:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-16T15:45:00-04:00:100131",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T10:15:00-04:00",
+      "clock": "2026-04-09T10:19:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-16T15:45:00-04:00:100131",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T11:25:00-04:00",
+      "clock": "2026-04-09T11:27:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T11:25:00-04:00",
+      "clock": "2026-04-09T11:28:00-04:00",
+      "direction": "S",
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|S|SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T11:40:00-04:00",
+      "clock": "2026-04-09T11:42:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T11:40:00-04:00",
+      "clock": "2026-04-09T11:44:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T11:45:00-04:00",
+      "clock": "2026-04-09T11:49:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T11:50:00-04:00",
+      "clock": "2026-04-09T11:53:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "bucket": "2026-04-09T11:50:00-04:00",
+      "clock": "2026-04-09T11:54:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-03-02T15:30:00-05:00:100400",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-13",
+      "bucket": "2026-04-13T10:20:00-04:00",
+      "clock": "2026-04-13T10:22:00-04:00",
+      "direction": "L",
+      "location_id": "FVG15:bullish:2026-04-13T10:15:00-04:00:101030",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-13T10:15:00-04:00:101030",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-13",
+      "bucket": "2026-04-13T10:50:00-04:00",
+      "clock": "2026-04-13T10:52:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-10T06:00:00-04:00:101100",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-10T06:00:00-04:00:101100",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-13",
+      "bucket": "2026-04-13T10:50:00-04:00",
+      "clock": "2026-04-13T10:53:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-10T06:00:00-04:00:101100",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-10T06:00:00-04:00:101100",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-13",
+      "bucket": "2026-04-13T10:50:00-04:00",
+      "clock": "2026-04-13T10:54:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-10T06:00:00-04:00:101100",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-10T06:00:00-04:00:101100",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-13",
+      "bucket": "2026-04-13T10:55:00-04:00",
+      "clock": "2026-04-13T10:59:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-04-10T15:00:00-04:00:101128",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-04-10T15:00:00-04:00:101128",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-13",
+      "bucket": "2026-04-13T11:35:00-04:00",
+      "clock": "2026-04-13T11:38:00-04:00",
+      "direction": "L",
+      "location_id": "R:2026-04-10T16:00:00-04:00:101210",
+      "location_source": "WICK_ZONE",
+      "tag": "A_NORMAL_REJECTION|L|R:2026-04-10T16:00:00-04:00:101210",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": true,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T10:05:00-04:00",
+      "clock": "2026-04-14T10:07:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T10:05:00-04:00",
+      "clock": "2026-04-14T10:08:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T10:05:00-04:00",
+      "clock": "2026-04-14T10:09:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T10:20:00-04:00",
+      "clock": "2026-04-14T10:22:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T10:20:00-04:00",
+      "clock": "2026-04-14T10:23:00-04:00",
+      "direction": "L",
+      "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "tag": "A_NORMAL_REJECTION|L|SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T10:45:00-04:00",
+      "clock": "2026-04-14T10:48:00-04:00",
+      "direction": "L",
+      "location_id": "FVG15:bullish:2026-04-14T10:45:00-04:00:103115",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-14T10:45:00-04:00:103115",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T10:45:00-04:00",
+      "clock": "2026-04-14T10:49:00-04:00",
+      "direction": "L",
+      "location_id": "FVG15:bullish:2026-04-14T10:45:00-04:00:103115",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-14T10:45:00-04:00:103115",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T11:10:00-04:00",
+      "clock": "2026-04-14T11:12:00-04:00",
+      "direction": "L",
+      "location_id": "FVG15:bullish:2026-04-14T10:30:00-04:00:103057",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-14T10:30:00-04:00:103057",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T11:10:00-04:00",
+      "clock": "2026-04-14T11:14:00-04:00",
+      "direction": "L",
+      "location_id": "FVG15:bullish:2026-04-14T10:30:00-04:00:103057",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-14T10:30:00-04:00:103057",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": true,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": false,
+        "R4_WICK_REJECTION_REQUIRED": true,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T11:45:00-04:00",
+      "clock": "2026-04-14T11:47:00-04:00",
+      "direction": "L",
+      "location_id": "FVG15:bullish:2026-04-14T11:45:00-04:00:103280",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-14T11:45:00-04:00:103280",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    },
+    {
+      "session": "2026-04-14",
+      "bucket": "2026-04-14T11:45:00-04:00",
+      "clock": "2026-04-14T11:49:00-04:00",
+      "direction": "L",
+      "location_id": "FVG15:bullish:2026-04-14T11:45:00-04:00:103280",
+      "location_source": "FVG_15M_CAUSAL_INTERACTION",
+      "tag": "A_NORMAL_REJECTION|L|FVG15:bullish:2026-04-14T11:45:00-04:00:103280",
+      "ablation": {
+        "R1_APPROACH_TRAVEL": false,
+        "R2_RECLAIM_AT_ZONE_MID": true,
+        "R3_RECLAIM_IS_A_TURN": true,
+        "R4_WICK_REJECTION_REQUIRED": false,
+        "R5_FOLLOW_ANCHORED_AT_MID": true,
+        "R6_DISPLACEMENT_REQUIRED": false,
+        "ALL_SIX_RESTORED": false
+      }
+    }
+  ]
+}

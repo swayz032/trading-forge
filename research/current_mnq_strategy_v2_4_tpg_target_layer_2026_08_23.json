@@ -1,0 +1,3697 @@
+{
+  "artifact": "TPG_TARGET_LAYER",
+  "status": "DIAGNOSTIC. Target-layer T/P/G at his entry. Repairs nothing.",
+  "authority": "ALGO-076 order (1)",
+  "produced": "2026-08-23",
+  "arm": "taught_0800",
+  "control_session": "2026-04-14",
+  "control_has_no_marked_tp_in_his_direction": true,
+  "relayed_tps_verified_against_the_frozen_pack": true,
+  "taxonomy_note": "TARGET_NOT_IN_MAP is PROPOSED as a residual member of the ALGO-067 taxonomy at the target layer - the analogue of LOCATION_NOT_IN_MAP at the entry layer. It is not minted here; ALGO-077 ratifies or renames it.",
+  "the_400_floor_refuses_NOTHING_at_his_entry": "Every destination considered at his own entry clears the floor in all four sessions (81/81, 10/10, 122/122, 3/3). The 112.50 / 382.50 / 397.50 refusals in ALGO-075 were measured at the BOT's candidate prices and clocks, which are different instants. The floor is not what separates him from the machine here.",
+  "standing_invariant_any_repair_must_contend_with": "targets.py docstring: 'No farther feature may leapfrog a nearer meaningful reaction area for prettier PnL.' Nearest-first is a deliberate anti-fitting guard, not an oversight.",
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "is_control": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-03-24 09:32:00-04:00",
+      "his_entry_price_1m_open": 24312.25,
+      "his_marked_tp": {
+        "lo": 24641.5,
+        "hi": 24641.5,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-24T09:32:00-04:00",
+        "marked_main_timeframe": "15m"
+      },
+      "his_marked_tp_side": "long",
+      "his_marked_tp_status": "MARKED",
+      "his_marked_tp_distance_points": 329.25,
+      "T_taught_rule": "ALGO-051, operator verbatim: '...momentum candle breakout and i jumped in and TARGETED THE NEXT KEY ZONE' - the target re-anchors to the NEXT key zone (22784.25; 32 pts x $30/pt at the 15-MNQ reference size). ALGO-052 measures the same shape: target 21932.25, 'the UPPER KEY ZONE BAND', 110 pts x $30 = $3300, 're-anchored at the opposite key zone'. THE TAUGHT TARGET IS A KEY ZONE BAND.",
+      "T_machine_rule": "targets.py equation 1: 'The first MEANINGFUL reaction area by physical near edge owns the room/blocker question', closed by 'No farther feature may leapfrog a nearer meaningful reaction area for prettier PnL.' Its universe is KEY_ZONE_15M + LIQUIDITY_CLUSTER + FVG_15M + refined 5m clusters. The $400 floor is a LATER layer applied after selection.",
+      "P_destinations_considered": [
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24343.953571428574,
+            24372.09642857143
+          ],
+          "first_contact_distance_points": 31.7,
+          "target_raw": 24358.03,
+          "target_executable": 24358.0,
+          "actual_target_distance_points": 45.75,
+          "reference_reward_usd": 1372.5,
+          "meaningful": true,
+          "quality": 0.6637,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24374.021875,
+            24381.228125
+          ],
+          "first_contact_distance_points": 61.77,
+          "target_raw": 24377.62,
+          "target_executable": 24377.5,
+          "actual_target_distance_points": 65.25,
+          "reference_reward_usd": 1957.5,
+          "meaningful": true,
+          "quality": 0.8323,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24398.504464285714,
+            24400.507142857143
+          ],
+          "first_contact_distance_points": 76.49,
+          "target_raw": 24399.51,
+          "target_executable": 24399.5,
+          "actual_target_distance_points": 87.25,
+          "reference_reward_usd": 2617.5,
+          "meaningful": true,
+          "quality": 0.6865,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24398.504464285714,
+            24399.918214285713
+          ],
+          "first_contact_distance_points": 82.83,
+          "target_raw": 24399.21,
+          "target_executable": 24399.0,
+          "actual_target_distance_points": 86.75,
+          "reference_reward_usd": 2602.5,
+          "meaningful": true,
+          "quality": 0.7349,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24408.29642857143,
+            24412.70357142857
+          ],
+          "first_contact_distance_points": 96.05,
+          "target_raw": 24410.5,
+          "target_executable": 24410.5,
+          "actual_target_distance_points": 98.25,
+          "reference_reward_usd": 2947.5,
+          "meaningful": true,
+          "quality": 0.9465,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24414.38482142857,
+            24431.415178571428
+          ],
+          "first_contact_distance_points": 102.13,
+          "target_raw": 24422.9,
+          "target_executable": 24422.75,
+          "actual_target_distance_points": 110.5,
+          "reference_reward_usd": 3315.0,
+          "meaningful": true,
+          "quality": 0.5801,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24427.791964285716,
+            24453.958035714284
+          ],
+          "first_contact_distance_points": 115.54,
+          "target_raw": 24440.88,
+          "target_executable": 24440.75,
+          "actual_target_distance_points": 128.5,
+          "reference_reward_usd": 3855.0,
+          "meaningful": true,
+          "quality": 0.8604,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24467.63482142857,
+            24481.11517857143
+          ],
+          "first_contact_distance_points": 155.38,
+          "target_raw": 24474.38,
+          "target_executable": 24474.25,
+          "actual_target_distance_points": 162.0,
+          "reference_reward_usd": 4860.0,
+          "meaningful": true,
+          "quality": 0.7181,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24481.303571428572,
+            24484.196428571428
+          ],
+          "first_contact_distance_points": 169.05,
+          "target_raw": 24482.75,
+          "target_executable": 24482.75,
+          "actual_target_distance_points": 170.5,
+          "reference_reward_usd": 5115.0,
+          "meaningful": true,
+          "quality": 0.9245,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24490.125892857144,
+            24493.374107142856
+          ],
+          "first_contact_distance_points": 176.92,
+          "target_raw": 24491.75,
+          "target_executable": 24491.75,
+          "actual_target_distance_points": 179.5,
+          "reference_reward_usd": 5385.0,
+          "meaningful": true,
+          "quality": 0.8289,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24498.409821428573,
+            24510.840178571427
+          ],
+          "first_contact_distance_points": 186.16,
+          "target_raw": 24504.62,
+          "target_executable": 24504.5,
+          "actual_target_distance_points": 192.25,
+          "reference_reward_usd": 5767.5,
+          "meaningful": true,
+          "quality": 0.6638,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24503.18973214286,
+            24515.460267857143
+          ],
+          "first_contact_distance_points": 187.98,
+          "target_raw": 24509.33,
+          "target_executable": 24509.25,
+          "actual_target_distance_points": 197.0,
+          "reference_reward_usd": 5910.0,
+          "meaningful": true,
+          "quality": 0.6874,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24525.354464285716,
+            24536.145535714284
+          ],
+          "first_contact_distance_points": 209.69,
+          "target_raw": 24530.75,
+          "target_executable": 24530.75,
+          "actual_target_distance_points": 218.5,
+          "reference_reward_usd": 6555.0,
+          "meaningful": true,
+          "quality": 0.8812,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24555.95357142857,
+            24560.04642857143
+          ],
+          "first_contact_distance_points": 243.7,
+          "target_raw": 24558.0,
+          "target_executable": 24558.0,
+          "actual_target_distance_points": 245.75,
+          "reference_reward_usd": 7372.5,
+          "meaningful": true,
+          "quality": 0.7528,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24626.84392857143,
+            24633.65607142857
+          ],
+          "first_contact_distance_points": 314.59,
+          "target_raw": 24630.25,
+          "target_executable": 24630.25,
+          "actual_target_distance_points": 318.0,
+          "reference_reward_usd": 9540.0,
+          "meaningful": true,
+          "quality": 0.9282,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24627.84642857143,
+            24660.35357142857
+          ],
+          "first_contact_distance_points": 315.6,
+          "target_raw": 24644.1,
+          "target_executable": 24644.0,
+          "actual_target_distance_points": 331.75,
+          "reference_reward_usd": 9952.5,
+          "meaningful": true,
+          "quality": 0.6588,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24637.246428571427,
+            24644.253571428573
+          ],
+          "first_contact_distance_points": 325.0,
+          "target_raw": 24640.75,
+          "target_executable": 24640.75,
+          "actual_target_distance_points": 328.5,
+          "reference_reward_usd": 9855.0,
+          "meaningful": true,
+          "quality": 0.7898,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24656.79142857143,
+            24665.20857142857
+          ],
+          "first_contact_distance_points": 344.54,
+          "target_raw": 24661.0,
+          "target_executable": 24661.0,
+          "actual_target_distance_points": 348.75,
+          "reference_reward_usd": 10462.5,
+          "meaningful": true,
+          "quality": 0.8181,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24672.897321428572,
+            24678.852678571428
+          ],
+          "first_contact_distance_points": 357.4,
+          "target_raw": 24675.88,
+          "target_executable": 24675.75,
+          "actual_target_distance_points": 363.5,
+          "reference_reward_usd": 10905.0,
+          "meaningful": true,
+          "quality": 0.7142,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24672.897321428572,
+            24677.067142857144
+          ],
+          "first_contact_distance_points": 359.68,
+          "target_raw": 24674.98,
+          "target_executable": 24674.75,
+          "actual_target_distance_points": 362.5,
+          "reference_reward_usd": 10875.0,
+          "meaningful": true,
+          "quality": 0.739,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24687.007142857143,
+            24701.942857142858
+          ],
+          "first_contact_distance_points": 371.53,
+          "target_raw": 24694.47,
+          "target_executable": 24694.25,
+          "actual_target_distance_points": 382.0,
+          "reference_reward_usd": 11460.0,
+          "meaningful": true,
+          "quality": 0.7389,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24705.507589285713,
+            24711.51714285714
+          ],
+          "first_contact_distance_points": 393.23,
+          "target_raw": 24708.51,
+          "target_executable": 24708.5,
+          "actual_target_distance_points": 396.25,
+          "reference_reward_usd": 11887.5,
+          "meaningful": true,
+          "quality": 0.583,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24716.05267857143,
+            24732.94732142857
+          ],
+          "first_contact_distance_points": 394.59,
+          "target_raw": 24724.5,
+          "target_executable": 24724.5,
+          "actual_target_distance_points": 412.25,
+          "reference_reward_usd": 12367.5,
+          "meaningful": true,
+          "quality": 0.5905,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24716.05267857143,
+            24717.21892857143
+          ],
+          "first_contact_distance_points": 402.03,
+          "target_raw": 24716.64,
+          "target_executable": 24716.5,
+          "actual_target_distance_points": 404.25,
+          "reference_reward_usd": 12127.5,
+          "meaningful": true,
+          "quality": 0.6797,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24724.131250000002,
+            24743.56875
+          ],
+          "first_contact_distance_points": 411.68,
+          "target_raw": 24733.85,
+          "target_executable": 24733.75,
+          "actual_target_distance_points": 421.5,
+          "reference_reward_usd": 12645.0,
+          "meaningful": true,
+          "quality": 0.6397,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24726.408571428572,
+            24732.091428571428
+          ],
+          "first_contact_distance_points": 414.16,
+          "target_raw": 24729.25,
+          "target_executable": 24729.25,
+          "actual_target_distance_points": 417.0,
+          "reference_reward_usd": 12510.0,
+          "meaningful": true,
+          "quality": 0.6734,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24735.436785714286,
+            24738.563214285714
+          ],
+          "first_contact_distance_points": 423.19,
+          "target_raw": 24737.0,
+          "target_executable": 24737.0,
+          "actual_target_distance_points": 424.75,
+          "reference_reward_usd": 12742.5,
+          "meaningful": true,
+          "quality": 0.7916,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24741.389642857142,
+            24747.610357142858
+          ],
+          "first_contact_distance_points": 429.14,
+          "target_raw": 24744.5,
+          "target_executable": 24744.5,
+          "actual_target_distance_points": 432.25,
+          "reference_reward_usd": 12967.5,
+          "meaningful": true,
+          "quality": 0.5789,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24749.123214285715,
+            24754.876785714285
+          ],
+          "first_contact_distance_points": 436.87,
+          "target_raw": 24752.0,
+          "target_executable": 24752.0,
+          "actual_target_distance_points": 439.75,
+          "reference_reward_usd": 13192.5,
+          "meaningful": true,
+          "quality": 0.7841,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24760.638839285715,
+            24779.361160714285
+          ],
+          "first_contact_distance_points": 448.39,
+          "target_raw": 24770.0,
+          "target_executable": 24770.0,
+          "actual_target_distance_points": 457.75,
+          "reference_reward_usd": 13732.5,
+          "meaningful": false,
+          "quality": 0.5765,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24761.49732142857,
+            24764.50267857143
+          ],
+          "first_contact_distance_points": 449.25,
+          "target_raw": 24763.0,
+          "target_executable": 24763.0,
+          "actual_target_distance_points": 450.75,
+          "reference_reward_usd": 13522.5,
+          "meaningful": true,
+          "quality": 0.9253,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24783.95535714286,
+            24814.444642857143
+          ],
+          "first_contact_distance_points": 471.71,
+          "target_raw": 24799.2,
+          "target_executable": 24799.0,
+          "actual_target_distance_points": 486.75,
+          "reference_reward_usd": 14602.5,
+          "meaningful": false,
+          "quality": 0.5894,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24797.400892857142,
+            24799.374642857143
+          ],
+          "first_contact_distance_points": 484.38,
+          "target_raw": 24798.39,
+          "target_executable": 24798.25,
+          "actual_target_distance_points": 486.0,
+          "reference_reward_usd": 14580.0,
+          "meaningful": true,
+          "quality": 0.8419,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24801.779285714285,
+            24808.220714285715
+          ],
+          "first_contact_distance_points": 489.53,
+          "target_raw": 24805.0,
+          "target_executable": 24805.0,
+          "actual_target_distance_points": 492.75,
+          "reference_reward_usd": 14782.5,
+          "meaningful": true,
+          "quality": 0.8098,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24811.26892857143,
+            24815.23107142857
+          ],
+          "first_contact_distance_points": 499.02,
+          "target_raw": 24813.25,
+          "target_executable": 24813.25,
+          "actual_target_distance_points": 501.0,
+          "reference_reward_usd": 15030.0,
+          "meaningful": true,
+          "quality": 0.8588,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            24820.0,
+            24826.0
+          ],
+          "first_contact_distance_points": 507.75,
+          "target_raw": 24823.0,
+          "target_executable": 24823.0,
+          "actual_target_distance_points": 510.75,
+          "reference_reward_usd": 15322.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24826.57857142857,
+            24829.92142857143
+          ],
+          "first_contact_distance_points": 514.33,
+          "target_raw": 24828.25,
+          "target_executable": 24828.25,
+          "actual_target_distance_points": 516.0,
+          "reference_reward_usd": 15480.0,
+          "meaningful": true,
+          "quality": 0.7572,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24833.71392857143,
+            24838.78607142857
+          ],
+          "first_contact_distance_points": 521.46,
+          "target_raw": 24836.25,
+          "target_executable": 24836.25,
+          "actual_target_distance_points": 524.0,
+          "reference_reward_usd": 15720.0,
+          "meaningful": true,
+          "quality": 0.7687,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24839.977142857144,
+            24842.522857142856
+          ],
+          "first_contact_distance_points": 527.73,
+          "target_raw": 24841.25,
+          "target_executable": 24841.25,
+          "actual_target_distance_points": 529.0,
+          "reference_reward_usd": 15870.0,
+          "meaningful": true,
+          "quality": 0.6616,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24846.948214285716,
+            24849.551785714284
+          ],
+          "first_contact_distance_points": 534.7,
+          "target_raw": 24848.25,
+          "target_executable": 24848.25,
+          "actual_target_distance_points": 536.0,
+          "reference_reward_usd": 16080.0,
+          "meaningful": true,
+          "quality": 0.626,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24851.85785714286,
+            24854.14214285714
+          ],
+          "first_contact_distance_points": 539.61,
+          "target_raw": 24853.0,
+          "target_executable": 24853.0,
+          "actual_target_distance_points": 540.75,
+          "reference_reward_usd": 16222.5,
+          "meaningful": true,
+          "quality": 0.8447,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24858.095714285715,
+            24865.904285714285
+          ],
+          "first_contact_distance_points": 545.85,
+          "target_raw": 24862.0,
+          "target_executable": 24862.0,
+          "actual_target_distance_points": 549.75,
+          "reference_reward_usd": 16492.5,
+          "meaningful": true,
+          "quality": 0.754,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24880.335714285713,
+            24941.664285714287
+          ],
+          "first_contact_distance_points": 568.09,
+          "target_raw": 24911.0,
+          "target_executable": 24911.0,
+          "actual_target_distance_points": 598.75,
+          "reference_reward_usd": 17962.5,
+          "meaningful": false,
+          "quality": 0.5659,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24889.3525,
+            24893.1475
+          ],
+          "first_contact_distance_points": 577.1,
+          "target_raw": 24891.25,
+          "target_executable": 24891.25,
+          "actual_target_distance_points": 579.0,
+          "reference_reward_usd": 17370.0,
+          "meaningful": true,
+          "quality": 0.7792,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24899.47142857143,
+            24903.02857142857
+          ],
+          "first_contact_distance_points": 587.22,
+          "target_raw": 24901.25,
+          "target_executable": 24901.25,
+          "actual_target_distance_points": 589.0,
+          "reference_reward_usd": 17670.0,
+          "meaningful": true,
+          "quality": 0.7228,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24905.385357142855,
+            24911.614642857145
+          ],
+          "first_contact_distance_points": 593.14,
+          "target_raw": 24908.5,
+          "target_executable": 24908.5,
+          "actual_target_distance_points": 596.25,
+          "reference_reward_usd": 17887.5,
+          "meaningful": true,
+          "quality": 0.7004,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24913.805714285714,
+            24919.694285714286
+          ],
+          "first_contact_distance_points": 601.56,
+          "target_raw": 24916.75,
+          "target_executable": 24916.75,
+          "actual_target_distance_points": 604.5,
+          "reference_reward_usd": 18135.0,
+          "meaningful": true,
+          "quality": 0.7849,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24920.368749999998,
+            24956.131250000002
+          ],
+          "first_contact_distance_points": 608.12,
+          "target_raw": 24938.25,
+          "target_executable": 24938.25,
+          "actual_target_distance_points": 626.0,
+          "reference_reward_usd": 18780.0,
+          "meaningful": false,
+          "quality": 0.5366,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24959.147142857142,
+            24965.352857142858
+          ],
+          "first_contact_distance_points": 646.9,
+          "target_raw": 24962.25,
+          "target_executable": 24962.25,
+          "actual_target_distance_points": 650.0,
+          "reference_reward_usd": 19500.0,
+          "meaningful": true,
+          "quality": 0.8087,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24970.222857142857,
+            24975.777142857143
+          ],
+          "first_contact_distance_points": 657.97,
+          "target_raw": 24973.0,
+          "target_executable": 24973.0,
+          "actual_target_distance_points": 660.75,
+          "reference_reward_usd": 19822.5,
+          "meaningful": true,
+          "quality": 0.7861,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24977.346071428572,
+            24982.653928571428
+          ],
+          "first_contact_distance_points": 665.1,
+          "target_raw": 24980.0,
+          "target_executable": 24980.0,
+          "actual_target_distance_points": 667.75,
+          "reference_reward_usd": 20032.5,
+          "meaningful": true,
+          "quality": 0.868,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24982.53125,
+            25002.51875
+          ],
+          "first_contact_distance_points": 670.28,
+          "target_raw": 24992.53,
+          "target_executable": 24992.5,
+          "actual_target_distance_points": 680.25,
+          "reference_reward_usd": 20407.5,
+          "meaningful": true,
+          "quality": 0.6301,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24986.380357142858,
+            24990.119642857142
+          ],
+          "first_contact_distance_points": 674.13,
+          "target_raw": 24988.25,
+          "target_executable": 24988.25,
+          "actual_target_distance_points": 676.0,
+          "reference_reward_usd": 20280.0,
+          "meaningful": true,
+          "quality": 0.708,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24990.589642857143,
+            24992.910357142857
+          ],
+          "first_contact_distance_points": 678.34,
+          "target_raw": 24991.75,
+          "target_executable": 24991.75,
+          "actual_target_distance_points": 679.5,
+          "reference_reward_usd": 20385.0,
+          "meaningful": true,
+          "quality": 0.6413,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24995.46107142857,
+            25002.53892857143
+          ],
+          "first_contact_distance_points": 683.21,
+          "target_raw": 24999.0,
+          "target_executable": 24999.0,
+          "actual_target_distance_points": 686.75,
+          "reference_reward_usd": 20602.5,
+          "meaningful": true,
+          "quality": 0.7759,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25016.397321428572,
+            25019.602678571428
+          ],
+          "first_contact_distance_points": 704.15,
+          "target_raw": 25018.0,
+          "target_executable": 25018.0,
+          "actual_target_distance_points": 705.75,
+          "reference_reward_usd": 21172.5,
+          "meaningful": true,
+          "quality": 0.663,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25016.437142857143,
+            25018.562857142857
+          ],
+          "first_contact_distance_points": 704.19,
+          "target_raw": 25017.5,
+          "target_executable": 25017.5,
+          "actual_target_distance_points": 705.25,
+          "reference_reward_usd": 21157.5,
+          "meaningful": true,
+          "quality": 0.7143,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25028.75,
+            25030.0
+          ],
+          "first_contact_distance_points": 716.5,
+          "target_raw": 25029.38,
+          "target_executable": 25029.25,
+          "actual_target_distance_points": 717.0,
+          "reference_reward_usd": 21510.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25029.72,
+            25035.78
+          ],
+          "first_contact_distance_points": 717.47,
+          "target_raw": 25032.75,
+          "target_executable": 25032.75,
+          "actual_target_distance_points": 720.5,
+          "reference_reward_usd": 21615.0,
+          "meaningful": true,
+          "quality": 0.9471,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25050.75,
+            25111.0
+          ],
+          "first_contact_distance_points": 738.5,
+          "target_raw": 25080.88,
+          "target_executable": 25080.75,
+          "actual_target_distance_points": 768.5,
+          "reference_reward_usd": 23055.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25059.371785714287,
+            25061.628214285713
+          ],
+          "first_contact_distance_points": 747.12,
+          "target_raw": 25060.5,
+          "target_executable": 25060.5,
+          "actual_target_distance_points": 748.25,
+          "reference_reward_usd": 22447.5,
+          "meaningful": true,
+          "quality": 0.8021,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25077.86160714286,
+            25085.63839285714
+          ],
+          "first_contact_distance_points": 765.61,
+          "target_raw": 25081.75,
+          "target_executable": 25081.75,
+          "actual_target_distance_points": 769.5,
+          "reference_reward_usd": 23085.0,
+          "meaningful": true,
+          "quality": 0.8577,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25090.395535714284,
+            25094.204464285714
+          ],
+          "first_contact_distance_points": 778.15,
+          "target_raw": 25092.3,
+          "target_executable": 25092.25,
+          "actual_target_distance_points": 780.0,
+          "reference_reward_usd": 23400.0,
+          "meaningful": true,
+          "quality": 0.8156,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25117.162857142856,
+            25128.837142857144
+          ],
+          "first_contact_distance_points": 804.91,
+          "target_raw": 25123.0,
+          "target_executable": 25123.0,
+          "actual_target_distance_points": 810.75,
+          "reference_reward_usd": 24322.5,
+          "meaningful": true,
+          "quality": 0.8129,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            25129.3375,
+            25131.48169642857
+          ],
+          "first_contact_distance_points": 816.77,
+          "target_raw": 25130.41,
+          "target_executable": 25130.25,
+          "actual_target_distance_points": 818.0,
+          "reference_reward_usd": 24540.0,
+          "meaningful": true,
+          "quality": 0.7948,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25139.376785714285,
+            25144.623214285715
+          ],
+          "first_contact_distance_points": 827.13,
+          "target_raw": 25142.0,
+          "target_executable": 25142.0,
+          "actual_target_distance_points": 829.75,
+          "reference_reward_usd": 24892.5,
+          "meaningful": true,
+          "quality": 0.6774,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25145.75044642857,
+            25149.24955357143
+          ],
+          "first_contact_distance_points": 833.5,
+          "target_raw": 25147.5,
+          "target_executable": 25147.5,
+          "actual_target_distance_points": 835.25,
+          "reference_reward_usd": 25057.5,
+          "meaningful": true,
+          "quality": 0.8173,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25171.716964285715,
+            25189.533035714285
+          ],
+          "first_contact_distance_points": 859.47,
+          "target_raw": 25180.62,
+          "target_executable": 25180.5,
+          "actual_target_distance_points": 868.25,
+          "reference_reward_usd": 26047.5,
+          "meaningful": true,
+          "quality": 0.7059,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25176.050714285713,
+            25183.949285714287
+          ],
+          "first_contact_distance_points": 863.8,
+          "target_raw": 25180.0,
+          "target_executable": 25180.0,
+          "actual_target_distance_points": 867.75,
+          "reference_reward_usd": 26032.5,
+          "meaningful": true,
+          "quality": 0.8234,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            25207.479464285716,
+            25212.400714285715
+          ],
+          "first_contact_distance_points": 891.85,
+          "target_raw": 25209.94,
+          "target_executable": 25209.75,
+          "actual_target_distance_points": 897.5,
+          "reference_reward_usd": 26925.0,
+          "meaningful": true,
+          "quality": 0.7227,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25265.5,
+            25340.0
+          ],
+          "first_contact_distance_points": 953.25,
+          "target_raw": 25302.75,
+          "target_executable": 25302.75,
+          "actual_target_distance_points": 990.5,
+          "reference_reward_usd": 29715.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25342.0,
+            25366.75
+          ],
+          "first_contact_distance_points": 1029.75,
+          "target_raw": 25354.38,
+          "target_executable": 25354.25,
+          "actual_target_distance_points": 1042.0,
+          "reference_reward_usd": 31260.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25390.949285714287,
+            25393.550714285713
+          ],
+          "first_contact_distance_points": 1078.7,
+          "target_raw": 25392.25,
+          "target_executable": 25392.25,
+          "actual_target_distance_points": 1080.0,
+          "reference_reward_usd": 32400.0,
+          "meaningful": true,
+          "quality": 0.6978,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25414.137142857144,
+            25416.862857142856
+          ],
+          "first_contact_distance_points": 1101.89,
+          "target_raw": 25415.5,
+          "target_executable": 25415.5,
+          "actual_target_distance_points": 1103.25,
+          "reference_reward_usd": 33097.5,
+          "meaningful": true,
+          "quality": 0.8546,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25420.0,
+            25435.0
+          ],
+          "first_contact_distance_points": 1107.75,
+          "target_raw": 25427.5,
+          "target_executable": 25427.5,
+          "actual_target_distance_points": 1115.25,
+          "reference_reward_usd": 33457.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25493.366071428572,
+            25496.633928571428
+          ],
+          "first_contact_distance_points": 1181.12,
+          "target_raw": 25495.0,
+          "target_executable": 25495.0,
+          "actual_target_distance_points": 1182.75,
+          "reference_reward_usd": 35482.5,
+          "meaningful": true,
+          "quality": 0.7131,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25534.25,
+            25535.0
+          ],
+          "first_contact_distance_points": 1222.0,
+          "target_raw": 25534.62,
+          "target_executable": 25534.5,
+          "actual_target_distance_points": 1222.25,
+          "reference_reward_usd": 36667.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25647.25,
+            25721.75
+          ],
+          "first_contact_distance_points": 1335.0,
+          "target_raw": 25684.5,
+          "target_executable": 25684.5,
+          "actual_target_distance_points": 1372.25,
+          "reference_reward_usd": 41167.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25811.5,
+            25926.75
+          ],
+          "first_contact_distance_points": 1499.25,
+          "target_raw": 25869.12,
+          "target_executable": 25869.0,
+          "actual_target_distance_points": 1556.75,
+          "reference_reward_usd": 46702.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25952.5,
+            25953.25
+          ],
+          "first_contact_distance_points": 1640.25,
+          "target_raw": 25952.88,
+          "target_executable": 25952.75,
+          "actual_target_distance_points": 1640.5,
+          "reference_reward_usd": 49215.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25957.25,
+            25961.5
+          ],
+          "first_contact_distance_points": 1645.0,
+          "target_raw": 25959.38,
+          "target_executable": 25959.25,
+          "actual_target_distance_points": 1647.0,
+          "reference_reward_usd": 49410.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        }
+      ],
+      "P_destination_count": 81,
+      "P_chosen": {
+        "target_executable": 24358.0,
+        "distance_points": 45.75,
+        "reference_reward_usd": 1372.5,
+        "band": [
+          24343.953571428574,
+          24372.09642857143
+        ],
+        "source_map": "WICK_ZONE",
+        "kind": "KEY_ZONE_15M",
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+      },
+      "P_refusal": null,
+      "P_chosen_distance_points": 45.75,
+      "G_his_tp_inside_a_15m_key_zone": [
+        {
+          "id": "SWING:S:2026-03-09T15:45:00-04:00:98563",
+          "band": [
+            24637.246428571427,
+            24644.253571428573
+          ],
+          "source": "STRONG_SWING_DISPLACEMENT"
+        }
+      ],
+      "G_his_tp_inside_a_considered_destination": [
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24627.84642857143,
+            24660.35357142857
+          ],
+          "first_contact_distance_points": 315.6,
+          "target_raw": 24644.1,
+          "target_executable": 24644.0,
+          "actual_target_distance_points": 331.75,
+          "reference_reward_usd": 9952.5,
+          "meaningful": true,
+          "quality": 0.6588,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24637.246428571427,
+            24644.253571428573
+          ],
+          "first_contact_distance_points": 325.0,
+          "target_raw": 24640.75,
+          "target_executable": 24640.75,
+          "actual_target_distance_points": 328.5,
+          "reference_reward_usd": 9855.0,
+          "meaningful": true,
+          "quality": 0.7898,
+          "passes_the_400_floor": true
+        }
+      ],
+      "how_many_considered_pass_the_400_floor": 81,
+      "G_gap_from_his_tp_to_nearest_considered_points": 0.0,
+      "G_nearest_considered_band": [
+        24627.84642857143,
+        24660.35357142857
+      ],
+      "P_chosen_is_a_key_zone": true,
+      "ALGO_067_verdict": "PREDICATE_MISSPECIFIED"
+    },
+    {
+      "session": "2026-03-30",
+      "is_control": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_SHORT",
+      "his_entry_clock": "2026-03-30 09:41:00-04:00",
+      "his_entry_price_1m_open": 23388.25,
+      "his_marked_tp": {
+        "lo": 23355.25,
+        "hi": 23355.25,
+        "planned_direction": "BEARISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-30T09:41:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "his_marked_tp_side": "short",
+      "his_marked_tp_status": "MARKED",
+      "his_marked_tp_distance_points": 33.0,
+      "T_taught_rule": "ALGO-051, operator verbatim: '...momentum candle breakout and i jumped in and TARGETED THE NEXT KEY ZONE' - the target re-anchors to the NEXT key zone (22784.25; 32 pts x $30/pt at the 15-MNQ reference size). ALGO-052 measures the same shape: target 21932.25, 'the UPPER KEY ZONE BAND', 110 pts x $30 = $3300, 're-anchored at the opposite key zone'. THE TAUGHT TARGET IS A KEY ZONE BAND.",
+      "T_machine_rule": "targets.py equation 1: 'The first MEANINGFUL reaction area by physical near edge owns the room/blocker question', closed by 'No farther feature may leapfrog a nearer meaningful reaction area for prettier PnL.' Its universe is KEY_ZONE_15M + LIQUIDITY_CLUSTER + FVG_15M + refined 5m clusters. The $400 floor is a LATER layer applied after selection.",
+      "P_destinations_considered": [
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23372.725892857143,
+            23374.774107142857
+          ],
+          "first_contact_distance_points": 13.48,
+          "target_raw": 23373.75,
+          "target_executable": 23373.75,
+          "actual_target_distance_points": 14.5,
+          "reference_reward_usd": 435.0,
+          "meaningful": true,
+          "quality": 0.8692,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23359.591964285715,
+            23365.158035714285
+          ],
+          "first_contact_distance_points": 23.09,
+          "target_raw": 23362.38,
+          "target_executable": 23362.5,
+          "actual_target_distance_points": 25.75,
+          "reference_reward_usd": 772.5,
+          "meaningful": true,
+          "quality": 0.6562,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            23320.907142857144,
+            23328.342857142856
+          ],
+          "first_contact_distance_points": 58.83,
+          "target_raw": 23324.62,
+          "target_executable": 23324.75,
+          "actual_target_distance_points": 63.5,
+          "reference_reward_usd": 1905.0,
+          "meaningful": true,
+          "quality": 0.7054,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            23300.0,
+            23301.5
+          ],
+          "first_contact_distance_points": 86.75,
+          "target_raw": 23300.75,
+          "target_executable": 23300.75,
+          "actual_target_distance_points": 87.5,
+          "reference_reward_usd": 2625.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            23243.25,
+            23250.75
+          ],
+          "first_contact_distance_points": 137.5,
+          "target_raw": 23247.0,
+          "target_executable": 23247.0,
+          "actual_target_distance_points": 141.25,
+          "reference_reward_usd": 4237.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            23230.25,
+            23235.25
+          ],
+          "first_contact_distance_points": 153.0,
+          "target_raw": 23232.75,
+          "target_executable": 23232.75,
+          "actual_target_distance_points": 155.5,
+          "reference_reward_usd": 4665.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23185.18125,
+            23193.56875
+          ],
+          "first_contact_distance_points": 194.68,
+          "target_raw": 23189.38,
+          "target_executable": 23189.5,
+          "actual_target_distance_points": 198.75,
+          "reference_reward_usd": 5962.5,
+          "meaningful": true,
+          "quality": 0.8687,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            23174.25,
+            23192.5
+          ],
+          "first_contact_distance_points": 195.75,
+          "target_raw": 23183.38,
+          "target_executable": 23183.5,
+          "actual_target_distance_points": 204.75,
+          "reference_reward_usd": 6142.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            23130.9625,
+            23135.542857142857
+          ],
+          "first_contact_distance_points": 251.21,
+          "target_raw": 23133.25,
+          "target_executable": 23133.5,
+          "actual_target_distance_points": 254.75,
+          "reference_reward_usd": 7642.5,
+          "meaningful": true,
+          "quality": 0.7472,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            23090.319285714286,
+            23097.180714285714
+          ],
+          "first_contact_distance_points": 291.07,
+          "target_raw": 23093.75,
+          "target_executable": 23093.75,
+          "actual_target_distance_points": 294.5,
+          "reference_reward_usd": 8835.0,
+          "meaningful": true,
+          "quality": 0.8518,
+          "passes_the_400_floor": true
+        }
+      ],
+      "P_destination_count": 10,
+      "P_chosen": {
+        "target_executable": 23373.75,
+        "distance_points": 14.5,
+        "reference_reward_usd": 435.0,
+        "band": [
+          23372.725892857143,
+          23374.774107142857
+        ],
+        "source_map": "WICK_ZONE",
+        "kind": "LIQUIDITY_CLUSTER",
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+      },
+      "P_refusal": null,
+      "P_chosen_distance_points": 14.5,
+      "G_his_tp_inside_a_15m_key_zone": [],
+      "G_his_tp_inside_a_considered_destination": [],
+      "how_many_considered_pass_the_400_floor": 10,
+      "G_gap_from_his_tp_to_nearest_considered_points": 4.34,
+      "G_nearest_considered_band": [
+        23359.591964285715,
+        23365.158035714285
+      ],
+      "P_chosen_is_a_key_zone": false,
+      "ALGO_067_verdict": "TARGET_NOT_IN_MAP"
+    },
+    {
+      "session": "2026-03-31",
+      "is_control": false,
+      "arm": "taught_0800",
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-03-31 09:49:00-04:00",
+      "his_entry_price_1m_open": 23483.5,
+      "his_marked_tp": {
+        "lo": 23540.75,
+        "hi": 23540.75,
+        "planned_direction": "BULLISH",
+        "source_method": "TRADER_REACTION_CLUSTER_EXACT_LEVEL",
+        "marked_time": "2026-03-31T09:35:00-04:00",
+        "marked_main_timeframe": "5m"
+      },
+      "his_marked_tp_side": "long",
+      "his_marked_tp_status": "MARKED",
+      "his_marked_tp_distance_points": 57.25,
+      "T_taught_rule": "ALGO-051, operator verbatim: '...momentum candle breakout and i jumped in and TARGETED THE NEXT KEY ZONE' - the target re-anchors to the NEXT key zone (22784.25; 32 pts x $30/pt at the 15-MNQ reference size). ALGO-052 measures the same shape: target 21932.25, 'the UPPER KEY ZONE BAND', 110 pts x $30 = $3300, 're-anchored at the opposite key zone'. THE TAUGHT TARGET IS A KEY ZONE BAND.",
+      "T_machine_rule": "targets.py equation 1: 'The first MEANINGFUL reaction area by physical near edge owns the room/blocker question', closed by 'No farther feature may leapfrog a nearer meaningful reaction area for prettier PnL.' Its universe is KEY_ZONE_15M + LIQUIDITY_CLUSTER + FVG_15M + refined 5m clusters. The $400 floor is a LATER layer applied after selection.",
+      "P_destinations_considered": [
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            23521.57857142857,
+            23529.92142857143
+          ],
+          "first_contact_distance_points": 37.43,
+          "target_raw": 23525.75,
+          "target_executable": 23525.75,
+          "actual_target_distance_points": 42.25,
+          "reference_reward_usd": 1267.5,
+          "meaningful": true,
+          "quality": 0.8567,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23551.579910714285,
+            23561.420089285715
+          ],
+          "first_contact_distance_points": 68.08,
+          "target_raw": 23556.5,
+          "target_executable": 23556.5,
+          "actual_target_distance_points": 73.0,
+          "reference_reward_usd": 2190.0,
+          "meaningful": true,
+          "quality": 0.6111,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23575.516517857144,
+            23581.983482142856
+          ],
+          "first_contact_distance_points": 92.02,
+          "target_raw": 23578.75,
+          "target_executable": 23578.75,
+          "actual_target_distance_points": 95.25,
+          "reference_reward_usd": 2857.5,
+          "meaningful": true,
+          "quality": 0.8604,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            23577.522857142856,
+            23582.477142857144
+          ],
+          "first_contact_distance_points": 94.02,
+          "target_raw": 23580.0,
+          "target_executable": 23580.0,
+          "actual_target_distance_points": 96.5,
+          "reference_reward_usd": 2895.0,
+          "meaningful": true,
+          "quality": 0.8434,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23608.447767857142,
+            23611.302232142858
+          ],
+          "first_contact_distance_points": 124.95,
+          "target_raw": 23609.88,
+          "target_executable": 23609.75,
+          "actual_target_distance_points": 126.25,
+          "reference_reward_usd": 3787.5,
+          "meaningful": true,
+          "quality": 0.7227,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            23691.75,
+            23721.75
+          ],
+          "first_contact_distance_points": 208.25,
+          "target_raw": 23706.75,
+          "target_executable": 23706.75,
+          "actual_target_distance_points": 223.25,
+          "reference_reward_usd": 6697.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            23767.5,
+            23770.0
+          ],
+          "first_contact_distance_points": 284.0,
+          "target_raw": 23768.75,
+          "target_executable": 23768.75,
+          "actual_target_distance_points": 285.25,
+          "reference_reward_usd": 8557.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            23812.15223214286,
+            23819.404642857142
+          ],
+          "first_contact_distance_points": 328.6,
+          "target_raw": 23815.78,
+          "target_executable": 23815.75,
+          "actual_target_distance_points": 332.25,
+          "reference_reward_usd": 9967.5,
+          "meaningful": true,
+          "quality": 0.8009,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            23838.926339285714,
+            23847.116964285713
+          ],
+          "first_contact_distance_points": 353.38,
+          "target_raw": 23843.02,
+          "target_executable": 23843.0,
+          "actual_target_distance_points": 359.5,
+          "reference_reward_usd": 10785.0,
+          "meaningful": true,
+          "quality": 0.6562,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23873.552232142858,
+            23880.447767857142
+          ],
+          "first_contact_distance_points": 390.05,
+          "target_raw": 23877.0,
+          "target_executable": 23877.0,
+          "actual_target_distance_points": 393.5,
+          "reference_reward_usd": 11805.0,
+          "meaningful": true,
+          "quality": 0.7387,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            23885.573214285712,
+            23891.987946428573
+          ],
+          "first_contact_distance_points": 400.51,
+          "target_raw": 23888.78,
+          "target_executable": 23888.75,
+          "actual_target_distance_points": 405.25,
+          "reference_reward_usd": 12157.5,
+          "meaningful": true,
+          "quality": 0.7422,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23893.464285714286,
+            23900.785714285714
+          ],
+          "first_contact_distance_points": 409.96,
+          "target_raw": 23897.12,
+          "target_executable": 23897.0,
+          "actual_target_distance_points": 413.5,
+          "reference_reward_usd": 12405.0,
+          "meaningful": true,
+          "quality": 0.8075,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23896.762053571427,
+            23903.237946428573
+          ],
+          "first_contact_distance_points": 413.26,
+          "target_raw": 23900.0,
+          "target_executable": 23900.0,
+          "actual_target_distance_points": 416.5,
+          "reference_reward_usd": 12495.0,
+          "meaningful": true,
+          "quality": 0.6365,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            23897.7025,
+            23901.7975
+          ],
+          "first_contact_distance_points": 414.2,
+          "target_raw": 23899.75,
+          "target_executable": 23899.75,
+          "actual_target_distance_points": 416.25,
+          "reference_reward_usd": 12487.5,
+          "meaningful": true,
+          "quality": 0.8201,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            23907.0,
+            23915.75
+          ],
+          "first_contact_distance_points": 423.5,
+          "target_raw": 23911.38,
+          "target_executable": 23911.25,
+          "actual_target_distance_points": 427.75,
+          "reference_reward_usd": 12832.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            23922.0,
+            23932.75
+          ],
+          "first_contact_distance_points": 438.5,
+          "target_raw": 23927.38,
+          "target_executable": 23927.25,
+          "actual_target_distance_points": 443.75,
+          "reference_reward_usd": 13312.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23924.228125,
+            23931.021875
+          ],
+          "first_contact_distance_points": 440.73,
+          "target_raw": 23927.62,
+          "target_executable": 23927.5,
+          "actual_target_distance_points": 444.0,
+          "reference_reward_usd": 13320.0,
+          "meaningful": true,
+          "quality": 0.7931,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23930.73482142857,
+            23939.01517857143
+          ],
+          "first_contact_distance_points": 447.23,
+          "target_raw": 23934.88,
+          "target_executable": 23934.75,
+          "actual_target_distance_points": 451.25,
+          "reference_reward_usd": 13537.5,
+          "meaningful": true,
+          "quality": 0.818,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            23953.40892857143,
+            23956.59107142857
+          ],
+          "first_contact_distance_points": 469.91,
+          "target_raw": 23955.0,
+          "target_executable": 23955.0,
+          "actual_target_distance_points": 471.5,
+          "reference_reward_usd": 14145.0,
+          "meaningful": true,
+          "quality": 0.661,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            23966.178125,
+            23973.571875
+          ],
+          "first_contact_distance_points": 482.68,
+          "target_raw": 23969.88,
+          "target_executable": 23969.75,
+          "actual_target_distance_points": 486.25,
+          "reference_reward_usd": 14587.5,
+          "meaningful": true,
+          "quality": 0.7376,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            23967.168214285713,
+            23974.331785714287
+          ],
+          "first_contact_distance_points": 483.67,
+          "target_raw": 23970.75,
+          "target_executable": 23970.75,
+          "actual_target_distance_points": 487.25,
+          "reference_reward_usd": 14617.5,
+          "meaningful": true,
+          "quality": 0.8379,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24001.748214285715,
+            24005.251785714285
+          ],
+          "first_contact_distance_points": 518.25,
+          "target_raw": 24003.5,
+          "target_executable": 24003.5,
+          "actual_target_distance_points": 520.0,
+          "reference_reward_usd": 15600.0,
+          "meaningful": true,
+          "quality": 0.6231,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24016.81517857143,
+            24027.694642857143
+          ],
+          "first_contact_distance_points": 531.81,
+          "target_raw": 24022.25,
+          "target_executable": 24022.25,
+          "actual_target_distance_points": 538.75,
+          "reference_reward_usd": 16162.5,
+          "meaningful": true,
+          "quality": 0.6763,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24020.66642857143,
+            24028.33357142857
+          ],
+          "first_contact_distance_points": 537.17,
+          "target_raw": 24024.5,
+          "target_executable": 24024.5,
+          "actual_target_distance_points": 541.0,
+          "reference_reward_usd": 16230.0,
+          "meaningful": true,
+          "quality": 0.7951,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24087.069642857143,
+            24088.702142857142
+          ],
+          "first_contact_distance_points": 599.8,
+          "target_raw": 24087.89,
+          "target_executable": 24087.75,
+          "actual_target_distance_points": 604.25,
+          "reference_reward_usd": 18127.5,
+          "meaningful": true,
+          "quality": 0.7197,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24115.042410714286,
+            24120.457589285714
+          ],
+          "first_contact_distance_points": 631.54,
+          "target_raw": 24117.75,
+          "target_executable": 24117.75,
+          "actual_target_distance_points": 634.25,
+          "reference_reward_usd": 19027.5,
+          "meaningful": true,
+          "quality": 0.9243,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24126.570535714287,
+            24137.6
+          ],
+          "first_contact_distance_points": 640.9,
+          "target_raw": 24132.09,
+          "target_executable": 24132.0,
+          "actual_target_distance_points": 648.5,
+          "reference_reward_usd": 19455.0,
+          "meaningful": true,
+          "quality": 0.8267,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            24141.0,
+            24170.0
+          ],
+          "first_contact_distance_points": 657.5,
+          "target_raw": 24155.5,
+          "target_executable": 24155.5,
+          "actual_target_distance_points": 672.0,
+          "reference_reward_usd": 20160.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24185.14857142857,
+            24193.35142857143
+          ],
+          "first_contact_distance_points": 701.65,
+          "target_raw": 24189.25,
+          "target_executable": 24189.25,
+          "actual_target_distance_points": 705.75,
+          "reference_reward_usd": 21172.5,
+          "meaningful": true,
+          "quality": 0.8366,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24200.969642857144,
+            24208.780357142856
+          ],
+          "first_contact_distance_points": 716.5,
+          "target_raw": 24204.88,
+          "target_executable": 24204.75,
+          "actual_target_distance_points": 721.25,
+          "reference_reward_usd": 21637.5,
+          "meaningful": true,
+          "quality": 0.8297,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24220.250892857144,
+            24228.999107142856
+          ],
+          "first_contact_distance_points": 736.75,
+          "target_raw": 24224.62,
+          "target_executable": 24224.5,
+          "actual_target_distance_points": 741.0,
+          "reference_reward_usd": 22230.0,
+          "meaningful": true,
+          "quality": 0.8826,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24226.319642857143,
+            24235.23035714286
+          ],
+          "first_contact_distance_points": 742.82,
+          "target_raw": 24230.78,
+          "target_executable": 24230.75,
+          "actual_target_distance_points": 747.25,
+          "reference_reward_usd": 22417.5,
+          "meaningful": true,
+          "quality": 0.7625,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24237.16919642857,
+            24243.33080357143
+          ],
+          "first_contact_distance_points": 753.67,
+          "target_raw": 24240.25,
+          "target_executable": 24240.25,
+          "actual_target_distance_points": 756.75,
+          "reference_reward_usd": 22702.5,
+          "meaningful": true,
+          "quality": 0.7222,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24238.345357142858,
+            24244.154642857142
+          ],
+          "first_contact_distance_points": 754.85,
+          "target_raw": 24241.25,
+          "target_executable": 24241.25,
+          "actual_target_distance_points": 757.75,
+          "reference_reward_usd": 22732.5,
+          "meaningful": true,
+          "quality": 0.68,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24271.26785714286,
+            24283.48214285714
+          ],
+          "first_contact_distance_points": 787.77,
+          "target_raw": 24277.38,
+          "target_executable": 24277.25,
+          "actual_target_distance_points": 793.75,
+          "reference_reward_usd": 23812.5,
+          "meaningful": true,
+          "quality": 0.6274,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24283.116964285713,
+            24299.492857142857
+          ],
+          "first_contact_distance_points": 797.26,
+          "target_raw": 24291.3,
+          "target_executable": 24291.25,
+          "actual_target_distance_points": 807.75,
+          "reference_reward_usd": 24232.5,
+          "meaningful": true,
+          "quality": 0.8593,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24288.65580357143,
+            24297.00982142857
+          ],
+          "first_contact_distance_points": 802.74,
+          "target_raw": 24292.83,
+          "target_executable": 24292.75,
+          "actual_target_distance_points": 809.25,
+          "reference_reward_usd": 24277.5,
+          "meaningful": true,
+          "quality": 0.6928,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24305.816964285714,
+            24318.683035714286
+          ],
+          "first_contact_distance_points": 821.17,
+          "target_raw": 24312.25,
+          "target_executable": 24312.25,
+          "actual_target_distance_points": 828.75,
+          "reference_reward_usd": 24862.5,
+          "meaningful": true,
+          "quality": 0.7362,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24340.31830357143,
+            24347.93169642857
+          ],
+          "first_contact_distance_points": 856.22,
+          "target_raw": 24344.12,
+          "target_executable": 24344.0,
+          "actual_target_distance_points": 860.5,
+          "reference_reward_usd": 25815.0,
+          "meaningful": true,
+          "quality": 0.8121,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            24372.25,
+            24375.0
+          ],
+          "first_contact_distance_points": 888.75,
+          "target_raw": 24373.62,
+          "target_executable": 24373.5,
+          "actual_target_distance_points": 890.0,
+          "reference_reward_usd": 26700.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24372.415178571428,
+            24394.584821428572
+          ],
+          "first_contact_distance_points": 888.92,
+          "target_raw": 24383.5,
+          "target_executable": 24383.5,
+          "actual_target_distance_points": 900.0,
+          "reference_reward_usd": 27000.0,
+          "meaningful": false,
+          "quality": 0.6092,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24375.904464285715,
+            24396.095535714285
+          ],
+          "first_contact_distance_points": 892.4,
+          "target_raw": 24386.0,
+          "target_executable": 24386.0,
+          "actual_target_distance_points": 902.5,
+          "reference_reward_usd": 27075.0,
+          "meaningful": true,
+          "quality": 0.7955,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24415.709821428572,
+            24431.840178571427
+          ],
+          "first_contact_distance_points": 924.43,
+          "target_raw": 24423.78,
+          "target_executable": 24423.75,
+          "actual_target_distance_points": 940.25,
+          "reference_reward_usd": 28207.5,
+          "meaningful": true,
+          "quality": 0.8245,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24456.208035714284,
+            24513.991964285717
+          ],
+          "first_contact_distance_points": 972.71,
+          "target_raw": 24485.1,
+          "target_executable": 24485.0,
+          "actual_target_distance_points": 1001.5,
+          "reference_reward_usd": 30045.0,
+          "meaningful": false,
+          "quality": 0.5273,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24481.303571428572,
+            24484.196428571428
+          ],
+          "first_contact_distance_points": 997.8,
+          "target_raw": 24482.75,
+          "target_executable": 24482.75,
+          "actual_target_distance_points": 999.25,
+          "reference_reward_usd": 29977.5,
+          "meaningful": true,
+          "quality": 0.8966,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24490.125892857144,
+            24493.374107142856
+          ],
+          "first_contact_distance_points": 1005.67,
+          "target_raw": 24491.75,
+          "target_executable": 24491.75,
+          "actual_target_distance_points": 1008.25,
+          "reference_reward_usd": 30247.5,
+          "meaningful": true,
+          "quality": 0.8072,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24505.728125,
+            24510.521875
+          ],
+          "first_contact_distance_points": 1022.23,
+          "target_raw": 24508.12,
+          "target_executable": 24508.0,
+          "actual_target_distance_points": 1024.5,
+          "reference_reward_usd": 30735.0,
+          "meaningful": true,
+          "quality": 0.6368,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24534.34375,
+            24544.570089285717
+          ],
+          "first_contact_distance_points": 1038.73,
+          "target_raw": 24539.46,
+          "target_executable": 24539.25,
+          "actual_target_distance_points": 1055.75,
+          "reference_reward_usd": 31672.5,
+          "meaningful": true,
+          "quality": 0.7909,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24559.756250000002,
+            24587.14375
+          ],
+          "first_contact_distance_points": 1076.26,
+          "target_raw": 24573.45,
+          "target_executable": 24573.25,
+          "actual_target_distance_points": 1089.75,
+          "reference_reward_usd": 32692.5,
+          "meaningful": true,
+          "quality": 0.5967,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24626.84392857143,
+            24633.65607142857
+          ],
+          "first_contact_distance_points": 1143.34,
+          "target_raw": 24630.25,
+          "target_executable": 24630.25,
+          "actual_target_distance_points": 1146.75,
+          "reference_reward_usd": 34402.5,
+          "meaningful": true,
+          "quality": 0.9017,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24657.483035714286,
+            24660.509375
+          ],
+          "first_contact_distance_points": 1143.99,
+          "target_raw": 24659.0,
+          "target_executable": 24658.75,
+          "actual_target_distance_points": 1175.25,
+          "reference_reward_usd": 35257.5,
+          "meaningful": true,
+          "quality": 0.714,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24637.246428571427,
+            24644.253571428573
+          ],
+          "first_contact_distance_points": 1153.75,
+          "target_raw": 24640.75,
+          "target_executable": 24640.75,
+          "actual_target_distance_points": 1157.25,
+          "reference_reward_usd": 34717.5,
+          "meaningful": true,
+          "quality": 0.7704,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24657.483035714286,
+            24662.866964285713
+          ],
+          "first_contact_distance_points": 1173.29,
+          "target_raw": 24660.17,
+          "target_executable": 24660.0,
+          "actual_target_distance_points": 1176.5,
+          "reference_reward_usd": 35295.0,
+          "meaningful": true,
+          "quality": 0.8025,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24678.132142857143,
+            24680.039642857144
+          ],
+          "first_contact_distance_points": 1190.46,
+          "target_raw": 24679.09,
+          "target_executable": 24679.0,
+          "actual_target_distance_points": 1195.5,
+          "reference_reward_usd": 35865.0,
+          "meaningful": true,
+          "quality": 0.6692,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24678.132142857143,
+            24680.954464285714
+          ],
+          "first_contact_distance_points": 1191.05,
+          "target_raw": 24679.54,
+          "target_executable": 24679.5,
+          "actual_target_distance_points": 1196.0,
+          "reference_reward_usd": 35880.0,
+          "meaningful": true,
+          "quality": 0.6196,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24683.73705357143,
+            24688.01294642857
+          ],
+          "first_contact_distance_points": 1200.24,
+          "target_raw": 24685.88,
+          "target_executable": 24685.75,
+          "actual_target_distance_points": 1202.25,
+          "reference_reward_usd": 36067.5,
+          "meaningful": false,
+          "quality": 0.5646,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24694.39375,
+            24697.000892857144
+          ],
+          "first_contact_distance_points": 1200.8,
+          "target_raw": 24695.7,
+          "target_executable": 24695.5,
+          "actual_target_distance_points": 1212.0,
+          "reference_reward_usd": 36360.0,
+          "meaningful": true,
+          "quality": 0.7758,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24694.39375,
+            24698.342410714286
+          ],
+          "first_contact_distance_points": 1208.41,
+          "target_raw": 24696.37,
+          "target_executable": 24696.25,
+          "actual_target_distance_points": 1212.75,
+          "reference_reward_usd": 36382.5,
+          "meaningful": true,
+          "quality": 0.789,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24705.668749999997,
+            24714.131250000002
+          ],
+          "first_contact_distance_points": 1217.44,
+          "target_raw": 24709.9,
+          "target_executable": 24709.75,
+          "actual_target_distance_points": 1226.25,
+          "reference_reward_usd": 36787.5,
+          "meaningful": true,
+          "quality": 0.6823,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24714.28107142857,
+            24717.21892857143
+          ],
+          "first_contact_distance_points": 1230.78,
+          "target_raw": 24715.75,
+          "target_executable": 24715.75,
+          "actual_target_distance_points": 1232.25,
+          "reference_reward_usd": 36967.5,
+          "meaningful": true,
+          "quality": 0.6554,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24725.474107142858,
+            24736.525892857142
+          ],
+          "first_contact_distance_points": 1238.49,
+          "target_raw": 24731.0,
+          "target_executable": 24731.0,
+          "actual_target_distance_points": 1247.5,
+          "reference_reward_usd": 37425.0,
+          "meaningful": true,
+          "quality": 0.7137,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24727.99017857143,
+            24732.923214285714
+          ],
+          "first_contact_distance_points": 1244.08,
+          "target_raw": 24730.46,
+          "target_executable": 24730.25,
+          "actual_target_distance_points": 1246.75,
+          "reference_reward_usd": 37402.5,
+          "meaningful": true,
+          "quality": 0.8242,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24735.436785714286,
+            24738.563214285714
+          ],
+          "first_contact_distance_points": 1251.94,
+          "target_raw": 24737.0,
+          "target_executable": 24737.0,
+          "actual_target_distance_points": 1253.5,
+          "reference_reward_usd": 37605.0,
+          "meaningful": true,
+          "quality": 0.7664,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24738.93482142857,
+            24748.665178571428
+          ],
+          "first_contact_distance_points": 1254.76,
+          "target_raw": 24743.8,
+          "target_executable": 24743.75,
+          "actual_target_distance_points": 1260.25,
+          "reference_reward_usd": 37807.5,
+          "meaningful": true,
+          "quality": 0.7085,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24761.22053571429,
+            24765.398214285713
+          ],
+          "first_contact_distance_points": 1276.1,
+          "target_raw": 24763.31,
+          "target_executable": 24763.25,
+          "actual_target_distance_points": 1279.75,
+          "reference_reward_usd": 38392.5,
+          "meaningful": true,
+          "quality": 0.7661,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24767.09107142857,
+            24769.65892857143
+          ],
+          "first_contact_distance_points": 1283.59,
+          "target_raw": 24768.38,
+          "target_executable": 24768.25,
+          "actual_target_distance_points": 1284.75,
+          "reference_reward_usd": 38542.5,
+          "meaningful": true,
+          "quality": 0.7794,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24780.86875,
+            24793.98125
+          ],
+          "first_contact_distance_points": 1291.78,
+          "target_raw": 24787.43,
+          "target_executable": 24787.25,
+          "actual_target_distance_points": 1303.75,
+          "reference_reward_usd": 39112.5,
+          "meaningful": true,
+          "quality": 0.5953,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24797.524999999998,
+            24807.875
+          ],
+          "first_contact_distance_points": 1309.71,
+          "target_raw": 24802.7,
+          "target_executable": 24802.5,
+          "actual_target_distance_points": 1319.0,
+          "reference_reward_usd": 39570.0,
+          "meaningful": true,
+          "quality": 0.6819,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24797.524999999998,
+            24799.374642857143
+          ],
+          "first_contact_distance_points": 1313.13,
+          "target_raw": 24798.45,
+          "target_executable": 24798.25,
+          "actual_target_distance_points": 1314.75,
+          "reference_reward_usd": 39442.5,
+          "meaningful": true,
+          "quality": 0.8177,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24808.024107142857,
+            24808.220714285715
+          ],
+          "first_contact_distance_points": 1318.28,
+          "target_raw": 24808.12,
+          "target_executable": 24808.0,
+          "actual_target_distance_points": 1324.5,
+          "reference_reward_usd": 39735.0,
+          "meaningful": true,
+          "quality": 0.7877,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24811.26892857143,
+            24815.23107142857
+          ],
+          "first_contact_distance_points": 1327.77,
+          "target_raw": 24813.25,
+          "target_executable": 24813.25,
+          "actual_target_distance_points": 1329.75,
+          "reference_reward_usd": 39892.5,
+          "meaningful": true,
+          "quality": 0.8376,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24815.235714285714,
+            24819.514285714286
+          ],
+          "first_contact_distance_points": 1331.74,
+          "target_raw": 24817.38,
+          "target_executable": 24817.25,
+          "actual_target_distance_points": 1333.75,
+          "reference_reward_usd": 40012.5,
+          "meaningful": true,
+          "quality": 0.671,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            24820.0,
+            24826.0
+          ],
+          "first_contact_distance_points": 1336.5,
+          "target_raw": 24823.0,
+          "target_executable": 24823.0,
+          "actual_target_distance_points": 1339.5,
+          "reference_reward_usd": 40185.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24830.35,
+            24838.25
+          ],
+          "first_contact_distance_points": 1346.85,
+          "target_raw": 24834.3,
+          "target_executable": 24834.25,
+          "actual_target_distance_points": 1350.75,
+          "reference_reward_usd": 40522.5,
+          "meaningful": true,
+          "quality": 0.743,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24832.507589285717,
+            24840.692410714284
+          ],
+          "first_contact_distance_points": 1349.01,
+          "target_raw": 24836.6,
+          "target_executable": 24836.5,
+          "actual_target_distance_points": 1353.0,
+          "reference_reward_usd": 40590.0,
+          "meaningful": true,
+          "quality": 0.8277,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24833.71392857143,
+            24838.78607142857
+          ],
+          "first_contact_distance_points": 1350.21,
+          "target_raw": 24836.25,
+          "target_executable": 24836.25,
+          "actual_target_distance_points": 1352.75,
+          "reference_reward_usd": 40582.5,
+          "meaningful": true,
+          "quality": 0.7442,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24848.558035714286,
+            24859.191964285714
+          ],
+          "first_contact_distance_points": 1365.06,
+          "target_raw": 24853.88,
+          "target_executable": 24853.75,
+          "actual_target_distance_points": 1370.25,
+          "reference_reward_usd": 41107.5,
+          "meaningful": true,
+          "quality": 0.6342,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24851.85785714286,
+            24854.14214285714
+          ],
+          "first_contact_distance_points": 1368.36,
+          "target_raw": 24853.0,
+          "target_executable": 24853.0,
+          "actual_target_distance_points": 1369.5,
+          "reference_reward_usd": 41085.0,
+          "meaningful": true,
+          "quality": 0.8196,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24857.02544642857,
+            24866.274553571428
+          ],
+          "first_contact_distance_points": 1373.53,
+          "target_raw": 24861.65,
+          "target_executable": 24861.5,
+          "actual_target_distance_points": 1378.0,
+          "reference_reward_usd": 41340.0,
+          "meaningful": true,
+          "quality": 0.7058,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24858.095714285715,
+            24865.904285714285
+          ],
+          "first_contact_distance_points": 1374.6,
+          "target_raw": 24862.0,
+          "target_executable": 24862.0,
+          "actual_target_distance_points": 1378.5,
+          "reference_reward_usd": 41355.0,
+          "meaningful": true,
+          "quality": 0.7408,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24876.222767857143,
+            24909.727232142857
+          ],
+          "first_contact_distance_points": 1392.72,
+          "target_raw": 24892.97,
+          "target_executable": 24892.75,
+          "actual_target_distance_points": 1409.25,
+          "reference_reward_usd": 42277.5,
+          "meaningful": false,
+          "quality": 0.5301,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24891.620535714286,
+            24893.1475
+          ],
+          "first_contact_distance_points": 1405.85,
+          "target_raw": 24892.38,
+          "target_executable": 24892.25,
+          "actual_target_distance_points": 1408.75,
+          "reference_reward_usd": 42262.5,
+          "meaningful": true,
+          "quality": 0.767,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24898.45625,
+            24929.643750000003
+          ],
+          "first_contact_distance_points": 1414.96,
+          "target_raw": 24914.05,
+          "target_executable": 24914.0,
+          "actual_target_distance_points": 1430.5,
+          "reference_reward_usd": 42915.0,
+          "meaningful": true,
+          "quality": 0.6517,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24899.47142857143,
+            24903.02857142857
+          ],
+          "first_contact_distance_points": 1415.97,
+          "target_raw": 24901.25,
+          "target_executable": 24901.25,
+          "actual_target_distance_points": 1417.75,
+          "reference_reward_usd": 42532.5,
+          "meaningful": true,
+          "quality": 0.7105,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24905.385357142855,
+            24911.614642857145
+          ],
+          "first_contact_distance_points": 1421.89,
+          "target_raw": 24908.5,
+          "target_executable": 24908.5,
+          "actual_target_distance_points": 1425.0,
+          "reference_reward_usd": 42750.0,
+          "meaningful": true,
+          "quality": 0.6798,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24913.805714285714,
+            24919.694285714286
+          ],
+          "first_contact_distance_points": 1430.31,
+          "target_raw": 24916.75,
+          "target_executable": 24916.75,
+          "actual_target_distance_points": 1433.25,
+          "reference_reward_usd": 42997.5,
+          "meaningful": true,
+          "quality": 0.7585,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24957.720982142855,
+            24964.229017857142
+          ],
+          "first_contact_distance_points": 1468.77,
+          "target_raw": 24960.97,
+          "target_executable": 24960.75,
+          "actual_target_distance_points": 1477.25,
+          "reference_reward_usd": 44317.5,
+          "meaningful": true,
+          "quality": 0.7881,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            24969.464285714286,
+            24986.285714285714
+          ],
+          "first_contact_distance_points": 1485.96,
+          "target_raw": 24977.88,
+          "target_executable": 24977.75,
+          "actual_target_distance_points": 1494.25,
+          "reference_reward_usd": 44827.5,
+          "meaningful": true,
+          "quality": 0.6372,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24970.222857142857,
+            24975.777142857143
+          ],
+          "first_contact_distance_points": 1486.72,
+          "target_raw": 24973.0,
+          "target_executable": 24973.0,
+          "actual_target_distance_points": 1489.5,
+          "reference_reward_usd": 44685.0,
+          "meaningful": true,
+          "quality": 0.7695,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24979.983928571426,
+            24982.653928571428
+          ],
+          "first_contact_distance_points": 1493.85,
+          "target_raw": 24981.32,
+          "target_executable": 24981.25,
+          "actual_target_distance_points": 1497.75,
+          "reference_reward_usd": 44932.5,
+          "meaningful": true,
+          "quality": 0.8435,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24996.885714285716,
+            25000.964285714286
+          ],
+          "first_contact_distance_points": 1496.64,
+          "target_raw": 24998.93,
+          "target_executable": 24998.75,
+          "actual_target_distance_points": 1515.25,
+          "reference_reward_usd": 45457.5,
+          "meaningful": true,
+          "quality": 0.6233,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24986.380357142858,
+            24990.119642857142
+          ],
+          "first_contact_distance_points": 1502.88,
+          "target_raw": 24988.25,
+          "target_executable": 24988.25,
+          "actual_target_distance_points": 1504.75,
+          "reference_reward_usd": 45142.5,
+          "meaningful": true,
+          "quality": 0.6962,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            24990.589642857143,
+            24992.910357142857
+          ],
+          "first_contact_distance_points": 1507.09,
+          "target_raw": 24991.75,
+          "target_executable": 24991.75,
+          "actual_target_distance_points": 1508.25,
+          "reference_reward_usd": 45247.5,
+          "meaningful": true,
+          "quality": 0.6278,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            24996.885714285716,
+            24996.899642857144
+          ],
+          "first_contact_distance_points": 1509.6,
+          "target_raw": 24996.89,
+          "target_executable": 24996.75,
+          "actual_target_distance_points": 1513.25,
+          "reference_reward_usd": 45397.5,
+          "meaningful": true,
+          "quality": 0.7508,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25014.245535714286,
+            25034.004464285714
+          ],
+          "first_contact_distance_points": 1530.75,
+          "target_raw": 25024.12,
+          "target_executable": 25024.0,
+          "actual_target_distance_points": 1540.5,
+          "reference_reward_usd": 46215.0,
+          "meaningful": false,
+          "quality": 0.5947,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25016.397321428572,
+            25019.602678571428
+          ],
+          "first_contact_distance_points": 1532.9,
+          "target_raw": 25018.0,
+          "target_executable": 25018.0,
+          "actual_target_distance_points": 1534.5,
+          "reference_reward_usd": 46035.0,
+          "meaningful": true,
+          "quality": 0.6571,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25016.437142857143,
+            25018.562857142857
+          ],
+          "first_contact_distance_points": 1532.94,
+          "target_raw": 25017.5,
+          "target_executable": 25017.5,
+          "actual_target_distance_points": 1534.0,
+          "reference_reward_usd": 46020.0,
+          "meaningful": true,
+          "quality": 0.7017,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25028.75,
+            25030.0
+          ],
+          "first_contact_distance_points": 1545.25,
+          "target_raw": 25029.38,
+          "target_executable": 25029.25,
+          "actual_target_distance_points": 1545.75,
+          "reference_reward_usd": 46372.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25029.72,
+            25035.78
+          ],
+          "first_contact_distance_points": 1546.22,
+          "target_raw": 25032.75,
+          "target_executable": 25032.75,
+          "actual_target_distance_points": 1549.25,
+          "reference_reward_usd": 46477.5,
+          "meaningful": true,
+          "quality": 0.9224,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25050.75,
+            25111.0
+          ],
+          "first_contact_distance_points": 1567.25,
+          "target_raw": 25080.88,
+          "target_executable": 25080.75,
+          "actual_target_distance_points": 1597.25,
+          "reference_reward_usd": 47917.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25059.371785714287,
+            25061.628214285713
+          ],
+          "first_contact_distance_points": 1575.87,
+          "target_raw": 25060.5,
+          "target_executable": 25060.5,
+          "actual_target_distance_points": 1577.0,
+          "reference_reward_usd": 47310.0,
+          "meaningful": true,
+          "quality": 0.7887,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25077.61875,
+            25081.63125
+          ],
+          "first_contact_distance_points": 1594.12,
+          "target_raw": 25079.62,
+          "target_executable": 25079.5,
+          "actual_target_distance_points": 1596.0,
+          "reference_reward_usd": 47880.0,
+          "meaningful": true,
+          "quality": 0.7203,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25077.86160714286,
+            25085.63839285714
+          ],
+          "first_contact_distance_points": 1594.36,
+          "target_raw": 25081.75,
+          "target_executable": 25081.75,
+          "actual_target_distance_points": 1598.25,
+          "reference_reward_usd": 47947.5,
+          "meaningful": true,
+          "quality": 0.849,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25114.76875,
+            25119.23125
+          ],
+          "first_contact_distance_points": 1631.27,
+          "target_raw": 25117.0,
+          "target_executable": 25117.0,
+          "actual_target_distance_points": 1633.5,
+          "reference_reward_usd": 49005.0,
+          "meaningful": true,
+          "quality": 0.6527,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "STRONG_SWING_DISPLACEMENT+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            25126.95044642857,
+            25128.54955357143
+          ],
+          "first_contact_distance_points": 1633.66,
+          "target_raw": 25127.75,
+          "target_executable": 25127.75,
+          "actual_target_distance_points": 1644.25,
+          "reference_reward_usd": 49327.5,
+          "meaningful": true,
+          "quality": 0.796,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "band": [
+            25130.260267857142,
+            25131.48169642857
+          ],
+          "first_contact_distance_points": 1645.52,
+          "target_raw": 25130.87,
+          "target_executable": 25130.75,
+          "actual_target_distance_points": 1647.25,
+          "reference_reward_usd": 49417.5,
+          "meaningful": true,
+          "quality": 0.7858,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25144.063392857144,
+            25150.436607142856
+          ],
+          "first_contact_distance_points": 1660.56,
+          "target_raw": 25147.25,
+          "target_executable": 25147.25,
+          "actual_target_distance_points": 1663.75,
+          "reference_reward_usd": 49912.5,
+          "meaningful": false,
+          "quality": 0.4852,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "LIQUIDITY_CLUSTER",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25164.177232142858,
+            25168.572767857142
+          ],
+          "first_contact_distance_points": 1680.68,
+          "target_raw": 25166.38,
+          "target_executable": 25166.25,
+          "actual_target_distance_points": 1682.75,
+          "reference_reward_usd": 50482.5,
+          "meaningful": true,
+          "quality": 0.7235,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "WICK_ZONE",
+          "band": [
+            25171.716964285715,
+            25189.533035714285
+          ],
+          "first_contact_distance_points": 1688.22,
+          "target_raw": 25180.62,
+          "target_executable": 25180.5,
+          "actual_target_distance_points": 1697.0,
+          "reference_reward_usd": 50910.0,
+          "meaningful": true,
+          "quality": 0.6962,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25176.050714285713,
+            25183.949285714287
+          ],
+          "first_contact_distance_points": 1692.55,
+          "target_raw": 25180.0,
+          "target_executable": 25180.0,
+          "actual_target_distance_points": 1696.5,
+          "reference_reward_usd": 50895.0,
+          "meaningful": true,
+          "quality": 0.8028,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25204.099285714285,
+            25212.400714285715
+          ],
+          "first_contact_distance_points": 1720.6,
+          "target_raw": 25208.25,
+          "target_executable": 25208.25,
+          "actual_target_distance_points": 1724.75,
+          "reference_reward_usd": 51742.5,
+          "meaningful": true,
+          "quality": 0.7059,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25265.5,
+            25340.0
+          ],
+          "first_contact_distance_points": 1782.0,
+          "target_raw": 25302.75,
+          "target_executable": 25302.75,
+          "actual_target_distance_points": 1819.25,
+          "reference_reward_usd": 54577.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25342.0,
+            25366.75
+          ],
+          "first_contact_distance_points": 1858.5,
+          "target_raw": 25354.38,
+          "target_executable": 25354.25,
+          "actual_target_distance_points": 1870.75,
+          "reference_reward_usd": 56122.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25390.949285714287,
+            25393.550714285713
+          ],
+          "first_contact_distance_points": 1907.45,
+          "target_raw": 25392.25,
+          "target_executable": 25392.25,
+          "actual_target_distance_points": 1908.75,
+          "reference_reward_usd": 57262.5,
+          "meaningful": true,
+          "quality": 0.6848,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25414.137142857144,
+            25416.862857142856
+          ],
+          "first_contact_distance_points": 1930.64,
+          "target_raw": 25415.5,
+          "target_executable": 25415.5,
+          "actual_target_distance_points": 1932.0,
+          "reference_reward_usd": 57960.0,
+          "meaningful": true,
+          "quality": 0.8415,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25420.0,
+            25435.0
+          ],
+          "first_contact_distance_points": 1936.5,
+          "target_raw": 25427.5,
+          "target_executable": 25427.5,
+          "actual_target_distance_points": 1944.0,
+          "reference_reward_usd": 58320.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "KEY_ZONE_15M",
+          "source_map": "STRONG_SWING_DISPLACEMENT",
+          "band": [
+            25493.366071428572,
+            25496.633928571428
+          ],
+          "first_contact_distance_points": 2009.87,
+          "target_raw": 25495.0,
+          "target_executable": 25495.0,
+          "actual_target_distance_points": 2011.5,
+          "reference_reward_usd": 60345.0,
+          "meaningful": true,
+          "quality": 0.7003,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25534.25,
+            25535.0
+          ],
+          "first_contact_distance_points": 2050.75,
+          "target_raw": 25534.62,
+          "target_executable": 25534.5,
+          "actual_target_distance_points": 2051.0,
+          "reference_reward_usd": 61530.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25647.25,
+            25721.75
+          ],
+          "first_contact_distance_points": 2163.75,
+          "target_raw": 25684.5,
+          "target_executable": 25684.5,
+          "actual_target_distance_points": 2201.0,
+          "reference_reward_usd": 66030.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25811.5,
+            25926.75
+          ],
+          "first_contact_distance_points": 2328.0,
+          "target_raw": 25869.12,
+          "target_executable": 25869.0,
+          "actual_target_distance_points": 2385.5,
+          "reference_reward_usd": 71565.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25952.5,
+            25953.25
+          ],
+          "first_contact_distance_points": 2469.0,
+          "target_raw": 25952.88,
+          "target_executable": 25952.75,
+          "actual_target_distance_points": 2469.25,
+          "reference_reward_usd": 74077.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25957.25,
+            25961.5
+          ],
+          "first_contact_distance_points": 2473.75,
+          "target_raw": 25959.38,
+          "target_executable": 25959.25,
+          "actual_target_distance_points": 2475.75,
+          "reference_reward_usd": 74272.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        }
+      ],
+      "P_destination_count": 122,
+      "P_chosen": {
+        "target_executable": 23525.75,
+        "distance_points": 42.25,
+        "reference_reward_usd": 1267.5,
+        "band": [
+          23521.57857142857,
+          23529.92142857143
+        ],
+        "source_map": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+        "kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+      },
+      "P_refusal": null,
+      "P_chosen_distance_points": 42.25,
+      "G_his_tp_inside_a_15m_key_zone": [],
+      "G_his_tp_inside_a_considered_destination": [],
+      "how_many_considered_pass_the_400_floor": 122,
+      "G_gap_from_his_tp_to_nearest_considered_points": 10.83,
+      "G_nearest_considered_band": [
+        23521.57857142857,
+        23529.92142857143
+      ],
+      "P_chosen_is_a_key_zone": true,
+      "ALGO_067_verdict": "TARGET_NOT_IN_MAP"
+    },
+    {
+      "session": "2026-04-14",
+      "is_control": true,
+      "arm": "taught_0800",
+      "his_action": "ENTER_LONG",
+      "his_entry_clock": "2026-04-14 09:36:00-04:00",
+      "his_entry_price_1m_open": 25743.0,
+      "his_marked_tp": null,
+      "his_marked_tp_side": "long",
+      "his_marked_tp_status": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT",
+      "his_marked_tp_distance_points": null,
+      "T_taught_rule": "ALGO-051, operator verbatim: '...momentum candle breakout and i jumped in and TARGETED THE NEXT KEY ZONE' - the target re-anchors to the NEXT key zone (22784.25; 32 pts x $30/pt at the 15-MNQ reference size). ALGO-052 measures the same shape: target 21932.25, 'the UPPER KEY ZONE BAND', 110 pts x $30 = $3300, 're-anchored at the opposite key zone'. THE TAUGHT TARGET IS A KEY ZONE BAND.",
+      "T_machine_rule": "targets.py equation 1: 'The first MEANINGFUL reaction area by physical near edge owns the room/blocker question', closed by 'No farther feature may leapfrog a nearer meaningful reaction area for prettier PnL.' Its universe is KEY_ZONE_15M + LIQUIDITY_CLUSTER + FVG_15M + refined 5m clusters. The $400 floor is a LATER layer applied after selection.",
+      "P_destinations_considered": [
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25811.5,
+            25926.75
+          ],
+          "first_contact_distance_points": 68.5,
+          "target_raw": 25869.12,
+          "target_executable": 25869.0,
+          "actual_target_distance_points": 126.0,
+          "reference_reward_usd": 3780.0,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25952.5,
+            25953.25
+          ],
+          "first_contact_distance_points": 209.5,
+          "target_raw": 25952.88,
+          "target_executable": 25952.75,
+          "actual_target_distance_points": 209.75,
+          "reference_reward_usd": 6292.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        },
+        {
+          "kind": "FVG_15M",
+          "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+          "band": [
+            25957.25,
+            25961.5
+          ],
+          "first_contact_distance_points": 214.25,
+          "target_raw": 25959.38,
+          "target_executable": 25959.25,
+          "actual_target_distance_points": 216.25,
+          "reference_reward_usd": 6487.5,
+          "meaningful": true,
+          "quality": 0.7,
+          "passes_the_400_floor": true
+        }
+      ],
+      "P_destination_count": 3,
+      "P_chosen": {
+        "target_executable": 25869.0,
+        "distance_points": 126.0,
+        "reference_reward_usd": 3780.0,
+        "band": [
+          25811.5,
+          25926.75
+        ],
+        "source_map": "FVG_15M_NATIVE_UNMITIGATED",
+        "kind": "FVG_15M",
+        "path_reason": "FIRST_REACTION:FVG_15M"
+      },
+      "P_refusal": null,
+      "P_chosen_distance_points": 126.0,
+      "G_his_tp_inside_a_15m_key_zone": null,
+      "G_his_tp_inside_a_considered_destination": null,
+      "how_many_considered_pass_the_400_floor": 3,
+      "G_gap_from_his_tp_to_nearest_considered_points": null,
+      "G_nearest_considered_band": null,
+      "P_chosen_is_a_key_zone": false,
+      "ALGO_067_verdict": "NO_MARKED_TP_IN_HIS_DIRECTION"
+    }
+  ],
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 10.25
+}

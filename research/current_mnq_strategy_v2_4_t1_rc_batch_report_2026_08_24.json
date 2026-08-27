@@ -1,0 +1,4875 @@
+{
+  "artifact": "T1_RC_BATCH_REPORT",
+  "status": "DIAGNOSTIC. Hypothetical T1+R-C batch. Lands nothing, moves no production file.",
+  "authority": "ALGO-085",
+  "produced": "2026-08-24",
+  "nothing_landed": true,
+  "floor_restored_after_the_arm": 400.0,
+  "pre_registered": {
+    "a_control_survives_with_a_key_zone_target": false,
+    "b_five_convicted_early_trades_refused_by_RC": "1/5",
+    "c_0330_target_contains_his_TP": false
+  },
+  "approved_baseline": 40,
+  "approved_batch": 55,
+  "entries_REMOVED_by_the_batch": [
+    [
+      "2026-04-02",
+      "2026-04-02 10:38:00-04:00",
+      "L",
+      "REV"
+    ],
+    [
+      "2026-04-06",
+      "2026-04-06 09:07:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 09:49:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-08",
+      "2026-04-08 08:52:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-08",
+      "2026-04-08 09:48:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-08",
+      "2026-04-08 10:57:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-09",
+      "2026-04-09 10:37:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-14",
+      "2026-04-14 09:38:00-04:00",
+      "L",
+      "BRK5"
+    ]
+  ],
+  "entries_ADDED_by_the_batch": [
+    [
+      "2026-03-23",
+      "2026-03-23 08:23:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-03-23",
+      "2026-03-23 10:14:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-03-23",
+      "2026-03-23 11:03:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-03-24",
+      "2026-03-24 08:38:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-03-25",
+      "2026-03-25 08:32:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-03-25",
+      "2026-03-25 09:52:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-03-31",
+      "2026-03-31 09:19:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-01",
+      "2026-04-01 09:22:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-01",
+      "2026-04-01 09:52:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-02",
+      "2026-04-02 09:54:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-02",
+      "2026-04-02 09:58:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-02",
+      "2026-04-02 09:59:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-02",
+      "2026-04-02 10:27:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 08:28:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 08:33:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 08:34:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 09:07:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-08",
+      "2026-04-08 08:22:00-04:00",
+      "S",
+      "REV"
+    ],
+    [
+      "2026-04-09",
+      "2026-04-09 10:53:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-09",
+      "2026-04-09 10:54:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-09",
+      "2026-04-09 11:04:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-13",
+      "2026-04-13 08:12:00-04:00",
+      "L",
+      "REV"
+    ],
+    [
+      "2026-04-13",
+      "2026-04-13 10:22:00-04:00",
+      "L",
+      "BRK5"
+    ]
+  ],
+  "target_changes_on_survivors": [
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 08:14:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24404.5,
+      "after": 24318.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:18:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24651.25,
+      "after": 24675.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:19:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24651.25,
+      "after": 24675.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:02:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24675.75,
+      "after": 24694.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:27:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24558.0,
+      "after": 24316.5,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:28:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24558.0,
+      "after": 24316.5,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:29:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24558.0,
+      "after": 24316.5,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:17:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24299.25,
+      "after": 24228.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:18:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24299.25,
+      "after": 24228.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:32:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24299.25,
+      "after": 24228.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:33:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24299.25,
+      "after": 24228.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-24",
+        "2026-03-24 08:34:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24278.75,
+      "after": 24228.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:23:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24402.0,
+      "after": 24358.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:37:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24530.75,
+      "after": 24558.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:38:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24530.75,
+      "after": 24558.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:33:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24086.0,
+      "after": 23815.75,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:34:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24086.0,
+      "after": 23815.75,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:23:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24240.25,
+      "after": 24291.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:39:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24132.25,
+      "after": 23815.75,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 09:03:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 23398.25,
+      "after": 23525.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:12:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24141.0,
+      "after": 24088.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:13:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24141.0,
+      "after": 24088.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 08:14:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24141.0,
+      "after": 24088.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:17:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24172.75,
+      "after": 24291.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:44:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 24053.5,
+      "after": 24024.5,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:23:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24253.75,
+      "after": 24293.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:24:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 24253.75,
+      "after": 24293.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:37:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 25085.25,
+      "after": 25123.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:39:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "before": 25085.25,
+      "after": 25123.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 11:27:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 25032.75,
+      "after": 24954.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 11:28:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 25032.75,
+      "after": 24954.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 09:37:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "before": 25159.25,
+      "after": 25062.0,
+      "kind_after": "KEY_ZONE_15M"
+    }
+  ],
+  "refused_by_RC": [
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:24:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-03-20 00:15:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-03-23 07:05:00-04:00",
+            "ohlc": [
+              23893.5,
+              24737.0,
+              23889.75,
+              24689.5
+            ]
+          },
+          {
+            "bucket": "2026-03-23 07:10:00-04:00",
+            "ohlc": [
+              24688.5,
+              24763.5,
+              24560.0,
+              24721.75
+            ]
+          },
+          {
+            "bucket": "2026-03-23 07:15:00-04:00",
+            "ohlc": [
+              24720.75,
+              24744.0,
+              24605.0,
+              24637.5
+            ]
+          },
+          {
+            "bucket": "2026-03-23 07:20:00-04:00",
+            "ohlc": [
+              24639.25,
+              24656.5,
+              24505.0,
+              24569.25
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+      "location_band": [
+        24626.96607142857,
+        24631.78392857143
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 08:12:00-04:00",
+        "L",
+        "REV"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-03-09 01:45:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-03-20 14:40:00-04:00",
+            "ohlc": [
+              24102.5,
+              24115.25,
+              24088.0,
+              24093.25
+            ]
+          },
+          {
+            "bucket": "2026-03-20 14:45:00-04:00",
+            "ohlc": [
+              24093.0,
+              24105.75,
+              24079.0,
+              24088.75
+            ]
+          },
+          {
+            "bucket": "2026-03-20 14:50:00-04:00",
+            "ohlc": [
+              24088.75,
+              24103.25,
+              24077.75,
+              24087.25
+            ]
+          },
+          {
+            "bucket": "2026-03-20 14:55:00-04:00",
+            "ohlc": [
+              24086.25,
+              24101.25,
+              24073.25,
+              24094.5
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "location_band": [
+        24083.297857142858,
+        24088.702142857142
+      ],
+      "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 08:14:00-04:00",
+        "L",
+        "REV"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-03-09 01:45:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-03-20 14:40:00-04:00",
+            "ohlc": [
+              24102.5,
+              24115.25,
+              24088.0,
+              24093.25
+            ]
+          },
+          {
+            "bucket": "2026-03-20 14:45:00-04:00",
+            "ohlc": [
+              24093.0,
+              24105.75,
+              24079.0,
+              24088.75
+            ]
+          },
+          {
+            "bucket": "2026-03-20 14:50:00-04:00",
+            "ohlc": [
+              24088.75,
+              24103.25,
+              24077.75,
+              24087.25
+            ]
+          },
+          {
+            "bucket": "2026-03-20 14:55:00-04:00",
+            "ohlc": [
+              24086.25,
+              24101.25,
+              24073.25,
+              24094.5
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+      "location_band": [
+        24083.297857142858,
+        24088.702142857142
+      ],
+      "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-03-30",
+        "2026-03-30 09:42:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-03-30 08:45:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-03-30 09:35:00-04:00",
+            "ohlc": [
+              23463.75,
+              23467.75,
+              23410.5,
+              23424.5
+            ]
+          }
+        ],
+        "hits": 1
+      },
+      "location_id": "S:2026-03-30T08:45:00-04:00:93755",
+      "location_band": [
+        23432.107589285715,
+        23447.392410714285
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 10:37:00-04:00",
+        "L",
+        "REV"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-03-31 22:15:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-03-31 22:15:00-04:00",
+            "ohlc": [
+              23975.0,
+              23981.5,
+              23968.0,
+              23979.25
+            ]
+          },
+          {
+            "bucket": "2026-03-31 22:20:00-04:00",
+            "ohlc": [
+              23978.75,
+              23979.75,
+              23970.25,
+              23975.25
+            ]
+          },
+          {
+            "bucket": "2026-03-31 22:25:00-04:00",
+            "ohlc": [
+              23976.25,
+              23976.75,
+              23964.75,
+              23968.25
+            ]
+          },
+          {
+            "bucket": "2026-03-31 22:30:00-04:00",
+            "ohlc": [
+              23969.0,
+              23973.0,
+              23958.5,
+              23959.0
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+      "location_band": [
+        23964.54955357143,
+        23973.20044642857
+      ],
+      "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-02",
+        "2026-04-02 10:38:00-04:00",
+        "L",
+        "REV"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-03-31 22:15:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-03-31 22:15:00-04:00",
+            "ohlc": [
+              23975.0,
+              23981.5,
+              23968.0,
+              23979.25
+            ]
+          },
+          {
+            "bucket": "2026-03-31 22:20:00-04:00",
+            "ohlc": [
+              23978.75,
+              23979.75,
+              23970.25,
+              23975.25
+            ]
+          },
+          {
+            "bucket": "2026-03-31 22:25:00-04:00",
+            "ohlc": [
+              23976.25,
+              23976.75,
+              23964.75,
+              23968.25
+            ]
+          },
+          {
+            "bucket": "2026-03-31 22:30:00-04:00",
+            "ohlc": [
+              23969.0,
+              23973.0,
+              23958.5,
+              23959.0
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+      "location_band": [
+        23964.54955357143,
+        23973.20044642857
+      ],
+      "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-06",
+        "2026-04-06 09:07:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-06 03:30:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-06 03:45:00-04:00",
+            "ohlc": [
+              24274.75,
+              24296.75,
+              24271.5,
+              24294.5
+            ]
+          },
+          {
+            "bucket": "2026-04-06 03:50:00-04:00",
+            "ohlc": [
+              24293.75,
+              24325.75,
+              24290.0,
+              24308.25
+            ]
+          },
+          {
+            "bucket": "2026-04-06 06:45:00-04:00",
+            "ohlc": [
+              24345.0,
+              24346.75,
+              24264.0,
+              24324.25
+            ]
+          },
+          {
+            "bucket": "2026-04-06 07:10:00-04:00",
+            "ohlc": [
+              24303.75,
+              24306.25,
+              24283.0,
+              24288.0
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+      "location_band": [
+        24289.334285714285,
+        24293.165714285715
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:48:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-06 03:45:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-06 13:10:00-04:00",
+            "ohlc": [
+              24278.75,
+              24281.25,
+              24202.5,
+              24227.5
+            ]
+          },
+          {
+            "bucket": "2026-04-06 21:50:00-04:00",
+            "ohlc": [
+              24223.5,
+              24226.25,
+              24187.75,
+              24199.0
+            ]
+          },
+          {
+            "bucket": "2026-04-06 22:35:00-04:00",
+            "ohlc": [
+              24197.5,
+              24208.5,
+              24191.0,
+              24208.0
+            ]
+          },
+          {
+            "bucket": "2026-04-06 22:40:00-04:00",
+            "ohlc": [
+              24208.25,
+              24209.75,
+              24199.25,
+              24207.5
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+      "location_band": [
+        24205.45357142857,
+        24209.54642857143
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:49:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-06 03:45:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-06 13:10:00-04:00",
+            "ohlc": [
+              24278.75,
+              24281.25,
+              24202.5,
+              24227.5
+            ]
+          },
+          {
+            "bucket": "2026-04-06 21:50:00-04:00",
+            "ohlc": [
+              24223.5,
+              24226.25,
+              24187.75,
+              24199.0
+            ]
+          },
+          {
+            "bucket": "2026-04-06 22:35:00-04:00",
+            "ohlc": [
+              24197.5,
+              24208.5,
+              24191.0,
+              24208.0
+            ]
+          },
+          {
+            "bucket": "2026-04-06 22:40:00-04:00",
+            "ohlc": [
+              24208.25,
+              24209.75,
+              24199.25,
+              24207.5
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+      "location_band": [
+        24205.45357142857,
+        24209.54642857143
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 09:43:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-08 04:45:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-08 09:30:00-04:00",
+            "ohlc": [
+              25199.25,
+              25251.75,
+              25132.75,
+              25162.75
+            ]
+          },
+          {
+            "bucket": "2026-04-08 09:35:00-04:00",
+            "ohlc": [
+              25162.5,
+              25181.0,
+              25114.0,
+              25123.0
+            ]
+          }
+        ],
+        "hits": 2
+      },
+      "location_id": "S:2026-04-08T04:45:00-04:00:100537",
+      "location_band": [
+        25128.9875,
+        25142.0125
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 10:57:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-03-17 20:00:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-03-17 20:05:00-04:00",
+            "ohlc": [
+              25019.25,
+              25032.25,
+              25018.0,
+              25031.25
+            ]
+          },
+          {
+            "bucket": "2026-03-17 20:10:00-04:00",
+            "ohlc": [
+              25031.5,
+              25052.75,
+              25029.5,
+              25051.0
+            ]
+          },
+          {
+            "bucket": "2026-03-17 20:15:00-04:00",
+            "ohlc": [
+              25051.75,
+              25055.25,
+              25038.0,
+              25038.25
+            ]
+          },
+          {
+            "bucket": "2026-03-17 20:20:00-04:00",
+            "ohlc": [
+              25039.25,
+              25052.0,
+              25035.75,
+              25048.75
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+      "location_band": [
+        25020.961607142857,
+        25039.988392857143
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 10:37:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-03-16 11:00:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-03-16 15:05:00-04:00",
+            "ohlc": [
+              24916.5,
+              25004.0,
+              24904.0,
+              25001.0
+            ]
+          },
+          {
+            "bucket": "2026-03-16 15:10:00-04:00",
+            "ohlc": [
+              25001.25,
+              25032.75,
+              24915.5,
+              24925.0
+            ]
+          },
+          {
+            "bucket": "2026-03-17 09:15:00-04:00",
+            "ohlc": [
+              24974.25,
+              25001.0,
+              24966.5,
+              24997.75
+            ]
+          },
+          {
+            "bucket": "2026-03-17 09:30:00-04:00",
+            "ohlc": [
+              25000.75,
+              25073.0,
+              24964.25,
+              25056.75
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
+      "location_band": [
+        24977.346071428572,
+        24982.653928571428
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 08:47:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-09 15:15:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-13 04:00:00-04:00",
+            "ohlc": [
+              25101.25,
+              25134.0,
+              25099.75,
+              25126.25
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:25:00-04:00",
+            "ohlc": [
+              25120.0,
+              25129.75,
+              25117.25,
+              25122.25
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:30:00-04:00",
+            "ohlc": [
+              25122.0,
+              25129.25,
+              25121.0,
+              25128.0
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:35:00-04:00",
+            "ohlc": [
+              25128.0,
+              25133.75,
+              25123.5,
+              25125.25
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+      "location_band": [
+        25128.262053571427,
+        25147.237946428573
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 08:48:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-09 15:15:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-13 04:00:00-04:00",
+            "ohlc": [
+              25101.25,
+              25134.0,
+              25099.75,
+              25126.25
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:25:00-04:00",
+            "ohlc": [
+              25120.0,
+              25129.75,
+              25117.25,
+              25122.25
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:30:00-04:00",
+            "ohlc": [
+              25122.0,
+              25129.25,
+              25121.0,
+              25128.0
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:35:00-04:00",
+            "ohlc": [
+              25128.0,
+              25133.75,
+              25123.5,
+              25125.25
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+      "location_band": [
+        25128.262053571427,
+        25147.237946428573
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 08:49:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-09 15:15:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-13 04:00:00-04:00",
+            "ohlc": [
+              25101.25,
+              25134.0,
+              25099.75,
+              25126.25
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:25:00-04:00",
+            "ohlc": [
+              25120.0,
+              25129.75,
+              25117.25,
+              25122.25
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:30:00-04:00",
+            "ohlc": [
+              25122.0,
+              25129.25,
+              25121.0,
+              25128.0
+            ]
+          },
+          {
+            "bucket": "2026-04-13 05:35:00-04:00",
+            "ohlc": [
+              25128.0,
+              25133.75,
+              25123.5,
+              25125.25
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+      "location_band": [
+        25128.262053571427,
+        25147.237946428573
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    },
+    {
+      "key": [
+        "2026-04-14",
+        "2026-04-14 09:38:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+      "rc": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-14 09:15:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-14 09:30:00-04:00",
+            "ohlc": [
+              25656.25,
+              25727.0,
+              25655.75,
+              25718.25
+            ]
+          }
+        ],
+        "hits": 1
+      },
+      "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+      "location_band": [
+        25714.66964285714,
+        25717.83035714286
+      ],
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+    }
+  ],
+  "convicted_early_trades": [
+    {
+      "session": "2026-03-23",
+      "clock": "08:14",
+      "direction": "S",
+      "found": true,
+      "refused_by": null,
+      "freshness_evidence": {
+        "exempt": true,
+        "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+      },
+      "still_approved": true
+    },
+    {
+      "session": "2026-03-24",
+      "clock": "08:17",
+      "direction": "S",
+      "found": true,
+      "refused_by": null,
+      "freshness_evidence": {
+        "exempt": true,
+        "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+      },
+      "still_approved": true
+    },
+    {
+      "session": "2026-03-31",
+      "clock": "09:03",
+      "direction": "L",
+      "found": true,
+      "refused_by": null,
+      "freshness_evidence": {
+        "exempt": true,
+        "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+      },
+      "still_approved": true
+    },
+    {
+      "session": "2026-04-06",
+      "clock": "09:07",
+      "direction": "S",
+      "found": true,
+      "refused_by": "R_C_ZONE_NOT_FRESH",
+      "freshness_evidence": {
+        "exempt": false,
+        "fresh": false,
+        "zone_birth": "2026-04-06 03:30:00-04:00",
+        "completed_bars_in_band_since_birth": [
+          {
+            "bucket": "2026-04-06 03:45:00-04:00",
+            "ohlc": [
+              24274.75,
+              24296.75,
+              24271.5,
+              24294.5
+            ]
+          },
+          {
+            "bucket": "2026-04-06 03:50:00-04:00",
+            "ohlc": [
+              24293.75,
+              24325.75,
+              24290.0,
+              24308.25
+            ]
+          },
+          {
+            "bucket": "2026-04-06 06:45:00-04:00",
+            "ohlc": [
+              24345.0,
+              24346.75,
+              24264.0,
+              24324.25
+            ]
+          },
+          {
+            "bucket": "2026-04-06 07:10:00-04:00",
+            "ohlc": [
+              24303.75,
+              24306.25,
+              24283.0,
+              24288.0
+            ]
+          }
+        ],
+        "hits": 4
+      },
+      "still_approved": false
+    },
+    {
+      "session": "2026-04-09",
+      "clock": "09:37",
+      "direction": "L",
+      "found": true,
+      "refused_by": null,
+      "freshness_evidence": {
+        "exempt": true,
+        "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+      },
+      "still_approved": true
+    }
+  ],
+  "rc_taught_exceptions": {
+    "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it.",
+    "PREBREAK_REPEAT_TEST_INTRA5_FORCE": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+  },
+  "baseline_rows": {
+    "2026-03-23": [
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 08:14:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24404.5,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24394.417857142857,
+          24414.432142857146
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+        "floor_telemetry_usd": 735.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 10:18:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24651.25,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24639.819642857143,
+          24662.680357142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 585.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 10:19:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24651.25,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24639.819642857143,
+          24662.680357142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 420.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:02:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24675.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24672.897321428572,
+          24678.852678571428
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-19T23:30:00-04:00:98591",
+        "floor_telemetry_usd": 877.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24558.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24555.95357142857,
+          24560.04642857143
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:WICK_ZONE->NEXT:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 1770.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24558.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24555.95357142857,
+          24560.04642857143
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 1432.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:29:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24558.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24555.95357142857,
+          24560.04642857143
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 1387.5,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-03-24": [
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:17:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24299.25,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24294.858482142856,
+          24303.391517857144
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M,KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 1020.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:18:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24299.25,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24294.858482142856,
+          24303.391517857144
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M,KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 945.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:32:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24299.25,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24294.858482142856,
+          24303.391517857144
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:WICK_ZONE,KEY_ZONE_15M:WICK_ZONE->NEXT:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 1027.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:33:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24299.25,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24294.858482142856,
+          24303.391517857144
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 600.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:34:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24278.75,
+        "target_kind": "FVG_15M",
+        "target_band": [
+          24270.0,
+          24287.5
+        ],
+        "path_reason": "FIRST_REACTION:FVG_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 517.5,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-03-25": [
+      {
+        "key": [
+          "2026-03-25",
+          "2026-03-25 09:23:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24402.0,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24398.710714285713,
+          24405.289285714287
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+        "floor_telemetry_usd": 757.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-25",
+          "2026-03-25 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24530.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24525.354464285716,
+          24536.145535714284
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+        "floor_telemetry_usd": 480.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-25",
+          "2026-03-25 09:38:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24530.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24525.354464285716,
+          24536.145535714284
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+        "floor_telemetry_usd": 405.0,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-03-26": [
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 09:33:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24086.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24083.297857142858,
+          24088.702142857142
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+        "floor_telemetry_usd": 487.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 09:34:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24086.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24083.297857142858,
+          24088.702142857142
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+        "floor_telemetry_usd": 480.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 10:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24240.25,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24237.16919642857,
+          24243.33080357143
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:WICK_ZONE->NEXT:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+        "floor_telemetry_usd": 420.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 10:39:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24132.25,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24126.570535714287,
+          24137.929464285713
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-03-26T10:15:00-04:00:96654",
+        "floor_telemetry_usd": 960.0,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-03-30": [],
+    "2026-03-31": [
+      {
+        "key": [
+          "2026-03-31",
+          "2026-03-31 09:03:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 23398.25,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          23392.688392857144,
+          23404.11160714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+        "floor_telemetry_usd": 450.0,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-04-01": [
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 08:12:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24141.0,
+        "target_kind": "FVG_15M",
+        "target_band": [
+          24139.5,
+          24142.25
+        ],
+        "path_reason": "FIRST_REACTION:FVG_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+        "floor_telemetry_usd": 832.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 08:13:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24141.0,
+        "target_kind": "FVG_15M",
+        "target_band": [
+          24139.5,
+          24142.25
+        ],
+        "path_reason": "FIRST_REACTION:FVG_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+        "floor_telemetry_usd": 780.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 08:14:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24141.0,
+        "target_kind": "FVG_15M",
+        "target_band": [
+          24139.5,
+          24142.25
+        ],
+        "path_reason": "FIRST_REACTION:FVG_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+        "floor_telemetry_usd": 705.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 09:17:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24172.75,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24162.966964285715,
+          24182.533035714285
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+        "floor_telemetry_usd": 2587.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 09:44:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24053.5,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24049.05669642857,
+          24057.69330357143
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+        "floor_telemetry_usd": 465.0,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-04-02": [
+      {
+        "key": [
+          "2026-04-02",
+          "2026-04-02 10:38:00-04:00",
+          "L",
+          "REV"
+        ],
+        "target": 24243.5,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24239.16919642857,
+          24247.83080357143
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+        "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+        "floor_telemetry_usd": 487.5,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-04-06": [
+      {
+        "key": [
+          "2026-04-06",
+          "2026-04-06 09:07:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24254.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24251.871428571427,
+          24257.378571428573
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+        "floor_telemetry_usd": 712.5,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-04-07": [
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 09:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24253.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24242.14017857143,
+          24265.45982142857
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:STRONG_SWING_DISPLACEMENT->NEXT:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+        "floor_telemetry_usd": 495.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 09:24:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24253.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24242.14017857143,
+          24265.45982142857
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M:STRONG_SWING_DISPLACEMENT->NEXT:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+        "floor_telemetry_usd": 487.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 09:49:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24132.5,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          24124.99017857143,
+          24139.75982142857
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+        "floor_telemetry_usd": 705.0,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-04-08": [
+      {
+        "key": [
+          "2026-04-08",
+          "2026-04-08 08:52:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25233.5,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          25231.04732142857,
+          25235.95267857143
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bearish:2026-04-08T08:45:00-04:00:100830",
+        "floor_telemetry_usd": 442.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-08",
+          "2026-04-08 09:48:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25180.75,
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "target_band": [
+          25175.28348214286,
+          25186.21651785714
+        ],
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-03-11T10:45:00-04:00:100720",
+        "floor_telemetry_usd": 817.5,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-08",
+          "2026-04-08 10:57:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24916.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24914.9875,
+          24918.139285714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+        "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+        "floor_telemetry_usd": 690.0,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-04-09": [
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25085.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          25083.92767857143,
+          25086.82232142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+        "floor_telemetry_usd": 870.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 09:39:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25085.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          25083.92767857143,
+          25086.82232142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+        "floor_telemetry_usd": 735.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 10:37:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24938.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24926.308035714286,
+          24949.59196428571
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
+        "floor_telemetry_usd": 705.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 25032.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          25029.72,
+          25035.78
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+        "floor_telemetry_usd": 1260.0,
+        "t1_telemetry": null,
+        "rc": null
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 25032.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          25029.72,
+          25035.78
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+        "floor_telemetry_usd": 757.5,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-04-13": [
+      {
+        "key": [
+          "2026-04-13",
+          "2026-04-13 09:37:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 25159.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          25155.035714285714,
+          25163.014285714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "S:2026-04-10T05:00:00-04:00:100813",
+        "floor_telemetry_usd": 690.0,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ],
+    "2026-04-14": [
+      {
+        "key": [
+          "2026-04-14",
+          "2026-04-14 09:38:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25869.0,
+        "target_kind": "FVG_15M",
+        "target_band": [
+          25811.5,
+          25926.75
+        ],
+        "path_reason": "FIRST_REACTION:FVG_15M",
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+        "floor_telemetry_usd": 3690.0,
+        "t1_telemetry": null,
+        "rc": null
+      }
+    ]
+  },
+  "batch_rows": {
+    "2026-03-23": [
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 08:14:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24318.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24310.73660714286,
+          24326.76339285714
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+        "floor_telemetry_usd": 3307.5,
+        "t1_telemetry": {
+          "considered_before": 14,
+          "after_kind_restriction": 6,
+          "htf_bands_added": 29,
+          "after_spent_filter": 31
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 08:23:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24316.5,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24311.748214285715,
+          24320.951785714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+        "floor_telemetry_usd": 5415.0,
+        "t1_telemetry": {
+          "considered_before": 20,
+          "after_kind_restriction": 9,
+          "htf_bands_added": 29,
+          "after_spent_filter": 31
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 10:14:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24675.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24672.897321428572,
+          24678.852678571428
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 1665.0,
+        "t1_telemetry": {
+          "considered_before": 69,
+          "after_kind_restriction": 51,
+          "htf_bands_added": 0,
+          "after_spent_filter": 49
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 10:18:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24675.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24672.897321428572,
+          24678.852678571428
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 1320.0,
+        "t1_telemetry": {
+          "considered_before": 68,
+          "after_kind_restriction": 50,
+          "htf_bands_added": 0,
+          "after_spent_filter": 49
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 10:19:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24675.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24672.897321428572,
+          24678.852678571428
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 1155.0,
+        "t1_telemetry": {
+          "considered_before": 67,
+          "after_kind_restriction": 50,
+          "htf_bands_added": 0,
+          "after_spent_filter": 49
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 10:24:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-03-20 00:15:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-03-23 07:05:00-04:00",
+              "ohlc": [
+                23893.5,
+                24737.0,
+                23889.75,
+                24689.5
+              ]
+            },
+            {
+              "bucket": "2026-03-23 07:10:00-04:00",
+              "ohlc": [
+                24688.5,
+                24763.5,
+                24560.0,
+                24721.75
+              ]
+            },
+            {
+              "bucket": "2026-03-23 07:15:00-04:00",
+              "ohlc": [
+                24720.75,
+                24744.0,
+                24605.0,
+                24637.5
+              ]
+            },
+            {
+              "bucket": "2026-03-23 07:20:00-04:00",
+              "ohlc": [
+                24639.25,
+                24656.5,
+                24505.0,
+                24569.25
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "R:2026-03-20T00:15:00-04:00:98518",
+        "location_band": [
+          24626.96607142857,
+          24631.78392857143
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:02:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24694.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24691.08142857143,
+          24696.91857142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-19T23:30:00-04:00:98591",
+        "floor_telemetry_usd": 1425.0,
+        "t1_telemetry": {
+          "considered_before": 66,
+          "after_kind_restriction": 49,
+          "htf_bands_added": 0,
+          "after_spent_filter": 45
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:03:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24694.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24691.08142857143,
+          24696.91857142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-19T23:30:00-04:00:98591",
+        "floor_telemetry_usd": 532.5,
+        "t1_telemetry": {
+          "considered_before": 64,
+          "after_kind_restriction": 47,
+          "htf_bands_added": 0,
+          "after_spent_filter": 45
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24316.5,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24311.748214285715,
+          24320.951785714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 9015.0,
+        "t1_telemetry": {
+          "considered_before": 25,
+          "after_kind_restriction": 12,
+          "htf_bands_added": 37,
+          "after_spent_filter": 31
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24316.5,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24311.748214285715,
+          24320.951785714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 8677.5,
+        "t1_telemetry": {
+          "considered_before": 24,
+          "after_kind_restriction": 11,
+          "htf_bands_added": 34,
+          "after_spent_filter": 31
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-23",
+          "2026-03-23 11:29:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24316.5,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24311.748214285715,
+          24320.951785714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-20T02:45:00-04:00:98429",
+        "floor_telemetry_usd": 8632.5,
+        "t1_telemetry": {
+          "considered_before": 24,
+          "after_kind_restriction": 11,
+          "htf_bands_added": 34,
+          "after_spent_filter": 31
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      }
+    ],
+    "2026-03-24": [
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:17:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24228.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24219.78348214286,
+          24235.96651785714
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M,KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 3157.5,
+        "t1_telemetry": {
+          "considered_before": 11,
+          "after_kind_restriction": 4,
+          "htf_bands_added": 9,
+          "after_spent_filter": 12
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:18:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24228.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24219.78348214286,
+          24235.96651785714
+        ],
+        "path_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M,KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 3082.5,
+        "t1_telemetry": {
+          "considered_before": 11,
+          "after_kind_restriction": 4,
+          "htf_bands_added": 9,
+          "after_spent_filter": 12
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:32:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24228.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24219.78348214286,
+          24235.96651785714
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 3165.0,
+        "t1_telemetry": {
+          "considered_before": 11,
+          "after_kind_restriction": 4,
+          "htf_bands_added": 9,
+          "after_spent_filter": 10
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:33:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24228.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24219.78348214286,
+          24235.96651785714
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 2737.5,
+        "t1_telemetry": {
+          "considered_before": 9,
+          "after_kind_restriction": 2,
+          "htf_bands_added": 8,
+          "after_spent_filter": 10
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:34:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24228.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24219.78348214286,
+          24235.96651785714
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 2040.0,
+        "t1_telemetry": {
+          "considered_before": 7,
+          "after_kind_restriction": 2,
+          "htf_bands_added": 6,
+          "after_spent_filter": 8
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-24",
+          "2026-03-24 08:38:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24228.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24219.78348214286,
+          24235.96651785714
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+        "floor_telemetry_usd": 1522.5,
+        "t1_telemetry": {
+          "considered_before": 7,
+          "after_kind_restriction": 2,
+          "htf_bands_added": 6,
+          "after_spent_filter": 8
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      }
+    ],
+    "2026-03-25": [
+      {
+        "key": [
+          "2026-03-25",
+          "2026-03-25 08:32:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24373.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24369.93357142857,
+          24376.06642857143
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-13T05:00:00-04:00:97590",
+        "floor_telemetry_usd": 382.5,
+        "t1_telemetry": {
+          "considered_before": 13,
+          "after_kind_restriction": 5,
+          "htf_bands_added": 5,
+          "after_spent_filter": 10
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-25",
+          "2026-03-25 09:23:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24358.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24355.740625,
+          24360.509375
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+        "floor_telemetry_usd": 2070.0,
+        "t1_telemetry": {
+          "considered_before": 16,
+          "after_kind_restriction": 7,
+          "htf_bands_added": 15,
+          "after_spent_filter": 6
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-25",
+          "2026-03-25 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24558.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24555.95357142857,
+          24560.04642857143
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+        "floor_telemetry_usd": 1297.5,
+        "t1_telemetry": {
+          "considered_before": 67,
+          "after_kind_restriction": 49,
+          "htf_bands_added": 0,
+          "after_spent_filter": 48
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-25",
+          "2026-03-25 09:38:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24558.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24555.95357142857,
+          24560.04642857143
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-20T03:45:00-04:00:97931",
+        "floor_telemetry_usd": 1222.5,
+        "t1_telemetry": {
+          "considered_before": 67,
+          "after_kind_restriction": 49,
+          "htf_bands_added": 0,
+          "after_spent_filter": 48
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-25",
+          "2026-03-25 09:52:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24358.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24355.740625,
+          24360.509375
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+        "floor_telemetry_usd": 577.5,
+        "t1_telemetry": {
+          "considered_before": 13,
+          "after_kind_restriction": 5,
+          "htf_bands_added": 2,
+          "after_spent_filter": 6
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      }
+    ],
+    "2026-03-26": [
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 08:12:00-04:00",
+          "L",
+          "REV"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-03-09 01:45:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-03-20 14:40:00-04:00",
+              "ohlc": [
+                24102.5,
+                24115.25,
+                24088.0,
+                24093.25
+              ]
+            },
+            {
+              "bucket": "2026-03-20 14:45:00-04:00",
+              "ohlc": [
+                24093.0,
+                24105.75,
+                24079.0,
+                24088.75
+              ]
+            },
+            {
+              "bucket": "2026-03-20 14:50:00-04:00",
+              "ohlc": [
+                24088.75,
+                24103.25,
+                24077.75,
+                24087.25
+              ]
+            },
+            {
+              "bucket": "2026-03-20 14:55:00-04:00",
+              "ohlc": [
+                24086.25,
+                24101.25,
+                24073.25,
+                24094.5
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+        "location_band": [
+          24083.297857142858,
+          24088.702142857142
+        ],
+        "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 08:14:00-04:00",
+          "L",
+          "REV"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-03-09 01:45:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-03-20 14:40:00-04:00",
+              "ohlc": [
+                24102.5,
+                24115.25,
+                24088.0,
+                24093.25
+              ]
+            },
+            {
+              "bucket": "2026-03-20 14:45:00-04:00",
+              "ohlc": [
+                24093.0,
+                24105.75,
+                24079.0,
+                24088.75
+              ]
+            },
+            {
+              "bucket": "2026-03-20 14:50:00-04:00",
+              "ohlc": [
+                24088.75,
+                24103.25,
+                24077.75,
+                24087.25
+              ]
+            },
+            {
+              "bucket": "2026-03-20 14:55:00-04:00",
+              "ohlc": [
+                24086.25,
+                24101.25,
+                24073.25,
+                24094.5
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "SWING:S:2026-03-09T01:45:00-04:00:96344",
+        "location_band": [
+          24083.297857142858,
+          24088.702142857142
+        ],
+        "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 09:33:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 23815.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          23812.095357142858,
+          23819.404642857142
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+        "floor_telemetry_usd": 8595.0,
+        "t1_telemetry": {
+          "considered_before": 5,
+          "after_kind_restriction": 2,
+          "htf_bands_added": 1,
+          "after_spent_filter": 1
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 09:34:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 23815.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          23812.095357142858,
+          23819.404642857142
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+        "floor_telemetry_usd": 8587.5,
+        "t1_telemetry": {
+          "considered_before": 5,
+          "after_kind_restriction": 2,
+          "htf_bands_added": 1,
+          "after_spent_filter": 1
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 10:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24291.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24283.116964285713,
+          24299.492857142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-26T03:00:00-04:00:96926",
+        "floor_telemetry_usd": 1950.0,
+        "t1_telemetry": {
+          "considered_before": 84,
+          "after_kind_restriction": 60,
+          "htf_bands_added": 15,
+          "after_spent_filter": 72
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-03-26",
+          "2026-03-26 10:39:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 23815.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          23812.095357142858,
+          23819.404642857142
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-03-26T10:15:00-04:00:96654",
+        "floor_telemetry_usd": 10455.0,
+        "t1_telemetry": {
+          "considered_before": 9,
+          "after_kind_restriction": 2,
+          "htf_bands_added": 11,
+          "after_spent_filter": 1
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      }
+    ],
+    "2026-03-30": [
+      {
+        "key": [
+          "2026-03-30",
+          "2026-03-30 09:42:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-03-30 08:45:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-03-30 09:35:00-04:00",
+              "ohlc": [
+                23463.75,
+                23467.75,
+                23410.5,
+                23424.5
+              ]
+            }
+          ],
+          "hits": 1
+        },
+        "location_id": "S:2026-03-30T08:45:00-04:00:93755",
+        "location_band": [
+          23432.107589285715,
+          23447.392410714285
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      }
+    ],
+    "2026-03-31": [
+      {
+        "key": [
+          "2026-03-31",
+          "2026-03-31 09:03:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 23525.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          23521.57857142857,
+          23529.92142857143
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+        "floor_telemetry_usd": 4275.0,
+        "t1_telemetry": {
+          "considered_before": 126,
+          "after_kind_restriction": 76,
+          "htf_bands_added": 1,
+          "after_spent_filter": 73
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-03-31",
+          "2026-03-31 09:19:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 23525.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          23521.57857142857,
+          23529.92142857143
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+        "floor_telemetry_usd": 3795.0,
+        "t1_telemetry": {
+          "considered_before": 126,
+          "after_kind_restriction": 75,
+          "htf_bands_added": 1,
+          "after_spent_filter": 73
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      }
+    ],
+    "2026-04-01": [
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 08:12:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24088.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "target_band": [
+          24087.129017857143,
+          24089.0
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+        "floor_telemetry_usd": 2415.0,
+        "t1_telemetry": {
+          "considered_before": 56,
+          "after_kind_restriction": 26,
+          "htf_bands_added": 26,
+          "after_spent_filter": 52
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 08:13:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24088.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "target_band": [
+          24087.129017857143,
+          24089.0
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+        "floor_telemetry_usd": 2362.5,
+        "t1_telemetry": {
+          "considered_before": 56,
+          "after_kind_restriction": 26,
+          "htf_bands_added": 26,
+          "after_spent_filter": 52
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 08:14:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24088.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "target_band": [
+          24087.129017857143,
+          24089.0
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+        "floor_telemetry_usd": 2287.5,
+        "t1_telemetry": {
+          "considered_before": 56,
+          "after_kind_restriction": 26,
+          "htf_bands_added": 25,
+          "after_spent_filter": 51
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 09:17:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24291.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24283.116964285713,
+          24299.492857142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+        "floor_telemetry_usd": 6142.5,
+        "t1_telemetry": {
+          "considered_before": 92,
+          "after_kind_restriction": 61,
+          "htf_bands_added": 12,
+          "after_spent_filter": 56
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 09:22:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24024.5,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24020.66642857143,
+          24028.33357142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+        "floor_telemetry_usd": 1147.5,
+        "t1_telemetry": {
+          "considered_before": 49,
+          "after_kind_restriction": 24,
+          "htf_bands_added": 8,
+          "after_spent_filter": 29
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 09:44:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24024.5,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24020.66642857143,
+          24028.33357142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+        "floor_telemetry_usd": 1335.0,
+        "t1_telemetry": {
+          "considered_before": 49,
+          "after_kind_restriction": 24,
+          "htf_bands_added": 10,
+          "after_spent_filter": 29
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-01",
+          "2026-04-01 09:52:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24291.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24283.116964285713,
+          24299.492857142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "R:2026-04-01T06:30:00-04:00:96362",
+        "floor_telemetry_usd": 5415.0,
+        "t1_telemetry": {
+          "considered_before": 93,
+          "after_kind_restriction": 60,
+          "htf_bands_added": 12,
+          "after_spent_filter": 56
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      }
+    ],
+    "2026-04-02": [
+      {
+        "key": [
+          "2026-04-02",
+          "2026-04-02 09:54:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 23842.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          23837.427232142858,
+          23847.116964285713
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+        "floor_telemetry_usd": 285.0,
+        "t1_telemetry": {
+          "considered_before": 107,
+          "after_kind_restriction": 67,
+          "htf_bands_added": 4,
+          "after_spent_filter": 71
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-02",
+          "2026-04-02 09:58:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 23883.25,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          23873.883035714287,
+          23892.866964285713
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+        "floor_telemetry_usd": 337.5,
+        "t1_telemetry": {
+          "considered_before": 105,
+          "after_kind_restriction": 66,
+          "htf_bands_added": 1,
+          "after_spent_filter": 67
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-02",
+          "2026-04-02 09:59:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 23899.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          23897.7025,
+          23901.7975
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-23T07:30:00-04:00:95263",
+        "floor_telemetry_usd": 367.5,
+        "t1_telemetry": {
+          "considered_before": 104,
+          "after_kind_restriction": 65,
+          "htf_bands_added": 0,
+          "after_spent_filter": 65
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-02",
+          "2026-04-02 10:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 23526.25,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          23520.930803571428,
+          23531.319196428572
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+        "floor_telemetry_usd": 12540.0,
+        "t1_telemetry": {
+          "considered_before": 36,
+          "after_kind_restriction": 20,
+          "htf_bands_added": 39,
+          "after_spent_filter": 13
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-02",
+          "2026-04-02 10:37:00-04:00",
+          "L",
+          "REV"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-03-31 22:15:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-03-31 22:15:00-04:00",
+              "ohlc": [
+                23975.0,
+                23981.5,
+                23968.0,
+                23979.25
+              ]
+            },
+            {
+              "bucket": "2026-03-31 22:20:00-04:00",
+              "ohlc": [
+                23978.75,
+                23979.75,
+                23970.25,
+                23975.25
+              ]
+            },
+            {
+              "bucket": "2026-03-31 22:25:00-04:00",
+              "ohlc": [
+                23976.25,
+                23976.75,
+                23964.75,
+                23968.25
+              ]
+            },
+            {
+              "bucket": "2026-03-31 22:30:00-04:00",
+              "ohlc": [
+                23969.0,
+                23973.0,
+                23958.5,
+                23959.0
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+        "location_band": [
+          23964.54955357143,
+          23973.20044642857
+        ],
+        "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-04-02",
+          "2026-04-02 10:38:00-04:00",
+          "L",
+          "REV"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-03-31 22:15:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-03-31 22:15:00-04:00",
+              "ohlc": [
+                23975.0,
+                23981.5,
+                23968.0,
+                23979.25
+              ]
+            },
+            {
+              "bucket": "2026-03-31 22:20:00-04:00",
+              "ohlc": [
+                23978.75,
+                23979.75,
+                23970.25,
+                23975.25
+              ]
+            },
+            {
+              "bucket": "2026-03-31 22:25:00-04:00",
+              "ohlc": [
+                23976.25,
+                23976.75,
+                23964.75,
+                23968.25
+              ]
+            },
+            {
+              "bucket": "2026-03-31 22:30:00-04:00",
+              "ohlc": [
+                23969.0,
+                23973.0,
+                23958.5,
+                23959.0
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "S:2026-03-31T22:15:00-04:00:95868",
+        "location_band": [
+          23964.54955357143,
+          23973.20044642857
+        ],
+        "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE"
+      }
+    ],
+    "2026-04-06": [
+      {
+        "key": [
+          "2026-04-06",
+          "2026-04-06 09:07:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-04-06 03:30:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-04-06 03:45:00-04:00",
+              "ohlc": [
+                24274.75,
+                24296.75,
+                24271.5,
+                24294.5
+              ]
+            },
+            {
+              "bucket": "2026-04-06 03:50:00-04:00",
+              "ohlc": [
+                24293.75,
+                24325.75,
+                24290.0,
+                24308.25
+              ]
+            },
+            {
+              "bucket": "2026-04-06 06:45:00-04:00",
+              "ohlc": [
+                24345.0,
+                24346.75,
+                24264.0,
+                24324.25
+              ]
+            },
+            {
+              "bucket": "2026-04-06 07:10:00-04:00",
+              "ohlc": [
+                24303.75,
+                24306.25,
+                24283.0,
+                24288.0
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+        "location_band": [
+          24289.334285714285,
+          24293.165714285715
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      }
+    ],
+    "2026-04-07": [
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 08:28:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24253.75,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24242.14017857143,
+          24265.45982142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "S:2026-04-01T12:15:00-04:00:96923",
+        "floor_telemetry_usd": 487.5,
+        "t1_telemetry": {
+          "considered_before": 75,
+          "after_kind_restriction": 60,
+          "htf_bands_added": 14,
+          "after_spent_filter": 72
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 08:33:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24120.25,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24119.060714285715,
+          24121.439285714285
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+        "floor_telemetry_usd": 2857.5,
+        "t1_telemetry": {
+          "considered_before": 56,
+          "after_kind_restriction": 35,
+          "htf_bands_added": 2,
+          "after_spent_filter": 28
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 08:34:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24120.25,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          24119.060714285715,
+          24121.439285714285
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+        "floor_telemetry_usd": 2752.5,
+        "t1_telemetry": {
+          "considered_before": 55,
+          "after_kind_restriction": 34,
+          "htf_bands_added": 2,
+          "after_spent_filter": 28
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 09:07:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24293.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "target_band": [
+          24290.5,
+          24297.00982142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+        "floor_telemetry_usd": 1560.0,
+        "t1_telemetry": {
+          "considered_before": 74,
+          "after_kind_restriction": 59,
+          "htf_bands_added": 13,
+          "after_spent_filter": 64
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 09:23:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24293.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "target_band": [
+          24290.5,
+          24297.00982142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+        "floor_telemetry_usd": 1695.0,
+        "t1_telemetry": {
+          "considered_before": 75,
+          "after_kind_restriction": 60,
+          "htf_bands_added": 15,
+          "after_spent_filter": 64
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 09:24:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 24293.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "target_band": [
+          24290.5,
+          24297.00982142857
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-03T09:15:00-04:00:96961",
+        "floor_telemetry_usd": 1687.5,
+        "t1_telemetry": {
+          "considered_before": 75,
+          "after_kind_restriction": 60,
+          "htf_bands_added": 15,
+          "after_spent_filter": 64
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 09:48:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-04-06 03:45:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-04-06 13:10:00-04:00",
+              "ohlc": [
+                24278.75,
+                24281.25,
+                24202.5,
+                24227.5
+              ]
+            },
+            {
+              "bucket": "2026-04-06 21:50:00-04:00",
+              "ohlc": [
+                24223.5,
+                24226.25,
+                24187.75,
+                24199.0
+              ]
+            },
+            {
+              "bucket": "2026-04-06 22:35:00-04:00",
+              "ohlc": [
+                24197.5,
+                24208.5,
+                24191.0,
+                24208.0
+              ]
+            },
+            {
+              "bucket": "2026-04-06 22:40:00-04:00",
+              "ohlc": [
+                24208.25,
+                24209.75,
+                24199.25,
+                24207.5
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+        "location_band": [
+          24205.45357142857,
+          24209.54642857143
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-04-07",
+          "2026-04-07 09:49:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-04-06 03:45:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-04-06 13:10:00-04:00",
+              "ohlc": [
+                24278.75,
+                24281.25,
+                24202.5,
+                24227.5
+              ]
+            },
+            {
+              "bucket": "2026-04-06 21:50:00-04:00",
+              "ohlc": [
+                24223.5,
+                24226.25,
+                24187.75,
+                24199.0
+              ]
+            },
+            {
+              "bucket": "2026-04-06 22:35:00-04:00",
+              "ohlc": [
+                24197.5,
+                24208.5,
+                24191.0,
+                24208.0
+              ]
+            },
+            {
+              "bucket": "2026-04-06 22:40:00-04:00",
+              "ohlc": [
+                24208.25,
+                24209.75,
+                24199.25,
+                24207.5
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "SWING:S:2026-04-06T03:45:00-04:00:96830",
+        "location_band": [
+          24205.45357142857,
+          24209.54642857143
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      }
+    ],
+    "2026-04-08": [
+      {
+        "key": [
+          "2026-04-08",
+          "2026-04-08 08:22:00-04:00",
+          "S",
+          "REV"
+        ],
+        "target": 25154.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          25152.079017857144,
+          25155.920982142856
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-08T08:45:00-04:00:101029",
+        "floor_telemetry_usd": 135.0,
+        "t1_telemetry": {
+          "considered_before": 116,
+          "after_kind_restriction": 71,
+          "htf_bands_added": 4,
+          "after_spent_filter": 75
+        },
+        "rc": {
+          "exempt": false,
+          "fresh": true,
+          "zone_birth": "2026-04-08 08:45:00-04:00",
+          "completed_bars_in_band_since_birth": [],
+          "hits": 0
+        }
+      },
+      {
+        "key": [
+          "2026-04-08",
+          "2026-04-08 09:43:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-04-08 04:45:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-04-08 09:30:00-04:00",
+              "ohlc": [
+                25199.25,
+                25251.75,
+                25132.75,
+                25162.75
+              ]
+            },
+            {
+              "bucket": "2026-04-08 09:35:00-04:00",
+              "ohlc": [
+                25162.5,
+                25181.0,
+                25114.0,
+                25123.0
+              ]
+            }
+          ],
+          "hits": 2
+        },
+        "location_id": "S:2026-04-08T04:45:00-04:00:100537",
+        "location_band": [
+          25128.9875,
+          25142.0125
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-04-08",
+          "2026-04-08 10:57:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-03-17 20:00:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-03-17 20:05:00-04:00",
+              "ohlc": [
+                25019.25,
+                25032.25,
+                25018.0,
+                25031.25
+              ]
+            },
+            {
+              "bucket": "2026-03-17 20:10:00-04:00",
+              "ohlc": [
+                25031.5,
+                25052.75,
+                25029.5,
+                25051.0
+              ]
+            },
+            {
+              "bucket": "2026-03-17 20:15:00-04:00",
+              "ohlc": [
+                25051.75,
+                25055.25,
+                25038.0,
+                25038.25
+              ]
+            },
+            {
+              "bucket": "2026-03-17 20:20:00-04:00",
+              "ohlc": [
+                25039.25,
+                25052.0,
+                25035.75,
+                25048.75
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "R:2026-03-17T20:00:00-04:00:100140",
+        "location_band": [
+          25020.961607142857,
+          25039.988392857143
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      }
+    ],
+    "2026-04-09": [
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 09:37:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25123.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          25117.162857142856,
+          25128.837142857144
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+        "floor_telemetry_usd": 2002.5,
+        "t1_telemetry": {
+          "considered_before": 24,
+          "after_kind_restriction": 12,
+          "htf_bands_added": 1,
+          "after_spent_filter": 9
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 09:39:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25123.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          25117.162857142856,
+          25128.837142857144
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+        "floor_telemetry_usd": 1867.5,
+        "t1_telemetry": {
+          "considered_before": 24,
+          "after_kind_restriction": 12,
+          "htf_bands_added": 1,
+          "after_spent_filter": 9
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 10:37:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-03-16 11:00:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-03-16 15:05:00-04:00",
+              "ohlc": [
+                24916.5,
+                25004.0,
+                24904.0,
+                25001.0
+              ]
+            },
+            {
+              "bucket": "2026-03-16 15:10:00-04:00",
+              "ohlc": [
+                25001.25,
+                25032.75,
+                24915.5,
+                24925.0
+              ]
+            },
+            {
+              "bucket": "2026-03-17 09:15:00-04:00",
+              "ohlc": [
+                24974.25,
+                25001.0,
+                24966.5,
+                24997.75
+              ]
+            },
+            {
+              "bucket": "2026-03-17 09:30:00-04:00",
+              "ohlc": [
+                25000.75,
+                25073.0,
+                24964.25,
+                25056.75
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "SWING:R:2026-03-16T11:00:00-04:00:99920",
+        "location_band": [
+          24977.346071428572,
+          24982.653928571428
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 10:53:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25123.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          25117.162857142856,
+          25128.837142857144
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bearish:2026-04-09T10:45:00-04:00:99997",
+        "floor_telemetry_usd": 2887.5,
+        "t1_telemetry": {
+          "considered_before": 28,
+          "after_kind_restriction": 14,
+          "htf_bands_added": 8,
+          "after_spent_filter": 9
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 10:54:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25123.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          25117.162857142856,
+          25128.837142857144
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+        "location_id": "FVG15:bearish:2026-04-09T10:45:00-04:00:99997",
+        "floor_telemetry_usd": 2557.5,
+        "t1_telemetry": {
+          "considered_before": 26,
+          "after_kind_restriction": 13,
+          "htf_bands_added": 2,
+          "after_spent_filter": 9
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "taught_story": "ALGO-009 exception 2: prior test -> reset -> return attack. The prior test is the story's own premise; requiring freshness would delete the form."
+        }
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 11:04:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24954.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24953.676785714288,
+          24954.729910714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-04-09T01:45:00-04:00:99977",
+        "floor_telemetry_usd": 2212.5,
+        "t1_telemetry": {
+          "considered_before": 108,
+          "after_kind_restriction": 67,
+          "htf_bands_added": 22,
+          "after_spent_filter": 61
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 11:27:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24954.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24953.676785714288,
+          24954.729910714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+        "floor_telemetry_usd": 3615.0,
+        "t1_telemetry": {
+          "considered_before": 110,
+          "after_kind_restriction": 68,
+          "htf_bands_added": 40,
+          "after_spent_filter": 61
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-09",
+          "2026-04-09 11:28:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 24954.25,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          24953.676785714288,
+          24954.729910714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+        "floor_telemetry_usd": 3112.5,
+        "t1_telemetry": {
+          "considered_before": 110,
+          "after_kind_restriction": 68,
+          "htf_bands_added": 38,
+          "after_spent_filter": 61
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      }
+    ],
+    "2026-04-13": [
+      {
+        "key": [
+          "2026-04-13",
+          "2026-04-13 08:12:00-04:00",
+          "L",
+          "REV"
+        ],
+        "target": 25131.75,
+        "target_kind": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "target_band": [
+          25129.0,
+          25134.5
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_FVG_15M_NATIVE",
+        "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+        "location_id": "SWING:S:2026-04-13T08:45:00-04:00:100293",
+        "floor_telemetry_usd": 480.0,
+        "t1_telemetry": {
+          "considered_before": 24,
+          "after_kind_restriction": 13,
+          "htf_bands_added": 7,
+          "after_spent_filter": 20
+        },
+        "rc": {
+          "exempt": false,
+          "fresh": true,
+          "zone_birth": "2026-04-13 08:45:00-04:00",
+          "completed_bars_in_band_since_birth": [],
+          "hits": 0
+        }
+      },
+      {
+        "key": [
+          "2026-04-13",
+          "2026-04-13 08:47:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-04-09 15:15:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-04-13 04:00:00-04:00",
+              "ohlc": [
+                25101.25,
+                25134.0,
+                25099.75,
+                25126.25
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:25:00-04:00",
+              "ohlc": [
+                25120.0,
+                25129.75,
+                25117.25,
+                25122.25
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:30:00-04:00",
+              "ohlc": [
+                25122.0,
+                25129.25,
+                25121.0,
+                25128.0
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:35:00-04:00",
+              "ohlc": [
+                25128.0,
+                25133.75,
+                25123.5,
+                25125.25
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+        "location_band": [
+          25128.262053571427,
+          25147.237946428573
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-04-13",
+          "2026-04-13 08:48:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-04-09 15:15:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-04-13 04:00:00-04:00",
+              "ohlc": [
+                25101.25,
+                25134.0,
+                25099.75,
+                25126.25
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:25:00-04:00",
+              "ohlc": [
+                25120.0,
+                25129.75,
+                25117.25,
+                25122.25
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:30:00-04:00",
+              "ohlc": [
+                25122.0,
+                25129.25,
+                25121.0,
+                25128.0
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:35:00-04:00",
+              "ohlc": [
+                25128.0,
+                25133.75,
+                25123.5,
+                25125.25
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+        "location_band": [
+          25128.262053571427,
+          25147.237946428573
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-04-13",
+          "2026-04-13 08:49:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-04-09 15:15:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-04-13 04:00:00-04:00",
+              "ohlc": [
+                25101.25,
+                25134.0,
+                25099.75,
+                25126.25
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:25:00-04:00",
+              "ohlc": [
+                25120.0,
+                25129.75,
+                25117.25,
+                25122.25
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:30:00-04:00",
+              "ohlc": [
+                25122.0,
+                25129.25,
+                25121.0,
+                25128.0
+              ]
+            },
+            {
+              "bucket": "2026-04-13 05:35:00-04:00",
+              "ohlc": [
+                25128.0,
+                25133.75,
+                25123.5,
+                25125.25
+              ]
+            }
+          ],
+          "hits": 4
+        },
+        "location_id": "S:2026-04-09T15:15:00-04:00:100537",
+        "location_band": [
+          25128.262053571427,
+          25147.237946428573
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      },
+      {
+        "key": [
+          "2026-04-13",
+          "2026-04-13 09:37:00-04:00",
+          "S",
+          "BRK5"
+        ],
+        "target": 25062.0,
+        "target_kind": "KEY_ZONE_15M",
+        "target_band": [
+          25057.26339285714,
+          25066.73660714286
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "S:2026-04-10T05:00:00-04:00:100813",
+        "floor_telemetry_usd": 3607.5,
+        "t1_telemetry": {
+          "considered_before": 114,
+          "after_kind_restriction": 71,
+          "htf_bands_added": 35,
+          "after_spent_filter": 66
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      },
+      {
+        "key": [
+          "2026-04-13",
+          "2026-04-13 10:22:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "target": 25374.5,
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "target_band": [
+          25370.235267857144,
+          25378.764732142856
+        ],
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+        "location_id": "SWING:R:2026-04-10T06:00:00-04:00:101100",
+        "floor_telemetry_usd": 2527.5,
+        "t1_telemetry": {
+          "considered_before": 11,
+          "after_kind_restriction": 4,
+          "htf_bands_added": 1,
+          "after_spent_filter": 3
+        },
+        "rc": {
+          "exempt": true,
+          "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+          "taught_story": "ALGO-009 Route D: the level is broken, ACCEPTED, then RETESTED as the opposite role. A retest is by definition a second visit, so freshness cannot be required of it."
+        }
+      }
+    ],
+    "2026-04-14": [
+      {
+        "key": [
+          "2026-04-14",
+          "2026-04-14 09:38:00-04:00",
+          "L",
+          "BRK5"
+        ],
+        "REFUSED_BY": "R_C_ZONE_NOT_FRESH",
+        "rc": {
+          "exempt": false,
+          "fresh": false,
+          "zone_birth": "2026-04-14 09:15:00-04:00",
+          "completed_bars_in_band_since_birth": [
+            {
+              "bucket": "2026-04-14 09:30:00-04:00",
+              "ohlc": [
+                25656.25,
+                25727.0,
+                25655.75,
+                25718.25
+              ]
+            }
+          ],
+          "hits": 1
+        },
+        "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+        "location_band": [
+          25714.66964285714,
+          25717.83035714286
+        ],
+        "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE"
+      }
+    ]
+  },
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 854.91
+}

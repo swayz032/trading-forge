@@ -1,0 +1,322 @@
+{
+  "artifact": "EARLY_BULLET_CENSUS",
+  "status": "DIAGNOSTIC. Early-bullet census. Lands nothing, proposes nothing.",
+  "authority": "ALGO-096 §7.2",
+  "magnitudes_a_break_family_story_can_clear": {
+    "reject_wick": [
+      "0.35",
+      "UNTAUGHT — v2.2 Params default; ALGO-071 §3 defines the rejection wick as OHLC against the band, no fraction"
+    ],
+    "acceptance_bars": [
+      "3",
+      "UNTAUGHT — the spec says DURABLE and names no count; declared in breakout_derivation.UNFROZEN_CHOICES"
+    ],
+    "body_frac": [
+      "0.62",
+      "UNTAUGHT — v2.2 default shipped with search range (0.56, 0.68)"
+    ],
+    "close_loc": [
+      "0.78",
+      "UNTAUGHT — v2.2 default shipped with search range (0.72, 0.84)"
+    ],
+    "range_ratio": [
+      "1.25",
+      "UNTAUGHT — v2.2 default; Route C only"
+    ]
+  },
+  "taught_clauses_ALGO_009": {
+    "7.10": "a REAL initial test of the level",
+    "7.11": "a MEANINGFUL reset away from it",
+    "7.12": "a TRUE return attack"
+  },
+  "join_key_warning": "`kernel_setup` (BRK5/BRK15/REV) and `authority route` (A/B/C/D) are DIFFERENT taxonomies. This census asks every route directly instead of copying the setup label forward, because a label in one taxonomy is not a fact in the other.",
+  "rows": [
+    {
+      "session": "2026-03-23",
+      "his_clock": "2026-03-23 11:21:00-04:00",
+      "early_bullet_entry": "2026-03-23 08:14:00-04:00",
+      "minutes_before_his_clock": 187.0,
+      "direction": "S",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "zone": {
+        "id": "S:2026-03-03T09:30:00-05:00:97791",
+        "band": [
+          24443.761607142857,
+          24453.238392857143
+        ],
+        "source": "WICK_ZONE",
+        "side": "S",
+        "birth": "2026-03-03 09:30:00-05:00",
+        "age_hours": 477.7,
+        "note": null
+      },
+      "authority_by_route_MEASURED": {
+        "A_NORMAL_REJECTION": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "INDECISION_AT_ZONE_WITHOUT_DIRECTIONAL_TAKEOVER",
+          "form": null
+        },
+        "B_NORMAL_BREAKOUT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+          "form": null
+        },
+        "C_PREBREAK_DISPLACEMENT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "DISPLACEMENT_THIRD_CANDLE_REVERSED_CONTROL",
+          "form": null
+        },
+        "D_PREBREAK_RETEST_BREAKOUT": {
+          "granted": true,
+          "state": "GRANTED",
+          "refusal": null,
+          "form": "break_retest"
+        }
+      },
+      "route_D_forms": {
+        "accepted_break_retest": {
+          "form": "break_retest",
+          "refusal": null
+        },
+        "prebreak_repeat_test": {
+          "form": "repeat_test_momentum_attack",
+          "refusal": null
+        }
+      }
+    },
+    {
+      "session": "2026-03-24",
+      "his_clock": "2026-03-24 09:32:00-04:00",
+      "early_bullet_entry": "2026-03-24 08:17:00-04:00",
+      "minutes_before_his_clock": 75.0,
+      "direction": "S",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "zone": {
+        "id": "S:2026-03-23T14:00:00-04:00:97276",
+        "band": [
+          24308.254464285714,
+          24327.495535714286
+        ],
+        "source": "WICK_ZONE",
+        "side": "S",
+        "birth": "2026-03-23 14:00:00-04:00",
+        "age_hours": 18.3,
+        "note": null
+      },
+      "authority_by_route_MEASURED": {
+        "A_NORMAL_REJECTION": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "MIXED_OVERLAP_AND_TWO_SIDED_WICKS",
+          "form": null
+        },
+        "B_NORMAL_BREAKOUT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+          "form": null
+        },
+        "C_PREBREAK_DISPLACEMENT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "DISPLACEMENT_THIRD_CANDLE_REVERSED_CONTROL",
+          "form": null
+        },
+        "D_PREBREAK_RETEST_BREAKOUT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=FIRST_BREAK_CANDLE_IS_SETUP_ONLY_NOT_AN_ENTRY; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+          "form": null
+        }
+      },
+      "route_D_forms": {
+        "accepted_break_retest": {
+          "form": null,
+          "refusal": "FIRST_BREAK_CANDLE_IS_SETUP_ONLY_NOT_AN_ENTRY"
+        },
+        "prebreak_repeat_test": {
+          "form": null,
+          "refusal": "REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK"
+        }
+      }
+    },
+    {
+      "session": "2026-03-31",
+      "his_clock": "2026-03-31 09:49:00-04:00",
+      "early_bullet_entry": "2026-03-31 09:03:00-04:00",
+      "minutes_before_his_clock": 46.0,
+      "direction": "L",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "zone": {
+        "id": "R:2026-03-31T07:45:00-04:00:93590",
+        "band": [
+          23392.688392857144,
+          23404.11160714286
+        ],
+        "source": "WICK_ZONE",
+        "side": "R",
+        "birth": "2026-03-31 07:45:00-04:00",
+        "age_hours": 1.3,
+        "note": null
+      },
+      "authority_by_route_MEASURED": {
+        "A_NORMAL_REJECTION": {
+          "granted": false,
+          "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "refusal": "MERE_APPROACH_WITHOUT_TOUCH",
+          "form": null
+        },
+        "B_NORMAL_BREAKOUT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+          "form": null
+        },
+        "C_PREBREAK_DISPLACEMENT": {
+          "granted": false,
+          "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+          "form": null
+        },
+        "D_PREBREAK_RETEST_BREAKOUT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=FIRST_BREAK_CANDLE_IS_SETUP_ONLY_NOT_AN_ENTRY; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+          "form": null
+        }
+      },
+      "route_D_forms": {
+        "accepted_break_retest": {
+          "form": null,
+          "refusal": "FIRST_BREAK_CANDLE_IS_SETUP_ONLY_NOT_AN_ENTRY"
+        },
+        "prebreak_repeat_test": {
+          "form": null,
+          "refusal": "REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK"
+        }
+      }
+    },
+    {
+      "session": "2026-04-06",
+      "his_clock": "2026-04-06 10:04:00-04:00",
+      "early_bullet_entry": "2026-04-06 09:07:00-04:00",
+      "minutes_before_his_clock": 57.0,
+      "direction": "S",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "zone": {
+        "id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+        "band": [
+          24289.334285714285,
+          24293.165714285715
+        ],
+        "source": "STRONG_SWING_DISPLACEMENT",
+        "side": "S",
+        "birth": "2026-04-06 03:30:00-04:00",
+        "age_hours": 5.6,
+        "note": null
+      },
+      "authority_by_route_MEASURED": {
+        "A_NORMAL_REJECTION": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "COUNTER_BIAS_REVERSAL_WITHOUT_COMPLETED_CONTROL_TRANSFER",
+          "form": null
+        },
+        "B_NORMAL_BREAKOUT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+          "form": null
+        },
+        "C_PREBREAK_DISPLACEMENT": {
+          "granted": false,
+          "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+          "form": null
+        },
+        "D_PREBREAK_RETEST_BREAKOUT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "NEITHER_ACCEPTED_BREAK_RETEST_NOR_PREBREAK_REPEAT_TEST_QUALIFIED: accepted_break=FIRST_BREAK_CANDLE_IS_SETUP_ONLY_NOT_AN_ENTRY; repeat_test=REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK",
+          "form": null
+        }
+      },
+      "route_D_forms": {
+        "accepted_break_retest": {
+          "form": null,
+          "refusal": "FIRST_BREAK_CANDLE_IS_SETUP_ONLY_NOT_AN_ENTRY"
+        },
+        "prebreak_repeat_test": {
+          "form": null,
+          "refusal": "REPEAT_TEST_WITHOUT_A_TRUE_RETURN_ATTACK"
+        }
+      }
+    },
+    {
+      "session": "2026-04-09",
+      "his_clock": "2026-04-09 11:35:00-04:00",
+      "early_bullet_entry": "2026-04-09 09:37:00-04:00",
+      "minutes_before_his_clock": 118.0,
+      "direction": "L",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "zone": {
+        "id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+        "band": [
+          25029.72,
+          25035.78
+        ],
+        "source": "STRONG_SWING_DISPLACEMENT",
+        "side": "R",
+        "birth": "2026-03-16 15:45:00-04:00",
+        "age_hours": 569.9,
+        "note": null
+      },
+      "authority_by_route_MEASURED": {
+        "A_NORMAL_REJECTION": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "TOUCH_WITHOUT_DIRECTIONAL_CONTROL",
+          "form": null
+        },
+        "B_NORMAL_BREAKOUT": {
+          "granted": false,
+          "state": "WAIT_STORY_INCOMPLETE",
+          "refusal": "NORMAL_BREAKOUT_TRIGGER_MUST_BE_THE_BAR_FOLLOWING_THE_FIRST_PRINT",
+          "form": null
+        },
+        "C_PREBREAK_DISPLACEMENT": {
+          "granted": false,
+          "state": "WAIT_PRICE_HAS_NOT_EARNED_THE_LEVEL",
+          "refusal": "ORDINARY_MOMENTUM_IS_NOT_TRUE_DISPLACEMENT",
+          "form": null
+        },
+        "D_PREBREAK_RETEST_BREAKOUT": {
+          "granted": true,
+          "state": "GRANTED",
+          "refusal": null,
+          "form": "break_retest"
+        }
+      },
+      "route_D_forms": {
+        "accepted_break_retest": {
+          "form": "break_retest",
+          "refusal": null
+        },
+        "prebreak_repeat_test": {
+          "form": "repeat_test_momentum_attack",
+          "refusal": null
+        }
+      }
+    }
+  ],
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 190.07
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "release_id": "MNQ-V2.4-PREMARKET-EQUATION-2-STRUCTURE-ONLY",
+  "frozen_at": "2026-08-20",
+  "purpose": "Premarket price action may provide a directional prior, but this strategy does not use PDH/PDL/PWH/PWL or prior-close/gap reference levels. The prior is built only from causal premarket net movement, candle control and higher/lower structure and is never a standalone signal.",
+  "active_reference_policy": {
+    "PDH": "FORBIDDEN",
+    "PDL": "FORBIDDEN",
+    "PWH": "FORBIDDEN",
+    "PWL": "FORBIDDEN",
+    "prior_close_gap_score": "FORBIDDEN",
+    "allowed": [
+      "causal_premarket_net_price_action",
+      "causal_premarket_candle_control",
+      "causal_premarket_higher_high_lower_low_structure"
+    ]
+  },
+  "major_location_equation": "structural S/R location_quality >= frozen Params.high_zone_quality OR allowed S/R+FVG confluence >= 2",
+  "aligned_or_neutral": "ALLOW_IF_ALL_OTHER_SR_OR_FVG_CANDLE_FORCE_ROOM_GATES_PASS",
+  "counter_plan_reversal": "ALLOW_ONLY_IF_COMPLETE_REVERSAL_STORY_AND_MAJOR_ALLOWED_LOCATION",
+  "counter_plan_strong_5m_breakout": "ALLOW_ONLY_IF_MAJOR_ALLOWED_LOCATION; the shared kernel separately requires the frozen 5m breakout/extension/force equation",
+  "counter_plan_weak_breakout": "ALLOW_ONLY_IF_MAJOR_ALLOWED_LOCATION; the shared kernel separately requires the frozen 15m continuation equation",
+  "forbidden": [
+    "PDH_PDL_PWH_PWL_influence",
+    "prior_close_gap_influence",
+    "counter_plan_pattern_away_from_SR_or_FVG",
+    "counter_plan_touch_without_directional_control",
+    "hardcoded_unregistered_quality_cutoff"
+  ],
+  "anti_overfit": {
+    "new_numeric_threshold_added": false,
+    "uses_existing_frozen_high_zone_quality": true,
+    "no_PnL_selection": true,
+    "no_variant_search": true,
+    "changing_this_contract_invalidates_prior_v2_4_evidence": true
+  }
+}

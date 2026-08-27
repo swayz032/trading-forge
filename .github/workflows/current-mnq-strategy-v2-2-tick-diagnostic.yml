@@ -1,0 +1,28 @@
+name: Current MNQ Strategy v2.2 Tick Diagnostic
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v2-2-robustness
+    paths:
+      - 'research/current_mnq_strategy_v2_2_tick_diagnostic.py'
+      - '.github/workflows/current-mnq-strategy-v2-2-tick-diagnostic.yml'
+  workflow_dispatch:
+
+jobs:
+  tick-diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check pandas numpy scipy
+      - name: Run pinned tick versus one-minute diagnostic
+        run: PYTHONPATH=. python research/current_mnq_strategy_v2_2_tick_diagnostic.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-2-tick-diagnostic
+          path: research/_mnq_v22_tick_diag/results/
+          if-no-files-found: error

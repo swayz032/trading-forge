@@ -1,0 +1,571 @@
+{
+  "artifact": "ALGO141_WHAT_DROPS_HIS_SETUP_AFTER_RANKING",
+  "authority": "ALGO-140 item 2, run as ALGO-096's procedure",
+  "ceiling_note": "THE CEILING IS NOT A PROPOSAL. The floor is his own taught rule and is untouched on disk. The number bounds what opening that one gate could possibly recover - no more.",
+  "ceiling_per_session": {
+    "2026-03-23": {
+      "entry_time": "2026-03-23 08:14:00-04:00",
+      "setup": "BRK5"
+    },
+    "2026-03-24": {
+      "entry_time": "2026-03-24 08:17:00-04:00",
+      "setup": "BRK5"
+    },
+    "2026-03-25": {
+      "entry_time": "2026-03-25 08:12:00-04:00",
+      "setup": "REV"
+    },
+    "2026-03-26": {
+      "entry_time": "2026-03-26 09:33:00-04:00",
+      "setup": "BRK5"
+    },
+    "2026-03-30": {
+      "entry_time": "2026-03-30 08:07:00-04:00",
+      "setup": "REV"
+    },
+    "2026-03-31": {
+      "entry_time": "2026-03-31 08:02:00-04:00",
+      "setup": "REV"
+    },
+    "2026-04-01": {
+      "entry_time": "2026-04-01 08:04:00-04:00",
+      "setup": "REV"
+    },
+    "2026-04-02": {
+      "entry_time": "2026-04-02 08:58:00-04:00",
+      "setup": "BRK5"
+    },
+    "2026-04-06": {
+      "entry_time": "2026-04-06 08:17:00-04:00",
+      "setup": "REV"
+    },
+    "2026-04-07": {
+      "entry_time": "2026-04-07 08:17:00-04:00",
+      "setup": "REV"
+    },
+    "2026-04-08": {
+      "entry_time": "2026-04-08 08:07:00-04:00",
+      "setup": "REV"
+    },
+    "2026-04-09": {
+      "entry_time": "2026-04-09 09:44:00-04:00",
+      "setup": "REV"
+    },
+    "2026-04-13": {
+      "entry_time": "2026-04-13 08:12:00-04:00",
+      "setup": "REV"
+    },
+    "2026-04-14": {
+      "entry_time": "2026-04-14 09:18:00-04:00",
+      "setup": "BRK5"
+    }
+  },
+  "elapsed_s": 375.11,
+  "emitter_reason_families_on_refused_rejections": {
+    "FIRST_REACTION": 8,
+    "TP1_REFERENCE_REWARD_UNDER_400": 6
+  },
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result decided anything here; net_pnl is never read.",
+  "per_session": {
+    "2026-03-23": {
+      "candidates_walked": 1,
+      "rejection_candidates": 0,
+      "rejections_that_died_at": {},
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "confirmed_time": "2026-03-23 08:14:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "S",
+          "emitter_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+          "entry_time": "2026-03-23 08:14:00-04:00",
+          "location_id": "S:2026-03-03T09:30:00-05:00:97791",
+          "location_source": "WICK_ZONE",
+          "setup": "BRK5",
+          "signal_time": "2026-03-23 08:10:00-04:00",
+          "target_points": 24.5,
+          "target_source": "WICK_ZONE"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-03-23 08:14:00-04:00",
+        "location_source": "WICK_ZONE",
+        "setup": "BRK5"
+      }
+    },
+    "2026-03-24": {
+      "candidates_walked": 1,
+      "rejection_candidates": 0,
+      "rejections_that_died_at": {},
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "confirmed_time": "2026-03-24 08:17:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "S",
+          "emitter_reason": "PROCESSED_REACTION_ROLLOVER:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M,KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M->NEXT:LIQUIDITY_CLUSTER",
+          "entry_time": "2026-03-24 08:17:00-04:00",
+          "location_id": "S:2026-03-23T14:00:00-04:00:97276",
+          "location_source": "WICK_ZONE",
+          "setup": "BRK5",
+          "signal_time": "2026-03-24 08:15:00-04:00",
+          "target_points": 34.0,
+          "target_source": "WICK_ZONE"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-03-24 08:17:00-04:00",
+        "location_source": "WICK_ZONE",
+        "setup": "BRK5"
+      }
+    },
+    "2026-03-25": {
+      "candidates_walked": 1,
+      "rejection_candidates": 1,
+      "rejections_that_died_at": {
+        "REACHED_THE_TRADE": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-03-25 08:12:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "L",
+          "emitter_reason": "FIRST_REACTION:KEY_ZONE_15M",
+          "entry_time": "2026-03-25 08:12:00-04:00",
+          "location_id": "S:2026-03-25T06:30:00-04:00:97689",
+          "location_source": "WICK_ZONE",
+          "setup": "REV",
+          "signal_time": "2026-03-25 08:10:00-04:00",
+          "target_points": 46.5,
+          "target_source": "STRONG_SWING_DISPLACEMENT"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-03-25 08:12:00-04:00",
+        "location_source": "WICK_ZONE",
+        "setup": "REV"
+      }
+    },
+    "2026-03-26": {
+      "candidates_walked": 1,
+      "rejection_candidates": 0,
+      "rejections_that_died_at": {},
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "confirmed_time": "2026-03-26 09:33:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "S",
+          "emitter_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+          "entry_time": "2026-03-26 09:33:00-04:00",
+          "location_id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "setup": "BRK5",
+          "signal_time": "2026-03-26 09:30:00-04:00",
+          "target_points": 25.25,
+          "target_source": "WICK_ZONE"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-03-26 09:33:00-04:00",
+        "location_source": "FVG_15M_CAUSAL_INTERACTION",
+        "setup": "BRK5"
+      }
+    },
+    "2026-03-30": {
+      "candidates_walked": 1,
+      "rejection_candidates": 1,
+      "rejections_that_died_at": {
+        "REACHED_THE_TRADE": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-03-30 08:07:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "L",
+          "emitter_reason": "FIRST_REACTION:KEY_ZONE_15M",
+          "entry_time": "2026-03-30 08:07:00-04:00",
+          "location_id": "S:2026-03-27T13:15:00-04:00:93776",
+          "location_source": "WICK_ZONE",
+          "setup": "REV",
+          "signal_time": "2026-03-30 08:05:00-04:00",
+          "target_points": 63.25,
+          "target_source": "WICK_ZONE"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-03-30 08:07:00-04:00",
+        "location_source": "WICK_ZONE",
+        "setup": "REV"
+      }
+    },
+    "2026-03-31": {
+      "candidates_walked": 4,
+      "rejection_candidates": 3,
+      "rejections_that_died_at": {
+        "G3_NO_TARGET": 2,
+        "REACHED_THE_TRADE": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": false,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-03-31 08:02:00-04:00",
+          "deepest_gate": "G3_NO_TARGET",
+          "direction": "L",
+          "emitter_reason": "TP1_REFERENCE_REWARD_UNDER_400:277.50:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-03-31 08:02:00-04:00",
+          "location_id": "FVG15:bullish:2026-03-31T07:30:00-04:00:93234",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "setup": "REV",
+          "signal_time": "2026-03-31 08:00:00-04:00"
+        },
+        {
+          "became_the_trade": false,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-03-31 08:04:00-04:00",
+          "deepest_gate": "G3_NO_TARGET",
+          "direction": "L",
+          "emitter_reason": "TP1_REFERENCE_REWARD_UNDER_400:255.00:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-03-31 08:04:00-04:00",
+          "location_id": "FVG15:bullish:2026-03-31T07:30:00-04:00:93234",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "setup": "REV",
+          "signal_time": "2026-03-31 08:00:00-04:00"
+        },
+        {
+          "became_the_trade": false,
+          "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "confirmed_time": "2026-03-31 09:19:00-04:00",
+          "deepest_gate": "G3_NO_TARGET",
+          "direction": "L",
+          "emitter_reason": "TP1_REFERENCE_REWARD_UNDER_400:397.50:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-03-31 09:19:00-04:00",
+          "location_id": "R:2026-03-31T07:45:00-04:00:93590",
+          "location_source": "WICK_ZONE",
+          "setup": "BRK5",
+          "signal_time": "2026-03-31 09:15:00-04:00"
+        },
+        {
+          "became_the_trade": true,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-03-31 10:19:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "L",
+          "emitter_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+          "entry_time": "2026-03-31 10:19:00-04:00",
+          "location_id": "FVG15:bullish:2026-03-31T10:15:00-04:00:93930",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "setup": "REV",
+          "signal_time": "2026-03-31 10:15:00-04:00",
+          "target_points": 13.5,
+          "target_source": "WICK_ZONE"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-03-31 10:19:00-04:00",
+        "location_source": "FVG_15M_CAUSAL_INTERACTION",
+        "setup": "REV"
+      }
+    },
+    "2026-04-01": {
+      "candidates_walked": 2,
+      "rejection_candidates": 1,
+      "rejections_that_died_at": {
+        "G3_NO_TARGET": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": false,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-01 08:04:00-04:00",
+          "deepest_gate": "G3_NO_TARGET",
+          "direction": "S",
+          "emitter_reason": "TP1_REFERENCE_REWARD_UNDER_400:180.00:FVG_15M:FVG_15M_NATIVE_UNMITIGATED",
+          "entry_time": "2026-04-01 08:04:00-04:00",
+          "location_id": "S:2026-03-26T04:00:00-04:00:96809",
+          "location_source": "WICK_ZONE",
+          "setup": "REV",
+          "signal_time": "2026-04-01 08:00:00-04:00"
+        },
+        {
+          "became_the_trade": true,
+          "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "confirmed_time": "2026-04-01 08:12:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "S",
+          "emitter_reason": "FIRST_REACTION:FVG_15M",
+          "entry_time": "2026-04-01 08:12:00-04:00",
+          "location_id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "setup": "BRK5",
+          "signal_time": "2026-04-01 08:10:00-04:00",
+          "target_points": 27.75,
+          "target_source": "FVG_15M_NATIVE_UNMITIGATED"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-04-01 08:12:00-04:00",
+        "location_source": "FVG_15M_CAUSAL_INTERACTION",
+        "setup": "BRK5"
+      }
+    },
+    "2026-04-02": {
+      "candidates_walked": 1,
+      "rejection_candidates": 0,
+      "rejections_that_died_at": {},
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "confirmed_time": "2026-04-02 08:58:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "S",
+          "emitter_reason": "FIRST_REACTION:KEY_ZONE_15M",
+          "entry_time": "2026-04-02 08:58:00-04:00",
+          "location_id": "SWING:S:2026-03-27T05:45:00-04:00:94839",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "setup": "BRK5",
+          "signal_time": "2026-04-02 08:55:00-04:00",
+          "target_points": 60.0,
+          "target_source": "STRONG_SWING_DISPLACEMENT"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-04-02 08:58:00-04:00",
+        "location_source": "STRONG_SWING_DISPLACEMENT",
+        "setup": "BRK5"
+      }
+    },
+    "2026-04-06": {
+      "candidates_walked": 2,
+      "rejection_candidates": 2,
+      "rejections_that_died_at": {
+        "G3_NO_TARGET": 1,
+        "REACHED_THE_TRADE": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": false,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-06 08:17:00-04:00",
+          "deepest_gate": "G3_NO_TARGET",
+          "direction": "L",
+          "emitter_reason": "TP1_REFERENCE_REWARD_UNDER_400:210.00:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M:WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "entry_time": "2026-04-06 08:17:00-04:00",
+          "location_id": "S:2026-04-01T13:15:00-04:00:97152",
+          "location_source": "WICK_ZONE",
+          "setup": "REV",
+          "signal_time": "2026-04-06 08:15:00-04:00"
+        },
+        {
+          "became_the_trade": true,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-06 08:47:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "L",
+          "emitter_reason": "FIRST_REACTION:KEY_ZONE_15M",
+          "entry_time": "2026-04-06 08:47:00-04:00",
+          "location_id": "S:2026-04-01T13:15:00-04:00:97152",
+          "location_source": "WICK_ZONE",
+          "setup": "REV",
+          "signal_time": "2026-04-06 08:45:00-04:00",
+          "target_points": 53.5,
+          "target_source": "WICK_ZONE"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-04-06 08:47:00-04:00",
+        "location_source": "WICK_ZONE",
+        "setup": "REV"
+      }
+    },
+    "2026-04-07": {
+      "candidates_walked": 1,
+      "rejection_candidates": 1,
+      "rejections_that_died_at": {
+        "REACHED_THE_TRADE": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-07 08:17:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "S",
+          "emitter_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER",
+          "entry_time": "2026-04-07 08:17:00-04:00",
+          "location_id": "S:2026-04-01T12:15:00-04:00:96923",
+          "location_source": "WICK_ZONE",
+          "setup": "REV",
+          "signal_time": "2026-04-07 08:15:00-04:00",
+          "target_points": 22.0,
+          "target_source": "WICK_ZONE"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-04-07 08:17:00-04:00",
+        "location_source": "WICK_ZONE",
+        "setup": "REV"
+      }
+    },
+    "2026-04-08": {
+      "candidates_walked": 1,
+      "rejection_candidates": 1,
+      "rejections_that_died_at": {
+        "REACHED_THE_TRADE": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-08 08:07:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "L",
+          "emitter_reason": "FIRST_REACTION:FVG_15M",
+          "entry_time": "2026-04-08 08:07:00-04:00",
+          "location_id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "setup": "REV",
+          "signal_time": "2026-04-08 08:05:00-04:00",
+          "target_points": 50.25,
+          "target_source": "FVG_15M_NATIVE_UNMITIGATED"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-04-08 08:07:00-04:00",
+        "location_source": "STRONG_SWING_DISPLACEMENT",
+        "setup": "REV"
+      }
+    },
+    "2026-04-09": {
+      "candidates_walked": 1,
+      "rejection_candidates": 1,
+      "rejections_that_died_at": {
+        "REACHED_THE_TRADE": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-09 09:44:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "L",
+          "emitter_reason": "FIRST_REACTION:KEY_ZONE_15M",
+          "entry_time": "2026-04-09 09:44:00-04:00",
+          "location_id": "SWING:S:2026-03-11T03:00:00-04:00:100033",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "setup": "REV",
+          "signal_time": "2026-04-09 09:40:00-04:00",
+          "target_points": 19.75,
+          "target_source": "STRONG_SWING_DISPLACEMENT"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-04-09 09:44:00-04:00",
+        "location_source": "STRONG_SWING_DISPLACEMENT",
+        "setup": "REV"
+      }
+    },
+    "2026-04-13": {
+      "candidates_walked": 3,
+      "rejection_candidates": 3,
+      "rejections_that_died_at": {
+        "G3_NO_TARGET": 2,
+        "REACHED_THE_TRADE": 1
+      },
+      "rows": [
+        {
+          "became_the_trade": false,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-13 08:12:00-04:00",
+          "deepest_gate": "G3_NO_TARGET",
+          "direction": "L",
+          "emitter_reason": "TP1_REFERENCE_REWARD_UNDER_400:322.50:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-04-13 08:12:00-04:00",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "setup": "REV",
+          "signal_time": "2026-04-13 08:10:00-04:00"
+        },
+        {
+          "became_the_trade": false,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-13 08:18:00-04:00",
+          "deepest_gate": "G3_NO_TARGET",
+          "direction": "L",
+          "emitter_reason": "TP1_REFERENCE_REWARD_UNDER_400:165.00:LIQUIDITY_CLUSTER:WICK_ZONE",
+          "entry_time": "2026-04-13 08:18:00-04:00",
+          "location_id": "SWING:S:2026-03-17T22:30:00-04:00:100322",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "setup": "REV",
+          "signal_time": "2026-04-13 08:15:00-04:00"
+        },
+        {
+          "became_the_trade": true,
+          "candidate_reason": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+          "confirmed_time": "2026-04-13 09:22:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "L",
+          "emitter_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+          "entry_time": "2026-04-13 09:22:00-04:00",
+          "location_id": "FVG15:bullish:2026-04-13T09:15:00-04:00:100618",
+          "location_source": "FVG_15M_CAUSAL_INTERACTION",
+          "setup": "REV",
+          "signal_time": "2026-04-13 09:20:00-04:00",
+          "target_points": 13.75,
+          "target_source": "WICK_ZONE+LIQUIDITY_CLUSTER_5M"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-04-13 09:22:00-04:00",
+        "location_source": "FVG_15M_CAUSAL_INTERACTION",
+        "setup": "REV"
+      }
+    },
+    "2026-04-14": {
+      "candidates_walked": 1,
+      "rejection_candidates": 0,
+      "rejections_that_died_at": {},
+      "rows": [
+        {
+          "became_the_trade": true,
+          "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+          "confirmed_time": "2026-04-14 09:18:00-04:00",
+          "deepest_gate": "REACHED_THE_TRADE",
+          "direction": "L",
+          "emitter_reason": "FIRST_REACTION:FVG_15M",
+          "entry_time": "2026-04-14 09:18:00-04:00",
+          "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+          "location_source": "STRONG_SWING_DISPLACEMENT",
+          "setup": "BRK5",
+          "signal_time": "2026-04-14 09:15:00-04:00",
+          "target_points": 190.0,
+          "target_source": "FVG_15M_NATIVE_UNMITIGATED"
+        }
+      ],
+      "the_trade": {
+        "entry_time": "2026-04-14 09:18:00-04:00",
+        "location_source": "STRONG_SWING_DISPLACEMENT",
+        "setup": "BRK5"
+      }
+    }
+  },
+  "rejections_by_deepest_gate_BY_KEY": {
+    "G3_NO_TARGET": 6,
+    "REACHED_THE_TRADE": 8
+  },
+  "sessions_whose_trade_is_a_REJECTION": {
+    "as_built": 8,
+    "with_the_reward_floor_at_zero": 9
+  },
+  "status": "DIAGNOSTIC ONLY. Records what the production functions return. Derives nothing, proposes nothing, changes no file.",
+  "the_layer": "current_mnq_strategy_v2_4_engine.py:43-60 - three continues: G1 no fill, G2 past LAST_ENTRY, G3 no target"
+}

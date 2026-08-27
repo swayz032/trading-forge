@@ -1,0 +1,116 @@
+name: Current MNQ Strategy v2.3 Production Gates
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v2-3-production-candidate
+    paths:
+      - 'research/current_mnq_strategy_v2_3_*.py'
+      - 'research/current_mnq_strategy_v2_3_*.json'
+      - 'research/mnq_v23_realtime/**'
+      - 'research/mnq_v23_requirements.txt'
+      - 'tests/test_current_mnq_strategy_v2_3*.py'
+      - '.github/workflows/current-mnq-strategy-v2-3-production-gates.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'research/current_mnq_strategy_v2_3_*.py'
+      - 'research/current_mnq_strategy_v2_3_*.json'
+      - 'research/mnq_v23_realtime/**'
+      - 'research/mnq_v23_requirements.txt'
+      - 'tests/test_current_mnq_strategy_v2_3*.py'
+      - '.github/workflows/current-mnq-strategy-v2-3-production-gates.yml'
+  workflow_dispatch:
+
+jobs:
+  production-architecture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+      - name: Install pinned isolated research dependencies
+        run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
+      - name: Run inherited v2.2 correctness plus v2.3 production gates
+        run: |
+          PYTHONPATH=. pytest --confcutdir=tests -q \
+            tests/test_current_mnq_strategy_v2_2_contracts.py \
+            tests/test_current_mnq_strategy_v2_2_projectx_history.py \
+            tests/test_current_mnq_strategy_v2_2_projectx_broker.py \
+            tests/test_current_mnq_strategy_v2_2_gold_lifecycle.py \
+            tests/test_current_mnq_strategy_v2_2_risk_metrics.py \
+            tests/test_current_mnq_strategy_v2_2_engine_final.py \
+            tests/test_current_mnq_strategy_v2_3*.py \
+            --junitxml=/tmp/mnq_v23_junit.xml
+      - name: Verify read-only SignalR sidecar syntax and hosted-runtime refusal
+        working-directory: research/mnq_v23_realtime
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --ignore-scripts --no-audit --no-fund
+          else
+            npm install --ignore-scripts --no-audit --no-fund
+          fi
+          node --check sidecar.mjs
+          set +e
+          output=$(node sidecar.mjs 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          test "$code" -ne 0
+          echo "$output" | grep 'REMOTE_RUNTIME_REFUSE:PROJECTX_REALTIME'
+      - name: Prove Python CI cannot be used as ProjectX automation runtime
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          from research.current_mnq_strategy_v2_3_local_runtime import require_personal_device
+          try:
+              require_personal_device('PROJECTX_ORDER_SUBMISSION')
+          except RuntimeError as e:
+              assert 'REMOTE_RUNTIME_REFUSE' in str(e)
+              print('PASS: hosted runner refused for ProjectX automation')
+          else:
+              raise SystemExit('FAIL: hosted runner was not refused')
+          PY
+      - name: Write architecture evidence receipt
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import json, shutil, xml.etree.ElementTree as ET
+          from pathlib import Path
+          from research.current_mnq_strategy_v2_3_evidence import gold_counts
+          from research.current_mnq_strategy_v2_3_policy import semantics_hash, load_spec
+          root=ET.parse('/tmp/mnq_v23_junit.xml').getroot()
+          if root.tag=='testsuites':
+              tests=sum(int(x.attrib.get('tests',0)) for x in root)
+              failures=sum(int(x.attrib.get('failures',0))+int(x.attrib.get('errors',0)) for x in root)
+          else:
+              tests=int(root.attrib.get('tests',0))
+              failures=int(root.attrib.get('failures',0))+int(root.attrib.get('errors',0))
+          out=Path('research/_mnq_v23_architecture'); out.mkdir(parents=True,exist_ok=True)
+          spec=load_spec(); pos,neg=gold_counts()
+          receipt={
+              'release_id':spec['release_id'], 'semantics_sha256':semantics_hash(),
+              'tests':tests, 'failures':failures,
+              'positive_user_gold_count':pos,
+              'negative_semantic_fixture_count':len(spec['negative_semantic_fixtures']),
+              'real_user_tempting_no_trade_gold_count':neg,
+              'signalr_sidecar_ci_automation_refused':True,
+              'topstep_lfa_projectx_api_refusal_required':True,
+              'automation_approved':False,
+              'reason':'architecture/fidelity software gates only; sealed OOS + real negative gold + local shadow/drills still required'
+          }
+          (out/'architecture_receipt.json').write_text(json.dumps(receipt,indent=2,sort_keys=True))
+          lock=Path('research/mnq_v23_realtime/package-lock.json')
+          if lock.exists():
+              shutil.copy2(lock, out/'generated-package-lock.json')
+          print(json.dumps(receipt,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-3-production-architecture-evidence
+          path: research/_mnq_v23_architecture/
+          if-no-files-found: error

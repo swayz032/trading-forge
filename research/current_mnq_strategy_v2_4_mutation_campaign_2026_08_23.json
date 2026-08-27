@@ -1,0 +1,159 @@
+{
+  "artifact": "MUTATION_CAMPAIGN_DERIVATION_LAYERS",
+  "authority": "ALGO-009 section 7",
+  "produced": "2026-08-23",
+  "owned_and_run": 15,
+  "mutations_run": 19,
+  "section7_mutations": 16,
+  "extra_mutations_outside_section7": {
+    "V1": "let a STRONG first break enter through the weak-break variant",
+    "V2": "accept a pullback that gave the level back",
+    "V3": "let the variant become a fifth route by accepting it under any route"
+  },
+  "extra_note": "section 7 enumerates fifteen defects and none is about the BRK15 variant, so the V-arms are reported OUTSIDE its denominator. Numbering them 7.16+ would invent coverage the ruling never asked for - an inflated denominator is the same lie as a shrunken one, in the flattering direction.",
+  "killed": 19,
+  "items_with_two_doors": [
+    4
+  ],
+  "not_yet_applicable": {},
+  "caveats": {
+    "14": "defended structurally, not by a predicate - the kill proves the completed/trigger split is load-bearing, not that a backdated entry clock is refused elsewhere"
+  },
+  "scope_note": "All 15 of section 7's items are now owned and run. Items 6-14 became runnable when routes B/C/D were built on 2026-08-23; before that they were deferred BY NAME rather than folded into a smaller denominator. Item 14 carries a caveat: its guard is architectural, so read `caveats` before quoting the kill. The V-arms are NOT section 7 items - see `extra_note`.",
+  "restored_byte_exact": true,
+  "results": [
+    {
+      "item": 1,
+      "description": "turn a plain touch into a valid rejection",
+      "file": "research/current_mnq_strategy_v2_4_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_derivation.py::test_price_that_sat_INSIDE_the_zone_all_along_has_approached_nothing",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 2,
+      "description": "hard-code approach=True without measured evidence",
+      "file": "research/current_mnq_strategy_v2_4_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_derivation.py::test_price_that_never_touches_the_zone_is_NOT_an_approach",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 3,
+      "description": "hard-code control/takeover without control-transfer evidence",
+      "file": "research/current_mnq_strategy_v2_4_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_derivation.py::test_a_touch_with_no_directional_control_is_refused",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 4,
+      "description": "allow force alone to authorize a trade (route A story gate)",
+      "file": "research/current_mnq_strategy_v2_4_entry_authority.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority.py::test_an_incomplete_story_stops_before_force",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 4,
+      "description": "allow force alone to authorize a trade (routes B/C/D evidence gate)",
+      "file": "research/current_mnq_strategy_v2_4_entry_authority.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority.py::test_the_three_breakout_routes_refuse_PURE_rejection_evidence",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 5,
+      "description": "allow a candle pattern away from the key level to authorize",
+      "file": "research/current_mnq_strategy_v2_4_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_derivation.py::test_no_interaction_is_returned_without_a_real_approach",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 15,
+      "description": "consume the bullet on a candidate the machine classifies WAIT",
+      "file": "research/current_mnq_strategy_v2_4_entry_authority.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority.py::test_no_authorized_location_stops_at_step_one",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 6,
+      "description": "let the first completed breakout candle enter automatically",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_the_first_completed_break_candle_NEVER_enters_on_its_own",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 7,
+      "description": "remove the second-5m extreme extension from the normal breakout",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_second_5m_momentum_without_extreme_extension_is_WAIT",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 8,
+      "description": "let ordinary momentum satisfy displacement exception #1",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_ordinary_momentum_is_NOT_displacement",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 9,
+      "description": "accept a displacement third candle after it loses directional control",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_a_third_candle_that_reverses_control_kills_the_sequence",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 10,
+      "description": "satisfy exception #2 with no real prior test or rejection",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_repeat_test_without_a_real_prior_test_is_refused",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 11,
+      "description": "satisfy exception #2 with no meaningful reset",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_repeat_test_without_a_meaningful_reset_is_refused",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 12,
+      "description": "satisfy exception #2 with no true retest or return attack",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_repeat_test_without_a_true_return_attack_is_refused",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 13,
+      "description": "create a third pre-break exception",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_the_two_exceptions_match_the_frozen_spec_VERBATIM",
+      "outcome": "KILLED"
+    },
+    {
+      "item": 14,
+      "description": "collapse the completed/trigger split so the parent's final OHLC is reachable",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_no_function_can_see_the_triggers_finished_form",
+      "outcome": "KILLED"
+    },
+    {
+      "item": "V1",
+      "description": "let a STRONG first break enter through the weak-break variant",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_a_STRONG_first_break_is_refused_by_the_variant",
+      "outcome": "KILLED"
+    },
+    {
+      "item": "V2",
+      "description": "accept a pullback that gave the level back",
+      "file": "research/current_mnq_strategy_v2_4_breakout_derivation.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_breakout_derivation.py::test_a_pullback_that_gives_the_level_back_is_a_FAILED_break_not_a_setup",
+      "outcome": "KILLED"
+    },
+    {
+      "item": "V3",
+      "description": "let the variant become a fifth route by accepting it under any route",
+      "file": "research/current_mnq_strategy_v2_4_entry_authority.py",
+      "test": "tests/test_current_mnq_strategy_v2_4_entry_authority.py::test_the_variant_cannot_be_smuggled_in_under_another_route",
+      "outcome": "KILLED"
+    }
+  ]
+}

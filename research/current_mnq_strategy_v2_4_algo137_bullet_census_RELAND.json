@@ -1,0 +1,359 @@
+{
+  "artifact": "BREAK_FAMILY_BULLET_CENSUS",
+  "status": "DIAGNOSTIC. Break-family bullet census. Lands nothing, proposes nothing.",
+  "authority": "ALGO-105 — the 08:17 S BRK5 object, opened as a census",
+  "horizon": "baseline approvals read from the field-enabled 40-capture at as_of=replay_end; bars read directly from the 5m frame",
+  "surfaces_searched_for_citations": [
+    "current_mnq_strategy_v2_4_key_level_semantics.json (THE FILE THE CODE LOADS — first)",
+    "current_mnq_strategy_v2_4_spec.json",
+    "video_evidence.md",
+    "supporting_visual_examples.md",
+    "trader_fidelity_addendum_2026_08_20.json",
+    "engineer_onboarding.md",
+    "fvg_semantics.json",
+    "the ALGO ladder"
+  ],
+  "citation_status_note": "stated as 'no citation found in the surfaces named', never as proof of absence (ALGO-087)",
+  "distinct_untaught_magnitudes_on_these_five_grants": [
+    "absolute_displacement_floor_atr",
+    "acceptance_bars",
+    "body_frac",
+    "close_loc",
+    "min_wick",
+    "recent_displacement_percentile",
+    "reject_wick"
+  ],
+  "rows": [
+    {
+      "session": "2026-03-23",
+      "his_clock": "11:21",
+      "bullet_entry": "2026-03-23 08:14:00-04:00",
+      "minutes_before_his_clock": 187.0,
+      "direction": "S",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "granting_route": "Route D · prebreak_repeat_test (§7.10-7.12)",
+      "zone": {
+        "id": "S:2026-03-03T09:30:00-05:00:97791",
+        "band": [
+          24443.761607142857,
+          24453.238392857143
+        ],
+        "side": "S",
+        "source": "WICK_ZONE",
+        "admission_path": "causal_15m_repeated_rejection_support_resistance (PRIMARY evidence)",
+        "state_at_bucket": "ZoneState.TESTED"
+      },
+      "trigger_bar": {
+        "kind": "FORCE PARTIAL from completed 1m sub-bars — the bar entry_authority actually reads",
+        "grant_decision_clock": "2026-03-23 08:14:00-04:00",
+        "clock_source": "X-ray SURVIVED_TO_RANKING record",
+        "completed_1m": 4,
+        "open": 24475.25,
+        "high": 24481.75,
+        "low": 24426.25,
+        "close": 24431.0,
+        "body_frac": 0.7973,
+        "close_loc": 0.0856
+      },
+      "magnitudes_on_the_granting_route": [
+        {
+          "name": "reject_wick",
+          "frozen": "Params default 0.35",
+          "citation_status": "UNTAUGHT — ALGO-071 §3 defines a rejection as OHLC against the band, no fraction. Retired from Route A; STILL LIVE in the break family."
+        },
+        {
+          "name": "body_frac",
+          "frozen": "Params default 0.62",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.56, 0.68). Retired from Route A's story gate by ALGO-071 §3; STILL LIVE in every break-family trigger."
+        },
+        {
+          "name": "close_loc",
+          "frozen": "Params default 0.78",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.72, 0.84). Same status."
+        }
+      ],
+      "magnitudes_on_the_admission_path": [],
+      "trigger_momentum_margins": {
+        "body_frac": {
+          "required": 0.62,
+          "measured": 0.7973,
+          "margin": 0.1773,
+          "cleared": true
+        },
+        "close_loc": {
+          "required": 0.78,
+          "measured": 0.9144,
+          "margin": 0.1344,
+          "cleared": true
+        }
+      },
+      "target": 24404.5,
+      "target_kind": "LIQUIDITY_CLUSTER"
+    },
+    {
+      "session": "2026-03-24",
+      "his_clock": "09:32",
+      "bullet_entry": "2026-03-24 08:17:00-04:00",
+      "minutes_before_his_clock": 75.0,
+      "direction": "S",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "granting_route": "Route D · prebreak_repeat_test (§7.10-7.12)",
+      "zone": {
+        "id": "S:2026-03-23T14:00:00-04:00:97276",
+        "band": [
+          24308.254464285714,
+          24327.495535714286
+        ],
+        "side": "S",
+        "source": "WICK_ZONE",
+        "admission_path": "causal_15m_repeated_rejection_support_resistance (PRIMARY evidence)",
+        "state_at_bucket": "ZoneState.TESTED"
+      },
+      "trigger_bar": {
+        "kind": "FORCE PARTIAL from completed 1m sub-bars — the bar entry_authority actually reads",
+        "grant_decision_clock": "2026-03-24 08:17:00-04:00",
+        "clock_source": "X-ray SURVIVED_TO_RANKING record",
+        "completed_1m": 2,
+        "open": 24344.0,
+        "high": 24345.5,
+        "low": 24329.0,
+        "close": 24331.75,
+        "body_frac": 0.7424,
+        "close_loc": 0.1667
+      },
+      "magnitudes_on_the_granting_route": [
+        {
+          "name": "reject_wick",
+          "frozen": "Params default 0.35",
+          "citation_status": "UNTAUGHT — ALGO-071 §3 defines a rejection as OHLC against the band, no fraction. Retired from Route A; STILL LIVE in the break family."
+        },
+        {
+          "name": "body_frac",
+          "frozen": "Params default 0.62",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.56, 0.68). Retired from Route A's story gate by ALGO-071 §3; STILL LIVE in every break-family trigger."
+        },
+        {
+          "name": "close_loc",
+          "frozen": "Params default 0.78",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.72, 0.84). Same status."
+        }
+      ],
+      "magnitudes_on_the_admission_path": [],
+      "trigger_momentum_margins": {
+        "body_frac": {
+          "required": 0.62,
+          "measured": 0.7424,
+          "margin": 0.1224,
+          "cleared": true
+        },
+        "close_loc": {
+          "required": 0.78,
+          "measured": 0.8333,
+          "margin": 0.0533,
+          "cleared": true
+        }
+      },
+      "target": 24299.25,
+      "target_kind": "LIQUIDITY_CLUSTER"
+    },
+    {
+      "session": "2026-03-31",
+      "his_clock": "09:49",
+      "bullet_entry": "2026-03-31 09:03:00-04:00",
+      "minutes_before_his_clock": 46.0,
+      "direction": "L",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "granting_route": "Route D · break_retest (accepted break, then retest)",
+      "zone": {
+        "id": "R:2026-03-31T07:45:00-04:00:93590",
+        "band": [
+          23392.688392857144,
+          23404.11160714286
+        ],
+        "side": "R",
+        "source": "WICK_ZONE",
+        "admission_path": "causal_15m_repeated_rejection_support_resistance (PRIMARY evidence)",
+        "state_at_bucket": "ZoneState.BROKEN"
+      },
+      "trigger_bar": {
+        "kind": "FORCE PARTIAL from completed 1m sub-bars — the bar entry_authority actually reads",
+        "grant_decision_clock": "2026-03-31 09:03:00-04:00",
+        "clock_source": "X-ray SURVIVED_TO_RANKING record",
+        "completed_1m": 3,
+        "open": 23370.25,
+        "high": 23386.75,
+        "low": 23370.25,
+        "close": 23383.5,
+        "body_frac": 0.803,
+        "close_loc": 0.803
+      },
+      "magnitudes_on_the_granting_route": [
+        {
+          "name": "acceptance_bars",
+          "frozen": "breakout_derivation.UNFROZEN_CHOICES = 3",
+          "citation_status": "UNTAUGHT — the spec says DURABLE and names no count; declared unfrozen by the module itself."
+        },
+        {
+          "name": "ACCEPTED_CLOSE_BEYOND",
+          "frozen": "no constant",
+          "citation_status": "TAUGHT and magnitude-free — a completed close past the band."
+        },
+        {
+          "name": "body_frac",
+          "frozen": "Params default 0.62",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.56, 0.68). Retired from Route A's story gate by ALGO-071 §3; STILL LIVE in every break-family trigger."
+        },
+        {
+          "name": "close_loc",
+          "frozen": "Params default 0.78",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.72, 0.84). Same status."
+        }
+      ],
+      "magnitudes_on_the_admission_path": [],
+      "trigger_momentum_margins": {
+        "body_frac": {
+          "required": 0.62,
+          "measured": 0.803,
+          "margin": 0.183,
+          "cleared": true
+        },
+        "close_loc": {
+          "required": 0.78,
+          "measured": 0.803,
+          "margin": 0.023,
+          "cleared": true
+        }
+      },
+      "target": 23398.25,
+      "target_kind": "KEY_ZONE_15M"
+    },
+    {
+      "session": "2026-04-06",
+      "his_clock": "10:04",
+      "bullet_entry": "2026-04-06 09:07:00-04:00",
+      "minutes_before_his_clock": 57.0,
+      "direction": "S",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "granting_route": "Route B · normal_breakout (§7.6-7.7)",
+      "zone": {
+        "id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+        "band": [
+          24289.334285714285,
+          24293.165714285715
+        ],
+        "side": "S",
+        "source": "STRONG_SWING_DISPLACEMENT",
+        "admission_path": "causal_exceptional_single_swing_support_resistance (the EXCEPTIONAL path)",
+        "state_at_bucket": "ZoneState.BROKEN"
+      },
+      "trigger_bar": null,
+      "magnitudes_on_the_granting_route": [
+        {
+          "name": "EXTREME_TAKE_OUT",
+          "frozen": "no constant",
+          "citation_status": "TAUGHT and magnitude-free — §7.7, `trigger.high > first.high`."
+        },
+        {
+          "name": "body_frac",
+          "frozen": "Params default 0.62",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.56, 0.68). Retired from Route A's story gate by ALGO-071 §3; STILL LIVE in every break-family trigger."
+        },
+        {
+          "name": "close_loc",
+          "frozen": "Params default 0.78",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.72, 0.84). Same status."
+        }
+      ],
+      "magnitudes_on_the_admission_path": [
+        {
+          "name": "min_wick",
+          "frozen": "Params default 0.20",
+          "citation_status": "UNTAUGHT — gates the EXCEPTIONAL single-swing admission path (key_level_semantics.exceptional_single_swing_path)."
+        },
+        {
+          "name": "absolute_displacement_floor_atr",
+          "frozen": "key_level_semantics = 1.0",
+          "citation_status": "UNTAUGHT as a VALUE, though the CLAUSE is in the loaded spec; ALGO-064 §2's M1 lane."
+        },
+        {
+          "name": "recent_displacement_percentile",
+          "frozen": "key_level_semantics = 0.75",
+          "citation_status": "UNTAUGHT as a VALUE. A percentile admits a fixed PROPORTION of the recent distribution by construction, so map size is pinned to the distribution rather than to whether the market offered levels."
+        }
+      ],
+      "trigger_momentum_margins": null,
+      "target": 24254.75,
+      "target_kind": "KEY_ZONE_15M"
+    },
+    {
+      "session": "2026-04-09",
+      "his_clock": "11:35",
+      "bullet_entry": "2026-04-09 09:37:00-04:00",
+      "minutes_before_his_clock": 118.0,
+      "direction": "L",
+      "kernel_setup": "BRK5",
+      "candidate_reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "granting_route": "Route D · break_retest (accepted break, then retest)",
+      "zone": {
+        "id": "SWING:R:2026-03-16T15:45:00-04:00:100131",
+        "band": [
+          25029.72,
+          25035.78
+        ],
+        "side": "R",
+        "source": "STRONG_SWING_DISPLACEMENT",
+        "admission_path": "causal_exceptional_single_swing_support_resistance (the EXCEPTIONAL path)",
+        "state_at_bucket": "ZoneState.BROKEN"
+      },
+      "trigger_bar": null,
+      "magnitudes_on_the_granting_route": [
+        {
+          "name": "acceptance_bars",
+          "frozen": "breakout_derivation.UNFROZEN_CHOICES = 3",
+          "citation_status": "UNTAUGHT — the spec says DURABLE and names no count; declared unfrozen by the module itself."
+        },
+        {
+          "name": "ACCEPTED_CLOSE_BEYOND",
+          "frozen": "no constant",
+          "citation_status": "TAUGHT and magnitude-free — a completed close past the band."
+        },
+        {
+          "name": "body_frac",
+          "frozen": "Params default 0.62",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.56, 0.68). Retired from Route A's story gate by ALGO-071 §3; STILL LIVE in every break-family trigger."
+        },
+        {
+          "name": "close_loc",
+          "frozen": "Params default 0.78",
+          "citation_status": "UNTAUGHT — v2.2 default shipped with search range (0.72, 0.84). Same status."
+        }
+      ],
+      "magnitudes_on_the_admission_path": [
+        {
+          "name": "min_wick",
+          "frozen": "Params default 0.20",
+          "citation_status": "UNTAUGHT — gates the EXCEPTIONAL single-swing admission path (key_level_semantics.exceptional_single_swing_path)."
+        },
+        {
+          "name": "absolute_displacement_floor_atr",
+          "frozen": "key_level_semantics = 1.0",
+          "citation_status": "UNTAUGHT as a VALUE, though the CLAUSE is in the loaded spec; ALGO-064 §2's M1 lane."
+        },
+        {
+          "name": "recent_displacement_percentile",
+          "frozen": "key_level_semantics = 0.75",
+          "citation_status": "UNTAUGHT as a VALUE. A percentile admits a fixed PROPORTION of the recent distribution by construction, so map size is pinned to the distribution rather than to whether the market offered levels."
+        }
+      ],
+      "trigger_momentum_margins": null,
+      "target": 25085.25,
+      "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    }
+  ],
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 85.44
+}

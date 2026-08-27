@@ -1,0 +1,286 @@
+{
+  "status": "DIAGNOSTIC_ONLY. Measures how much information the Story carries. Fits nothing, tunes nothing, selects no strategy rule. ALGO-011.",
+  "scope": "Route A only. BRK5 candidates carry story=None by construction.",
+  "cases": 10,
+  "wanted": 5,
+  "unwanted": 5,
+  "fields": {
+    "approach": {
+      "wanted": "5/5",
+      "unwanted": "5/5",
+      "constant": true,
+      "separates": false
+    },
+    "weakening": {
+      "wanted": "0/5",
+      "unwanted": "0/5",
+      "constant": true,
+      "separates": false
+    },
+    "compression": {
+      "wanted": "3/5",
+      "unwanted": "2/5",
+      "constant": false,
+      "separates": false
+    },
+    "rejection": {
+      "wanted": "2/5",
+      "unwanted": "4/5",
+      "constant": false,
+      "separates": false
+    },
+    "failed_push": {
+      "wanted": "4/5",
+      "unwanted": "5/5",
+      "constant": false,
+      "separates": false
+    },
+    "reclaim": {
+      "wanted": "5/5",
+      "unwanted": "5/5",
+      "constant": true,
+      "separates": false
+    },
+    "takeover": {
+      "wanted": "5/5",
+      "unwanted": "5/5",
+      "constant": true,
+      "separates": false
+    },
+    "displacement": {
+      "wanted": "2/5",
+      "unwanted": "1/5",
+      "constant": false,
+      "separates": false
+    },
+    "follow_through": {
+      "wanted": "5/5",
+      "unwanted": "5/5",
+      "constant": true,
+      "separates": false
+    },
+    "fight": {
+      "wanted": "5/5",
+      "unwanted": "5/5",
+      "constant": true,
+      "separates": false
+    },
+    "decision": {
+      "wanted": "5/5",
+      "unwanted": "5/5",
+      "constant": true,
+      "separates": false
+    },
+    "complete": {
+      "wanted": "5/5",
+      "unwanted": "5/5",
+      "constant": true,
+      "separates": false
+    }
+  },
+  "constant_fields": [
+    "approach",
+    "weakening",
+    "reclaim",
+    "takeover",
+    "follow_through",
+    "fight",
+    "decision",
+    "complete"
+  ],
+  "varying_fields": [
+    "compression",
+    "rejection",
+    "failed_push",
+    "displacement"
+  ],
+  "separating_fields": [],
+  "duplicate_fields": {
+    "follow_through_equals_decision": true,
+    "why": "both are `bool(follow)` -- entries.py:176 and 178. One value, two names."
+  },
+  "weakening_never_fires": true,
+  "verdict": "the Story advertises 12 states and carries 4 varying bits at the point of a granted entry; 0 of them discriminate.",
+  "rows": [
+    {
+      "session": "2026-03-24",
+      "wanted": true,
+      "quality": 0.7709161987467865,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": false,
+      "rejection": true,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": true,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-03-25",
+      "wanted": false,
+      "quality": 0.8254419243149502,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": true,
+      "rejection": true,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": false,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-03-26",
+      "wanted": false,
+      "quality": 0.8590838825949226,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": false,
+      "rejection": true,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": false,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-03-30",
+      "wanted": true,
+      "quality": 0.8589814383182608,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": false,
+      "rejection": true,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": false,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-03-31",
+      "wanted": true,
+      "quality": 0.824073294836508,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": true,
+      "rejection": false,
+      "failed_push": false,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": false,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-04-02",
+      "wanted": false,
+      "quality": 0.7285482765540255,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": false,
+      "rejection": false,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": true,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-04-06",
+      "wanted": true,
+      "quality": 0.8157963810796229,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": true,
+      "rejection": false,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": true,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-04-07",
+      "wanted": false,
+      "quality": 0.7736616874949372,
+      "confluence": 1.0,
+      "approach": true,
+      "weakening": false,
+      "compression": false,
+      "rejection": true,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": false,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-04-08",
+      "wanted": false,
+      "quality": 0.8244295544994255,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": true,
+      "rejection": true,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": false,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    },
+    {
+      "session": "2026-04-09",
+      "wanted": true,
+      "quality": 0.7941156905084639,
+      "confluence": 0.0,
+      "approach": true,
+      "weakening": false,
+      "compression": true,
+      "rejection": false,
+      "failed_push": true,
+      "reclaim": true,
+      "takeover": true,
+      "displacement": false,
+      "follow_through": true,
+      "fight": true,
+      "decision": true,
+      "complete": true
+    }
+  ]
+}

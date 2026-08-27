@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "status": "IMMUTABLE_HASHED_FIDELITY_SET_V1",
+  "privacy": "No user screenshots/video bytes are committed. Only hashes and previously-established semantic labels are stored.",
+  "source_archive": {
+    "name": "Trading screenshots (2).zip",
+    "sha256": "56d96a0e7048dc460fe82da184bd5b7d2a7c08c3436e672e535ede105edba632"
+  },
+  "fixtures": [
+    {
+      "id": "G01_STRONG_BULL_BREAKOUT",
+      "source_name": "Screenshot 2026-08-16 225947.png",
+      "sha256": "8e01eca0fc5b0108141489e50cfa6944a606bbd2ad3858c02d6d9fe6bb8bd868",
+      "chart_timeframe": "5m",
+      "expected_direction": "LONG",
+      "expected_family": "BRK5",
+      "must_have": ["pre_marked_zone", "strong_bullish_displacement", "close_through_zone", "room_to_meaningful_destination"],
+      "must_not_require": ["15m_close_after_strong_5m_acceptance"],
+      "approx_entry": 18999.75,
+      "approx_stop": 18982.50,
+      "approx_destination": 19053.25,
+      "note": "Strong momentum earns faster 5m breakout confirmation."
+    },
+    {
+      "id": "G02_BEAR_CONTROL_SHIFT",
+      "source_name": "Screenshot 2026-08-17 001958.png",
+      "sha256": "eae72bf7bbe2ec4a06dbf7fa5a7c0f1da278ae14340534ec170a063f598ffa75",
+      "chart_timeframe": "5m",
+      "expected_direction": "SHORT",
+      "expected_family": "REV",
+      "must_have": ["important_upper_location", "buyer_push_weakens", "bearish_takeover", "displacement_away"],
+      "approx_entry": 19522.0,
+      "approx_stop": 19539.25,
+      "approx_destination": 19490.25,
+      "note": "Location first, then candle story/control transfer."
+    },
+    {
+      "id": "G03_MAJOR_ZONE_FAILURE",
+      "source_name": "Screenshot 2026-08-17 005716.png",
+      "sha256": "73d2400b36630aeec86fb45540e6918fe02e134049926e961a137577cffb0fb1",
+      "chart_timeframe": "15m_context_plus_5m_execution",
+      "expected_direction": "SHORT",
+      "expected_family": "BRK",
+      "must_have": ["established_15m_zone", "zone_failure", "seller_continuation", "farther_meaningful_destination"],
+      "destination_context": ["next_reaction_cluster", "logical_15m_FVG_if_relevant"],
+      "note": "Do not confuse a major established zone finally failing with a reversal off support."
+    },
+    {
+      "id": "G04_UPPER_REJECTION_TAKEOVER",
+      "source_name": "Screenshot 2026-08-17 004003.png",
+      "sha256": "c2feb23a4866db46bf4f135c7d5bc1d1edfc9308f8af03406840ecdcc086a99d",
+      "chart_timeframe": "5m",
+      "expected_direction": "SHORT",
+      "expected_family": "REV",
+      "must_have": ["rally_into_upper_SR", "rejection", "loss_of_bullish_control", "seller_takeover"],
+      "note": "Pattern name is secondary; geometry/control sequence is primary."
+    },
+    {
+      "id": "G05_FAILED_BREAKOUT_RECLAIM",
+      "source_name": "Screenshot 2026-08-17 023935.png",
+      "sha256": "b97417b13e4fcb844e4ab4e0da893aadd7d02094dbf81c87f2026170e984c453",
+      "chart_timeframe": "5m",
+      "expected_direction": "SHORT",
+      "expected_family": "FAILED_BREAKOUT_REVERSAL",
+      "must_have": ["push_above_upper_zone", "failure_to_accept", "reclaim_back_below", "bearish_control_transfer"],
+      "must_not_do": ["permanently_flip_resistance_to_support_on_first_failed_breach"],
+      "note": "A failed breakout must be distinguishable from true acceptance."
+    },
+    {
+      "id": "G06_FIRST_REACTION_CLUSTER_BEFORE_FVG",
+      "source_name": "User TP example screenshot batch — 2026-08-18",
+      "source_kind": "user_trade_screenshot_batch",
+      "sha256": "bd8f5ef59eefbaedeffc916cc564385ccbe093df06da2e8ad73c9f662edc1b3c",
+      "source_files": [
+        {
+          "name": "Screenshot 2026-08-17 231223.png",
+          "sha256": "6742bbdbf7172b56dcdb810a2dcbe8e938dd784fdc1d5a696bfe489a9de7d2fe"
+        },
+        {
+          "name": "Screenshot 2026-08-18 014126.png",
+          "sha256": "fe3cd9c23c4503af546ad444539112b4644c75e4e50135456216bad67e64af80"
+        },
+        {
+          "name": "Screenshot 2026-08-18 015356.png",
+          "sha256": "be9b7dd251eeff9b21d6ea9a8e7fc5a393ffec2f5dae14b369d81b75de529006"
+        }
+      ],
+      "chart_timeframe": "5m_execution_with_15m_FVG_context",
+      "expected_family": "TP_FIRST_REACTION_SELECTION",
+      "must_have": [
+        "valid_trade_already_in_progress",
+        "meaningful_5m_liquidity_cluster_ahead",
+        "farther_active_15m_FVG",
+        "cluster_near_edge_precedes_fvg_near_edge",
+        "tp_set_at_nearer_cluster"
+      ],
+      "must_not_do": [
+        "skip_nearer_meaningful_liquidity_cluster_to_target_farther_FVG"
+      ],
+      "trader_label": "Target the FVG or liquidity cluster zone whichever comes first. In this example the cluster was in front of the FVG, so the cluster was the first reaction zone and owned TP.",
+      "note": "This fixture binds the user's physical first-reaction TP hierarchy. It does not identify which image in the supplied batch carries the annotation; the batch hash binds the exact evidence set without inventing that detail."
+    }
+  ],
+  "video_sources": [
+    {
+      "name": "Desktop 2026.08.16 - 23.06.30.02.mp4",
+      "sha256": "8f4020a8aa7dd6fa48d48508d411e25466577fcd0e140e4ed79a9dd232ec8c8a",
+      "semantic_role": "strong bullish displacement/continuation toward a distant marked destination"
+    },
+    {
+      "name": "Desktop 2026.08.16 - 23.34.40.03.mp4",
+      "sha256": "da8b6c2e4f53f26c4946b526eb076b26a7813be02c03391c41a4e7ad638c12",
+      "semantic_role": "failed upper breakout/rejection followed by large bearish takeover candle"
+    }
+  ],
+  "known_gap": "The separate current_mnq_strategy_v2_3_no_trade_gold.json register still requires at least one real user-labeled tempting NO-TRADE example before the fidelity gate can pass."
+}

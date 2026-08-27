@@ -1,0 +1,870 @@
+{
+  "artifact": "FROZEN_14_CASE_FIDELITY_BASELINE_SCORECARD",
+  "authority": "ALGO-007 §6, repaired per the ALGO-008 grade (band 5, REFUTED)",
+  "produced": "2026-08-22",
+  "status": "SEEN_DEVELOPMENT_FIDELITY_EVIDENCE_ONLY_NOT_EDGE_EVIDENCE",
+  "supersedes": "the SESSION-joined scorecard whose two headline figures were refuted",
+  "regrade_status": "POST_REPAIR_SAME_WINDOW_BOT_REGRADE_NOT_EDGE_EVIDENCE",
+  "source_pack_id": "aa4e32104b39e0aaa37eb2bd2c90e67a059604447892411d7dfd530c243910e4",
+  "trader_labels_custody": {
+    "path": "research\\current_mnq_strategy_v2_4_replay_v3_labels_FROZEN.json",
+    "committed_to_git": true,
+    "whole_file_sha256": "1b20b0a810df2009af2df564bc5b4b0d40db55b66d004676b155825d9e058ad8",
+    "whole_file_sha256_covers": "every byte, including the censoring annotation",
+    "internal_labels_sha256": "11d8dec0749301c16c7d3b553d06dd564149edf78b4bab4b897fe3635783059c",
+    "internal_labels_sha256_covers": "{schema_version, pack_id, frozen_at, labels} only",
+    "keys_OUTSIDE_the_internal_signature": [
+      "status",
+      "wait_at_replay_end_count",
+      "capture_warnings"
+    ],
+    "why_both_are_recorded": "these two digests cover DIFFERENT BYTE RANGES and comparing them to each other is meaningless. Each is now named with its scope so nobody tries.",
+    "corroborated_against_external_origin": true
+  },
+  "trader_labels_file_sha256": "1b20b0a810df2009af2df564bc5b4b0d40db55b66d004676b155825d9e058ad8",
+  "trader_labels_status": "FROZEN_WITH_TRADER_WAIT_AT_REPLAY_END",
+  "right_censored_case_count": 6,
+  "censoring_note": "Six labels carry TRADER_ENDED_PRESENTED_REPLAY_STILL_WAITING with a single timeline entry at exactly the window end. Those cases record NO trader decision and are segregated from every agreement and disagreement count.",
+  "case_count": 14,
+  "pnl_or_exit_used": false,
+  "runtime": {
+    "total_seconds": 264.52,
+    "data_prepare_seconds": 1.84,
+    "regrade_seconds": 262.49,
+    "per_case_mean_seconds": 18.749
+  },
+  "aggregates": {
+    "join": "WINDOW",
+    "join_note": "The refuted first version joined on SESSION; see F-1 in the docstring.",
+    "agreement_definition": "AGREE + BOTH_DECLINED, from _mismatch_class only",
+    "agreement_decided_cases": "3/8",
+    "uncensored_case_count": 8,
+    "censored_excluded_from_both_numerator_and_denominator": 6,
+    "asymmetric_censoring_diagnostic": {
+      "STATUS": "DIAGNOSTIC_ONLY_NOT_THE_HEADLINE",
+      "question": "trader-side non-decision is excluded from both numerator and denominator; bot-side non-decision is counted as a disagreement. Should it also be excluded, or is an unavailable bot a real failure that must count?",
+      "sessions_where_the_bot_had_no_in_window_decision": [
+        "2026-03-23",
+        "2026-04-02",
+        "2026-04-06",
+        "2026-04-09"
+      ],
+      "headline_as_published_stricter_reading": "3/8",
+      "if_bot_side_were_censored_symmetrically": "3/4",
+      "why_it_is_not_adopted": "it raises the fidelity number, and a party may not adopt the reading that flatters it. This is an ALGO question, not a worker decision."
+    },
+    "opposite_direction_at_decision_count": 0,
+    "missed_trader_entry_count": 4,
+    "bot_only_entry_uncensored_decline_count": 0,
+    "both_declined_count": 0,
+    "censored_bot_entered_count": 2,
+    "censored_bot_declined_count": 0,
+    "missed_reason_census": {
+      "BUDGET_CONSUMED_BEFORE_WINDOW": 3,
+      "NO_PERMISSION_IN_WINDOW": 1
+    },
+    "sessions_whose_bullet_was_spent_before_the_window": 8,
+    "in_window_entries_the_budget_forbids": 15,
+    "bot_genuinely_declined_in_window_count": 1,
+    "bot_unavailable_in_window_count": 8,
+    "bot_entered_in_window_count": 5,
+    "bot_traded_at_all_in_the_session_count": 13,
+    "total_decisions_through_window_end": 62,
+    "total_decisions_in_window": 26,
+    "same_direction_timing_deltas_seconds": [
+      -240.0,
+      0.0,
+      360.0
+    ],
+    "mismatch_class_census": {
+      "AGREE": 3,
+      "CENSORED_BOT_BUDGET_CONSUMED": 4,
+      "CENSORED_BOT_ENTERED": 2,
+      "MISSED_TRADER_ENTRY": 4,
+      "TRADER_DECLINED_BOT_TRADED_PRE_WINDOW": 1
+    }
+  },
+  "cases": [
+    {
+      "case_id": "RPL3-85576C2BBB7040F4",
+      "session": "2026-03-23",
+      "replay_window": {
+        "start": "2026-03-23T11:16:00-04:00",
+        "end": "2026-03-23T11:36:00-04:00"
+      },
+      "trader_state": "ENTER_SHORT",
+      "trader_label_censored": false,
+      "trader_censor_note": null,
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": null,
+      "trader_decision_clock": "2026-03-23T11:21:00-04:00",
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 17,
+      "decisions_in_window": 6,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "FORCE_REAL",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": "MARKED",
+      "mismatch_class": "MISSED_TRADER_ENTRY",
+      "missed_reason": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-03-23T09:47:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 6,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-EAB79AD9E5485D56",
+      "session": "2026-03-24",
+      "replay_window": {
+        "start": "2026-03-24T09:30:00-04:00",
+        "end": "2026-03-24T09:40:00-04:00"
+      },
+      "trader_state": "ENTER_LONG",
+      "trader_label_censored": false,
+      "trader_censor_note": null,
+      "bot_state_in_window": "ENTER_LONG",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-03-24T09:32:00-04:00",
+      "trader_decision_clock": "2026-03-24T09:32:00-04:00",
+      "timing_delta_seconds": 0.0,
+      "decisions_through_window_end": 1,
+      "decisions_in_window": 1,
+      "in_window_action_sequence": [
+        "ENTER_LONG"
+      ],
+      "interaction_geometry": {
+        "location_id": "S:2026-03-24T00:15:00-04:00:96923",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-03-24T09:30:00-04:00",
+        "setup": "REV",
+        "confirmed": true,
+        "decision_clock": "2026-03-24T09:32:00-04:00",
+        "parent_start": "2026-03-24T09:30:00-04:00",
+        "completed_1m_observations": 2,
+        "directional_progress": 57.0,
+        "path_distance": 57.0,
+        "path_efficiency": 1.0,
+        "latest_close_at_directional_extreme": true,
+        "partial_momentum_geometry": true,
+        "reason": "SUSTAINED_DIRECTIONAL_FORCE",
+        "source": "research.current_mnq_strategy_v2_4_force.force_snapshot, recomputed at the candidate's own (signal_time, confirmed_time, direction) - the same pure call the kernel gated on."
+      },
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "FORCE_REAL",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "WICK_ZONE",
+        "target_kind": "KEY_ZONE_15M",
+        "raw_price": 24358.025,
+        "executable_price": 24358.0,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M"
+      },
+      "trader_marked_tp": "MARKED",
+      "mismatch_class": "AGREE",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-03-24T09:32:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": false,
+        "executable_in_window": true,
+        "in_window_entries_the_budget_forbids": 0,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-1D002C0416219512",
+      "session": "2026-03-25",
+      "replay_window": {
+        "start": "2026-03-25T10:56:00-04:00",
+        "end": "2026-03-25T11:16:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "trader_label_censored": true,
+      "trader_censor_note": "Replay ended while the trader was still watching. This is NOT a decline and may not be counted against the bot.",
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": null,
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 7,
+      "decisions_in_window": 3,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "trader_final_timeline_force": "NOT_APPLICABLE",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": null,
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-03-25T09:37:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 3,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-A240A60150B98D33",
+      "session": "2026-03-26",
+      "replay_window": {
+        "start": "2026-03-26T10:42:00-04:00",
+        "end": "2026-03-26T11:02:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "trader_label_censored": true,
+      "trader_censor_note": "Replay ended while the trader was still watching. This is NOT a decline and may not be counted against the bot.",
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": null,
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 6,
+      "decisions_in_window": 2,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": null,
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-03-26T09:33:00-04:00",
+        "session_first_action": "ENTER_SHORT",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 2,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-E3CEDD98C6C01E9B",
+      "session": "2026-03-30",
+      "replay_window": {
+        "start": "2026-03-30T09:35:00-04:00",
+        "end": "2026-03-30T09:55:00-04:00"
+      },
+      "trader_state": "ENTER_SHORT",
+      "trader_label_censored": false,
+      "trader_censor_note": null,
+      "bot_state_in_window": "ENTER_SHORT",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-03-30T09:47:00-04:00",
+      "trader_decision_clock": "2026-03-30T09:41:00-04:00",
+      "timing_delta_seconds": 360.0,
+      "decisions_through_window_end": 1,
+      "decisions_in_window": 1,
+      "in_window_action_sequence": [
+        "ENTER_SHORT"
+      ],
+      "interaction_geometry": {
+        "location_id": "R:2026-03-30T09:15:00-04:00:94096",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-03-30T09:45:00-04:00",
+        "setup": "REV",
+        "confirmed": true,
+        "decision_clock": "2026-03-30T09:47:00-04:00",
+        "parent_start": "2026-03-30T09:45:00-04:00",
+        "completed_1m_observations": 2,
+        "directional_progress": 29.5,
+        "path_distance": 34.0,
+        "path_efficiency": 0.8676470588235294,
+        "latest_close_at_directional_extreme": true,
+        "partial_momentum_geometry": true,
+        "reason": "SUSTAINED_DIRECTIONAL_FORCE",
+        "source": "research.current_mnq_strategy_v2_4_force.force_snapshot, recomputed at the candidate's own (signal_time, confirmed_time, direction) - the same pure call the kernel gated on."
+      },
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "FORCE_REAL",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "raw_price": 23324.625,
+        "executable_price": 23324.75,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+      },
+      "trader_marked_tp": "MARKED",
+      "mismatch_class": "AGREE",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-03-30T09:47:00-04:00",
+        "session_first_action": "ENTER_SHORT",
+        "bullet_spent_before_window": false,
+        "executable_in_window": true,
+        "in_window_entries_the_budget_forbids": 0,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-911C2D9EAA857BEC",
+      "session": "2026-03-31",
+      "replay_window": {
+        "start": "2026-03-31T09:35:00-04:00",
+        "end": "2026-03-31T09:55:00-04:00"
+      },
+      "trader_state": "ENTER_LONG",
+      "trader_label_censored": false,
+      "trader_censor_note": null,
+      "bot_state_in_window": "NO_ENTRY_IN_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "NO_TRADE_THROUGH_WINDOW",
+      "bot_window_status": "NO_FULL_ENTRY_THROUGH_REPLAY_END",
+      "bot_decision_clock": null,
+      "trader_decision_clock": "2026-03-31T09:49:00-04:00",
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 0,
+      "decisions_in_window": 0,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "FORCE_REAL",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": "MARKED",
+      "mismatch_class": "MISSED_TRADER_ENTRY",
+      "missed_reason": "NO_PERMISSION_IN_WINDOW",
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": null,
+        "session_first_action": null,
+        "bullet_spent_before_window": false,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 0,
+        "note": "No fully-approved entry existed anywhere through the replay end, so the bullet was never spent and the bot GENUINELY DECLINED. Emitting this block is what makes that state reachable at all."
+      }
+    },
+    {
+      "case_id": "RPL3-68AD0631CA2C0011",
+      "session": "2026-04-01",
+      "replay_window": {
+        "start": "2026-04-01T09:32:00-04:00",
+        "end": "2026-04-01T09:52:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "trader_label_censored": true,
+      "trader_censor_note": "Replay ended while the trader was still watching. This is NOT a decline and may not be counted against the bot.",
+      "bot_state_in_window": "ENTER_LONG",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-01T09:37:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 5,
+      "decisions_in_window": 5,
+      "in_window_action_sequence": [
+        "ENTER_LONG"
+      ],
+      "interaction_geometry": {
+        "location_id": "S:2026-03-26T10:15:00-04:00:96264",
+        "location_source": "WICK_ZONE"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-04-01T09:35:00-04:00",
+        "setup": "REV",
+        "confirmed": true,
+        "decision_clock": "2026-04-01T09:37:00-04:00",
+        "parent_start": "2026-04-01T09:35:00-04:00",
+        "completed_1m_observations": 2,
+        "directional_progress": 8.75,
+        "path_distance": 8.75,
+        "path_efficiency": 1.0,
+        "latest_close_at_directional_extreme": true,
+        "partial_momentum_geometry": true,
+        "reason": "SUSTAINED_DIRECTIONAL_FORCE",
+        "source": "research.current_mnq_strategy_v2_4_force.force_snapshot, recomputed at the candidate's own (signal_time, confirmed_time, direction) - the same pure call the kernel gated on."
+      },
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "trader_final_timeline_force": "TUG_OF_WAR",
+      "first_tp": {
+        "target_source": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+        "target_kind": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M",
+        "raw_price": 24204.875,
+        "executable_price": 24204.75,
+        "path_reason": "FIRST_REACTION:KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+      },
+      "trader_marked_tp": null,
+      "mismatch_class": "CENSORED_BOT_ENTERED",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-01T09:37:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": false,
+        "executable_in_window": true,
+        "in_window_entries_the_budget_forbids": 0,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-8E7C268E08366A46",
+      "session": "2026-04-02",
+      "replay_window": {
+        "start": "2026-04-02T10:35:00-04:00",
+        "end": "2026-04-02T10:55:00-04:00"
+      },
+      "trader_state": "NO_TRADE",
+      "trader_label_censored": false,
+      "trader_censor_note": null,
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": null,
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 6,
+      "decisions_in_window": 2,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "FORCE_REAL",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": null,
+      "mismatch_class": "TRADER_DECLINED_BOT_TRADED_PRE_WINDOW",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-02T09:37:00-04:00",
+        "session_first_action": "ENTER_SHORT",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 2,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-AD0DBC962D7C429F",
+      "session": "2026-04-06",
+      "replay_window": {
+        "start": "2026-04-06T09:52:00-04:00",
+        "end": "2026-04-06T10:12:00-04:00"
+      },
+      "trader_state": "ENTER_SHORT",
+      "trader_label_censored": false,
+      "trader_censor_note": null,
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": null,
+      "trader_decision_clock": "2026-04-06T10:04:00-04:00",
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 1,
+      "decisions_in_window": 0,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "FORCE_REAL",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": "MARKED",
+      "mismatch_class": "MISSED_TRADER_ENTRY",
+      "missed_reason": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-06T09:37:00-04:00",
+        "session_first_action": "ENTER_SHORT",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 0,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-6E618850C834365C",
+      "session": "2026-04-07",
+      "replay_window": {
+        "start": "2026-04-07T09:36:00-04:00",
+        "end": "2026-04-07T09:56:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "trader_label_censored": true,
+      "trader_censor_note": "Replay ended while the trader was still watching. This is NOT a decline and may not be counted against the bot.",
+      "bot_state_in_window": "ENTER_SHORT",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-07T09:49:00-04:00",
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 1,
+      "decisions_in_window": 1,
+      "in_window_action_sequence": [
+        "ENTER_SHORT"
+      ],
+      "interaction_geometry": {
+        "location_id": "SWING:R:2026-04-06T09:30:00-04:00:97353",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "REV",
+      "story_receipt": "ZONE_REJECTION_STORY_THEN_INTRA5_FORCE",
+      "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-04-07T09:45:00-04:00",
+        "setup": "REV",
+        "confirmed": true,
+        "decision_clock": "2026-04-07T09:49:00-04:00",
+        "parent_start": "2026-04-07T09:45:00-04:00",
+        "completed_1m_observations": 4,
+        "directional_progress": 40.75,
+        "path_distance": 40.75,
+        "path_efficiency": 1.0,
+        "latest_close_at_directional_extreme": true,
+        "partial_momentum_geometry": true,
+        "reason": "SUSTAINED_DIRECTIONAL_FORCE",
+        "source": "research.current_mnq_strategy_v2_4_force.force_snapshot, recomputed at the candidate's own (signal_time, confirmed_time, direction) - the same pure call the kernel gated on."
+      },
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "trader_final_timeline_force": "TUG_OF_WAR",
+      "first_tp": {
+        "target_source": "WICK_ZONE",
+        "target_kind": "LIQUIDITY_CLUSTER",
+        "raw_price": 24132.375,
+        "executable_price": 24132.5,
+        "path_reason": "FIRST_REACTION:LIQUIDITY_CLUSTER"
+      },
+      "trader_marked_tp": null,
+      "mismatch_class": "CENSORED_BOT_ENTERED",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-07T09:49:00-04:00",
+        "session_first_action": "ENTER_SHORT",
+        "bullet_spent_before_window": false,
+        "executable_in_window": true,
+        "in_window_entries_the_budget_forbids": 0,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-2A23163B9B2BBBA0",
+      "session": "2026-04-08",
+      "replay_window": {
+        "start": "2026-04-08T10:41:00-04:00",
+        "end": "2026-04-08T11:01:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "trader_label_censored": true,
+      "trader_censor_note": "Replay ended while the trader was still watching. This is NOT a decline and may not be counted against the bot.",
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": null,
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 3,
+      "decisions_in_window": 1,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "trader_final_timeline_force": "NOT_APPLICABLE",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": null,
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-08T09:43:00-04:00",
+        "session_first_action": "ENTER_SHORT",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 1,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-F1B0058A42B537D6",
+      "session": "2026-04-09",
+      "replay_window": {
+        "start": "2026-04-09T11:15:00-04:00",
+        "end": "2026-04-09T11:35:00-04:00"
+      },
+      "trader_state": "ENTER_LONG",
+      "trader_label_censored": false,
+      "trader_censor_note": null,
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": null,
+      "trader_decision_clock": "2026-04-09T11:35:00-04:00",
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 8,
+      "decisions_in_window": 0,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "FORCE_REAL",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": "MARKED",
+      "mismatch_class": "MISSED_TRADER_ENTRY",
+      "missed_reason": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-09T09:44:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 0,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-DE838DC7D547F27C",
+      "session": "2026-04-13",
+      "replay_window": {
+        "start": "2026-04-13T10:31:00-04:00",
+        "end": "2026-04-13T10:51:00-04:00"
+      },
+      "trader_state": "WAIT",
+      "trader_label_censored": true,
+      "trader_censor_note": "Replay ended while the trader was still watching. This is NOT a decline and may not be counted against the bot.",
+      "bot_state_in_window": "BUDGET_CONSUMED_BEFORE_WINDOW",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_SHORT",
+      "bot_window_status": "FIRST_A_PLUS_PRECEDES_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": null,
+      "trader_decision_clock": null,
+      "timing_delta_seconds": null,
+      "decisions_through_window_end": 3,
+      "decisions_in_window": 1,
+      "in_window_action_sequence": [],
+      "interaction_geometry": {
+        "location_id": null,
+        "location_source": null
+      },
+      "entry_family_receipt": null,
+      "story_receipt": null,
+      "force_receipt": null,
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "NOT_APPLICABLE",
+      "trader_final_timeline_force": "TUG_OF_WAR",
+      "first_tp": {
+        "target_source": null,
+        "target_kind": null,
+        "raw_price": null,
+        "executable_price": null,
+        "path_reason": null
+      },
+      "trader_marked_tp": null,
+      "mismatch_class": "CENSORED_BOT_BUDGET_CONSUMED",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-13T09:37:00-04:00",
+        "session_first_action": "ENTER_SHORT",
+        "bullet_spent_before_window": true,
+        "executable_in_window": false,
+        "in_window_entries_the_budget_forbids": 1,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    },
+    {
+      "case_id": "RPL3-6183B3E8E76BD914",
+      "session": "2026-04-14",
+      "replay_window": {
+        "start": "2026-04-14T09:30:00-04:00",
+        "end": "2026-04-14T09:46:00-04:00"
+      },
+      "trader_state": "ENTER_LONG",
+      "trader_label_censored": false,
+      "trader_censor_note": null,
+      "bot_state_in_window": "ENTER_LONG",
+      "bot_state_session_first_REFUTED_JOIN": "ENTER_LONG",
+      "bot_window_status": "FIRST_A_PLUS_INSIDE_OLD_REPLAY_WINDOW",
+      "bot_decision_clock": "2026-04-14T09:32:00-04:00",
+      "trader_decision_clock": "2026-04-14T09:36:00-04:00",
+      "timing_delta_seconds": -240.0,
+      "decisions_through_window_end": 3,
+      "decisions_in_window": 3,
+      "in_window_action_sequence": [
+        "ENTER_LONG"
+      ],
+      "interaction_geometry": {
+        "location_id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+        "location_source": "STRONG_SWING_DISPLACEMENT"
+      },
+      "entry_family_receipt": "BRK5",
+      "story_receipt": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "force_receipt": {
+        "cross_checked_against_an_independent_derivation": true,
+        "independent_derivation_agreed": true,
+        "parent_minutes": 5,
+        "parent_start_used": "2026-04-14T09:30:00-04:00",
+        "setup": "BRK5",
+        "confirmed": true,
+        "decision_clock": "2026-04-14T09:32:00-04:00",
+        "parent_start": "2026-04-14T09:30:00-04:00",
+        "completed_1m_observations": 2,
+        "directional_progress": 52.25,
+        "path_distance": 52.25,
+        "path_efficiency": 1.0,
+        "latest_close_at_directional_extreme": true,
+        "partial_momentum_geometry": true,
+        "reason": "SUSTAINED_DIRECTIONAL_FORCE",
+        "source": "research.current_mnq_strategy_v2_4_force.force_snapshot, recomputed at the candidate's own (signal_time, confirmed_time, direction) - the same pure call the kernel gated on."
+      },
+      "force_receipt_note": "REAL SNAPSHOT as of ALGO-011 section 9.3. The previous receipt claimed force was implied because the entry passed `one_minute_entry` - a v2.2 fill-price helper with zero force logic (ALGO-008 F-7). This is the actual force_snapshot recomputed at the candidate's own decision clock. WHAT IT ESTABLISHES IS REPRODUCIBILITY, NOT AGREEMENT: it re-issues the exact argument tuple the kernel already gated on and force_snapshot is pure, so it cannot come back unconfirmed. The previous version of this caption advertised a FORCE_RECEIPT_DISAGREES_WITH_KERNEL_GATE raise as a live guard; the arena grade of 2026-08-23 (F-2) proved it dead on 100% of the corpus and it is gone. The cross-check that has real power is `independent_force`, and its power is one-sided - see its own docstring.",
+      "trader_entry_force": "FORCE_REAL",
+      "trader_final_timeline_force": "FORCE_REAL",
+      "first_tp": {
+        "target_source": "FVG_15M_NATIVE_UNMITIGATED",
+        "target_kind": "FVG_15M",
+        "raw_price": 25869.125,
+        "executable_price": 25869.0,
+        "path_reason": "FIRST_REACTION:FVG_15M"
+      },
+      "trader_marked_tp": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT",
+      "mismatch_class": "AGREE",
+      "missed_reason": null,
+      "budget_faithful": {
+        "one_trade_budget": 1,
+        "session_first_entry_time": "2026-04-14T09:32:00-04:00",
+        "session_first_action": "ENTER_LONG",
+        "bullet_spent_before_window": false,
+        "executable_in_window": true,
+        "in_window_entries_the_budget_forbids": 0,
+        "note": "Only the session's FIRST fully-approved entry can execute. When it precedes the window, every in-window entry is unreachable and must not be scored as the bot's decision."
+      }
+    }
+  ]
+}

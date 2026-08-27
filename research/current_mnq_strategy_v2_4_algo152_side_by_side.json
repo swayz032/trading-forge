@@ -1,0 +1,938 @@
+{
+  "TOLERANCE_SENSITIVITY": {
+    "0.00": {
+      "bot_zones_matching_nothing_he_drew": "508 of 522",
+      "his_levels_the_bot_also_has": "13 of 28",
+      "of_those_exceptional": 233
+    },
+    "10.00": {
+      "bot_zones_matching_nothing_he_drew": "479 of 522",
+      "his_levels_the_bot_also_has": "25 of 28",
+      "of_those_exceptional": 216
+    },
+    "2.50": {
+      "bot_zones_matching_nothing_he_drew": "501 of 522",
+      "his_levels_the_bot_also_has": "17 of 28",
+      "of_those_exceptional": 228
+    }
+  },
+  "answer_changes_with_tolerance": true,
+  "artifact": "ALGO152_SIDE_BY_SIDE",
+  "authority": "ALGO-152; rails ALGO-151 \u00a75.1 and ALGO-083",
+  "inputs_are_committed_artifacts_nothing_rerun": true,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result is read.",
+  "rows": [
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "S:2026-03-03T09:30:00-05:00:97791",
+          "source": "WICK_ZONE"
+        },
+        "destination": {
+          "kind": "WICK_ZONE",
+          "points": 24.5
+        },
+        "entry_clock": "2026-03-23 08:14:00-04:00",
+        "refusal": null,
+        "setup": "BRK5",
+        "zones_established": 11,
+        "zones_exceptional": 15,
+        "zones_total": 26
+      },
+      "HIS": {
+        "action": "ENTER_SHORT",
+        "entry_clock": "2026-03-23T11:21:00-04:00",
+        "levels": [
+          {
+            "hi": 24347.25,
+            "lo": 24340,
+            "role": "SUPPORT",
+            "timeframe": "15m"
+          },
+          {
+            "hi": 24765.5,
+            "lo": 24758.25,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 24160.5,
+        "tp_status": "MARKED"
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 26,
+          "bot_zones_matching_nothing_he_drew": 25,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 15,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 26,
+          "bot_zones_matching_nothing_he_drew": 22,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 13,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "2.50": {
+          "bot_zones": 26,
+          "bot_zones_matching_nothing_he_drew": 24,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 14,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        }
+      },
+      "session": "2026-03-23"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "S:2026-03-23T14:00:00-04:00:97276",
+          "source": "WICK_ZONE"
+        },
+        "destination": {
+          "kind": "WICK_ZONE",
+          "points": 34.0
+        },
+        "entry_clock": "2026-03-24 08:17:00-04:00",
+        "refusal": null,
+        "setup": "BRK5",
+        "zones_established": 11,
+        "zones_exceptional": 13,
+        "zones_total": 24
+      },
+      "HIS": {
+        "action": "ENTER_LONG",
+        "entry_clock": "2026-03-24T09:32:00-04:00",
+        "levels": [
+          {
+            "hi": 24192.25,
+            "lo": 24192,
+            "role": "SUPPORT",
+            "timeframe": "15m"
+          },
+          {
+            "hi": 24510.5,
+            "lo": 24510.25,
+            "role": "RESISTANCE",
+            "timeframe": "15m"
+          }
+        ],
+        "marked_tp": 24641.5,
+        "tp_status": "MARKED"
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 24,
+          "bot_zones_matching_nothing_he_drew": 23,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 13,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 24,
+          "bot_zones_matching_nothing_he_drew": 22,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 13,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "2.50": {
+          "bot_zones": 24,
+          "bot_zones_matching_nothing_he_drew": 23,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 13,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        }
+      },
+      "session": "2026-03-24"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "SWING:R:2026-04-14T09:15:00-04:00:102865",
+          "source": "STRONG_SWING_DISPLACEMENT"
+        },
+        "destination": {
+          "kind": "FVG_15M_NATIVE_UNMITIGATED",
+          "points": 190.0
+        },
+        "entry_clock": "2026-04-14 09:18:00-04:00",
+        "refusal": null,
+        "setup": "BRK5",
+        "zones_established": 26,
+        "zones_exceptional": 20,
+        "zones_total": 46
+      },
+      "HIS": {
+        "action": "ENTER_LONG",
+        "entry_clock": "2026-04-14T09:36:00-04:00",
+        "levels": [
+          {
+            "hi": 25716.75,
+            "lo": 25716.5,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 25620.75,
+            "lo": 25620.5,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": null,
+        "tp_status": "NO_VISIBLE_MEANINGFUL_REACTION_IN_PRESENTED_CONTEXT"
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 46,
+          "bot_zones_matching_nothing_he_drew": 45,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 19,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 46,
+          "bot_zones_matching_nothing_he_drew": 43,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": true
+        },
+        "2.50": {
+          "bot_zones": 46,
+          "bot_zones_matching_nothing_he_drew": 43,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": true
+        }
+      },
+      "session": "2026-04-14"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "S:2026-03-25T06:30:00-04:00:97689",
+          "source": "WICK_ZONE"
+        },
+        "destination": {
+          "kind": "STRONG_SWING_DISPLACEMENT",
+          "points": 46.5
+        },
+        "entry_clock": "2026-03-25 08:12:00-04:00",
+        "refusal": null,
+        "setup": "REV",
+        "zones_established": 8,
+        "zones_exceptional": 17,
+        "zones_total": 25
+      },
+      "HIS": {
+        "action": "WAIT",
+        "entry_clock": null,
+        "levels": [
+          {
+            "hi": 24327.25,
+            "lo": 24327,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 24539.25,
+            "lo": 24538.5,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 24680.5,
+        "tp_status": null
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 25,
+          "bot_zones_matching_nothing_he_drew": 23,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 25,
+          "bot_zones_matching_nothing_he_drew": 20,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 15,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "2.50": {
+          "bot_zones": 25,
+          "bot_zones_matching_nothing_he_drew": 23,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        }
+      },
+      "session": "2026-03-25"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "FVG15:bullish:2026-03-26T09:30:00-04:00:96494",
+          "source": "FVG_15M_CAUSAL_INTERACTION"
+        },
+        "destination": {
+          "kind": "WICK_ZONE",
+          "points": 25.25
+        },
+        "entry_clock": "2026-03-26 09:33:00-04:00",
+        "refusal": null,
+        "setup": "BRK5",
+        "zones_established": 12,
+        "zones_exceptional": 16,
+        "zones_total": 28
+      },
+      "HIS": {
+        "action": "WAIT",
+        "entry_clock": null,
+        "levels": [
+          {
+            "hi": 24241.75,
+            "lo": 24241.5,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 24068.5,
+            "lo": 24068.25,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 24284.25,
+        "tp_status": null
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 28,
+          "bot_zones_matching_nothing_he_drew": 28,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 0,
+          "of_those_exceptional": 16,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        },
+        "10.00": {
+          "bot_zones": 28,
+          "bot_zones_matching_nothing_he_drew": 26,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 15,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        },
+        "2.50": {
+          "bot_zones": 28,
+          "bot_zones_matching_nothing_he_drew": 28,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 0,
+          "of_those_exceptional": 16,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        }
+      },
+      "session": "2026-03-26"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "S:2026-03-30T08:45:00-04:00:93755",
+          "source": "WICK_ZONE"
+        },
+        "destination": {
+          "kind": "WICK_ZONE",
+          "points": 63.25
+        },
+        "entry_clock": "2026-03-30 08:07:00-04:00",
+        "refusal": null,
+        "setup": "REV",
+        "zones_established": 19,
+        "zones_exceptional": 18,
+        "zones_total": 37
+      },
+      "HIS": {
+        "action": "ENTER_SHORT",
+        "entry_clock": "2026-03-30T09:41:00-04:00",
+        "levels": [
+          {
+            "hi": 23609.25,
+            "lo": 23609,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 23436.75,
+            "lo": 23436.5,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 23355.25,
+        "tp_status": "MARKED"
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 36,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": true
+        },
+        "10.00": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 36,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": true
+        },
+        "2.50": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 36,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": true
+        }
+      },
+      "session": "2026-03-30"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "R:2026-03-31T07:45:00-04:00:93590",
+          "source": "WICK_ZONE"
+        },
+        "destination": {
+          "kind": "WICK_ZONE",
+          "points": 15.0
+        },
+        "entry_clock": "2026-03-31 09:03:00-04:00",
+        "refusal": null,
+        "setup": "BRK5",
+        "zones_established": 22,
+        "zones_exceptional": 17,
+        "zones_total": 39
+      },
+      "HIS": {
+        "action": "ENTER_LONG",
+        "entry_clock": "2026-03-31T09:49:00-04:00",
+        "levels": [
+          {
+            "hi": 23312,
+            "lo": 23311.75,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 23436.75,
+            "lo": 23436.5,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 23540.75,
+        "tp_status": "MARKED"
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 39,
+          "bot_zones_matching_nothing_he_drew": 37,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 39,
+          "bot_zones_matching_nothing_he_drew": 37,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "2.50": {
+          "bot_zones": 39,
+          "bot_zones_matching_nothing_he_drew": 37,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        }
+      },
+      "session": "2026-03-31"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "SWING:S:2026-04-02T08:45:00-04:00:94666",
+          "source": "STRONG_SWING_DISPLACEMENT"
+        },
+        "destination": {
+          "kind": "STRONG_SWING_DISPLACEMENT",
+          "points": 27.5
+        },
+        "entry_clock": "2026-04-02 08:07:00-04:00",
+        "refusal": null,
+        "setup": "REV",
+        "zones_established": 28,
+        "zones_exceptional": 19,
+        "zones_total": 47
+      },
+      "HIS": {
+        "action": "NO_TRADE",
+        "entry_clock": null,
+        "levels": [
+          {
+            "hi": 24042.75,
+            "lo": 24042.5,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 23665.75,
+            "lo": 23665.5,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 24162.25,
+        "tp_status": null
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 47,
+          "bot_zones_matching_nothing_he_drew": 47,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 0,
+          "of_those_exceptional": 19,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 47,
+          "bot_zones_matching_nothing_he_drew": 44,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": true
+        },
+        "2.50": {
+          "bot_zones": 47,
+          "bot_zones_matching_nothing_he_drew": 45,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": true
+        }
+      },
+      "session": "2026-04-02"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "SWING:R:2026-03-05T10:45:00-05:00:100833",
+          "source": "STRONG_SWING_DISPLACEMENT"
+        },
+        "destination": {
+          "kind": "FVG_15M_NATIVE_UNMITIGATED",
+          "points": 50.25
+        },
+        "entry_clock": "2026-04-08 08:07:00-04:00",
+        "refusal": null,
+        "setup": "REV",
+        "zones_established": 21,
+        "zones_exceptional": 16,
+        "zones_total": 37
+      },
+      "HIS": {
+        "action": "WAIT",
+        "entry_clock": null,
+        "levels": [
+          {
+            "hi": 25256.75,
+            "lo": 25256.5,
+            "role": "RESISTANCE",
+            "timeframe": "15m"
+          },
+          {
+            "hi": 24615.25,
+            "lo": 24615,
+            "role": "SUPPORT",
+            "timeframe": "15m"
+          }
+        ],
+        "marked_tp": null,
+        "tp_status": null
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 36,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 15,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 34,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 13,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "2.50": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 36,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 15,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        }
+      },
+      "session": "2026-04-08"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "SWING:S:2026-03-11T03:00:00-04:00:100033",
+          "source": "STRONG_SWING_DISPLACEMENT"
+        },
+        "destination": {
+          "kind": "STRONG_SWING_DISPLACEMENT",
+          "points": 19.75
+        },
+        "entry_clock": "2026-04-09 09:44:00-04:00",
+        "refusal": null,
+        "setup": "REV",
+        "zones_established": 21,
+        "zones_exceptional": 16,
+        "zones_total": 37
+      },
+      "HIS": {
+        "action": "ENTER_LONG",
+        "entry_clock": "2026-04-09T11:35:00-04:00",
+        "levels": [
+          {
+            "hi": 24960.75,
+            "lo": 24960.5,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 25112.25,
+            "lo": 25112,
+            "role": "RESISTANCE",
+            "timeframe": "15m"
+          }
+        ],
+        "marked_tp": 25157.25,
+        "tp_status": "MARKED"
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 36,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 16,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 32,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 13,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "2.50": {
+          "bot_zones": 37,
+          "bot_zones_matching_nothing_he_drew": 36,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 16,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        }
+      },
+      "session": "2026-04-09"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "FVG15:bullish:2026-04-13T09:15:00-04:00:100618",
+          "source": "FVG_15M_CAUSAL_INTERACTION"
+        },
+        "destination": {
+          "kind": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "points": 13.75
+        },
+        "entry_clock": "2026-04-13 09:22:00-04:00",
+        "refusal": null,
+        "setup": "REV",
+        "zones_established": 29,
+        "zones_exceptional": 12,
+        "zones_total": 41
+      },
+      "HIS": {
+        "action": "WAIT",
+        "entry_clock": null,
+        "levels": [
+          {
+            "hi": 25333,
+            "lo": 25331.5,
+            "role": "RESISTANCE",
+            "timeframe": "15m"
+          },
+          {
+            "hi": 25158.5,
+            "lo": 25158.25,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 25390.25,
+        "tp_status": null
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 41,
+          "bot_zones_matching_nothing_he_drew": 40,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 12,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        },
+        "10.00": {
+          "bot_zones": 41,
+          "bot_zones_matching_nothing_he_drew": 38,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 11,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        },
+        "2.50": {
+          "bot_zones": 41,
+          "bot_zones_matching_nothing_he_drew": 40,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 12,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        }
+      },
+      "session": "2026-04-13"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "FVG15:bullish:2026-04-01T08:00:00-04:00:96672",
+          "source": "FVG_15M_CAUSAL_INTERACTION"
+        },
+        "destination": {
+          "kind": "FVG_15M_NATIVE_UNMITIGATED",
+          "points": 27.75
+        },
+        "entry_clock": "2026-04-01 08:12:00-04:00",
+        "refusal": null,
+        "setup": "BRK5",
+        "zones_established": 30,
+        "zones_exceptional": 18,
+        "zones_total": 48
+      },
+      "HIS": {
+        "action": "WAIT",
+        "entry_clock": null,
+        "levels": [
+          {
+            "hi": 24245,
+            "lo": 24244.75,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 24006.25,
+            "lo": 24006,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 24283.5,
+        "tp_status": null
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 48,
+          "bot_zones_matching_nothing_he_drew": 47,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        },
+        "10.00": {
+          "bot_zones": 48,
+          "bot_zones_matching_nothing_he_drew": 45,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        },
+        "2.50": {
+          "bot_zones": 48,
+          "bot_zones_matching_nothing_he_drew": 47,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": null
+        }
+      },
+      "session": "2026-04-01"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "SWING:R:2026-04-06T03:30:00-04:00:97165",
+          "source": "STRONG_SWING_DISPLACEMENT"
+        },
+        "destination": {
+          "kind": "WICK_ZONE+LIQUIDITY_CLUSTER_5M",
+          "points": 46.75
+        },
+        "entry_clock": "2026-04-06 08:29:00-04:00",
+        "refusal": null,
+        "setup": "REV",
+        "zones_established": 26,
+        "zones_exceptional": 18,
+        "zones_total": 44
+      },
+      "HIS": {
+        "action": "ENTER_SHORT",
+        "entry_clock": "2026-04-06T10:04:00-04:00",
+        "levels": [
+          {
+            "hi": 24421.75,
+            "lo": 24421.5,
+            "role": "RESISTANCE",
+            "timeframe": "15m"
+          },
+          {
+            "hi": 24248.25,
+            "lo": 24248,
+            "role": "SUPPORT",
+            "timeframe": "15m"
+          }
+        ],
+        "marked_tp": 24257.25,
+        "tp_status": "MARKED"
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 44,
+          "bot_zones_matching_nothing_he_drew": 43,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 44,
+          "bot_zones_matching_nothing_he_drew": 41,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 17,
+          "the_zone_the_bot_traded_is_one_of_his": true
+        },
+        "2.50": {
+          "bot_zones": 44,
+          "bot_zones_matching_nothing_he_drew": 43,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 18,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        }
+      },
+      "session": "2026-04-06"
+    },
+    {
+      "BOT": {
+        "authorising_zone": {
+          "id": "S:2026-04-01T12:15:00-04:00:96923",
+          "source": "WICK_ZONE"
+        },
+        "destination": {
+          "kind": "WICK_ZONE",
+          "points": 22.0
+        },
+        "entry_clock": "2026-04-07 08:17:00-04:00",
+        "refusal": null,
+        "setup": "REV",
+        "zones_established": 23,
+        "zones_exceptional": 20,
+        "zones_total": 43
+      },
+      "HIS": {
+        "action": "WAIT",
+        "entry_clock": null,
+        "levels": [
+          {
+            "hi": 24135,
+            "lo": 24134.75,
+            "role": "SUPPORT",
+            "timeframe": "5m"
+          },
+          {
+            "hi": 24302.25,
+            "lo": 24302,
+            "role": "RESISTANCE",
+            "timeframe": "5m"
+          }
+        ],
+        "marked_tp": 24399.75,
+        "tp_status": null
+      },
+      "JOINS_BY_PAD": {
+        "0.00": {
+          "bot_zones": 43,
+          "bot_zones_matching_nothing_he_drew": 42,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 1,
+          "of_those_exceptional": 20,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "10.00": {
+          "bot_zones": 43,
+          "bot_zones_matching_nothing_he_drew": 39,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 19,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        },
+        "2.50": {
+          "bot_zones": 43,
+          "bot_zones_matching_nothing_he_drew": 40,
+          "his_levels": 2,
+          "his_levels_the_bot_also_has": 2,
+          "of_those_exceptional": 19,
+          "the_zone_the_bot_traded_is_one_of_his": false
+        }
+      },
+      "session": "2026-04-07"
+    }
+  ],
+  "status": "A PICTURE, NOT A METRIC. His marked levels LOCATE, they never SCORE. No agreement number, percentage or verdict is computed anywhere here.",
+  "tolerance": "band overlap after padding each side; reported at 0.00 / 2.50 / 10.00 points"
+}

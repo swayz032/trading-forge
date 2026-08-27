@@ -1,0 +1,29 @@
+{
+  "matrix": {
+    "A_NORMAL_REJECTION": {
+      "A_NORMAL_REJECTION": true,
+      "B_NORMAL_BREAKOUT": false,
+      "C_PREBREAK_DISPLACEMENT": false,
+      "D_PREBREAK_RETEST_BREAKOUT": false
+    },
+    "B_NORMAL_BREAKOUT": {
+      "A_NORMAL_REJECTION": false,
+      "B_NORMAL_BREAKOUT": true,
+      "C_PREBREAK_DISPLACEMENT": false,
+      "D_PREBREAK_RETEST_BREAKOUT": false
+    },
+    "C_PREBREAK_DISPLACEMENT": {
+      "A_NORMAL_REJECTION": false,
+      "B_NORMAL_BREAKOUT": false,
+      "C_PREBREAK_DISPLACEMENT": true,
+      "D_PREBREAK_RETEST_BREAKOUT": false
+    },
+    "D_PREBREAK_RETEST_BREAKOUT": {
+      "A_NORMAL_REJECTION": false,
+      "B_NORMAL_BREAKOUT": false,
+      "C_PREBREAK_DISPLACEMENT": false,
+      "D_PREBREAK_RETEST_BREAKOUT": true
+    }
+  },
+  "overlaps": []
+}

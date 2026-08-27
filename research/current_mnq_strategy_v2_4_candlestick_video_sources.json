@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC1",
+  "purpose": "Auditable source ledger for trader-supplied candlestick education videos. Video content may inform semantic interpretation only after verified review; no PnL parameter tuning may be derived from these sources.",
+  "hard_trader_rules_override_video_sources": [
+    "NO_ZONE_NO_TRADE",
+    "PRICE_MUST_REACH_AUTHORIZED_ZONE",
+    "TRADE_REQUIRES_ZONE_REJECTION_OR_ZONE_BREAK_ACCEPTANCE",
+    "CANDLESTICKS_CONFIRM_BUYER_SELLER_CONTROL_AT_ZONE_NOT_STANDALONE_SIGNAL",
+    "FIRST_A_PLUS_ONLY",
+    "MAX_ONE_TRADE_PER_SESSION"
+  ],
+  "sources": [
+    {
+      "youtube_id": "ukbWRb4d5-s",
+      "url": "https://youtu.be/ukbWRb4d5-s",
+      "supplied_by": "trader",
+      "status": "PRIOR_REVIEW_NOTES_INTEGRATED",
+      "allowed_use": "semantic cross-check only"
+    },
+    {
+      "youtube_id": "m4WOwgUMQuc",
+      "url": "https://youtu.be/m4WOwgUMQuc",
+      "supplied_by": "trader",
+      "status": "PRIOR_REVIEW_NOTES_INTEGRATED",
+      "allowed_use": "semantic cross-check only"
+    },
+    {
+      "youtube_id": "tW13N4Hll88",
+      "url": "https://youtu.be/tW13N4Hll88",
+      "supplied_by": "trader",
+      "status": "PRIOR_REVIEW_NOTES_INTEGRATED",
+      "allowed_use": "semantic cross-check only"
+    },
+    {
+      "youtube_id": "AOz1YPOKvEs",
+      "url": "https://youtu.be/AOz1YPOKvEs",
+      "supplied_by": "trader",
+      "status": "PRIOR_REVIEW_NOTES_INTEGRATED",
+      "allowed_use": "semantic cross-check only"
+    },
+    {
+      "youtube_id": "UU4ZQF-X9jE",
+      "url": "https://youtu.be/UU4ZQF-X9jE",
+      "supplied_by": "trader",
+      "status": "PRIOR_REVIEW_NOTES_INTEGRATED",
+      "allowed_use": "semantic cross-check only"
+    },
+    {
+      "youtube_id": "JbmffTYNRtg",
+      "url": "https://youtu.be/JbmffTYNRtg",
+      "supplied_by": "trader",
+      "status": "PENDING_VERIFIED_TRANSCRIPT_OR_VISUAL_REVIEW",
+      "access_note": "Current browser/search session did not expose reliable indexed metadata or transcript; do not infer video claims.",
+      "allowed_use": "none until verified"
+    },
+    {
+      "youtube_id": "3UXSxe4Vi0w",
+      "url": "https://youtu.be/3UXSxe4Vi0w",
+      "supplied_by": "trader",
+      "status": "PENDING_VERIFIED_TRANSCRIPT_OR_VISUAL_REVIEW",
+      "access_note": "Current browser/search session did not expose reliable indexed metadata or transcript; do not infer video claims.",
+      "allowed_use": "none until verified"
+    }
+  ],
+  "anti_overfit": {
+    "videos_may_not_be_used_to_select_profitable_thresholds": true,
+    "videos_may_not_override_explicit_trader_rules": true,
+    "unverified_video_content_may_not_change_executable_semantics": true
+  }
+}

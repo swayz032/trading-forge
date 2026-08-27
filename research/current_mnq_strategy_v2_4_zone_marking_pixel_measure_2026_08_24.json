@@ -1,0 +1,96 @@
+{
+  "artifact": "ZONE_MARKING_PIXEL_MEASURE",
+  "status": "DIAGNOSTIC. Measures his zone-marking screenshot. Changes no rule.",
+  "authority": "ALGO-088",
+  "produced": "2026-08-24",
+  "custody": {
+    "path": "C:\\Users\\tonio\\Pictures\\Screenshots\\Screenshot 2026-08-24 185737.png",
+    "sha256": "fce8834f5585c4f73c9604bdf8802d1072321a2c5de3d0462950f31ca70d0af3",
+    "bytes": 113584,
+    "matches_the_ruling": true
+  },
+  "teaching_era": "Fri 11 Jul '25 - lawful predicate source (ALGO-020/064)",
+  "calibration": {
+    "price_per_row": -0.399332,
+    "pixels_per_point": 2.5042,
+    "max_residual_price_points": 0.233,
+    "match_tolerance_points": 0.63,
+    "seed_labels": [
+      23140.0,
+      23120.0,
+      23100.0,
+      23080.0,
+      23060.0,
+      23040.0,
+      23020.0,
+      23000.0
+    ]
+  },
+  "zone_pixels": {
+    "fill_top_row": 215,
+    "fill_bottom_row": 258,
+    "top_stroke_rows": [
+      213,
+      214
+    ],
+    "bottom_stroke_rows": [
+      259,
+      260
+    ],
+    "top_row": 213.5,
+    "bottom_row": 259.5,
+    "left_col": 330,
+    "right_col": 1689
+  },
+  "zone_top_price": 23109.78,
+  "zone_bottom_price": 23091.41,
+  "zone_width_points": 18.37,
+  "spike_pixels": {
+    "col": 593,
+    "wick_top_row": 212,
+    "body_top_row": 261,
+    "candle_pixel_columns": 1286
+  },
+  "spike_wick_extreme_price": 23110.38,
+  "spike_body_close_side_price": 23090.82,
+  "candidate_constructions": {
+    "A_wick_extreme_to_close_RATIFIED": {
+      "predicted_band": [
+        23090.82,
+        23110.38
+      ],
+      "edge_error_points": [
+        0.59,
+        0.6
+      ],
+      "zone_measured": [
+        23091.41,
+        23109.78
+      ],
+      "candle_measured": {
+        "wick_extreme": 23110.38,
+        "body_close_side": 23090.82
+      }
+    },
+    "B_band_ABOVE_the_wick": {
+      "predicted_lower_edge": 23110.38,
+      "lower_edge_error_points": 18.97,
+      "band_width_points": 18.37
+    },
+    "C_close_to_wick_extreme": {
+      "predicted_band": [
+        23090.82,
+        23110.38
+      ],
+      "note": "same interval as A; distinguished only by which edge anchors"
+    }
+  },
+  "detector_plausibility_passed": true,
+  "detector_note": null,
+  "BEST_MATCH": "A_wick_extreme_to_close_RATIFIED",
+  "best_match_error_points": 0.6,
+  "matches_within_tolerance": true,
+  "no_rule_changed": true,
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic.",
+  "runtime_seconds": 0.13
+}

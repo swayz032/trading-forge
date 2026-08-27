@@ -1,0 +1,85 @@
+{
+  "schema_version": 4,
+  "strategy_release": "MNQ-V2.4-ZONE-CANDLE-PC3-FORCE1-SR-FVG-FIDELITY",
+  "source": "Trader-provided FVG transcript, closed-world trade screenshot/video corpus, frozen 14-case replay, and explicit trader clarifications through 2026-08-20",
+  "fidelity_addendum": "research/current_mnq_strategy_v2_4_trader_fidelity_addendum_2026_08_20.json",
+  "visual_evidence_manifest": "research/current_mnq_strategy_v2_4_visual_evidence_manifest_2026_08_20.json",
+  "detector_authority": {
+    "repository_path": "src/engine/indicators/fvg_native.py",
+    "rule": "Use the existing native detector; do not maintain a second strategy-specific FVG detector.",
+    "timeframe_for_current_strategy": "15m",
+    "completed_bars_only": true
+  },
+  "fvg_identity": {
+    "bullish": "third candle low is strictly above first candle high",
+    "bearish": "third candle high is strictly below first candle low",
+    "middle_candle": "displacement/imbalance candle",
+    "zone_boundaries": "wick-to-wick price band between candle one and candle three",
+    "active_gap": "formed and not subsequently re-entered/mitigated on a completed later 15m bar"
+  },
+  "trader_target_rule": {
+    "purpose": "FVG is one possible take-profit reaction destination and may also be a causal support/resistance interaction band; it is never an automatic trade.",
+    "allowed_destination_families": [
+      "structural_support_resistance_reaction_zone",
+      "5m_liquidity_or_reaction_cluster",
+      "active_15m_FVG"
+    ],
+    "forbidden_destination_families": ["PDH", "PDL", "PWH", "PWL"],
+    "rank_by": "PHYSICAL_REACTION_ORDER_AT_THE_ACTUAL_ENTRY_CLOCK",
+    "rank_distance_uses": "near_edge_of_reaction_area_not_midpoint",
+    "fvg_take_profit": "middle of the selected active 15m FVG, tick rounded conservatively",
+    "fvg_edge_reaction_boundary": "The trader may use the relevant end/edge of the FVG as the support/resistance reaction boundary when that FVG is the physical structure immediately before the next structural S/R.",
+    "liquidity_cluster_take_profit": "the selected meaningful liquidity/reaction cluster TP level/interior defined by the existing structural target geometry",
+    "liquidity_cluster_before_fvg": "TARGET_LIQUIDITY_CLUSTER",
+    "fvg_before_liquidity_cluster": "TARGET_FVG_MIDPOINT",
+    "sr_before_cluster_or_fvg": "TARGET_OR_REFINE_INSIDE_FIRST_SR_REACTION_AREA",
+    "normal_tp1_rule": "The nearest meaningful physical S/R reaction, liquidity/reaction cluster, or active FVG owns TP1. No farther feature may leapfrog it merely for more room.",
+    "tp_display_safe_gap_rule": "At the frozen 15-MNQ reference display, planned TP1 reward >= $400 is safe enough for direct entry if every other A+ gate passes; planned reward under $400 blocks the immediate entry.",
+    "tp_display_reference_formula": "target_distance_points * $2_per_MNQ_point * 15_reference_contracts",
+    "tp_display_reference_floor_usd": 400.0,
+    "tp_display_reference_distance_points": 13.333333333333334,
+    "exact_400_is_allowed": true,
+    "under_400_blind_tp1_to_tp2_rollover_forbidden": true,
+    "processed_reaction_continuation_exception": "A later candidate may target the next meaningful destination only when that candidate itself earns an already-approved continuation through the same TP1 reaction area; unrelated earlier entry locations may not claim TP1 was processed.",
+    "retired_rule": "The prior Params.min_room_r * Params.stop automatic TP1-to-TP2 rollover interpretation is superseded and forbidden for the trader's planned TP display gap.",
+    "weak_near_blocker_contract_preserved": true,
+    "fixed_R_target": false,
+    "reaction_significance_is_distinct_from_entry_authorization": true,
+    "target_only_15m_zone_rule": "An active established 15m structural S/R zone with at least 2 independent rejections and quality>=min_zone_quality remains a meaningful TP/blocker even when it lacks the confluence or high_zone_quality required to authorize a fresh entry.",
+    "target_only_zone_can_create_entry": false
+  },
+  "fvg_support_resistance_interaction": {
+    "enabled_by_direct_trader_confirmation_2026_08_20": true,
+    "bullish_fvg_default_role": "POTENTIAL_SUPPORT_INTERACTION_BAND",
+    "bearish_fvg_default_role": "POTENTIAL_RESISTANCE_INTERACTION_BAND",
+    "band_alone_is_not_signal": true,
+    "fvg_before_regular_sr_is_evaluated_first": true,
+    "bearish_from_resistance_fvg": "price must reject the FVG resistance band and then prove bearish 5m candle story plus sustained bearish live force",
+    "bullish_through_resistance_fvg": "price must disrespect/clear the opposing FVG resistance band under the normal breakout confirmation plus sustained bullish live force",
+    "bullish_from_support_fvg": "price must reject the FVG support band and then prove bullish 5m candle story plus sustained bullish live force",
+    "bearish_through_support_fvg": "price must disrespect/clear the opposing FVG support band under the normal breakout confirmation plus sustained bearish live force",
+    "normal_breakout_confirmation": "first completed 5m print beyond the band is setup only; following forming 5m must extend beyond the first breakout candle directional extreme and prove sustained force",
+    "intraday_fvg_refresh": "Only completed active 15m FVGs known at the start of each forming 5m bucket may participate; future/incomplete 15m FVGs are forbidden.",
+    "fvg_required_for_entry": false,
+    "fvg_required_for_displacement": false
+  },
+  "video_entry_filters": {
+    "knowledge_recorded": [
+      "unmitigated/not previously tested",
+      "reaction close behavior",
+      "support/resistance interaction",
+      "relative FVG priority",
+      "premium/discount placement concept",
+      "break of structure before gap"
+    ],
+    "adoption_rule": "Do not silently import unrelated creator checklist thresholds. Only the trader-confirmed current-strategy FVG identity, TP role, support/resistance interaction, rejection/clearance behavior and causal timing are executable authority."
+  },
+  "anti_overfit": {
+    "pnl_tuning_for_destination_ordering": false,
+    "pnl_tuning_for_fvg_entry_role": false,
+    "tp_400_floor_came_from_direct_trader_rule_not_PnL": true,
+    "no_threshold_search": true,
+    "semantic_change_invalidates_prior_v2_4_exact_sha_evidence": true,
+    "fresh_validation_required_after_fidelity_freeze": true
+  }
+}

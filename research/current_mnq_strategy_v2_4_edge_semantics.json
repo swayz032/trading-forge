@@ -1,0 +1,92 @@
+{
+  "schema_version": 3,
+  "release_id": "MNQ-V2.4-EDGE-EQUATION-2-DQ1",
+  "frozen_at": "2026-08-18",
+  "purpose": "Define edge before seeing clean v2.4 validation PnL. No component may be relaxed because a result fails. Equation-2 corrects an impossible calendar gate discovered before any clean PnL was observed: MNQ launched 2019-05-06, so fewer than 756 weekdays exist before the already-contaminated 2022-01-01 boundary. DQ1 freezes a vendor-data quarantine after Databento condition metadata was inspected but before any clean v2.4 PnL was executed.",
+  "equation": {
+    "name": "WEAKEST_LINK_ROBUST_EXPECTANCY",
+    "definition": "ROBUST_EDGE_EXPECTANCY = min(BOOTSTRAP_LCB95, MAX_COST_STRESS_EXPECTANCY, DETAILED_EXPECTANCY, LEAVE_BEST_MONTH_OUT_EXPECTANCY)",
+    "certified_edge": "DATA_CLEAN AND CLEAN_SCOPE_COMPLETE AND SAMPLE_OK AND TEMPORAL_OK AND ROBUST_EDGE_EXPECTANCY > 0 AND BREAK_EVEN_MARGIN > 0",
+    "interpretation": "The strategy only claims edge at the weakest surviving expectancy after uncertainty, friction, outlier-removal and calendar-concentration attacks."
+  },
+  "clean_historical_scope": {
+    "instrument_launch_date": "2019-05-06",
+    "required_dataset_start_on_or_before": "2019-05-06",
+    "required_dataset_end_on_or_after": "2021-12-31",
+    "require_full_available_pre_contamination_history": true,
+    "initial_post_launch_warmup_is_unscored": true,
+    "reason": "Use the complete genuine MNQ history available before the known-seen 2022+ performance era. Do not substitute NQ, synthetic pre-launch MNQ, or cherry-picked subranges."
+  },
+  "vendor_data_quality_quarantine": {
+    "decision_frozen_before_clean_pnl": true,
+    "frozen_at": "2026-08-18",
+    "source": "Databento GLBX.MDP3 metadata.get_dataset_condition",
+    "policy": "A vendor date whose condition is not available is not scored directly and is also quarantined through the maximum causal historical lookback. Raw dataset bytes remain unchanged and frozen; only clean score evidence is excluded. Any newly observed non-available vendor-condition date not declared here requires review before the sealed run.",
+    "downstream_quarantine_calendar_days": 40,
+    "causal_basis": "v2.4 established wick zones and exceptional single-swing grading use a maximum 40-calendar-day historical lookback; shorter dependencies include 25-day FVG context plus prior-day/prior-week references. Therefore same-day-only exclusion is insufficient.",
+    "source_condition_events": [
+      {
+        "date": "2020-02-27",
+        "condition": "degraded",
+        "observed_last_modified_date": "2026-05-27"
+      },
+      {
+        "date": "2020-02-28",
+        "condition": "degraded",
+        "observed_last_modified_date": "2026-05-28"
+      },
+      {
+        "date": "2020-06-30",
+        "condition": "degraded",
+        "observed_last_modified_date": "2026-05-22"
+      },
+      {
+        "date": "2020-07-01",
+        "condition": "degraded",
+        "observed_last_modified_date": "2026-05-22"
+      },
+      {
+        "date": "2021-12-05",
+        "condition": "degraded",
+        "observed_last_modified_date": "2026-05-18"
+      }
+    ]
+  },
+  "gates": {
+    "minimum_trades": 100,
+    "minimum_score_sessions": 500,
+    "chronological_folds": 4,
+    "minimum_positive_folds": 3,
+    "top_winner_fraction_removed": 0.05,
+    "leave_best_calendar_month_out": true,
+    "bootstrap_lower_95_must_be_positive": true,
+    "highest_declared_slippage_stress_expectancy_must_be_positive": true,
+    "detailed_expectancy_must_be_positive": true,
+    "leave_best_month_out_expectancy_must_be_positive": true,
+    "break_even_win_rate_margin_must_be_positive": true
+  },
+  "anti_overfit": {
+    "no_parameter_search": true,
+    "no_threshold_rescue_after_result": true,
+    "no_best_variant_selection": true,
+    "gate_change_reason_must_predate_clean_result": true,
+    "same_history_may_be_used_for_development_diagnostics_but_not_relabeled_clean_OOS": true,
+    "known_seen_performance_ranges": [
+      {
+        "start": "2022-01-01",
+        "end": "2026-08-17",
+        "reason": "Aggregate MNQ strategy performance over this multi-year Databento era was already inspected before the v2.4 equation was frozen. It can support development/robustness diagnostics, but it cannot be called a fresh clean v2.4 OOS proof."
+      }
+    ],
+    "clean_final_edge_requires": "Complete genuine MNQ history from launch through 2021-12-31 with contaminated ranges and the frozen pre-PnL vendor-data quarantine excluded from score evidence, or future post-freeze evidence under a separately frozen future-evidence contract."
+  },
+  "diagnostics_not_hard_gates": [
+    "long_short_profit_split",
+    "setup_profit_split",
+    "win_rate",
+    "profit_factor",
+    "maximum_drawdown",
+    "longest_losing_streak",
+    "target_distance_distribution"
+  ]
+}

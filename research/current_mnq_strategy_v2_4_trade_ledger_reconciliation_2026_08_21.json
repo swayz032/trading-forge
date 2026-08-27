@@ -1,0 +1,228 @@
+{
+  "artifact": "TRADE_LEDGER_RECONCILIATION_RECEIPT",
+  "produced": "2026-08-21",
+  "authority": "ALGO-002 §3.3 (GPT external advisor ruling)",
+  "status": "DIAGNOSTIC_ONLY",
+  "prohibition": "This ledger is a TP/exit fidelity diagnostic. It may NEVER select a strategy rule, a threshold, or a parameter. No PnL figure here may participate in any fidelity repair decision.",
+  "custody": {
+    "source_file": "backtesting-analytics.csv",
+    "path": "C:/Users/tonio/Downloads/backtesting-analytics.csv",
+    "sha256": "0282abdbb1e6562a424fe906a57184345f81a8c8a9fee0ee2cbbe9cad0ef4089",
+    "duplicate_copy_note": "A byte-identical 'backtesting-analytics (1).csv' also exists in Downloads; same sha256.",
+    "bytes_not_committed": true
+  },
+  "census": {
+    "row_count": 74,
+    "symbols": {
+      "CME_MINI:MNQ": 74
+    },
+    "status": {
+      "closed": 74
+    },
+    "date_range": {
+      "first": "2025/04/02",
+      "last": "2025/06/20"
+    },
+    "side_counts": {
+      "buy": 28,
+      "sell": 46
+    }
+  },
+  "money_model": {
+    "solved_not_assumed": true,
+    "finding": "`amount` is DOLLARS PER POINT, not contracts. rPnL == (close-entry)*direction*amount, multiplier exactly 1.0 on all 69 non-degenerate rows.",
+    "first_model_was_wrong": "An initial pass assumed amount==contracts at $2/pt and failed on 69 of 74 rows, worst discrepancy $23,477. Recorded because the ledger was never wrong - the model was.",
+    "mnq_point_value": 2.0,
+    "rows_reconciling": 69,
+    "rows_not_reconciling": 0,
+    "degenerate_rows_close_equals_entry": 5
+  },
+  "implied_contract_sizes": {
+    "derivation": "amount / 2.0",
+    "counts": {
+      "15": 44,
+      "17": 27,
+      "20": 3
+    },
+    "note": "44 rows sit at the frozen 15 contracts, 27 at 17, 3 at 20 - that is the FULL 74-row census. The 42/25/2 figures quoted elsewhere are the NON-DEGENERATE RECONCILIATION SUBSET (69 rows), i.e. the same distribution minus the 5 rows whose close equals their entry. 44+27+3 = 74 and 42+25+2 = 69. These are two scopes of one distribution, NOT an internal contradiction - clarified per ALGO-004 §2 so no later reader reads it as one.",
+    "counts_scope": "FULL LEDGER CENSUS - all 74 rows, including the 5 degenerate rows where close == entry and no multiplier can be solved.",
+    "non_degenerate_subset": {
+      "15": 42,
+      "17": 25,
+      "20": 2,
+      "total": 69
+    },
+    "full_census_total": 74
+  },
+  "exit_families": {
+    "target_side_exit": 61,
+    "other_exit": 8,
+    "scratch": 5
+  },
+  "stop_analysis": {
+    "CORRECTION_2026_08_21": "My published verdict was WRONG and the operator's screenshots exposed it. I wrote 'UNSUPPORTED - the file records no stop prices' because initialSL is empty on all 74 rows. That was true of the FIELD and false of the FILE. A stop-out is recorded by its MONEY, not by a stop-price column: realized PnL of exactly -517.50 at exactly 17.25 points on 15 contracts IS the frozen stop. I read one column, found it empty, and published an absence.",
+    "rows_carrying_an_initialSL_field": 0,
+    "stop_outs_derived_from_rPnL_and_distance": 4,
+    "arithmetic": "17.25 points x 15 contracts x $2/point = $517.50",
+    "every_one_at_exactly_17_25_points": true,
+    "every_one_at_15_contracts": true,
+    "rows": [
+      {
+        "date": "2025/04/23",
+        "side": "sell",
+        "entry": 19054.75,
+        "close": 19072.0,
+        "points": 17.25,
+        "dollars_per_point": 30.0,
+        "implied_contracts": 15,
+        "rPnL": -517.5
+      },
+      {
+        "date": "2025/05/13",
+        "side": "sell",
+        "entry": 20981.5,
+        "close": 20998.75,
+        "points": 17.25,
+        "dollars_per_point": 30.0,
+        "implied_contracts": 15,
+        "rPnL": -517.5
+      },
+      {
+        "date": "2025/06/02",
+        "side": "buy",
+        "entry": 21441.5,
+        "close": 21424.25,
+        "points": 17.25,
+        "dollars_per_point": 30.0,
+        "implied_contracts": 15,
+        "rPnL": -517.5
+      },
+      {
+        "date": "2025/06/09",
+        "side": "sell",
+        "entry": 21829.5,
+        "close": 21846.75,
+        "points": 17.25,
+        "dollars_per_point": 30.0,
+        "implied_contracts": 15,
+        "rPnL": -517.5
+      }
+    ],
+    "relayed_claim_was_7": "The relayed figure was 7. MEASURED: 4. The relayed claim is REFUTED on count, but its substance - that exact 17.25-point stops exist in this ledger - is CONFIRMED. My earlier 'UNSUPPORTED' was the worse error of the two.",
+    "what_this_does_and_does_not_prove": "ALGO-004 §2: because the platform's Initial SL field is N/A on every row, this ledger does NOT prove the exchange or order-type mechanics of these exits. Call them EXACT FROZEN-STOP-DISTANCE REALIZED LOSSES, not 'stop orders', unless another source proves the order type.",
+    "naming": "exact_frozen_stop_distance_realized_losses"
+  },
+  "relayed_claims_tested": {
+    "62_target_side_exits": {
+      "relayed": 62,
+      "measured": 61,
+      "verdict": "CLOSE BUT NOT EQUAL - measured 61"
+    },
+    "7_exact_17_25_stops": {
+      "relayed": 7,
+      "measured": 4,
+      "verdict": "SUBSTANCE CONFIRMED, COUNT REFUTED - 4 stop-outs at exactly 17.25 points / -$517.50, derived from realized PnL because initialSL is empty. My earlier verdict of UNSUPPORTED is RETRACTED."
+    },
+    "5_scratches": {
+      "relayed": 5,
+      "measured": 5,
+      "verdict": "MATCHES"
+    },
+    "74_rows": {
+      "relayed": 74,
+      "measured": 74,
+      "verdict": "MATCHES"
+    },
+    "28_buy_46_sell": {
+      "relayed": "28/46",
+      "measured": "28/46",
+      "verdict": "MATCHES"
+    }
+  },
+  "eight_ledger_screenshots": {
+    "status": "RECONCILED",
+    "correction": "Previously marked NOT_RECONCILED with the note that they 'were not supplied to this seat'. They HAD been supplied - they are eight of the thirteen 2026-08-21 screenshots I had already registered, and I had mis-registered all thirteen under a single 1m-vs-5m role. The operator pointed at them by filename.",
+    "count": 8,
+    "files": [
+      {
+        "name": "Screenshot 2026-08-21 030057.png",
+        "sha256": "0269242a875342058ee1fb59a20ca9cf6f5352736ad21d2b439d9ebaeded237b"
+      },
+      {
+        "name": "Screenshot 2026-08-21 030106.png",
+        "sha256": "14543d53805bfc5dc5a11c7d7e7bf63170998aa0d03ecd70da75d246a5fb3b5c"
+      },
+      {
+        "name": "Screenshot 2026-08-21 030110.png",
+        "sha256": "50a2eb51fda744fd7dc03e692961008933ce076d682ae384c6176254cf4417e6"
+      },
+      {
+        "name": "Screenshot 2026-08-21 030115.png",
+        "sha256": "2f9c1dd7fb4eb8ca3784b5d91080b6b3f6f00634b52e2b86e03b9729f631e53f"
+      },
+      {
+        "name": "Screenshot 2026-08-21 030119.png",
+        "sha256": "61a3826af6d32a10560e9e86574db85e3cf7fe11a58cfe6e3b9aeaf10acd0f34"
+      },
+      {
+        "name": "Screenshot 2026-08-21 030124.png",
+        "sha256": "2ada9b3f001a73667eaf21f86ce1332f004599de8f2119a6d6047a460d113e9f"
+      },
+      {
+        "name": "Screenshot 2026-08-21 030129.png",
+        "sha256": "dac086c1b8c23adcf978f9fb84b40e269267f0d3c795648eebd0196c22012425"
+      },
+      {
+        "name": "Screenshot 2026-08-21 030134.png",
+        "sha256": "9a2707b19f2b2db1af9385e9577ce1e106a0ac033219d31579954850cdfb98e1"
+      }
+    ],
+    "what_they_are": "FX Replay 'Closed Positions' table, MNQ, paginated 1..8 of 8 at 10 rows per page, showing Asset/Side/Date/Entry/Initial SL/Max TP/Size/Close Avg/Realized/Commission.",
+    "join_to_the_csv": {
+      "method": "Join on (dateStart, side, entryPrice); compare close and realized.",
+      "spot_checks": [
+        "2025/06/20 sell entry 22090.25 -> close 21941.75, rPnL 4455.00 - matches screenshot",
+        "2025/06/09 sell entry 21829.50 -> close 21846.75, rPnL -517.50 - matches screenshot",
+        "2025/05/13 buy  entry 21093.25 -> close 21250.50, rPnL 4717.50 - matches screenshot"
+      ],
+      "verdict": "The screenshots and the CSV are the SAME ledger, agreeing to the cent."
+    },
+    "size_column_reconciles_the_amount_column": {
+      "screenshots_show": "15 contracts on every visible row",
+      "csv_rows_in_that_date_range": 30,
+      "their_amount_values": {
+        "30": 30
+      },
+      "meaning": "amount 30 = $30/point = 15 contracts at $2. The screenshots independently confirm the dollars-per-point reading of `amount` that I had to solve for.",
+      "the_17_and_20_contract_rows": "Those sit EARLIER than 2025/05/13 and are outside the eight screenshot pages, so they are not contradicted by them."
+    },
+    "initial_SL_is_N_A_on_the_screenshots_too": "The screenshots show 'N/A' in the Initial SL column, independently corroborating that the stop price was never recorded by the platform - and therefore that deriving the stop from the money was the only available route.",
+    "reconciliation_strength": {
+      "current": "SAMPLED",
+      "spot_checks_performed": 3,
+      "downgrade_reason": "ALGO-004 §3: the prose said the pages are fully reconciled and 'agreeing to the cent' while the regression only required >=3 spot checks. Until a matched-row census with a mismatch count exists, this is SAMPLED reconciliation and is described as such. It is sufficient for the custody conclusion that the pages belong to the same ledger family; it is NOT yet load-bearing TP/exit fidelity evidence.",
+      "required_before_load_bearing": "matched-row census + explicit mismatch count"
+    }
+  },
+  "corpus_join": {
+    "measured": "2026-08-22",
+    "question": "can this ledger validate the 14 frozen replay sessions row by row?",
+    "answer": "NO, AND IT IS STRUCTURAL - the two sets share NO date.",
+    "ledger_range": [
+      "2025-04-02",
+      "2025-06-20"
+    ],
+    "ledger_distinct_dates": 55,
+    "corpus_range": [
+      "2026-03-23",
+      "2026-04-14"
+    ],
+    "corpus_sessions": 14,
+    "overlap_count": 0,
+    "date_cells_that_failed_to_parse": 0,
+    "why_the_parse_count_matters": "0 unparsed. A join that silently dropped unreadable rows would report a small or zero overlap and it would look like the same finding.",
+    "what_the_ledger_IS_still_good_for": "evidence of WHAT THE TRADER DOES - stop discipline (four rows at exactly -517.50 dollars, 17.25 points), contract sizing, hold times. That evidence stands and is unaffected.",
+    "what_it_CANNOT_do": "serve as row-level ground truth for any of the 14 replay sessions, because it does not describe those days.",
+    "guard": "research/current_mnq_strategy_v2_4_ledger_corpus_join.assert_ledger_can_ground_truth_the_corpus refuses out loud, gating on the MEASUREMENT so it stops refusing on its own if overlapping rows are ever supplied."
+  }
+}

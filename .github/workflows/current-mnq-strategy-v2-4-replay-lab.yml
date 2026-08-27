@@ -1,0 +1,236 @@
+name: Current MNQ Strategy v2.4 Human-Bot Replay Lab
+
+on:
+  push:
+    branches:
+      - research/current-mnq-strategy-v2-4-zone-first-candles
+    paths:
+      - 'research/current_mnq_strategy_v2_4_replay_lab.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_generate.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_calibration_requirements.json'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py'
+      - 'research/START_MNQ_REPLAY_LAB.bat'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_calibration.py'
+      - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
+      - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'research/current_mnq_strategy_v2_4_replay_lab.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_generate.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_selection.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate.py'
+      - 'research/current_mnq_strategy_v2_4_replay_calibration_requirements.json'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch.py'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py'
+      - 'research/START_MNQ_REPLAY_LAB.bat'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_contract.json'
+      - 'research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py'
+      - 'tests/test_current_mnq_strategy_v2_4_replay_calibration.py'
+      - 'research/current_mnq_strategy_v2_4_user_fidelity_gold.json'
+      - '.github/workflows/current-mnq-strategy-v2-4-replay-lab.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: current-mnq-v2-4-replay-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  replay-lab:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+      - name: Install frozen research dependencies
+        run: python -m pip install --disable-pip-version-check -r research/mnq_v23_requirements.txt
+      - name: Prove replay fidelity and calibration contracts
+        run: |
+          PYTHONPATH=. pytest --confcutdir=tests -q \
+            tests/test_current_mnq_strategy_v2_4_replay_lab.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_enhance.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_bundle.py \
+            tests/test_current_mnq_strategy_v2_4_replay_lab_v3_tp_context.py \
+            tests/test_current_mnq_strategy_v2_4_replay_calibration.py \
+            tests/test_current_mnq_strategy_v2_4_fvg_targets.py
+      - name: Generate momentum-heavy bilateral-context V3 calibration pack
+        run: PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_calibration_generate
+      - name: Bind unified main chart and single-trade interaction layer
+        run: |
+          set -euo pipefail
+          pack="research/_mnq_v24_replay_lab_v3/pack"
+          cp research/current_mnq_strategy_v2_4_replay_lab_v3_enhance.js "$pack/replay_v3_enhance.js"
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '<script src="replay_v3_enhance.js"></script>'
+          if marker not in text:
+              text = text.replace('</body>', marker + '</body>')
+          p.write_text(text, encoding='utf-8')
+
+          # Compatibility shim for the bundler's historical exact-TP painter marker.
+          # The source enhancer already contains the corrected paintBand behavior,
+          # so this commented marker lets the old transform recognize the state
+          # without changing runtime behavior.
+          e = Path('research/_mnq_v24_replay_lab_v3/pack/replay_v3_enhance.js')
+          js = e.read_text(encoding='utf-8')
+          old = """        const top = Math.min(y1, y2);\n        const height = Math.abs(y2 - y1);\n        ctx.fillStyle = 'rgba(229,161,92,.17)';\n        ctx.strokeStyle = 'rgba(229,161,92,.94)';\n        ctx.fillRect(0, top, d.w, height);\n        ctx.strokeRect(0, top, d.w, height);\n"""
+          if old not in js:
+              js += "\n/* REPLAY_V3_TP_EXACT_LINE_COMPAT\n" + old + "*/\n"
+          e.write_text(js, encoding='utf-8')
+          PY
+          grep -q 'replay_v3_enhance.js' "$pack/review_v3.html"
+          grep -q 'Main Structure / Key Zones + TP Reaction Cluster' "$pack/replay_v3_enhance.js"
+          grep -q "paintLayer(ov5, main, l.trader_zones, l.trader_tp_reaction_cluster)" "$pack/replay_v3_enhance.js"
+          grep -q "drawZone.onclick = () => beginDraw('main-zone', ov5)" "$pack/replay_v3_enhance.js"
+          grep -q "drawTp.onclick = () => beginDraw('main-tp', ov5)" "$pack/replay_v3_enhance.js"
+          grep -q 'ZOOMED_OUT_HIGHER_LOWER' "$pack/replay_v3_enhance.js"
+          grep -q 'MOVE_AWAY_REJECTION_ORIGIN' "$pack/replay_v3_enhance.js"
+          grep -q 'if (l.final_action) return;' "$pack/replay_v3_enhance.js"
+          grep -q 'RESET DECISION' "$pack/replay_v3_enhance.js"
+          grep -q 'Date.UTC' "$pack/replay_v3_enhance.js"
+      - name: Vendor pinned TradingView Lightweight Charts 5.2.0
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          cd "$tmp"
+          pkg="$(npm pack lightweight-charts@5.2.0 --silent)"
+          tar -xzf "$pkg"
+          cp package/dist/lightweight-charts.standalone.production.js \
+            "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
+          test -s "$GITHUB_WORKSPACE/research/_mnq_v24_replay_lab_v3/pack/lightweight-charts.standalone.production.js"
+      - name: Bundle one-file standalone trader page and localhost launcher
+        run: |
+          set -euo pipefail
+          pack="research/_mnq_v24_replay_lab_v3/pack"
+          PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_bundle
+          PYTHONPATH=. python -m research.current_mnq_strategy_v2_4_replay_lab_v3_tp_context_patch
+          cp research/current_mnq_strategy_v2_4_replay_lab_v3_serve.py "$pack/serve_replay_lab.py"
+          cp research/START_MNQ_REPLAY_LAB.bat "$pack/START_REPLAY_LAB.bat"
+          html="$pack/review_v3.html"
+          ! grep -q 'src="lightweight-charts.standalone.production.js"' "$html"
+          ! grep -q 'src="replay_v3_enhance.js"' "$html"
+          grep -q 'RESET DECISION' "$html"
+          grep -q 'if (l.final_action) return;' "$html"
+          grep -q 'Main Structure / Key Zones + TP Reaction Cluster' "$html"
+          grep -q '15m CONTEXT' "$html"
+          grep -q 'MOVE_AWAY_REJECTION_ORIGIN' "$html"
+          grep -q 'MNQ_CONTROLS_READY' "$html"
+          grep -q 'MNQ_TP_CONTEXT_GAP_READY' "$html"
+          grep -q 'BULLISH — NO VISIBLE REACTION' "$html"
+          grep -q 'BEARISH — NO VISIBLE REACTION' "$html"
+          grep -q 'The opposite-direction TP is optional' "$html"
+          grep -q 'Save Draft' "$html"
+          grep -q "updateMainControlStatus('TIMEFRAME')" "$html"
+          grep -q "updateMainControlStatus('FIT ALL')" "$html"
+          test -s "$pack/serve_replay_lab.py"
+          test -s "$pack/START_REPLAY_LAB.bat"
+          grep -q '127.0.0.1' "$pack/serve_replay_lab.py"
+          grep -q 'serve_replay_lab.py' "$pack/START_REPLAY_LAB.bat"
+      - name: Syntax-check generated V3 browser JavaScript
+        run: |
+          set -euo pipefail
+          node --check research/_mnq_v24_replay_lab_v3/pack/replay_v3_enhance.js
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('research/_mnq_v24_replay_lab_v3/pack/review_v3.html').read_text(encoding='utf-8')
+          blocks = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S|re.I)
+          inline = [b for b in blocks if b.strip()]
+          if len(inline) < 4:
+              raise SystemExit(f'REPLAY_V3_EXPECTED_4_INLINE_SCRIPTS:{len(inline)}')
+          for i, block in enumerate(inline):
+              Path(f'/tmp/replay_v3_inline_{i}.js').write_text(block, encoding='utf-8')
+          print(len(inline))
+          PY
+          for f in /tmp/replay_v3_inline_*.js; do node --check "$f"; done
+          python -m py_compile research/_mnq_v24_replay_lab_v3/pack/serve_replay_lab.py
+      - name: Prove bilateral context, momentum-heavy sampling, visible controls, and standalone receipt
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pack = Path('research/_mnq_v24_replay_lab_v3/pack')
+          review = json.loads((pack/'review_pack_v3.json').read_text())
+          receipt = json.loads((pack/'calibration_receipt_v3.json').read_text())
+          if review['status'] != 'AUTOMATED_FIDELITY_REGRESSION_MOMENTUM_HEAVY_BILATERAL_CONTEXT':
+              raise SystemExit('REPLAY_CALIBRATION_STATUS_MISSING')
+          if receipt['case_count'] != review['case_count'] or receipt['session_count'] != review['session_count']:
+              raise SystemExit('REPLAY_CALIBRATION_CASE_SESSION_COUNT_MISMATCH')
+          if receipt['all_cases_require_bilateral_meaningful_reaction_context'] is not True:
+              raise SystemExit('REPLAY_CALIBRATION_BILATERAL_CONTEXT_NOT_LOCKED')
+          if receipt['context_15m_days'] != 40 or receipt['context_5m_days'] != 10:
+              raise SystemExit('REPLAY_CALIBRATION_DEEP_CONTEXT_MISSING')
+          if receipt['active_15m_fvg_midpoint_is_valid_tp_when_first_reaction'] is not True:
+              raise SystemExit('REPLAY_CALIBRATION_FVG_MIDPOINT_TP_MISSING')
+          if receipt['momentum_or_entry_cases'] != receipt['case_count']:
+              raise SystemExit('REPLAY_CALIBRATION_NON_MOMENTUM_CONTROL_INCLUDED')
+          if receipt['pnl_or_exit_outcome_used_for_selection'] is not False:
+              raise SystemExit('REPLAY_CALIBRATION_PNL_SELECTION_FORBIDDEN')
+          if receipt['edge_evidence_eligible'] is not False:
+              raise SystemExit('REPLAY_CALIBRATION_EDGE_EVIDENCE_FORBIDDEN')
+          if any(c.get('calibration_context', {}).get('bilateral_meaningful_reaction_context') is not True for c in review['cases']):
+              raise SystemExit('REPLAY_CALIBRATION_CASE_CONTEXT_FLAG_MISSING')
+          html = (pack/'review_v3.html').read_text(encoding='utf-8')
+          if 'src="lightweight-charts.standalone.production.js"' in html or 'src="replay_v3_enhance.js"' in html:
+              raise SystemExit('REPLAY_V3_NOT_STANDALONE')
+          for marker in (
+              'Main Structure / Key Zones + TP Reaction Cluster', '15m CONTEXT',
+              '− ZOOM OUT', 'MOVE_AWAY_REJECTION_ORIGIN', 'MNQ_CONTROLS_READY',
+              'MNQ_TP_CONTEXT_GAP_READY', 'BULLISH — NO VISIBLE REACTION',
+              'BEARISH — NO VISIBLE REACTION', 'The opposite-direction TP is optional',
+              "updateMainControlStatus('TIMEFRAME')", "updateMainControlStatus('FIT ALL')",
+              "updateMainControlStatus('REPLAY')",
+          ):
+              if marker not in html:
+                  raise SystemExit('REPLAY_V3_CONTROL_HTML_MISSING:' + marker)
+          for launcher in ('serve_replay_lab.py', 'START_REPLAY_LAB.bat'):
+              if not (pack/launcher).is_file():
+                  raise SystemExit('REPLAY_V3_LAUNCHER_MISSING:' + launcher)
+          PY
+      - name: Upload V3 trader calibration pack — safe bot answers withheld
+        uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-4-interactive-replay-v3-calibration-pack
+          path: |
+            research/_mnq_v24_replay_lab_v3/pack/review_v3.html
+            research/_mnq_v24_replay_lab_v3/pack/review_pack_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/labels_template_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/calibration_receipt_v3.json
+            research/_mnq_v24_replay_lab_v3/pack/serve_replay_lab.py
+            research/_mnq_v24_replay_lab_v3/pack/START_REPLAY_LAB.bat
+          if-no-files-found: error
+      - name: Upload hidden V3 calibration bot answer key — do not open before labels freeze
+        uses: actions/upload-artifact@v4
+        with:
+          name: mnq-v2-4-hidden-replay-v3-calibration-answer-key
+          path: research/_mnq_v24_replay_lab_v3/pack/answer_key_v3.json
+          if-no-files-found: error

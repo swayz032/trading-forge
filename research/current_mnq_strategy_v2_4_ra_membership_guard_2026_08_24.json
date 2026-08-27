@@ -1,0 +1,439 @@
+{
+  "artifact": "RA_MEMBERSHIP_GUARD_RESULT",
+  "status": "DIAGNOSTIC. Records why R-A was NOT landed.",
+  "authority": "ALGO-082 (R-A authorised to land) - its own pre-registered expectation FAILED",
+  "produced": "2026-08-24",
+  "pre_registered_expectation": "03-24's target moves; NO other day changes. If another day moves, R-A is wrong as scoped. - ALGO-082",
+  "instrument_note": "The X-ray in-window grant capture used for earlier repairs is the WRONG instrument for a target-layer repair: it records SURVIVED_TO_RANKING, which is upstream of build_and_classify, so R-A cannot move it and that guard would have passed VACUOUSLY. This capture keys on FULLY-APPROVED entries and carries the chosen target beside each one.",
+  "approved_entries_pre": 40,
+  "approved_entries_post": 58,
+  "approvals_REMOVED": [],
+  "approvals_ADDED": [
+    [
+      "2026-03-23",
+      "2026-03-23 08:23:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-03-23",
+      "2026-03-23 10:14:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-03-23",
+      "2026-03-23 11:03:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-03-25",
+      "2026-03-25 09:52:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-03-31",
+      "2026-03-31 09:19:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-01",
+      "2026-04-01 09:22:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-01",
+      "2026-04-01 09:52:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-02",
+      "2026-04-02 10:27:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 08:28:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 08:33:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 08:34:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 09:07:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-07",
+      "2026-04-07 09:48:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-08",
+      "2026-04-08 09:47:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-09",
+      "2026-04-09 10:53:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-09",
+      "2026-04-09 10:54:00-04:00",
+      "L",
+      "BRK5"
+    ],
+    [
+      "2026-04-09",
+      "2026-04-09 11:04:00-04:00",
+      "S",
+      "BRK5"
+    ],
+    [
+      "2026-04-13",
+      "2026-04-13 10:22:00-04:00",
+      "L",
+      "BRK5"
+    ]
+  ],
+  "approvals_added_count": 18,
+  "targets_changed_on_surviving_approvals": [
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 08:14:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24404.5,
+      "target_after": 24318.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:18:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24651.25,
+      "target_after": 24675.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 10:19:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24651.25,
+      "target_after": 24675.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:02:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24675.75,
+      "target_after": 24694.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:27:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24558.0,
+      "target_after": 24316.5,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:28:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24558.0,
+      "target_after": 24316.5,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-23",
+        "2026-03-23 11:29:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24558.0,
+      "target_after": 24316.5,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:23:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24402.0,
+      "target_after": 24358.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:37:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24530.75,
+      "target_after": 24558.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-25",
+        "2026-03-25 09:38:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24530.75,
+      "target_after": 24558.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:33:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24086.0,
+      "target_after": 23824.75,
+      "kind_after": "LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 09:34:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24086.0,
+      "target_after": 23824.75,
+      "kind_after": "LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:23:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24240.25,
+      "target_after": 24277.25,
+      "kind_after": "LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-26",
+        "2026-03-26 10:39:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24132.25,
+      "target_after": 23824.75,
+      "kind_after": "LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-03-31",
+        "2026-03-31 09:03:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 23398.25,
+      "target_after": 23525.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:17:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24172.75,
+      "target_after": 24277.25,
+      "kind_after": "LIQUIDITY_CLUSTER"
+    },
+    {
+      "key": [
+        "2026-04-01",
+        "2026-04-01 09:44:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24053.5,
+      "target_after": 24024.5,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:23:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24253.75,
+      "target_after": 24293.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:24:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 24253.75,
+      "target_after": 24293.75,
+      "kind_after": "KEY_ZONE_15M_REFINED_FVG_15M_NATIVE"
+    },
+    {
+      "key": [
+        "2026-04-07",
+        "2026-04-07 09:49:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 24132.5,
+      "target_after": 24120.25,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 08:52:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 25233.5,
+      "target_after": 25302.75,
+      "kind_after": "FVG_15M"
+    },
+    {
+      "key": [
+        "2026-04-08",
+        "2026-04-08 09:48:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 25180.75,
+      "target_after": 25302.75,
+      "kind_after": "FVG_15M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:37:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 25085.25,
+      "target_after": 25123.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 09:39:00-04:00",
+        "L",
+        "BRK5"
+      ],
+      "target_before": 25085.25,
+      "target_after": 25123.0,
+      "kind_after": "KEY_ZONE_15M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 11:27:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 25032.75,
+      "target_after": 24954.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-09",
+        "2026-04-09 11:28:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 25032.75,
+      "target_after": 24954.25,
+      "kind_after": "KEY_ZONE_15M_REFINED_LIQUIDITY_CLUSTER_5M"
+    },
+    {
+      "key": [
+        "2026-04-13",
+        "2026-04-13 09:37:00-04:00",
+        "S",
+        "BRK5"
+      ],
+      "target_before": 25159.25,
+      "target_after": 25063.25,
+      "kind_after": "LIQUIDITY_CLUSTER"
+    }
+  ],
+  "targets_changed_count": 27,
+  "sessions_whose_targets_moved": [
+    "2026-03-23",
+    "2026-03-25",
+    "2026-03-26",
+    "2026-03-31",
+    "2026-04-01",
+    "2026-04-07",
+    "2026-04-08",
+    "2026-04-09",
+    "2026-04-13"
+  ],
+  "VERDICT": "FAILS_PRE_REGISTERED_EXPECTATION_NOT_LANDED",
+  "mechanism": "Dropping a near SPENT destination promotes a FARTHER one, whose larger distance produces a larger reference reward - which can clear the $400 TP floor that had been REFUSING the entry. Measured on 2026-04-07 08:28 L: BEFORE TP1_REFERENCE_REWARD_UNDER_400:90.00 (refused); AFTER, approved at 24253.75. So a TARGET-UNIVERSE repair silently loosens the ENTRY gate through the reward floor.",
+  "why_this_matters_for_R_B": "R-B admits NEW destinations, which changes which destination is nearest, which changes the reward, which can flip the same $400 gate. The same class of unintended entry admission applies to R-B and its guard must measure approvals, not grants.",
+  "disposition": "R-A NOT landed. Production target_policy.py reverted to HEAD. The patch and its 10 guards (including the red-proof that goes RED on the planted bar-start defect) are held under research/_held_patches/ pending a ruling.",
+  "red_proof_result": "PASSED in isolation: planting the bar-start defect turned test_a_bar_STILL_FORMING_at_the_clock_is_NOT_evidence RED; module restored byte-exact (sha 27d1b91f8fbb1ca7).",
+  "no_pnl": "No PnL, realized outcome, winner/loser label or clean-edge result participated in any decision in this diagnostic."
+}

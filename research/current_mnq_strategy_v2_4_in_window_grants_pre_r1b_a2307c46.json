@@ -1,0 +1,245 @@
+{
+  "2026-03-23": [
+    {
+      "key": [
+        "2026-03-23T11:25:00-04:00",
+        "2026-03-23T11:27:00-04:00",
+        "S",
+        "R:2026-03-20T02:45:00-04:00:98429",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "location_band": [
+        24602.246875,
+        24616.253125
+      ],
+      "location_source": "WICK_ZONE",
+      "form": "repeat_test_momentum_attack",
+      "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "variant": null
+    },
+    {
+      "key": [
+        "2026-03-23T11:25:00-04:00",
+        "2026-03-23T11:28:00-04:00",
+        "S",
+        "R:2026-03-20T02:45:00-04:00:98429",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "location_band": [
+        24602.246875,
+        24616.253125
+      ],
+      "location_source": "WICK_ZONE",
+      "form": "repeat_test_momentum_attack",
+      "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "variant": null
+    },
+    {
+      "key": [
+        "2026-03-23T11:25:00-04:00",
+        "2026-03-23T11:29:00-04:00",
+        "S",
+        "R:2026-03-20T02:45:00-04:00:98429",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "location_band": [
+        24602.246875,
+        24616.253125
+      ],
+      "location_source": "WICK_ZONE",
+      "form": "repeat_test_momentum_attack",
+      "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "variant": null
+    }
+  ],
+  "2026-03-24": [],
+  "2026-03-25": [],
+  "2026-03-26": [],
+  "2026-03-30": [
+    {
+      "key": [
+        "2026-03-30T09:40:00-04:00",
+        "2026-03-30T09:42:00-04:00",
+        "S",
+        "S:2026-03-30T08:45:00-04:00:93755",
+        "B_NORMAL_BREAKOUT"
+      ],
+      "location_band": [
+        23432.107589285715,
+        23447.392410714285
+      ],
+      "location_source": "WICK_ZONE",
+      "form": "normal_breakout",
+      "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "variant": null
+    }
+  ],
+  "2026-03-31": [],
+  "2026-04-01": [
+    {
+      "key": [
+        "2026-04-01T09:40:00-04:00",
+        "2026-04-01T09:44:00-04:00",
+        "S",
+        "S:2026-03-26T10:15:00-04:00:96264",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "location_band": [
+        24063.895089285714,
+        24075.104910714286
+      ],
+      "location_source": "WICK_ZONE",
+      "form": "repeat_test_momentum_attack",
+      "reason": "PREBREAK_REPEAT_TEST_INTRA5_FORCE",
+      "variant": null
+    }
+  ],
+  "2026-04-02": [
+    {
+      "key": [
+        "2026-04-02T10:35:00-04:00",
+        "2026-04-02T10:37:00-04:00",
+        "L",
+        "S:2026-03-31T22:15:00-04:00:95868",
+        "A_NORMAL_REJECTION"
+      ],
+      "location_band": [
+        23964.54955357143,
+        23973.20044642857
+      ],
+      "location_source": "WICK_ZONE",
+      "form": null,
+      "reason": null,
+      "variant": null
+    },
+    {
+      "key": [
+        "2026-04-02T10:35:00-04:00",
+        "2026-04-02T10:38:00-04:00",
+        "L",
+        "S:2026-03-31T22:15:00-04:00:95868",
+        "A_NORMAL_REJECTION"
+      ],
+      "location_band": [
+        23964.54955357143,
+        23973.20044642857
+      ],
+      "location_source": "WICK_ZONE",
+      "form": null,
+      "reason": null,
+      "variant": null
+    }
+  ],
+  "2026-04-06": [],
+  "2026-04-07": [
+    {
+      "key": [
+        "2026-04-07T09:45:00-04:00",
+        "2026-04-07T09:48:00-04:00",
+        "S",
+        "SWING:S:2026-04-06T03:45:00-04:00:96830",
+        "B_NORMAL_BREAKOUT"
+      ],
+      "location_band": [
+        24205.45357142857,
+        24209.54642857143
+      ],
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "form": "normal_breakout",
+      "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "variant": null
+    },
+    {
+      "key": [
+        "2026-04-07T09:45:00-04:00",
+        "2026-04-07T09:49:00-04:00",
+        "S",
+        "SWING:S:2026-04-06T03:45:00-04:00:96830",
+        "B_NORMAL_BREAKOUT"
+      ],
+      "location_band": [
+        24205.45357142857,
+        24209.54642857143
+      ],
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "form": "normal_breakout",
+      "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "variant": null
+    }
+  ],
+  "2026-04-08": [
+    {
+      "key": [
+        "2026-04-08T10:55:00-04:00",
+        "2026-04-08T10:57:00-04:00",
+        "S",
+        "R:2026-03-17T20:00:00-04:00:100140",
+        "B_NORMAL_BREAKOUT"
+      ],
+      "location_band": [
+        25020.961607142857,
+        25039.988392857143
+      ],
+      "location_source": "WICK_ZONE",
+      "form": "normal_breakout",
+      "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "variant": null
+    }
+  ],
+  "2026-04-09": [
+    {
+      "key": [
+        "2026-04-09T11:25:00-04:00",
+        "2026-04-09T11:27:00-04:00",
+        "S",
+        "SWING:S:2026-03-17T22:30:00-04:00:100322",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "location_band": [
+        25079.274285714284,
+        25081.725714285716
+      ],
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "form": "break_retest",
+      "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "variant": null
+    },
+    {
+      "key": [
+        "2026-04-09T11:25:00-04:00",
+        "2026-04-09T11:28:00-04:00",
+        "S",
+        "SWING:S:2026-03-17T22:30:00-04:00:100322",
+        "D_PREBREAK_RETEST_BREAKOUT"
+      ],
+      "location_band": [
+        25079.274285714284,
+        25081.725714285716
+      ],
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "form": "break_retest",
+      "reason": "ACCEPTED_BREAK_RETEST_THEN_INTRA5_FORCE",
+      "variant": null
+    }
+  ],
+  "2026-04-13": [],
+  "2026-04-14": [
+    {
+      "key": [
+        "2026-04-14T09:35:00-04:00",
+        "2026-04-14T09:38:00-04:00",
+        "L",
+        "SWING:R:2026-04-14T09:15:00-04:00:102865",
+        "B_NORMAL_BREAKOUT"
+      ],
+      "location_band": [
+        25714.66964285714,
+        25717.83035714286
+      ],
+      "location_source": "STRONG_SWING_DISPLACEMENT",
+      "form": "normal_breakout",
+      "reason": "FIRST_BREAK_PRINT_THEN_INTRA5_FORCE",
+      "variant": null
+    }
+  ]
+}
